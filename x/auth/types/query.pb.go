@@ -31,8 +31,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryAccountRequest is request type for the Query/Account RPC method
+// QueryAccountRequest is the request type for the Query/Account RPC method.
 type QueryAccountRequest struct {
+	// address defines the address to query for.
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
 }
 
@@ -76,8 +77,9 @@ func (m *QueryAccountRequest) GetAddress() github_com_cosmos_cosmos_sdk_types.Ac
 	return nil
 }
 
-// QueryAccountResponse is response type for the Query/Account RPC method
+// QueryAccountResponse is the response type for the Query/Account RPC method.
 type QueryAccountResponse struct {
+	// address defines the account of the corresponding address.
 	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
 
@@ -121,7 +123,7 @@ func (m *QueryAccountResponse) GetAccount() *types.Any {
 	return nil
 }
 
-// QueryParamsRequest is request type for the Query/Params RPC method
+// QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
 
@@ -158,8 +160,9 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is response type for the Query/Params RPC method
+// QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
+	// params defines the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
@@ -251,9 +254,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Account returns account details based on address
+	// Account returns account details based on address.
 	Account(ctx context.Context, in *QueryAccountRequest, opts ...grpc.CallOption) (*QueryAccountResponse, error)
-	// Params queries all parameters
+	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
@@ -285,9 +288,9 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Account returns account details based on address
+	// Account returns account details based on address.
 	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
-	// Params queries all parameters
+	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 

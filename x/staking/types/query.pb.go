@@ -30,9 +30,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryValidatorsRequest is request type for Query/Validators RPC method
+// QueryValidatorsRequest is request type for Query/Validators RPC method.
 type QueryValidatorsRequest struct {
-	Status     string             `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// status enables to query for validators matching a given status.
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -85,7 +87,9 @@ func (m *QueryValidatorsRequest) GetPagination() *query.PageRequest {
 
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 type QueryValidatorsResponse struct {
-	Validators []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// validators contains all the queried validators
+	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -138,6 +142,7 @@ func (m *QueryValidatorsResponse) GetPagination() *query.PageResponse {
 
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 type QueryValidatorRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -183,6 +188,7 @@ func (m *QueryValidatorRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 type QueryValidatorResponse struct {
+	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -228,8 +234,10 @@ func (m *QueryValidatorResponse) GetValidator() Validator {
 
 // QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorDelegationsRequest) Reset()         { *m = QueryValidatorDelegationsRequest{} }
@@ -282,7 +290,8 @@ func (m *QueryValidatorDelegationsRequest) GetPagination() *query.PageRequest {
 // QueryValidatorDelegationsRequest is response type for the Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsResponse struct {
 	DelegationResponses DelegationResponses `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3,castrepeated=DelegationResponses" json:"delegation_responses"`
-	Pagination          *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorDelegationsResponse) Reset()         { *m = QueryValidatorDelegationsResponse{} }
@@ -334,8 +343,10 @@ func (m *QueryValidatorDelegationsResponse) GetPagination() *query.PageResponse 
 
 // QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
 type QueryValidatorUnbondingDelegationsRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorUnbondingDelegationsRequest) Reset() {
@@ -389,10 +400,11 @@ func (m *QueryValidatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method
+// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method.
 type QueryValidatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
-	Pagination         *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorUnbondingDelegationsResponse) Reset() {
@@ -446,9 +458,11 @@ func (m *QueryValidatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryDelegationRequest is request type for the Query/Delegation RPC method
+// QueryDelegationRequest is request type for the Query/Delegation RPC method.
 type QueryDelegationRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -499,9 +513,10 @@ func (m *QueryDelegationRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk
 	return nil
 }
 
-// QueryDelegationResponse is response type for the Query/Delegation RPC method
+// QueryDelegationResponse is response type for the Query/Delegation RPC method.
 type QueryDelegationResponse struct {
-	DelegationResponse *DelegationResponse `protobuf:"bytes,1,opt,name=delegation_response,json=delegationResponse,proto3,casttype=DelegationResponse" json:"delegation_response,omitempty"`
+	// delegation_responses defines the delegation info of a delegation.
+	DelegationResponse *DelegationResponse `protobuf:"bytes,1,opt,name=delegation_response,json=delegationResponse,proto3" json:"delegation_response,omitempty"`
 }
 
 func (m *QueryDelegationResponse) Reset()         { *m = QueryDelegationResponse{} }
@@ -544,9 +559,11 @@ func (m *QueryDelegationResponse) GetDelegationResponse() *DelegationResponse {
 	return nil
 }
 
-// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method
+// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -597,8 +614,9 @@ func (m *QueryUnbondingDelegationRequest) GetValidatorAddr() github_com_cosmos_c
 	return nil
 }
 
-// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method
+// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationResponse struct {
+	// unbond defines the unbonding information of a delegation.
 	Unbond UnbondingDelegation `protobuf:"bytes,1,opt,name=unbond,proto3" json:"unbond"`
 }
 
@@ -642,10 +660,12 @@ func (m *QueryUnbondingDelegationResponse) GetUnbond() UnbondingDelegation {
 	return UnbondingDelegation{}
 }
 
-// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method
+// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorDelegationsRequest) Reset()         { *m = QueryDelegatorDelegationsRequest{} }
@@ -695,10 +715,12 @@ func (m *QueryDelegatorDelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method
+// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsResponse struct {
+	// delegation_responses defines all the delegations' info of a delegator.
 	DelegationResponses []DelegationResponse `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3" json:"delegation_responses"`
-	Pagination          *query.PageResponse  `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorDelegationsResponse) Reset()         { *m = QueryDelegatorDelegationsResponse{} }
@@ -748,10 +770,12 @@ func (m *QueryDelegatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method
+// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorUnbondingDelegationsRequest) Reset() {
@@ -805,10 +829,11 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method
+// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
-	Pagination         *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorUnbondingDelegationsResponse) Reset() {
@@ -862,12 +887,16 @@ func (m *QueryDelegatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method
+// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method.
 type QueryRedelegationsRequest struct {
-	DelegatorAddr    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// delegator_addr defines the delegator address to query for.
+	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// src_validator_addr defines the validator address to redelegate from.
 	SrcValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=src_validator_addr,json=srcValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"src_validator_addr,omitempty"`
+	// dst_validator_addr defines the validator address to redelegate to.
 	DstValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=dst_validator_addr,json=dstValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"dst_validator_addr,omitempty"`
-	Pagination       *query.PageRequest                            `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryRedelegationsRequest) Reset()         { *m = QueryRedelegationsRequest{} }
@@ -931,10 +960,11 @@ func (m *QueryRedelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method
+// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method.
 type QueryRedelegationsResponse struct {
 	RedelegationResponses []RedelegationResponse `protobuf:"bytes,1,rep,name=redelegation_responses,json=redelegationResponses,proto3" json:"redelegation_responses"`
-	Pagination            *query.PageResponse    `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryRedelegationsResponse) Reset()         { *m = QueryRedelegationsResponse{} }
@@ -984,10 +1014,12 @@ func (m *QueryRedelegationsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorValidatorsRequest) Reset()         { *m = QueryDelegatorValidatorsRequest{} }
@@ -1037,9 +1069,11 @@ func (m *QueryDelegatorValidatorsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
-	Validators []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// validators defines the the validators' info of a delegator.
+	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1090,9 +1124,11 @@ func (m *QueryDelegatorValidatorsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method
+// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -1143,8 +1179,9 @@ func (m *QueryDelegatorValidatorRequest) GetValidatorAddr() github_com_cosmos_co
 	return nil
 }
 
-// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method
+// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
+	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -1188,8 +1225,9 @@ func (m *QueryDelegatorValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method
+// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method.
 type QueryHistoricalInfoRequest struct {
+	// height defines at which height to query the historical info.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
 }
 
@@ -1233,8 +1271,9 @@ func (m *QueryHistoricalInfoRequest) GetHeight() int64 {
 	return 0
 }
 
-// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method
+// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method.
 type QueryHistoricalInfoResponse struct {
+	// hist defines the historical info at the given height.
 	Hist *HistoricalInfo `protobuf:"bytes,1,opt,name=hist,proto3" json:"hist,omitempty"`
 }
 
@@ -1278,7 +1317,7 @@ func (m *QueryHistoricalInfoResponse) GetHist() *HistoricalInfo {
 	return nil
 }
 
-// QueryPoolRequest is request type for the Query/Pool RPC method
+// QueryPoolRequest is request type for the Query/Pool RPC method.
 type QueryPoolRequest struct {
 }
 
@@ -1315,8 +1354,9 @@ func (m *QueryPoolRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryPoolRequest proto.InternalMessageInfo
 
-// QueryPoolResponse is response type for the Query/Pool RPC method
+// QueryPoolResponse is response type for the Query/Pool RPC method.
 type QueryPoolResponse struct {
+	// pool defines the pool info.
 	Pool Pool `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool"`
 }
 
@@ -1360,7 +1400,7 @@ func (m *QueryPoolResponse) GetPool() Pool {
 	return Pool{}
 }
 
-// QueryParamsRequest is request type for the Query/Params RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
 
@@ -1397,10 +1437,10 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is response type for the Query/Params RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	Params     Params              `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// params holds all the parameters of this module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -1443,13 +1483,6 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-func (m *QueryParamsResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*QueryValidatorsRequest)(nil), "cosmos.staking.QueryValidatorsRequest")
 	proto.RegisterType((*QueryValidatorsResponse)(nil), "cosmos.staking.QueryValidatorsResponse")
@@ -1484,76 +1517,75 @@ func init() {
 func init() { proto.RegisterFile("cosmos/staking/query.proto", fileDescriptor_802d43a0c79dce0e) }
 
 var fileDescriptor_802d43a0c79dce0e = []byte{
-	// 1099 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x41, 0x6f, 0x1b, 0x45,
-	0x14, 0xf6, 0x24, 0xc1, 0x52, 0x1e, 0x6d, 0x54, 0xc6, 0xae, 0x49, 0xb7, 0xd4, 0x76, 0xb7, 0x50,
-	0xda, 0x42, 0xed, 0x34, 0xf4, 0xd2, 0x4a, 0x08, 0x25, 0x54, 0x08, 0x0e, 0x48, 0xed, 0x22, 0x02,
-	0x2a, 0x48, 0x66, 0xe3, 0x5d, 0xd6, 0x2b, 0x3b, 0x1e, 0x67, 0x67, 0x0d, 0x14, 0x89, 0x2b, 0x5c,
-	0x39, 0x21, 0x6e, 0xdc, 0xf9, 0x01, 0x70, 0x80, 0x03, 0x07, 0x24, 0x7a, 0xe0, 0x50, 0x09, 0x90,
-	0x38, 0x05, 0x94, 0xfc, 0x03, 0x8e, 0x3d, 0x21, 0xcf, 0xbe, 0x1d, 0xaf, 0x77, 0x67, 0x37, 0x9b,
-	0xd8, 0xa9, 0x92, 0x93, 0xed, 0x99, 0xf7, 0xbe, 0xf7, 0xe6, 0x7b, 0x6f, 0xde, 0x7b, 0x63, 0xd0,
-	0xda, 0x8c, 0x6f, 0x31, 0xde, 0xe4, 0xbe, 0xd9, 0x75, 0xfb, 0x4e, 0x73, 0x7b, 0x68, 0x7b, 0x0f,
-	0x1a, 0x03, 0x8f, 0xf9, 0x8c, 0x2e, 0x05, 0x7b, 0x0d, 0xdc, 0xd3, 0x2e, 0xa0, 0xac, 0x90, 0x69,
-	0x0e, 0x4c, 0xc7, 0xed, 0x9b, 0xbe, 0xcb, 0xfa, 0x81, 0xb8, 0x56, 0x76, 0x98, 0xc3, 0xc4, 0xd7,
-	0xe6, 0xe8, 0x1b, 0xae, 0x3e, 0x17, 0x33, 0x80, 0x9f, 0xc1, 0xae, 0xde, 0x85, 0xca, 0xbd, 0x11,
-	0xda, 0x86, 0xd9, 0x73, 0x2d, 0xd3, 0x67, 0x1e, 0x37, 0xec, 0xed, 0xa1, 0xcd, 0x7d, 0x5a, 0x81,
-	0x22, 0xf7, 0x4d, 0x7f, 0xc8, 0x97, 0x49, 0x9d, 0x5c, 0x59, 0x34, 0xf0, 0x17, 0xbd, 0x05, 0x30,
-	0xb6, 0xbc, 0x3c, 0x57, 0x27, 0x57, 0x9e, 0x5e, 0x3d, 0xd7, 0x40, 0x4f, 0x03, 0xef, 0xef, 0x9a,
-	0x8e, 0x8d, 0x30, 0x46, 0x44, 0x58, 0xff, 0x86, 0xc0, 0xb3, 0x09, 0x6b, 0x7c, 0xc0, 0xfa, 0xdc,
-	0xa6, 0xaf, 0x01, 0x7c, 0x22, 0x57, 0x97, 0x49, 0x7d, 0x3e, 0x0a, 0x1b, 0xfa, 0x2c, 0xf5, 0xd6,
-	0x17, 0x1e, 0xee, 0xd4, 0x0a, 0x46, 0x44, 0x85, 0xde, 0x56, 0xf8, 0xa5, 0xa9, 0xfc, 0x0a, 0x0c,
-	0x4e, 0x38, 0xb6, 0x0d, 0x67, 0x27, 0xfd, 0x0a, 0x49, 0x78, 0x1f, 0x96, 0xa4, 0x89, 0x96, 0x69,
-	0x59, 0x9e, 0x20, 0xe3, 0xd4, 0xfa, 0x8d, 0xc7, 0x3b, 0xb5, 0xeb, 0x8e, 0xeb, 0x77, 0x86, 0x9b,
-	0x8d, 0x36, 0xdb, 0x6a, 0x22, 0xc7, 0xc1, 0xc7, 0x75, 0x6e, 0x75, 0x9b, 0xfe, 0x83, 0x81, 0xcd,
-	0x47, 0x0e, 0xaf, 0x59, 0x96, 0x67, 0x73, 0x6e, 0x9c, 0x96, 0x40, 0xa3, 0x15, 0xfd, 0xbd, 0x38,
-	0xf1, 0x92, 0x89, 0x57, 0x61, 0x51, 0x8a, 0x0a, 0x73, 0x39, 0x88, 0x18, 0x6b, 0xe8, 0x3f, 0x12,
-	0xa8, 0x4f, 0x22, 0xdf, 0xb1, 0x7b, 0xb6, 0x23, 0x0e, 0xca, 0x8f, 0xfc, 0x5c, 0xd3, 0xa4, 0xc7,
-	0x1f, 0x04, 0x2e, 0x66, 0x78, 0x8e, 0xf4, 0x78, 0x50, 0xb6, 0xe4, 0x72, 0xcb, 0xc3, 0xe5, 0x30,
-	0x65, 0xf4, 0x38, 0x53, 0x63, 0x88, 0x10, 0x61, 0xfd, 0xfc, 0x88, 0xb2, 0xef, 0xff, 0xa9, 0x95,
-	0x92, 0x7b, 0xdc, 0x28, 0x59, 0xc9, 0xc5, 0xa9, 0x72, 0xeb, 0x17, 0x02, 0x57, 0x27, 0x4f, 0xf5,
-	0x6e, 0x7f, 0x93, 0xf5, 0x2d, 0xb7, 0xef, 0x9c, 0x94, 0xc0, 0xfc, 0x4a, 0xe0, 0x5a, 0x9e, 0x23,
-	0x60, 0x84, 0xee, 0x43, 0x69, 0x18, 0xee, 0x27, 0x02, 0x74, 0x29, 0x1e, 0x20, 0x05, 0x14, 0x26,
-	0x35, 0x95, 0x28, 0xb3, 0x89, 0xc4, 0xef, 0x04, 0xef, 0x5c, 0x34, 0xee, 0x92, 0x76, 0x8c, 0xfb,
-	0xe1, 0x68, 0x5f, 0x6b, 0xb7, 0x25, 0xed, 0x12, 0x48, 0xd0, 0x9e, 0x0c, 0xe8, 0xdc, 0x8c, 0x2a,
-	0xc8, 0x97, 0x61, 0x35, 0x4d, 0xa6, 0x31, 0xed, 0x42, 0x49, 0x71, 0x49, 0xb0, 0x9a, 0xe4, 0xb9,
-	0x23, 0x95, 0xc7, 0x3b, 0x35, 0x9a, 0x5c, 0x37, 0x68, 0xf2, 0x7a, 0xe8, 0x7f, 0x11, 0xa8, 0x09,
-	0x47, 0x14, 0xa1, 0x3c, 0xc9, 0x04, 0xdb, 0x58, 0x48, 0x95, 0xc7, 0x42, 0xa2, 0xd7, 0xa0, 0x18,
-	0x64, 0x29, 0x72, 0x7b, 0x80, 0xf4, 0x46, 0xc5, 0x71, 0xc1, 0xbe, 0x13, 0x9e, 0x4b, 0x5d, 0x17,
-	0x8e, 0x88, 0xbf, 0x29, 0xea, 0xc2, 0xcf, 0x61, 0xc1, 0x56, 0x7b, 0x8e, 0x14, 0x7d, 0x30, 0x75,
-	0xc1, 0x0e, 0xf8, 0x3a, 0xba, 0xca, 0x2c, 0xdd, 0xdf, 0xa7, 0x32, 0x1f, 0xbf, 0x08, 0xc8, 0xca,
-	0xbc, 0xcf, 0x11, 0x8e, 0x79, 0x65, 0xfe, 0x6f, 0x0e, 0xce, 0x89, 0x63, 0x18, 0xb6, 0xf5, 0x24,
-	0x99, 0x6f, 0x01, 0xe5, 0x5e, 0xbb, 0x35, 0xab, 0xfa, 0x71, 0x86, 0x7b, 0xed, 0x8d, 0x89, 0xa6,
-	0xdb, 0x02, 0x6a, 0x71, 0x3f, 0x6e, 0x60, 0xfe, 0xd0, 0x06, 0x2c, 0xee, 0x6f, 0x64, 0x74, 0xf5,
-	0x85, 0x83, 0xe4, 0xce, 0x4f, 0x04, 0x34, 0x15, 0xe9, 0x98, 0x2b, 0x26, 0x54, 0x3c, 0x3b, 0xe3,
-	0xe2, 0x3e, 0x1f, 0x4f, 0x97, 0x28, 0x4c, 0xec, 0xea, 0x9e, 0xf5, 0xec, 0x59, 0x5f, 0xde, 0x1f,
-	0xc2, 0xa6, 0x23, 0x33, 0x3f, 0xf9, 0x84, 0x39, 0x96, 0x57, 0xf6, 0xbb, 0x44, 0xb9, 0x3f, 0x6e,
-	0xaf, 0xa1, 0x3f, 0x09, 0x54, 0x53, 0x3c, 0x3c, 0xc9, 0xed, 0xfc, 0xa3, 0xd4, 0x84, 0x99, 0xd5,
-	0xd3, 0xeb, 0x26, 0x5e, 0xa8, 0x37, 0x5d, 0xee, 0x33, 0xcf, 0x6d, 0x9b, 0xbd, 0xb7, 0xfa, 0x1f,
-	0xb3, 0xc8, 0x83, 0xba, 0x63, 0xbb, 0x4e, 0xc7, 0x17, 0xc8, 0xf3, 0x06, 0xfe, 0xd2, 0xef, 0xc1,
-	0x79, 0xa5, 0x16, 0xfa, 0xb4, 0x0a, 0x0b, 0x1d, 0x97, 0xfb, 0xe8, 0x4e, 0x35, 0xee, 0x4e, 0x4c,
-	0x4b, 0xc8, 0xea, 0x14, 0xce, 0x08, 0xc8, 0xbb, 0x8c, 0xf5, 0xd0, 0xbc, 0xfe, 0x3a, 0x3c, 0x13,
-	0x59, 0x43, 0xf0, 0x06, 0x2c, 0x0c, 0x18, 0xeb, 0x21, 0x78, 0x39, 0x0e, 0x3e, 0x92, 0xc5, 0x63,
-	0x0a, 0x39, 0xbd, 0x0c, 0x34, 0x00, 0x31, 0x3d, 0x73, 0x2b, 0xbc, 0x67, 0xfa, 0x57, 0x04, 0x4a,
-	0x13, 0xcb, 0x88, 0x7e, 0x13, 0x8a, 0x03, 0xb1, 0x82, 0xf8, 0x95, 0x04, 0xbe, 0xd8, 0x0d, 0xe7,
-	0xa1, 0x40, 0x76, 0x9a, 0xd4, 0x5d, 0xfd, 0xed, 0x14, 0x3c, 0x25, 0x3c, 0xa1, 0x2d, 0x80, 0xf1,
-	0xbd, 0xa2, 0x97, 0xe3, 0x96, 0xd5, 0x7f, 0x7a, 0x68, 0x2f, 0xee, 0x2b, 0x87, 0x33, 0x6f, 0x81,
-	0x7e, 0x08, 0x8b, 0x72, 0x9d, 0xbe, 0x90, 0xad, 0x17, 0xc2, 0x5f, 0xde, 0x4f, 0x4c, 0xa2, 0x7f,
-	0x01, 0x65, 0xd5, 0x2b, 0x98, 0xae, 0x64, 0x23, 0x24, 0xe7, 0x16, 0xed, 0xc6, 0x01, 0x34, 0xa4,
-	0xf9, 0x6f, 0x09, 0x5c, 0xc8, 0x7c, 0xec, 0xd1, 0x5b, 0xd9, 0xb0, 0x19, 0x93, 0x94, 0x76, 0xfb,
-	0x30, 0xaa, 0xd2, 0xb5, 0x16, 0xc0, 0x78, 0x23, 0x25, 0xb0, 0x89, 0xf7, 0x47, 0x4a, 0x60, 0x93,
-	0xb3, 0xa6, 0x5e, 0xa0, 0x9f, 0x43, 0x49, 0xe1, 0x02, 0x6d, 0x2a, 0x11, 0xd2, 0x9f, 0x3c, 0xda,
-	0x4a, 0x7e, 0x85, 0x68, 0xd8, 0x55, 0xb3, 0x74, 0x4a, 0xd8, 0x33, 0x1e, 0x0c, 0x29, 0x61, 0xcf,
-	0x1a, 0xd4, 0x31, 0xec, 0x99, 0x93, 0x64, 0x4a, 0xd8, 0xf3, 0x0c, 0xd0, 0x29, 0x61, 0xcf, 0x35,
-	0xb8, 0xea, 0x05, 0xda, 0x81, 0xd3, 0x13, 0x73, 0x0a, 0xbd, 0xaa, 0x84, 0x53, 0x0d, 0x90, 0xda,
-	0xb5, 0x3c, 0xa2, 0xd1, 0xf8, 0x2b, 0x5a, 0x73, 0x4a, 0xfc, 0xd3, 0xa7, 0x0f, 0x6d, 0x25, 0xbf,
-	0x82, 0xb4, 0xfd, 0x29, 0xd0, 0xa4, 0x00, 0x6d, 0xe4, 0x44, 0x0a, 0x2d, 0x37, 0x73, 0xcb, 0x4b,
-	0xc3, 0x5d, 0x58, 0x9a, 0xec, 0x24, 0x54, 0x4d, 0x9a, 0xb2, 0xb5, 0x69, 0x2f, 0xe5, 0x92, 0x95,
-	0xc6, 0xde, 0x86, 0x85, 0x51, 0x67, 0xa1, 0x75, 0xa5, 0x5a, 0xa4, 0x69, 0x69, 0x17, 0x33, 0x24,
-	0x24, 0xdc, 0x3b, 0x50, 0x0c, 0x1a, 0x09, 0xd5, 0xd5, 0xe2, 0xd1, 0x66, 0xa5, 0x5d, 0xca, 0x94,
-	0x09, 0x41, 0xd7, 0xdf, 0x78, 0xb8, 0x5b, 0x25, 0x8f, 0x76, 0xab, 0xe4, 0xdf, 0xdd, 0x2a, 0xf9,
-	0x7a, 0xaf, 0x5a, 0x78, 0xb4, 0x57, 0x2d, 0xfc, 0xbd, 0x57, 0x2d, 0xdc, 0x7f, 0x39, 0x73, 0x0a,
-	0xf9, 0x4c, 0xfe, 0xd1, 0x2e, 0xe6, 0x91, 0xcd, 0xa2, 0xf8, 0x9f, 0xfd, 0x95, 0xff, 0x03, 0x00,
-	0x00, 0xff, 0xff, 0x9c, 0xed, 0xaa, 0xa9, 0xe8, 0x17, 0x00, 0x00,
+	// 1086 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x4f, 0x6f, 0x1b, 0x45,
+	0x14, 0xf7, 0x24, 0xc6, 0x52, 0x1e, 0x6d, 0x54, 0xc6, 0x6e, 0x48, 0xb7, 0xd4, 0x71, 0xb7, 0x50,
+	0xda, 0x42, 0xed, 0x34, 0xf4, 0xd2, 0x4a, 0x08, 0x25, 0x54, 0x08, 0x84, 0x90, 0xda, 0xad, 0x08,
+	0xa8, 0x20, 0x99, 0x8d, 0x77, 0x59, 0xaf, 0xe2, 0xec, 0x38, 0x3b, 0x6b, 0xa0, 0x48, 0x7c, 0x07,
+	0x4e, 0x88, 0x1b, 0x77, 0x3e, 0x00, 0x1c, 0xe0, 0xc0, 0x01, 0x89, 0x1e, 0x38, 0x54, 0x02, 0x24,
+	0x4e, 0x05, 0x25, 0xdf, 0x80, 0x23, 0x27, 0xe4, 0xd9, 0xb7, 0xe3, 0xfd, 0x33, 0xbb, 0xd9, 0x24,
+	0x0e, 0x4a, 0x4e, 0xb6, 0x67, 0xde, 0xfb, 0xbd, 0x37, 0xbf, 0xf7, 0x67, 0xde, 0x18, 0xb4, 0x1e,
+	0xe3, 0x5b, 0x8c, 0x77, 0x78, 0x60, 0x6e, 0xba, 0x9e, 0xd3, 0xd9, 0x1e, 0xd9, 0xfe, 0xc3, 0xf6,
+	0xd0, 0x67, 0x01, 0xa3, 0xf3, 0xe1, 0x5e, 0x1b, 0xf7, 0xb4, 0x0b, 0x28, 0x2b, 0x64, 0x3a, 0x43,
+	0xd3, 0x71, 0x3d, 0x33, 0x70, 0x99, 0x17, 0x8a, 0x6b, 0x0d, 0x87, 0x39, 0x4c, 0x7c, 0xed, 0x8c,
+	0xbf, 0xe1, 0xea, 0x73, 0x29, 0x03, 0xf8, 0x19, 0xee, 0xea, 0x9b, 0xb0, 0x70, 0x6f, 0x8c, 0xb6,
+	0x6e, 0x0e, 0x5c, 0xcb, 0x0c, 0x98, 0xcf, 0x0d, 0x7b, 0x7b, 0x64, 0xf3, 0x80, 0x2e, 0x40, 0x8d,
+	0x07, 0x66, 0x30, 0xe2, 0x8b, 0xa4, 0x45, 0xae, 0xcc, 0x19, 0xf8, 0x8b, 0xde, 0x02, 0x98, 0x58,
+	0x5e, 0x9c, 0x69, 0x91, 0x2b, 0x4f, 0xaf, 0x9c, 0x6b, 0xa3, 0xa7, 0xa1, 0xf7, 0x77, 0x4d, 0xc7,
+	0x46, 0x18, 0x23, 0x26, 0xac, 0x7f, 0x45, 0xe0, 0xd9, 0x8c, 0x35, 0x3e, 0x64, 0x1e, 0xb7, 0xe9,
+	0x6b, 0x00, 0x9f, 0xc8, 0xd5, 0x45, 0xd2, 0x9a, 0x8d, 0xc3, 0x46, 0x3e, 0x4b, 0xbd, 0xb5, 0xea,
+	0xa3, 0x27, 0x4b, 0x15, 0x23, 0xa6, 0x42, 0x6f, 0x2b, 0xfc, 0xd2, 0x54, 0x7e, 0x85, 0x06, 0x13,
+	0x8e, 0x6d, 0xc3, 0xd9, 0xa4, 0x5f, 0x11, 0x09, 0xef, 0xc3, 0xbc, 0x34, 0xd1, 0x35, 0x2d, 0xcb,
+	0x17, 0x64, 0x9c, 0x5a, 0xbb, 0xf1, 0xef, 0x93, 0xa5, 0xeb, 0x8e, 0x1b, 0xf4, 0x47, 0x1b, 0xed,
+	0x1e, 0xdb, 0xea, 0x20, 0xc7, 0xe1, 0xc7, 0x75, 0x6e, 0x6d, 0x76, 0x82, 0x87, 0x43, 0x9b, 0x8f,
+	0x1d, 0x5e, 0xb5, 0x2c, 0xdf, 0xe6, 0xdc, 0x38, 0x2d, 0x81, 0xc6, 0x2b, 0xfa, 0x7b, 0x69, 0xe2,
+	0x25, 0x13, 0xaf, 0xc2, 0x9c, 0x14, 0x15, 0xe6, 0x4a, 0x10, 0x31, 0xd1, 0xd0, 0xbf, 0x27, 0xd0,
+	0x4a, 0x22, 0xdf, 0xb1, 0x07, 0xb6, 0x23, 0x0e, 0xca, 0x8f, 0xfc, 0x5c, 0x87, 0x49, 0x8f, 0xdf,
+	0x08, 0x5c, 0x2c, 0xf0, 0x1c, 0xe9, 0xf1, 0xa1, 0x61, 0xc9, 0xe5, 0xae, 0x8f, 0xcb, 0x51, 0xca,
+	0xe8, 0x69, 0xa6, 0x26, 0x10, 0x11, 0xc2, 0xda, 0xf9, 0x31, 0x65, 0xdf, 0xfe, 0xb5, 0x54, 0xcf,
+	0xee, 0x71, 0xa3, 0x6e, 0x65, 0x17, 0x0f, 0x95, 0x5b, 0x3f, 0x11, 0xb8, 0x9a, 0x3c, 0xd5, 0xbb,
+	0xde, 0x06, 0xf3, 0x2c, 0xd7, 0x73, 0x4e, 0x4a, 0x60, 0x7e, 0x26, 0x70, 0xad, 0xcc, 0x11, 0x30,
+	0x42, 0x0f, 0xa0, 0x3e, 0x8a, 0xf6, 0x33, 0x01, 0xba, 0x94, 0x0e, 0x90, 0x02, 0x0a, 0x93, 0x9a,
+	0x4a, 0x94, 0xe9, 0x44, 0xe2, 0x57, 0x82, 0x35, 0x17, 0x8f, 0xbb, 0xa4, 0x1d, 0xe3, 0x7e, 0x30,
+	0xda, 0x57, 0x7b, 0x3d, 0x49, 0xbb, 0x04, 0x12, 0xb4, 0x67, 0x03, 0x3a, 0x33, 0xa5, 0x0e, 0xe2,
+	0x61, 0x33, 0xcd, 0x66, 0x31, 0xbd, 0x0f, 0x75, 0x45, 0x8d, 0x60, 0x33, 0x29, 0x51, 0x22, 0x06,
+	0xcd, 0x56, 0x81, 0xfe, 0x07, 0x81, 0x25, 0x61, 0x50, 0x11, 0xb1, 0x93, 0xcc, 0xa3, 0x8d, 0xfd,
+	0x52, 0x79, 0x2c, 0x24, 0x74, 0x15, 0x6a, 0x61, 0x32, 0x22, 0x87, 0xfb, 0xc8, 0x62, 0x54, 0x9c,
+	0xf4, 0xe5, 0x3b, 0xd1, 0xb9, 0xd4, 0xe5, 0x7f, 0x44, 0xfc, 0x1d, 0xa2, 0xfc, 0x7f, 0x8c, 0xfa,
+	0xb2, 0xda, 0x73, 0xa4, 0xe8, 0x83, 0x43, 0xf7, 0xe5, 0x90, 0xaf, 0xa3, 0x6b, 0xc0, 0xd2, 0xfd,
+	0x3d, 0x1a, 0xf0, 0xf1, 0x8b, 0x80, 0x6c, 0xc0, 0x7b, 0x1c, 0xe1, 0x98, 0x37, 0xe0, 0x7f, 0x66,
+	0xe0, 0x9c, 0x38, 0x86, 0x61, 0x5b, 0xff, 0x27, 0xf3, 0x5d, 0xa0, 0xdc, 0xef, 0x75, 0xa7, 0xd5,
+	0x3f, 0xce, 0x70, 0xbf, 0xb7, 0x9e, 0xb8, 0x5b, 0xbb, 0x40, 0x2d, 0x1e, 0xa4, 0x0d, 0xcc, 0x1e,
+	0xd8, 0x80, 0xc5, 0x83, 0xf5, 0x82, 0xcb, 0xbb, 0xba, 0x9f, 0xdc, 0xf9, 0x81, 0x80, 0xa6, 0x22,
+	0x1d, 0x73, 0xc5, 0x84, 0x05, 0xdf, 0x2e, 0x28, 0xdc, 0xe7, 0xd3, 0xe9, 0x12, 0x87, 0x49, 0x95,
+	0xee, 0x59, 0xdf, 0x9e, 0x76, 0xf1, 0x7e, 0x17, 0x5d, 0x3a, 0x32, 0xf3, 0xb3, 0x2f, 0x95, 0x63,
+	0x59, 0xb2, 0xdf, 0x64, 0xda, 0xfd, 0x71, 0x7b, 0xf4, 0xfc, 0x4e, 0xa0, 0x99, 0xe3, 0xe1, 0x49,
+	0xbe, 0xce, 0x3f, 0xca, 0x4d, 0x98, 0x69, 0xbd, 0xb0, 0x6e, 0x62, 0x41, 0xbd, 0xe9, 0xf2, 0x80,
+	0xf9, 0x6e, 0xcf, 0x1c, 0xbc, 0xe5, 0x7d, 0xcc, 0x62, 0xef, 0xe6, 0xbe, 0xed, 0x3a, 0xfd, 0x40,
+	0x20, 0xcf, 0x1a, 0xf8, 0x4b, 0xbf, 0x07, 0xe7, 0x95, 0x5a, 0xe8, 0xd3, 0x0a, 0x54, 0xfb, 0x2e,
+	0x0f, 0xd0, 0x9d, 0x66, 0xda, 0x9d, 0x94, 0x96, 0x90, 0xd5, 0x29, 0x9c, 0x11, 0x90, 0x77, 0x19,
+	0x1b, 0xa0, 0x79, 0xfd, 0x75, 0x78, 0x26, 0xb6, 0x86, 0xe0, 0x6d, 0xa8, 0x0e, 0x19, 0x1b, 0x20,
+	0x78, 0x23, 0x0d, 0x3e, 0x96, 0xc5, 0x63, 0x0a, 0x39, 0xbd, 0x01, 0x34, 0x04, 0x31, 0x7d, 0x73,
+	0x2b, 0xaa, 0x33, 0xfd, 0x6d, 0xa8, 0x27, 0x56, 0x11, 0xfc, 0x26, 0xd4, 0x86, 0x62, 0x05, 0xe1,
+	0x17, 0x32, 0xf0, 0x62, 0x37, 0x1a, 0x87, 0x42, 0xd9, 0x95, 0x5f, 0x4e, 0xc1, 0x53, 0x02, 0x8d,
+	0x76, 0x01, 0x26, 0xa5, 0x41, 0x2f, 0xa7, 0xb5, 0xd5, 0x7f, 0x4f, 0x68, 0x2f, 0xee, 0x29, 0x87,
+	0x63, 0x6b, 0x85, 0x7e, 0x08, 0x73, 0x72, 0x9d, 0xbe, 0x50, 0xac, 0x17, 0xc1, 0x5f, 0xde, 0x4b,
+	0x4c, 0xa2, 0x7f, 0x01, 0x0d, 0xd5, 0x7b, 0x95, 0x2e, 0x17, 0x23, 0x64, 0x47, 0x0f, 0xed, 0xc6,
+	0x3e, 0x34, 0xa4, 0xf9, 0xaf, 0x09, 0x5c, 0x28, 0x7c, 0x96, 0xd1, 0x5b, 0xc5, 0xb0, 0x05, 0xc3,
+	0x90, 0x76, 0xfb, 0x20, 0xaa, 0xd2, 0xb5, 0x2e, 0xc0, 0x64, 0x23, 0x27, 0xb0, 0x99, 0x27, 0x44,
+	0x4e, 0x60, 0xb3, 0xe3, 0xa2, 0x5e, 0xa1, 0x9f, 0x43, 0x5d, 0xe1, 0x02, 0xed, 0x28, 0x11, 0xf2,
+	0x5f, 0x2d, 0xda, 0x72, 0x79, 0x85, 0x78, 0xd8, 0x55, 0xe3, 0x70, 0x4e, 0xd8, 0x0b, 0x66, 0xfe,
+	0x9c, 0xb0, 0x17, 0xcd, 0xda, 0x18, 0xf6, 0xc2, 0x61, 0x30, 0x27, 0xec, 0x65, 0x66, 0xe0, 0x9c,
+	0xb0, 0x97, 0x9a, 0x3d, 0xf5, 0x0a, 0xed, 0xc3, 0xe9, 0xc4, 0xa8, 0x41, 0xaf, 0x2a, 0xe1, 0x54,
+	0x33, 0xa0, 0x76, 0xad, 0x8c, 0x68, 0x3c, 0xfe, 0x8a, 0xdb, 0x35, 0x27, 0xfe, 0xf9, 0x03, 0x84,
+	0xb6, 0x5c, 0x5e, 0x41, 0xda, 0xfe, 0x14, 0x68, 0x56, 0x80, 0xb6, 0x4b, 0x22, 0x45, 0x96, 0x3b,
+	0xa5, 0xe5, 0xa5, 0xe1, 0x4d, 0x98, 0x4f, 0x5e, 0x06, 0x54, 0x4d, 0x9a, 0xf2, 0x76, 0xd2, 0x5e,
+	0x2a, 0x25, 0x2b, 0x8d, 0xbd, 0x03, 0xd5, 0xf1, 0xe5, 0x40, 0x5b, 0x4a, 0xb5, 0xd8, 0xbd, 0xa3,
+	0x5d, 0x2c, 0x90, 0x90, 0x70, 0xf7, 0xa1, 0x16, 0x5e, 0x06, 0x54, 0x57, 0x8b, 0xc7, 0xef, 0x1b,
+	0xed, 0x52, 0xa1, 0x4c, 0x04, 0xba, 0xf6, 0xc6, 0xa3, 0x9d, 0x26, 0x79, 0xbc, 0xd3, 0x24, 0x7f,
+	0xef, 0x34, 0xc9, 0x97, 0xbb, 0xcd, 0xca, 0xe3, 0xdd, 0x66, 0xe5, 0xcf, 0xdd, 0x66, 0xe5, 0xc1,
+	0xcb, 0x85, 0x83, 0xc4, 0x67, 0xf2, 0x2f, 0x71, 0x31, 0x52, 0x6c, 0xd4, 0xc4, 0x3f, 0xe2, 0xaf,
+	0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x82, 0x78, 0x19, 0x92, 0x17, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1568,33 +1600,33 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Validators queries all validators that match the given status
+	// Validators queries all validators that match the given status.
 	Validators(ctx context.Context, in *QueryValidatorsRequest, opts ...grpc.CallOption) (*QueryValidatorsResponse, error)
-	// Validator queries validator info for given validator addr
+	// Validator queries validator info for given validator address.
 	Validator(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorResponse, error)
-	// ValidatorDelegations queries delegate info for given validator
+	// ValidatorDelegations queries delegate info for given validator.
 	ValidatorDelegations(ctx context.Context, in *QueryValidatorDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorDelegationsResponse, error)
-	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
+	// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
 	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// Delegation queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(ctx context.Context, in *QueryDelegationRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for give validator delegator pair
+	// UnbondingDelegation queries unbonding info for given validator delegator pair.
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
-	// DelegatorDelegations queries all delegations of a give delegator address
+	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
-	// Redelegations queries redelegations of given address
+	// Redelegations queries redelegations of given address.
 	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address
+	// DelegatorValidators queries all validator info for given delegator address.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair
+	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
-	// HistoricalInfo queries the historical info for given height
+	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
-	// Pool queries the pool info
+	// Pool queries the pool info.
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
-	// Parameters queries the staking parameters
+	// Parameters queries the staking parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
@@ -1734,33 +1766,33 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Validators queries all validators that match the given status
+	// Validators queries all validators that match the given status.
 	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
-	// Validator queries validator info for given validator addr
+	// Validator queries validator info for given validator address.
 	Validator(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
-	// ValidatorDelegations queries delegate info for given validator
+	// ValidatorDelegations queries delegate info for given validator.
 	ValidatorDelegations(context.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
-	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
+	// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
 	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// Delegation queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for give validator delegator pair
+	// UnbondingDelegation queries unbonding info for given validator delegator pair.
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
-	// DelegatorDelegations queries all delegations of a give delegator address
+	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
-	// Redelegations queries redelegations of given address
+	// Redelegations queries redelegations of given address.
 	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address
+	// DelegatorValidators queries all validator info for given delegator address.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair
+	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
-	// HistoricalInfo queries the historical info for given height
+	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
-	// Pool queries the pool info
+	// Pool queries the pool info.
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
-	// Parameters queries the staking parameters
+	// Parameters queries the staking parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
@@ -3220,18 +3252,6 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -3688,10 +3708,6 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
 	return n
 }
 
@@ -6698,42 +6714,6 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

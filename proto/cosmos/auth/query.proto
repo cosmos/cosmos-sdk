@@ -25,7 +25,7 @@ message QueryAccountRequest{
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 message QueryAccountResponse{
-  // address defines the account of the corresponding address.
+  // account defines the account of the corresponding address.
   google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 }
 

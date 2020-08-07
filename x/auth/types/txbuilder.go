@@ -300,7 +300,7 @@ func MakeSignature(kr keyring.Keyring, name string, msg StdSignMsg) (sig StdSign
 	}
 
 	return StdSignature{
-		PubKey:    pubkey.Bytes(),
+		PubKey:    pubkey,
 		Signature: sigBytes,
 	}, nil
 }

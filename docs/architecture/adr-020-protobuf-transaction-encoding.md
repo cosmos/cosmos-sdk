@@ -8,6 +8,7 @@
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
+- 2020 August 07: Use Regencode from ADR-026 for serializing `SignDoc`.
 
 ## Status
 
@@ -188,8 +189,6 @@ message SignDoc {
     bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
-    // account_sequence starts at 1 rather than 0 to avoid the case where
-    // the default 0 value must be omitted in protobuf serialization
     uint64 account_sequence = 5;
 }
 ```
@@ -197,8 +196,7 @@ message SignDoc {
 In order to sign in the default mode, clients take the following steps:
 
 1. Serialize `TxBody` and `AuthInfo` using any valid protobuf implementation.
-2. Create a `SignDoc` and encode it. (The only requirement of the underlying
-   protobuf implementation is that fields are serialized in order).
+2. Create a `SignDoc` and serialize it using [Regencode](./adr-026-protobuf-regencode.md).
 3. Sign the encoded `SignDoc` bytes.
 4. Build a `TxRaw` and serialize it for broadcasting.
 
@@ -214,8 +212,7 @@ Signature verifiers do:
 3. For each required signer:
    - Pull account number and sequence from the state.
    - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
-   - Create a `SignDoc` and serialize it. Due to the simplicity of the type it
-     is expected that this matches the serialization used by the signer.
+   - Create a `SignDoc` and serialize it using [Regencode](./adr-026-protobuf-regencode.md).
    - Verify the signature at the the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`
@@ -423,8 +420,6 @@ message SignDocAux {
     PublicKey public_key = 2;
     string chain_id = 3;
     uint64 account_number = 4;
-    // account_sequence starts at 1 rather than 0 to avoid the case where
-    // the default 0 value must be omitted in protobuf serialization
     uint64 account_sequence = 5;
 }
 ```

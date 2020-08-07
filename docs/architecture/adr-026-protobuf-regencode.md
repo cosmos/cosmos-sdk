@@ -53,10 +53,12 @@ however, it is possible to set the fields with an empty value or omitting them
 entirely. This is a significant difference to e.g. JSON where a property can be
 empty (`""`, `0`), `null` or undefined, leading to 3 different documents.
 
-Omitting empty fields is a valid option because the parser must assign the
-default value to fields missing in the serialization<sup>2</sup>. Requiring to
-serialize them would be equally valid. No good reason is known to the author for
-preferring one of those options over the other.
+Omitting empty fields is valid because the parser must assign the default value
+to fields missing in the serialization<sup>2</sup>. This is preferred over
+requiring to always serialize them because it allows for some amount of forward
+compatibility: users of newer versions of a protobuf schema produce the same
+serialization as users of older versions as long as newly added fields are not
+used (i.e. set to their default value).
 
 ### Implementation
 

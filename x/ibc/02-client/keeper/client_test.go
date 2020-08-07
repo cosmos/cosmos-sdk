@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 
 				// store trusted consensus state for Header2
-				intermediateConsState := ibctmtypes.ConsensusState{
+				intermediateConsState := &ibctmtypes.ConsensusState{
 					Height:             testClientHeight + 3,
 					Timestamp:          suite.now.Add(time.Minute),
 					NextValidatorsHash: bothValsHash,
@@ -365,7 +365,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				return err
 			},
-			true,
+			false,
 		},
 		{
 			"trusted ConsensusState2 not found",
@@ -382,7 +382,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				return err
 			},
-			true,
+			false,
 		},
 
 		{

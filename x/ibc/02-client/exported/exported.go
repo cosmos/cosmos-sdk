@@ -3,8 +3,6 @@ package exported
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/proto"
-
 	ics23 "github.com/confio/ics23/go"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +17,6 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	proto.Message
-
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64

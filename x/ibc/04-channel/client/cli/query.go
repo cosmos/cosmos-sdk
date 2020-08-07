@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	types2 "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -168,12 +166,7 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 
 			clientCtx = clientCtx.WithHeight(height)
 
-			any, err := types2.NewAnyWithValue(clientStateRes)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(any)
+			return clientCtx.PrintOutputLegacy(clientStateRes)
 		},
 	}
 

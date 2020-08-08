@@ -37,7 +37,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is used intentionally here, don't migrate it
-		err = clientCtx.Codec.UnmarshalJSON(body, &req)
+		err = clientCtx.LegacyAmino.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -58,7 +58,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, sigFeeMemoTx)
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, sigFeeMemoTx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -66,7 +66,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		response := DecodeResp(stdTx)
 
 		// NOTE: amino is set intentionally here, don't migrate it
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

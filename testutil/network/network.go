@@ -62,7 +62,7 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec            codec.Marshaler
-	LegacyAmino      *codec.Codec
+	LegacyAmino      *codec.LegacyAmino
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor

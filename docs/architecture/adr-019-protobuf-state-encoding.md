@@ -203,7 +203,7 @@ type InterfaceUnpacker interface {
 ```
 
 Note that `InterfaceRegistry` usage does not deviate from standard protobuf
-usage of `Any`, it just introduces a security and introspection layer for 
+usage of `Any`, it just introduces a security and introspection layer for
 golang usage.
 
 `InterfaceRegistry` will be a member of `ProtoCodec` and `HybridCodec` as
@@ -270,6 +270,7 @@ interfaces before they're needed.
 To implement the `UnpackInterfaces` phase of deserialization which unpacks
 interfaces wrapped in `Any` before they're needed, we create an interface
 that `sdk.Msg`s and other types can implement:
+
 ```go
 type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error
@@ -291,7 +292,7 @@ correct interface type.
 This has the added benefit that unmarshaling of `Any` values only happens once
 during initial deserialization rather than every time the value is read. Also,
 when `Any` values are first packed (for instance in a call to
-`NewMsgSubmitEvidence`), the original interface value is cached so that 
+`NewMsgSubmitEvidence`), the original interface value is cached so that
 unmarshaling isn't needed to read it again.
 
 `MsgSubmitEvidence` could implement `UnpackInterfaces`, plus a convenience getter
@@ -316,12 +317,13 @@ with the proper codec instance. What this means is that interfaces packed within
 have been registered properly with Amino).
 
 In order for this functionality to work:
-* **all legacy code must use `*codec.Codec` instead of `*amino.Codec` which is
-now a wrapper which properly handles `Any`**
-* **all new code should use `Marshaler` which is compatible with both amino and
-protobuf**
 
-Also, before v0.39, `codec.Codec` will be renamed to `codec.LegacyAmino`.
+- **all legacy code must use `*codec.LegacyAmino` instead of `*amino.Codec` which is
+  now a wrapper which properly handles `Any`**
+- **all new code should use `Marshaler` which is compatible with both amino and
+  protobuf**
+
+Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
 
 ### Why Wasn't X Chosen Instead
 
@@ -366,7 +368,7 @@ seamless.
 
 - Learning curve required to understand and implement Protobuf messages.
 - Slightly larger message size due to use of `Any`, although this could be offset
-by a compression layer in the future
+  by a compression layer in the future
 
 ### Neutral
 

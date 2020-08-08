@@ -11,7 +11,7 @@ import (
 )
 
 // ConvertTxToStdTx converts a transaction to the legacy StdTx format
-func ConvertTxToStdTx(codec *codec.Codec, tx signing.SigFeeMemoTx) (types.StdTx, error) {
+func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.SigFeeMemoTx) (types.StdTx, error) {
 	if stdTx, ok := tx.(types.StdTx); ok {
 		return stdTx, nil
 	}

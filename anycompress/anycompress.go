@@ -1,131 +1,67 @@
 /*
 anycompress presents a layer atop tendermint/tm-db that serves to compress *types.Any
-transparently. When a value is issued, it is scanned for plausibility of being a protobuf
-serialized types.Any. If it isn't a protobuf serialized types.Any, .Set and .Get proceed
+transparently. When a value is issued, it is scanned for plausibility of being of the
+form of types.Any.TypeURL. If it doesn't match that format, .Set and .Get proceed
 transparently as though the high level database were being used.
-Otherwise, we extract the typeURL, hash it with a 4 byte FNV32 hash, and append the
-hash as well as our magic identifier "\xfe\xff" to the value and store to that to the
-underlying database. When a .Get is issued, the underlying database is firstly checked
-for presence of the unique 8 bytes suffix signature and if it is, we then extract the
-hashed FNV32 hash and on the fly extract the appropriate TypeUrl and then return the
-protobuf serialized equivalent as if the types.Any had been stored that way. This conserves
+Otherwise, we replace typeURLs by their respective indices from the typeURLListing registry,
+encoded as varint. The replaced value will be prefixed with 2 bytes containing "\\\xfe"; it serves as our unique
+marker to perform a sleight of hand replacement when we need to retrieve values.
+
+For cost savings calculation:
+* we'll ALWAYS use at least 2 bytes for "\\\xfe"
+* for the typeURL.index, in most cases where the types registry has say <64 types, the varint equivalent is 1 byte
+If the number of unique registered types is 100 million, the varint equivalent is 4 bytes.
+
+In short, in the worst case of 100 million unique types, the amount of bytes used by this scheme is a maximum of 6
+bytes, of which the most nonsensical typeURL is "/A.B" aka 4 bytes, but for the smallest sensible package names e.g "/foo.Biz"
+is 8 bytes, and our compression will still save at least 2 bytes. Typical typeURLs might look like "/cosmos.bank.Input" of 18 bytes.
+As you can see we always provide big savings!
 */
 package anycompress
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"hash"
-	"hash/fnv"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
-	"google.golang.org/protobuf/encoding/protowire"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/tendermint/tm-db"
 )
 
-// TODO: Examine the plausibility of "\xfe\xff" naturally existing in files.
-// UNIX's EOF is "\xff", so our use of "\xfe\xff" might be super rare too.
-var magicSuffixForValue = []byte("\xfe\xff")
+const minTypeURLLen = len("/a.T")
 
 // compressDB transparently compresses types.Any with the backing of an underlying tendermint/tm-db database.
 type compressDB struct {
 	dbm.DB
 
-	mu sync.RWMutex
+	// trie stores the prefixes to match the longest prefixes to disambiguate
+	// between typeURLs and the binary data in which they live.
+	trie *trie
 
-	startTime    time.Time
-	path         string
-	index        map[string]uint32
-	reverseIndex map[uint32]string
-
-	fnvHash                 hash.Hash32
-	cancelBackgroundBacking func()
+	typesRegistry map[string]int
+	// indexToTypeURL's key is typed as int64 because, insertions are performed exactly
+	// once, but retrievals will occur very frequently and decode a varint whose type is int64.
+	indexToTypeURL map[int64][]byte
 }
 
 // New mimicks the signature that tm-db.New presents and allows the database to be used transparently.
-func New(name string, backend dbm.BackendType, dir string) (_ dbm.DB, err error) {
+// typeURLListing MUST maintain a deterministic ordering of typeURLs
+// Note: whenever we have a global gRPC based typesRegistry, perhaps pass it in here.
+func New(name string, backend dbm.BackendType, dir string, typeURLListing []string) (_ dbm.DB, err error) {
 	baseDB := dbm.NewDB(name, backend, dir)
 
-	var cdb *compressDB
-	backingFilepath := filepath.Join(dir, ".compressanydb")
-	if _, cerr := os.Stat(backingFilepath); cerr == nil {
-		// TODO: Perhaps log to the caller that we are re-using and existent path.
-		cdb, err = loadedFromFilepath(backingFilepath)
-	} else {
-		cdb = freshFromRAM(backingFilepath)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	cdb.DB = baseDB
-	cdb.fnvHash = fnv.New32()
-
-	// Otherwise, this is the first time we'll be using this path.
-	// TODO: Perhaps log to the caller that we are using a fresh path.
-	ctx, cancel := context.WithCancel(context.Background())
-	cdb.cancelBackgroundBacking = cancel
-
-	// Start the background backing in the background.
-	go cdb.flushPeriodically(ctx)
-
-	return cdb, nil
-}
-
-type journal struct {
-	WriteTimeUnix int64             `json:"w"`
-	Index         map[string]uint32 `json:"i"`
-}
-
-func freshFromRAM(path string) *compressDB {
-	return &compressDB{
-		fnvHash:      fnv.New32(),
-		path:         path,
-		index:        make(map[string]uint32),
-		reverseIndex: make(map[uint32]string),
-	}
-}
-
-func loadedFromFilepath(path string) (*compressDB, error) {
-	blob, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	jrnl := new(journal)
-	if err := json.Unmarshal(blob, jrnl); err != nil {
-		return nil, err
-	}
-
-	// Otherwise, we've retrieved our state from disk and let's construct the indices.
-	index := jrnl.Index
-	if index == nil {
-		index = make(map[string]uint32)
-	}
-	reverseIndex := make(map[uint32]string)
-	for url, hash := range index {
-		reverseIndex[hash] = url
-	}
-
-	startTimeUnix := jrnl.WriteTimeUnix
-	if startTimeUnix <= 0 {
-		startTimeUnix = time.Now().Unix()
-	}
 	cdb := &compressDB{
-		startTime:    time.Unix(startTimeUnix, 0),
-		path:         path,
-		reverseIndex: reverseIndex,
+		typesRegistry:  make(map[string]int),
+		trie:           newTrie(),
+		DB:             baseDB,
+		indexToTypeURL: make(map[int64][]byte),
+	}
+
+	for i, typeURL := range typeURLListing {
+		cdb.typesRegistry[typeURL] = i
+		bTypeURL := []byte(typeURL)
+		cdb.trie.set(bTypeURL, bTypeURL)
+		cdb.indexToTypeURL[int64(i)] = bTypeURL
 	}
 
 	return cdb, nil
@@ -133,181 +69,160 @@ func loadedFromFilepath(path string) (*compressDB, error) {
 
 var _ dbm.DB = (*compressDB)(nil)
 
-func (cdb *compressDB) Get(key []byte) ([]byte, error) {
-	value, err := cdb.DB.Get(key)
-	if err != nil {
-		return nil, err
+var serializeMagic = []byte("\\\xfe")
+
+func (cdb *compressDB) SetSync(key, value []byte) error {
+	indices, err := cdb.potentialIndicesForAny(value)
+	if errors.Is(err, errNoMatch) {
+		return cdb.DB.SetSync(key, value)
 	}
-
-	if len(value) <= len(magicSuffixForValue)+4 || !bytes.HasSuffix(value, magicSuffixForValue) {
-		// Definitely wasn't saved with our magic header.
-		return value, nil
-	}
-
-	// Otherwise, we now need to retrieve the appropriate TypeURL, as well as
-	// value and serialize it as the proto for a *types.Any.
-	valueWithSignature := value[:len(magicSuffixForValue)]
-
-	// Retrieve the signature of the types.Any corresponding URL.
-	typeURLSignature := binary.BigEndian.Uint32(value[len(valueWithSignature)-4:])
-	value = valueWithSignature[:len(value)-4]
-
-	cdb.mu.Lock()
-	typeURL, ok := cdb.reverseIndex[typeURLSignature]
-	cdb.mu.Unlock()
-	if !ok {
-		panic(fmt.Sprintf("Unexpectedly could not find the typeURL with fnv hash signature: %d", typeURLSignature))
-	}
-
-	// TODO: We can perhaps inline this proto.Marshal if we deem it consumes more resources than necessary.
-	any := &types.Any{
-		TypeUrl: typeURL,
-		Value:   value,
-	}
-	return proto.Marshal(any)
-}
-
-func (cdb *compressDB) DeleteSync(key []byte) error {
-	rawValue, err := cdb.DB.Get(key)
 	if err != nil {
 		return err
 	}
-	if err := cdb.DB.DeleteSync(key); err != nil {
-		return err
+
+	replaceBuf := make([]byte, binary.MaxVarintLen64)
+	for _, typeURL := range indices {
+		registryIndex, ok := cdb.typesRegistry[string(typeURL)]
+		if !ok {
+			return fmt.Errorf("no registry index for typeURL %q", typeURL)
+		}
+		n := binary.PutVarint(replaceBuf, int64(registryIndex))
+		replace := make([]byte, len(serializeMagic)+n)
+		ni := copy(replace, serializeMagic)
+		copy(replace[ni:], replaceBuf[:n])
+		value = bytes.ReplaceAll(value, typeURL, replace)
 	}
-
-	if len(rawValue) <= len(magicSuffixForValue)+4 || !bytes.HasSuffix(rawValue, magicSuffixForValue) {
-		// Definitely wasn't saved with our magic header.
-		return nil
-	}
-
-	// Otherwise, we also need to delete from our caches.
-	typeURLSignature := binary.BigEndian.Uint32(rawValue[len(rawValue)-4:][:4])
-
-	cdb.mu.Lock()
-	typeURL := cdb.reverseIndex[typeURLSignature]
-	delete(cdb.reverseIndex, typeURLSignature)
-	delete(cdb.index, typeURL)
-	cdb.mu.Unlock()
-
-	return nil
+	return cdb.DB.SetSync(key, value)
 }
 
 func (cdb *compressDB) Set(key, value []byte) error {
 	return cdb.SetSync(key, value)
 }
 
-func (cdb *compressDB) SetSync(key, value []byte) error {
-	typeURL, value, plausiblyAny := isAnyAsPb(value)
-	if !plausiblyAny {
-		// Pass through.
-		return cdb.DB.SetSync(key, value)
-	}
-
-	// Otherwise it is, and we've got to hash the typeURL.
-	cdb.mu.Lock()
-	cdb.fnvHash.Write([]byte(typeURL))
-	blobHashSignature := cdb.fnvHash.Sum(nil)
-	indexAsUint32 := cdb.fnvHash.Sum32()
-	cdb.fnvHash.Reset()
-	cdb.index[string(typeURL)] = indexAsUint32
-	cdb.reverseIndex[indexAsUint32] = string(typeURL)
-	cdb.mu.Unlock()
-
-	preparedValue := make([]byte, len(value)+len(blobHashSignature)+len(magicSuffixForValue))
-	n := copy(preparedValue, value)
-	n += copy(preparedValue[n:], blobHashSignature)
-	copy(preparedValue[n:], magicSuffixForValue)
-	return cdb.DB.Set(key, preparedValue)
+type unfurlingIterator struct {
+	dbm.Iterator
+	cdb *compressDB
 }
 
-func isAnyAsPb(blob []byte) (typeURL, value []byte, isPlausiblyAny bool) {
-	defer func() {
-		if !isPlausiblyAny {
-			value = blob
-		}
-	}()
-	// We assume that types.Any as a proto message is stored in the blob.
-	typeURLTagNum, typeURLWireType, nTypeURL := protowire.ConsumeField(blob)
-	if nTypeURL < 0 {
-		return
-	}
-	if typeURLTagNum != 1 {
-		return
-	}
-	if typeURLWireType != protowire.Type(descriptor.FieldDescriptorProto_TYPE_STRING) {
-		return
-	}
-	if nTypeURL >= len(blob)+2 {
-		return
-	}
-	typeURL = blob[2:nTypeURL]
-	if !bytes.HasPrefix(typeURL, []byte("/")) {
-		return
-	}
+var _ dbm.Iterator = (*unfurlingIterator)(nil)
 
-	// Now let's check the plausibility of the next value being the Value.
-	valueTagNum, valueWireType, nValue := protowire.ConsumeField(blob[nTypeURL+2:])
-	if nValue < 0 {
-		return
+func (ufi *unfurlingIterator) Value() (value []byte) {
+	compressed := ufi.Iterator.Value()
+	uncompressed, err := ufi.cdb.unfurlOrReturnValue(compressed)
+	if err != nil {
+		panic(err)
 	}
-	if valueTagNum != 2 {
-		return
-	}
-	if valueWireType != protowire.Type(descriptor.FieldDescriptorProto_TYPE_BYTES) {
-		return
-	}
-	// Plausibly is a types.Any.
-	value = blob[nTypeURL+2+2:]
-	return typeURL, value, true
+	return uncompressed
 }
 
-func (cdb *compressDB) Close() error {
-	if fn := cdb.cancelBackgroundBacking; fn != nil {
-		fn()
+func (cdb *compressDB) unfurlOrReturnValue(compressed []byte) ([]byte, error) {
+	if !bytes.Contains(compressed, serializeMagic) {
+		return compressed, nil
 	}
-	return cdb.DB.Close()
-}
 
-func (cdb *compressDB) getFlushInterval() time.Duration {
-	return 2 * time.Minute
-}
+	unfurled := make([]byte, 0, len(compressed))
+	for len(compressed) > 0 {
+		// Find and replace all occurences of: serializedMagic + varint(typeURL index).
+		index := bytes.Index(compressed, serializeMagic)
 
-// flushPeriodically periodically writes known types.URL hashes to disk.
-// This ensures that later on, we can have a mapping of FNV32(typeURL) -> signature
-// for lookup and compression, so that typeURLs don't consume so much space.
-func (cdb *compressDB) flushPeriodically(ctx context.Context) error {
-	shouldExit := false
-	for shouldExit == false {
-		select {
-		case <-ctx.Done():
-			// Our job is done, return now.
-			shouldExit = true
-
-		case <-time.After(cdb.getFlushInterval()):
+		// No more occurences available, so bail out.
+		if index < 0 {
+			break
 		}
 
-		if len(cdb.index) == 0 {
-			// Nothing to serialize.
+		// Otherwise, decode the registryIndex and then retrieve its associated typeURL.
+		registryIndex, n := binary.Varint(compressed[index+len(serializeMagic):])
+		if n <= 0 {
+			return nil, fmt.Errorf("failed to varint parse value at index: %d", index)
+		}
+		typeURL, ok := cdb.indexToTypeURL[registryIndex]
+		if !ok {
+			return nil, fmt.Errorf("could not find a corresponding typeURL for registry index: %d", registryIndex)
+		}
+
+		unfurled = append(unfurled, compressed[:index]...)
+		unfurled = append(unfurled, typeURL...)
+		compressed = compressed[index+len(serializeMagic)+n:]
+	}
+	if len(compressed) > 0 {
+		unfurled = append(unfurled, compressed...)
+	}
+	return unfurled, nil
+}
+
+func (cdb *compressDB) Get(key []byte) ([]byte, error) {
+	got, err := cdb.DB.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	return cdb.unfurlOrReturnValue(got)
+}
+
+func (cdb *compressDB) Iterator(start, end []byte) (dbm.Iterator, error) {
+	ri, err := cdb.DB.Iterator(start, end)
+	if err != nil {
+		return ri, err
+	}
+	return &unfurlingIterator{Iterator: ri, cdb: cdb}, nil
+}
+
+func (cdb *compressDB) ReverseIterator(start, end []byte) (dbm.Iterator, error) {
+	ri, err := cdb.DB.ReverseIterator(start, end)
+	if err != nil {
+		return ri, err
+	}
+	return &unfurlingIterator{Iterator: ri, cdb: cdb}, nil
+}
+
+func (cdb *compressDB) potentialIndicesForAny(b []byte) (indices [][]byte, err error) {
+	for i := 0; i < len(b); {
+		index := bytes.IndexByte(b[i:], '/')
+		if index < 0 {
+			return
+		}
+
+		// Otherwise plausibly could be a match.
+		typeURL, index, rerr := cdb.findClosestTypeURL(b[index:])
+		if rerr != nil {
+			err = rerr
+			return
+		}
+		if index == -1 || len(typeURL) < minTypeURLLen {
+			i++
 			continue
 		}
 
-		// Now serialize the entire index to disk.
-		blob, err := json.Marshal(cdb.index)
-		if err != nil {
-			// TODO: Figure out if we should log this, or panic?
-			continue
-		}
-		f, err := os.Create(cdb.path)
-		if err != nil {
-			// TODO: Figure out if we should log this, or panic?
-			return err
-		}
-		if _, err := f.Write(blob); err != nil {
-			// TODO: Figure out if we should log this, or panic?
-			continue
+		indices = append(indices, typeURL)
+		i = index + len(typeURL)
+	}
+	return
+}
+
+func (cdb *compressDB) findClosestTypeURL(b []byte) ([]byte, int, error) {
+	if len(b) == 0 {
+		return nil, -1, errNoMatch
+	}
+
+	index := -1
+	for index = 0; index < len(b); index++ {
+		if trieIndex(b[index]) == -1 {
+			break
 		}
 	}
 
-	return ctx.Err()
+	// Now check if the typesRegistry has this type.
+	typeURLIndex, ok := cdb.typesRegistry[string(b[:index])]
+	if ok {
+		return b[:index], typeURLIndex, nil
+	}
+
+	// Now to confirm if this was a false positive, we've got to find the closest prefix.
+	longestPrefix, i := cdb.trie.longestPrefix(b[:index])
+	if longestPrefix == nil {
+		return nil, -1, errNoMatch
+	}
+	if longestPrefix.value == nil {
+		return nil, -1, errNoMatch
+	}
+	return longestPrefix.value, i, nil
 }

@@ -12,8 +12,25 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
+func mustAny(msg proto.Message) (*types.Any, []byte) {
+	any := new(types.Any)
+	any.Pack(msg)
+	anyAsValue, err := proto.Marshal(any)
+	if err != nil {
+		panic(err)
+	}
+	return any, anyAsValue
+}
+
 func TestCompressDB(t *testing.T) {
-	db, err := New("inmem", dbm.MemDBBackend, "")
+	anyGarfield, _ := mustAny(&testdata.Cat{
+		Moniker: "Garfield",
+		Lives:   9,
+	})
+	any, anyAsValue := mustAny(anyGarfield)
+
+	typesRegistry := []string{anyGarfield.TypeUrl, any.TypeUrl}
+	db, err := New("inmem", dbm.MemDBBackend, "", typesRegistry)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,18 +48,6 @@ func TestCompressDB(t *testing.T) {
 		t.Fatalf("Mismatch on retrieved values\nGot:  %q\nWant: %q", g, w)
 	}
 
-	// Now insert a types.Any.
-	any := new(types.Any)
-	any.Pack(&testdata.Cat{
-		Moniker: "Garfield",
-		Lives:   9,
-	})
-
-	anyAsValue, err := proto.Marshal(any)
-	if err != nil {
-		t.Fatalf("Unexpectedly failed to proto marshal any: %v", err)
-	}
-
 	if err := db.Set([]byte("foo"), anyAsValue); err != nil {
 		t.Fatalf("Failed to save any: %v", err)
 	}
@@ -52,7 +57,7 @@ func TestCompressDB(t *testing.T) {
 		t.Fatalf("Unexpectedly failed to retrieve foo: %v", err)
 	}
 	if g, w := gotAnyBlob, anyAsValue; !bytes.Equal(g, w) {
-		t.Fatalf("any was not transparently gotten\nGot:  % x\nWant: % x", g, w)
+		t.Fatalf("any was not transparently gotten\nGot:  %s\nWant: %s", g, w)
 	}
 
 	// Let's assert fully that our value is as it would have been inserted.
@@ -76,4 +81,7 @@ func TestCompressDB(t *testing.T) {
 	if got != nil {
 		t.Fatalf("Got %q yet expected nil back", got)
 	}
+}
+
+func TestCompresseDBReplace(t *testing.T) {
 }

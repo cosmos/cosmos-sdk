@@ -67,6 +67,7 @@ type BaseReq struct {
 	ChainID       string       `json:"chain_id"`
 	AccountNumber uint64       `json:"account_number"`
 	Sequence      uint64       `json:"sequence"`
+	TimeoutHeight uint64       `json:"timeout_height"`
 	Fees          sdk.Coins    `json:"fees"`
 	GasPrices     sdk.DecCoins `json:"gas_prices"`
 	Gas           string       `json:"gas"`
@@ -273,22 +274,12 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 		err  error
 	)
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.Codec
-	}
-
 	switch b := body.(type) {
 	case []byte:
 		resp = b
 
 	default:
-		resp, err = marshaler.MarshalJSON(body)
+		resp, err = ctx.JSONMarshaler.MarshalJSON(body)
 		if CheckInternalServerError(w, err) {
 			return
 		}
@@ -312,8 +303,8 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	// TODO: Remove once client-side Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
+	// TODO: Remove once PubKey Protobuf migration has been completed.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/6886
 	var marshaler codec.JSONMarshaler
 
 	if ctx.JSONMarshaler != nil {

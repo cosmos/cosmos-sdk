@@ -31,7 +31,7 @@ func (k Keeper) VerifyClientConsensusState(
 	}
 
 	if err := clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, k.aminoCdc, targetConsState.GetRoot(), height,
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
 	); err != nil {
 		return sdkerrors.Wrap(err, "failed consensus state verification")

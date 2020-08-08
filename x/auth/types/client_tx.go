@@ -24,7 +24,7 @@ type StdTxBuilder struct {
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
 }
 
@@ -68,6 +68,11 @@ func (s *StdTxBuilder) SetGasLimit(limit uint64) {
 // SetMemo implements TxBuilder.SetMemo
 func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
+}
+
+// SetTimeoutHeight sets the transaction's height timeout.
+func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
+	s.TimeoutHeight = height
 }
 
 // StdTxConfig is a context.TxConfig for StdTx
@@ -146,5 +151,5 @@ func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, e
 }
 
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return stdTxSignModeHandler{}
 }

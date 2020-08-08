@@ -161,7 +161,8 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig)
+		WithTxConfig(ctx.TxConfig).
+		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
@@ -238,6 +239,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
+	tx.SetTimeoutHeight(txf.TimeoutHeight())
 
 	return tx, nil
 }

@@ -47,18 +47,18 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+		txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
+		tx, ok := txI.(signing.Tx)
 		if !ok {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
 			return
 		}
 
-		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, sigFeeMemoTx)
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

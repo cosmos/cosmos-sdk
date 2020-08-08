@@ -149,7 +149,7 @@ func (rs *Store) LoadVersion(ver int64) error {
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	infos := make(map[string]types.StoreInfo)
 
-	var cInfo *types.CommitInfo
+	cInfo := &types.CommitInfo{}
 
 	// load old data if we are not version 0
 	if ver != 0 {
@@ -289,6 +289,10 @@ func (rs *Store) TracingEnabled() bool {
 
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
+	if rs.lastCommitInfo == nil {
+		return types.CommitID{}
+	}
+
 	return rs.lastCommitInfo.CommitID()
 }
 

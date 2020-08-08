@@ -46,14 +46,15 @@ with the following additions:
 
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behaviour of all protobuf encoders the author is aware of, the 3rd rule
-is more interesting. Protobuf 3 has no notion of optional values and thus cannot
-differentiate between null/unset and empty fields. At serialization level
-however, it is possible to set the fields with an empty value or omitting them
-entirely. This is a significant difference to e.g. JSON where a property can be
-empty (`""`, `0`), `null` or undefined, leading to 3 different documents.
+is more interesting. After a protobuf 3 deserialization you cannot differentiate
+between unset fields and fields set to the default value<sup>2</sup>. At
+serialization level however, it is possible to set the fields with an empty
+value or omitting them entirely. This is a significant difference to e.g. JSON
+where a property can be empty (`""`, `0`), `null` or undefined, leading to 3
+different documents.
 
 Omitting empty fields is valid because the parser must assign the default value
-to fields missing in the serialization<sup>2</sup>. This is preferred over
+to fields missing in the serialization<sup>3</sup>. This is preferred over
 requiring to always serialize them because it allows for some amount of forward
 compatibility: users of newer versions of a protobuf schema produce the same
 serialization as users of older versions as long as newly added fields are not
@@ -217,7 +218,14 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
   https://developers.google.com/protocol-buffers/docs/encoding#order
-- <sup>2</sup> _When a message is parsed, if the encoded message does not
+- <sup>2</sup> _Note that for scalar message fields, once a message is parsed
+  there's no way of telling whether a field was explicitly set to the default
+  value (for example whether a boolean was set to false) or just not set at all:
+  you should bear this in mind when defining your message types. For example,
+  don't have a boolean that switches on some behaviour when set to false if you
+  don't want that behaviour to also happen by default._ from
+  https://developers.google.com/protocol-buffers/docs/proto3#default
+- <sup>3</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default

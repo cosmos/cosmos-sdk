@@ -19,6 +19,7 @@ func NewAnteHandler(
 		NewRejectExtensionOptionsDecorator(),
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
+		TxTimeoutHeightDecorator{},
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
 		NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators

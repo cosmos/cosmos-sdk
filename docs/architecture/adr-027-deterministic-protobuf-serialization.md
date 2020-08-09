@@ -53,12 +53,17 @@ value or omitting them entirely. This is a significant difference to e.g. JSON
 where a property can be empty (`""`, `0`), `null` or undefined, leading to 3
 different documents.
 
-Omitting empty fields is valid because the parser must assign the default value
-to fields missing in the serialization<sup>3</sup>. This is preferred over
-requiring to always serialize them because it allows for some amount of forward
-compatibility: users of newer versions of a protobuf schema produce the same
-serialization as users of older versions as long as newly added fields are not
-used (i.e. set to their default value).
+Omitting fields set to default values is valid because the parser must assign
+the default value to fields missing in the serialization<sup>3</sup>. For scalar
+types, omitting defaults is required by the spec<sup>4</sup>. For `repeated`
+fields, not serializing them is the only way to express empty lists. Enums must
+have a fist element of numeric value 0, which is the default<sup>5</sup>. And
+message fields default to unset<sup>6</sup>.
+
+Omitting defaults allows for some amount of forward compatibility: users of
+newer versions of a protobuf schema produce the same serialization as users of
+older versions as long as newly added fields are not used (i.e. set to their
+default value).
 
 ### Implementation
 
@@ -228,6 +233,15 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - <sup>3</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
+  https://developers.google.com/protocol-buffers/docs/proto3#default
+- <sup>4</sup> _Also note that if a scalar message field is set to its default,
+  the value will not be serialized on the wire._ from
+  https://developers.google.com/protocol-buffers/docs/proto3#default
+- <sup>5</sup> _For enums, the default value is the first defined enum value,
+  which must be 0._ from
+  https://developers.google.com/protocol-buffers/docs/proto3#default
+- <sup>6</sup> _For message fields, the field is not set. Its exact value is
+  language-dependent._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
 - Encoding rules and parts of the reasoning taken from
   [canonical-proto3 Aaron Craelius](https://github.com/regen-network/canonical-proto3)

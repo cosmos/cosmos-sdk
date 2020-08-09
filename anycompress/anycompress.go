@@ -48,7 +48,10 @@ type compressDB struct {
 // typeURLListing MUST maintain a deterministic ordering of typeURLs
 // Note: whenever we have a global gRPC based typesRegistry, perhaps pass it in here.
 func New(name string, backend dbm.BackendType, dir string, typeURLListing []string) (_ dbm.DB, err error) {
-	baseDB := dbm.NewDB(name, backend, dir)
+	baseDB, err := dbm.NewDB(name, backend, dir)
+	if err != nil {
+		return nil, err
+	}
 
 	cdb := &compressDB{
 		typesRegistry:  make(map[string]int),
@@ -175,6 +178,11 @@ func (cdb *compressDB) ReverseIterator(start, end []byte) (dbm.Iterator, error) 
 }
 
 func (cdb *compressDB) potentialIndicesForAny(b []byte) (indices [][]byte, err error) {
+	defer func() {
+		if len(indices) > 0 && errors.Is(err, errNoMatch) {
+			err = nil
+		}
+	}()
 	for i := 0; i < len(b); {
 		index := bytes.IndexByte(b[i:], '/')
 		if index < 0 {

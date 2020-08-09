@@ -13,7 +13,7 @@ var errNoMatch = errors.New("no match found")
 // trie is a prefix matcher with O(k) aka constant time searches and insertions, where k
 // is the length of the subject string.
 type trie struct {
-	leaves [('Z' - 'A') + ('z' - 'a') + ('9' - '0') + len(".") + len("/") + len("_") + len("-")]*trie
+	leaves [('Z' - 'A') + 1 + ('z' - 'a') + 1 + ('9' - '0') + 1 + len(".") + len("/") + len("_") + len("-")]*trie
 	value  []byte
 }
 

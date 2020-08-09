@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -141,12 +142,23 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestCmdQueryGovData() {
+	val := s.network.Validators[0]
+
+	clientCtx := val.ClientCtx
+
+	out, err := govtestutil.SubmitTestProposal(val.ClientCtx, val.Address.String(), s.cfg.BondDenom)
+	s.Require().NoError(err)
+	var res sdk.TxResponse
+	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.T().Log(out)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

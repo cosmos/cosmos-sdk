@@ -77,7 +77,7 @@ most custom development:
   existing serializer accordingly.
 - **Normalize default values before encoding them.** If your serializer follows
   rule 1. and 2. and allows you to explicitly unset fields for serialization,
-  you can normalize empty values to unset. This can be done when working with
+  you can normalize default values to unset. This can be done when working with
   [protobuf.js](https://www.npmjs.com/package/protobufjs):
 
   ```js

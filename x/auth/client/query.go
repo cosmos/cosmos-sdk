@@ -9,9 +9,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events
@@ -53,7 +51,7 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	txs, err := formatTxResults(clientCtx.Codec, resTxs.Txs, resBlocks)
+	txs, err := formatTxResults(clientCtx, resTxs.Txs, resBlocks)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +86,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	out, err := formatTxResult(clientCtx.Codec, resTx, resBlocks[resTx.Height])
+	out, err := formatTxResult(clientCtx, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}
@@ -97,11 +95,11 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
-func formatTxResults(cdc *codec.Codec, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]*sdk.TxResponse, error) {
+func formatTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]*sdk.TxResponse, error) {
 	var err error
 	out := make([]*sdk.TxResponse, len(resTxs))
 	for i := range resTxs {
-		out[i], err = formatTxResult(cdc, resTxs[i], resBlocks[resTxs[i].Height])
+		out[i], err = formatTxResult(clientCtx, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
 			return nil, err
 		}
@@ -132,8 +130,8 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 	return resBlocks, nil
 }
 
-func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
-	tx, err := parseTx(cdc, resTx.Tx)
+func formatTxResult(clientCtx client.Context, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
+	tx, err := parseTx(clientCtx, resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +139,10 @@ func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.R
 	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
-	var tx types.StdTx
+func parseTx(clientCtx client.Context, txBytes []byte) (sdk.Tx, error) {
+	var tx sdk.Tx
 
-	err := cdc.UnmarshalBinaryBare(txBytes, &tx)
+	tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, err
 	}

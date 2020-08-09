@@ -39,7 +39,7 @@ type builder struct {
 }
 
 var (
-	_ authsigning.Tx   = &builder{}
+	_ authsigning.Tx             = &builder{}
 	_ client.TxBuilder           = &builder{}
 	_ ante.HasExtensionOptionsTx = &builder{}
 )

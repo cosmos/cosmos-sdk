@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// CommitInfo defines commit information used by the multi-store when committing
+// a version/height.
 type CommitInfo struct {
 	Version    int64       `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
 	StoreInfos []StoreInfo `protobuf:"bytes,2,rep,name=store_infos,json=storeInfos,proto3" json:"store_infos"`
@@ -75,6 +77,8 @@ func (m *CommitInfo) GetStoreInfos() []StoreInfo {
 	return nil
 }
 
+// StoreInfo defines store-specific commit information. It contains a reference
+// between a store name and the commit ID.
 type StoreInfo struct {
 	Name     string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	CommitID CommitID `protobuf:"bytes,2,opt,name=commit_id,json=commitId,proto3" json:"commit_id"`
@@ -127,6 +131,8 @@ func (m *StoreInfo) GetCommitID() CommitID {
 	return CommitID{}
 }
 
+// CommitID defines the committment information when a specific store is
+// committed.
 type CommitID struct {
 	Version int64  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
 	Hash    []byte `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`

@@ -32,7 +32,7 @@ func (q Keeper) DenomTrace(c context.Context, req *types.QueryDenomTraceRequest)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrap(types.ErrInvalidDenomForTransfer, req.Hash).Error(), // TODO: update error
+			sdkerrors.Wrap(types.ErrTraceNotFound, req.Hash).Error(),
 		)
 	}
 

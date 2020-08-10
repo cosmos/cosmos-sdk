@@ -82,6 +82,35 @@ func TestDenomTrace_Validate(t *testing.T) {
 	}
 }
 
+func TestTraces_Validate(t *testing.T) {
+	testCases := []struct {
+		name     string
+		traces   Traces
+		expError bool
+	}{
+		{"empty Traces", Traces{}, false},
+		{"valid multiple trace info", Traces{{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"}}, false},
+		{
+			"valid multiple trace info",
+			Traces{
+				{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"},
+				{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"},
+			},
+			true,
+		},
+		{"empty base denom with trace", Traces{{BaseDenom: "", Trace: "transfer/channelToA"}}, true},
+	}
+
+	for _, tc := range testCases {
+		err := tc.traces.Validate()
+		if tc.expError {
+			require.Error(t, err, tc.name)
+			continue
+		}
+		require.NoError(t, err, tc.name)
+	}
+}
+
 func TestValidatePrefixedDenom(t *testing.T) {
 	testCases := []struct {
 		name     string

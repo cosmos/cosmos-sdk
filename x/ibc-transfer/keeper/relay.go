@@ -81,7 +81,10 @@ func (k Keeper) SendTransfer(
 	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
 	if strings.HasPrefix(token.Denom, "ibc/") {
 		hexHash := token.Denom[4:]
-		hash, _ := types.ParseHexHash(hexHash)
+		hash, err := types.ParseHexHash(hexHash)
+		if err != nil {
+			return err
+		}
 
 		denomTrace, found := k.GetDenomTrace(ctx, hash)
 		if !found {

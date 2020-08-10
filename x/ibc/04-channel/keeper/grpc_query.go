@@ -12,6 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -123,6 +125,88 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 		Channels:   channels,
 		Pagination: pageRes,
 		Height:     ctx.BlockHeight(),
+	}, nil
+}
+
+// ChannelClientState implements the Query/ChannelClientState gRPC method
+func (q Keeper) ChannelClientState(c context.Context, req *types.QueryChannelClientStateRequest) (*types.QueryChannelClientStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	channel, found := q.GetChannel(ctx, req.PortID, req.ChannelID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(types.ErrChannelNotFound, "port-id: %s, channel-id %s", req.PortID, req.ChannelID).Error(),
+		)
+	}
+
+	connection, found := q.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", channel.ConnectionHops[0]),
+		)
+	}
+
+	clientState, found := q.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientID),
+		)
+	}
+
+	return types.NewQueryChannelClientStateResponse(connection.ClientID, clientState, nil, ctx.BlockHeight()), nil
+
+}
+
+// ChannelConsensusState implements the Query/ChannelConsensusState gRPC method
+func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannelConsensusStateRequest) (*types.QueryChannelConsensusStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := validategRPCRequest(req.PortID, req.ChannelID); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	channel, found := q.GetChannel(ctx, req.PortID, req.ChannelID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(types.ErrChannelNotFound, "port-id: %s, channel-id %s", req.PortID, req.ChannelID).Error(),
+		)
+	}
+
+	connection, found := q.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", connection.ConnectionHops[0]),
+		)
+	}
+
+	clientState, found := q.clientKeeper.GetConsensusState(ctx, connection.ClientID, req.Height)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(clienttypes.ErrClientStateNotFound, "client-id: %s", connection.ClientID),
+		)
+	}
+
+	return &types.QueryChannelClientStateResponse{
+		ClientState: clientState,
+		Height:      ctx.BlockHeight(),
 	}, nil
 }
 

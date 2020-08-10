@@ -3,6 +3,8 @@ package types
 import (
 	"strings"
 
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -21,6 +23,29 @@ func NewQueryChannelResponse(portID, channelID string, channel Channel, proof []
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
 		ProofHeight: uint64(height),
+	}
+}
+
+// NewQueryChannelClientStateResponse creates a newQueryChannelClientStateResponse instance
+func NewQueryChannelClientStateResponse(clientID string, clientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryChannelClientStateResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
+	return &QueryChannelClientStateResponse{
+		ClientState: &clientState,
+		Proof:       proof,
+		ProofPath:   path.Pretty(),
+		ProofHeight: uint64(height),
+	}
+}
+
+// NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
+func NewQueryChannelConsensusStateResponse(clientID string, consensusState clientexported.ConsensusState, proof []byte, height int64) *QueryChannelConsensusStateResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
+	return &QueryChannelConsensusStateResponse{
+		ConsensusState: consensusState,
+		ClientID:       clientID,
+		Proof:          proof,
+		ProofPath:      path.Pretty(),
+		ProofHeight:    uint64(height),
 	}
 }
 
@@ -60,21 +85,5 @@ func NewQueryNextSequenceReceiveResponse(
 		Proof:               proof,
 		ProofPath:           path.Pretty(),
 		ProofHeight:         uint64(height),
-	}
-}
-
-// NewQueryChannelClientStateRequest creates a new QueryChannelClientStateRequest instance.
-func NewQueryChannelClientStateRequest(portID, channelID string) *QueryChannelClientStateRequest {
-	return &QueryChannelClientStateRequest{
-		PortID:    portID,
-		ChannelID: channelID,
-	}
-}
-
-// NewQueryChannelConsensusStateRequest creates a new QueryChannelConsensusStateRequest instance.
-func NewQueryChannelConsensusStateRequest(portID, channelID string) *QueryChannelConsensusStateRequest {
-	return &QueryChannelConsensusStateRequest{
-		PortID:    portID,
-		ChannelID: channelID,
 	}
 }

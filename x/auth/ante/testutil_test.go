@@ -85,7 +85,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.SigFeeMemoTx, error) {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2

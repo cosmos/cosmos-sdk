@@ -16,7 +16,6 @@ message GenesisState {
 
   // balances is an array containing the balances of all the accounts.
   repeated Balance balances = 2 [
-    (gogoproto.casttype) = "Balance",
     (gogoproto.nullable) = false
   ];
 

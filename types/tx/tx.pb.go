@@ -398,8 +398,9 @@ type SignerInfo struct {
 	// mode_info describes the signing mode of the signer and is a nested
 	// structure to support nested multisig pubkey's
 	ModeInfo *ModeInfo `protobuf:"bytes,2,opt,name=mode_info,json=modeInfo,proto3" json:"mode_info,omitempty"`
-	// account_sequence is the number of transactions previously sent from this
-	// address plus one. It is used to prevent replay attacks.
+	// account_sequence is the sequence of the account, which describes the
+	// number of transactions sent from a given address. It is used to prevent
+	// replay attacks.
 	AccountSequence uint64 `protobuf:"varint,3,opt,name=account_sequence,json=accountSequence,proto3" json:"account_sequence,omitempty"`
 }
 

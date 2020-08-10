@@ -108,7 +108,7 @@ message SignerInfo {
     // account_sequence is the sequence of the account, which describes the
     // number of transactions sent from a given address. It is used to prevent
     // replay attacks.
-    uint64 account_sequence = 5;
+    uint64 account_sequence = 3;
 }
 
 message ModeInfo {
@@ -426,9 +426,6 @@ message SignDocAux {
     PublicKey public_key = 2;
     string chain_id = 3;
     uint64 account_number = 4;
-    // account_sequence starts at 1 rather than 0 to avoid the case where
-    // the default 0 value must be omitted in protobuf serialization
-    uint64 account_sequence = 5;
 }
 ```
 

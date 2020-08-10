@@ -8,7 +8,7 @@ import (
 
 // RegisterCodec registers the account interfaces and concrete types on the
 // provided Amino codec.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*AccountI)(nil), nil)

@@ -30,8 +30,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
+		b, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
+		SimulationOperations(app, app.LegacyAmino(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -69,8 +69,8 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
+		b, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
+		SimulationOperations(app, app.LegacyAmino(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 

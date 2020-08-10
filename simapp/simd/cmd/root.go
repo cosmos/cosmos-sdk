@@ -52,7 +52,7 @@ var (
 			WithJSONMarshaler(encodingConfig.Marshaler).
 			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 			WithTxConfig(encodingConfig.TxConfig).
-			WithCodec(encodingConfig.Amino).
+			WithLegacyAmino(encodingConfig.Amino).
 			WithInput(os.Stdin).
 			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
 			WithBroadcastMode(flags.BroadcastBlock).

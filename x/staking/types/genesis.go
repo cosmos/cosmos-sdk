@@ -24,7 +24,7 @@ func DefaultGenesisState() *GenesisState {
 
 // GetGenesisStateFromAppState returns x/staking GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) *GenesisState {
+func GetGenesisStateFromAppState(cdc *codec.LegacyAmino, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {

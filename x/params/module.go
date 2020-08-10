@@ -38,7 +38,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the params module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	proposal.RegisterCodec(cdc)
 }
 

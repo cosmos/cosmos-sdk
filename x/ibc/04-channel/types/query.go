@@ -1,22 +1,12 @@
 package types
 
 import (
-	"fmt"
 	"strings"
 
-	proto "github.com/gogo/protobuf/proto"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-)
-
-// query routes supported by the IBC channel Querier
-const (
-	QueryChannelClientState    = "channel-client-state"
-	QueryChannelConsensusState = "channel-consensus-state"
 )
 
 // NewQueryChannelResponse creates a new QueryChannelResponse instance
@@ -44,17 +34,7 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
 func NewQueryChannelConsensusStateResponse(clientID string, consensusState clientexported.ConsensusState, proof []byte, height int64) *QueryChannelConsensusStateResponse {
 	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(consensusState.GetHeight()))), "/"))
-	// convert consensus state to Any
-	msg, ok := consensusState.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("cannot proto marshal %T", consensusState))
-	}
-
-	anyConsensusState, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		panic(err)
-	}
-
+	anyConsensusState := clienttypes.GetAnyFromConsensusState(consensusState)
 	return &QueryChannelConsensusStateResponse{
 		ConsensusState: anyConsensusState,
 		ClientID:       clientID,

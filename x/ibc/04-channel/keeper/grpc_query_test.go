@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -285,6 +287,251 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expChannels, res.Channels)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryChannelClientState() {
+	var (
+		req                      *types.QueryChannelClientStateRequest
+		expIdentifiedClientState clienttypes.IdentifiedClientState
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid port ID",
+			func() {
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    "",
+					ChannelID: "test-channel-id",
+				}
+			},
+			false,
+		},
+		{
+			"invalid channel ID",
+			func() {
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    "test-port-id",
+					ChannelID: "",
+				}
+			},
+			false,
+		},
+		{"channel not found",
+			func() {
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				channel := suite.chainA.GetChannel(channelA)
+				// update channel to reference a connection that does not exist
+				channel.ConnectionHops[0] = "doesnotexist"
+
+				// set connection hops to wrong connection ID
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+				}
+			}, false,
+		},
+		{
+			"client state for channel's connection not found",
+			func() {
+				_, _, connA, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				// set connection to empty so clientID is empty
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connectiontypes.ConnectionEnd{})
+
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				// init channel
+				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+				suite.Require().NoError(err)
+
+				expClientState := suite.chainA.GetClientState(clientA)
+				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
+
+				req = &types.QueryChannelClientStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ChannelClientState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(&expIdentifiedClientState, res.IdentifiedClientState)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
+	var (
+		req               *types.QueryChannelConsensusStateRequest
+		expConsensusState clientexported.ConsensusState
+		expClientID       string
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid port ID",
+			func() {
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    "",
+					ChannelID: "test-channel-id",
+					Height:    1,
+				}
+			},
+			false,
+		},
+		{
+			"invalid channel ID",
+			func() {
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    "test-port-id",
+					ChannelID: "",
+					Height:    1,
+				}
+			},
+			false,
+		},
+		{"channel not found",
+			func() {
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    "test-port-id",
+					ChannelID: "test-channel-id",
+					Height:    1,
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				channel := suite.chainA.GetChannel(channelA)
+				// update channel to reference a connection that does not exist
+				channel.ConnectionHops[0] = "doesnotexist"
+
+				// set connection hops to wrong connection ID
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Height:    1,
+				}
+			}, false,
+		},
+		{
+			"consensus state for channel's connection not found",
+			func() {
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Height:    uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				// init channel
+				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+				suite.Require().NoError(err)
+
+				clientState := suite.chainA.GetClientState(clientA)
+				expConsensusState, _ = suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+				suite.Require().NotNil(expConsensusState)
+				expClientID = clientA
+
+				req = &types.QueryChannelConsensusStateRequest{
+					PortID:    channelA.PortID,
+					ChannelID: channelA.ID,
+					Height:    expConsensusState.GetHeight(),
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ChannelConsensusState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expConsensusState, clienttypes.GetConsensusStateFromAny(res.ConsensusState))
+				suite.Require().Equal(expClientID, res.ClientID)
 			} else {
 				suite.Require().Error(err)
 			}

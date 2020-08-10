@@ -23,8 +23,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState - all slashing state that must be provided at genesis
+// GenesisState defines all slashing state that must be provided at genesis.
 type GenesisState struct {
+	// params defines all the paramaters of related to deposit.
 	Params       Params                  `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	SigningInfos []SigningInfo           `protobuf:"bytes,2,rep,name=signing_infos,json=signingInfos,proto3" json:"signing_infos" yaml:"signing_infos"`
 	MissedBlocks []ValidatorMissedBlocks `protobuf:"bytes,3,rep,name=missed_blocks,json=missedBlocks,proto3" json:"missed_blocks" yaml:"missed_blocks"`
@@ -84,7 +85,7 @@ func (m *GenesisState) GetMissedBlocks() []ValidatorMissedBlocks {
 	return nil
 }
 
-// SigningInfo stores validator signing info of corresponding address
+// SigningInfo stores validator signing info of corresponding address.
 type SigningInfo struct {
 	Address              string               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	ValidatorSigningInfo ValidatorSigningInfo `protobuf:"bytes,2,opt,name=validator_signing_info,json=validatorSigningInfo,proto3" json:"validator_signing_info" yaml:"validator_signing_info"`
@@ -137,7 +138,7 @@ func (m *SigningInfo) GetValidatorSigningInfo() ValidatorSigningInfo {
 	return ValidatorSigningInfo{}
 }
 
-// ValidatorMissedBlocks contains array of missed blocks of corresponding address
+// ValidatorMissedBlocks contains array of missed blocks of corresponding address.
 type ValidatorMissedBlocks struct {
 	Address      string        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	MissedBlocks []MissedBlock `protobuf:"bytes,2,rep,name=missed_blocks,json=missedBlocks,proto3" json:"missed_blocks" yaml:"missed_blocks"`
@@ -190,7 +191,7 @@ func (m *ValidatorMissedBlocks) GetMissedBlocks() []MissedBlock {
 	return nil
 }
 
-// MissedBlock contains height and missed status as boolean
+// MissedBlock contains height and missed status as boolean.
 type MissedBlock struct {
 	Index  int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 	Missed bool  `protobuf:"varint,2,opt,name=missed,proto3" json:"missed,omitempty"`

@@ -26,9 +26,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// DelegatorWithdrawInfo
-// the address for where distributions rewards are withdrawn to by default
-// this struct is only used at genesis to feed in default withdraw addresses
+// DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
+// this struct is only used at genesis to feed in default withdraw addresses.
 type DelegatorWithdrawInfo struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
@@ -81,8 +80,7 @@ func (m *DelegatorWithdrawInfo) GetWithdrawAddress() github_com_cosmos_cosmos_sd
 	return nil
 }
 
-// ValidatorOutstandingRewardsRecord
-// used for import/export via genesis json
+// ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 type ValidatorOutstandingRewardsRecord struct {
 	ValidatorAddress   github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins   `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards" yaml:"outstanding_rewards"`
@@ -135,8 +133,7 @@ func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() github_com_c
 	return nil
 }
 
-// ValidatorAccumulatedCommissionRecord
-// used for import / export via genesis json
+// ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
 type ValidatorAccumulatedCommissionRecord struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Accumulated      ValidatorAccumulatedCommission                `protobuf:"bytes,2,opt,name=accumulated,proto3" json:"accumulated" yaml:"accumulated"`
@@ -189,8 +186,7 @@ func (m *ValidatorAccumulatedCommissionRecord) GetAccumulated() ValidatorAccumul
 	return ValidatorAccumulatedCommission{}
 }
 
-// ValidatorHistoricalRewardsRecord
-// used for import / export via genesis json
+// ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
 type ValidatorHistoricalRewardsRecord struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Period           uint64                                        `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
@@ -251,8 +247,7 @@ func (m *ValidatorHistoricalRewardsRecord) GetRewards() ValidatorHistoricalRewar
 	return ValidatorHistoricalRewards{}
 }
 
-// ValidatorCurrentRewardsRecord
-// used for import / export via genesis json
+// ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 type ValidatorCurrentRewardsRecord struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Rewards          ValidatorCurrentRewards                       `protobuf:"bytes,2,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
@@ -305,8 +300,7 @@ func (m *ValidatorCurrentRewardsRecord) GetRewards() ValidatorCurrentRewards {
 	return ValidatorCurrentRewards{}
 }
 
-// DelegatorStartingInfoRecord
-// used for import / export via genesis json
+// DelegatorStartingInfoRecord used for import / export via genesis json.
 type DelegatorStartingInfoRecord struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
@@ -367,8 +361,7 @@ func (m *DelegatorStartingInfoRecord) GetStartingInfo() DelegatorStartingInfo {
 	return DelegatorStartingInfo{}
 }
 
-// ValidatorSlashEventRecord
-// used for import / export via genesis json
+// ValidatorSlashEventRecord is used for import / export via genesis json.
 type ValidatorSlashEventRecord struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Height           uint64                                        `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
@@ -437,7 +430,7 @@ func (m *ValidatorSlashEventRecord) GetEvent() ValidatorSlashEvent {
 	return ValidatorSlashEvent{}
 }
 
-// GenesisState - all distribution state that must be provided at genesis
+// GenesisState defines all distribution state that must be provided at genesis.
 type GenesisState struct {
 	Params                          Params                                         `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`
 	FeePool                         FeePool                                        `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool" yaml:"fee_pool"`

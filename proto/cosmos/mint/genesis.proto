@@ -6,12 +6,13 @@ import "cosmos/mint/mint.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
-// GenesisState - minter state
+// GenesisState defines the minter genesis state.
 message GenesisState {
   Minter minter = 1 [
     (gogoproto.nullable) = false
   ];
 
+  // params defines all the paramaters of the module.
   Params params = 2 [
     (gogoproto.nullable) = false
   ];

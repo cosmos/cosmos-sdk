@@ -27,10 +27,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the bank module's genesis state.
 type GenesisState struct {
-	Params        Params                                   `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	Balances      []Balance                                `protobuf:"bytes,2,rep,name=balances,proto3,casttype=Balance" json:"balances"`
-	Supply        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
-	DenomMetadata []Metadata                               `protobuf:"bytes,4,rep,name=denom_metadata,json=denomMetadata,proto3" json:"denom_metadata" yaml:"denom_metadata"`
+	// params defines all the paramaters of the module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// balances is an array containing the balances of all the accounts.
+	Balances []Balance `protobuf:"bytes,2,rep,name=balances,proto3,casttype=Balance" json:"balances"`
+	// supply represents the total supply.
+	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`
+	// denom_metadata defines the metadata of the differents coins.
+	DenomMetadata []Metadata `protobuf:"bytes,4,rep,name=denom_metadata,json=denomMetadata,proto3" json:"denom_metadata" yaml:"denom_metadata"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -97,8 +101,10 @@ func (m *GenesisState) GetDenomMetadata() []Metadata {
 // Balance defines an account address and balance pair used in the bank module's
 // genesis state.
 type Balance struct {
+	// address is the address of the balance holder.
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	// coins defines the different coins this balance holds.
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *Balance) Reset()         { *m = Balance{} }

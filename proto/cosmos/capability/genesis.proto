@@ -18,10 +18,10 @@ message GenesisOwners {
 
 // GenesisState represents the Capability module genesis state.
 message GenesisState {
-  // capability global index.
+  // index is the capability global index.
   uint64 index = 1;
 
-  // map from index to owners of the capability index
+  // owners represents a map from index to owners of the capability index
 	// index key is string to allow amino marshalling.
   repeated GenesisOwners owners = 2 [
     (gogoproto.nullable) = false

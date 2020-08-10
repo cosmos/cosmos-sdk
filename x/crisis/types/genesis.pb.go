@@ -25,8 +25,10 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState - genesis state of x/crisis
+// GenesisState - genesis state of x/crisis.
 type GenesisState struct {
+	// constant_fee is the fee used to verify the invariant in the crisis
+	// module.
 	ConstantFee github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=constant_fee,json=constantFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"constant_fee" yaml:"constant_fee"`
 }
 

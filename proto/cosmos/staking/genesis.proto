@@ -6,7 +6,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 import "gogoproto/gogo.proto";
 import "cosmos/staking/staking.proto";
 
-// GenesisState - all staking state that must be provided at genesis
+// GenesisState defines all staking state that must be provided at genesis.
 message GenesisState {
   Params params = 1 [
     (gogoproto.nullable) = false
@@ -42,7 +42,7 @@ message GenesisState {
   bool exported = 8;
 }
 
-// LastValidatorPower required for validator set update logic
+// LastValidatorPower required for validator set update logic.
 message LastValidatorPower {
   bytes address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"

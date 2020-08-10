@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types.ModuleName, err))
 	}
 
-	for _, e := range gs.Evidence {
+	for _, e := range gs.Evidences {
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
 			panic("expected evidence")
@@ -35,7 +35,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 // ExportGenesis returns the evidence module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	e := k.GetAllEvidence(ctx)
-	evidence := make([]*codectypes.Any, len(e))
+	evidences := make([]*codectypes.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)
 		if !ok {
@@ -45,9 +45,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		evidence[i] = any
+		evidences[i] = any
 	}
 	return types.GenesisState{
-		Evidence: evidence,
+		Evidences: evidences,
 	}
 }

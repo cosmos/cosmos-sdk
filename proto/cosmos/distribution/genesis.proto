@@ -8,11 +8,8 @@ import "gogoproto/gogo.proto";
 import "cosmos/cosmos.proto";
 import "cosmos/distribution/distribution.proto";
 
-// genesis types
-
-// DelegatorWithdrawInfo
-// the address for where distributions rewards are withdrawn to by default
-// this struct is only used at genesis to feed in default withdraw addresses
+// DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
+// this struct is only used at genesis to feed in default withdraw addresses.
 message DelegatorWithdrawInfo {
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
@@ -25,8 +22,7 @@ message DelegatorWithdrawInfo {
   ];
 }
 
-// ValidatorOutstandingRewardsRecord
-// used for import/export via genesis json
+// ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 message ValidatorOutstandingRewardsRecord {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -40,8 +36,7 @@ message ValidatorOutstandingRewardsRecord {
   ];
 }
 
-// ValidatorAccumulatedCommissionRecord
-// used for import / export via genesis json
+// ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
 message ValidatorAccumulatedCommissionRecord {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -54,8 +49,7 @@ message ValidatorAccumulatedCommissionRecord {
   ];
 }
 
-// ValidatorHistoricalRewardsRecord
-// used for import / export via genesis json
+// ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
 message ValidatorHistoricalRewardsRecord {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -70,8 +64,7 @@ message ValidatorHistoricalRewardsRecord {
   ];
 }
 
-// ValidatorCurrentRewardsRecord
-// used for import / export via genesis json
+// ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 message ValidatorCurrentRewardsRecord {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -84,8 +77,7 @@ message ValidatorCurrentRewardsRecord {
   ];
 }
 
-// DelegatorStartingInfoRecord
-// used for import / export via genesis json
+// DelegatorStartingInfoRecord used for import / export via genesis json.
 message DelegatorStartingInfoRecord {
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
@@ -103,8 +95,7 @@ message DelegatorStartingInfoRecord {
   ];
 }
 
-// ValidatorSlashEventRecord
-// used for import / export via genesis json
+// ValidatorSlashEventRecord is used for import / export via genesis json.
 message ValidatorSlashEventRecord {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -118,7 +109,7 @@ message ValidatorSlashEventRecord {
   ];
 }
 
-// GenesisState - all distribution state that must be provided at genesis
+// GenesisState defines all distribution state that must be provided at genesis.
 message GenesisState {
   Params params = 1 [
     (gogoproto.nullable) = false,

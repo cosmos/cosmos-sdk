@@ -26,7 +26,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState - all auth state that must be provided at genesis.
 type GenesisState struct {
-	Params   Params       `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// params defines all the paramaters of the module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// accounts are the accounts present at genesis.
 	Accounts []*types.Any `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
 }
 

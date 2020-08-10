@@ -6,8 +6,9 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/slashing.proto";
 
-// GenesisState - all slashing state that must be provided at genesis
+// GenesisState defines all slashing state that must be provided at genesis.
 message GenesisState {
+  // params defines all the paramaters of related to deposit.
   Params params = 1 [
     (gogoproto.nullable) = false
   ];
@@ -23,7 +24,7 @@ message GenesisState {
   ];
 }
 
-// SigningInfo stores validator signing info of corresponding address
+// SigningInfo stores validator signing info of corresponding address.
 message SigningInfo {
   string address = 1;
   ValidatorSigningInfo validator_signing_info = 2 [
@@ -32,7 +33,7 @@ message SigningInfo {
   ];
 }
 
-// ValidatorMissedBlocks contains array of missed blocks of corresponding address
+// ValidatorMissedBlocks contains array of missed blocks of corresponding address.
 message ValidatorMissedBlocks {
   string address = 1;
   repeated MissedBlock missed_blocks = 2 [
@@ -41,7 +42,7 @@ message ValidatorMissedBlocks {
   ];
 }
 
-// MissedBlock contains height and missed status as boolean
+// MissedBlock contains height and missed status as boolean.
 message MissedBlock {
   int64 index = 1;
   bool missed = 2; 

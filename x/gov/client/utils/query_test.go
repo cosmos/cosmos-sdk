@@ -147,7 +147,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			cli := TxSearchMock{txs: marshalled}
 			clientCtx := client.Context{}.
 				WithJSONMarshaler(cdc).
-				WithCodec(cdc).
+				WithLegacyAmino(cdc).
 				WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)

@@ -203,7 +203,7 @@ func TestProcessPostResponse(t *testing.T) {
 	cdc := codec.New()
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
-	ctx = ctx.WithCodec(cdc)
+	ctx = ctx.WithLegacyAmino(cdc)
 
 	// setup expected results
 	jsonNoIndent, err := ctx.LegacyAmino.MarshalJSON(acc)

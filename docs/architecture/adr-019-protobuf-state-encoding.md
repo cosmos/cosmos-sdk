@@ -322,8 +322,7 @@ In order for this functionality to work:
   now a wrapper which properly handles `Any`**
 - **all new code should use `Marshaler` which is compatible with both amino and
   protobuf**
-
-Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
+- Also, before v0.39, `codec.LegacyAmino` will be renamed to `codec.LegacyAmino`.
 
 ### Why Wasn't X Chosen Instead
 
@@ -376,3 +375,4 @@ seamless.
 
 1. https://github.com/cosmos/cosmos-sdk/issues/4977
 2. https://github.com/cosmos/cosmos-sdk/issues/5444
+

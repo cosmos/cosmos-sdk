@@ -66,7 +66,7 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 
 // WithCodec returns a copy of the context with an updated codec.
 // TODO: Deprecated (remove).
-func (ctx Context) WithCodec(cdc *codec.LegacyAmino) Context {
+func (ctx Context) WithLegacyAmino(cdc *codec.LegacyAmino) Context {
 	ctx.LegacyAmino = cdc
 	return ctx
 }

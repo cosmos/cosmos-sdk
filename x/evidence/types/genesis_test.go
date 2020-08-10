@@ -17,8 +17,8 @@ import (
 
 func TestDefaultGenesisState(t *testing.T) {
 	gs := types.DefaultGenesisState()
-	require.NotNil(t, gs.Evidences)
-	require.Len(t, gs.Evidences, 0)
+	require.NotNil(t, gs.Evidence)
+	require.Len(t, gs.Evidence, 0)
 }
 
 func TestNewGenesisState(t *testing.T) {
@@ -105,7 +105,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			"expected evidence",
 			func() {
 				genesisState = types.GenesisState{
-					Evidences: []*codectypes.Any{{}},
+					Evidence: []*codectypes.Any{{}},
 				}
 			},
 			false,
@@ -127,7 +127,7 @@ func TestGenesisStateValidate(t *testing.T) {
 
 func TestUnpackInterfaces(t *testing.T) {
 	var gs = types.GenesisState{
-		Evidences: []*codectypes.Any{{}},
+		Evidence: []*codectypes.Any{{}},
 	}
 
 	testCases := []struct {

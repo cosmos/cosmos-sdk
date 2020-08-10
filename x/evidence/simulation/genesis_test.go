@@ -37,5 +37,5 @@ func TestRandomizedGenState(t *testing.T) {
 	var evidenceGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &evidenceGenesis)
 
-	require.Len(t, evidenceGenesis.Evidences, 0)
+	require.Len(t, evidenceGenesis.Evidence, 0)
 }

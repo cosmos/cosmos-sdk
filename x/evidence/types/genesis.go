@@ -13,7 +13,7 @@ var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []exported.Evidence) GenesisState {
-	evidences := make([]*types.Any, len(e))
+	evidence := make([]*types.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)
 		if !ok {
@@ -23,24 +23,24 @@ func NewGenesisState(e []exported.Evidence) GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		evidences[i] = any
+		evidence[i] = any
 	}
 	return GenesisState{
-		Evidences: evidences,
+		Evidence: evidence,
 	}
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Evidences: []*types.Any{},
+		Evidence: []*types.Any{},
 	}
 }
 
 // Validate performs basic gensis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	for _, e := range gs.Evidences {
+	for _, e := range gs.Evidence {
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
 			return fmt.Errorf("expected evidence")
@@ -55,7 +55,7 @@ func (gs GenesisState) Validate() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, any := range gs.Evidences {
+	for _, any := range gs.Evidence {
 		var evi exported.Evidence
 		err := unpacker.UnpackAny(any, &evi)
 		if err != nil {

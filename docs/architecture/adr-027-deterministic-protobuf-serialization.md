@@ -57,7 +57,7 @@ Omitting fields set to default values is valid because the parser must assign
 the default value to fields missing in the serialization<sup>3</sup>. For scalar
 types, omitting defaults is required by the spec<sup>4</sup>. For `repeated`
 fields, not serializing them is the only way to express empty lists. Enums must
-have a fist element of numeric value 0, which is the default<sup>5</sup>. And
+have a first element of numeric value 0, which is the default<sup>5</sup>. And
 message fields default to unset<sup>6</sup>.
 
 Omitting defaults allows for some amount of forward compatibility: users of

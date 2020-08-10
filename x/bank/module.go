@@ -1,14 +1,17 @@
 package bank
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	grpc1 "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -59,6 +62,11 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 // RegisterRESTRoutes registers the REST routes for the bank module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
+}
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (a AppModuleBasic) RegisterGRPCRoutes(ctx context.Context, mux *runtime.ServeMux, endpoint string) {
+	types.RegisterQueryHandlerFromEndpoint(ctx, mux, endpoint, []grpc1.DialOption{grpc1.WithInsecure()})
 }
 
 // GetTxCmd returns the root tx command for the bank module.

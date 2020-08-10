@@ -3,11 +3,13 @@ package gov
 // DONTCOVER
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -82,6 +84,9 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 
 	rest.RegisterHandlers(clientCtx, rtr, proposalRESTHandlers)
 }
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ context.Context, _ *runtime.ServeMux, _ string) {}
 
 // GetTxCmd returns the root tx command for the gov module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {

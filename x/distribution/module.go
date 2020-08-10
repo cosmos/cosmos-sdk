@@ -1,11 +1,13 @@
 package distribution
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -66,6 +68,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
 }
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ context.Context, _ *runtime.ServeMux, _ string) {}
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

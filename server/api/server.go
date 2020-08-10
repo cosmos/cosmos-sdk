@@ -49,11 +49,11 @@ type GRPCServer struct {
 	logger    log.Logger
 }
 
-func NewGrpc(cliCtx context.Context, router *runtime.ServeMux, logger log.Logger, endPoint string, opts ...runtime.ServeMuxOption) *GRPCServer {
+func NewGrpc(cliCtx context.Context, router *runtime.ServeMux, logger log.Logger, endpoint string, opts ...runtime.ServeMuxOption) *GRPCServer {
 	return &GRPCServer{
 		ClientCtx: context.Background(),
 		Router:    runtime.NewServeMux(opts...),
-		EndPoint:  endPoint,
+		EndPoint:  endpoint,
 		logger:    logger,
 	}
 }

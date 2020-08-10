@@ -6,6 +6,8 @@ import (
 	"math/rand"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/net/context"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
@@ -70,6 +72,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.
 func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ context.Context, _ *runtime.ServeMux, _ string) {}
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command { return nil }

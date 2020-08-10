@@ -1,11 +1,13 @@
 package staking
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -72,6 +74,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
 }
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (AppModuleBasic) RegisterGRPCRoutes(_ context.Context, _ *runtime.ServeMux, _ string) {}
 
 // GetTxCmd returns the root tx command for the staking module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

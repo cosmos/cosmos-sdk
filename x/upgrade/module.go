@@ -1,9 +1,11 @@
 package upgrade
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -50,6 +52,9 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
 	rest.RegisterRoutes(clientCtx, r)
 }
+
+// RegisterGRPCRoutes registers the capability module's REST service handlers.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ context.Context, _ *runtime.ServeMux, _ string) {}
 
 // GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {

@@ -118,6 +118,10 @@ func checkValidity(
 	}
 
 	// Verify next header with the passed-in trustedVals
+	// - asserts trusting period not passed
+	// - assert header timestamp is not past the trusting period
+	// - assert header timestamp is past latest stored consensus state timestamp
+	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
 		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,

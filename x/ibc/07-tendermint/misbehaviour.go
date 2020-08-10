@@ -84,12 +84,14 @@ func CheckMisbehaviourAndUpdateState(
 
 	// Check the validity of the two conflicting headers against their respective
 	// trusted consensus states
-	if err := checkMisbehavingHeader(
+	// NOTE: header height and commitment root assertions are checked with the
+	// evidence.ValidateBasic and msg ValidateBasic functions at the AnteHandler level.
+	if err := checkMisbehaviourHeader(
 		tmClientState, tmConsensusState1, tmEvidence.Header1, currentTimestamp,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header1 in Evidence failed")
 	}
-	if err := checkMisbehavingHeader(
+	if err := checkMisbehaviourHeader(
 		tmClientState, tmConsensusState2, tmEvidence.Header2, currentTimestamp,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Evidence failed")
@@ -99,9 +101,9 @@ func CheckMisbehaviourAndUpdateState(
 	return tmClientState, nil
 }
 
-// checkMisbehavingHeader checks that a Header in Misbehaviour is valid evidence given
+// checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given
 // a trusted ConsensusState
-func checkMisbehavingHeader(
+func checkMisbehaviourHeader(
 	clientState *types.ClientState, consState *types.ConsensusState, header types.Header, currentTimestamp time.Time,
 ) error {
 	// check the trusted fields for the header against ConsensusState

@@ -260,7 +260,7 @@ type TxBody struct {
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
 	// timeout is the block height after which this transaction will not
 	// be processed by the chain
-	TimeoutHeight int64 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
+	TimeoutHeight uint64 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present
 	// and can't be handled, the transaction will be rejected
@@ -318,7 +318,7 @@ func (m *TxBody) GetMemo() string {
 	return ""
 }
 
-func (m *TxBody) GetTimeoutHeight() int64 {
+func (m *TxBody) GetTimeoutHeight() uint64 {
 	if m != nil {
 		return m.TimeoutHeight
 	}
@@ -2159,7 +2159,7 @@ func (m *TxBody) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TimeoutHeight |= int64(b&0x7F) << shift
+				m.TimeoutHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

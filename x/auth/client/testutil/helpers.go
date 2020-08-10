@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
@@ -24,7 +25,10 @@ func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, ex
 
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetSignCommand(), args)
+	cmd := cli.GetSignCommand()
+	tmcli.PrepareBaseCmd(cmd, "", "")
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 }
 
 func TxBroadcastExec(clientCtx client.Context, filename string, extraArgs ...string) (testutil.BufferWriter, error) {

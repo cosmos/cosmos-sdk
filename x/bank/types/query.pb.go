@@ -31,11 +31,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryBalanceRequest is the request type for the Query/Balance RPC method
+// QueryBalanceRequest is the request type for the Query/Balance RPC method.
 type QueryBalanceRequest struct {
-	// address is the address to query balances for
+	// address is the address to query balances for.
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	// denom is the coin denom to query balances for
+	// denom is the coin denom to query balances for.
 	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
@@ -86,9 +86,9 @@ func (m *QueryBalanceRequest) GetDenom() string {
 	return ""
 }
 
-// QueryBalanceResponse is the response type for the Query/Balance RPC method
+// QueryBalanceResponse is the response type for the Query/Balance RPC method.
 type QueryBalanceResponse struct {
-	// balance is the balance of the coin
+	// balance is the balance of the coin.
 	Balance *types.Coin `protobuf:"bytes,1,opt,name=balance,proto3" json:"balance,omitempty"`
 }
 
@@ -132,11 +132,12 @@ func (m *QueryBalanceResponse) GetBalance() *types.Coin {
 	return nil
 }
 
-// QueryBalanceRequest is the request type for the Query/AllBalances RPC method
+// QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
 type QueryAllBalancesRequest struct {
-	// address is the address to query balances for
-	Address    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Pagination *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// address is the address to query balances for.
+	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryAllBalancesRequest) Reset()         { *m = QueryAllBalancesRequest{} }
@@ -186,11 +187,12 @@ func (m *QueryAllBalancesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method.
 type QueryAllBalancesResponse struct {
-	// balances is the balances of the coins
-	Balances   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
-	Pagination *query.PageResponse                      `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// balances is the balances of all the coins.
+	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryAllBalancesResponse) Reset()         { *m = QueryAllBalancesResponse{} }
@@ -240,7 +242,7 @@ func (m *QueryAllBalancesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method.
 type QueryTotalSupplyRequest struct {
 }
 
@@ -323,8 +325,9 @@ func (m *QueryTotalSupplyResponse) GetSupply() github_com_cosmos_cosmos_sdk_type
 	return nil
 }
 
-// QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method
+// QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
 type QuerySupplyOfRequest struct {
+	// denom is the coin denom to query balances for.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
@@ -368,9 +371,9 @@ func (m *QuerySupplyOfRequest) GetDenom() string {
 	return ""
 }
 
-// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method
+// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 type QuerySupplyOfResponse struct {
-	// amount is the supply of the coin
+	// amount is the supply of the coin.
 	Amount github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
 }
 
@@ -470,13 +473,13 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Balance queries the balance of a single coin for a single account
+	// Balance queries the balance of a single coin for a single account.
 	Balance(ctx context.Context, in *QueryBalanceRequest, opts ...grpc.CallOption) (*QueryBalanceResponse, error)
-	// AllBalances queries the balance of all coins for a single account
+	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(ctx context.Context, in *QueryAllBalancesRequest, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
-	// TotalSupply queries the total supply of all coins
+	// TotalSupply queries the total supply of all coins.
 	TotalSupply(ctx context.Context, in *QueryTotalSupplyRequest, opts ...grpc.CallOption) (*QueryTotalSupplyResponse, error)
-	// SupplyOf queries the supply of a single coin
+	// SupplyOf queries the supply of a single coin.
 	SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, opts ...grpc.CallOption) (*QuerySupplyOfResponse, error)
 }
 
@@ -526,13 +529,13 @@ func (c *queryClient) SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, op
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Balance queries the balance of a single coin for a single account
+	// Balance queries the balance of a single coin for a single account.
 	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
-	// AllBalances queries the balance of all coins for a single account
+	// AllBalances queries the balance of all coins for a single account.
 	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
-	// TotalSupply queries the total supply of all coins
+	// TotalSupply queries the total supply of all coins.
 	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
-	// SupplyOf queries the supply of a single coin
+	// SupplyOf queries the supply of a single coin.
 	SupplyOf(context.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error)
 }
 

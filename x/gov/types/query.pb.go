@@ -30,9 +30,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryProposalRequest is the request type for the Query/Proposal RPC method
+// QueryProposalRequest is the request type for the Query/Proposal RPC method.
 type QueryProposalRequest struct {
-	// unique id of the proposal
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
@@ -76,7 +76,7 @@ func (m *QueryProposalRequest) GetProposalId() uint64 {
 	return 0
 }
 
-// QueryProposalResponse is the response type for the Query/Proposal RPC method
+// QueryProposalResponse is the response type for the Query/Proposal RPC method.
 type QueryProposalResponse struct {
 	Proposal Proposal `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal"`
 }
@@ -121,15 +121,16 @@ func (m *QueryProposalResponse) GetProposal() Proposal {
 	return Proposal{}
 }
 
-// QueryProposalsRequest is the request type for the Query/Proposals RPC method
+// QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 type QueryProposalsRequest struct {
 	// status of the proposals.
 	ProposalStatus ProposalStatus `protobuf:"varint,1,opt,name=proposal_status,json=proposalStatus,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"proposal_status,omitempty"`
 	// Voter address for the proposals.
 	Voter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
-	// Deposit addresses from the proposals.
-	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
-	Pagination *query.PageRequest                            `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryProposalsRequest) Reset()         { *m = QueryProposalsRequest{} }
@@ -193,9 +194,10 @@ func (m *QueryProposalsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryProposalsResponse is the response type for the Query/Proposals RPC method
+// QueryProposalsResponse is the response type for the Query/Proposals RPC method.
 type QueryProposalsResponse struct {
-	Proposals  []Proposal          `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals"`
+	Proposals []Proposal `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -246,11 +248,11 @@ func (m *QueryProposalsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryVoteRequest is the request type for the Query/Vote RPC method
+// QueryVoteRequest is the request type for the Query/Vote RPC method.
 type QueryVoteRequest struct {
-	// unique id of the proposal
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	// Voter address for the proposals.
+	// voter defines the oter address for the proposals.
 	Voter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
 }
 
@@ -301,8 +303,9 @@ func (m *QueryVoteRequest) GetVoter() github_com_cosmos_cosmos_sdk_types.AccAddr
 	return nil
 }
 
-// QueryVoteResponse is the response type for the Query/Vote RPC method
+// QueryVoteResponse is the response type for the Query/Vote RPC method.
 type QueryVoteResponse struct {
+	// vote defined the queried vote.
 	Vote Vote `protobuf:"bytes,1,opt,name=vote,proto3" json:"vote"`
 }
 
@@ -346,10 +349,11 @@ func (m *QueryVoteResponse) GetVote() Vote {
 	return Vote{}
 }
 
-// QueryVotesRequest is the request type for the Query/Votes RPC method
+// QueryVotesRequest is the request type for the Query/Votes RPC method.
 type QueryVotesRequest struct {
-	// unique id of the proposal
-	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -400,9 +404,11 @@ func (m *QueryVotesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryVotesResponse is the response type for the Query/Votes RPC method
+// QueryVotesResponse is the response type for the Query/Votes RPC method.
 type QueryVotesResponse struct {
-	Votes      []Vote              `protobuf:"bytes,1,rep,name=votes,proto3" json:"votes"`
+	// votes defined the queried votes.
+	Votes []Vote `protobuf:"bytes,1,rep,name=votes,proto3" json:"votes"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -453,8 +459,9 @@ func (m *QueryVotesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryParamsRequest is the request type for the Query/Params RPC method
+// QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
+	// params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit".
 	ParamsType string `protobuf:"bytes,1,opt,name=params_type,json=paramsType,proto3" json:"params_type,omitempty"`
 }
 
@@ -498,11 +505,14 @@ func (m *QueryParamsRequest) GetParamsType() string {
 	return ""
 }
 
-// QueryParamsResponse is the response type for the Query/Params RPC method
+// QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	VotingParams  VotingParams  `protobuf:"bytes,1,opt,name=voting_params,json=votingParams,proto3" json:"voting_params"`
+	// voting_params defines the parameters related to voting.
+	VotingParams VotingParams `protobuf:"bytes,1,opt,name=voting_params,json=votingParams,proto3" json:"voting_params"`
+	// deposit_params defines the parameters related to deposit.
 	DepositParams DepositParams `protobuf:"bytes,2,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params"`
-	TallyParams   TallyParams   `protobuf:"bytes,3,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params"`
+	// tally_params defines the parameters related to tally.
+	TallyParams TallyParams `protobuf:"bytes,3,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -559,11 +569,11 @@ func (m *QueryParamsResponse) GetTallyParams() TallyParams {
 	return TallyParams{}
 }
 
-// QueryDepositRequest is the request type for the Query/Deposit RPC method
+// QueryDepositRequest is the request type for the Query/Deposit RPC method.
 type QueryDepositRequest struct {
-	// unique id of the proposal
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	// Deposit addresses from the proposals.
+	// depositor defines the deposit addresses from the proposals.
 	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
 }
 
@@ -614,8 +624,9 @@ func (m *QueryDepositRequest) GetDepositor() github_com_cosmos_cosmos_sdk_types.
 	return nil
 }
 
-// QueryDepositResponse is the response type for the Query/Deposit RPC method
+// QueryDepositResponse is the response type for the Query/Deposit RPC method.
 type QueryDepositResponse struct {
+	// deposit defines the requested deposit.
 	Deposit Deposit `protobuf:"bytes,1,opt,name=deposit,proto3" json:"deposit"`
 }
 
@@ -659,10 +670,11 @@ func (m *QueryDepositResponse) GetDeposit() Deposit {
 	return Deposit{}
 }
 
-// QueryDepositsRequest is the request type for the Query/Deposits RPC method
+// QueryDepositsRequest is the request type for the Query/Deposits RPC method.
 type QueryDepositsRequest struct {
-	// unique id of the proposal
-	ProposalId uint64             `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -713,9 +725,10 @@ func (m *QueryDepositsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryDepositsResponse is the response type for the Query/Deposits RPC method
+// QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 type QueryDepositsResponse struct {
-	Deposits   []Deposit           `protobuf:"bytes,1,rep,name=deposits,proto3" json:"deposits"`
+	Deposits []Deposit `protobuf:"bytes,1,rep,name=deposits,proto3" json:"deposits"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -766,9 +779,9 @@ func (m *QueryDepositsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryTallyResultRequest is the request type for the Query/Tally RPC method
+// QueryTallyResultRequest is the request type for the Query/Tally RPC method.
 type QueryTallyResultRequest struct {
-	// unique id of the proposal
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
@@ -812,8 +825,9 @@ func (m *QueryTallyResultRequest) GetProposalId() uint64 {
 	return 0
 }
 
-// QueryTallyResultResponse is the response type for the Query/Tally RPC method
+// QueryTallyResultResponse is the response type for the Query/Tally RPC method.
 type QueryTallyResultResponse struct {
+	// tally defines the requested tally.
 	Tally TallyResult `protobuf:"bytes,1,opt,name=tally,proto3" json:"tally"`
 }
 
@@ -947,21 +961,21 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Proposal queries proposal details based on ProposalID
+	// Proposal queries proposal details based on ProposalID.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
-	// Proposals queries all proposals based on given status
+	// Proposals queries all proposals based on given status.
 	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
-	// Vote queries Voted information based on proposalID, voterAddr
+	// Vote queries voted information based on proposalID, voterAddr.
 	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
-	// Votes queries votes of a given proposal
+	// Votes queries votes of a given proposal.
 	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
-	// Params queries all parameters of the gov module
+	// Params queries all parameters of the gov module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Deposit queries single deposit information based proposalID, depositAddr
+	// Deposit queries single deposit information based proposalID, depositAddr.
 	Deposit(ctx context.Context, in *QueryDepositRequest, opts ...grpc.CallOption) (*QueryDepositResponse, error)
-	// Deposits queries all deposits of a single proposal
+	// Deposits queries all deposits of a single proposal.
 	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
-	// TallyResult queries the tally of a proposal vote
+	// TallyResult queries the tally of a proposal vote.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 }
 
@@ -1047,21 +1061,21 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Proposal queries proposal details based on ProposalID
+	// Proposal queries proposal details based on ProposalID.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
-	// Proposals queries all proposals based on given status
+	// Proposals queries all proposals based on given status.
 	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
-	// Vote queries Voted information based on proposalID, voterAddr
+	// Vote queries voted information based on proposalID, voterAddr.
 	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
-	// Votes queries votes of a given proposal
+	// Votes queries votes of a given proposal.
 	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
-	// Params queries all parameters of the gov module
+	// Params queries all parameters of the gov module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Deposit queries single deposit information based proposalID, depositAddr
+	// Deposit queries single deposit information based proposalID, depositAddr.
 	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
-	// Deposits queries all deposits of a single proposal
+	// Deposits queries all deposits of a single proposal.
 	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
-	// TallyResult queries the tally of a proposal vote
+	// TallyResult queries the tally of a proposal vote.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 }
 

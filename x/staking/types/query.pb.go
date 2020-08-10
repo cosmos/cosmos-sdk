@@ -30,9 +30,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryValidatorsRequest is request type for Query/Validators RPC method
+// QueryValidatorsRequest is request type for Query/Validators RPC method.
 type QueryValidatorsRequest struct {
-	Status     string             `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// status enables to query for validators matching a given status.
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -85,7 +87,9 @@ func (m *QueryValidatorsRequest) GetPagination() *query.PageRequest {
 
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 type QueryValidatorsResponse struct {
-	Validators []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// validators contains all the queried validators
+	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -138,6 +142,7 @@ func (m *QueryValidatorsResponse) GetPagination() *query.PageResponse {
 
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 type QueryValidatorRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -183,6 +188,7 @@ func (m *QueryValidatorRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 type QueryValidatorResponse struct {
+	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -228,8 +234,10 @@ func (m *QueryValidatorResponse) GetValidator() Validator {
 
 // QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorDelegationsRequest) Reset()         { *m = QueryValidatorDelegationsRequest{} }
@@ -282,7 +290,8 @@ func (m *QueryValidatorDelegationsRequest) GetPagination() *query.PageRequest {
 // QueryValidatorDelegationsRequest is response type for the Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsResponse struct {
 	DelegationResponses DelegationResponses `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3,castrepeated=DelegationResponses" json:"delegation_responses"`
-	Pagination          *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorDelegationsResponse) Reset()         { *m = QueryValidatorDelegationsResponse{} }
@@ -334,8 +343,10 @@ func (m *QueryValidatorDelegationsResponse) GetPagination() *query.PageResponse 
 
 // QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
 type QueryValidatorUnbondingDelegationsRequest struct {
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorUnbondingDelegationsRequest) Reset() {
@@ -389,10 +400,11 @@ func (m *QueryValidatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method
+// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method.
 type QueryValidatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
-	Pagination         *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorUnbondingDelegationsResponse) Reset() {
@@ -446,9 +458,11 @@ func (m *QueryValidatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryDelegationRequest is request type for the Query/Delegation RPC method
+// QueryDelegationRequest is request type for the Query/Delegation RPC method.
 type QueryDelegationRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -499,9 +513,10 @@ func (m *QueryDelegationRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk
 	return nil
 }
 
-// QueryDelegationResponse is response type for the Query/Delegation RPC method
+// QueryDelegationResponse is response type for the Query/Delegation RPC method.
 type QueryDelegationResponse struct {
-	DelegationResponse *DelegationResponse `protobuf:"bytes,1,opt,name=delegation_response,json=delegationResponse,proto3,casttype=DelegationResponse" json:"delegation_response,omitempty"`
+	// delegation_responses defines the delegation info of a delegation.
+	DelegationResponse *DelegationResponse `protobuf:"bytes,1,opt,name=delegation_response,json=delegationResponse,proto3" json:"delegation_response,omitempty"`
 }
 
 func (m *QueryDelegationResponse) Reset()         { *m = QueryDelegationResponse{} }
@@ -544,9 +559,11 @@ func (m *QueryDelegationResponse) GetDelegationResponse() *DelegationResponse {
 	return nil
 }
 
-// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method
+// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -597,8 +614,9 @@ func (m *QueryUnbondingDelegationRequest) GetValidatorAddr() github_com_cosmos_c
 	return nil
 }
 
-// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method
+// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationResponse struct {
+	// unbond defines the unbonding information of a delegation.
 	Unbond UnbondingDelegation `protobuf:"bytes,1,opt,name=unbond,proto3" json:"unbond"`
 }
 
@@ -642,10 +660,12 @@ func (m *QueryUnbondingDelegationResponse) GetUnbond() UnbondingDelegation {
 	return UnbondingDelegation{}
 }
 
-// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method
+// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorDelegationsRequest) Reset()         { *m = QueryDelegatorDelegationsRequest{} }
@@ -695,10 +715,12 @@ func (m *QueryDelegatorDelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method
+// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsResponse struct {
+	// delegation_responses defines all the delegations' info of a delegator.
 	DelegationResponses []DelegationResponse `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3" json:"delegation_responses"`
-	Pagination          *query.PageResponse  `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorDelegationsResponse) Reset()         { *m = QueryDelegatorDelegationsResponse{} }
@@ -748,10 +770,12 @@ func (m *QueryDelegatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method
+// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorUnbondingDelegationsRequest) Reset() {
@@ -805,10 +829,11 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method
+// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
-	Pagination         *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorUnbondingDelegationsResponse) Reset() {
@@ -862,12 +887,16 @@ func (m *QueryDelegatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method
+// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method.
 type QueryRedelegationsRequest struct {
-	DelegatorAddr    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// delegator_addr defines the delegator address to query for.
+	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// src_validator_addr defines the validator address to redelegate from.
 	SrcValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=src_validator_addr,json=srcValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"src_validator_addr,omitempty"`
+	// dst_validator_addr defines the validator address to redelegate to.
 	DstValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=dst_validator_addr,json=dstValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"dst_validator_addr,omitempty"`
-	Pagination       *query.PageRequest                            `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryRedelegationsRequest) Reset()         { *m = QueryRedelegationsRequest{} }
@@ -931,10 +960,11 @@ func (m *QueryRedelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method
+// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method.
 type QueryRedelegationsResponse struct {
 	RedelegationResponses []RedelegationResponse `protobuf:"bytes,1,rep,name=redelegation_responses,json=redelegationResponses,proto3" json:"redelegation_responses"`
-	Pagination            *query.PageResponse    `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryRedelegationsResponse) Reset()         { *m = QueryRedelegationsResponse{} }
@@ -984,10 +1014,12 @@ func (m *QueryRedelegationsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
-	Pagination    *query.PageRequest                            `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryDelegatorValidatorsRequest) Reset()         { *m = QueryDelegatorValidatorsRequest{} }
@@ -1037,9 +1069,11 @@ func (m *QueryDelegatorValidatorsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
-	Validators []Validator         `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// validators defines the the validators' info of a delegator.
+	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -1090,9 +1124,11 @@ func (m *QueryDelegatorValidatorsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method
+// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorRequest struct {
+	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	// validator_addr defines the validator address to query for.
 	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
 }
 
@@ -1143,8 +1179,9 @@ func (m *QueryDelegatorValidatorRequest) GetValidatorAddr() github_com_cosmos_co
 	return nil
 }
 
-// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method
+// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
+	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
 }
 
@@ -1188,8 +1225,9 @@ func (m *QueryDelegatorValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method
+// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method.
 type QueryHistoricalInfoRequest struct {
+	// height defines at which height to query the historical info.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
 }
 
@@ -1233,8 +1271,9 @@ func (m *QueryHistoricalInfoRequest) GetHeight() int64 {
 	return 0
 }
 
-// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method
+// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method.
 type QueryHistoricalInfoResponse struct {
+	// hist defines the historical info at the given height.
 	Hist *HistoricalInfo `protobuf:"bytes,1,opt,name=hist,proto3" json:"hist,omitempty"`
 }
 
@@ -1278,7 +1317,7 @@ func (m *QueryHistoricalInfoResponse) GetHist() *HistoricalInfo {
 	return nil
 }
 
-// QueryPoolRequest is request type for the Query/Pool RPC method
+// QueryPoolRequest is request type for the Query/Pool RPC method.
 type QueryPoolRequest struct {
 }
 
@@ -1315,8 +1354,9 @@ func (m *QueryPoolRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryPoolRequest proto.InternalMessageInfo
 
-// QueryPoolResponse is response type for the Query/Pool RPC method
+// QueryPoolResponse is response type for the Query/Pool RPC method.
 type QueryPoolResponse struct {
+	// pool defines the pool info.
 	Pool Pool `protobuf:"bytes,1,opt,name=pool,proto3" json:"pool"`
 }
 
@@ -1360,7 +1400,7 @@ func (m *QueryPoolResponse) GetPool() Pool {
 	return Pool{}
 }
 
-// QueryParamsRequest is request type for the Query/Params RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
 
@@ -1397,10 +1437,10 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is response type for the Query/Params RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	Params     Params              `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// params holds all the parameters of this module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -1441,13 +1481,6 @@ func (m *QueryParamsResponse) GetParams() Params {
 		return m.Params
 	}
 	return Params{}
-}
-
-func (m *QueryParamsResponse) GetPagination() *query.PageResponse {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
 }
 
 func init() {
@@ -1572,33 +1605,33 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Validators queries all validators that match the given status
+	// Validators queries all validators that match the given status.
 	Validators(ctx context.Context, in *QueryValidatorsRequest, opts ...grpc.CallOption) (*QueryValidatorsResponse, error)
-	// Validator queries validator info for given validator addr
+	// Validator queries validator info for given validator address.
 	Validator(ctx context.Context, in *QueryValidatorRequest, opts ...grpc.CallOption) (*QueryValidatorResponse, error)
-	// ValidatorDelegations queries delegate info for given validator
+	// ValidatorDelegations queries delegate info for given validator.
 	ValidatorDelegations(ctx context.Context, in *QueryValidatorDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorDelegationsResponse, error)
-	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
+	// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
 	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// Delegation queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(ctx context.Context, in *QueryDelegationRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for give validator delegator pair
+	// UnbondingDelegation queries unbonding info for given validator delegator pair.
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
-	// DelegatorDelegations queries all delegations of a give delegator address
+	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
-	// Redelegations queries redelegations of given address
+	// Redelegations queries redelegations of given address.
 	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address
+	// DelegatorValidators queries all validator info for given delegator address.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair
+	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
-	// HistoricalInfo queries the historical info for given height
+	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
-	// Pool queries the pool info
+	// Pool queries the pool info.
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
-	// Parameters queries the staking parameters
+	// Parameters queries the staking parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
@@ -1738,33 +1771,33 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Validators queries all validators that match the given status
+	// Validators queries all validators that match the given status.
 	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
-	// Validator queries validator info for given validator addr
+	// Validator queries validator info for given validator address.
 	Validator(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
-	// ValidatorDelegations queries delegate info for given validator
+	// ValidatorDelegations queries delegate info for given validator.
 	ValidatorDelegations(context.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
-	// ValidatorUnbondingDelegations queries unbonding delegations of a validator
+	// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
 	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
-	// Delegation queries delegate info for given validator delegator pair
+	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for give validator delegator pair
+	// UnbondingDelegation queries unbonding info for given validator delegator pair.
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
-	// DelegatorDelegations queries all delegations of a give delegator address
+	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
-	// Redelegations queries redelegations of given address
+	// Redelegations queries redelegations of given address.
 	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address
+	// DelegatorValidators queries all validator info for given delegator address.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair
+	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
-	// HistoricalInfo queries the historical info for given height
+	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
-	// Pool queries the pool info
+	// Pool queries the pool info.
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
-	// Parameters queries the staking parameters
+	// Parameters queries the staking parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
@@ -3224,18 +3257,6 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -3692,10 +3713,6 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
-	if m.Pagination != nil {
-		l = m.Pagination.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
 	return n
 }
 
@@ -6702,42 +6719,6 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Pagination == nil {
-				m.Pagination = &query.PageResponse{}
-			}
-			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -31,7 +31,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest is the request type for the Query/Params RPC method
+// QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
 
@@ -68,8 +68,9 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse is the response type for the Query/Params RPC method
+// QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
+	// params defines the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
@@ -113,8 +114,9 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method
+// QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method.
 type QueryValidatorOutstandingRewardsRequest struct {
+	// validator_address defines the validator address to query for.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
 }
 
@@ -160,7 +162,7 @@ func (m *QueryValidatorOutstandingRewardsRequest) GetValidatorAddress() github_c
 	return nil
 }
 
-// QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method
+// QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method.
 type QueryValidatorOutstandingRewardsResponse struct {
 	Rewards ValidatorOutstandingRewards `protobuf:"bytes,1,opt,name=rewards,proto3" json:"rewards"`
 }
@@ -209,6 +211,7 @@ func (m *QueryValidatorOutstandingRewardsResponse) GetRewards() ValidatorOutstan
 
 // QueryValidatorCommissionRequest is the request type for the Query/ValidatorCommission RPC method
 type QueryValidatorCommissionRequest struct {
+	// validator_address defines the validator address to query for.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
 }
 
@@ -254,6 +257,7 @@ func (m *QueryValidatorCommissionRequest) GetValidatorAddress() github_com_cosmo
 
 // QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method
 type QueryValidatorCommissionResponse struct {
+	// commission defines the commision the validator received.
 	Commission ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission"`
 }
 
@@ -299,10 +303,14 @@ func (m *QueryValidatorCommissionResponse) GetCommission() ValidatorAccumulatedC
 
 // QueryValidatorSlashesRequest is the request type for the Query/ValidatorSlashes RPC method
 type QueryValidatorSlashesRequest struct {
+	// validator_address defines the validator address to query for.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
-	StartingHeight   uint64                                        `protobuf:"varint,2,opt,name=starting_height,json=startingHeight,proto3" json:"starting_height,omitempty"`
-	EndingHeight     uint64                                        `protobuf:"varint,3,opt,name=ending_height,json=endingHeight,proto3" json:"ending_height,omitempty"`
-	Pagination       *query.PageRequest                            `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// starting_height defines the optional starting height to query the slashes.
+	StartingHeight uint64 `protobuf:"varint,2,opt,name=starting_height,json=startingHeight,proto3" json:"starting_height,omitempty"`
+	// starting_height defines the optional ending height to query the slashes.
+	EndingHeight uint64 `protobuf:"varint,3,opt,name=ending_height,json=endingHeight,proto3" json:"ending_height,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorSlashesRequest) Reset()         { *m = QueryValidatorSlashesRequest{} }
@@ -366,10 +374,12 @@ func (m *QueryValidatorSlashesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method
+// QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method.
 type QueryValidatorSlashesResponse struct {
-	Slashes    []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=slashes,proto3" json:"slashes"`
-	Pagination *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// slashes defines the slashes the validator received.
+	Slashes []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=slashes,proto3" json:"slashes"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *QueryValidatorSlashesResponse) Reset()         { *m = QueryValidatorSlashesResponse{} }
@@ -419,9 +429,11 @@ func (m *QueryValidatorSlashesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method
+// QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method.
 type QueryDelegationRewardsRequest struct {
+	// delegator_address defines the delegator address to query for.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
+	// validator_address defines the validator address to query for.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty"`
 }
 
@@ -472,8 +484,9 @@ func (m *QueryDelegationRewardsRequest) GetValidatorAddress() github_com_cosmos_
 	return nil
 }
 
-// QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method
+// QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method.
 type QueryDelegationRewardsResponse struct {
+	// rewards defines the rewards accrued by a delegation.
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
 
@@ -517,8 +530,9 @@ func (m *QueryDelegationRewardsResponse) GetRewards() github_com_cosmos_cosmos_s
 	return nil
 }
 
-// QueryDelegationTotalRewardsRequest is the request type for the Query/DelegationTotalRewards RPC method
+// QueryDelegationTotalRewardsRequest is the request type for the Query/DelegationTotalRewards RPC method.
 type QueryDelegationTotalRewardsRequest struct {
+	// delegator_address defines the delegator address to query for.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
 }
 
@@ -562,10 +576,12 @@ func (m *QueryDelegationTotalRewardsRequest) GetDelegatorAddress() github_com_co
 	return nil
 }
 
-// QueryDelegationTotalRewardsResponse is the response type for the Query/DelegationTotalRewards RPC method
+// QueryDelegationTotalRewardsResponse is the response type for the Query/DelegationTotalRewards RPC method.
 type QueryDelegationTotalRewardsResponse struct {
-	Rewards []DelegationDelegatorReward                 `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
-	Total   github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"total"`
+	// rewards defines all the rewards accrued by a delegator.
+	Rewards []DelegationDelegatorReward `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
+	// total defines the sum of all the rewards.
+	Total github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"total"`
 }
 
 func (m *QueryDelegationTotalRewardsResponse) Reset()         { *m = QueryDelegationTotalRewardsResponse{} }
@@ -615,8 +631,9 @@ func (m *QueryDelegationTotalRewardsResponse) GetTotal() github_com_cosmos_cosmo
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is the request type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsRequest is the request type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
+	// delegator_address defines the delegator address to query for.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
 }
 
@@ -660,8 +677,9 @@ func (m *QueryDelegatorValidatorsRequest) GetDelegatorAddress() github_com_cosmo
 	return nil
 }
 
-// QueryDelegatorValidatorsResponse is the response type for the Query/DelegatorValidators RPC method
+// QueryDelegatorValidatorsResponse is the response type for the Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
+	// validators defines the validators a delegator is delegating for.
 	Validators []github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,rep,name=validators,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validators,omitempty"`
 }
 
@@ -705,8 +723,9 @@ func (m *QueryDelegatorValidatorsResponse) GetValidators() []github_com_cosmos_c
 	return nil
 }
 
-// QueryDelegatorWithdrawAddressRequest is the request type for the Query/DelegatorWithdrawAddress RPC method
+// QueryDelegatorWithdrawAddressRequest is the request type for the Query/DelegatorWithdrawAddress RPC method.
 type QueryDelegatorWithdrawAddressRequest struct {
+	// delegator_address defines the delegator address to query for.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty"`
 }
 
@@ -750,8 +769,9 @@ func (m *QueryDelegatorWithdrawAddressRequest) GetDelegatorAddress() github_com_
 	return nil
 }
 
-// QueryDelegatorWithdrawAddressResponse is the response type for the Query/DelegatorWithdrawAddress RPC method
+// QueryDelegatorWithdrawAddressResponse is the response type for the Query/DelegatorWithdrawAddress RPC method.
 type QueryDelegatorWithdrawAddressResponse struct {
+	// withdraw_address defines the delegator address to query for.
 	WithdrawAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty"`
 }
 
@@ -795,7 +815,7 @@ func (m *QueryDelegatorWithdrawAddressResponse) GetWithdrawAddress() github_com_
 	return nil
 }
 
-// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC method
+// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC method.
 type QueryCommunityPoolRequest struct {
 }
 
@@ -832,8 +852,9 @@ func (m *QueryCommunityPoolRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
 
-// QueryCommunityPoolResponse is the response type for the Query/CommunityPool RPC method
+// QueryCommunityPoolResponse is the response type for the Query/CommunityPool RPC method.
 type QueryCommunityPoolResponse struct {
+	// pool defines community pool's coins.
 	Pool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=pool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"pool"`
 }
 
@@ -979,23 +1000,23 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries params of distribution module
+	// Params queries params of the distribution module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// ValidatorOutstandingRewards queries rewards of a validator address
+	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
-	// ValidatorCommission queries accumulated commission for a validator
+	// ValidatorCommission queries accumulated commission for a validator.
 	ValidatorCommission(ctx context.Context, in *QueryValidatorCommissionRequest, opts ...grpc.CallOption) (*QueryValidatorCommissionResponse, error)
-	// ValidatorSlashes queries slash events of a validator
+	// ValidatorSlashes queries slash events of a validator.
 	ValidatorSlashes(ctx context.Context, in *QueryValidatorSlashesRequest, opts ...grpc.CallOption) (*QueryValidatorSlashesResponse, error)
-	// DelegationRewards the total rewards accrued by a delegation
+	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards the total rewards accrued by a each validator
+	// DelegationTotalRewards queries the total rewards accrued by a each validator.
 	DelegationTotalRewards(ctx context.Context, in *QueryDelegationTotalRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationTotalRewardsResponse, error)
-	// DelegatorValidators queries the validators of a delegator
+	// DelegatorValidators queries the validators of a delegator.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorWithdrawAddress queries withdraw address of a delegator
+	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
-	// CommunityPool queries the community pool coins
+	// CommunityPool queries the community pool coins.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 }
 
@@ -1090,23 +1111,23 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries params of distribution module
+	// Params queries params of the distribution module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// ValidatorOutstandingRewards queries rewards of a validator address
+	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
-	// ValidatorCommission queries accumulated commission for a validator
+	// ValidatorCommission queries accumulated commission for a validator.
 	ValidatorCommission(context.Context, *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error)
-	// ValidatorSlashes queries slash events of a validator
+	// ValidatorSlashes queries slash events of a validator.
 	ValidatorSlashes(context.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
-	// DelegationRewards the total rewards accrued by a delegation
+	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards the total rewards accrued by a each validator
+	// DelegationTotalRewards queries the total rewards accrued by a each validator.
 	DelegationTotalRewards(context.Context, *QueryDelegationTotalRewardsRequest) (*QueryDelegationTotalRewardsResponse, error)
-	// DelegatorValidators queries the validators of a delegator
+	// DelegatorValidators queries the validators of a delegator.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorWithdrawAddress queries withdraw address of a delegator
+	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
-	// CommunityPool queries the community pool coins
+	// CommunityPool queries the community pool coins.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }
 

@@ -28,10 +28,12 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest is request type for the Query/Params RPC method
+// QueryParamsRequest is request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
+	// subspace defines the module to query the parameter for.
 	Subspace string `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
-	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// key defines the key of the parameter in the subspace.
+	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
 func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
@@ -81,9 +83,10 @@ func (m *QueryParamsRequest) GetKey() string {
 	return ""
 }
 
-// QueryParamsResponse is response type for the Query/Params RPC method
+// QueryParamsResponse is response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	Params ParamChange `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// param defines the queried parameter.
+	Param ParamChange `protobuf:"bytes,1,opt,name=param,proto3" json:"param"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -119,9 +122,9 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-func (m *QueryParamsResponse) GetParams() ParamChange {
+func (m *QueryParamsResponse) GetParam() ParamChange {
 	if m != nil {
-		return m.Params
+		return m.Param
 	}
 	return ParamChange{}
 }
@@ -167,7 +170,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params queries all parameters of the params module
+	// Params queries a specific parameter of a module, given its subspace and key.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
@@ -190,7 +193,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params queries all parameters of the params module
+	// Params queries a specific parameter of a module, given its subspace and key.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
@@ -295,7 +298,7 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Param.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -341,7 +344,7 @@ func (m *QueryParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Params.Size()
+	l = m.Param.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -500,7 +503,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Param", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -527,7 +530,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Param.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

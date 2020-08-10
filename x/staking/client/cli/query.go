@@ -116,7 +116,7 @@ $ %s query staking validators
 				return err
 			}
 
-			var validators []types.Validator
+			var validators types.Validators
 			for _, kv := range resKVs {
 				validator, err := types.UnmarshalValidator(types.ModuleCdc, kv.Value)
 				if err != nil {

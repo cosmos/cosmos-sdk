@@ -146,8 +146,8 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := app.AppCodec()
 	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	appCodec := legacyQuerierCdc
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))

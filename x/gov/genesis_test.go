@@ -1,6 +1,7 @@
 package gov_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -61,7 +61,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
 
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		panic(err)
 	}

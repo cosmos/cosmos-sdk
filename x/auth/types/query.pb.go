@@ -79,7 +79,7 @@ func (m *QueryAccountRequest) GetAddress() github_com_cosmos_cosmos_sdk_types.Ac
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 type QueryAccountResponse struct {
-	// address defines the account of the corresponding address.
+	// account defines the account of the corresponding address.
 	Account *types.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 }
 

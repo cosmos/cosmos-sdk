@@ -8,9 +8,9 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(StartingProposalId uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
+func NewGenesisState(startingProposalId uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
 	return GenesisState{
-		StartingProposalId: StartingProposalId,
+		StartingProposalId: startingProposalId,
 		DepositParams:      dp,
 		VotingParams:       vp,
 		TallyParams:        tp,

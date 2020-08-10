@@ -8,8 +8,8 @@ import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
-// TxService defines a gRPC convenience service for simulating, broadcasting and querying Tx's.
-service TxService {
+// Service defines a gRPC convenience service for simulating, broadcasting and querying Tx's.
+service Service {
     // Simulate simulates executing a transaction for estimating gas usage.
     rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
 }

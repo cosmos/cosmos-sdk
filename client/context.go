@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -209,7 +211,17 @@ func (ctx Context) PrintString(str string) error {
 // PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) PrintOutput(toPrint interface{}) error {
+func (ctx Context) PrintOutput(toPrint proto.Message) error {
+	return ctx.printOutput(toPrint)
+}
+
+// PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
+// and uses amino JSON encoding. It will be removed in the near future!
+func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+	return ctx.WithJSONMarshaler(ctx.Codec).printOutput(toPrint)
+}
+
+func (ctx Context) printOutput(toPrint interface{}) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {

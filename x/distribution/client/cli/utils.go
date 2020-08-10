@@ -19,7 +19,8 @@ type (
 )
 
 // ParseCommunityPoolSpendProposalJSON reads and parses a CommunityPoolSpendProposalJSON from a file.
-func ParseCommunityPoolSpendProposalJSON(cdc codec.JSONMarshaler, proposalFile string) (CommunityPoolSpendProposalJSON, error) {
+// TODO: migrate this to protobuf
+func ParseCommunityPoolSpendProposalJSON(cdc *codec.Codec, proposalFile string) (CommunityPoolSpendProposalJSON, error) {
 	proposal := CommunityPoolSpendProposalJSON{}
 
 	contents, err := ioutil.ReadFile(proposalFile)

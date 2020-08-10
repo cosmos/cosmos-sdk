@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -93,8 +95,8 @@ func init() {
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		queryCommand(),
-		txCommand(),
+		withProtoJson(queryCommand()),
+		withProtoJson(txCommand()),
 		keys.Commands(simapp.DefaultNodeHome),
 	)
 }
@@ -196,4 +198,28 @@ func exportAppStateAndTMValidators(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+}
+
+// This is a temporary command middleware to enable proto JSON marshaling for testing.
+// Once proto JSON works everywhere we can remove this and set ProtoCodec as default
+func withProtoJson(command *cobra.Command) *cobra.Command {
+	existing := command.PersistentPreRunE
+	if existing != nil {
+		command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+			err := existing(cmd, args)
+			if err != nil {
+				return err
+			}
+			return setProtoJson(cmd, args)
+		}
+	} else {
+		command.PersistentPreRunE = setProtoJson
+	}
+	return command
+}
+
+func setProtoJson(cmd *cobra.Command, args []string) error {
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx = clientCtx.WithJSONMarshaler(codec.NewProtoCodec(clientCtx.InterfaceRegistry))
+	return client.SetCmdClientContext(cmd, clientCtx)
 }

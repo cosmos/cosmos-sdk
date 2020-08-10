@@ -1629,11 +1629,11 @@ type QueryClient interface {
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator address.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
@@ -1795,11 +1795,11 @@ type QueryServer interface {
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator address.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorValidator queries validator info for given delegator validator pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)

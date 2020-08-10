@@ -45,7 +45,7 @@ service Query {
 		option (google.api.http).get = "/cosmos/staking/v1beta1/delegations/{delegator_addr}";
   }
 
-  // DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
+  // DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
   rpc DelegatorUnbondingDelegations (QueryDelegatorUnbondingDelegationsRequest) returns (QueryDelegatorUnbondingDelegationsResponse) {
 		option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations";
   }
@@ -55,7 +55,7 @@ service Query {
 		option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations";
   }
 
-  // DelegatorValidators queries all validator info for given delegator address.
+  // DelegatorValidators queries all validators info for given delegator address.
   rpc DelegatorValidators (QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
 		option (google.api.http).get = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators";  
   }

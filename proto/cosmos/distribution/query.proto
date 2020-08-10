@@ -53,7 +53,7 @@ service Query {
 
   // CommunityPool queries the community pool coins.
   rpc CommunityPool (QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
-    option (google.api.http).get = "/cosmos/distribution/v1beta1/community-pool";
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
 }
 

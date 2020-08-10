@@ -122,12 +122,14 @@ func QueryChannelClientState(
 	}
 
 	if prove {
-		_, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ID)
+		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ID)
 		if err != nil {
 			return nil, err
 		}
-		res.Proof = proof
-		res.ProofHeight = proofHeight
+
+		// use client state returned from ABCI query in case query height differs
+		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.ID, clientState)
+		res = types.NewQueryChannelClientStateResponse(identifiedClientState, proof, int64(proofHeight))
 	}
 
 	return res, nil
@@ -157,12 +159,13 @@ func QueryChannelConsensusState(
 	}
 
 	if prove {
-		_, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientID, consensusState.GetHeight())
+		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientID, consensusState.GetHeight())
 		if err != nil {
 			return nil, err
 		}
-		res.Proof = proof
-		res.ProofHeight = proofHeight
+
+		// use consensus state returned from ABCI query in case query height differs
+		res = types.NewQueryChannelConsensusStateResponse(res.ClientID, consensusState, proof, int64(proofHeight))
 	}
 
 	return res, nil

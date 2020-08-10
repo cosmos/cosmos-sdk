@@ -38,13 +38,13 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, s
 }
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
-func MustMarshalDelegation(cdc codec.Marshaler, delegation Delegation) []byte {
+func MustMarshalDelegation(cdc codec.BinaryMarshaler, delegation Delegation) []byte {
 	return cdc.MustMarshalBinaryBare(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
 // Panics if fails.
-func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
+func MustUnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
 		panic(err)
@@ -54,7 +54,7 @@ func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
 }
 
 // return the delegation
-func UnmarshalDelegation(cdc codec.Marshaler, value []byte) (delegation Delegation, err error) {
+func UnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) (delegation Delegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &delegation)
 	return delegation, err
 }
@@ -126,12 +126,12 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 }
 
 // return the unbonding delegation
-func MustMarshalUBD(cdc codec.Marshaler, ubd UnbondingDelegation) []byte {
+func MustMarshalUBD(cdc codec.BinaryMarshaler, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshalBinaryBare(&ubd)
 }
 
 // unmarshal a unbonding delegation from a store value
-func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
+func MustUnmarshalUBD(cdc codec.BinaryMarshaler, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
 		panic(err)
@@ -141,7 +141,7 @@ func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
 }
 
 // unmarshal a unbonding delegation from a store value
-func UnmarshalUBD(cdc codec.Marshaler, value []byte) (ubd UnbondingDelegation, err error) {
+func UnmarshalUBD(cdc codec.BinaryMarshaler, value []byte) (ubd UnbondingDelegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &ubd)
 	return ubd, err
 }
@@ -220,12 +220,12 @@ func (red *Redelegation) RemoveEntry(i int64) {
 }
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
-func MustMarshalRED(cdc codec.Marshaler, red Redelegation) []byte {
+func MustMarshalRED(cdc codec.BinaryMarshaler, red Redelegation) []byte {
 	return cdc.MustMarshalBinaryBare(&red)
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
-func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
+func MustUnmarshalRED(cdc codec.BinaryMarshaler, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
 		panic(err)
@@ -235,7 +235,7 @@ func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
 }
 
 // UnmarshalRED unmarshals a redelegation from a store value
-func UnmarshalRED(cdc codec.Marshaler, value []byte) (red Redelegation, err error) {
+func UnmarshalRED(cdc codec.BinaryMarshaler, value []byte) (red Redelegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &red)
 	return red, err
 }
@@ -278,13 +278,6 @@ func (d Redelegations) String() (out string) {
 // ----------------------------------------------------------------------------
 // Client Types
 
-// DelegationResponse is equivalent to Delegation except that it contains a balance
-// in addition to shares which is more suitable for client responses.
-type DelegationResponse struct {
-	Delegation
-	Balance sdk.Coin `json:"balance" yaml:"balance"`
-}
-
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
@@ -326,14 +319,6 @@ func (d DelegationResponses) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// RedelegationResponse is equivalent to a Redelegation except that its entries
-// contain a balance in addition to shares which is more suitable for client
-// responses.
-type RedelegationResponse struct {
-	Redelegation
-	Entries []RedelegationEntryResponse `json:"entries" yaml:"entries"`
-}
-
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
@@ -348,14 +333,6 @@ func NewRedelegationResponse(
 	}
 }
 
-// RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
-// contains a balance in addition to shares which is more suitable for client
-// responses.
-type RedelegationEntryResponse struct {
-	RedelegationEntry
-	Balance sdk.Int `json:"balance"`
-}
-
 // NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
 func NewRedelegationEntryResponse(
 	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int) RedelegationEntryResponse {
@@ -363,32 +340,6 @@ func NewRedelegationEntryResponse(
 		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst),
 		Balance:           balance,
 	}
-}
-
-// String implements the Stringer interface for RedelegationResp.
-func (r RedelegationResponse) String() string {
-	out := fmt.Sprintf(`Redelegations between:
-  Delegator:                 %s
-  Source Validator:          %s
-  Destination Validator:     %s
-  Entries:
-`,
-		r.DelegatorAddress, r.ValidatorSrcAddress, r.ValidatorDstAddress,
-	)
-
-	for i, entry := range r.Entries {
-		out += fmt.Sprintf(`    Redelegation Entry #%d:
-      Creation height:           %v
-      Min time to unbond (unix): %v
-      Initial Balance:           %s
-      Shares:                    %s
-      Balance:                   %s
-`,
-			i, entry.CreationHeight, entry.CompletionTime, entry.InitialBalance, entry.SharesDst, entry.Balance,
-		)
-	}
-
-	return strings.TrimRight(out, "\n")
 }
 
 type redelegationRespAlias RedelegationResponse

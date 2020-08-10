@@ -3,6 +3,10 @@ package types_test
 import (
 	"testing"
 
+	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/cosmos/cosmos-sdk/client/testutil"
 
 	"github.com/stretchr/testify/suite"
@@ -15,12 +19,13 @@ import (
 func testCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
-	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	cryptoAmino.RegisterCrypto(cdc)
+	cdc.RegisterConcrete(&testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }
 
-func TestStdTxGenerator(t *testing.T) {
+func TestStdTxConfig(t *testing.T) {
 	cdc := testCodec()
-	txGen := types.StdTxGenerator{Cdc: cdc}
-	suite.Run(t, testutil.NewTxGeneratorTestSuite(txGen))
+	txGen := types.StdTxConfig{Cdc: cdc}
+	suite.Run(t, testutil.NewTxConfigTestSuite(txGen))
 }

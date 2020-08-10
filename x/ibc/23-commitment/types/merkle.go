@@ -41,11 +41,6 @@ func (mr MerkleRoot) GetHash() []byte {
 	return mr.Hash
 }
 
-// GetCommitmentType implements RootI interface
-func (MerkleRoot) GetCommitmentType() exported.Type {
-	return exported.Merkle
-}
-
 // Empty returns true if the root is empty
 func (mr MerkleRoot) Empty() bool {
 	return len(mr.GetHash()) == 0
@@ -58,11 +53,6 @@ func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
 	return MerklePrefix{
 		KeyPrefix: keyPrefix,
 	}
-}
-
-// GetCommitmentType implements Prefix interface
-func (MerklePrefix) GetCommitmentType() exported.Type {
-	return exported.Merkle
 }
 
 // Bytes returns the key prefix bytes
@@ -87,11 +77,6 @@ func NewMerklePath(keyPathStr []string) MerklePath {
 	return MerklePath{
 		KeyPath: merkleKeyPath,
 	}
-}
-
-// GetCommitmentType implements PathI
-func (MerklePath) GetCommitmentType() exported.Type {
-	return exported.Merkle
 }
 
 // String implements fmt.Stringer.
@@ -131,11 +116,6 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 }
 
 var _ exported.Proof = (*MerkleProof)(nil)
-
-// GetCommitmentType implements ProofI
-func (MerkleProof) GetCommitmentType() exported.Type {
-	return exported.Merkle
-}
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path, value []byte) error {
@@ -230,7 +210,7 @@ func (proof MerkleProof) BatchVerifyMembership(specs []*ics23.ProofSpec, root ex
 	// of all subroots up to final root
 	subroot, err := proofs[0].Calculate()
 	if err != nil {
-		sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0. %v", err)
+		return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0: %v", err)
 	}
 	if ok := ics23.BatchVerifyMembership(specs[0], subroot, proofs[0], items); !ok {
 		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify batch items")
@@ -281,7 +261,7 @@ func (proof MerkleProof) BatchVerifyNonMembership(specs []*ics23.ProofSpec, root
 	// of all subroots up to final root
 	subroot, err := proofs[0].Calculate()
 	if err != nil {
-		sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0. %v", err)
+		return sdkerrors.Wrapf(ErrInvalidProof, "could not calculate root for proof index 0: %v", err)
 	}
 	if ok := ics23.BatchVerifyNonMembership(specs[0], subroot, proofs[0], items); !ok {
 		return sdkerrors.Wrapf(ErrInvalidProof, "could not verify batch items")
@@ -336,8 +316,8 @@ func verifyChainedMembershipProof(root []byte, specs []*ics23.ProofSpec, proofs 
 		// from the proofs and specs which are lowest to highest
 		key := keys.GetKey(-1 * (i + 1))
 		if ok := ics23.VerifyMembership(specs[i], subroot, proofs[i], key, value); !ok {
-			return sdkerrors.Wrapf(ErrInvalidProof, "chained membership proof failed to verify membership of value: %X in subroot %X at index %d",
-				value, subroot, i)
+			return sdkerrors.Wrapf(ErrInvalidProof, "chained membership proof failed to verify membership of value: %X in subroot %X at index %d for proof %v",
+				value, subroot, i, proofs[i])
 		}
 		// Set value to subroot so that we verify next proof in chain commits to this subroot
 		value = subroot
@@ -366,7 +346,7 @@ func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
 
 // Empty returns true if the root is empty
 func (proof MerkleProof) Empty() bool {
-	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+	return proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
 }
 
 // ValidateBasic checks if the proof is empty.
@@ -379,8 +359,12 @@ func (proof MerkleProof) ValidateBasic() error {
 
 // validateVerificationArgs verifies the proof arguments are valid
 func (proof MerkleProof) validateVerificationArgs(specs []*ics23.ProofSpec, root exported.Root) error {
-	if proof.Empty() || root == nil || root.Empty() {
-		return sdkerrors.Wrap(ErrInvalidMerkleProof, "empty params or proof")
+	if proof.Empty() {
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "proof cannot be empty")
+	}
+
+	if root == nil || root.Empty() {
+		return sdkerrors.Wrap(ErrInvalidMerkleProof, "root cannot be empty")
 	}
 
 	if len(specs) != len(proof.Proof.Ops) {

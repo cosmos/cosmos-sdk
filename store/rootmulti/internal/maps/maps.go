@@ -1,13 +1,13 @@
 package maps
 
 import (
-	"bytes"
 	"encoding/binary"
-	"io"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/kv"
+
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
@@ -28,6 +28,9 @@ func newMerkleMap() *merkleMap {
 // to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
+	byteKey := []byte(key)
+	types.AssertValidKey(byteKey)
+
 	sm.sorted = false
 
 	// The value is hashed, so you can check for equality with a cached value (say)
@@ -35,7 +38,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	vhash := tmhash.Sum(value)
 
 	sm.kvs = append(sm.kvs, kv.Pair{
-		Key:   []byte(key),
+		Key:   byteKey,
 		Value: vhash,
 	})
 }
@@ -55,47 +58,12 @@ func (sm *merkleMap) sort() {
 	sm.sorted = true
 }
 
-// kvPair defines a type alias for kv.Pair so that we can create bytes to hash
-// when constructing the merkle root. Note, key and values are both length-prefixed.
-type kvPair kv.Pair
-
-// bytes returns a byte slice representation of the kvPair where the key and value
-// are length-prefixed.
-func (kv kvPair) bytes() []byte {
-	var b bytes.Buffer
-
-	err := encodeByteSlice(&b, kv.Key)
-	if err != nil {
-		panic(err)
-	}
-
-	err = encodeByteSlice(&b, kv.Value)
-	if err != nil {
-		panic(err)
-	}
-
-	return b.Bytes()
-}
-
-func encodeByteSlice(w io.Writer, bz []byte) error {
-	var buf [8]byte
-	n := binary.PutUvarint(buf[:], uint64(len(bz)))
-
-	_, err := w.Write(buf[:n])
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write(bz)
-	return err
-}
-
 // hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
 // byte slices.
 func hashKVPairs(kvs kv.Pairs) []byte {
 	kvsH := make([][]byte, len(kvs))
 	for i, kvp := range kvs {
-		kvsH[i] = kvPair(kvp).bytes()
+		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
 	return merkle.SimpleHashFromByteSlices(kvsH)
@@ -121,6 +89,8 @@ func newSimpleMap() *simpleMap {
 // Set creates a kv pair of the key and the hash of the value,
 // and then appends it to SimpleMap's kv pairs.
 func (sm *simpleMap) Set(key string, value []byte) {
+	byteKey := []byte(key)
+	types.AssertValidKey(byteKey)
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -129,7 +99,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	vhash := tmhash.Sum(value)
 
 	sm.Kvs = append(sm.Kvs, kv.Pair{
-		Key:   []byte(key),
+		Key:   byteKey,
 		Value: vhash,
 	})
 }
@@ -177,16 +147,23 @@ func NewKVPair(key, value []byte) KVPair {
 // Bytes returns key || value, with both the
 // key and value length prefixed.
 func (kv KVPair) Bytes() []byte {
-	var b bytes.Buffer
-	err := encodeByteSlice(&b, kv.Key)
-	if err != nil {
-		panic(err)
-	}
-	err = encodeByteSlice(&b, kv.Value)
-	if err != nil {
-		panic(err)
-	}
-	return b.Bytes()
+	// In the worst case:
+	// * 8 bytes to Uvarint encode the length of the key
+	// * 8 bytes to Uvarint encode the length of the value
+	// So preallocate for the worst case, which will in total
+	// be a maximum of 14 bytes wasted, if len(key)=1, len(value)=1,
+	// but that's going to rare.
+	buf := make([]byte, 8+len(kv.Key)+8+len(kv.Value))
+
+	// Encode the key, prefixed with its length.
+	nlk := binary.PutUvarint(buf, uint64(len(kv.Key)))
+	nk := copy(buf[nlk:], kv.Key)
+
+	// Encode the value, prefixing with its length.
+	nlv := binary.PutUvarint(buf[nlk+nk:], uint64(len(kv.Value)))
+	nv := copy(buf[nlk+nk+nlv:], kv.Value)
+
+	return buf[:nlk+nk+nlv+nv]
 }
 
 // SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle

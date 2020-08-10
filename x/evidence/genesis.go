@@ -3,7 +3,11 @@ package evidence
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -16,17 +20,34 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	for _, e := range gs.Evidence {
-		if _, ok := k.GetEvidence(ctx, e.Hash()); ok {
-			panic(fmt.Sprintf("evidence with hash %s already exists", e.Hash()))
+		evi, ok := e.GetCachedValue().(exported.Evidence)
+		if !ok {
+			panic("expected evidence")
+		}
+		if _, ok := k.GetEvidence(ctx, evi.Hash()); ok {
+			panic(fmt.Sprintf("evidence with hash %s already exists", evi.Hash()))
 		}
 
-		k.SetEvidence(ctx, e)
+		k.SetEvidence(ctx, evi)
 	}
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+	e := k.GetAllEvidence(ctx)
+	evidence := make([]*codectypes.Any, len(e))
+	for i, evi := range e {
+		msg, ok := evi.(proto.Message)
+		if !ok {
+			panic(fmt.Errorf("cannot proto marshal %T", evi))
+		}
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		evidence[i] = any
+	}
 	return types.GenesisState{
-		Evidence: k.GetAllEvidence(ctx),
+		Evidence: evidence,
 	}
 }

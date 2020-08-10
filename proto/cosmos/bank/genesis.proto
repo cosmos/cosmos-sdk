@@ -1,0 +1,45 @@
+syntax = "proto3";
+package cosmos.bank;
+
+import "gogoproto/gogo.proto";
+import "cosmos/cosmos.proto";
+import "cosmos/bank/bank.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// GenesisState defines the bank module's genesis state.
+message GenesisState {
+  Params params = 1 [
+    (gogoproto.casttype) = "Params",
+    (gogoproto.nullable) = false
+  ];
+
+  repeated Balance balances = 2 [
+    (gogoproto.casttype) = "Balance",
+    (gogoproto.nullable) = false
+  ];
+
+  repeated cosmos.Coin supply = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+
+  repeated Metadata denom_metadata = 4 [
+    (gogoproto.casttype) = "Metadata",
+    (gogoproto.moretags) = "yaml:\"denom_metadata\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// Balance defines an account address and balance pair used in the bank module's
+// genesis state.
+message Balance {
+  option (gogoproto.goproto_getters)  = false;
+
+  bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
+  repeated cosmos.Coin coins = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}

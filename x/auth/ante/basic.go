@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -89,7 +90,7 @@ func NewConsumeGasForTxSizeDecorator(ak AccountKeeper) ConsumeTxSizeGasDecorator
 }
 
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	sigTx, ok := tx.(SigVerifiableTx)
+	sigTx, ok := tx.(signing.SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
@@ -119,9 +120,9 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			}
 
 			// use stdsignature to mock the size of a full signature
-			simSig := types.StdSignature{ //nolint:staticheck // this will be removed when proto is ready
+			simSig := types.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
 				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey.Bytes(),
+				PubKey:    pubkey,
 			}
 
 			sigBz := legacy.Cdc.MustMarshalBinaryBare(simSig)
@@ -135,6 +136,40 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 		}
+	}
+
+	return next(ctx, tx, simulate)
+}
+
+type (
+	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
+	// tx height timeout.
+	TxTimeoutHeightDecorator struct{}
+
+	// TxWithTimeoutHeight defines the interface a tx must implement in order for
+	// TxHeightTimeoutDecorator to process the tx.
+	TxWithTimeoutHeight interface {
+		sdk.Tx
+
+		GetTimeoutHeight() uint64
+	}
+)
+
+// AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
+// type where the current block height is checked against the tx's height timeout.
+// If a height timeout is provided (non-zero) and is less than the current block
+// height, then an error is returned.
+func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	timeoutTx, ok := tx.(TxWithTimeoutHeight)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
+	}
+
+	timeoutHeight := timeoutTx.GetTimeoutHeight()
+	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
+		return ctx, sdkerrors.Wrapf(
+			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
+		)
 	}
 
 	return next(ctx, tx, simulate)

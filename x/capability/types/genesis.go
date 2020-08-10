@@ -8,22 +8,6 @@ import (
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
 
-// GenesisOwners defines the capability owners with their corresponding index.
-type GenesisOwners struct {
-	Index  uint64           `json:"index" yaml:"index"`
-	Owners CapabilityOwners `json:"index_owners" yaml:"index_owners"`
-}
-
-// GenesisState represents the Capability module genesis state
-type GenesisState struct {
-	// capability global index
-	Index uint64 `json:"index" yaml:"index"`
-
-	// map from index to owners of the capability index
-	// index key is string to allow amino marshalling
-	Owners []GenesisOwners `json:"owners" yaml:"owners"`
-}
-
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() GenesisState {
 	return GenesisState{

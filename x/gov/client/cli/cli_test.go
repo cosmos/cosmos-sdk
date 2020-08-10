@@ -1,159 +1,166 @@
-// +build cli_test
-
 package cli_test
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutils "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestCLISubmitProposal(t *testing.T) {
-	t.Parallel()
-	f := cli.InitFixtures(t)
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+	cfg     network.Config
+	network *network.Network
+}
 
-	testutil.QueryGovParamDeposit(f)
-	testutil.QueryGovParamVoting(f)
-	testutil.QueryGovParamTallying(f)
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	fooAddr := f.KeyAddress(cli.KeyFoo)
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
 
-	startTokens := sdk.TokensFromConsensusPower(50)
-	require.Equal(t, startTokens, banktestutils.QueryBalances(f, fooAddr).AmountOf(sdk.DefaultBondDenom))
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	proposalsQuery := testutil.QueryGovProposals(f)
-	require.Empty(t, proposalsQuery)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
 
-	// Test submit generate only for submit proposal
-	proposalTokens := sdk.TokensFromConsensusPower(5)
-	success, stdout, stderr := testutil.TxGovSubmitProposal(f,
-		fooAddr.String(), "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--generate-only", "-y")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Test --dry-run
-	success, _, _ = testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "--dry-run")
-	require.True(t, success)
+func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
+	val := s.network.Validators[0]
 
-	// Create the proposal
-	testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Test", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_text_proposal.*.json")
+	s.Require().NoError(err)
+	defer os.Remove(invalidPropFile.Name())
 
-	// Ensure transaction events can be queried
-	searchResult := f.QueryTxs(1, 50, "message.action=submit_proposal", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
+	invalidProp := `{
+  "title": "",
+	"description": "Where is the title!?",
+	"type": "Text",
+  "deposit": "-324foocoin"
+}`
 
-	// Ensure deposit was deducted
-	require.Equal(t, startTokens.Sub(proposalTokens), banktestutils.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+	_, err = invalidPropFile.WriteString(invalidProp)
+	s.Require().NoError(err)
 
-	// Ensure propsal is directly queryable
-	proposal1 := testutil.QueryGovProposal(f, 1)
-	require.Equal(t, uint64(1), proposal1.ProposalID)
-	require.Equal(t, types.StatusDepositPeriod, proposal1.Status)
+	validPropFile, err := ioutil.TempFile(os.TempDir(), "valid_text_proposal.*.json")
+	s.Require().NoError(err)
+	defer os.Remove(validPropFile.Name())
 
-	// Ensure query proposals returns properly
-	proposalsQuery = testutil.QueryGovProposals(f)
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
+	validProp := fmt.Sprintf(`{
+  "title": "Text Proposal",
+	"description": "Hello, World!",
+	"type": "Text",
+  "deposit": "%s"
+}`, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
 
-	// Query the deposits on the proposal
-	deposit := testutil.QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens, deposit.Amount.AmountOf(cli.Denom))
+	_, err = validPropFile.WriteString(validProp)
+	s.Require().NoError(err)
 
-	// Test deposit generate only
-	depositTokens := sdk.TokensFromConsensusPower(10)
-	success, stdout, stderr = testutil.TxGovDeposit(f, 1, fooAddr.String(), sdk.NewCoin(cli.Denom, depositTokens), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     fmt.Stringer
+		expectedCode uint32
+	}{
+		{
+			"invalid proposal (file)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid proposal",
+			[]string{
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction (file)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
 
-	// Run the deposit transaction
-	testutil.TxGovDeposit(f, 1, cli.KeyFoo, sdk.NewCoin(cli.Denom, depositTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	for _, tc := range testCases {
+		tc := tc
 
-	// test query deposit
-	deposits := testutil.QueryGovDeposits(f, 1)
-	require.Len(t, deposits, 1)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposits[0].Amount.AmountOf(cli.Denom))
+		s.Run(tc.name, func() {
+			cmd := cli.NewCmdSubmitProposal()
+			_, out := testutil.ApplyMockIO(cmd)
 
-	// Ensure querying the deposit returns the proper amount
-	deposit = testutil.QueryGovDeposit(f, 1, fooAddr)
-	require.Equal(t, proposalTokens.Add(depositTokens), deposit.Amount.AmountOf(cli.Denom))
+			clientCtx := val.ClientCtx.WithOutput(out)
 
-	// Ensure events are set on the transaction
-	searchResult = f.QueryTxs(1, 50, "message.action=deposit", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-	// Ensure account has expected amount of funds
-	require.Equal(t, startTokens.Sub(proposalTokens.Add(depositTokens)), banktestutils.QueryBalances(f, fooAddr).AmountOf(cli.Denom))
+			out.Reset()
+			cmd.SetArgs(tc.args)
 
-	// Fetch the proposal and ensure it is now in the voting period
-	proposal1 = testutil.QueryGovProposal(f, 1)
-	require.Equal(t, uint64(1), proposal1.ProposalID)
-	require.Equal(t, types.StatusVotingPeriod, proposal1.Status)
+			s.Require().NoError(s.network.WaitForNextBlock())
 
-	// Test vote generate only
-	success, stdout, stderr = testutil.TxGovVote(f, 1, types.OptionYes, fooAddr.String(), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, 0, len(msg.GetSignatures()))
+			err := cmd.ExecuteContext(ctx)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-	// Vote on the proposal
-	testutil.TxGovVote(f, 1, types.OptionYes, cli.KeyFoo, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
 
-	// Query the vote
-	vote := testutil.QueryGovVote(f, 1, fooAddr)
-	require.Equal(t, uint64(1), vote.ProposalID)
-	require.Equal(t, types.OptionYes, vote.Option)
-
-	// Query the votes
-	votes := testutil.QueryGovVotes(f, 1)
-	require.Len(t, votes, 1)
-	require.Equal(t, uint64(1), votes[0].ProposalID)
-	require.Equal(t, types.OptionYes, votes[0].Option)
-
-	// Ensure events are applied to voting transaction properly
-	searchResult = f.QueryTxs(1, 50, "message.action=vote", fmt.Sprintf("message.sender=%s", fooAddr))
-	require.Len(t, searchResult.Txs, 1)
-
-	// Ensure no proposals in deposit period
-	proposalsQuery = testutil.QueryGovProposals(f, "--status=DepositPeriod")
-	require.Empty(t, proposalsQuery)
-
-	// Ensure the proposal returns as in the voting period
-	proposalsQuery = testutil.QueryGovProposals(f, "--status=VotingPeriod")
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
-
-	// submit a second test proposal
-	testutil.TxGovSubmitProposal(f, cli.KeyFoo, "Text", "Apples", "test", sdk.NewCoin(cli.Denom, proposalTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Test limit on proposals query
-	proposalsQuery = testutil.QueryGovProposals(f, "--limit=2")
-	require.Len(t, proposalsQuery, 2)
-	require.Equal(t, uint64(1), proposalsQuery[0].ProposalID)
-
-	f.Cleanup()
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

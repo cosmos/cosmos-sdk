@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,9 +37,4 @@ var PortKey = []byte{0x01}
 // unique.
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(portID + channelID)))
-}
-
-// GetDenomPrefix returns the receiving denomination prefix
-func GetDenomPrefix(portID, channelID string) string {
-	return fmt.Sprintf("%s/%s/", portID, channelID)
 }

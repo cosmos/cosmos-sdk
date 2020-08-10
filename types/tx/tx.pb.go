@@ -35,7 +35,8 @@ type Tx struct {
 	// auth_info is the authorization related content of the transaction, specifically
 	// signers, signer modes and fee
 	AuthInfo *AuthInfo `protobuf:"bytes,2,opt,name=auth_info,json=authInfo,proto3" json:"auth_info,omitempty"`
-	// signatures are the raw binary signatures of signers specified by body and auth_info
+	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
+	// allow connecting signature meta information like public key and signing mode by position.
 	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
 }
 
@@ -93,12 +94,80 @@ func (m *Tx) GetSignatures() [][]byte {
 	return nil
 }
 
-// SignDoc is the standard type used for signing transaction in SIGN_MODE_DIRECT
+// TxRaw is a variant of Tx that pins the signer's exact binary representation of body and
+// auth_info. This is used for signing, broadcasting and verification. The binary
+// `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
+// becomes the "txhash", commonly used as the transaction ID.
+type TxRaw struct {
+	// body_bytes is a protobuf serialization of a TxBody that matches the representation in SignDoc.
+	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in SignDoc.
+	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
+	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
+	// allow connecting signature meta information like public key and signing mode by position.
+	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
+}
+
+func (m *TxRaw) Reset()         { *m = TxRaw{} }
+func (m *TxRaw) String() string { return proto.CompactTextString(m) }
+func (*TxRaw) ProtoMessage()    {}
+func (*TxRaw) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{1}
+}
+func (m *TxRaw) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxRaw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxRaw.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxRaw) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxRaw.Merge(m, src)
+}
+func (m *TxRaw) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxRaw) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxRaw.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxRaw proto.InternalMessageInfo
+
+func (m *TxRaw) GetBodyBytes() []byte {
+	if m != nil {
+		return m.BodyBytes
+	}
+	return nil
+}
+
+func (m *TxRaw) GetAuthInfoBytes() []byte {
+	if m != nil {
+		return m.AuthInfoBytes
+	}
+	return nil
+}
+
+func (m *TxRaw) GetSignatures() [][]byte {
+	if m != nil {
+		return m.Signatures
+	}
+	return nil
+}
+
+// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
 type SignDoc struct {
-	// body is the TxBody from Tx
-	Body *TxBody `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
-	// auth_info is the AuthInfo from Tx
-	AuthInfo *AuthInfo `protobuf:"bytes,2,opt,name=auth_info,json=authInfo,proto3" json:"auth_info,omitempty"`
+	// body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
+	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in TxRaw.
+	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
 	// chain_id is the unique identifier of the chain this transaction targets.
 	// It prevents signed transactions from being used on another chain by an
 	// attacker
@@ -114,7 +183,7 @@ func (m *SignDoc) Reset()         { *m = SignDoc{} }
 func (m *SignDoc) String() string { return proto.CompactTextString(m) }
 func (*SignDoc) ProtoMessage()    {}
 func (*SignDoc) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{1}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{2}
 }
 func (m *SignDoc) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -143,16 +212,16 @@ func (m *SignDoc) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignDoc proto.InternalMessageInfo
 
-func (m *SignDoc) GetBody() *TxBody {
+func (m *SignDoc) GetBodyBytes() []byte {
 	if m != nil {
-		return m.Body
+		return m.BodyBytes
 	}
 	return nil
 }
 
-func (m *SignDoc) GetAuthInfo() *AuthInfo {
+func (m *SignDoc) GetAuthInfoBytes() []byte {
 	if m != nil {
-		return m.AuthInfo
+		return m.AuthInfoBytes
 	}
 	return nil
 }
@@ -180,13 +249,18 @@ func (m *SignDoc) GetAccountSequence() uint64 {
 
 // TxBody is the body of a transaction that all signers sign over
 type TxBody struct {
-	// messages are the processable content of the transaction
+	// messages is a list of messages to be executed. The required signers of those messages define
+	// the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
+	// Each required signer address is added to the list only the first time it occurs.
+	//
+	// By convention, the first required signer (usually from the first message) is referred
+	// to as the primary signer and pays the fee for the whole transaction.
 	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// memo is any arbitrary memo to be added to the transaction
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
 	// timeout is the block height after which this transaction will not
 	// be processed by the chain
-	TimeoutHeight int64 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
+	TimeoutHeight uint64 `protobuf:"varint,3,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
 	// extension_options are arbitrary options that can be added by chains
 	// when the default options are not sufficient. If any of these are present
 	// and can't be handled, the transaction will be rejected
@@ -201,7 +275,7 @@ func (m *TxBody) Reset()         { *m = TxBody{} }
 func (m *TxBody) String() string { return proto.CompactTextString(m) }
 func (*TxBody) ProtoMessage()    {}
 func (*TxBody) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{2}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{3}
 }
 func (m *TxBody) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -244,7 +318,7 @@ func (m *TxBody) GetMemo() string {
 	return ""
 }
 
-func (m *TxBody) GetTimeoutHeight() int64 {
+func (m *TxBody) GetTimeoutHeight() uint64 {
 	if m != nil {
 		return m.TimeoutHeight
 	}
@@ -267,12 +341,14 @@ func (m *TxBody) GetNonCriticalExtensionOptions() []*types.Any {
 
 // AuthInfo describes the fee and signer modes that are used to sign a transaction
 type AuthInfo struct {
-	// signer_infos is the list of signer infos which corresponds with
-	// Tx.signatures and expected signers derived from TxBody.messages. All signers
-	// are expected to occur in the same order in each of these locations
+	// signer_infos defines the signing modes for the required signers. The number
+	// and order of elements must match the required signers from TxBody's messages.
+	// The first element is the primary signer and the one which pays the fee.
 	SignerInfos []*SignerInfo `protobuf:"bytes,1,rep,name=signer_infos,json=signerInfos,proto3" json:"signer_infos,omitempty"`
 	// Fee is the fee and gas limit for the transaction. The first signer is the
-	// primary signer and the one which pays the fee
+	// primary signer and the one which pays the fee. The fee can be calculated
+	// based on the cost of evaluating the body and doing signature verification
+	// of the signers. This can be estimated via simulation.
 	Fee *Fee `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee,omitempty"`
 }
 
@@ -280,7 +356,7 @@ func (m *AuthInfo) Reset()         { *m = AuthInfo{} }
 func (m *AuthInfo) String() string { return proto.CompactTextString(m) }
 func (*AuthInfo) ProtoMessage()    {}
 func (*AuthInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{3}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{4}
 }
 func (m *AuthInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -326,8 +402,9 @@ func (m *AuthInfo) GetFee() *Fee {
 // SignerInfo describes the public key and signing mode of a single top-level signer
 type SignerInfo struct {
 	// public_key is the public key of the signer. It is optional for accounts
-	// that already exist in state
-	PublicKey *types.Any `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	// that already exist in state. If unset, the verifier can use the required \
+	// signer address for this position and lookup the public key.
+	PublicKey *types1.PublicKey `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	// mode_info describes the signing mode of the signer and is a nested
 	// structure to support nested multisig pubkey's
 	ModeInfo *ModeInfo `protobuf:"bytes,2,opt,name=mode_info,json=modeInfo,proto3" json:"mode_info,omitempty"`
@@ -337,7 +414,7 @@ func (m *SignerInfo) Reset()         { *m = SignerInfo{} }
 func (m *SignerInfo) String() string { return proto.CompactTextString(m) }
 func (*SignerInfo) ProtoMessage()    {}
 func (*SignerInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{4}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{5}
 }
 func (m *SignerInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -366,7 +443,7 @@ func (m *SignerInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignerInfo proto.InternalMessageInfo
 
-func (m *SignerInfo) GetPublicKey() *types.Any {
+func (m *SignerInfo) GetPublicKey() *types1.PublicKey {
 	if m != nil {
 		return m.PublicKey
 	}
@@ -395,7 +472,7 @@ func (m *ModeInfo) Reset()         { *m = ModeInfo{} }
 func (m *ModeInfo) String() string { return proto.CompactTextString(m) }
 func (*ModeInfo) ProtoMessage()    {}
 func (*ModeInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{5}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{6}
 }
 func (m *ModeInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -480,7 +557,7 @@ func (m *ModeInfo_Single) Reset()         { *m = ModeInfo_Single{} }
 func (m *ModeInfo_Single) String() string { return proto.CompactTextString(m) }
 func (*ModeInfo_Single) ProtoMessage()    {}
 func (*ModeInfo_Single) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{5, 0}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{6, 0}
 }
 func (m *ModeInfo_Single) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -529,7 +606,7 @@ func (m *ModeInfo_Multi) Reset()         { *m = ModeInfo_Multi{} }
 func (m *ModeInfo_Multi) String() string { return proto.CompactTextString(m) }
 func (*ModeInfo_Multi) ProtoMessage()    {}
 func (*ModeInfo_Multi) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{5, 1}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{6, 1}
 }
 func (m *ModeInfo_Multi) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -587,7 +664,7 @@ func (m *Fee) Reset()         { *m = Fee{} }
 func (m *Fee) String() string { return proto.CompactTextString(m) }
 func (*Fee) ProtoMessage()    {}
 func (*Fee) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9b35c9d5d6b7bce8, []int{6}
+	return fileDescriptor_9b35c9d5d6b7bce8, []int{7}
 }
 func (m *Fee) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -632,6 +709,7 @@ func (m *Fee) GetGasLimit() uint64 {
 
 func init() {
 	proto.RegisterType((*Tx)(nil), "cosmos.tx.Tx")
+	proto.RegisterType((*TxRaw)(nil), "cosmos.tx.TxRaw")
 	proto.RegisterType((*SignDoc)(nil), "cosmos.tx.SignDoc")
 	proto.RegisterType((*TxBody)(nil), "cosmos.tx.TxBody")
 	proto.RegisterType((*AuthInfo)(nil), "cosmos.tx.AuthInfo")
@@ -645,54 +723,57 @@ func init() {
 func init() { proto.RegisterFile("cosmos/tx/tx.proto", fileDescriptor_9b35c9d5d6b7bce8) }
 
 var fileDescriptor_9b35c9d5d6b7bce8 = []byte{
-	// 749 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcd, 0x6e, 0xdb, 0x38,
-	0x10, 0xb6, 0x2c, 0xdb, 0xb1, 0x27, 0xff, 0x4c, 0x16, 0x50, 0x1c, 0x40, 0x31, 0x0c, 0x04, 0xf0,
-	0x1e, 0x56, 0xca, 0x3a, 0x7b, 0xd8, 0xdd, 0xcb, 0x22, 0xce, 0x6e, 0x90, 0x60, 0x9b, 0x16, 0xa0,
-	0x83, 0x1e, 0x72, 0x11, 0x64, 0x99, 0x96, 0x89, 0x58, 0xa4, 0x2b, 0x52, 0xa8, 0x5d, 0xa0, 0xef,
-	0xd0, 0x4b, 0x5f, 0xa2, 0x87, 0x3e, 0x47, 0x6e, 0xcd, 0xb1, 0xa7, 0xb6, 0x48, 0x1e, 0xa4, 0x85,
-	0x28, 0xca, 0x71, 0x0b, 0x37, 0x3d, 0xf5, 0xa4, 0xe1, 0x37, 0xdf, 0x37, 0x33, 0x9c, 0x19, 0x11,
-	0x50, 0xc0, 0x45, 0xc4, 0x85, 0x2b, 0x27, 0xae, 0x9c, 0x38, 0xe3, 0x98, 0x4b, 0x8e, 0x6a, 0x19,
-	0xe6, 0xc8, 0x49, 0x7d, 0x3b, 0xe4, 0x21, 0x57, 0xa8, 0x9b, 0x5a, 0x19, 0xa1, 0x5e, 0xd7, 0xa2,
-	0x20, 0x9e, 0x8e, 0x25, 0xd7, 0x1f, 0xed, 0xdb, 0xca, 0x7d, 0x59, 0x8c, 0x0c, 0xdc, 0xbb, 0xcf,
-	0x22, 0x68, 0xc8, 0x28, 0x0b, 0xf3, 0xaf, 0x26, 0xec, 0x84, 0x9c, 0x87, 0x23, 0xe2, 0xaa, 0x53,
-	0x2f, 0x19, 0xb8, 0x3e, 0x9b, 0x66, 0xae, 0xe6, 0x4b, 0x28, 0x5e, 0x4c, 0xd0, 0x3e, 0x94, 0x7a,
-	0xbc, 0x3f, 0xb5, 0x8c, 0x86, 0xd1, 0x5a, 0x6e, 0x6f, 0x3a, 0xb3, 0x12, 0x9d, 0x8b, 0x49, 0x87,
-	0xf7, 0xa7, 0x58, 0xb9, 0xd1, 0x01, 0xd4, 0xfc, 0x44, 0x0e, 0x3d, 0xca, 0x06, 0xdc, 0x2a, 0x2a,
-	0xee, 0xd6, 0x1c, 0xf7, 0x28, 0x91, 0xc3, 0x33, 0x36, 0xe0, 0xb8, 0xea, 0x6b, 0x0b, 0xd9, 0x00,
-	0x69, 0x29, 0xbe, 0x4c, 0x62, 0x22, 0x2c, 0xb3, 0x61, 0xb6, 0x56, 0xf0, 0x1c, 0xd2, 0x7c, 0x67,
-	0xc0, 0x52, 0x97, 0x86, 0xec, 0x5f, 0x1e, 0xfc, 0xbc, 0x22, 0x76, 0xa0, 0x1a, 0x0c, 0x7d, 0xca,
-	0x3c, 0xda, 0xb7, 0xcc, 0x86, 0xd1, 0xaa, 0xe1, 0x25, 0x75, 0x3e, 0xeb, 0xa3, 0x7d, 0x58, 0xf3,
-	0x83, 0x80, 0x27, 0x4c, 0x7a, 0x2c, 0x89, 0x7a, 0x24, 0xb6, 0x4a, 0x0d, 0xa3, 0x55, 0xc2, 0xab,
-	0x1a, 0x7d, 0xac, 0x40, 0xf4, 0x2b, 0x6c, 0xe4, 0x34, 0x41, 0x9e, 0x25, 0x84, 0x05, 0xc4, 0x2a,
-	0x2b, 0xe2, 0xba, 0xc6, 0xbb, 0x1a, 0x6e, 0xbe, 0x2e, 0x42, 0x25, 0xab, 0x17, 0x1d, 0x40, 0x35,
-	0x22, 0x42, 0xf8, 0x21, 0x11, 0x96, 0xd1, 0x30, 0x5b, 0xcb, 0xed, 0x6d, 0x27, 0x9b, 0x84, 0x93,
-	0x4f, 0xc2, 0x39, 0x62, 0x53, 0x3c, 0x63, 0x21, 0x04, 0xa5, 0x88, 0x44, 0xd9, 0xb5, 0x6a, 0x58,
-	0xd9, 0x69, 0x89, 0x92, 0x46, 0x84, 0x27, 0xd2, 0x1b, 0x12, 0x1a, 0x0e, 0xa5, 0xba, 0x83, 0x89,
-	0x57, 0x35, 0x7a, 0xaa, 0x40, 0xd4, 0x81, 0x4d, 0x32, 0x91, 0x84, 0x09, 0xca, 0x99, 0xc7, 0xc7,
-	0x92, 0x72, 0x26, 0xac, 0xcf, 0x4b, 0x0f, 0xa4, 0xdd, 0x98, 0xf1, 0x9f, 0x64, 0x74, 0x74, 0x09,
-	0x36, 0xe3, 0xcc, 0x0b, 0x62, 0x2a, 0x69, 0xe0, 0x8f, 0xbc, 0x05, 0x01, 0xd7, 0x1f, 0x08, 0xb8,
-	0xcb, 0x38, 0x3b, 0xd6, 0xda, 0xff, 0xbe, 0x89, 0xdd, 0x1c, 0x40, 0x35, 0x1f, 0x0d, 0xfa, 0x13,
-	0x56, 0xd2, 0x1d, 0x20, 0xb1, 0x1a, 0x62, 0xde, 0x9c, 0x5f, 0xe6, 0xa6, 0xd8, 0x55, 0x6e, 0x35,
-	0xc7, 0x65, 0x31, 0xb3, 0x05, 0x6a, 0x80, 0x39, 0x20, 0x44, 0x8f, 0x7d, 0x6d, 0x4e, 0x70, 0x42,
-	0x08, 0x4e, 0x5d, 0x4d, 0x01, 0x70, 0x2f, 0x46, 0x87, 0x00, 0xe3, 0xa4, 0x37, 0xa2, 0x81, 0x77,
-	0x45, 0xf2, 0xcd, 0x5a, 0x5c, 0x7c, 0x2d, 0xe3, 0xfd, 0x4f, 0xd4, 0x86, 0x45, 0xbc, 0x4f, 0xbe,
-	0xb7, 0x61, 0xe7, 0xbc, 0x4f, 0xb2, 0x0d, 0x8b, 0xb4, 0xd5, 0x7c, 0x5b, 0x84, 0x6a, 0x0e, 0xa3,
-	0x3f, 0xa0, 0x22, 0x28, 0x0b, 0x47, 0x44, 0xe7, 0xab, 0x2f, 0xd0, 0x3a, 0x5d, 0xc5, 0x38, 0x2d,
-	0x60, 0xcd, 0x45, 0xbf, 0x43, 0x39, 0x4a, 0x46, 0x92, 0xea, 0x84, 0x3b, 0x8b, 0x44, 0xe7, 0x29,
-	0xe1, 0xb4, 0x80, 0x33, 0x66, 0xfd, 0x2f, 0xa8, 0x64, 0x61, 0x90, 0x0b, 0xa5, 0xb4, 0x16, 0x95,
-	0x70, 0xad, 0xbd, 0x3b, 0xa7, 0xcd, 0x1f, 0x82, 0xb4, 0x27, 0x69, 0x1c, 0xac, 0x88, 0xf5, 0xe7,
-	0x50, 0x56, 0xc1, 0xd0, 0xdf, 0x50, 0xed, 0x51, 0xe9, 0xc7, 0xb1, 0x9f, 0xb7, 0xc7, 0xce, 0xd5,
-	0xfa, 0xe1, 0x39, 0xe6, 0xd1, 0xd8, 0x0f, 0x64, 0x87, 0xca, 0xa3, 0x94, 0x85, 0x67, 0x7c, 0xd4,
-	0x06, 0x98, 0xf5, 0x49, 0x58, 0x45, 0x35, 0xc4, 0x85, 0x8d, 0xaa, 0xe5, 0x8d, 0x12, 0x9d, 0x32,
-	0x98, 0x22, 0x89, 0x9a, 0x2f, 0xc0, 0x3c, 0x21, 0x04, 0x3d, 0x85, 0x8a, 0x1f, 0xa5, 0xbf, 0x8f,
-	0x5e, 0x81, 0x95, 0x5c, 0x7d, 0xcc, 0x29, 0xeb, 0x1c, 0x5c, 0x7f, 0xd8, 0x2b, 0xbc, 0xf9, 0xb8,
-	0xd7, 0x0a, 0xa9, 0x1c, 0x26, 0x3d, 0x27, 0xe0, 0x91, 0xfb, 0xd5, 0xfb, 0xf7, 0x9b, 0xe8, 0x5f,
-	0xb9, 0x72, 0x3a, 0x26, 0x99, 0x40, 0x60, 0x1d, 0x0d, 0xed, 0x42, 0x2d, 0xf4, 0x85, 0x37, 0xa2,
-	0x11, 0x95, 0xaa, 0xa1, 0x25, 0x5c, 0x0d, 0x7d, 0xf1, 0x28, 0x3d, 0x77, 0xfe, 0xb9, 0xbe, 0xb5,
-	0x8d, 0x9b, 0x5b, 0xdb, 0xf8, 0x74, 0x6b, 0x1b, 0xaf, 0xee, 0xec, 0xc2, 0xcd, 0x9d, 0x5d, 0x78,
-	0x7f, 0x67, 0x17, 0x2e, 0xf7, 0x7f, 0x9c, 0xc8, 0x95, 0x93, 0x5e, 0x45, 0x2d, 0xce, 0xe1, 0x97,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x14, 0xf8, 0x98, 0x8a, 0xde, 0x05, 0x00, 0x00,
+	// 795 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0x8f, 0xe3, 0x24, 0x8d, 0x5f, 0xff, 0xed, 0xce, 0x2e, 0x92, 0x9b, 0x0a, 0x37, 0x8a, 0x54,
+	0x14, 0x0e, 0xd8, 0xa5, 0x20, 0xf1, 0xe7, 0x82, 0x9a, 0xc2, 0xaa, 0x2b, 0x58, 0x40, 0x93, 0x8a,
+	0xc3, 0x5e, 0x2c, 0xdb, 0x99, 0x38, 0xa3, 0x8d, 0x67, 0x82, 0x67, 0xac, 0xda, 0x48, 0x7c, 0x07,
+	0x2e, 0x7c, 0x09, 0x0e, 0x7c, 0x03, 0xee, 0x7b, 0xdc, 0x23, 0x27, 0x40, 0xed, 0x07, 0x01, 0xcd,
+	0x78, 0x9c, 0x0d, 0xab, 0xee, 0xf6, 0xb2, 0xa7, 0xbc, 0xf9, 0xbd, 0xdf, 0x7b, 0xbf, 0x97, 0xf7,
+	0xc7, 0x80, 0x12, 0x2e, 0x32, 0x2e, 0x02, 0x59, 0x06, 0xb2, 0xf4, 0x57, 0x39, 0x97, 0x1c, 0x39,
+	0x35, 0xe6, 0xcb, 0x72, 0xf0, 0x30, 0xe5, 0x29, 0xd7, 0x68, 0xa0, 0xac, 0x9a, 0x30, 0x18, 0x98,
+	0xa0, 0x24, 0xaf, 0x56, 0x92, 0x9b, 0x1f, 0xe3, 0x7b, 0xd0, 0xf8, 0xea, 0x1c, 0x35, 0x78, 0xf4,
+	0x52, 0x45, 0xd0, 0x94, 0x51, 0x96, 0x36, 0xbf, 0x86, 0x70, 0x90, 0x72, 0x9e, 0x2e, 0x49, 0xa0,
+	0x5f, 0x71, 0x31, 0x0f, 0x22, 0x56, 0xd5, 0xae, 0xd1, 0xcf, 0xd0, 0xbe, 0x2c, 0xd1, 0x31, 0x74,
+	0x62, 0x3e, 0xab, 0x5c, 0x6b, 0x68, 0x8d, 0xb7, 0x4f, 0xef, 0xfb, 0xeb, 0x12, 0xfd, 0xcb, 0x72,
+	0xc2, 0x67, 0x15, 0xd6, 0x6e, 0x74, 0x02, 0x4e, 0x54, 0xc8, 0x45, 0x48, 0xd9, 0x9c, 0xbb, 0x6d,
+	0xcd, 0x7d, 0xb0, 0xc1, 0x3d, 0x2b, 0xe4, 0xe2, 0x31, 0x9b, 0x73, 0xdc, 0x8f, 0x8c, 0x85, 0x3c,
+	0x00, 0x55, 0x4a, 0x24, 0x8b, 0x9c, 0x08, 0xd7, 0x1e, 0xda, 0xe3, 0x1d, 0xbc, 0x81, 0x8c, 0x18,
+	0x74, 0x2f, 0x4b, 0x1c, 0x5d, 0xa1, 0x77, 0x01, 0x94, 0x44, 0x18, 0x57, 0x92, 0x08, 0x5d, 0xc7,
+	0x0e, 0x76, 0x14, 0x32, 0x51, 0x00, 0x7a, 0x0f, 0xf6, 0xd7, 0xca, 0x86, 0xd3, 0xd6, 0x9c, 0xdd,
+	0x46, 0xaa, 0xe6, 0xdd, 0xa5, 0xf7, 0x87, 0x05, 0x5b, 0x53, 0x9a, 0xb2, 0x2f, 0x79, 0xf2, 0xb6,
+	0x24, 0x0f, 0xa0, 0x9f, 0x2c, 0x22, 0xca, 0x42, 0x3a, 0x73, 0xed, 0xa1, 0x35, 0x76, 0xf0, 0x96,
+	0x7e, 0x3f, 0x9e, 0xa1, 0x63, 0xd8, 0x8b, 0x92, 0x84, 0x17, 0x4c, 0x86, 0xac, 0xc8, 0x62, 0x92,
+	0xbb, 0x9d, 0xa1, 0x35, 0xee, 0xe0, 0x5d, 0x83, 0x7e, 0xab, 0x41, 0xf4, 0x3e, 0xdc, 0x6b, 0x68,
+	0x82, 0xfc, 0x58, 0x10, 0x96, 0x10, 0xb7, 0xab, 0x89, 0xfb, 0x06, 0x9f, 0x1a, 0x78, 0xf4, 0x6b,
+	0x1b, 0x7a, 0xf5, 0x48, 0xd0, 0x09, 0xf4, 0x33, 0x22, 0x44, 0x94, 0xea, 0xe2, 0xed, 0xf1, 0xf6,
+	0xe9, 0x43, 0xbf, 0x9e, 0xb3, 0xdf, 0xcc, 0xd9, 0x3f, 0x63, 0x15, 0x5e, 0xb3, 0x10, 0x82, 0x4e,
+	0x46, 0xb2, 0x7a, 0x72, 0x0e, 0xd6, 0xb6, 0x2a, 0x51, 0xd2, 0x8c, 0xf0, 0x42, 0x86, 0x0b, 0x42,
+	0xd3, 0x85, 0xd4, 0xff, 0xa1, 0x83, 0x77, 0x0d, 0x7a, 0xa1, 0x41, 0x34, 0x81, 0xfb, 0xa4, 0x94,
+	0x84, 0x09, 0xca, 0x59, 0xc8, 0x57, 0x92, 0x72, 0x26, 0xdc, 0x7f, 0xb7, 0xde, 0x20, 0x7b, 0x6f,
+	0xcd, 0xff, 0xae, 0xa6, 0xa3, 0xa7, 0xe0, 0x31, 0xce, 0xc2, 0x24, 0xa7, 0x92, 0x26, 0xd1, 0x32,
+	0xbc, 0x25, 0xe1, 0xfe, 0x1b, 0x12, 0x1e, 0x32, 0xce, 0xce, 0x4d, 0xec, 0x57, 0xaf, 0xe4, 0x1e,
+	0xcd, 0xa1, 0xdf, 0x6c, 0x1f, 0xfa, 0x14, 0x76, 0xd4, 0xc4, 0x49, 0xae, 0x47, 0xd7, 0x34, 0xe7,
+	0x9d, 0x8d, 0x45, 0x9d, 0x6a, 0xb7, 0x5e, 0xd5, 0x6d, 0xb1, 0xb6, 0x05, 0x1a, 0x82, 0x3d, 0x27,
+	0xc4, 0x6c, 0xf6, 0xde, 0x46, 0xc0, 0x23, 0x42, 0xb0, 0x72, 0x8d, 0xae, 0x00, 0x5e, 0x06, 0xa3,
+	0x4f, 0x00, 0x56, 0x45, 0xbc, 0xa4, 0x49, 0xf8, 0x8c, 0x34, 0xc7, 0xe3, 0x36, 0x61, 0xe6, 0x6e,
+	0xbf, 0xd7, 0x84, 0xaf, 0x49, 0x85, 0x9d, 0x55, 0x63, 0xaa, 0x43, 0xca, 0xf8, 0x8c, 0xbc, 0xee,
+	0x90, 0x9e, 0xf0, 0x19, 0xa9, 0x0f, 0x29, 0x33, 0xd6, 0xe8, 0xf7, 0x36, 0xf4, 0x1b, 0x18, 0x7d,
+	0x0c, 0x3d, 0x41, 0x59, 0xba, 0x24, 0x46, 0x73, 0x70, 0x4b, 0xac, 0x3f, 0xd5, 0x8c, 0x8b, 0x16,
+	0x36, 0x5c, 0xf4, 0x21, 0x74, 0xb3, 0x62, 0x29, 0xa9, 0x11, 0x3c, 0xb8, 0x2d, 0xe8, 0x89, 0x22,
+	0x5c, 0xb4, 0x70, 0xcd, 0x1c, 0x7c, 0x06, 0xbd, 0x3a, 0x0d, 0x0a, 0xa0, 0xa3, 0x6a, 0xd1, 0x82,
+	0x7b, 0xa7, 0x87, 0x1b, 0xb1, 0xcd, 0xa7, 0x46, 0xf5, 0x45, 0xe5, 0xc1, 0x9a, 0x38, 0xb8, 0x82,
+	0xae, 0x4e, 0x86, 0x3e, 0x87, 0x7e, 0x4c, 0x65, 0x94, 0xe7, 0x51, 0xd3, 0x22, 0xef, 0x95, 0x16,
+	0x9d, 0xf3, 0x6c, 0x15, 0x25, 0x72, 0x42, 0xe5, 0x99, 0x62, 0xe1, 0x35, 0x1f, 0x9d, 0x02, 0xac,
+	0xfb, 0xa4, 0xce, 0xcf, 0x7e, 0x5d, 0xa3, 0x9c, 0xa6, 0x51, 0x62, 0xd2, 0x05, 0x5b, 0x14, 0xd9,
+	0xe8, 0x27, 0xb0, 0x1f, 0x11, 0x82, 0x7e, 0x80, 0x5e, 0x94, 0xa9, 0x13, 0x32, 0x6b, 0xb0, 0xd3,
+	0x44, 0x9f, 0x73, 0xca, 0x26, 0x27, 0xcf, 0xff, 0x3a, 0x6a, 0xfd, 0xf6, 0xf7, 0xd1, 0x38, 0xa5,
+	0x72, 0x51, 0xc4, 0x7e, 0xc2, 0xb3, 0xe0, 0x7f, 0x5f, 0xd8, 0x0f, 0xc4, 0xec, 0x59, 0x20, 0xab,
+	0x15, 0xa9, 0x03, 0x04, 0x36, 0xd9, 0xd0, 0x21, 0x38, 0x69, 0x24, 0xc2, 0x25, 0xcd, 0xa8, 0xd4,
+	0x0d, 0xed, 0xe0, 0x7e, 0x1a, 0x89, 0x6f, 0xd4, 0x7b, 0xf2, 0xc5, 0xf3, 0x6b, 0xcf, 0x7a, 0x71,
+	0xed, 0x59, 0xff, 0x5c, 0x7b, 0xd6, 0x2f, 0x37, 0x5e, 0xeb, 0xc5, 0x8d, 0xd7, 0xfa, 0xf3, 0xc6,
+	0x6b, 0x3d, 0x3d, 0xbe, 0x5b, 0x28, 0x90, 0x65, 0xdc, 0xd3, 0x9b, 0xff, 0xd1, 0x7f, 0x01, 0x00,
+	0x00, 0xff, 0xff, 0x8a, 0xb6, 0xa1, 0x83, 0x40, 0x06, 0x00, 0x00,
 }
 
 func (m *Tx) Marshal() (dAtA []byte, err error) {
@@ -751,6 +832,52 @@ func (m *Tx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *TxRaw) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxRaw) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxRaw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signatures) > 0 {
+		for iNdEx := len(m.Signatures) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signatures[iNdEx])
+			copy(dAtA[i:], m.Signatures[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Signatures[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.AuthInfoBytes) > 0 {
+		i -= len(m.AuthInfoBytes)
+		copy(dAtA[i:], m.AuthInfoBytes)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.AuthInfoBytes)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.BodyBytes) > 0 {
+		i -= len(m.BodyBytes)
+		copy(dAtA[i:], m.BodyBytes)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BodyBytes)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *SignDoc) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -788,27 +915,17 @@ func (m *SignDoc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if m.AuthInfo != nil {
-		{
-			size, err := m.AuthInfo.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
+	if len(m.AuthInfoBytes) > 0 {
+		i -= len(m.AuthInfoBytes)
+		copy(dAtA[i:], m.AuthInfoBytes)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.AuthInfoBytes)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.Body != nil {
-		{
-			size, err := m.Body.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
-		}
+	if len(m.BodyBytes) > 0 {
+		i -= len(m.BodyBytes)
+		copy(dAtA[i:], m.BodyBytes)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BodyBytes)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1219,18 +1336,41 @@ func (m *Tx) Size() (n int) {
 	return n
 }
 
+func (m *TxRaw) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.BodyBytes)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.AuthInfoBytes)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Signatures) > 0 {
+		for _, b := range m.Signatures {
+			l = len(b)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *SignDoc) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Body != nil {
-		l = m.Body.Size()
+	l = len(m.BodyBytes)
+	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.AuthInfo != nil {
-		l = m.AuthInfo.Size()
+	l = len(m.AuthInfoBytes)
+	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.ChainId)
@@ -1564,6 +1704,159 @@ func (m *Tx) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *TxRaw) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxRaw: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxRaw: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BodyBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BodyBytes = append(m.BodyBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.BodyBytes == nil {
+				m.BodyBytes = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthInfoBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AuthInfoBytes = append(m.AuthInfoBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.AuthInfoBytes == nil {
+				m.AuthInfoBytes = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signatures", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signatures = append(m.Signatures, make([]byte, postIndex-iNdEx))
+			copy(m.Signatures[len(m.Signatures)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *SignDoc) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1595,9 +1888,9 @@ func (m *SignDoc) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field BodyBytes", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1607,33 +1900,31 @@ func (m *SignDoc) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Body == nil {
-				m.Body = &TxBody{}
-			}
-			if err := m.Body.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.BodyBytes = append(m.BodyBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.BodyBytes == nil {
+				m.BodyBytes = []byte{}
 			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuthInfo", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthInfoBytes", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1643,26 +1934,24 @@ func (m *SignDoc) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.AuthInfo == nil {
-				m.AuthInfo = &AuthInfo{}
-			}
-			if err := m.AuthInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+			m.AuthInfoBytes = append(m.AuthInfoBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.AuthInfoBytes == nil {
+				m.AuthInfoBytes = []byte{}
 			}
 			iNdEx = postIndex
 		case 3:
@@ -1868,7 +2157,7 @@ func (m *TxBody) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TimeoutHeight |= int64(b&0x7F) << shift
+				m.TimeoutHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2147,7 +2436,7 @@ func (m *SignerInfo) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.PublicKey == nil {
-				m.PublicKey = &types.Any{}
+				m.PublicKey = &types1.PublicKey{}
 			}
 			if err := m.PublicKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -73,11 +76,14 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	app     *simapp.SimApp
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
+	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := keeper.NewKeeper(
@@ -90,13 +96,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app.EvidenceKeeper = *evidenceKeeper
 
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(*evidenceKeeper)
+	suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyQuerierCdc)
 	suite.app = app
 
 	for i, addr := range valAddresses {
 		addr := sdk.AccAddress(addr)
 		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

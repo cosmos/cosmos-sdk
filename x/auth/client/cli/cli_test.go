@@ -325,7 +325,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	codec := codec2.New()
 	sdk.RegisterCodec(codec)
 	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -436,7 +436,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	codec := codec2.New()
 	sdk.RegisterCodec(codec)
 	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -537,7 +537,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	codec := codec2.New()
 	sdk.RegisterCodec(codec)
 	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")

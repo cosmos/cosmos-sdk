@@ -23,7 +23,7 @@ var (
 	valAddr1 = sdk.ValAddress(delPk1.Address())
 )
 
-func makeTestCodec() (cdc *codec.Codec) {
+func makeTestCodec() (cdc *codec.LegacyAmino) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)

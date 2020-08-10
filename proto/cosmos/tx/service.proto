@@ -10,14 +10,19 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
 // TxService defines a gRPC convenience service for simulating, broadcasting and querying Tx's.
 service TxService {
-    // Generate takes a GenerateRequest to build a Tx, optionally simulating the transaction and estimating gas.
+    // Simulate simulates executing a transaction for estimating gas usage.
     rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
 }
 
 // GenerateRequest is the request type for the TxService.Generate RPC method.
 message SimulateRequest {
+    Tx tx = 1;
 }
 
 // GenerateResponse is the response type for the TxService.Generate RPC method.
 message SimulateResponse {
+    uint64 gas_wanted = 1;
+    uint64 gas_used = 2;
+    bytes data = 3;
+    string log = 4;
 }

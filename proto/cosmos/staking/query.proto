@@ -27,7 +27,7 @@ service Query {
 
   // ValidatorUnbondingDelegations queries unbonding delegations of a validator
   rpc ValidatorUnbondingDelegations (QueryValidatorUnbondingDelegationsRequest) returns (QueryValidatorUnbondingDelegationsResponse) {
-		option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding-delegations";
+		option (google.api.http).get = "/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations";
   }
 
   // Delegation queries delegate info for given validator delegator pair

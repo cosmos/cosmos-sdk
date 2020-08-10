@@ -21,39 +21,47 @@ service Query {
 
   // ConnectionChannels queries all the channels associated with a connection
   // end.
-  rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
+  rpc ConnectionChannels(QueryConnectionChannelsRequest)
+      returns (QueryConnectionChannelsResponse) {
   }
 
   // ChannelClientState queries for the client state for the channel associated
   // with the provided channel identifiers.
-  rpc ChannelClientState(QueryChannelClientStateRequest) returns (QueryChannelClientStateRequest) {
+  rpc ChannelClientState(QueryChannelClientStateRequest)
+      returns (QueryChannelClientStateResponse) {
   }
 
   // ChannelConsensusState queries for the consensus state for the channel
   // associated with the provided channel identifiers.
-  rpc ChannelConsensusState(QueryChannelConsensusStateRequest) returns (QueryChannelConsensusStateRequest) {
+  rpc ChannelConsensusState(QueryChannelConsensusStateRequest)
+      returns (QueryChannelConsensusStateResponse) {
   }
 
   // PacketCommitment queries a stored packet commitment hash.
-  rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
+  rpc PacketCommitment(QueryPacketCommitmentRequest)
+      returns (QueryPacketCommitmentResponse) {
   }
 
   // PacketCommitments returns the all the packet commitments hashes associated
   // with a channel.
-  rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
+  rpc PacketCommitments(QueryPacketCommitmentsRequest)
+      returns (QueryPacketCommitmentsResponse) {
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
-  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
+  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest)
+      returns (QueryPacketAcknowledgementResponse) {
   }
 
   // UnrelayedPackets returns all the unrelayed IBC packets associated with a
   // channel and sequences.
-  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {
+  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest)
+      returns (QueryUnrelayedPacketsResponse) {
   }
 
   // NextSequenceReceive returns the next receive sequence for a given channel
-  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
+  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest)
+      returns (QueryNextSequenceReceiveResponse) {
   }
 }
 
@@ -128,7 +136,7 @@ message QueryChannelClientStateRequest {
 // Query/QueryChannelClientState RPC method
 message QueryChannelClientStateResponse {
   // client state associated with the channel
-  ibc.client.IdentifiedClientState client_state = 1;
+  ibc.client.IdentifiedClientState identified_client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
   // merkle proof path
@@ -242,7 +250,8 @@ message QueryUnrelayedPacketsRequest {
   // channel unique identifier
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
   // list of packet sequences
-  repeated uint64 packet_commitment_sequences = 3 [(gogoproto.customname) = "PacketCommitmentSequences"];
+  repeated uint64 packet_commitment_sequences = 3
+      [(gogoproto.customname) = "PacketCommitmentSequences"];
   // flag indicating if the return value is packet commitments or
   // acknowledgements
   bool acknowledgements = 4;

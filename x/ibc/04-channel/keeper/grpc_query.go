@@ -152,7 +152,7 @@ func (q Keeper) ChannelClientState(c context.Context, req *types.QueryChannelCli
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", channel.ConnectionHops[0]),
+			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", channel.ConnectionHops[0]).Error(),
 		)
 	}
 
@@ -160,11 +160,13 @@ func (q Keeper) ChannelClientState(c context.Context, req *types.QueryChannelCli
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientID),
+			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientID).Error(),
 		)
 	}
 
-	return types.NewQueryChannelClientStateResponse(connection.ClientID, clientState, nil, ctx.BlockHeight()), nil
+	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientID, clientState)
+
+	return types.NewQueryChannelClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
 
 }
 
@@ -192,22 +194,19 @@ func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannel
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", connection.ConnectionHops[0]),
+			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", channel.ConnectionHops[0]).Error(),
 		)
 	}
 
-	clientState, found := q.clientKeeper.GetConsensusState(ctx, connection.ClientID, req.Height)
+	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientID, req.Height)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(clienttypes.ErrClientStateNotFound, "client-id: %s", connection.ClientID),
+			sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "client-id: %s", connection.ClientID).Error(),
 		)
 	}
 
-	return &types.QueryChannelClientStateResponse{
-		ClientState: clientState,
-		Height:      ctx.BlockHeight(),
-	}, nil
+	return types.NewQueryChannelConsensusStateResponse(connection.ClientID, consensusState, nil, ctx.BlockHeight()), nil
 }
 
 // PacketCommitment implements the Query/PacketCommitment gRPC method

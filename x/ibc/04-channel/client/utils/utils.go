@@ -3,12 +3,13 @@ package utils
 import (
 	"context"
 	"encoding/binary"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -53,7 +54,8 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	// FIXME: res.Height+1 is hack, fix later
+	// FIXME: height + 1 is returned as the proof height
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
 	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, res.Value, proofBz, res.Height+1), nil
 }
 
@@ -101,67 +103,90 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, res.Height), nil
 }
 
-// QueryChannelClientState uses the channel Querier to return the ClientState of
-// a Channel.
-func QueryChannelClientState(clientCtx client.Context, portID, channelID string) (clientexported.ClientState, int64, error) {
-	params := types.NewQueryChannelClientStateRequest(portID, channelID)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+// QueryChannelClientState returns the ClientState of a channel end. If
+// prove is true, it performs an ABCI store query in order to retrieve the
+// merkle proof. Otherwise, it uses the gRPC query client.
+func QueryChannelClientState(
+	clientCtx client.Context, portID, channelID string, prove bool,
+) (*types.QueryChannelClientStateResponse, error) {
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryChannelClientStateRequest{
+		PortID:    portID,
+		ChannelID: channelID,
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryChannelClientState)
-	res, height, err := clientCtx.QueryWithData(route, bz)
+	res, err := queryClient.ChannelClientState(context.Background(), req)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	var clientState clientexported.ClientState
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clientState)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal client state: %w", err)
+	if prove {
+		_, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ID)
+		if err != nil {
+			return nil, err
+		}
+		res.Proof = proof
+		res.ProofHeight = proofHeight
 	}
-	return clientState, height, nil
+
+	return res, nil
 }
 
-// QueryChannelConsensusState uses the channel Querier to return the ConsensusState
-// of a Channel.
-func QueryChannelConsensusState(clientCtx client.Context, portID, channelID string) (clientexported.ConsensusState, int64, error) {
-	params := types.NewQueryChannelConsensusStateRequest(portID, channelID)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+// QueryChannelConsensusState returns the ConsensusState of a channel end. If
+// prove is true, it performs an ABCI store query in order to retrieve the
+// merkle proof. Otherwise, it uses the gRPC query client.
+func QueryChannelConsensusState(
+	clientCtx client.Context, portID, channelID string, prove bool,
+) (*types.QueryChannelConsensusStateResponse, error) {
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryChannelConsensusStateRequest{
+		PortID:    portID,
+		ChannelID: channelID,
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryChannelConsensusState)
-	res, height, err := clientCtx.QueryWithData(route, bz)
+	res, err := queryClient.ChannelConsensusState(context.Background(), req)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	var consensusState clientexported.ConsensusState
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &consensusState)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal consensus state: %w", err)
+	consensusState, ok := res.ConsensusState.GetCachedValue().(clientexported.ConsensusState)
+	if !ok {
+		panic("invalid consensus state")
 	}
-	return consensusState, height, nil
+
+	if prove {
+		_, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientID, consensusState.GetHeight())
+		if err != nil {
+			return nil, err
+		}
+		res.Proof = proof
+		res.ProofHeight = proofHeight
+	}
+
+	return res, nil
 }
 
 // QueryCounterpartyConsensusState uses the channel Querier to return the
 // counterparty ConsensusState given the source port ID and source channel ID.
-func QueryCounterpartyConsensusState(clientCtx client.Context, portID, channelID string) (clientexported.ConsensusState, int64, error) {
+func QueryCounterpartyConsensusState(
+	clientCtx client.Context, portID, channelID string,
+) (clientexported.ConsensusState, uint64, error) {
 	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	counterparty := channelRes.Channel.Counterparty
-	clientState, height, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID)
+	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID, false)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return clientState, height, nil
+	consensusState := clienttypes.GetConsensusStateFromAny(res.ConsensusState)
+
+	return consensusState, res.ProofHeight, nil
 }
 
 // QueryNextSequenceReceive returns the next sequence receive.

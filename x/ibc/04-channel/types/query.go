@@ -1,8 +1,12 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
+	proto "github.com/gogo/protobuf/proto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -27,21 +31,32 @@ func NewQueryChannelResponse(portID, channelID string, channel Channel, proof []
 }
 
 // NewQueryChannelClientStateResponse creates a newQueryChannelClientStateResponse instance
-func NewQueryChannelClientStateResponse(clientID string, clientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryChannelClientStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
+func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryChannelClientStateResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.ID, host.ClientStatePath()), "/"))
 	return &QueryChannelClientStateResponse{
-		ClientState: &clientState,
-		Proof:       proof,
-		ProofPath:   path.Pretty(),
-		ProofHeight: uint64(height),
+		IdentifiedClientState: &identifiedClientState,
+		Proof:                 proof,
+		ProofPath:             path.Pretty(),
+		ProofHeight:           uint64(height),
 	}
 }
 
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
 func NewQueryChannelConsensusStateResponse(clientID string, consensusState clientexported.ConsensusState, proof []byte, height int64) *QueryChannelConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.ChannelPath(portID, channelID), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(consensusState.GetHeight()))), "/"))
+	// convert consensus state to Any
+	msg, ok := consensusState.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("cannot proto marshal %T", consensusState))
+	}
+
+	anyConsensusState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+
 	return &QueryChannelConsensusStateResponse{
-		ConsensusState: consensusState,
+		ConsensusState: anyConsensusState,
 		ClientID:       clientID,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),

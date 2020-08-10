@@ -12,11 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/upgrade/current", getCurrentPlanHandler(clientCtx)).Methods("GET")
-	r.HandleFunc("/upgrade/applied/{name}", getDonePlanHandler(clientCtx)).Methods("GET")
-	registerTxRoutes(clientCtx, r)
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc(
+		"/upgrade/current", getCurrentPlanHandler(clientCtx),
+	).Methods("GET")
+	r.HandleFunc(
+		"/upgrade/applied/{name}", getDonePlanHandler(clientCtx),
+	).Methods("GET")
 }
 
 func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {

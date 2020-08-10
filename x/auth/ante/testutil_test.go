@@ -113,7 +113,9 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 			AccountNumber:   accNums[i],
 			AccountSequence: accSeqs[i],
 		}
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxConfig)
+		sigV2, err := tx.SignWithPrivKey(
+			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
 		}

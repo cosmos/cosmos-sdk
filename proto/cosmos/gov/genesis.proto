@@ -11,6 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 message GenesisState{
   // starting_proposal_id is the ID of the starting proposal.
   uint64 starting_proposal_id  = 1 [
+    (gogoproto.customname) = "StartingProposalID",
     (gogoproto.moretags) = "yaml:\"starting_proposal_id\""
   ];
   // deposits defines all the deposits present at genesis.

@@ -8,9 +8,9 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalId uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
+func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
 	return GenesisState{
-		StartingProposalId: startingProposalId,
+		StartingProposalID: startingProposalID,
 		DepositParams:      dp,
 		VotingParams:       vp,
 		TallyParams:        tp,
@@ -28,7 +28,7 @@ func DefaultGenesisState() GenesisState {
 }
 
 func (data GenesisState) Equal(other GenesisState) bool {
-	return data.StartingProposalId == other.StartingProposalId &&
+	return data.StartingProposalID == other.StartingProposalID &&
 		data.Deposits.Equal(other.Deposits) &&
 		data.Votes.Equal(other.Votes) &&
 		data.Proposals.Equal(other.Proposals) &&

@@ -36,6 +36,7 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 			Data: &signing.SingleSignatureData{
 				SignMode: signMode,
 			},
+			AccountSequence: seq[i],
 		}
 	}
 

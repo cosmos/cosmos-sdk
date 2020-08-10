@@ -141,8 +141,9 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 		// make a SignatureV2 with PubKey filled in from above
 		sig = signing.SignatureV2{
-			PubKey: pubKey,
-			Data:   sig.Data,
+			PubKey:          pubKey,
+			Data:            sig.Data,
+			AccountSequence: sig.AccountSequence,
 		}
 
 		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, params)
@@ -359,6 +360,7 @@ func ConsumeMultisignatureVerificationGas(
 		sigV2 := signing.SignatureV2{
 			PubKey: pubkey.GetPubKeys()[i],
 			Data:   sig.Signatures[sigIndex],
+			// AccountSequence: , // TODO
 		}
 		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
 		if err != nil {

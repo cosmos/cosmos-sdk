@@ -322,6 +322,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+	accSeq uint64,
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
@@ -344,8 +345,9 @@ func SignWithPrivKey(
 	}
 
 	sigV2 = signing.SignatureV2{
-		PubKey: priv.PubKey(),
-		Data:   &sigData,
+		PubKey:          priv.PubKey(),
+		Data:            &sigData,
+		AccountSequence: accSeq,
 	}
 
 	return sigV2, nil
@@ -390,8 +392,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Signature: nil,
 	}
 	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
+		PubKey:          pubKey,
+		Data:            &sigData,
+		AccountSequence: txf.Sequence(),
 	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
@@ -415,8 +418,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Signature: sigBytes,
 	}
 	sig = signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
+		PubKey:          pubKey,
+		Data:            &sigData,
+		AccountSequence: txf.Sequence(),
 	}
 
 	// And here the tx is populated with the signature

@@ -42,7 +42,15 @@ var (
 	_ authsigning.Tx             = &builder{}
 	_ client.TxBuilder           = &builder{}
 	_ ante.HasExtensionOptionsTx = &builder{}
+	_ ExtensionOptionsTxBuilder  = &builder{}
 )
+
+type ExtensionOptionsTxBuilder interface {
+	client.TxBuilder
+
+	SetExtensionOptions([]*codectypes.Any)
+	SetNonCriticalExtensionOptions([]*codectypes.Any)
+}
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 	return &builder{
@@ -400,4 +408,14 @@ func (t *builder) GetExtensionOptions() []*codectypes.Any {
 
 func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return t.tx.Body.NonCriticalExtensionOptions
+}
+
+func (t *builder) SetExtensionOptions(extOpts []*codectypes.Any) {
+	t.tx.Body.ExtensionOptions = extOpts
+	t.bodyBz = nil
+}
+
+func (t *builder) SetNonCriticalExtensionOptions(extOpts []*codectypes.Any) {
+	t.tx.Body.NonCriticalExtensionOptions = extOpts
+	t.bodyBz = nil
 }

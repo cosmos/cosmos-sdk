@@ -11,7 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
 service Query{
     // Params queries a specific parameter of a module, given its subspace and key.
     rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-        option (google.api.http).get = "/cosmos/params/v1beta/params";
+        option (google.api.http).get = "/cosmos/params/v1beta1/params";
     }
 }
 

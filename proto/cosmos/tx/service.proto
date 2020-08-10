@@ -21,8 +21,5 @@ message SimulateRequest {
 
 // GenerateResponse is the response type for the TxService.Generate RPC method.
 message SimulateResponse {
-    uint64 gas_wanted = 1;
-    uint64 gas_used = 2;
-    bytes data = 3;
-    string log = 4;
+    cosmos.SimulationResponse simulation_response = 1;
 }

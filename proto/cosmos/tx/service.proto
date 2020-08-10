@@ -20,5 +20,6 @@ message SimulateRequest {
 
 // SimulateResponse is the response type for the Service.Simulate RPC method.
 message SimulateResponse {
-    cosmos.SimulationResponse simulation_response = 1;
+    cosmos.GasInfo gas_info = 1;
+    cosmos.Result result = 2;
 }

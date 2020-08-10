@@ -33,7 +33,7 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
 func NewQueryChannelConsensusStateResponse(clientID string, consensusState clientexported.ConsensusState, proof []byte, height int64) *QueryChannelConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(consensusState.GetHeight()))), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(consensusState.GetHeight())), "/"))
 	anyConsensusState := clienttypes.GetAnyFromConsensusState(consensusState)
 	return &QueryChannelConsensusStateResponse{
 		ConsensusState: anyConsensusState,

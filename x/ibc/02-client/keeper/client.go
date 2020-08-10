@@ -136,15 +136,15 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	var err error
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
-		// Get ConsensusStates at TrustedHeights
+		// Get consensus states at TrustedHeight for each header
 		consensusState1, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
 		if !found {
-			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight1: %d",
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for first header",
 				misbehaviour.GetClientID(), e.Header1.TrustedHeight)
 		}
 		consensusState2, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header2.TrustedHeight)
 		if !found {
-			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight1: %d",
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for second header",
 				misbehaviour.GetClientID(), e.Header2.TrustedHeight)
 		}
 

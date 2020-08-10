@@ -66,7 +66,7 @@ func CheckValidityAndUpdateState(
 	return tmClientState, consensusState, nil
 }
 
-// checkTrustedHeader checks that consensus state matches TrustedFields of Header
+// checkTrustedHeader checks that consensus state matches trusted fields of Header
 func checkTrustedHeader(header types.Header, consState *types.ConsensusState) error {
 	if header.TrustedHeight != consState.Height {
 		return sdkerrors.Wrapf(

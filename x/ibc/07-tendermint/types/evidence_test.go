@@ -86,7 +86,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			true,
 		},
 		{
-			"trusted height1 is 0",
+			"trusted height is 0 in Header1",
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
@@ -97,7 +97,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			false,
 		},
 		{
-			"trusted height2 is 0",
+			"trusted height is 0 in Header2",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
@@ -108,7 +108,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			false,
 		},
 		{
-			"trusted valset1 is nil",
+			"trusted valset is nil in Header1",
 			ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				Header2:  suite.header,
@@ -119,7 +119,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			false,
 		},
 		{
-			"trusted valset2 is nil",
+			"trusted valset is nil in Header2",
 			ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),

@@ -38,11 +38,11 @@ func CheckMisbehaviourAndUpdateState(
 
 	tmConsensusState1, ok := consensusState1.(*types.ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", &types.ConsensusState{}, consensusState1)
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &types.ConsensusState{}, consensusState1)
 	}
 	tmConsensusState2, ok := consensusState2.(*types.ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", &types.ConsensusState{}, consensusState2)
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &types.ConsensusState{}, consensusState2)
 	}
 
 	tmEvidence, ok := misbehaviour.(types.Evidence)
@@ -104,7 +104,7 @@ func CheckMisbehaviourAndUpdateState(
 func checkMisbehavingHeader(
 	clientState *types.ClientState, consState *types.ConsensusState, header types.Header, currentTimestamp time.Time,
 ) error {
-	// check TrustedFields against ConsensusState
+	// check the trusted fields for the header against ConsensusState
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
 	}

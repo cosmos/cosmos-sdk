@@ -18,7 +18,7 @@ import (
 // and will not work for protobuf transactions.
 type StdTxBuilder struct {
 	StdTx
-	cdc *codec.Codec
+	cdc *codec.LegacyAmino
 }
 
 var _ client.TxBuilder = &StdTxBuilder{}
@@ -77,7 +77,7 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
-	Cdc *codec.Codec
+	Cdc *codec.LegacyAmino
 }
 
 var _ client.TxConfig = StdTxConfig{}

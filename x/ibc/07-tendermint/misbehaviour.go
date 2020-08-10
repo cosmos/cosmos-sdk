@@ -14,8 +14,10 @@ import (
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
 // headers at the same height would have convinced the light client.
 //
-// NOTE: assumes provided height is the height at which the consensusState is
-// stored.
+// NOTE: consensusState1 is the trusted consensus state that corresponds to the TrustedHeight
+// of misbehaviour.Header1
+// Similarly, consensusState2 is the trusted consensus state that corresponds
+// to misbehaviour.Header2
 func CheckMisbehaviourAndUpdateState(
 	clientState clientexported.ClientState,
 	consensusState1, consensusState2 clientexported.ConsensusState,

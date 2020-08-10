@@ -186,7 +186,6 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten. Ignored if --multisig is on")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)

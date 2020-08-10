@@ -14,12 +14,6 @@ func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 	}
 }
 
-// GenesisState defines the ibc connection submodule's genesis state.
-type GenesisState struct {
-	Connections           []IdentifiedConnection `json:"connections" yaml:"connections"`
-	ClientConnectionPaths []ConnectionPaths      `json:"client_connection_paths" yaml:"client_connection_paths"`
-}
-
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
 	connections []IdentifiedConnection, connPaths []ConnectionPaths,

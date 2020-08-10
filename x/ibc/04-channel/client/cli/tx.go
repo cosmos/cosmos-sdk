@@ -84,7 +84,7 @@ func NewChannelOpenTryCmd() *cobra.Command {
 			// TODO: Differentiate between channel and counterparty versions.
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
-			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
@@ -133,7 +133,7 @@ func NewChannelOpenAckCmd() *cobra.Command {
 			// TODO: Differentiate between channel and counterparty versions.
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
-			proofTry, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
+			proofTry, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
@@ -175,7 +175,7 @@ func NewChannelOpenConfirmCmd() *cobra.Command {
 			portID := args[0]
 			channelID := args[1]
 
-			proofAck, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
+			proofAck, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
@@ -247,7 +247,7 @@ func NewChannelCloseConfirmCmd() *cobra.Command {
 			portID := args[0]
 			channelID := args[1]
 
-			proofInit, err := connectionutils.ParseProof(clientCtx.Codec, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}

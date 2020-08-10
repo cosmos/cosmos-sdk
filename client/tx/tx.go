@@ -178,7 +178,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.Codec, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -188,12 +188,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.Codec, tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 
-	output, err := ctx.Codec.MarshalJSON(stdTx)
+	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}

@@ -29,8 +29,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses.
 type DelegatorWithdrawInfo struct {
+	// delegator_address is the address of the delegator.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+	// withdraw_address is the address to withdraw the delegation rewards to.
+	WithdrawAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
 }
 
 func (m *DelegatorWithdrawInfo) Reset()         { *m = DelegatorWithdrawInfo{} }
@@ -82,8 +84,10 @@ func (m *DelegatorWithdrawInfo) GetWithdrawAddress() github_com_cosmos_cosmos_sd
 
 // ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 type ValidatorOutstandingRewardsRecord struct {
-	ValidatorAddress   github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins   `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards" yaml:"outstanding_rewards"`
+	// validator_address is the address of the validator.
+	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	// outstanding_rewards represents the oustanding rewards of a validator.
+	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards" yaml:"outstanding_rewards"`
 }
 
 func (m *ValidatorOutstandingRewardsRecord) Reset()         { *m = ValidatorOutstandingRewardsRecord{} }
@@ -135,6 +139,7 @@ func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() github_com_c
 
 // ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
 type ValidatorAccumulatedCommissionRecord struct {
+	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	Accumulated      ValidatorAccumulatedCommission                `protobuf:"bytes,2,opt,name=accumulated,proto3" json:"accumulated" yaml:"accumulated"`
 }
@@ -188,9 +193,12 @@ func (m *ValidatorAccumulatedCommissionRecord) GetAccumulated() ValidatorAccumul
 
 // ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
 type ValidatorHistoricalRewardsRecord struct {
+	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	Period           uint64                                        `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
-	Rewards          ValidatorHistoricalRewards                    `protobuf:"bytes,3,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
+	// period defines the period the historical rewards apply to.
+	Period uint64 `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
+	// rewards defines the historical rewards of a validator.
+	Rewards ValidatorHistoricalRewards `protobuf:"bytes,3,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
 }
 
 func (m *ValidatorHistoricalRewardsRecord) Reset()         { *m = ValidatorHistoricalRewardsRecord{} }
@@ -249,8 +257,10 @@ func (m *ValidatorHistoricalRewardsRecord) GetRewards() ValidatorHistoricalRewar
 
 // ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 type ValidatorCurrentRewardsRecord struct {
+	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	Rewards          ValidatorCurrentRewards                       `protobuf:"bytes,2,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
+	// rewards defines the current rewards of a validator.
+	Rewards ValidatorCurrentRewards `protobuf:"bytes,2,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
 }
 
 func (m *ValidatorCurrentRewardsRecord) Reset()         { *m = ValidatorCurrentRewardsRecord{} }
@@ -302,9 +312,12 @@ func (m *ValidatorCurrentRewardsRecord) GetRewards() ValidatorCurrentRewards {
 
 // DelegatorStartingInfoRecord used for import / export via genesis json.
 type DelegatorStartingInfoRecord struct {
+	// delegator_address is the address of the delegator.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	StartingInfo     DelegatorStartingInfo                         `protobuf:"bytes,3,opt,name=starting_info,json=startingInfo,proto3" json:"starting_info" yaml:"starting_info"`
+	// starting_info defines the starting info of a delegator.
+	StartingInfo DelegatorStartingInfo `protobuf:"bytes,3,opt,name=starting_info,json=startingInfo,proto3" json:"starting_info" yaml:"starting_info"`
 }
 
 func (m *DelegatorStartingInfoRecord) Reset()         { *m = DelegatorStartingInfoRecord{} }
@@ -363,10 +376,14 @@ func (m *DelegatorStartingInfoRecord) GetStartingInfo() DelegatorStartingInfo {
 
 // ValidatorSlashEventRecord is used for import / export via genesis json.
 type ValidatorSlashEventRecord struct {
+	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	Height           uint64                                        `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
-	Period           uint64                                        `protobuf:"varint,3,opt,name=period,proto3" json:"period,omitempty"`
-	Event            ValidatorSlashEvent                           `protobuf:"bytes,4,opt,name=event,proto3" json:"event" yaml:"event"`
+	// height defines the block height at which the slash event occured.
+	Height uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+	// period is the period of the slash event.
+	Period uint64 `protobuf:"varint,3,opt,name=period,proto3" json:"period,omitempty"`
+	// event describes the slash event.
+	Event ValidatorSlashEvent `protobuf:"bytes,4,opt,name=event,proto3" json:"event" yaml:"event"`
 }
 
 func (m *ValidatorSlashEventRecord) Reset()         { *m = ValidatorSlashEventRecord{} }
@@ -432,16 +449,26 @@ func (m *ValidatorSlashEventRecord) GetEvent() ValidatorSlashEvent {
 
 // GenesisState defines all distribution state that must be provided at genesis.
 type GenesisState struct {
-	Params                          Params                                         `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`
-	FeePool                         FeePool                                        `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool" yaml:"fee_pool"`
-	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                        `protobuf:"bytes,3,rep,name=delegator_withdraw_infos,json=delegatorWithdrawInfos,proto3" json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
-	PreviousProposer                github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,4,opt,name=previous_proposer,json=previousProposer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"previous_proposer,omitempty" yaml:"previous_proposer"`
-	OutstandingRewards              []ValidatorOutstandingRewardsRecord            `protobuf:"bytes,5,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
-	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord         `protobuf:"bytes,6,rep,name=validator_accumulated_commissions,json=validatorAccumulatedCommissions,proto3" json:"validator_accumulated_commissions" yaml:"validator_accumulated_commissions"`
-	ValidatorHistoricalRewards      []ValidatorHistoricalRewardsRecord             `protobuf:"bytes,7,rep,name=validator_historical_rewards,json=validatorHistoricalRewards,proto3" json:"validator_historical_rewards" yaml:"validator_historical_rewards"`
-	ValidatorCurrentRewards         []ValidatorCurrentRewardsRecord                `protobuf:"bytes,8,rep,name=validator_current_rewards,json=validatorCurrentRewards,proto3" json:"validator_current_rewards" yaml:"validator_current_rewards"`
-	DelegatorStartingInfos          []DelegatorStartingInfoRecord                  `protobuf:"bytes,9,rep,name=delegator_starting_infos,json=delegatorStartingInfos,proto3" json:"delegator_starting_infos" yaml:"delegator_starting_infos"`
-	ValidatorSlashEvents            []ValidatorSlashEventRecord                    `protobuf:"bytes,10,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events" yaml:"validator_slash_events"`
+	// params defines all the paramaters of the module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`
+	// fee_pool defines the fee pool at genesis.
+	FeePool FeePool `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool" yaml:"fee_pool"`
+	// fee_pool defines the delegator withdraw infos at genesis.
+	DelegatorWithdrawInfos []DelegatorWithdrawInfo `protobuf:"bytes,3,rep,name=delegator_withdraw_infos,json=delegatorWithdrawInfos,proto3" json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
+	// fee_pool defines the previous proposer at genesis.
+	PreviousProposer github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,4,opt,name=previous_proposer,json=previousProposer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"previous_proposer,omitempty" yaml:"previous_proposer"`
+	// fee_pool defines the outstanding rewards of all validators at genesis.
+	OutstandingRewards []ValidatorOutstandingRewardsRecord `protobuf:"bytes,5,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
+	// fee_pool defines the accumulated commisions of all validators at genesis.
+	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `protobuf:"bytes,6,rep,name=validator_accumulated_commissions,json=validatorAccumulatedCommissions,proto3" json:"validator_accumulated_commissions" yaml:"validator_accumulated_commissions"`
+	// fee_pool defines the historical rewards of all validators at genesis.
+	ValidatorHistoricalRewards []ValidatorHistoricalRewardsRecord `protobuf:"bytes,7,rep,name=validator_historical_rewards,json=validatorHistoricalRewards,proto3" json:"validator_historical_rewards" yaml:"validator_historical_rewards"`
+	// fee_pool defines the current rewards of all validators at genesis.
+	ValidatorCurrentRewards []ValidatorCurrentRewardsRecord `protobuf:"bytes,8,rep,name=validator_current_rewards,json=validatorCurrentRewards,proto3" json:"validator_current_rewards" yaml:"validator_current_rewards"`
+	// fee_pool defines the delegator starting infos at genesis.
+	DelegatorStartingInfos []DelegatorStartingInfoRecord `protobuf:"bytes,9,rep,name=delegator_starting_infos,json=delegatorStartingInfos,proto3" json:"delegator_starting_infos" yaml:"delegator_starting_infos"`
+	// fee_pool defines the validator slash events at genesis.
+	ValidatorSlashEvents []ValidatorSlashEventRecord `protobuf:"bytes,10,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events" yaml:"validator_slash_events"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }

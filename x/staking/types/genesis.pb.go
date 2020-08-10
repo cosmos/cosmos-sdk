@@ -26,14 +26,23 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines all staking state that must be provided at genesis.
 type GenesisState struct {
-	Params               Params                                 `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	LastTotalPower       github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=last_total_power,json=lastTotalPower,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_total_power" yaml:"last_total_power"`
-	LastValidatorPowers  []LastValidatorPower                   `protobuf:"bytes,3,rep,name=last_validator_powers,json=lastValidatorPowers,proto3" json:"last_validator_powers" yaml:"last_validator_powers"`
-	Validators           []Validator                            `protobuf:"bytes,4,rep,name=validators,proto3" json:"validators"`
-	Delegations          []Delegation                           `protobuf:"bytes,5,rep,name=delegations,proto3" json:"delegations"`
-	UnbondingDelegations []UnbondingDelegation                  `protobuf:"bytes,6,rep,name=unbonding_delegations,json=unbondingDelegations,proto3" json:"unbonding_delegations" yaml:"unbonding_delegations"`
-	Redelegations        []Redelegation                         `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations"`
-	Exported             bool                                   `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
+	// params defines all the paramaters of related to deposit.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// last_total_power tracks the total amounts of bonded tokens recorded during
+	// the previous end block.
+	LastTotalPower github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=last_total_power,json=lastTotalPower,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_total_power" yaml:"last_total_power"`
+	// last_validator_powers is a special index that provides a historical list
+	// of the last-block's bonded validators.
+	LastValidatorPowers []LastValidatorPower `protobuf:"bytes,3,rep,name=last_validator_powers,json=lastValidatorPowers,proto3" json:"last_validator_powers" yaml:"last_validator_powers"`
+	// delegations defines the validator set at genesis.
+	Validators []Validator `protobuf:"bytes,4,rep,name=validators,proto3" json:"validators"`
+	// delegations defines the delegations active at genesis.
+	Delegations []Delegation `protobuf:"bytes,5,rep,name=delegations,proto3" json:"delegations"`
+	// unbonding_delegations defines the unbonding delegations active at genesis.
+	UnbondingDelegations []UnbondingDelegation `protobuf:"bytes,6,rep,name=unbonding_delegations,json=unbondingDelegations,proto3" json:"unbonding_delegations" yaml:"unbonding_delegations"`
+	// redelegations defines the redelegations active at genesis.
+	Redelegations []Redelegation `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations"`
+	Exported      bool           `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -120,8 +129,10 @@ func (m *GenesisState) GetExported() bool {
 
 // LastValidatorPower required for validator set update logic.
 type LastValidatorPower struct {
+	// address is the address of the validator.
 	Address github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"address,omitempty"`
-	Power   int64                                         `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+	// power defines the power of the validator.
+	Power int64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
 }
 
 func (m *LastValidatorPower) Reset()         { *m = LastValidatorPower{} }

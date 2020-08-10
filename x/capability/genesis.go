@@ -13,8 +13,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// set owners for each index and initialize capability
 	for _, genOwner := range genState.Owners {
-		k.SetOwners(ctx, genOwner.Index, genOwner.Owners)
-		k.InitializeCapability(ctx, genOwner.Index, genOwner.Owners)
+		k.SetOwners(ctx, genOwner.Index, genOwner.IndexOwners)
+		k.InitializeCapability(ctx, genOwner.Index, genOwner.IndexOwners)
 	}
 }
 
@@ -30,8 +30,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		}
 
 		genOwner := types.GenesisOwners{
-			Index:  i,
-			Owners: capabilityOwners,
+			Index:       i,
+			IndexOwners: capabilityOwners,
 		}
 		owners = append(owners, genOwner)
 	}

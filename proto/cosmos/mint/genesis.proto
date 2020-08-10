@@ -8,6 +8,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
 // GenesisState defines the minter genesis state.
 message GenesisState {
+  // minter is a space for holding current inflation information.
   Minter minter = 1 [
     (gogoproto.nullable) = false
   ];

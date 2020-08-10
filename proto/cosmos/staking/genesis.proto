@@ -8,33 +8,43 @@ import "cosmos/staking/staking.proto";
 
 // GenesisState defines all staking state that must be provided at genesis.
 message GenesisState {
+  // params defines all the paramaters of related to deposit.
   Params params = 1 [
     (gogoproto.nullable) = false
   ];
+
+  // last_total_power tracks the total amounts of bonded tokens recorded during
+  // the previous end block.
   bytes last_total_power = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"last_total_power\"",
     (gogoproto.nullable)   = false
   ];
 
+  // last_validator_powers is a special index that provides a historical list
+  // of the last-block's bonded validators.
   repeated LastValidatorPower last_validator_powers = 3 [
     (gogoproto.moretags) = "yaml:\"last_validator_powers\"",
     (gogoproto.nullable) = false
   ];
 
+  // delegations defines the validator set at genesis.
   repeated Validator validators = 4 [
     (gogoproto.nullable) = false
   ];
 
+  // delegations defines the delegations active at genesis.
   repeated Delegation delegations = 5 [
     (gogoproto.nullable) = false
   ];
 
+  // unbonding_delegations defines the unbonding delegations active at genesis.
   repeated UnbondingDelegation unbonding_delegations = 6 [
     (gogoproto.moretags) = "yaml:\"unbonding_delegations\"",
     (gogoproto.nullable) = false
   ];
 
+  // redelegations defines the redelegations active at genesis.
   repeated Redelegation redelegations = 7 [
     (gogoproto.nullable) = false
   ];
@@ -44,8 +54,11 @@ message GenesisState {
 
 // LastValidatorPower required for validator set update logic.
 message LastValidatorPower {
+  // address is the address of the validator.
   bytes address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"
   ];
+
+  // power defines the power of the validator.
   int64 power = 2;
 }

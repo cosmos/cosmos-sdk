@@ -25,10 +25,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines all staking state that must be provided at genesis.
 type GenesisState struct {
-	StartingProposalId uint64    `protobuf:"varint,1,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty" yaml:"starting_proposal_id"`
-	Deposits           Deposits  `protobuf:"bytes,2,rep,name=deposits,proto3,castrepeated=Deposits" json:"deposits"`
-	Votes              Votes     `protobuf:"bytes,3,rep,name=votes,proto3,castrepeated=Votes" json:"votes"`
-	Proposals          Proposals `protobuf:"bytes,4,rep,name=proposals,proto3,castrepeated=Proposals" json:"proposals"`
+	// starting_proposal_id is the ID of the starting proposal.
+	StartingProposalId uint64 `protobuf:"varint,1,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty" yaml:"starting_proposal_id"`
+	// deposits defines all the deposits present at genesis.
+	Deposits Deposits `protobuf:"bytes,2,rep,name=deposits,proto3,castrepeated=Deposits" json:"deposits"`
+	// votes defines all the votes present at genesis.
+	Votes Votes `protobuf:"bytes,3,rep,name=votes,proto3,castrepeated=Votes" json:"votes"`
+	// proposals defines all the proposals present at genesis.
+	Proposals Proposals `protobuf:"bytes,4,rep,name=proposals,proto3,castrepeated=Proposals" json:"proposals"`
 	// params defines all the paramaters of related to deposit.
 	DepositParams DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params" yaml:"deposit_params"`
 	// params defines all the paramaters of related to voting.

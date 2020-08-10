@@ -75,7 +75,7 @@ message TxBody {
 
   // timeout is the block height after which this transaction will not
   // be processed by the chain
-  int64 timeout_height = 3;
+  uint64 timeout_height = 3;
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present

@@ -6,7 +6,7 @@ import "cosmos/tx/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
-// Service defines a gRPC convenience service for simulating transactions.
+// Service defines a gRPC service for simulating transactions.
 // It may also support querying and broadcasting in the future.
 service Service {
     // Simulate simulates executing a transaction for estimating gas usage.

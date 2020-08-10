@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				suite.Require().Equal(expValue, res.Params.Value)
+				suite.Require().Equal(expValue, res.Param.Value)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)

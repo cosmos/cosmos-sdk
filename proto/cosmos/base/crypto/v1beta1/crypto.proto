@@ -30,7 +30,7 @@ message PubKeyMultisigThreshold {
 }
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
-// See cosmos.tx.ModeInfo.Multi for how to specify which signers signed and
+// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers signed and
 // with which modes.
 message MultiSignature {
   option (gogoproto.goproto_unrecognized) = true;

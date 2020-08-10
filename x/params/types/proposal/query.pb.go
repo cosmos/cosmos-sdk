@@ -86,7 +86,7 @@ func (m *QueryParamsRequest) GetKey() string {
 // QueryParamsResponse is response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
 	// param defines the queried parameter.
-	Param ParamChange `protobuf:"bytes,1,opt,name=param,proto3" json:"param"`
+	Params ParamChange `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -122,9 +122,9 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-func (m *QueryParamsResponse) GetParam() ParamChange {
+func (m *QueryParamsResponse) GetParams() ParamChange {
 	if m != nil {
-		return m.Param
+		return m.Params
 	}
 	return ParamChange{}
 }
@@ -298,7 +298,7 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
-		size, err := m.Param.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -344,7 +344,7 @@ func (m *QueryParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Param.Size()
+	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -503,7 +503,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Param", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -530,7 +530,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Param.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

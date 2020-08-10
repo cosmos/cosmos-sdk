@@ -123,9 +123,9 @@ func (m *QueryProposalResponse) GetProposal() Proposal {
 
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 type QueryProposalsRequest struct {
-	// status of the proposals.
+	// proposal_status defines the status of the proposals.
 	ProposalStatus ProposalStatus `protobuf:"varint,1,opt,name=proposal_status,json=proposalStatus,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"proposal_status,omitempty"`
-	// Voter address for the proposals.
+	// voter defines the voter address for the proposals.
 	Voter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
 	// depositor defines the deposit addresses from the proposals.
 	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`

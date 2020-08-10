@@ -219,7 +219,7 @@ func (m *PubKeyMultisigThreshold) GetPubKeys() []*PublicKey {
 }
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
-// See cosmos.tx.ModeInfo.Multi for how to specify which signers signed and
+// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers signed and
 // with which modes.
 type MultiSignature struct {
 	Signatures       [][]byte `protobuf:"bytes,1,rep,name=signatures,proto3" json:"signatures,omitempty"`

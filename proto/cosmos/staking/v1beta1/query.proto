@@ -89,6 +89,7 @@ message QueryValidatorDelegationsRequest {
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
 
 // QueryValidatorDelegationsRequest is response type for the Query/ValidatorDelegations RPC method
 message QueryValidatorDelegationsResponse {
@@ -171,6 +172,7 @@ message QueryDelegatorUnbondingDelegationsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
+
 // QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method.
 message QueryDelegatorUnbondingDelegationsResponse {
   repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];

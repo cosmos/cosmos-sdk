@@ -6,18 +6,19 @@ import "cosmos/tx/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
-// Service defines a gRPC convenience service for simulating, broadcasting and querying Tx's.
+// Service defines a gRPC convenience service for simulating transactions.
+// It may also support querying and broadcasting in the future.
 service Service {
     // Simulate simulates executing a transaction for estimating gas usage.
     rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
 }
 
-// GenerateRequest is the request type for the TxService.Generate RPC method.
+// SimulateRequest is the request type for the Service.Simulate RPC method.
 message SimulateRequest {
     Tx tx = 1;
 }
 
-// GenerateResponse is the response type for the TxService.Generate RPC method.
+// SimulateResponse is the response type for the Service.Simulate RPC method.
 message SimulateResponse {
     cosmos.SimulationResponse simulation_response = 1;
 }

@@ -4,19 +4,26 @@ package cosmos.slashing;
 import "cosmos/query/pagination.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/slashing.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 
 // Query provides defines the gRPC querier service
 service Query {
 	// Params queries the parameters of slashing module
-	rpc Params (QueryParamsRequest) returns (QueryParamsResponse){}
+	rpc Params (QueryParamsRequest) returns (QueryParamsResponse){
+		option (google.api.http).get = "/cosmos/slashing/v1beta/params";
+	}
 
 	// SigningInfo queries the signing info of given cons address
-	rpc SigningInfo (QuerySigningInfoRequest) returns (QuerySigningInfoResponse) {}
+	rpc SigningInfo (QuerySigningInfoRequest) returns (QuerySigningInfoResponse) {
+		option (google.api.http).get = "/cosmos/slashing/v1beta/signing_infos/{cons_address}";
+	}
 
 	// SigningInfos queries signing info of all validators
-	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {}
+	rpc SigningInfos (QuerySigningInfosRequest) returns (QuerySigningInfosResponse) {
+		option (google.api.http).get = "/cosmos/slashing/v1beta/signing_infos";
+	}
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method

@@ -3,13 +3,16 @@ package cosmos.params;
 
 import "gogoproto/gogo.proto";
 import "cosmos/params/params.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
 
 // Query defines the gRPC querier service.
 service Query{
     // Params queries a specific parameter of a module, given its subspace and key.
-    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {}
+    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+        option (google.api.http).get = "/cosmos/params/v1beta/params";
+    }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.

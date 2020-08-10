@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -52,7 +53,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 
@@ -84,7 +85,7 @@ func GetCmdQueryInflation() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.Inflation))
 		},
 	}
 
@@ -116,7 +117,7 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.AnnualProvisions))
 		},
 	}
 

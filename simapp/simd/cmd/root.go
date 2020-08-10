@@ -95,8 +95,8 @@ func init() {
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		withProtoJson(queryCommand()),
-		withProtoJson(txCommand()),
+		withProtoJSON(queryCommand()),
+		withProtoJSON(txCommand()),
 		keys.Commands(simapp.DefaultNodeHome),
 	)
 }
@@ -202,7 +202,7 @@ func exportAppStateAndTMValidators(
 
 // This is a temporary command middleware to enable proto JSON marshaling for testing.
 // Once proto JSON works everywhere we can remove this and set ProtoCodec as default
-func withProtoJson(command *cobra.Command) *cobra.Command {
+func withProtoJSON(command *cobra.Command) *cobra.Command {
 	existing := command.PersistentPreRunE
 	if existing != nil {
 		command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
@@ -210,15 +210,15 @@ func withProtoJson(command *cobra.Command) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return setProtoJson(cmd, args)
+			return setProtoJSON(cmd, args)
 		}
 	} else {
-		command.PersistentPreRunE = setProtoJson
+		command.PersistentPreRunE = setProtoJSON
 	}
 	return command
 }
 
-func setProtoJson(cmd *cobra.Command, args []string) error {
+func setProtoJSON(cmd *cobra.Command, args []string) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	clientCtx = clientCtx.WithJSONMarshaler(codec.NewProtoCodec(clientCtx.InterfaceRegistry))
 	return client.SetCmdClientContext(cmd, clientCtx)

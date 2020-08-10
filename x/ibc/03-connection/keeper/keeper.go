@@ -22,16 +22,14 @@ type Keeper struct {
 	types.QueryServer
 
 	storeKey     sdk.StoreKey
-	aminoCdc     *codec.Codec // amino codec. TODO: remove after clients have been migrated to proto
 	cdc          codec.BinaryMarshaler
 	clientKeeper types.ClientKeeper
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
 	return Keeper{
 		storeKey:     key,
-		aminoCdc:     aminoCdc,
 		cdc:          cdc,
 		clientKeeper: ck,
 	}

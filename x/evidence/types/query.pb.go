@@ -31,8 +31,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryEvidenceRequest is the request type for the Query/Evidence RPC method
+// QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 type QueryEvidenceRequest struct {
+	// evidence_hash defines the hash of the requested evidence.
 	EvidenceHash github_com_tendermint_tendermint_libs_bytes.HexBytes `protobuf:"bytes,1,opt,name=evidence_hash,json=evidenceHash,proto3,casttype=github.com/tendermint/tendermint/libs/bytes.HexBytes" json:"evidence_hash,omitempty"`
 }
 
@@ -76,8 +77,9 @@ func (m *QueryEvidenceRequest) GetEvidenceHash() github_com_tendermint_tendermin
 	return nil
 }
 
-// QueryEvidenceResponse is the response type for the Query/Evidence RPC method
+// QueryEvidenceResponse is the response type for the Query/Evidence RPC method.
 type QueryEvidenceResponse struct {
+	// evidence returns the requested evidence.
 	Evidence *types.Any `protobuf:"bytes,1,opt,name=evidence,proto3" json:"evidence,omitempty"`
 }
 
@@ -121,8 +123,9 @@ func (m *QueryEvidenceResponse) GetEvidence() *types.Any {
 	return nil
 }
 
-// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method
+// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method.
 type QueryAllEvidenceRequest struct {
+	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -166,9 +169,11 @@ func (m *QueryAllEvidenceRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method
+// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method.
 type QueryAllEvidenceResponse struct {
-	Evidence   []*types.Any        `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
+	// evidence returns all evidences.
+	Evidence []*types.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
+	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -270,9 +275,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Evidence queries evidence based on evidence hash
+	// Evidence queries evidence based on evidence hash.
 	Evidence(ctx context.Context, in *QueryEvidenceRequest, opts ...grpc.CallOption) (*QueryEvidenceResponse, error)
-	// AllEvidence queries all evidence
+	// AllEvidence queries all evidence.
 	AllEvidence(ctx context.Context, in *QueryAllEvidenceRequest, opts ...grpc.CallOption) (*QueryAllEvidenceResponse, error)
 }
 
@@ -304,9 +309,9 @@ func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Evidence queries evidence based on evidence hash
+	// Evidence queries evidence based on evidence hash.
 	Evidence(context.Context, *QueryEvidenceRequest) (*QueryEvidenceResponse, error)
-	// AllEvidence queries all evidence
+	// AllEvidence queries all evidence.
 	AllEvidence(context.Context, *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error)
 }
 

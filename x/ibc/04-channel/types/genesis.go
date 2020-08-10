@@ -26,14 +26,6 @@ func (pa PacketAckCommitment) Validate() error {
 	return validateGenFields(pa.PortID, pa.ChannelID, pa.Sequence)
 }
 
-// PacketSequence defines the genesis type necessary to retrieve and store
-// next send and receive sequences.
-type PacketSequence struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
-	Sequence  uint64 `json:"sequence" yaml:"sequence"`
-}
-
 // NewPacketSequence creates a new PacketSequences instance.
 func NewPacketSequence(portID, channelID string, seq uint64) PacketSequence {
 	return PacketSequence{
@@ -47,16 +39,6 @@ func NewPacketSequence(portID, channelID string, seq uint64) PacketSequence {
 // failure.
 func (ps PacketSequence) Validate() error {
 	return validateGenFields(ps.PortID, ps.ChannelID, ps.Sequence)
-}
-
-// GenesisState defines the ibc channel submodule's genesis state.
-type GenesisState struct {
-	Channels         []IdentifiedChannel   `json:"channels" yaml:"channels"`
-	Acknowledgements []PacketAckCommitment `json:"acknowledgements" yaml:"acknowledgements"`
-	Commitments      []PacketAckCommitment `json:"commitments" yaml:"commitments"`
-	SendSequences    []PacketSequence      `json:"send_sequences" yaml:"send_sequences"`
-	RecvSequences    []PacketSequence      `json:"recv_sequences" yaml:"recv_sequences"`
-	AckSequences     []PacketSequence      `json:"ack_sequences" yaml:"ack_sequences"`
 }
 
 // NewGenesisState creates a GenesisState instance.

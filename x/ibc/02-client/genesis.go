@@ -12,12 +12,23 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
-		k.SetClientState(ctx, client.ClientID, client.ClientState)
-		k.SetClientType(ctx, client.ClientID, client.ClientState.ClientType())
+		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
+		if !ok {
+			panic("invalid client state")
+		}
+
+		k.SetClientState(ctx, client.ClientID, cs)
+		k.SetClientType(ctx, client.ClientID, cs.ClientType())
 	}
+
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			k.SetClientConsensusState(ctx, cs.ClientID, consState.GetHeight(), consState)
+			consensusState, ok := consState.GetCachedValue().(exported.ConsensusState)
+			if !ok {
+				panic("invalid consensus state")
+			}
+
+			k.SetClientConsensusState(ctx, cs.ClientID, consensusState.GetHeight(), consensusState)
 		}
 	}
 
@@ -45,6 +56,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
-		CreateLocalhost:  true,
+		CreateLocalhost:  false,
 	}
 }

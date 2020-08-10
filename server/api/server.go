@@ -9,9 +9,11 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
+	"golang.org/x/net/context"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -36,6 +38,22 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 	return &Server{
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
+		logger:    logger,
+	}
+}
+
+type GRPCServer struct {
+	Router    *runtime.ServeMux
+	ClientCtx context.Context
+	EndPoint  string
+	logger    log.Logger
+}
+
+func NewGrpc(cliCtx context.Context, router *runtime.ServeMux, logger log.Logger, endPoint string, opts ...runtime.ServeMuxOption) *GRPCServer {
+	return &GRPCServer{
+		ClientCtx: context.Background(),
+		Router:    runtime.NewServeMux(opts...),
+		EndPoint:  endPoint,
 		logger:    logger,
 	}
 }

@@ -509,6 +509,10 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server) {
 	ModuleBasics.RegisterRESTRoutes(apiSvr.ClientCtx, apiSvr.Router)
 }
 
+func (app *SimApp) RegisterGRPCRoutes(apiSvr *api.GRPCServer) {
+	ModuleBasics.RegisterGRPCRoutes(apiSvr.ClientCtx, apiSvr.Router, apiSvr.EndPoint)
+}
+
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)

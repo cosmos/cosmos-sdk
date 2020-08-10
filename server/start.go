@@ -3,11 +3,13 @@ package server
 // DONTCOVER
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime/pprof"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
@@ -234,7 +236,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppC
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
+		grpcServer := api.NewGrpc(context.Background(), runtime.NewServeMux(), ctx.Logger.With("module", "api-server"), config.GRPC.Address)
+
 		app.RegisterAPIRoutes(apiSrv)
+		app.RegisterGRPCRoutes(grpcServer)
 
 		errCh := make(chan error)
 

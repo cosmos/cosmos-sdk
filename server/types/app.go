@@ -33,6 +33,8 @@ type (
 
 		RegisterAPIRoutes(*api.Server)
 
+		RegisterGRPCRoutes(*api.GRPCServer)
+
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
 		RegisterGRPCServer(grpc.Server)

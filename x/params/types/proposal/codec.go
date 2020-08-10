@@ -11,10 +11,10 @@ type Codec struct {
 
 	// Keep reference to the amino codec to allow backwards compatibility along
 	// with type, and interface registration.
-	amino *codec.Codec
+	amino *codec.LegacyAmino
 }
 
-func NewCodec(amino *codec.Codec) *Codec {
+func NewCodec(amino *codec.LegacyAmino) *Codec {
 	return &Codec{Marshaler: codec.NewHybridCodec(amino, types.NewInterfaceRegistry()), amino: amino}
 }
 
@@ -29,7 +29,7 @@ func init() {
 }
 
 // RegisterCodec registers all necessary param module types with a given codec.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&ParameterChangeProposal{}, "cosmos-sdk/ParameterChangeProposal", nil)
 }
 

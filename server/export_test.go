@@ -41,9 +41,9 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	serverCtx := NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
-	clientCtx := client.Context{}.WithJSONMarshaler(app.Codec())
+	clientCtx := client.Context{}.WithJSONMarshaler(app.LegacyAmino())
 
-	genDoc := newDefaultGenesisDoc(app.Codec())
+	genDoc := newDefaultGenesisDoc(app.LegacyAmino())
 	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
 
 	app.InitChain(
@@ -71,7 +71,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
-	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)
+	err = app.LegacyAmino().UnmarshalJSON(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
@@ -90,7 +90,7 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
-func newDefaultGenesisDoc(cdc *codec.Codec) *tmtypes.GenesisDoc {
+func newDefaultGenesisDoc(cdc *codec.LegacyAmino) *tmtypes.GenesisDoc {
 	genesisState := simapp.NewDefaultGenesisState()
 
 	stateBytes, err := codec.MarshalJSONIndent(cdc, genesisState)

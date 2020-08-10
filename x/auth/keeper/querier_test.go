@@ -17,7 +17,7 @@ import (
 
 func TestQueryAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 
 	req := abci.RequestQuery{
 		Path: "",

@@ -45,7 +45,7 @@ type Context struct {
 	NodeURI           string
 
 	// TODO: Deprecated (remove).
-	Codec *codec.Codec
+	LegacyAmino *codec.LegacyAmino
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -68,8 +68,8 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 
 // WithCodec returns a copy of the context with an updated codec.
 // TODO: Deprecated (remove).
-func (ctx Context) WithCodec(cdc *codec.Codec) Context {
-	ctx.Codec = cdc
+func (ctx Context) WithLegacyAmino(cdc *codec.LegacyAmino) Context {
+	ctx.LegacyAmino = cdc
 	return ctx
 }
 

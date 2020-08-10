@@ -3,14 +3,15 @@ package types
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // RegisterCodec registers the IBC client interfaces and types
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.ClientState)(nil), nil) // remove after genesis migration
 	cdc.RegisterInterface((*exported.MsgCreateClient)(nil), nil)
 	cdc.RegisterInterface((*exported.MsgUpdateClient)(nil), nil)

@@ -39,7 +39,7 @@ func (mock TxSearchMock) Block(height *int64) (*ctypes.ResultBlock, error) {
 	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
 }
 
-func newTestCodec() *codec.Codec {
+func newTestCodec() *codec.LegacyAmino {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	types.RegisterCodec(cdc)
@@ -147,7 +147,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			cli := TxSearchMock{txs: marshalled}
 			clientCtx := client.Context{}.
 				WithJSONMarshaler(cdc).
-				WithCodec(cdc).
+				WithLegacyAmino(cdc).
 				WithClient(cli)
 
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)

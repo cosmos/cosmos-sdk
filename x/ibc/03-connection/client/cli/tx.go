@@ -39,7 +39,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -98,12 +98,12 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			// TODO: parse strings?
 			counterpartyVersions := args[5]
 
-			proofInit, err := utils.ParseProof(clientCtx.Codec, args[6])
+			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[6])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[7])
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[7])
 			if err != nil {
 				return err
 			}
@@ -154,12 +154,12 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[2])
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofAck, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofAck, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}

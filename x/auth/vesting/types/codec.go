@@ -27,8 +27,16 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&DelayedVestingAccount{},
 		&PeriodicVestingAccount{},
 	)
+
 	registry.RegisterImplementations(
 		(*authtypes.AccountI)(nil),
+		&DelayedVestingAccount{},
+		&ContinuousVestingAccount{},
+		&PeriodicVestingAccount{},
+	)
+
+	registry.RegisterImplementations(
+		(*authtypes.GenesisAccount)(nil),
 		&DelayedVestingAccount{},
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},

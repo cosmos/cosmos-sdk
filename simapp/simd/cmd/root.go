@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -77,12 +79,12 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		withProtoJson(genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome)),
+		withProtoJson(genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig),
-		AddGenesisAccountCmd(simapp.DefaultNodeHome),
+		withProtoJson(genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
+		withProtoJson(genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig)),
+		withProtoJson(AddGenesisAccountCmd(simapp.DefaultNodeHome)),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -171,6 +173,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		encodingConfig,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -184,16 +187,42 @@ func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 
+	encCfg := simapp.MakeEncodingConfig()
+	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
+		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg)
 
 		if err := simApp.LoadHeight(height); err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
+		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+}
+
+// This is a temporary command middleware to enable proto JSON marshaling for testing.
+// Once proto JSON works everywhere we can remove this and set ProtoCodec as default
+func withProtoJson(command *cobra.Command) *cobra.Command {
+	existing := command.PersistentPreRunE
+	if existing != nil {
+		command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+			err := existing(cmd, args)
+			if err != nil {
+				return err
+			}
+			return setProtoJson(cmd, args)
+		}
+	} else {
+		command.PersistentPreRunE = setProtoJson
+	}
+	return command
+}
+
+func setProtoJson(cmd *cobra.Command, args []string) error {
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx = clientCtx.WithJSONMarshaler(codec.NewProtoCodec(clientCtx.InterfaceRegistry))
+	return client.SetCmdClientContext(cmd, clientCtx)
 }

@@ -195,6 +195,34 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
+	val := s.network.Validators[0]
+
+	clientCtx := val.ClientCtx
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	from := val.Address
+	to := val.Address
+	amount := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+	args := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	}
+
+	bz, err := banktestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	s.Require().NoError(err)
+	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
+	s.Require().NoError(err)
+	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
+}
+
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 
@@ -204,27 +232,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     interface{}
 		expectedCode uint32
 	}{
-		{
-			"valid transaction (gen-only)",
-			val.Address,
-			val.Address,
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			false,
-			&sdk.TxResponse{},
-			0,
-		},
 		{
 			"valid transaction",
 			val.Address,

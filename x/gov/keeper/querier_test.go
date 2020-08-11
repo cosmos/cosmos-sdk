@@ -294,7 +294,7 @@ func TestQueries(t *testing.T) {
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	appCodec := app.AppCodec()
+	legacyQuerierCdc := app.LegacyAmino()
 
 	proposal := types.Proposal{
 		ProposalID: 100,
@@ -317,11 +317,10 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		app.GovKeeper.SetVote(ctx, vote)
 	}
 
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order
-	all := getQueriedVotes(t, ctx, appCodec, querier, proposal.ProposalID, 1, 0)
+	all := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.ProposalID, 1, 0)
 	require.Equal(t, len(all), len(votes))
 
 	type testCase struct {
@@ -355,7 +354,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
-			votes := getQueriedVotes(t, ctx, appCodec, querier, proposal.ProposalID, tc.page, tc.limit)
+			votes := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.ProposalID, tc.page, tc.limit)
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

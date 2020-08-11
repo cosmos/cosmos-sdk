@@ -21,7 +21,7 @@ import (
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc   codec.Marshaler
+	cdc   codec.BinaryMarshaler
 	amino *codec.LegacyAmino
 	ctx   sdk.Context
 	ss    types.Subspace
@@ -125,12 +125,12 @@ func (suite *SubspaceTestSuite) TestUpdate() {
 
 	bad := time.Minute * 5
 
-	bz, err := suite.cdc.MarshalJSON(bad)
+	bz, err := suite.amino.MarshalJSON(bad)
 	suite.Require().NoError(err)
 	suite.Require().Error(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
 	good := time.Hour * 360
-	bz, err = suite.cdc.MarshalJSON(good)
+	bz, err = suite.amino.MarshalJSON(good)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 

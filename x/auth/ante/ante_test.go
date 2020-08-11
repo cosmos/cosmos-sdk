@@ -358,7 +358,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"fix sequence, should pass",
@@ -387,7 +387,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			func() {},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"tx from just second signer with incorrect sequence fails",
@@ -398,7 +398,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"fix the sequence and it passes",
@@ -816,7 +816,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized, // because of wrong accSeq
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"test public key not found",
@@ -862,7 +862,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"make sure previous public key has been set after wrong signature",
@@ -874,7 +874,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 	}
 

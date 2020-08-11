@@ -90,7 +90,7 @@ func DefaultConfig() Config {
 		Codec:            encCfg.Marshaler,
 		TxConfig:         encCfg.TxConfig,
 		LegacyAmino:      encCfg.Amino,
-		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
+		AccountRetriever: authtypes.AccountRetriever{},
 		AppConstructor:   NewSimApp,
 		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:    2 * time.Second,

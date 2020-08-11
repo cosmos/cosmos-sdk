@@ -6,8 +6,8 @@ import "github.com/cosmos/cosmos-sdk/types"
 // ensure an account exists and to be able to query for account fields necessary
 // for signing.
 type AccountRetriever interface {
-	EnsureExists(nodeQuerier NodeQuerier, addr types.AccAddress) error
-	GetAccountNumberSequence(nodeQuerier NodeQuerier, addr types.AccAddress) (accNum uint64, accSeq uint64, err error)
+	EnsureExists(clientCtx Context, addr types.AccAddress) error
+	GetAccountNumberSequence(clientCtx Context, addr types.AccAddress) (accNum uint64, accSeq uint64, err error)
 }
 
 // NodeQuerier is an interface that is satisfied by types that provide the QueryWithData method

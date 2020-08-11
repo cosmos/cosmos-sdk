@@ -8,7 +8,7 @@ import (
 )
 
 // REMOVE: once simapp uses proto
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
 }
 

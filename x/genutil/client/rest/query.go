@@ -22,7 +22,7 @@ func QueryGenesisTxs(clientCtx client.Context, w http.ResponseWriter) {
 		return
 	}
 
-	appState, err := types.GenesisStateFromGenDoc(clientCtx.Codec, *resultGenesis.Genesis)
+	appState, err := types.GenesisStateFromGenDoc(clientCtx.LegacyAmino, *resultGenesis.Genesis)
 	if err != nil {
 		rest.WriteErrorResponse(
 			w, http.StatusInternalServerError,
@@ -31,7 +31,7 @@ func QueryGenesisTxs(clientCtx client.Context, w http.ResponseWriter) {
 		return
 	}
 
-	genState := types.GetGenesisStateFromAppState(clientCtx.Codec, appState)
+	genState := types.GetGenesisStateFromAppState(clientCtx.LegacyAmino, appState)
 	genTxs := make([]sdk.Tx, len(genState.GenTxs))
 	for i, tx := range genState.GenTxs {
 		err := clientCtx.JSONMarshaler.UnmarshalJSON(tx, &genTxs[i])

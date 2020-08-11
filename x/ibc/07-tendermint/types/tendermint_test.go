@@ -29,7 +29,7 @@ type TendermintTestSuite struct {
 	suite.Suite
 
 	ctx      sdk.Context
-	aminoCdc *codec.Codec
+	aminoCdc *codec.LegacyAmino
 	cdc      codec.Marshaler
 	privVal  tmtypes.PrivValidator
 	valSet   *tmtypes.ValidatorSet
@@ -42,7 +42,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.Codec()
+	suite.aminoCdc = app.LegacyAmino()
 	suite.cdc = app.AppCodec()
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)

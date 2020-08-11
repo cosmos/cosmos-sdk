@@ -86,8 +86,9 @@ func CheckMisbehaviourAndUpdateState(
 
 	// Check the validity of the two conflicting headers against their respective
 	// trusted consensus states
-	// NOTE: header height and commitment root assertions are checked with the
-	// evidence.ValidateBasic and msg ValidateBasic functions at the AnteHandler level.
+	// NOTE: header height and commitment root assertions are checked in
+	// evidence.ValidateBasic by the client keeper and msg.ValidateBasic
+	// by the base application.
 	if err := checkMisbehaviourHeader(
 		tmClientState, tmConsensusState1, tmEvidence.Header1, currentTimestamp,
 	); err != nil {

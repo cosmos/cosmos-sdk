@@ -200,7 +200,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 }
 
 // custom tx codec
-func makeCodec() *codec.Codec {
+func makeCodec() *codec.LegacyAmino {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)

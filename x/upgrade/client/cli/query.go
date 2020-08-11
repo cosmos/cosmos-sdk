@@ -105,7 +105,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return clientCtx.PrintOutput(string(bz))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", string(bz)))
 		},
 	}
 

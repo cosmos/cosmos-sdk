@@ -33,7 +33,6 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"golang.org/x/net/context"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -58,7 +57,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
-	RegisterGRPCRoutes(context.Context, *runtime.ServeMux, string)
+	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -118,9 +117,9 @@ func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rou
 }
 
 // RegisterGRPCRoutes registers all module rest routes
-func (bm BasicManager) RegisterGRPCRoutes(clientCtx context.Context, rtr *runtime.ServeMux, endpoint string) {
+func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {
-		b.RegisterGRPCRoutes(clientCtx, rtr, endpoint)
+		b.RegisterGRPCRoutes(clientCtx, rtr)
 	}
 }
 

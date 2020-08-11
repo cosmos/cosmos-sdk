@@ -43,7 +43,7 @@ func KeyPrefixBytes(prefix int) []byte {
 // FullClientPath returns the full path of a specific client path in the format:
 // "clients/{clientID}/{path}" as a string.
 func FullClientPath(clientID string, path string) string {
-	return string(FullKeyClientPath(clientID, path))
+	return string(FullKeyClientPath(clientID, []byte(path)))
 }
 
 // FullKeyClientPath returns the full path of specific client path in the format:

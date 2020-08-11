@@ -10,8 +10,8 @@ import (
 var _ codectypes.UnpackInterfacesMessage = GenesisState{}
 
 // DefaultGenesisState returns the ibc module's default genesis state.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		ClientGenesis:     clienttypes.DefaultGenesisState(),
 		ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 		ChannelGenesis:    channeltypes.DefaultGenesisState(),
@@ -25,7 +25,7 @@ func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
-func (gs GenesisState) Validate() error {
+func (gs *GenesisState) Validate() error {
 	if err := gs.ClientGenesis.Validate(); err != nil {
 		return err
 	}

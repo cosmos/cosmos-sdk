@@ -136,28 +136,11 @@ type (
 
 // ProposalStatusFromString turns a string into a ProposalStatus
 func ProposalStatusFromString(str string) (ProposalStatus, error) {
-	switch str {
-	case "DepositPeriod":
-		return StatusDepositPeriod, nil
-
-	case "VotingPeriod":
-		return StatusVotingPeriod, nil
-
-	case "Passed":
-		return StatusPassed, nil
-
-	case "Rejected":
-		return StatusRejected, nil
-
-	case "Failed":
-		return StatusFailed, nil
-
-	case "":
-		return StatusNil, nil
-
-	default:
-		return ProposalStatus(0xff), fmt.Errorf("'%s' is not a valid proposal status", str)
+	num, ok := ProposalStatus_value[str]
+	if !ok {
+		return StatusNil, fmt.Errorf("'%s' is not a valid proposal status", str)
 	}
+	return ProposalStatus(num), nil
 }
 
 // ValidProposalStatus returns true if the proposal status is valid and false

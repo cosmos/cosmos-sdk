@@ -45,7 +45,7 @@ type Context struct {
 	NodeURI           string
 
 	// TODO: Deprecated (remove).
-	Codec *codec.Codec
+	LegacyAmino *codec.LegacyAmino
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -68,8 +68,8 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 
 // WithCodec returns a copy of the context with an updated codec.
 // TODO: Deprecated (remove).
-func (ctx Context) WithCodec(cdc *codec.Codec) Context {
-	ctx.Codec = cdc
+func (ctx Context) WithLegacyAmino(cdc *codec.LegacyAmino) Context {
+	ctx.LegacyAmino = cdc
 	return ctx
 }
 
@@ -218,7 +218,7 @@ func (ctx Context) PrintOutput(toPrint proto.Message) error {
 // PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
 // and uses amino JSON encoding. It will be removed in the near future!
 func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
-	return ctx.WithJSONMarshaler(ctx.Codec).printOutput(toPrint)
+	return ctx.WithJSONMarshaler(ctx.LegacyAmino).printOutput(toPrint)
 }
 
 func (ctx Context) printOutput(toPrint interface{}) error {

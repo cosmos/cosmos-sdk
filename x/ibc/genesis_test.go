@@ -266,8 +266,8 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			suite.NotPanics(func() {
 				cdc := codec.NewProtoCodec(suite.chainA.App.InterfaceRegistry())
-				genState := cdc.MustMarshalJSON(&gs)
-				cdc.MustUnmarshalJSON(genState, &gs)
+				genState := cdc.MustMarshalJSON(gs)
+				cdc.MustUnmarshalJSON(genState, gs)
 			})
 
 			// init genesis based on marshal and unmarshal

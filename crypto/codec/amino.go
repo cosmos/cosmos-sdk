@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
-var amino *codec.Codec
+var amino *codec.LegacyAmino
 
 func init() {
 	amino = codec.New()
@@ -19,7 +19,7 @@ func init() {
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
-func RegisterCrypto(cdc *codec.Codec) {
+func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
 		ed25519.PubKeyAminoName, nil)

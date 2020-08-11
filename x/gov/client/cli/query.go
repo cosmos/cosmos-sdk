@@ -641,7 +641,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", out))
+			return clientCtx.PrintOutputLegacy(out)
 		},
 	}
 

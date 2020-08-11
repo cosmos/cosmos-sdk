@@ -146,7 +146,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	appCodec := legacyQuerierCdc
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
@@ -317,7 +317,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		app.GovKeeper.SetVote(ctx, vote)
 	}
 
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order

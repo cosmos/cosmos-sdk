@@ -303,7 +303,8 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	marshaler := ctx.Codec
+	// LegacyAmino used intentionally for REST
+	marshaler := ctx.LegacyAmino
 
 	switch res := resp.(type) {
 	case []byte:

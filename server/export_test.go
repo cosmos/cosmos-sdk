@@ -35,7 +35,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0)
+	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0, simapp.MakeEncodingConfig())
 
 	serverCtx := NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir

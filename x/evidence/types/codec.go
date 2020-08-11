@@ -10,7 +10,7 @@ import (
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // evidence module.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterConcrete(&MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation", nil)
@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.Codec) {
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSubmitEvidence{})
 	registry.RegisterInterface(
-		"cosmos_sdk.evidence.v1.Evidence",
+		"cosmos.evidence.v1beta1.Evidence",
 		(*exported.Evidence)(nil),
 		&Equivocation{},
 	)

@@ -9,8 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Compile-time type assertions
@@ -166,21 +164,6 @@ func (bva BaseVestingAccount) Validate() error {
 type vestingAccountYAML struct {
 	Address          sdk.AccAddress `json:"address" yaml:"address"`
 	PubKey           string         `json:"public_key" yaml:"public_key"`
-	AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
-	Sequence         uint64         `json:"sequence" yaml:"sequence"`
-	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`
-	DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`
-	DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"`
-	EndTime          int64          `json:"end_time" yaml:"end_time"`
-
-	// custom fields based on concrete vesting type which can be omitted
-	StartTime      int64   `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	VestingPeriods Periods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
-}
-
-type vestingAccountJSON struct {
-	Address          sdk.AccAddress `json:"address" yaml:"address"`
-	PubKey           crypto.PubKey  `json:"public_key" yaml:"public_key"`
 	AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
 	Sequence         uint64         `json:"sequence" yaml:"sequence"`
 	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`

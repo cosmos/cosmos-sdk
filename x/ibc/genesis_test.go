@@ -23,7 +23,7 @@ import (
 func (suite *IBCTestSuite) TestValidateGenesis() {
 	testCases := []struct {
 		name     string
-		genState types.GenesisState
+		genState *types.GenesisState
 		expPass  bool
 	}{
 		{
@@ -33,7 +33,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "valid genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
@@ -93,7 +93,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid client genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
@@ -112,7 +112,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid connection genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
@@ -127,7 +127,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid channel genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis:     clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 				ChannelGenesis: channeltypes.GenesisState{
@@ -154,7 +154,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 func (suite *IBCTestSuite) TestInitGenesis() {
 	testCases := []struct {
 		name     string
-		genState types.GenesisState
+		genState *types.GenesisState
 	}{
 		{
 			name:     "default",
@@ -162,7 +162,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 		},
 		{
 			name: "valid genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.GenesisClientState{
 						clienttypes.NewGenesisClientState(
@@ -254,7 +254,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			tc.malleate()
 
-			var gs types.GenesisState
+			var gs *types.GenesisState
 			suite.NotPanics(func() {
 				gs = ibc.ExportGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper)
 			})
@@ -266,8 +266,8 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			suite.NotPanics(func() {
 				cdc := codec.NewProtoCodec(suite.chainA.App.InterfaceRegistry())
-				genState := cdc.MustMarshalJSON(&gs)
-				cdc.MustUnmarshalJSON(genState, &gs)
+				genState := cdc.MustMarshalJSON(gs)
+				cdc.MustUnmarshalJSON(genState, gs)
 			})
 
 			// init genesis based on marshal and unmarshal

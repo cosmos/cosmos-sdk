@@ -20,9 +20,9 @@ import (
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
 func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
-	if !FlagEnabledValue {
-		return simtypes.Config{}, nil, "", nil, true, nil
-	}
+	//if !FlagEnabledValue {
+	//	return simtypes.Config{}, nil, "", nil, true, nil
+	//}
 
 	config := NewConfigFromFlags()
 	config.ChainID = helpers.SimAppChainID

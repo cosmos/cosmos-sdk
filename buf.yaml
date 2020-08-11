@@ -15,7 +15,6 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
   ignore:
-    - confio
     - tendermint
     - gogoproto
     - cosmos_proto

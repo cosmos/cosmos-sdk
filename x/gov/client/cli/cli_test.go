@@ -7,14 +7,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -148,61 +146,6 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			}
 		})
 	}
-}
-
-func (s *IntegrationTestSuite) TestQueryProposalCmd() {
-	val := s.network.Validators[0]
-
-	clientCtx := val.ClientCtx
-
-	out, err := govtestutil.SubmitTestProposal(val.ClientCtx, val.Address.String(), s.cfg.BondDenom)
-	s.Require().NoError(err)
-	var res sdk.TxResponse
-	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
-	s.T().Log(out)
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{"invalid proposalId",
-			[]string{
-				"foo",
-			},
-			true,
-		},
-		{"valid proposalId",
-			[]string{
-				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryProposal()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var res types.QueryProposalResponse
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
-				s.T().Log(res)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestNewCmdDeposit() {
-
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

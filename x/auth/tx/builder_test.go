@@ -24,8 +24,8 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
-
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Random account sequence
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -40,6 +40,7 @@ func TestTxBuilder(t *testing.T) {
 				},
 			},
 		},
+		AccountSequence: accSeq,
 	})
 
 	var sig signing.SignatureV2
@@ -49,6 +50,7 @@ func TestTxBuilder(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubkey.Bytes(),
 		},
+		AccountSequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}

@@ -89,13 +89,14 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
-	for _, priv := range privs {
+	for i, priv := range privs {
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
 				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
+			AccountSequence: accSeqs[i],
 		}
 
 		sigsV2 = append(sigsV2, sigV2)

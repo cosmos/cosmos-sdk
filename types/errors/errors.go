@@ -110,6 +110,10 @@ var (
 	// explicitly set timeout height.
 	ErrTxTimeoutHeight = Register(RootCodespace, 30, "tx timeout height")
 
+	// ErrWrongAccountSequence defines an error where the account sequence defined in
+	// the signer info doesn't match the account's actual sequence number.
+	ErrWrongAccountSequence = Register(RootCodespace, 31, "incorrect account sequence")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

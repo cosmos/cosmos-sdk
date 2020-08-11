@@ -704,7 +704,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongAccountSequence,
 		},
 		{
 			"test wrong accNums",

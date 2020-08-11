@@ -101,12 +101,12 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set SignatureV2 without actual signature bytes
 	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
+	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, AccountSequence: 2}
 
 	msigData := multisig.NewMultisig(2)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
-	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, AccountSequence: 4}
 
 	// fail validation without required signers
 	err = txBuilder.SetSignatures(sig1)
@@ -128,9 +128,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   1,
-		AccountSequence: 2,
+		ChainID:       "test",
+		AccountNumber: 1,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -138,9 +137,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   3,
-		AccountSequence: 4,
+		ChainID:       "test",
+		AccountNumber: 3,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -156,8 +154,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set signature
 	sigData1.Signature = sigBz
-	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
-	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, AccountSequence: 2}
+	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, AccountSequence: 4}
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()

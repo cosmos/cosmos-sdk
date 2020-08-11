@@ -189,7 +189,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	// stdSigs contains the sequence number, account number, and signatures.
+	// stdSigs contains the account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signerAddrs := sigTx.GetSigners()
 	signerAccs := make([]types.AccountI, len(signerAddrs))
@@ -213,6 +213,14 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
+		// Check account sequence number.
+		if sig.AccountSequence != signerAccs[i].GetSequence() {
+			return ctx, sdkerrors.Wrapf(
+				sdkerrors.ErrWrongAccountSequence,
+				"account sequence mismatch, expected %d, got %d", signerAccs[i].GetSequence(), sig.AccountSequence,
+			)
+		}
+
 		// retrieve signer data
 		genesis := ctx.BlockHeight() == 0
 		chainID := ctx.ChainID()
@@ -231,7 +239,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; verify correct account number (%d), account sequence (%d), and chain-id (%s)", signerAccs[i].GetAccountNumber(), signerAccs[i].GetSequence(), ctx.ChainID())
+					"signature verification failed; verify correct account number (%d), and chain-id (%s)", signerAccs[i].GetAccountNumber(), ctx.ChainID())
 			}
 		}
 	}
@@ -334,7 +342,7 @@ func DefaultSigVerificationGasConsumer(
 		if !ok {
 			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
 		}
-		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
+		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig)
 		if err != nil {
 			return err
 		}
@@ -347,7 +355,8 @@ func DefaultSigVerificationGasConsumer(
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
 func ConsumeMultisignatureVerificationGas(
-	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey, params types.Params,
+	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
+	params types.Params, sigV2 signing.SignatureV2,
 ) error {
 
 	size := sig.BitArray.Count()
@@ -358,9 +367,9 @@ func ConsumeMultisignatureVerificationGas(
 			continue
 		}
 		sigV2 := signing.SignatureV2{
-			PubKey: pubkey.GetPubKeys()[i],
-			Data:   sig.Signatures[sigIndex],
-			// AccountSequence: , // TODO
+			PubKey:          pubkey.GetPubKeys()[i],
+			Data:            sig.Signatures[sigIndex],
+			AccountSequence: sigV2.AccountSequence,
 		}
 		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
 		if err != nil {

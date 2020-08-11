@@ -30,6 +30,8 @@ type SignerData struct {
 	AccountNumber uint64
 
 	// AccountSequence is the account sequence number of the signer that is used
-	// for replay protection
+	// for replay protection. This field is only useful for Legacy Amino signing,
+	// since in SIGN_MODE_DIRECT the account sequence is already in the signer
+	// info.
 	AccountSequence uint64
 }

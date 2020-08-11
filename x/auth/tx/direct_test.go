@@ -28,6 +28,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Random account sequence
 
 	pk, err := pubKeyCdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -42,14 +43,16 @@ func TestDirectModeHandler(t *testing.T) {
 				},
 			},
 		},
+		AccountSequence: accSeq,
 	})
 
 	sigData := &signingtypes.SingleSignatureData{
 		SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
 	}
 	sig := signingtypes.SignatureV2{
-		PubKey: pubkey,
-		Data:   sigData,
+		PubKey:          pubkey,
+		Data:            sigData,
+		AccountSequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}

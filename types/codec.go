@@ -6,13 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// Register the sdk message type
-func RegisterCodec(cdc *codec.Codec) {
+// RegisterCodec registers the sdk message type.
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
 }
 
-// Register the sdk message type
+// RegisterInterfaces registers the sdk message type.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterInterface("cosmos_sdk.v1.Msg", (*Msg)(nil))
+	registry.RegisterInterface("cosmos.v1beta1.Msg", (*Msg)(nil))
 }

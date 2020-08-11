@@ -6,7 +6,7 @@ import (
 )
 
 // KeysCdc defines codec to be used with key operations
-var KeysCdc *codec.Codec
+var KeysCdc *codec.LegacyAmino
 
 func init() {
 	KeysCdc = codec.New()

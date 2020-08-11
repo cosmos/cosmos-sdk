@@ -232,7 +232,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     interface{}
+		respType     fmt.Stringer
 		expectedCode uint32
 	}{
 		{

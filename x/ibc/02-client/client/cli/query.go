@@ -41,7 +41,8 @@ func GetCmdQueryClientStates() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(clientStates)
+
+			return clientCtx.PrintOutputLegacy(clientStates)
 		},
 	}
 
@@ -81,7 +82,7 @@ func GetCmdQueryClientState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintOutputLegacy(clientStateRes)
 		},
 	}
 
@@ -125,7 +126,7 @@ func GetCmdQueryConsensusState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
-			return clientCtx.PrintOutput(csRes)
+			return clientCtx.PrintOutputLegacy(csRes)
 		},
 	}
 
@@ -155,7 +156,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(header)
+			return clientCtx.PrintOutputLegacy(header)
 		},
 	}
 

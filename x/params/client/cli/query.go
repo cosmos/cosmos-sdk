@@ -47,7 +47,7 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetParam())
+			return clientCtx.PrintOutput(&res.Param)
 		},
 	}
 

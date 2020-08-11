@@ -76,9 +76,11 @@ func (k Keeper) SendTransfer(
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
+	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
 	prefixedDenom := token.Denom
 
-	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
+	// deconstruct the token denomination into the denomination trace info
+	// to determine if the sender is the source chain
 	if strings.HasPrefix(token.Denom, "ibc/") {
 		hexHash := token.Denom[4:]
 		hash, err := types.ParseHexHash(hexHash)
@@ -92,6 +94,9 @@ func (k Keeper) SendTransfer(
 		}
 		prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
 	} else if strings.Contains(token.Denom, "/") {
+		// in the case the user transfers a prefixed denomination,
+		// update the token denomination with the hashed trace info as that's the
+		// representation on the user balance
 		denomTrace := types.ParseDenomTrace(token.Denom)
 		token.Denom = denomTrace.IBCDenom()
 	}
@@ -192,6 +197,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	// NOTE: sourcePrefix contains the trailing "/"
 	prefixedDenom := sourcePrefix + data.Denom
 
+	// construct the denomination trace from the full raw denomination
 	denomTrace := types.ParseDenomTrace(prefixedDenom)
 
 	traceHash := denomTrace.Hash()

@@ -10,6 +10,7 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -39,7 +40,7 @@ func ParseDenomTrace(rawDenom string) DenomTrace {
 
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields using the following formula:
 //
-// 	hash = sha256(trace + "/" + baseDenom)
+// hash = sha256(trace + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
 	return tmhash.Sum([]byte(dt.GetPrefix() + dt.BaseDenom))
 }
@@ -155,6 +156,7 @@ func ValidatePrefixedDenom(denom string) error {
 // ValidateIBCDenom validates that the given denomination is either:
 //
 //  - A valid base denomination (eg: 'uatom')
+//  - A valid trace prefixed denomination  (eg: '{portIDN}/{channelIDN}/.../{portID0}/{channelID0}/baseDenom')
 //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
 func ValidateIBCDenom(denom string) error {
 	denomSplit := strings.Split(denom, "/")
@@ -166,8 +168,7 @@ func ValidateIBCDenom(denom string) error {
 		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
 
 	case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
-		// NOTE: coin base denomination already verified
-		return nil
+		return sdk.ValidateDenom(denom)
 
 	case len(denomSplit) > 2:
 		return validateTraceIdentifiers(denomSplit[:len(denomSplit)-1])

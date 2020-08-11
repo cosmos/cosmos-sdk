@@ -37,21 +37,23 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
-		},
-		kv.Pair{
-			Key:   host.KeyConnection(connectionID),
-			Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&connection),
-		},
-		kv.Pair{
-			Key:   host.KeyChannel(portID, channelID),
-			Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&channel),
-		},
-		kv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+		Pairs: []kv.Pair{
+			{
+				Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
+				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
+			},
+			{
+				Key:   host.KeyConnection(connectionID),
+				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&connection),
+			},
+			{
+				Key:   host.KeyChannel(portID, channelID),
+				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&channel),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -68,9 +70,9 @@ func TestDecodeStore(t *testing.T) {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			if i == len(tests)-1 {
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			} else {
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

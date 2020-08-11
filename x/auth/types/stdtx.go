@@ -321,7 +321,7 @@ type StdSignature struct {
 }
 
 // DefaultTxDecoder logic for standard transaction decoding
-func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
@@ -340,7 +340,7 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultJSONTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
@@ -360,7 +360,7 @@ func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 // DefaultTxEncoder logic for standard transaction encoding
-func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
+func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
@@ -379,7 +379,7 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
-func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.SignatureV2, error) {
+func StdSignatureToSignatureV2(cdc *codec.LegacyAmino, sig StdSignature) (signing.SignatureV2, error) {
 	pk := sig.GetPubKey()
 	data, err := pubKeySigToSigData(cdc, pk, sig.Signature)
 	if err != nil {
@@ -393,7 +393,7 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 }
 
 // SignatureV2ToStdSignature converts a SignatureV2 to a StdSignature
-func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSignature, error) {
+func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) (StdSignature, error) {
 	var (
 		sigBz []byte
 		err   error
@@ -412,7 +412,7 @@ func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSi
 	}, nil
 }
 
-func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
+func pubKeySigToSigData(cdc *codec.LegacyAmino, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{
@@ -451,7 +451,7 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 
 // MultiSignatureDataToAminoMultisignature converts a MultiSignatureData to an AminoMultisignature.
 // Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
-func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
+func MultiSignatureDataToAminoMultisignature(cdc *codec.LegacyAmino, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
 	n := len(mSig.Signatures)
 	sigs := make([][]byte, n)
 
@@ -471,7 +471,7 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.Mul
 
 // SignatureDataToAminoSignature converts a SignatureData to amino-encoded signature bytes.
 // Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
-func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData) ([]byte, error) {
+func SignatureDataToAminoSignature(cdc *codec.LegacyAmino, data signing.SignatureData) ([]byte, error) {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
 		if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {

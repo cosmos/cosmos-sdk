@@ -140,7 +140,7 @@ To query for the total supply of a specific coin denomination use:
 					return err
 				}
 
-				return clientCtx.PrintOutput(res.Supply)
+				return clientCtx.PrintOutput(res)
 			}
 
 			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
@@ -148,7 +148,7 @@ To query for the total supply of a specific coin denomination use:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Amount)
+			return clientCtx.PrintOutput(&res.Amount)
 		},
 	}
 

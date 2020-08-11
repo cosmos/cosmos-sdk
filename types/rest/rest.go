@@ -310,7 +310,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 	if ctx.JSONMarshaler != nil {
 		marshaler = ctx.JSONMarshaler
 	} else {
-		marshaler = ctx.Codec
+		marshaler = ctx.LegacyAmino
 	}
 
 	switch res := resp.(type) {

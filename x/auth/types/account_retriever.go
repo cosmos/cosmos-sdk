@@ -1,23 +1,21 @@
 package types
 
 import (
-	context "context"
+	"context"
+	"fmt"
+	"strconv"
+
+	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
-type AccountRetriever struct {
-	ir types.InterfaceRegistry
-}
-
-// NewAccountRetriever initializes a new AccountRetriever instance.
-func NewAccountRetriever(ir types.InterfaceRegistry) AccountRetriever {
-	return AccountRetriever{ir: ir}
-}
+type AccountRetriever struct{}
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
@@ -30,18 +28,30 @@ func (ar AccountRetriever) GetAccount(clientCtx client.Context, addr sdk.AccAddr
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
 func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr sdk.AccAddress) (AccountI, int64, error) {
+	var header metadata.MD
+
 	queryClient := NewQueryClient(clientCtx)
-	res, err := queryClient.Account(context.Background(), &QueryAccountRequest{Address: addr})
+	res, err := queryClient.Account(context.Background(), &QueryAccountRequest{Address: addr}, grpc.Header(&header))
 	if err != nil {
 		return nil, 0, err
 	}
 
+	blockHeight := header.Get(servergrpc.GRPCBlockHeightHeader)
+	if l := len(blockHeight); l != 1 {
+		return nil, 0, fmt.Errorf("unexpected '%s' header length; got %d, expected: %d", servergrpc.GRPCBlockHeightHeader, l, 1)
+	}
+
+	nBlockHeight, err := strconv.Atoi(blockHeight[0])
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to parse block height: %w", err)
+	}
+
 	var acc AccountI
-	if err := ar.ir.UnpackAny(res.Account, &acc); err != nil {
+	if err := clientCtx.InterfaceRegistry.UnpackAny(res.Account, &acc); err != nil {
 		return nil, 0, err
 	}
 
-	return acc, 0, nil
+	return acc, int64(nBlockHeight), nil
 }
 
 // EnsureExists returns an error if no account exists for the given address else nil.

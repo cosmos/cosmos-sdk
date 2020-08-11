@@ -78,7 +78,7 @@ func (m *GenesisOwners) GetIndexOwners() CapabilityOwners {
 	return CapabilityOwners{}
 }
 
-// GenesisState represents the Capability module genesis state.
+// GenesisState defines the capability module's genesis state.
 type GenesisState struct {
 	// index is the capability global index.
 	Index uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`

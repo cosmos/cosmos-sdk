@@ -18,7 +18,7 @@ message GenesisOwners {
   ];
 }
 
-// GenesisState represents the Capability module genesis state.
+// GenesisState defines the capability module's genesis state.
 message GenesisState {
   // index is the capability global index.
   uint64 index = 1;

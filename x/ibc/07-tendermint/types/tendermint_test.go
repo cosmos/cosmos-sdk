@@ -18,6 +18,7 @@ import (
 
 const (
 	chainID                      = "gaia"
+	clientID                     = "gaiamainnet"
 	height                       = 4
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3

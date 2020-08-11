@@ -71,7 +71,7 @@ x: "10"
 	// amino
 	//
 	amino := testdata.NewTestAmino()
-	ctx = ctx.WithJSONMarshaler(codec.NewAminoCodec(&codec.Codec{Amino: amino}))
+	ctx = ctx.WithJSONMarshaler(codec.NewAminoCodec(&codec.LegacyAmino{Amino: amino}))
 
 	// json
 	buf = &bytes.Buffer{}

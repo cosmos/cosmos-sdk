@@ -148,7 +148,7 @@ func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	appCodec := app.AppCodec()
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
@@ -318,7 +318,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		app.GovKeeper.SetVote(ctx, vote)
 	}
 
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order

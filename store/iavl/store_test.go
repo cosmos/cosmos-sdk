@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
@@ -408,18 +409,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := []types.KVPair{}
-	KVs1 := []types.KVPair{
-		{Key: k1, Value: v1},
-		{Key: k2, Value: v2},
+	KVs0 := kv.Pairs{}
+	KVs1 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v1},
+			{Key: k2, Value: v2},
+		},
 	}
-	KVs2 := []types.KVPair{
-		{Key: k1, Value: v3},
-		{Key: k2, Value: v2},
+	KVs2 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v3},
+			{Key: k2, Value: v2},
+		},
 	}
-	valExpSubEmpty := cdc.MustMarshalBinaryBare(KVs0)
-	valExpSub1 := cdc.MustMarshalBinaryBare(KVs1)
-	valExpSub2 := cdc.MustMarshalBinaryBare(KVs2)
+
+	valExpSubEmpty, err := KVs0.Marshal()
+	require.NoError(t, err)
+
+	valExpSub1, err := KVs1.Marshal()
+	require.NoError(t, err)
+
+	valExpSub2, err := KVs2.Marshal()
+	require.NoError(t, err)
 
 	cid := iavlStore.Commit()
 	ver := cid.Version

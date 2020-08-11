@@ -62,7 +62,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
 
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.LegacyAmino(), genesisState)
 	if err != nil {
 		panic(err)
 	}

@@ -21,7 +21,7 @@ func validateNoOp(_ interface{}) error { return nil }
 
 type testInput struct {
 	ctx    sdk.Context
-	cdc    *codec.Codec
+	cdc    *codec.LegacyAmino
 	keeper keeper.Keeper
 }
 

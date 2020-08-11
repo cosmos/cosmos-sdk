@@ -269,18 +269,25 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
-		var KVs []types.KVPair
+		pairs := kv.Pairs{
+			Pairs: make([]kv.Pair, 0),
+		}
 
 		subspace := req.Data
 		res.Key = subspace
 
 		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, types.KVPair{Key: iterator.Key(), Value: iterator.Value()})
+			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
+		}
+		iterator.Close()
+
+		bz, err := pairs.Marshal()
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal KV pairs: %w", err))
 		}
 
-		iterator.Close()
-		res.Value = cdc.MustMarshalBinaryBare(KVs)
+		res.Value = bz
 
 	default:
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unexpected query path: %v", req.Path))

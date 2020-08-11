@@ -37,7 +37,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is used intentionally here, don't migrate it
-		err = clientCtx.Codec.UnmarshalJSON(body, &req)
+		err = clientCtx.LegacyAmino.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -47,18 +47,18 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+		txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
+		tx, ok := txI.(signing.Tx)
 		if !ok {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
 			return
 		}
 
-		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, sigFeeMemoTx)
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -66,7 +66,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		response := DecodeResp(stdTx)
 
 		// NOTE: amino is set intentionally here, don't migrate it
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

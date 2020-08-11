@@ -20,7 +20,7 @@ import (
 
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
-	cdc := suite.app.Codec()
+	cdc := suite.app.LegacyAmino()
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,

@@ -7,10 +7,8 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
-// RegisterCodec registers client state on the provided Amino codec. This type is used for
-// Amino JSON serialization.
-// TODO: remove after genesis and exporting use proto
-func RegisterCodec(cdc *codec.Codec) {
+// REMOVE: once simapp uses proto
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
 }
 
@@ -28,9 +26,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	// SubModuleCdc references the global x/ibc/09-localhost module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding.
-	//
+	// SubModuleCdc references the global x/ibc/09-localhost module codec.
 	// The actual codec used for serialization should be provided to x/ibc/09-localhost and
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

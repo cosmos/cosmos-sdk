@@ -30,7 +30,7 @@ func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*pr
 
 	ctx := sdk.UnwrapSDKContext(c)
 	rawValue := ss.GetRaw(ctx, []byte(req.Key))
-	params := proposal.NewParamChange(req.Subspace, req.Key, string(rawValue))
+	param := proposal.NewParamChange(req.Subspace, req.Key, string(rawValue))
 
-	return &proposal.QueryParamsResponse{Params: params}, nil
+	return &proposal.QueryParamsResponse{Param: param}, nil
 }

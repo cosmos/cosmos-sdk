@@ -64,7 +64,7 @@ func NewSimApp(val Validator) servertypes.Application {
 type Config struct {
 	Codec             codec.Marshaler
 	InterfaceRegistry codectypes.InterfaceRegistry
-	LegacyAmino       *codec.Codec
+	LegacyAmino       *codec.LegacyAmino
 	TxConfig          client.TxConfig
 	AccountRetriever  client.AccountRetriever
 	AppConstructor    AppConstructor             // the ABCI application constructor

@@ -31,8 +31,7 @@ service Query {
 
   // ChannelClientState queries for the client state for the channel associated
   // with the provided channel identifiers.
-  rpc PacketCommitment(QueryPacketCommitmentRequest) 
-    returns (QueryPacketCommitmentResponse) {
+  rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
 		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
   }
 

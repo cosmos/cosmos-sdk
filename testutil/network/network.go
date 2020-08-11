@@ -54,6 +54,7 @@ type AppConstructor = func(val Validator) servertypes.Application
 func NewSimApp(val Validator) servertypes.Application {
 	return simapp.NewSimApp(
 		val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+		simapp.MakeEncodingConfig(),
 		baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 		baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 	)

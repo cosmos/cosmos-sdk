@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -149,7 +150,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryGovData() {
+func (s *IntegrationTestSuite) TestQueryProposalCmd() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -159,6 +160,49 @@ func (s *IntegrationTestSuite) TestCmdQueryGovData() {
 	var res sdk.TxResponse
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
 	s.T().Log(out)
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{"invalid proposalId",
+			[]string{
+				"foo",
+			},
+			true,
+		},
+		{"valid proposalId",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposal()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var res types.QueryProposalResponse
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+				s.T().Log(res)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdDeposit() {
+
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

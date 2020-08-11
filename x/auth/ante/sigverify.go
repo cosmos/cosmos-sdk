@@ -189,10 +189,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		return ctx, err
 	}
 
-	// stdSigs contains the account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
 	signerAddrs := sigTx.GetSigners()
-	signerAccs := make([]types.AccountI, len(signerAddrs))
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signerAddrs) {
@@ -205,19 +202,17 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, err
 		}
 
-		signerAccs[i] = acc
-
 		// retrieve pubkey
-		pubKey := signerAccs[i].GetPubKey()
+		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
-		if sig.AccountSequence != signerAccs[i].GetSequence() {
+		if sig.AccountSequence != acc.GetSequence() {
 			return ctx, sdkerrors.Wrapf(
 				sdkerrors.ErrWrongAccountSequence,
-				"account sequence mismatch, expected %d, got %d", signerAccs[i].GetSequence(), sig.AccountSequence,
+				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.AccountSequence,
 			)
 		}
 
@@ -239,7 +234,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; verify correct account number (%d), and chain-id (%s)", signerAccs[i].GetAccountNumber(), ctx.ChainID())
+					"signature verification failed; verify correct account number (%d), and chain-id (%s)", acc.GetAccountNumber(), ctx.ChainID())
 			}
 		}
 	}

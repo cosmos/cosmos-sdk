@@ -7,8 +7,6 @@ parent:
   <h1> Cosmos SDK </h1>
 </div>
 
-![banner](docs/cosmos-sdk-image.jpg)
-
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/releases/latest">
     <img alt="Version" src="https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg" />
@@ -50,8 +48,7 @@ Cosmos-SDK has been used to build a number of high value public blockchains, inc
 * [`Sentinel`](https://github.com/sentinel-official/sentinel), a decentralized VPN
 * [`Binance Chain`](https://github.com/binance-chain/), a DEX
 
-**WARNING**: The SDK has mostly stabilized, but we are still making some
-breaking changes.
+**WARNING**: The SDK has mostly stabilized, but we are still making some breaking changes.
 
 **Note**: Requires [Go 1.14+](https://golang.org/dl/)
 
@@ -63,7 +60,7 @@ If you want to get started quickly and learn how to build on top of the SDK, ple
 
 For more, please go to the [Cosmos SDK Docs](./docs/).
 
-## Scaffolding with Starport
+## Accelerated Development with Starport
 
 If you are starting a new app or module, you may wish to check out [Starport](https://github.com/tendermint/starport).  Starport will help you get started and speed up development by giving you a good application layout and generating simple modules and simple front end interfaces for you.  
 

@@ -105,12 +105,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`"1.000000000000000000"`,
+			`1.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"1.000000000000000000"`,
+			`1.000000000000000000`,
 		},
 	}
 
@@ -139,12 +139,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`"500000000.000000000000000000"`,
+			`500000000.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"500000000.000000000000000000"`,
+			`500000000.000000000000000000`,
 		},
 	}
 

@@ -319,7 +319,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithChainID(cfg.ChainID).
 			WithInterfaceRegistry(cfg.InterfaceRegistry).
 			WithJSONMarshaler(cfg.Codec).
-			WithCodec(cfg.LegacyAmino).
+			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 

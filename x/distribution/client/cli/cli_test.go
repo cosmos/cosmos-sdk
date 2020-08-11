@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
 	cfg.GenesisState = genesisState
@@ -358,7 +358,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`[{"denom":"stake","amount":"387.100000000000000000"}]`,
+			`{"rewards":[{"denom":"stake","amount":"387.100000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -385,7 +385,8 @@ total:
 				addr.String(), valAddr.String(),
 			},
 			false,
-			`- amount: "387.100000000000000000"
+			`rewards:
+- amount: "387.100000000000000000"
   denom: stake`,
 		},
 	}
@@ -422,12 +423,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`[{"denom":"stake","amount":"4.740000000000000000"}]`,
+			`{"pool":[{"denom":"stake","amount":"4.740000000000000000"}]}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
-			`- amount: "4.740000000000000000"
+			`pool:
+- amount: "4.740000000000000000"
   denom: stake`,
 		},
 	}

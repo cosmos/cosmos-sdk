@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func testCodec() *codec.Codec {
+func testCodec() *codec.LegacyAmino {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptoAmino.RegisterCrypto(cdc)

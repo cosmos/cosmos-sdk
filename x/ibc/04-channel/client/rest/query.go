@@ -52,14 +52,14 @@ func queryChannelClientStateHandlerFn(clientCtx client.Context) http.HandlerFunc
 			return
 		}
 
-		clientState, height, err := utils.QueryChannelClientState(clientCtx, portID, channelID)
+		res, err := utils.QueryChannelClientState(clientCtx, portID, channelID, false)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		clientCtx = clientCtx.WithHeight(height)
-		rest.PostProcessResponse(w, clientCtx, clientState)
+		clientCtx = clientCtx.WithHeight(int64(res.ProofHeight))
+		rest.PostProcessResponse(w, clientCtx, res.IdentifiedClientState)
 	}
 }
 

@@ -55,7 +55,7 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	}
 
 	// NOTE: this uses amino explicitly, don't migrate it!
-	cdc := val.ClientCtx.Codec
+	cdc := val.ClientCtx.LegacyAmino
 
 	bz, err := cdc.MarshalJSON(stdTx)
 	s.Require().NoError(err)
@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) 
 	val := s.network.Validators[0]
 
 	// NOTE: this uses amino explicitly, don't migrate it!
-	cdc := val.ClientCtx.Codec
+	cdc := val.ClientCtx.LegacyAmino
 
 	req := rest2.BroadcastReq{
 		Tx:   stdTx,

@@ -17,7 +17,7 @@ func TestNewQuerier(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, abci.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.SlashingKeeper, legacyQuerierCdc)
 
 	query := abci.RequestQuery{

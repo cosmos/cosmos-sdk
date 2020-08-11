@@ -45,7 +45,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 
 // RegisterCodec registers the necessary x/ibc/23-commitment interfaces and concrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.Root)(nil), nil)
 	cdc.RegisterInterface((*exported.Prefix)(nil), nil)
 	cdc.RegisterInterface((*exported.Path)(nil), nil)

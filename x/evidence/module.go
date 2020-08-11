@@ -56,7 +56,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the evidence module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 

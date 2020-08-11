@@ -419,7 +419,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)

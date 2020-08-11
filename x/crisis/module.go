@@ -35,7 +35,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the crisis module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 

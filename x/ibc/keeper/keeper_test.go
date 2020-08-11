@@ -16,7 +16,7 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.Codec
+	cdc     *codec.LegacyAmino
 	ctx     sdk.Context
 	keeper  *keeper.Keeper
 	querier sdk.Querier
@@ -25,9 +25,9 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 
-	suite.cdc = app.Codec()
+	suite.cdc = app.LegacyAmino()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.keeper = app.IBCKeeper
 	suite.querier = keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc)

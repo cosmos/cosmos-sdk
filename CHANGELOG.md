@@ -37,8 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.39.1]
 
-### Client Breaking Changes
-
 * (x/auth) [\#6861](https://github.com/cosmos/cosmos-sdk/pull/6861) Remove public key Bech32 encoding for all account types for JSON serialization, instead relying on direct Amino encoding. In addition, JSON serialization utilizes Amino instead of the Go stdlib, so integers are treated as strings.
 * (client) [\#6853](https://github.com/cosmos/cosmos-sdk/pull/6853) Add --unsafe-cors flag.
 

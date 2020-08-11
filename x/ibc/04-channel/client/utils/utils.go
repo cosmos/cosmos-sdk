@@ -153,9 +153,9 @@ func QueryChannelConsensusState(
 		return nil, err
 	}
 
-	consensusState, ok := res.ConsensusState.GetCachedValue().(clientexported.ConsensusState)
-	if !ok {
-		panic("invalid consensus state")
+	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+	if err != nil {
+		return nil, err
 	}
 
 	if prove {
@@ -165,7 +165,12 @@ func QueryChannelConsensusState(
 		}
 
 		// use consensus state returned from ABCI query in case query height differs
-		res = types.NewQueryChannelConsensusStateResponse(res.ClientID, consensusState, proof, int64(proofHeight))
+		anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
+		if err != nil {
+			return nil, err
+		}
+
+		res = types.NewQueryChannelConsensusStateResponse(res.ClientID, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
 	}
 
 	return res, nil
@@ -187,7 +192,10 @@ func QueryCounterpartyConsensusState(
 		return nil, 0, err
 	}
 
-	consensusState := clienttypes.GetConsensusStateFromAny(res.ConsensusState)
+	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return consensusState, res.ProofHeight, nil
 }

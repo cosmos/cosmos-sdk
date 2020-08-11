@@ -530,7 +530,9 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				suite.Require().Equal(expConsensusState, clienttypes.GetConsensusStateFromAny(res.ConsensusState))
+				consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expConsensusState, consensusState)
 				suite.Require().Equal(expClientID, res.ClientID)
 			} else {
 				suite.Require().Error(err)

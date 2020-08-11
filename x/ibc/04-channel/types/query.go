@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -32,9 +32,8 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 }
 
 // NewQueryChannelConsensusStateResponse creates a newQueryChannelConsensusStateResponse instance
-func NewQueryChannelConsensusStateResponse(clientID string, consensusState clientexported.ConsensusState, proof []byte, height int64) *QueryChannelConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(consensusState.GetHeight())), "/"))
-	anyConsensusState := clienttypes.GetAnyFromConsensusState(consensusState)
+func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight uint64, proof []byte, height int64) *QueryChannelConsensusStateResponse {
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(consensusStateHeight)), "/"))
 	return &QueryChannelConsensusStateResponse{
 		ConsensusState: anyConsensusState,
 		ClientID:       clientID,

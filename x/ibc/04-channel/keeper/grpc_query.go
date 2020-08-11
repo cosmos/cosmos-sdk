@@ -206,7 +206,12 @@ func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannel
 		)
 	}
 
-	return types.NewQueryChannelConsensusStateResponse(connection.ClientID, consensusState, nil, ctx.BlockHeight()), nil
+	anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return types.NewQueryChannelConsensusStateResponse(connection.ClientID, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
 }
 
 // PacketCommitment implements the Query/PacketCommitment gRPC method

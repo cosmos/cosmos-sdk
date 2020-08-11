@@ -85,7 +85,7 @@ func GetCmdQueryInflation() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.Inflation))
 		},
 	}
 
@@ -117,7 +117,7 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintString(fmt.Sprintf("%s\n", res))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", res.AnnualProvisions))
 		},
 	}
 

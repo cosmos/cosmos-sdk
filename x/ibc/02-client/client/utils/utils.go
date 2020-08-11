@@ -80,13 +80,13 @@ func QueryClientStateABCI(
 		return nil, nil, 0, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
 	if err != nil {
 		return nil, nil, 0, err
 	}
 
 	var clientState exported.ClientState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
 		return nil, nil, 0, err
 	}
 
@@ -139,13 +139,13 @@ func QueryConsensusStateABCI(
 		return nil, nil, 0, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
 	if err != nil {
 		return nil, nil, 0, err
 	}
 
 	var cs exported.ConsensusState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
 		return nil, nil, 0, err
 	}
 

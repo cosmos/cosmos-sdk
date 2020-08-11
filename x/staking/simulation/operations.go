@@ -102,7 +102,9 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
-		valPK := ed25519.GenPrivKey() // Tendermint currently only supports ed25519 consensus keys
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		valPK := ed25519.GenPrivKeyFromSecret(privkeySeed).PubKey()
 
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
@@ -152,7 +154,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg := types.NewMsgCreateValidator(address, valPK.PubKey(),
+		msg := types.NewMsgCreateValidator(address, valPK,
 			selfDelegation, description, commission, sdk.OneInt())
 
 		txGen := simappparams.MakeEncodingConfig().TxConfig

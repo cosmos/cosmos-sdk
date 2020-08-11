@@ -56,16 +56,15 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Equal(coinToSendBackToA, balance)
 
 	// send from chainB back to chainA
-
-	// NOTE: token is prefixed with the full trace in order to verify the packet commitment
-	coinToSendBackToA = sdk.NewCoin(voucherDenomTrace.GetPrefix()+voucherDenomTrace.BaseDenom, coinToSendBackToA.Amount)
 	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
 
 	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
-	fungibleTokenPacket = types.NewFungibleTokenPacketData(coinToSendBackToA.Denom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
+	// NOTE: fungible token is prefixed with the full trace in order to verify the packet commitment
+	voucherDenom := voucherDenomTrace.GetPrefix() + voucherDenomTrace.BaseDenom
+	fungibleTokenPacket = types.NewFungibleTokenPacketData(voucherDenom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
 	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
 	err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed

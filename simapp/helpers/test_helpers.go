@@ -20,7 +20,7 @@ const (
 )
 
 // GenTx generates a signed mock transaction.
-func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) (sdk.Tx, error) {
+func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...crypto.PrivKey) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
@@ -30,13 +30,15 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 
 	signMode := gen.SignModeHandler().DefaultMode()
 
+	// 1st round: set set SignatureV2 with empty signatures, to set correct
+	// signer infos.
 	for i, p := range priv {
 		sigs[i] = signing.SignatureV2{
 			PubKey: p.PubKey(),
 			Data: &signing.SingleSignatureData{
 				SignMode: signMode,
 			},
-			AccountSequence: seq[i],
+			AccountSequence: accSeqs[i],
 		}
 	}
 
@@ -52,12 +54,12 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
 	tx.SetGasLimit(gas)
+	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		// use a empty chainID for ease of testing
 		signerData := authsign.SignerData{
 			ChainID:         chainID,
-			AccountNumber:   accnums[i],
-			AccountSequence: seq[i],
+			AccountNumber:   accNums[i],
+			AccountSequence: accSeqs[i],
 		}
 		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {

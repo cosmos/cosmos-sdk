@@ -24,6 +24,7 @@ type (
 	}
 
 	appTestCase struct {
+		desc             string
 		expSimPass       bool
 		expPass          bool
 		msgs             []sdk.Msg
@@ -218,6 +219,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
+			desc:       "make a valid tx",
 			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
@@ -230,17 +232,19 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			},
 		},
 		{
+			desc:       "wrong accNum should pass Simulate, but not Deliver",
 			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
+			accNums:    []uint64{1}, // Wrong accNum.
+			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
 		},
 		{
+			desc:       "wrong accSeq should not pass Simulate",
 			msgs:       []sdk.Msg{multiSendMsg5},
 			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
+			accSeqs:    []uint64{0}, // Wrong accSeq
 			expSimPass: false,
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},

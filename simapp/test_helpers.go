@@ -320,7 +320,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // returned.
 func SignCheckDeliver(
 	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
-	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
+	accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
 	tx, err := helpers.GenTx(
@@ -330,7 +330,7 @@ func SignCheckDeliver(
 		helpers.DefaultGenTxGas,
 		"",
 		accNums,
-		seq,
+		accSeqs,
 		priv...,
 	)
 	require.NoError(t, err)

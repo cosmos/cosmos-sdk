@@ -72,8 +72,8 @@ func TestFullAppSimulation(t *testing.T) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-		SimulationOperations(app, app.LegacyAmino(), config),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -282,8 +282,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-				SimulationOperations(app, app.LegacyAmino(), config),
+				t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+				SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)

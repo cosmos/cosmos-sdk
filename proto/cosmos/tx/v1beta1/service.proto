@@ -1,0 +1,25 @@
+syntax = "proto3";
+package cosmos.tx.v1beta1;
+
+import "cosmos/base/abci/v1beta1/abci.proto";
+import "cosmos/tx/v1beta1/tx.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+
+// Service defines a gRPC service for simulating transactions.
+// It may also support querying and broadcasting in the future.
+service Service {
+    // Simulate simulates executing a transaction for estimating gas usage.
+    rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
+}
+
+// SimulateRequest is the request type for the Service.Simulate RPC method.
+message SimulateRequest {
+    Tx tx = 1;
+}
+
+// SimulateResponse is the response type for the Service.Simulate RPC method.
+message SimulateResponse {
+    cosmos.base.abci.v1beta1.GasInfo gas_info = 1;
+    cosmos.base.abci.v1beta1.Result result = 2;
+}

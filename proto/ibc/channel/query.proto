@@ -13,20 +13,18 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 // Query provides defines the gRPC querier service
 service Query {
   // Channel queries an IBC Channel.
-  rpc Channel(QueryChannelRequest) 
-    returns (QueryChannelResponse) {
-		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
+  rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
   }
 
   // Channels queries all the IBC channels of a chain.
-  rpc Channels(QueryChannelsRequest) 
-    returns (QueryChannelsResponse) {
-		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels";
+  rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
+		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels";
   }
 
   // ConnectionChannels queries all the channels associated with a connection
   // end.
-  rpc ConnectionChannels(QueryConnectionChannelsRequest) 
+  rpc ConnectionChannels(QueryConnectionChannelsRequest)
     returns (QueryConnectionChannelsResponse) {
 		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/connections/{connection}/channels";
   }

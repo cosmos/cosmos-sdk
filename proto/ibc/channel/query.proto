@@ -1,10 +1,12 @@
 syntax = "proto3";
 package ibc.channel;
 
+import "ibc/client/client.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/query/pagination.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/channel/channel.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
@@ -20,17 +22,19 @@ service Query {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels";
   }
 
-  // ConnectionChannels queries all the channels associated with a connection end.
+  // ConnectionChannels queries all the channels associated with a connection
+  // end.
   rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/connections/{connection}/channels";
   }
 
-  // PacketCommitment queries a stored packet commitment hash.
+  // ChannelClientState queries for the client state for the channel associated
+  // with the provided channel identifiers.
   rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
   }
 
-  // PacketCommitments returns the all the packet commitments hashes associated with a channel.
+  // PacketCommitment queries a stored packet commitment hash.
   rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
   }
@@ -40,12 +44,13 @@ service Query {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
   }
 
-  // UnrelayedPackets returns all the unrelayed IBC packets associated with a channel and sequences.
+  // UnrelayedPackets returns all the unrelayed IBC packets associated with a
+  // channel and sequences.
   rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/packet_acks/{acknowledgements}/unrelayed_packets";
   }
 
-  // NextSequenceReceive returns the next receive sequence for a given channel
+  // NextSequenceReceive returns the next receive sequence for a given channel.
   rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
 		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
   }
@@ -80,7 +85,7 @@ message QueryChannelResponse {
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
 message QueryChannelsRequest {
   // pagination request
-  cosmos.query.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryChannelsResponse is the response type for the Query/Channels RPC method.
@@ -88,30 +93,81 @@ message QueryChannelsResponse {
   // list of stored channels of the chain.
   repeated ibc.channel.IdentifiedChannel channels = 1;
   // pagination response
-  cosmos.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
 
-// QueryConnectionChannelsRequest is the request type for the Query/QueryConnectionChannels RPC method
+// QueryConnectionChannelsRequest is the request type for the
+// Query/QueryConnectionChannels RPC method
 message QueryConnectionChannelsRequest {
   // connection unique identifier
   string connection = 1;
   // pagination request
-  cosmos.query.PageRequest pagination = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryConnectionChannelsResponse is the Response type for the Query/QueryConnectionChannels RPC method
+// QueryConnectionChannelsResponse is the Response type for the
+// Query/QueryConnectionChannels RPC method
 message QueryConnectionChannelsResponse {
   // list of channels associated with a connection.
   repeated ibc.channel.IdentifiedChannel channels = 1;
   // pagination response
-  cosmos.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
 
-// QueryPacketCommitmentRequest is the request type for the Query/PacketCommitment RPC method
+// QueryChannelClientStateRequest is the request type for the Query/ClientState
+// RPC method
+message QueryChannelClientStateRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+}
+
+// QueryChannelClientStateResponse is the Response type for the
+// Query/QueryChannelClientState RPC method
+message QueryChannelClientStateResponse {
+  // client state associated with the channel
+  ibc.client.IdentifiedClientState identified_client_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryChannelConsensusStateRequest is the request type for the
+// Query/ConsensusState RPC method
+message QueryChannelConsensusStateRequest {
+  // port unique identifier
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  // channel unique identifier
+  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  // height of the consensus state
+  uint64 height = 3;
+}
+
+// QueryChannelClientStateResponse is the Response type for the
+// Query/QueryChannelClientState RPC method
+message QueryChannelConsensusStateResponse {
+  // consensus state associated with the channel
+  google.protobuf.Any consensus_state = 1;
+  // client ID associated with the consensus state
+  string client_id = 2 [(gogoproto.customname) = "ClientID"];
+  // merkle proof of existence
+  bytes proof = 3;
+  // merkle proof path
+  string proof_path = 4;
+  // height at which the proof was retrieved
+  uint64 proof_height = 5;
+}
+
+// QueryPacketCommitmentRequest is the request type for the
+// Query/PacketCommitment RPC method
 message QueryPacketCommitmentRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
@@ -121,8 +177,9 @@ message QueryPacketCommitmentRequest {
   uint64 sequence = 3;
 }
 
-// QueryPacketCommitmentResponse defines the client query response for a packet which also
-// includes a proof, its path and the height form which the proof was retrieved
+// QueryPacketCommitmentResponse defines the client query response for a packet
+// which also includes a proof, its path and the height form which the proof was
+// retrieved
 message QueryPacketCommitmentResponse {
   // packet associated with the request fields
   bytes commitment = 1;
@@ -134,26 +191,29 @@ message QueryPacketCommitmentResponse {
   uint64 proof_height = 4;
 }
 
-// QueryPacketCommitmentsRequest is the request type for the Query/QueryPacketCommitments RPC method
+// QueryPacketCommitmentsRequest is the request type for the
+// Query/QueryPacketCommitments RPC method
 message QueryPacketCommitmentsRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   // channel unique identifier
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
   // pagination request
-  cosmos.query.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-// QueryPacketCommitmentsResponse is the request type for the Query/QueryPacketCommitments RPC method
+// QueryPacketCommitmentsResponse is the request type for the
+// Query/QueryPacketCommitments RPC method
 message QueryPacketCommitmentsResponse {
   repeated ibc.channel.PacketAckCommitment commitments = 1;
   // pagination response
-  cosmos.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
 
-// QueryPacketAcknowledgementRequest is the request type for the Query/PacketAcknowledgement RPC method
+// QueryPacketAcknowledgementRequest is the request type for the
+// Query/PacketAcknowledgement RPC method
 message QueryPacketAcknowledgementRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
@@ -163,8 +223,9 @@ message QueryPacketAcknowledgementRequest {
   uint64 sequence = 3;
 }
 
-// QueryPacketAcknowledgementResponse defines the client query response for a packet which also
-// includes a proof, its path and the height form which the proof was retrieved
+// QueryPacketAcknowledgementResponse defines the client query response for a
+// packet which also includes a proof, its path and the height form which the
+// proof was retrieved
 message QueryPacketAcknowledgementResponse {
   // packet associated with the request fields
   bytes acknowledgement = 1;
@@ -176,19 +237,23 @@ message QueryPacketAcknowledgementResponse {
   uint64 proof_height = 4;
 }
 
-// QueryUnrelayedPacketsRequest is the request type for the Query/UnrelayedPackets RPC method
+// QueryUnrelayedPacketsRequest is the request type for the
+// Query/UnrelayedPackets RPC method
 message QueryUnrelayedPacketsRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   // channel unique identifier
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
   // list of packet sequences
-  repeated uint64 packet_commitment_sequences = 3 [(gogoproto.customname) = "PacketCommitmentSequences"];
-  // flag indicating if the return value is packet commitments or acknowledgements
+  repeated uint64 packet_commitment_sequences = 3
+      [(gogoproto.customname) = "PacketCommitmentSequences"];
+  // flag indicating if the return value is packet commitments or
+  // acknowledgements
   bool acknowledgements = 4;
 }
 
-// QueryUnrelayedPacketsResponse is the request type for the Query/UnrelayedPacketCommitments RPC method
+// QueryUnrelayedPacketsResponse is the request type for the
+// Query/UnrelayedPacketCommitments RPC method
 message QueryUnrelayedPacketsResponse {
   // list of unrelayed packet sequences
   repeated uint64 sequences = 1;
@@ -196,7 +261,8 @@ message QueryUnrelayedPacketsResponse {
   int64 height = 2;
 }
 
-// QueryNextSequenceReceiveRequest is the request type for the Query/QueryNextSequenceReceiveRequest RPC method
+// QueryNextSequenceReceiveRequest is the request type for the
+// Query/QueryNextSequenceReceiveRequest RPC method
 message QueryNextSequenceReceiveRequest {
   // port unique identifier
   string port_id = 1 [(gogoproto.customname) = "PortID"];
@@ -204,7 +270,8 @@ message QueryNextSequenceReceiveRequest {
   string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
 }
 
-// QuerySequenceResponse is the request type for the Query/QueryNextSequenceReceiveResponse RPC method
+// QuerySequenceResponse is the request type for the
+// Query/QueryNextSequenceReceiveResponse RPC method
 message QueryNextSequenceReceiveResponse {
   // next sequence receive number
   uint64 next_sequence_receive = 1;
@@ -216,18 +283,3 @@ message QueryNextSequenceReceiveResponse {
   uint64 proof_height = 4;
 }
 
-// QueryChannelClientStateRequest is the request type for the Query/ClientState RPC method
-message QueryChannelClientStateRequest {
-  // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
-  // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
-}
-
-// QueryChannelConsensusStateRequest is the request type for the Query/ConsensusState RPC method
-message QueryChannelConsensusStateRequest {
-  // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
-  // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
-}

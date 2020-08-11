@@ -34,7 +34,7 @@ func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *
 		}
 
 		var plan types.Plan
-		err = clientCtx.Codec.UnmarshalBinaryBare(res, &plan)
+		err = clientCtx.LegacyAmino.UnmarshalBinaryBare(res, &plan)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

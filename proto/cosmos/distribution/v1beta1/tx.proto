@@ -1,0 +1,50 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
+message MsgSetWithdrawAddress {
+  bytes delegator_address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"delegator_address\""
+  ];
+  bytes withdraw_address = 2 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"withdraw_address\""
+  ];
+}
+
+// msg struct for delegation withdraw from a single validator
+message MsgWithdrawDelegatorReward {
+  bytes delegator_address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"delegator_address\""
+  ];
+  bytes validator_address = 2 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.moretags) = "yaml:\"validator_address\""
+  ];
+}
+
+// msg struct for validator withdraw
+message MsgWithdrawValidatorCommission {
+  bytes validator_address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+    (gogoproto.moretags) = "yaml:\"validator_address\""
+  ];
+}
+
+// MsgFundCommunityPool defines a Msg type that allows an account to directly
+// fund the community pool.
+message MsgFundCommunityPool {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -128,43 +130,41 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  fmt.Stringer
-		expected  fmt.Stringer
+		respType  proto.Message
+		expected  proto.Message
 	}{
 		{
-			"total supply",
-			[]string{
+			name: "total supply",
+			args: []string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
+			respType: &types.QueryTotalSupplyResponse{},
+			expected: &types.QueryTotalSupplyResponse{
+				Supply: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+				)},
 		},
 		{
-			"total supply of a specific denomination",
-			[]string{
+			name: "total supply of a specific denomination",
+			args: []string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&sdk.Coin{},
-			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
 		},
 		{
-			"total supply of a bogus denom",
-			[]string{
+			name: "total supply of a bogus denom",
+			args: []string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{"foobar", sdk.ZeroInt()},
 		},
 	}
 
@@ -188,8 +188,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				s.Require().Equal(tc.expected.String(), tc.respType.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().Equal(tc.expected, tc.respType)
 			}
 		})
 	}

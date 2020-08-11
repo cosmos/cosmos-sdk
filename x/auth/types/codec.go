@@ -8,7 +8,7 @@ import (
 
 // RegisterCodec registers the account interfaces and concrete types on the
 // provided Amino codec.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*AccountI)(nil), nil)
@@ -21,7 +21,7 @@ func RegisterCodec(cdc *codec.Codec) {
 // and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.auth.v1.AccountI",
+		"cosmos.auth.v1beta1.AccountI",
 		(*AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},

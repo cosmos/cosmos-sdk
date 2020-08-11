@@ -18,13 +18,13 @@ import (
 // and will not work for protobuf transactions.
 type StdTxBuilder struct {
 	StdTx
-	cdc *codec.Codec
+	cdc *codec.LegacyAmino
 }
 
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
 }
 
@@ -70,9 +70,14 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
+// SetTimeoutHeight sets the transaction's height timeout.
+func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
+	s.TimeoutHeight = height
+}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
-	Cdc *codec.Codec
+	Cdc *codec.LegacyAmino
 }
 
 var _ client.TxConfig = StdTxConfig{}

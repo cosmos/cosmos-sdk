@@ -40,7 +40,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0)
 	genesisState := simapp.NewDefaultGenesisState()
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.LegacyAmino(), genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +55,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
-	s.querier = s.module.LegacyQuerierHandler(codec.NewAminoCodec(app.Codec()))
+	s.querier = s.module.LegacyQuerierHandler(codec.NewAminoCodec(app.LegacyAmino()))
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return s
 }

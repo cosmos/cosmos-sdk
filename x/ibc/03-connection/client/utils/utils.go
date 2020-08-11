@@ -47,11 +47,11 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 	}
 
 	var connection types.ConnectionEnd
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &connection); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &connection); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +90,11 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 	}
 
 	var paths []string
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &paths); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &paths); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.Codec.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment
 // Prefix. If the input is not a JSON, it looks for a path to the JSON file.
-func ParsePrefix(cdc *codec.Codec, arg string) (commitmenttypes.MerklePrefix, error) {
+func ParsePrefix(cdc *codec.LegacyAmino, arg string) (commitmenttypes.MerklePrefix, error) {
 	var prefix commitmenttypes.MerklePrefix
 	if err := cdc.UnmarshalJSON([]byte(arg), &prefix); err != nil {
 		// check for file path if JSON input is not provided
@@ -122,7 +122,7 @@ func ParsePrefix(cdc *codec.Codec, arg string) (commitmenttypes.MerklePrefix, er
 // ParseProof unmarshals a cmd input argument from a JSON string to a commitment
 // Proof. If the input is not a JSON, it looks for a path to the JSON file. It
 // then marshals the commitment proof into a proto encoded byte array.
-func ParseProof(cdc *codec.Codec, arg string) ([]byte, error) {
+func ParseProof(cdc *codec.LegacyAmino, arg string) ([]byte, error) {
 	var merkleProof commitmenttypes.MerkleProof
 	if err := cdc.UnmarshalJSON([]byte(arg), &merkleProof); err != nil {
 		// check for file path if JSON input is not provided

@@ -24,7 +24,7 @@ func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req paramscutils.ParamChangeProposalReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

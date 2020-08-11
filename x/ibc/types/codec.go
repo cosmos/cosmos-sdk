@@ -13,9 +13,10 @@ import (
 
 // RegisterCodec registers the necessary x/ibc interfaces and concrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	clienttypes.RegisterCodec(cdc)
 	ibctmtypes.RegisterCodec(cdc)
+	localhosttypes.RegisterCodec(cdc)
 	commitmenttypes.RegisterCodec(cdc)
 }
 

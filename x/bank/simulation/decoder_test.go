@@ -23,8 +23,10 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{
-		kv.Pair{Key: types.SupplyKey, Value: supplyBz},
-		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+		Pairs: []kv.Pair{
+			{Key: types.SupplyKey, Value: supplyBz},
+			{Key: []byte{0x99}, Value: []byte{0x99}},
+		},
 	}
 
 	tests := []struct {
@@ -40,9 +42,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

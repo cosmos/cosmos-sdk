@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -231,6 +230,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	}
 }
 
+/*
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.ChainID, suite.ctx.BlockHeight())
 
@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
 	suite.Require().NoError(err, err)
 	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
-}
+}*/
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPrivVal := tmtypes.NewMockPV()

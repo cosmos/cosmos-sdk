@@ -9,7 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -557,7 +557,7 @@ func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
 
 }
 
-func checkContains(t testing.TB, info []storeInfo, wanted []string) {
+func checkContains(t testing.TB, info []types.StoreInfo, wanted []string) {
 	t.Helper()
 
 	for _, want := range wanted {
@@ -565,7 +565,7 @@ func checkContains(t testing.TB, info []storeInfo, wanted []string) {
 	}
 }
 
-func checkHas(t testing.TB, info []storeInfo, want string) {
+func checkHas(t testing.TB, info []types.StoreInfo, want string) {
 	t.Helper()
 	for _, i := range info {
 		if i.Name == want {
@@ -586,12 +586,9 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()
-		m[name] = storeInfo{
-			Name: name,
-			Core: storeCore{
-				CommitID: store.LastCommitID(),
-				// StoreType: store.GetStoreType(),
-			},
+		m[name] = types.StoreInfo{
+			Name:     name,
+			CommitID: store.LastCommitID(),
 		}.GetHash()
 	}
 	return sdkmaps.HashFromMap(m)

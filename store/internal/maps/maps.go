@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -20,7 +19,7 @@ type merkleMap struct {
 
 func newMerkleMap() *merkleMap {
 	return &merkleMap{
-		kvs:    nil,
+		kvs:    kv.Pairs{},
 		sorted: false,
 	}
 }
@@ -30,7 +29,7 @@ func newMerkleMap() *merkleMap {
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
 	byteKey := []byte(key)
-	types.AssertValidKey(byteKey)
+	assertValidKey(byteKey)
 
 	sm.sorted = false
 
@@ -38,7 +37,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.kvs = append(sm.kvs, kv.Pair{
+	sm.kvs.Pairs = append(sm.kvs.Pairs, kv.Pair{
 		Key:   byteKey,
 		Value: vhash,
 	})
@@ -62,8 +61,8 @@ func (sm *merkleMap) sort() {
 // hashKVPairs hashes a kvPair and creates a merkle tree where the leaves are
 // byte slices.
 func hashKVPairs(kvs kv.Pairs) []byte {
-	kvsH := make([][]byte, len(kvs))
-	for i, kvp := range kvs {
+	kvsH := make([][]byte, len(kvs.Pairs))
+	for i, kvp := range kvs.Pairs {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
@@ -82,7 +81,7 @@ type simpleMap struct {
 
 func newSimpleMap() *simpleMap {
 	return &simpleMap{
-		Kvs:    nil,
+		Kvs:    kv.Pairs{},
 		sorted: false,
 	}
 }
@@ -91,7 +90,7 @@ func newSimpleMap() *simpleMap {
 // and then appends it to SimpleMap's kv pairs.
 func (sm *simpleMap) Set(key string, value []byte) {
 	byteKey := []byte(key)
-	types.AssertValidKey(byteKey)
+	assertValidKey(byteKey)
 	sm.sorted = false
 
 	// The value is hashed, so you can
@@ -99,7 +98,7 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// and make a determination to fetch or not.
 	vhash := tmhash.Sum(value)
 
-	sm.Kvs = append(sm.Kvs, kv.Pair{
+	sm.Kvs.Pairs = append(sm.Kvs.Pairs, kv.Pair{
 		Key:   byteKey,
 		Value: vhash,
 	})
@@ -124,8 +123,11 @@ func (sm *simpleMap) Sort() {
 // NOTE these contain the hashed key and value.
 func (sm *simpleMap) KVPairs() kv.Pairs {
 	sm.Sort()
-	kvs := make(kv.Pairs, len(sm.Kvs))
-	copy(kvs, sm.Kvs)
+	kvs := kv.Pairs{
+		Pairs: make([]kv.Pair, len(sm.Kvs.Pairs)),
+	}
+
+	copy(kvs.Pairs, sm.Kvs.Pairs)
 	return kvs
 }
 
@@ -189,18 +191,25 @@ func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*tmcrypto.Proof, []s
 
 	sm.Sort()
 	kvs := sm.Kvs
-	kvsBytes := make([][]byte, len(kvs))
-	for i, kvp := range kvs {
+	kvsBytes := make([][]byte, len(kvs.Pairs))
+	for i, kvp := range kvs.Pairs {
 		kvsBytes[i] = KVPair(kvp).Bytes()
 	}
 
 	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
 	proofs := make(map[string]*tmcrypto.Proof)
 	keys := make([]string, len(proofList))
-	for i, kvp := range kvs {
+
+	for i, kvp := range kvs.Pairs {
 		proofs[string(kvp.Key)] = proofList[i].ToProto()
 		keys[i] = string(kvp.Key)
 	}
 
 	return rootHash, proofs, keys
+}
+
+func assertValidKey(key []byte) {
+	if len(key) == 0 {
+		panic("key is nil")
+	}
 }

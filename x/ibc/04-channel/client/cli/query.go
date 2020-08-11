@@ -165,7 +165,8 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(clientStateRes)
+
+			return clientCtx.PrintOutputLegacy(clientStateRes)
 		},
 	}
 

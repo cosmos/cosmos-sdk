@@ -42,7 +42,7 @@ const (
 type IBCTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
+	cdc    *codec.LegacyAmino
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	header ibctmtypes.Header
@@ -63,7 +63,7 @@ func (suite *IBCTestSuite) SetupTest() {
 
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
-	suite.cdc = suite.app.Codec()
+	suite.cdc = suite.app.LegacyAmino()
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }
 

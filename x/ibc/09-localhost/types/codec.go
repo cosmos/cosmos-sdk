@@ -7,6 +7,11 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
+// REMOVE: once simapp uses proto
+func RegisterCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(ClientState{}, "ibc/client/localhost/ClientState", nil)
+}
+
 // RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {

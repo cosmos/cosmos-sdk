@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -30,18 +29,20 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		testdata.NewTestMsg(addr1, addr2),
 	}
 
-	tx := StdTx{
-		Msgs:       msgs,
-		Fee:        fee,
-		Signatures: nil,
-		Memo:       memo,
-	}
-
 	var (
-		chainId        = "test-chain"
-		accNum  uint64 = 7
-		seqNum  uint64 = 7
+		chainId              = "test-chain"
+		accNum        uint64 = 7
+		seqNum        uint64 = 7
+		timeoutHeight uint64 = 10
 	)
+
+	tx := StdTx{
+		Msgs:          msgs,
+		Fee:           fee,
+		Signatures:    nil,
+		Memo:          memo,
+		TimeoutHeight: timeoutHeight,
+	}
 
 	handler := stdTxSignModeHandler{}
 	signingData := signing.SignerData{
@@ -52,7 +53,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := StdSignBytes(chainId, accNum, seqNum, fee, msgs, memo)
+	expectedSignBz := StdSignBytes(chainId, accNum, seqNum, timeoutHeight, fee, msgs, memo)
 
 	require.Equal(t, expectedSignBz, signBz)
 

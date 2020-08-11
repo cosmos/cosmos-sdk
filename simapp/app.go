@@ -129,7 +129,7 @@ var _ App = (*SimApp)(nil)
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	cdc               *codec.Codec
+	cdc               *codec.LegacyAmino
 	appCodec          codec.Marshaler
 	interfaceRegistry types.InterfaceRegistry
 
@@ -393,10 +393,10 @@ func NewSimApp(
 	return app
 }
 
-// MakeCodecs constructs the *std.Codec and *codec.Codec instances used by
+// MakeCodecs constructs the *std.Codec and *codec.LegacyAmino instances used by
 // simapp. It is useful for tests and clients who do not want to construct the
 // full simapp
-func MakeCodecs() (codec.Marshaler, *codec.Codec) {
+func MakeCodecs() (codec.Marshaler, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
 }
@@ -451,7 +451,7 @@ func (app *SimApp) BlockedAddrs() map[string]bool {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SimApp) Codec() *codec.Codec {
+func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
 	return app.cdc
 }
 

@@ -67,6 +67,7 @@ type BaseReq struct {
 	ChainID       string       `json:"chain_id"`
 	AccountNumber uint64       `json:"account_number"`
 	Sequence      uint64       `json:"sequence"`
+	TimeoutHeight uint64       `json:"timeout_height"`
 	Fees          sdk.Coins    `json:"fees"`
 	GasPrices     sdk.DecCoins `json:"gas_prices"`
 	Gas           string       `json:"gas"`
@@ -309,7 +310,7 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 	if ctx.JSONMarshaler != nil {
 		marshaler = ctx.JSONMarshaler
 	} else {
-		marshaler = ctx.Codec
+		marshaler = ctx.LegacyAmino
 	}
 
 	switch res := resp.(type) {

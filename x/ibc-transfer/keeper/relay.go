@@ -91,6 +91,9 @@ func (k Keeper) SendTransfer(
 			return sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
 		}
 		prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
+	} else if strings.Contains(token.Denom, "/") {
+		denomTrace := types.ParseDenomTrace(token.Denom)
+		token.Denom = denomTrace.IBCDenom()
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own

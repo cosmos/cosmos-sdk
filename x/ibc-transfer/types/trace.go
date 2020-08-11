@@ -78,7 +78,7 @@ func (dt *DenomTrace) RemovePrefix() {
 }
 
 func validateTraceIdentifiers(identifiers []string) error {
-	if len(identifiers)%2 != 0 {
+	if len(identifiers) == 0 || len(identifiers)%2 != 0 {
 		return errors.New("trace info must come in pairs of port and channel identifiers '{portID}/{channelID}'")
 	}
 
@@ -157,14 +157,20 @@ func ValidatePrefixedDenom(denom string) error {
 //  - A valid base denomination (eg: 'uatom')
 //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
 func ValidateIBCDenom(denom string) error {
-	denomSplit := strings.SplitN(denom, "/", 2)
+	denomSplit := strings.Split(denom, "/")
 
 	switch {
-	case denomSplit[0] != "ibc" && denomSplit[0] == denom && strings.TrimSpace(denom) != "":
+	case strings.TrimSpace(denom) == "",
+		len(denomSplit) == 1 && denomSplit[0] == "ibc",
+		len(denomSplit) == 2 && (denomSplit[0] != "ibc" || strings.TrimSpace(denomSplit[1]) == ""):
+		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
+
+	case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
 		// NOTE: coin base denomination already verified
 		return nil
-	case len(denomSplit) != 2, denomSplit[0] != "ibc", strings.TrimSpace(denomSplit[1]) == "":
-		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
+
+	case len(denomSplit) > 2:
+		return validateTraceIdentifiers(denomSplit[:len(denomSplit)-1])
 	}
 
 	if _, err := ParseHexHash(denomSplit[1]); err != nil {

@@ -56,6 +56,9 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Equal(coinToSendBackToA, balance)
 
 	// send from chainB back to chainA
+
+	// NOTE: token is prefixed with the full trace in order to verify the packet commitment
+	coinToSendBackToA = sdk.NewCoin(voucherDenomTrace.GetPrefix()+voucherDenomTrace.BaseDenom, coinToSendBackToA.Amount)
 	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
 
 	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
@@ -79,7 +82,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	// check that balance on chain B is empty
 	balance = suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenomTrace.IBCDenom())
-	suite.Require().Equal(0, balance.Amount.Int64())
+	suite.Require().Zero(balance.Amount.Int64())
 }
 
 func TestHandlerTestSuite(t *testing.T) {

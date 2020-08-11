@@ -146,7 +146,7 @@ func TestValidateIBCDenom(t *testing.T) {
 		{"denom with trace hash", "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", false},
 		{"base denom", "uatom", false},
 		{"empty denom", "", true},
-		{"invalid prefixed denom", "transfer/channelToA/uatom", true},
+		{"invalid prefixed denom", "transfer/channelToA/uatom", false},
 		{"denom 'ibc'", "ibc", true},
 		{"denom 'ibc/'", "ibc/", true},
 		{"invald prefix", "notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
@@ -154,6 +154,7 @@ func TestValidateIBCDenom(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		t.Log(tc.name)
 		err := ValidateIBCDenom(tc.denom)
 		if tc.expError {
 			require.Error(t, err, tc.name)

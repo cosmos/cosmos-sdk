@@ -21,14 +21,22 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 // Interfaces and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.auth.vesting.v1.VestingAccount",
+		"cosmos.vesting.v1beta1.VestingAccount",
 		(*exported.VestingAccount)(nil),
 		&ContinuousVestingAccount{},
 		&DelayedVestingAccount{},
 		&PeriodicVestingAccount{},
 	)
+
 	registry.RegisterImplementations(
 		(*authtypes.AccountI)(nil),
+		&DelayedVestingAccount{},
+		&ContinuousVestingAccount{},
+		&PeriodicVestingAccount{},
+	)
+
+	registry.RegisterImplementations(
+		(*authtypes.GenesisAccount)(nil),
 		&DelayedVestingAccount{},
 		&ContinuousVestingAccount{},
 		&PeriodicVestingAccount{},

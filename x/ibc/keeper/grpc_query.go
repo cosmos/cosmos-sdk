@@ -37,6 +37,16 @@ func (q Keeper) ConnectionChannels(c context.Context, req *channeltypes.QueryCon
 	return q.ChannelKeeper.ConnectionChannels(c, req)
 }
 
+// ChannelClientState implements the IBC QueryServer interface
+func (q Keeper) ChannelClientState(c context.Context, req *channeltypes.QueryChannelClientStateRequest) (*channeltypes.QueryChannelClientStateResponse, error) {
+	return q.ChannelKeeper.ChannelClientState(c, req)
+}
+
+// ChannelConsensusState implements the IBC QueryServer interface
+func (q Keeper) ChannelConsensusState(c context.Context, req *channeltypes.QueryChannelConsensusStateRequest) (*channeltypes.QueryChannelConsensusStateResponse, error) {
+	return q.ChannelKeeper.ChannelConsensusState(c, req)
+}
+
 // PacketCommitment implements the IBC QueryServer interface
 func (q Keeper) PacketCommitment(c context.Context, req *channeltypes.QueryPacketCommitmentRequest) (*channeltypes.QueryPacketCommitmentResponse, error) {
 	return q.ChannelKeeper.PacketCommitment(c, req)

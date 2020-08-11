@@ -29,21 +29,23 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
-		},
-		kv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
-			Value: []byte(exported.Tendermint.String()),
-		},
-		kv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
-			Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
-		},
-		kv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+		Pairs: []kv.Pair{
+			{
+				Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
+				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
+			},
+			{
+				Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
+				Value: []byte(exported.Tendermint.String()),
+			},
+			{
+				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
+				Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -59,13 +61,13 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(app.IBCKeeper.ClientKeeper, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(app.IBCKeeper.ClientKeeper, kvPairs.Pairs[i], kvPairs.Pairs[i])
 			if i == len(tests)-1 {
-				require.False(t, found, string(kvPairs[i].Key))
-				require.Empty(t, res, string(kvPairs[i].Key))
+				require.False(t, found, string(kvPairs.Pairs[i].Key))
+				require.Empty(t, res, string(kvPairs.Pairs[i].Key))
 			} else {
-				require.True(t, found, string(kvPairs[i].Key))
-				require.Equal(t, tt.expectedLog, res, string(kvPairs[i].Key))
+				require.True(t, found, string(kvPairs.Pairs[i].Key))
+				require.Equal(t, tt.expectedLog, res, string(kvPairs.Pairs[i].Key))
 			}
 		})
 	}

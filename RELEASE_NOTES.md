@@ -1,131 +1,20 @@
-# Cosmos SDK v0.39.0 Release Notes
+# Cosmos SDK v0.39.1 Release Notes
 
-This is the inaugural release of the **Cosmos SDK 0.39 «Launchpad»** release series.
+This release fixes the [issue affecting the accounts migration](https://github.com/cosmos/cosmos-sdk/issues/6828) from v0.38 to v0.39.
 
-See the [Cosmos SDK 0.39.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/27?closed=1) on our issue tracker for details.
+See the [Cosmos SDK 0.39.1 milestone](https://github.com/cosmos/cosmos-sdk/milestone/29?closed=1) on our issue tracker for details.
 
-## Changes to IAVL and store pruning
+## Remove custom JSON serialization for account types
 
-The pruning features introduced in the `0.38` release series are buggy and might lead to data loss,
-even after upgrading to `v0.39.0`. When upgrading from `0.38` it is important to follow the instructions
-below, to prevent data loss and database corruption.
+Account types JSON serialization has now changed to Amino. Changes are significant (e.g. integers are treated
+as strings) thus it is required to migrate the exported state of an application before restarting the node
+with a more recent version of the Cosmos SDK.
 
-**Note: there are are several breaking changes with regard to IAVL, stores, and pruning settings that affect command line clients, server configuration, and Golang API.**
+## REST server's --unsafe-cors mode
 
-### Migrate an application from 0.38.5 to 0.39.0
+This a UX improvement [back ported from master](https://github.com/cosmos/cosmos-sdk/pull/6853) that allows developers to disable CORS
+restrictions during app development and testing by passing the `--unsafe-cors` option to the client's `rest-server` command.
 
-The IAVL's `v0.13.0` release introduced a pruning functionality that turned out to be buggy and flawed.
-IAVL's new `v0.14.0` release now commits and flushes every state to disk as it did in pre-`v0.13.0` release.
-The SDK's multi-store will track and ensure the proper heights are pruned. The operator can now set the pruning
-options by passing a `pruning` configuration via command line option or `app.toml`. The `pruning` flag supports the following
-options: `default`, `everything`, `nothing`, `custom` - see docs for further details. If the operator chooses `custom`, they
-may want to provide either of the granular pruning values:
-- `pruning-keep-recent`
-- `pruning-keep-every`
-- `pruning-interval`
+## Tendermint 0.33.7
 
-The former two options dictate how many recent versions are kept on disk and the offset of what versions are kept after that
-respectively, and the latter defines the height interval in which versions are deleted in a batch. **Note: there are are some
-client application breaking changes with regard to IAVL, stores, and pruning settings.** An example patch follows:
-
-```patch
-From 5884171ba73c3054e98564c39adc9cbbab8d4646 Mon Sep 17 00:00:00 2001
-From: Alessio Treglia <alessio@tendermint.com>
-Date: Tue, 14 Jul 2020 14:54:19 +0100
-Subject: [PATCH 2/4] use new pruning options
-
----
- cmd/cnd/main.go | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/cmd/cnd/main.go b/cmd/cnd/main.go
-index b0c86f4a..4a3a8518 100644
---- a/cmd/cnd/main.go
-+++ b/cmd/cnd/main.go
-@@ -23,7 +23,6 @@ import (
- 	comgenutilcli "github.com/commercionetwork/commercionetwork/x/genutil/client/cli"
- 	"github.com/cosmos/cosmos-sdk/baseapp"
- 	"github.com/cosmos/cosmos-sdk/server"
--	"github.com/cosmos/cosmos-sdk/store"
- 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
- 	"github.com/cosmos/cosmos-sdk/x/staking"
- )
-@@ -87,9 +86,14 @@ func main() {
- }
- 
- func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-+	pruningOpts, err := server.GetPruningOptionsFromFlags()
-+	if err != nil {
-+		panic(err)
-+	}
-+
- 	return app.NewCommercioNetworkApp(
- 		logger, db, traceStore, true, invCheckPeriod,
--		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
-+		baseapp.SetPruning(pruningOpts),
- 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
- 		baseapp.SetHaltHeight(uint64(viper.GetInt(server.FlagHaltHeight))),
- 	)
-```
-
-### Migrate a node from 0.38.5 to 0.39.0
-
-Note: **do not modify pruning settings with any release prior to `v0.39.0` as that may cause data corruption**.
-
-The following instructions assume that **pruning settings have not been modified since the node started using 0.38.x. Note: the default pruning setting `syncable` used `KeepEvery:100`.
-
-#### Chain Hard Fork (also know as The Tested Upgrade Path)
-
-This strategy entails performing a hard fork of your chain.
-It takes time, coordination and a few technical steps that the validators of the network must follow. Note: a software upgrade guide for `gaia`, the application that powers the Cosmos Hub, is [available too](https://hub.cosmos.network/master/gaia-tutorials/upgrade-node.html). It contains detailed instructions on how to upgrade network nodes that apply to the vast majority of Cosmos SDK applications.
-
-In preparation of the upgrade, you need to export the current state. This operation should be be performed on one node:
-
- * Stop the node and export the current state, e.g.: `appd export --for-zero-height > export_genesis.json`.
- * Manually replace the chain id and genesis time fields in `export_genesis.json` with the values that the network had agreed upon.
-
-Follow these steps to perform the upgrade:
-
-* Make a backup copy of the old `genesis.json` file in your server application's config directory (e.g. `$HOME/.appd/config/genesis.json`) and replace it with `export_genesis.json`. Note: do rename `export_genesis.json` to `genesis.json`.
-* Replace the old binary with the new one and restart the service using the new binary.
-
-#### Alternative strategies
-
-Alternatively, you can follow *one of* the following strategies:
-
-* Replace the application server's binary and perform a full sync of the node from scratch.
-
-* If your node had started with using `KeepEvery:1` (e.g. pruning settings `nothing` or `everything`), upgrading to `v0.39.0` should be simple and safe.
-
-* Do halt block processing with `--halt-height` after committing a height divisible by `KeepEvery` - e.g. at block 147600 with `KeepEvery:100`. The **node must never have processed a height beyond that at any time in its past**. Upgrading to `v0.39.0` is then safe.
-
-* Set the `KeepEvery` setting to the same as the previous `KeepEvery` setting (both `<=v0.38.5` and `v0.39.0` default to `KeepEvery:100`). Upgrade to `v0.39.0` is then safe as long as you wait one `KeepEvery` interval plus one `KeepRecent` interval **plus** one pruning `Interval` before changing pruning settings or deleting the last `<=v0.38.5` height (so wait *210* heights with the default configuration).
-
-* Otherwise, make sure the last version persisted with `<=v0.38.5` is never deleted after upgrading to `v0.39.0`, as doing so may cause data loss and data corruption.
-
-## Regression in the signature verification when multiple transactions in the same block are sent from the same account
-
-When multiple transactions in the same block are sent (and correctly signed) by the same account, chances are that some of them could be rejected and the error `unauthorized: signature verification failed` would be returned due to the account's sequence (*nonce*) getting stuck and not being incremented by the ante handler. This behaviour was [a regression](https://github.com/cosmos/cosmos-sdk/issues/6287) introduced in the `v0.38` release series, it did not occur in the `v0.37` release series and is now fixed in this release.
-
-## Changes to ABCI Query's "app/simulate" path
-
-The `app/simulate` query path is used to simulate the execution transactions in order to obtain an estimate
-of the gas consumption that would be required to actually execute them. The response used to return only
-the amount of gas, it now returns the result of the transaction as well.
-
-## bank.send event comes with sender information
-
-The `bank.send` event used to carry only the recipient and amount. It was assumed that the sender of the funds was `message.sender`.
-This is often not true when a module call the bank keeper directly. This may be due to staking distribution, or via a cosmwasm contract that released funds (where I discovered the issue).
-
-`bank.send` now contains the entire triple `(sender, recipient, amount)`.
-
-## trace option is no longer ignored
-
-The `--trace` option is reintroduced. It comes in very handy for debugging as it causes the full stack trace to be included in the ABCI error logs.
-
-## appcli keys parse command didn't honor client application's bech32 prefixes
-
-The `key parse` command ignored the application-specific address bech32
-prefixes and used to return `cosmos*1`-prefixed addresses regardless
-of the client application's configuration.
+Tendermint 0.33.7 brings an important regression fix. Please refer to [this bug report](https://github.com/tendermint/tendermint/issues/5112) for more information.

@@ -16,6 +16,7 @@ import (
 	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
+	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
 )
 
 const (
@@ -29,6 +30,7 @@ const (
 var migrationMap = extypes.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
+	"v0.39": v039.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.
@@ -118,7 +120,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to sort JSON genesis doc")
 			}
 
-			fmt.Println(string(sortedBz))
+			cmd.Println(string(sortedBz))
 			return nil
 		},
 	}

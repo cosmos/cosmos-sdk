@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
@@ -633,16 +634,44 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	val := s.network.Validators[0]
+	_, _, addr1 := testdata.KeyTestPubAddr()
 
-	cmd := authcli.GetAccountCmd()
-	args := []string{val.Address.String(),
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"invalid address",
+			[]string{val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid address",
+			[]string{addr1.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
 
-	var acc authtypes.BaseAccount
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &acc))
-	s.Require().Equal(val.Address, acc.Address)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				var acc authtypes.BaseAccount
+				s.Require().NoError(err)
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &acc))
+				s.Require().Equal(val.Address, acc.Address)
+			}
+		})
+	}
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {

@@ -18,6 +18,7 @@ func TestMerkleMap(t *testing.T) {
 		values []string // each string gets converted to []byte in test
 		want   string
 	}{
+		{[]string{}, []string{}, ""},
 		{[]string{"key1"}, []string{"value1"}, "a44d3cc7daba1a4600b00a2434b30f8b970652169810d6dfa9fb1793a2189324"},
 		{[]string{"key1"}, []string{"value2"}, "0638e99b3445caec9d95c05e1a3fc1487b4ddec6a952ff337080360b0dcc078c"},
 		// swap order with 2 keys
@@ -64,6 +65,7 @@ func TestSimpleMap(t *testing.T) {
 		values []string // each string gets converted to []byte in test
 		want   string
 	}{
+		{[]string{}, []string{}, ""},
 		{[]string{"key1"}, []string{"value1"}, "a44d3cc7daba1a4600b00a2434b30f8b970652169810d6dfa9fb1793a2189324"},
 		{[]string{"key1"}, []string{"value2"}, "0638e99b3445caec9d95c05e1a3fc1487b4ddec6a952ff337080360b0dcc078c"},
 		// swap order with 2 keys

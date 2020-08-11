@@ -11,7 +11,7 @@ import (
 func TestValidateGenesis(t *testing.T) {
 	testCases := []struct {
 		name     string
-		genState types.GenesisState
+		genState *types.GenesisState
 		expPass  bool
 	}{
 		{
@@ -21,14 +21,14 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			"valid genesis",
-			types.GenesisState{
+			&types.GenesisState{
 				PortID: "portidone",
 			},
 			true,
 		},
 		{
 			"invalid client",
-			types.GenesisState{
+			&types.GenesisState{
 				PortID: "(INVALIDPORT)",
 			},
 			false,

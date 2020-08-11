@@ -46,8 +46,8 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) GenesisState {
-	return GenesisState{
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) *GenesisState {
+	return &GenesisState{
 		Params:        params,
 		Balances:      balances,
 		Supply:        supply,
@@ -56,20 +56,20 @@ func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomM
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
-func DefaultGenesisState() GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
 
-	return genesisState
+	return &genesisState
 }
 
 // GenesisAccountIterator implements genesis account iteration.

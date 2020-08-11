@@ -1,8 +1,8 @@
 syntax = "proto3";
-package cosmos.tx;
+package cosmos.tx.v1beta1;
 
-import "cosmos/cosmos.proto";
-import "cosmos/tx/tx.proto";
+import "cosmos/base/abci/v1beta1/abci.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -20,6 +20,6 @@ message SimulateRequest {
 
 // SimulateResponse is the response type for the Service.Simulate RPC method.
 message SimulateResponse {
-    cosmos.GasInfo gas_info = 1;
-    cosmos.Result result = 2;
+    cosmos.base.abci.v1beta1.GasInfo gas_info = 1;
+    cosmos.base.abci.v1beta1.Result result = 2;
 }

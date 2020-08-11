@@ -12,14 +12,18 @@ import (
 func TestAccountRetriever(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
-	network := network.New(t, cfg)
 
-	_, err := network.WaitForHeight(1)
+	network := network.New(t, cfg)
+	defer network.Cleanup()
+
+	_, err := network.WaitForHeight(3)
 	require.NoError(t, err)
 
 	val := network.Validators[0]
 	clientCtx := val.ClientCtx
 	ar := types.AccountRetriever{}
+
+	clientCtx = clientCtx.WithHeight(2)
 
 	acc, err := ar.GetAccount(clientCtx, val.Address)
 	require.NoError(t, err)

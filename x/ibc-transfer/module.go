@@ -45,7 +45,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec implements AppModuleBasic interface
-func (AppModuleBasic) RegisterCodec(*codec.Codec) {}
+func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.

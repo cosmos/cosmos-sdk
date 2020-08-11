@@ -64,7 +64,7 @@ $ <appcli> query auth params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 
@@ -98,13 +98,7 @@ func GetAccountCmd() *cobra.Command {
 				return err
 			}
 
-			var account types.AccountI
-			err = clientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(account)
+			return clientCtx.PrintOutput(res.Account)
 		},
 	}
 

@@ -150,7 +150,7 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-func makeCodec() *codec.Codec {
+func makeCodec() *codec.LegacyAmino {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)

@@ -75,9 +75,9 @@ func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.Codec, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(bz, tc.respType))
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
@@ -122,9 +122,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.Codec, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(bz, tc.respType))
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

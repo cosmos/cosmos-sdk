@@ -139,7 +139,7 @@ $ <appcli> query slashing params
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

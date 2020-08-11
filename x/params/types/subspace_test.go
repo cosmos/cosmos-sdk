@@ -22,7 +22,7 @@ type SubspaceTestSuite struct {
 	suite.Suite
 
 	cdc   codec.Marshaler
-	amino *codec.Codec
+	amino *codec.LegacyAmino
 	ctx   sdk.Context
 	ss    types.Subspace
 }

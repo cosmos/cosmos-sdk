@@ -311,7 +311,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
 		WithJSONMarshaler(encodingConfig.Amino). // amino used intentionally here
-		WithCodec(encodingConfig.Amino)          // amino used intentionally here
+		WithLegacyAmino(encodingConfig.Amino)    // amino used intentionally here
 	// write bytes
 	w := httptest.NewRecorder()
 	bs := []byte("text string")

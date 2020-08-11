@@ -11,11 +11,11 @@ import (
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
-	codec *codec.Codec
+	codec *codec.LegacyAmino
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(codec *codec.Codec) AccountRetriever {
+func NewAccountRetriever(codec *codec.LegacyAmino) AccountRetriever {
 	return AccountRetriever{codec: codec}
 }
 

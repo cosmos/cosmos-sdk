@@ -45,7 +45,7 @@ func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHei
 
 // ParseResponseWithHeight returns the raw result from a JSON-encoded
 // ResponseWithHeight object.
-func ParseResponseWithHeight(cdc *codec.Codec, bz []byte) ([]byte, error) {
+func ParseResponseWithHeight(cdc *codec.LegacyAmino, bz []byte) ([]byte, error) {
 	r := ResponseWithHeight{}
 	if err := cdc.UnmarshalJSON(bz, &r); err != nil {
 		return nil, err
@@ -279,7 +279,7 @@ func PostProcessResponseBare(w http.ResponseWriter, ctx client.Context, body int
 		resp = b
 
 	default:
-		resp, err = ctx.Codec.MarshalJSON(body)
+		resp, err = ctx.LegacyAmino.MarshalJSON(body)
 		if CheckInternalServerError(w, err) {
 			return
 		}

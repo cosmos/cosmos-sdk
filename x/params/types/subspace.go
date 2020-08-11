@@ -22,7 +22,7 @@ const (
 // recording whether the parameter has been changed or not
 type Subspace struct {
 	cdc         codec.BinaryMarshaler
-	legacyAmino *codec.Codec
+	legacyAmino *codec.LegacyAmino
 	key         sdk.StoreKey // []byte -> []byte, stores parameter
 	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
 	name        []byte
@@ -30,7 +30,7 @@ type Subspace struct {
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.BinaryMarshaler, legacyAmino *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
 	return Subspace{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,

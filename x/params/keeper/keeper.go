@@ -14,14 +14,14 @@ import (
 // Keeper of the global paramstore
 type Keeper struct {
 	cdc         codec.BinaryMarshaler
-	legacyAmino *codec.Codec
+	legacyAmino *codec.LegacyAmino
 	key         sdk.StoreKey
 	tkey        sdk.StoreKey
 	spaces      map[string]*types.Subspace
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc codec.BinaryMarshaler, legacyAmino *codec.Codec, key, tkey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,

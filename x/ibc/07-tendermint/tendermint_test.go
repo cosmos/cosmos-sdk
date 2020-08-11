@@ -26,7 +26,7 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
-	cdc        *codec.Codec
+	cdc        *codec.LegacyAmino
 	signers    []tmtypes.PrivValidator
 	privVal    tmtypes.PrivValidator
 	valSet     *tmtypes.ValidatorSet

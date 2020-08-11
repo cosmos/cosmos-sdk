@@ -7,7 +7,7 @@ import "cosmos/gov/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
-// GenesisState defines all staking state that must be provided at genesis.
+// GenesisState defines the gov module's genesis state.
 message GenesisState{
   // starting_proposal_id is the ID of the starting proposal.
   uint64 starting_proposal_id  = 1 [

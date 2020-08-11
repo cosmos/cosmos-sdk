@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines all staking state that must be provided at genesis.
+// GenesisState defines the gov module's genesis state.
 type GenesisState struct {
 	// starting_proposal_id is the ID of the starting proposal.
 	StartingProposalID uint64 `protobuf:"varint,1,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty" yaml:"starting_proposal_id"`

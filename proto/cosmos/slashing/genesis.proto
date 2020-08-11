@@ -6,7 +6,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/slashing.proto";
 
-// GenesisState defines all slashing state that must be provided at genesis.
+// GenesisState defines the slashing module's genesis state.
 message GenesisState {
   // params defines all the paramaters of related to deposit.
   Params params = 1 [

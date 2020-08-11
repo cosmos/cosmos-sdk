@@ -24,7 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState - all auth state that must be provided at genesis.
+// GenesisState defines the auth module's genesis state.
 type GenesisState struct {
 	// params defines all the paramaters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`

@@ -6,7 +6,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 import "gogoproto/gogo.proto";
 import "cosmos/staking/staking.proto";
 
-// GenesisState defines all staking state that must be provided at genesis.
+// GenesisState defines the staking module's genesis state.
 message GenesisState {
   // params defines all the paramaters of related to deposit.
   Params params = 1 [

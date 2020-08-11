@@ -126,7 +126,7 @@ message ValidatorSlashEventRecord {
   ];
 }
 
-// GenesisState defines all distribution state that must be provided at genesis.
+// GenesisState defines the distribution module's genesis state.
 message GenesisState {
   // params defines all the paramaters of the module.
   Params params = 1 [

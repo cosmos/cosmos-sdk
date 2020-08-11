@@ -447,7 +447,7 @@ func (m *ValidatorSlashEventRecord) GetEvent() ValidatorSlashEvent {
 	return ValidatorSlashEvent{}
 }
 
-// GenesisState defines all distribution state that must be provided at genesis.
+// GenesisState defines the distribution module's genesis state.
 type GenesisState struct {
 	// params defines all the paramaters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`

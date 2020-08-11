@@ -14,7 +14,7 @@ import (
 type ClientTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	cdc *codec.LegacyAmino
 	ctx sdk.Context
 	app *simapp.SimApp
 }
@@ -23,7 +23,7 @@ func (suite *ClientTestSuite) SetupTest() {
 	isCheckTx := false
 
 	suite.app = simapp.Setup(isCheckTx)
-	suite.cdc = suite.app.Codec()
+	suite.cdc = suite.app.LegacyAmino()
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
 
 }

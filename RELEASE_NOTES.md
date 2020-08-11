@@ -12,8 +12,8 @@ with a more recent version of the Cosmos SDK.
 
 ## REST server's --unsafe-cors mode
 
-UX improvement [back ported from master](https://github.com/cosmos/cosmos-sdk/pull/6853) that allows developers to disable CORS
-restrictions during app development and testing.
+This a UX improvement [back ported from master](https://github.com/cosmos/cosmos-sdk/pull/6853) that allows developers to disable CORS
+restrictions during app development and testing by passing the `--unsafe-cors` option to the client's `rest-server` command.
 
 ## Tendermint 0.33.7
 

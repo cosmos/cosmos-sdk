@@ -318,7 +318,5 @@ Where proposal.json contains:
 		},
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }

@@ -88,7 +88,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection,
 		)
 
 		if tc.expPass {
@@ -139,7 +139,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel,
 		)
 
 		if tc.expPass {
@@ -194,7 +194,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment,
 		)
 
 		if tc.expPass {
@@ -249,7 +249,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack,
 		)
 
 		if tc.expPass {
@@ -280,7 +280,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence,
 		)
 
 		if tc.expPass {
@@ -330,7 +330,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence,
 		)
 
 		if tc.expPass {

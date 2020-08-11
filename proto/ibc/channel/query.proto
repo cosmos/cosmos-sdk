@@ -13,46 +13,54 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 // Query provides defines the gRPC querier service
 service Query {
   // Channel queries an IBC Channel.
-  rpc Channel(QueryChannelRequest) returns (QueryChannelResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
+  rpc Channel(QueryChannelRequest) 
+    returns (QueryChannelResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}";
   }
 
   // Channels queries all the IBC channels of a chain.
-  rpc Channels(QueryChannelsRequest) returns (QueryChannelsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels";
+  rpc Channels(QueryChannelsRequest) 
+    returns (QueryChannelsResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels";
   }
 
   // ConnectionChannels queries all the channels associated with a connection
   // end.
-  rpc ConnectionChannels(QueryConnectionChannelsRequest) returns (QueryConnectionChannelsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/connections/{connection}/channels";
+  rpc ConnectionChannels(QueryConnectionChannelsRequest) 
+    returns (QueryConnectionChannelsResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/connections/{connection}/channels";
   }
 
   // ChannelClientState queries for the client state for the channel associated
   // with the provided channel identifiers.
-  rpc PacketCommitment(QueryPacketCommitmentRequest) returns (QueryPacketCommitmentResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
+  rpc PacketCommitment(QueryPacketCommitmentRequest) 
+    returns (QueryPacketCommitmentResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
-  rpc PacketCommitments(QueryPacketCommitmentsRequest) returns (QueryPacketCommitmentsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
+  rpc PacketCommitments(QueryPacketCommitmentsRequest) 
+    returns (QueryPacketCommitmentsResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments";
   }
 
   // PacketAcknowledgement queries a stored packet acknowledgement hash.
-  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) returns (QueryPacketAcknowledgementResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
+  rpc PacketAcknowledgement(QueryPacketAcknowledgementRequest) 
+    returns (QueryPacketAcknowledgementResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
   }
 
   // UnrelayedPackets returns all the unrelayed IBC packets associated with a
   // channel and sequences.
-  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/packet_acks/{acknowledgements}/unrelayed_packets";
+  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) 
+    returns (QueryUnrelayedPacketsResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/packet_acks/{acknowledgements}/unrelayed_packets";
   }
 
   // NextSequenceReceive returns the next receive sequence for a given channel.
-  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
-		option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
+  rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) 
+    returns (QueryNextSequenceReceiveResponse) {
+		  option (google.api.http).get = "/cosmos/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";
   }
 
   // TODO: blocked by client proto migration

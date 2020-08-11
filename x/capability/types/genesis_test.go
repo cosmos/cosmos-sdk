@@ -120,7 +120,7 @@ func TestValidateGenesis(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		genState := DefaultGenesis()
-		tc.malleate(&genState)
+		tc.malleate(genState)
 		err := genState.Validate()
 		if tc.expPass {
 			require.NoError(t, err, tc.name)

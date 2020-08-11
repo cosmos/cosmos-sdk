@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	index := k.GetLatestIndex(ctx)
 	owners := []types.GenesisOwners{}
 
@@ -36,7 +36,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		owners = append(owners, genOwner)
 	}
 
-	return types.GenesisState{
+	return &types.GenesisState{
 		Index:  index,
 		Owners: owners,
 	}

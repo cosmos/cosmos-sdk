@@ -44,12 +44,6 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			fmt.Sprintf("unknown IBC %s query endpoint", connectiontypes.SubModuleName),
 		},
 		{
-			"channel - QuerierChannelClientState",
-			[]string{channeltypes.SubModuleName, channeltypes.QueryChannelClientState},
-			false,
-			"",
-		},
-		{
 			"channel - invalid query",
 			[]string{channeltypes.SubModuleName, "foo"},
 			true,

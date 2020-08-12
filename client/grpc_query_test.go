@@ -1,21 +1,18 @@
-package grpc_test
+package client_test
 
 import (
 	"context"
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
-	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type IntegrationTestSuite struct {
@@ -41,21 +38,16 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGRPCServer() {
 	val0 := s.network.Validators[0]
-	conn, err := grpc.Dial(
-		val0.AppConfig.GRPC.Address,
-		grpc.WithInsecure(), // Or else we get "no transport security set"
-	)
-	s.Require().NoError(err)
 
 	// gRPC query to test service should work
-	testClient := testdata.NewTestServiceClient(conn)
+	testClient := testdata.NewTestServiceClient(val0.ClientCtx)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
 
 	// gRPC query to bank service should work
 	denom := fmt.Sprintf("%stoken", val0.Moniker)
-	bankClient := banktypes.NewQueryClient(conn)
+	bankClient := banktypes.NewQueryClient(val0.ClientCtx)
 	var header metadata.MD
 	bankRes, err := bankClient.Balance(
 		context.Background(),
@@ -72,29 +64,12 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 
 	// Request metadata should work
 	bankRes, err = bankClient.Balance(
-		metadata.AppendToOutgoingContext(context.Background(), baseapp.GRPCBlockHeightHeader, "1"), // Add metadata to request
+		context.Background(),
 		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
 		grpc.Header(&header),
 	)
 	blockHeight = header.Get(baseapp.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
-
-	// Test server reflection
-	reflectClient := rpb.NewServerReflectionClient(conn)
-	stream, err := reflectClient.ServerReflectionInfo(context.Background(), grpc.WaitForReady(true))
-	s.Require().NoError(err)
-	s.Require().NoError(stream.Send(&rpb.ServerReflectionRequest{
-		MessageRequest: &rpb.ServerReflectionRequest_ListServices{},
-	}))
-	res, err := stream.Recv()
-	s.Require().NoError(err)
-	services := res.GetListServicesResponse().Service
-	servicesMap := make(map[string]bool)
-	for _, s := range services {
-		servicesMap[s.Name] = true
-	}
-	// Make sure the following services are present
-	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

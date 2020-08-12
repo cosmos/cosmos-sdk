@@ -3,7 +3,7 @@ package testdata;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
-import "cosmos/tx/tx.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 
@@ -362,8 +362,8 @@ message TestUpdatedTxBody {
 }
 
 message TestUpdatedAuthInfo {
-    repeated cosmos.tx.SignerInfo signer_infos = 1;
-    cosmos.tx.Fee fee = 2;
+    repeated cosmos.tx.v1beta1.SignerInfo signer_infos = 1;
+    cosmos.tx.v1beta1.Fee fee = 2;
     bytes new_field_3 = 3;
     bytes new_field_1024 = 1024;
 }

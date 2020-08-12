@@ -66,7 +66,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return ValidateGenesis(data)
+	return ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the staking module.
@@ -146,7 +146,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, genesisState)
+	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking

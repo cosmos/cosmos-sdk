@@ -142,7 +142,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", host.ModuleName, err))
 	}
-	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
+	InitGenesis(ctx, *am.keeper, am.createLocalhost, &gs)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -3,11 +3,15 @@ package client
 import (
 	gocontext "context"
 	"fmt"
+	"strconv"
 
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -17,19 +21,39 @@ var _ gogogrpc.ClientConn = Context{}
 var protoCodec = encoding.GetCodec(proto.Name)
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(_ gocontext.Context, method string, args, reply interface{}, _ ...grpc.CallOption) error {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err
 	}
-	resBz, _, err := ctx.QueryWithData(method, reqBz)
+	req := abci.RequestQuery{
+		Path: method,
+		Data: reqBz,
+	}
+
+	res, err := ctx.QueryABCI(req)
 	if err != nil {
 		return err
 	}
 
-	err = protoCodec.Unmarshal(resBz, reply)
+	err = protoCodec.Unmarshal(res.Value, reply)
 	if err != nil {
 		return err
+	}
+
+	// Create header metadata. For now the headers contain:
+	// - block height
+	// We then parse all the call options, if the call option is a
+	// HeaderCallOption, then we manually set the value of that header to the
+	// metadata.
+	md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	for _, callOpt := range opts {
+		header, ok := callOpt.(grpc.HeaderCallOption)
+		if !ok {
+			continue
+		}
+
+		*header.HeaderAddr = md
 	}
 
 	if ctx.InterfaceRegistry != nil {

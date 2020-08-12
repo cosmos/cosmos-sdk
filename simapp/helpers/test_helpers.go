@@ -30,7 +30,7 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 
 	signMode := gen.SignModeHandler().DefaultMode()
 
-	// 1st round: set set SignatureV2 with empty signatures, to set correct
+	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
 	for i, p := range priv {
 		sigs[i] = signing.SignatureV2{

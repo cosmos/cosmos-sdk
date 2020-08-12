@@ -31,8 +31,8 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, state types.GenesisState
 }
 
 // ExportGenesis exports transfer module's portID into its geneis state
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
-	return types.GenesisState{
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
+	return &types.GenesisState{
 		PortID: keeper.GetPort(ctx),
 	}
 }

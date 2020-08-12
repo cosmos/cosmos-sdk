@@ -2,32 +2,52 @@ syntax = "proto3";
 package ibc.connection;
 
 import "gogoproto/gogo.proto";
-import "cosmos/query/pagination.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/client/client.proto";
 import "ibc/connection/connection.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 // Query provides defines the gRPC querier service
 service Query {
   // Connection queries an IBC connection end.
-  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {}
+  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
+  }
 
   // Connections queries all the IBC connections of a chain.
-  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {}
+  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
+  }
 
-  // ClientConnections queries the connection paths associated with a client state.
-  rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {}
+  // ClientConnections queries the connection paths associated with a client
+  // state.
+  rpc ClientConnections(QueryClientConnectionsRequest)
+      returns (QueryClientConnectionsResponse) {
+  }
+
+  // ConnectionClientState queries the client state associated with the
+  // connection
+  rpc ConnectionClientState(QueryConnectionClientStateRequest)
+      returns (QueryConnectionClientStateResponse) {
+  }
+
+  // ConnectionConsensusState queries the consensus state associated with the
+  // connection
+  rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
+      returns (QueryConnectionConsensusStateResponse) {
+  }
 }
 
-// QueryConnectionRequest is the request type for the Query/Connection RPC method
+// QueryConnectionRequest is the request type for the Query/Connection RPC
+// method
 message QueryConnectionRequest {
   // connection unique identifier
   string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
 }
 
-// QueryConnectionResponse is the response type for the Query/Connection RPC method.
-// Besides the connection end, it includes a proof and the height from which the
-// proof was retrieved.
+// QueryConnectionResponse is the response type for the Query/Connection RPC
+// method. Besides the connection end, it includes a proof and the height from
+// which the proof was retrieved.
 message QueryConnectionResponse {
   // connection associated with the request identifier
   ibc.connection.ConnectionEnd connection = 1;
@@ -39,30 +59,32 @@ message QueryConnectionResponse {
   uint64 proof_height = 4;
 }
 
-// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+// QueryConnectionsRequest is the request type for the Query/Connections RPC
+// method
 message QueryConnectionsRequest {
-  cosmos.query.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+// QueryConnectionsResponse is the response type for the Query/Connections RPC
+// method.
 message QueryConnectionsResponse {
   // list of stored connections of the chain.
   repeated ibc.connection.IdentifiedConnection connections = 1;
   // pagination response
-  cosmos.query.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
   int64 height = 3;
 }
 
-// QueryClientConnectionsRequest is the request type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsRequest is the request type for the
+// Query/ClientConnections RPC method
 message QueryClientConnectionsRequest {
   // client identifier associated with a connection
   string client_id = 1 [(gogoproto.customname) = "ClientID"];
 }
 
-// QueryClientConnectionsResponse is the response type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsResponse is the response type for the
+// Query/ClientConnections RPC method
 message QueryClientConnectionsResponse {
   // slice of all the connection paths associated with a client.
   repeated string connection_paths = 1;
@@ -72,4 +94,53 @@ message QueryClientConnectionsResponse {
   string proof_path = 3;
   // height at which the proof was generated
   uint64 proof_height = 4;
+}
+
+// QueryConnectionClientStateRequest is the request type for the
+// Query/ConnectionClientState RPC method
+message QueryConnectionClientStateRequest {
+  // connection identifier
+  string id = 1 [
+    (gogoproto.customname) = "ConnectionID",
+    (gogoproto.moretags) = "yaml:\"connection_id\""
+  ];
+}
+
+// QueryConnectionClientStateResponse is the response type for the
+// Query/ConnectionClientState RPC method
+message QueryConnectionClientStateResponse {
+  // client state associated with the channel
+  ibc.client.IdentifiedClientState identified_client_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryConnectionConsensusStateRequest is the request type for the
+// Query/ConnectionConsensusState RPC method
+message QueryConnectionConsensusStateRequest {
+  // connection identifier
+  string connection_id = 1 [
+    (gogoproto.customname) = "ConnectionID",
+    (gogoproto.moretags) = "yaml:\"connection_id\""
+  ];
+  uint64 height = 2;
+}
+
+// QueryConnectionConsensusStateResponse is the response type for the
+// Query/ConnectionConsensusState RPC method
+message QueryConnectionConsensusStateResponse {
+  // consensus state associated with the channel
+  google.protobuf.Any consensus_state = 1;
+  // client ID associated with the consensus state
+  string client_id = 2 [(gogoproto.customname) = "ClientID"];
+  // merkle proof of existence
+  bytes proof = 3;
+  // merkle proof path
+  string proof_path = 4;
+  // height at which the proof was retrieved
+  uint64 proof_height = 5;
 }

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"math"
 	"time"
 
@@ -86,17 +85,19 @@ func (ev Evidence) GetTime() time.Time {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
-	if ev.Header1.TrustedHeight != ev.Header2.TrustedHeight {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "evidence headers must share the same trusted height. got height1: %d, height2: %d",
-			ev.Header1.TrustedHeight, ev.Header2.TrustedHeight)
+	if ev.Header1.TrustedHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header1 must have non-zero trusted height")
 	}
-	if !bytes.Equal(ev.Header1.TrustedValidators.Hash(), ev.Header2.TrustedValidators.Hash()) {
-		return sdkerrors.Wrapf(ErrInvalidValidatorSet, "trusted validators on both submitted headers must be the same. Got valset1: %s, valset2: %s",
-			ev.Header1.TrustedValidators, ev.Header2.TrustedValidators)
+	if ev.Header2.TrustedHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header2 must have non-zero trusted height")
 	}
 	if ev.Header1.TrustedValidators == nil {
-		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set cannot be empty")
+		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")
 	}
+	if ev.Header2.TrustedValidators == nil {
+		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header2 cannot be empty")
+	}
+
 	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "evidence client ID is invalid")
 	}

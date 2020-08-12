@@ -5,8 +5,8 @@ import (
 )
 
 // DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		PortID: PortID,
 	}
 }

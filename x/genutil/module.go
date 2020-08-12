@@ -49,7 +49,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, txEncodingConfi
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data, txEncodingConfig.TxJSONDecoder())
+	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder())
 }
 
 // RegisterRESTRoutes registers the REST routes for the genutil module.

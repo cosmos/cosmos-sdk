@@ -30,7 +30,6 @@ const (
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
 	flagHDPath      = "hd-path"
-	flagKeyAlgo     = "algo"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -75,7 +74,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
-	cmd.Flags().String(flagKeyAlgo, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	cmd.SetOut(cmd.OutOrStdout())
 	cmd.SetErr(cmd.ErrOrStderr())
@@ -126,7 +125,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	showMnemonic := !noBackup
 
 	keyringAlgos, _ := kb.SupportedAlgorithms()
-	algoStr, _ := cmd.Flags().GetString(flagKeyAlgo)
+	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 	algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
 	if err != nil {
 		return err

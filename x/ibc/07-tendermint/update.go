@@ -66,12 +66,15 @@ func CheckValidityAndUpdateState(
 	return tmClientState, consensusState, nil
 }
 
-// checkValidity checks if the Tendermint header is valid.
-// CONTRACT: consState.Height == header.TrustedHeight
-func checkValidity(
-	clientState *types.ClientState, consState *types.ConsensusState,
-	header types.Header, currentTimestamp time.Time,
-) error {
+// checkTrustedHeader checks that consensus state matches trusted fields of Header
+func checkTrustedHeader(header types.Header, consState *types.ConsensusState) error {
+	if header.TrustedHeight != consState.Height {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidHeaderHeight,
+			"trusted header height %d does not match consensus state height %d",
+			header.TrustedHeight, consState.Height,
+		)
+	}
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
 	tvalHash := header.TrustedValidators.Hash()
@@ -82,30 +85,17 @@ func checkValidity(
 			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
 		)
 	}
-	// assert trusting period has not yet passed
-	if currentTimestamp.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
-		return sdkerrors.Wrapf(
-			types.ErrTrustingPeriodExpired,
-			"current timestamp minus the consensus state timestamp is greater than or equal to the trusting period (%s >= %s)",
-			currentTimestamp.Sub(consState.Timestamp), clientState.TrustingPeriod,
-		)
-	}
+	return nil
+}
 
-	// assert header timestamp is not past the trusting period
-	if header.Time.Sub(consState.Timestamp) >= clientState.TrustingPeriod {
-		return sdkerrors.Wrap(
-			clienttypes.ErrInvalidHeader,
-			"header timestamp is beyond trusting period in relation to the consensus state timestamp",
-		)
-	}
-
-	// assert header timestamp is past latest stored consensus state timestamp
-	if header.Time.Unix() <= consState.Timestamp.Unix() {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader,
-			"header timestamp ≤ consensus state timestamp (%s ≤ %s)",
-			header.Time.UTC(), consState.Timestamp.UTC(),
-		)
+// checkValidity checks if the Tendermint header is valid.
+// CONTRACT: consState.Height == header.TrustedHeight
+func checkValidity(
+	clientState *types.ClientState, consState *types.ConsensusState,
+	header types.Header, currentTimestamp time.Time,
+) error {
+	if err := checkTrustedHeader(header, consState); err != nil {
+		return err
 	}
 
 	// assert header height is newer than consensus state
@@ -128,6 +118,10 @@ func checkValidity(
 	}
 
 	// Verify next header with the passed-in trustedVals
+	// - asserts trusting period not passed
+	// - assert header timestamp is not past the trusting period
+	// - assert header timestamp is past latest stored consensus state timestamp
+	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
 	err := lite.Verify(
 		clientState.GetChainID(), &signedHeader,
 		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,

@@ -65,6 +65,8 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 	ageBlocks := uint64(infractionHeight) - height
 
+	// TODO: Retrieve consensusparams from client state and not context
+	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
 	consensusParams := ctx.ConsensusParams()
 
 	// Reject misbehaviour if the age is too old. Evidence is considered stale

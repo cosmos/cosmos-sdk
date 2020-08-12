@@ -417,6 +417,12 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
+	unicodeLinearB := Coins{
+		{"𐀀𐀆𐀉", NewInt(1)},
+	}
+	unicodeEmoji := Coins{
+		{"🤑😋🤔", NewInt(1)},
+	}
 	multipleIBCDenoms := Coins{
 		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(1)},
 		{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", NewInt(2)},
@@ -471,6 +477,8 @@ func TestCoins(t *testing.T) {
 
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.True(t, goodCaps.IsValid(), "Coins all caps are valid")
+	assert.True(t, unicodeLinearB.IsValid(), "Unicode characters")
+	assert.False(t, unicodeEmoji.IsValid(), "Unicode emoji")
 	assert.True(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
 	assert.True(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
 	assert.True(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")

@@ -25,7 +25,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.4
-	github.com/tendermint/tendermint v0.32.12
+	github.com/tendermint/tendermint v0.32.13
 	github.com/tendermint/tm-db v0.2.0
 	gopkg.in/yaml.v2 v2.2.7
 )

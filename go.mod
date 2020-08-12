@@ -23,7 +23,7 @@ require (
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/common v0.10.0
+	github.com/prometheus/common v0.11.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.0
 	github.com/spf13/afero v1.2.2 // indirect
@@ -37,7 +37,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.14.0
-	github.com/tendermint/tendermint v0.33.7
+	github.com/tendermint/tendermint v0.33.8
 	github.com/tendermint/tm-db v0.5.1
 	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0

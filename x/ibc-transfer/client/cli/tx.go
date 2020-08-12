@@ -67,7 +67,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
-				consensusState, _, err := channelutils.QueryCounterpartyConsensusState(clientCtx, srcPort, srcChannel)
+				consensusState, _, err := channelutils.QueryCounterpartyConsensusState(clientCtx, srcPort, srcChannel, uint64(clientCtx.Height))
 				if err != nil {
 					return err
 				}

@@ -325,6 +325,22 @@ func TestAddressInterface(t *testing.T) {
 
 }
 
+func TestVerifyAddressFormat(t *testing.T) {
+	addr0 := make([]byte, 0)
+	addr5 := make([]byte, 5)
+	addr20 := make([]byte, 20)
+	addr32 := make([]byte, 32)
+
+	err := types.VerifyAddressFormat(addr0)
+	require.EqualError(t, err, "incorrect address length (expected: 20, actual: 0)")
+	err = types.VerifyAddressFormat(addr5)
+	require.EqualError(t, err, "incorrect address length (expected: 20, actual: 5)")
+	err = types.VerifyAddressFormat(addr20)
+	require.Nil(t, err)
+	err = types.VerifyAddressFormat(addr32)
+	require.EqualError(t, err, "incorrect address length (expected: 20, actual: 32)")
+}
+
 func TestCustomAddressVerifier(t *testing.T) {
 	// Create a 10 byte address
 	addr := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}

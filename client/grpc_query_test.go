@@ -36,7 +36,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGRPCServer() {
+func (s *IntegrationTestSuite) TestGRPCQuery() {
 	val0 := s.network.Validators[0]
 
 	// gRPC query to test service should work
@@ -59,10 +59,12 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 		sdk.NewCoin(denom, s.network.Config.AccountTokens),
 		*bankRes.GetBalance(),
 	)
+	fmt.Println("TEST header=", header)
 	blockHeight := header.Get(baseapp.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
+	val0.ClientCtx = val0.ClientCtx.WithHeight(1)
 	bankRes, err = bankClient.Balance(
 		context.Background(),
 		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},

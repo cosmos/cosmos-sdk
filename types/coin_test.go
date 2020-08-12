@@ -484,7 +484,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
-	assert.False(t, empty.IsValid(), "Invalid coin")
+	assert.False(t, invalidDenom.IsValid(), "Invalid coin")
 	assert.False(t, dup1.IsValid(), "Duplicate coin")
 	assert.False(t, dup2.IsValid(), "Duplicate coin with uppercase")
 	assert.False(t, dup3.Sort().IsValid(), "Duplicate coins with uppercase")

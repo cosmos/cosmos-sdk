@@ -15,6 +15,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -70,6 +71,7 @@ type TestChain struct {
 	CurrentHeader abci.Header       // header for current block height
 	QueryServer   types.QueryServer
 	TxConfig      client.TxConfig
+	Codec         codec.BinaryMarshaler
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -127,6 +129,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		CurrentHeader: header,
 		QueryServer:   app.IBCKeeper,
 		TxConfig:      txConfig,
+		Codec:         app.AppCodec(),
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,

@@ -3,14 +3,15 @@ package types
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // RegisterCodec registers the IBC client interfaces and types
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.ClientState)(nil), nil) // remove after genesis migration
 	cdc.RegisterInterface((*exported.MsgCreateClient)(nil), nil)
 	cdc.RegisterInterface((*exported.MsgUpdateClient)(nil), nil)
@@ -77,4 +78,15 @@ func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.
 	}
 
 	return anyConsensusState
+}
+
+// UnpackConsensusState unpacks an Any into a ConsensusState. It returns an error if the
+// consensus state can't be unpacked into a ConsensusState.
+func UnpackConsensusState(any *codectypes.Any) (exported.ConsensusState, error) {
+	consensusState, ok := any.GetCachedValue().(exported.ConsensusState)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into ConsensusState %T", any)
+	}
+
+	return consensusState, nil
 }

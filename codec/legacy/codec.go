@@ -9,7 +9,7 @@ import (
 // has all Tendermint crypto and evidence types registered.
 //
 // TODO: Deprecated - remove this global.
-var Cdc *codec.Codec
+var Cdc *codec.LegacyAmino
 
 func init() {
 	Cdc = codec.New()

@@ -132,18 +132,29 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
+	if err := misbehaviour.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "IBC misbehaviour failed validate basic")
+	}
 
 	var err error
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
-		// Get ConsensusState at TrustedHeight
-		consensusState, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
+		// Get consensus states at TrustedHeight for each header
+		consensusState1, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
 		if !found {
-			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for first header",
+				misbehaviour.GetClientID(), e.Header1.TrustedHeight)
+		}
+		consensusState2, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header2.TrustedHeight)
+		if !found {
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for second header",
+				misbehaviour.GetClientID(), e.Header2.TrustedHeight)
 		}
 
+		// TODO: Retrieve consensusparams from client and not context
+		// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
+			clientState, consensusState1, consensusState2, misbehaviour, ctx.BlockTime(), ctx.ConsensusParams(),
 		)
 
 	default:

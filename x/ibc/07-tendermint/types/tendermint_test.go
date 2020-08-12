@@ -14,10 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 const (
 	chainID                      = "gaia"
+	clientID                     = "gaiamainnet"
 	height                       = 4
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -27,8 +29,15 @@ const (
 type TendermintTestSuite struct {
 	suite.Suite
 
+	coordinator *ibctesting.Coordinator
+
+	// testing chains used for convenience and readability
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
+
+	// TODO: deprecate usage in favor of testing package
 	ctx      sdk.Context
-	aminoCdc *codec.Codec
+	aminoCdc *codec.LegacyAmino
 	cdc      codec.Marshaler
 	privVal  tmtypes.PrivValidator
 	valSet   *tmtypes.ValidatorSet
@@ -38,10 +47,15 @@ type TendermintTestSuite struct {
 }
 
 func (suite *TendermintTestSuite) SetupTest() {
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+
+	// TODO: deprecate usage in favor of testing package
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.Codec()
+	suite.aminoCdc = app.LegacyAmino()
 	suite.cdc = app.AppCodec()
 
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)

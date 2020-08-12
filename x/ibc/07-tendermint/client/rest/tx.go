@@ -33,7 +33,7 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 func createClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -82,7 +82,7 @@ func updateClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		clientID := vars[RestClientID]
 
 		var req UpdateClientReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -127,7 +127,7 @@ func updateClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func submitMisbehaviourHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req SubmitMisbehaviourReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

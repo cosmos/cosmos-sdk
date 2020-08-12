@@ -9,7 +9,7 @@ type HybridCodec struct {
 	amino Marshaler
 }
 
-func NewHybridCodec(amino *Codec, unpacker types.AnyUnpacker) Marshaler {
+func NewHybridCodec(amino *LegacyAmino, unpacker types.AnyUnpacker) Marshaler {
 	return &HybridCodec{
 		proto: NewProtoCodec(unpacker),
 		amino: NewAminoCodec(amino),

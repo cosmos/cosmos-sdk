@@ -59,7 +59,7 @@ func TestNewGenesisState(t *testing.T) {
 
 func TestGenesisStateValidate(t *testing.T) {
 	var (
-		genesisState types.GenesisState
+		genesisState *types.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)
@@ -104,7 +104,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"expected evidence",
 			func() {
-				genesisState = types.GenesisState{
+				genesisState = &types.GenesisState{
 					Evidence: []*codectypes.Any{{}},
 				}
 			},

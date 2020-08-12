@@ -1,4 +1,4 @@
-package tendermint_test
+package types_test
 
 import (
 	"bytes"

@@ -47,14 +47,14 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 		return nil, false
 	}
 
-	clientState := k.MustUnmarshalClientState(bz)
+	clientState := types.MustUnmarshalClientState(k.cdc, bz)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
 func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exported.ClientState) {
 	store := k.ClientStore(ctx, clientID)
-	store.Set(host.KeyClientState(), k.MustMarshalClientState(clientState))
+	store.Set(host.KeyClientState(), types.MustMarshalClientState(k.cdc, clientState))
 }
 
 // GetClientType gets the consensus type for a specific client
@@ -82,7 +82,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 		return nil, false
 	}
 
-	consensusState := k.MustUnmarshalConsensusState(bz)
+	consensusState := types.MustUnmarshalConsensusState(k.cdc, bz)
 	return consensusState, true
 }
 
@@ -90,7 +90,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 // height
 func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
-	store.Set(host.KeyConsensusState(height), k.MustMarshalConsensusState(consensusState))
+	store.Set(host.KeyConsensusState(height), types.MustMarshalConsensusState(k.cdc, consensusState))
 }
 
 // IterateConsensusStates provides an iterator over all stored consensus states.
@@ -108,7 +108,7 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
-		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
+		consensusState := types.MustUnmarshalConsensusState(k.cdc, iterator.Value())
 
 		if cb(clientID, consensusState) {
 			break
@@ -210,7 +210,7 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(clientID string, cs expo
 		if keySplit[len(keySplit)-1] != "clientState" {
 			continue
 		}
-		clientState := k.MustUnmarshalClientState(iterator.Value())
+		clientState := types.MustUnmarshalClientState(k.cdc, iterator.Value())
 
 		// key is ibc/{clientid}/clientState
 		// Thus, keySplit[1] is clientID

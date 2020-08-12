@@ -25,6 +25,11 @@ type ClientState interface {
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Update and Misbehaviour functions
+
+	CheckValidityAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
+	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
+
 	// State verification functions
 
 	VerifyClientConsensusState(
@@ -138,6 +143,7 @@ type MsgCreateClient interface {
 	GetClientID() string
 	GetClientType() string
 	GetConsensusState() ConsensusState
+	InitializeClientState() ClientState
 }
 
 // MsgUpdateClient defines the msg interface that the

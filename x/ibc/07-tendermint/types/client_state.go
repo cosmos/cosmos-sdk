@@ -23,14 +23,6 @@ import (
 
 var _ clientexported.ClientState = (*ClientState)(nil)
 
-// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
-	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
-		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.ProofSpecs,
-	)
-}
-
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,

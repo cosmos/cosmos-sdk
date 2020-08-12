@@ -64,7 +64,7 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec             codec.Marshaler
-	LegacyAmino       *codec.LegacyAmino
+	LegacyAmino       *codec.LegacyAmino // TODO: Remove!
 	InterfaceRegistry codectypes.InterfaceRegistry
 	TxConfig          client.TxConfig
 	AccountRetriever  client.AccountRetriever

@@ -125,7 +125,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			for _, sig := range sigs {
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature; %v", err)
+					return fmt.Errorf("couldn't verify signature: %w", err)
 				}
 
 				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.PubKeys); err != nil {

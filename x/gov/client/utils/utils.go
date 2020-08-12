@@ -44,6 +44,7 @@ func NormalizeProposalStatus(status string) string {
 		return "Passed"
 	case "Rejected", "rejected":
 		return "Rejected"
+	default:
+		return status
 	}
-	return ""
 }

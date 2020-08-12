@@ -589,7 +589,7 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 128 characters long.
-	reDnmString = `\p{L}[\p{L}\p{N}/]{2,127}`
+	reDnmString = `\p{L}[\p{L}\p{N}/_-]{2,127}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`

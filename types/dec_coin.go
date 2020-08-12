@@ -174,7 +174,7 @@ func NewDecCoins(decCoins ...DecCoin) DecCoins {
 	return newDecCoins
 }
 
-// NewDecCoinsFromCoin constructs a new coin set with decimal values
+// NewDecCoinsFromCoins constructs a new coin set with decimal values
 // from regular Coins.
 func NewDecCoinsFromCoins(coins ...Coin) DecCoins {
 	decCoins := make(DecCoins, len(coins))
@@ -577,7 +577,7 @@ func removeZeroDecCoins(coins DecCoins) DecCoins {
 //-----------------------------------------------------------------------------
 // Sorting
 
-var _ sort.Interface = Coins{}
+var _ sort.Interface = DecCoins{}
 
 // Len implements sort.Interface for DecCoins
 func (coins DecCoins) Len() int { return len(coins) }

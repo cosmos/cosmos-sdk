@@ -406,9 +406,9 @@ func TestCoins(t *testing.T) {
 		{"TREE", NewInt(1)},
 	}
 	mixedCase1 := Coins{
-		{"gAs", NewInt(1)},
 		{"MineraL", NewInt(1)},
 		{"TREE", NewInt(1)},
+		{"gAs", NewInt(1)},
 	}
 	mixedCase2 := Coins{
 		{"gAs", NewInt(1)},

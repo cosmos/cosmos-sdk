@@ -223,7 +223,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 
 			prefix = suite.chainB.GetPrefix()
 
-			// make conneciton proof
+			// make connection proof
 			connectionKey := host.KeyConnection(connB.ID)
 			proof, proofHeight = suite.chainB.QueryProof(connectionKey)
 
@@ -470,7 +470,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			prefix = suite.chainB.GetPrefix()
 
-			// make packet commitment proof
+			// make packet acknowledgement proof
 			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
 
@@ -557,7 +557,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 			prefix = suite.chainB.GetPrefix()
 
-			// make packet commitment proof
+			// make packet acknowledgement absence proof
 			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
 

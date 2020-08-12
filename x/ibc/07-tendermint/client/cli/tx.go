@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	flagTrustLevel = "trust-level"
-	flagProofSpecs = "proof-specs"
+	flagTrustLevel                  = "trust-level"
+	flagProofSpecs                  = "proof-specs"
+	flagAllowGovOverrideAfterExpiry = "allow_governance_override_after_expiry"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC Client as defined
@@ -119,6 +120,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+	cmd.Flags().Bool(flagAllowGovOverrideAfterExpiry, false, "allow governance override after expiry")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

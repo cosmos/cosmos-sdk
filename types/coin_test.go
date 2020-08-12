@@ -417,8 +417,8 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
-	unicodeLinearB := Coins{
-		{"𐀀𐀆𐀉", NewInt(1)},
+	unicodeLinearBAndRoman := Coins{
+		{"𐀀𐀆𐀉Ⅲ", NewInt(1)},
 	}
 	unicodeEmoji := Coins{
 		{"🤑😋🤔", NewInt(1)},
@@ -458,17 +458,9 @@ func TestCoins(t *testing.T) {
 		{"gas", NewInt(1)},
 		{"mineral", NewInt(1)},
 	}
-	dup2 := Coins{
+	notDup := Coins{
 		{"GAS", NewInt(1)},
 		{"gAs", NewInt(1)},
-	}
-	dup3 := Coins{
-		{"GAS", NewInt(1)},
-		{"gas", NewInt(1)},
-		{"MINERAL", NewInt(1)},
-		{"mineral", NewInt(1)},
-		{"tree", NewInt(1)},
-		{"TREE", NewInt(1)},
 	}
 	neg := Coins{
 		{"gas", NewInt(-1)},
@@ -477,7 +469,7 @@ func TestCoins(t *testing.T) {
 
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.True(t, goodCaps.IsValid(), "Coins all caps are valid")
-	assert.True(t, unicodeLinearB.IsValid(), "Unicode characters")
+	assert.True(t, unicodeLinearBAndRoman.IsValid(), "Unicode characters")
 	assert.False(t, unicodeEmoji.IsValid(), "Unicode emoji")
 	assert.True(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
 	assert.True(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
@@ -494,8 +486,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, invalidDenom.IsValid(), "Invalid coin")
 	assert.False(t, dup1.IsValid(), "Duplicate coin")
-	assert.False(t, dup2.IsValid(), "Duplicate coin with uppercase")
-	assert.False(t, dup3.Sort().IsValid(), "Duplicate coins with uppercase")
+	assert.True(t, notDup.IsValid(), "Same coin with uppercase")
 	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 

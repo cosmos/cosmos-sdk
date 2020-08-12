@@ -201,11 +201,10 @@ func (coins Coins) IsValid() bool {
 
 		lowDenom := coins[0].Denom
 		seenDenoms := make(map[string]bool)
-		seenDenoms[strings.ToUpper(lowDenom)] = true
+		seenDenoms[lowDenom] = true
 
 		for _, coin := range coins[1:] {
-			denomUpper := strings.ToUpper(coin.Denom)
-			if seenDenoms[denomUpper] {
+			if seenDenoms[coin.Denom] {
 				return false
 			}
 			if err := ValidateDenom(coins[0].Denom); err != nil {
@@ -220,7 +219,7 @@ func (coins Coins) IsValid() bool {
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
-			seenDenoms[denomUpper] = true
+			seenDenoms[coin.Denom] = true
 		}
 
 		return true
@@ -571,10 +570,8 @@ func removeZeroCoins(coins Coins) Coins {
 // Len implements sort.Interface for Coins
 func (coins Coins) Len() int { return len(coins) }
 
-// Less implements sort.Interface for Coins. It compares the denominations in uppercase characters.
-func (coins Coins) Less(i, j int) bool {
-	return strings.ToUpper(coins[i].Denom) < strings.ToUpper(coins[j].Denom)
-}
+// Less implements sort.Interface for Coins
+func (coins Coins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
 
 // Swap implements sort.Interface for Coins
 func (coins Coins) Swap(i, j int) { coins[i], coins[j] = coins[j], coins[i] }
@@ -685,11 +682,11 @@ func findDup(coins findDupDescriptor) int {
 
 	seenDenoms := make(map[string]bool)
 	for i := 0; i < coins.Len(); i++ {
-		coinUpper := strings.ToUpper(coins.GetDenomByIndex(i))
-		if seenDenoms[coinUpper] {
+		coin := coins.GetDenomByIndex(i)
+		if seenDenoms[coin] {
 			return i
 		}
-		seenDenoms[coinUpper] = true
+		seenDenoms[coin] = true
 	}
 
 	return -1

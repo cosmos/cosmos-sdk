@@ -79,8 +79,6 @@ message Proposal {
 
 // ProposalStatus is a type alias that represents a proposal status as a byte
 enum ProposalStatus {
-  option (gogoproto.enum_stringer)         = false;
-  option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
   // PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.

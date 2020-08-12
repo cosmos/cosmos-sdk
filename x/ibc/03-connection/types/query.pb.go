@@ -6,7 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
+	types "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -29,7 +31,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryConnectionRequest is the request type for the Query/Connection RPC method
+// QueryConnectionRequest is the request type for the Query/Connection RPC
+// method
 type QueryConnectionRequest struct {
 	// connection unique identifier
 	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
@@ -75,9 +78,9 @@ func (m *QueryConnectionRequest) GetConnectionID() string {
 	return ""
 }
 
-// QueryConnectionResponse is the response type for the Query/Connection RPC method.
-// Besides the connection end, it includes a proof and the height from which the
-// proof was retrieved.
+// QueryConnectionResponse is the response type for the Query/Connection RPC
+// method. Besides the connection end, it includes a proof and the height from
+// which the proof was retrieved.
 type QueryConnectionResponse struct {
 	// connection associated with the request identifier
 	Connection *ConnectionEnd `protobuf:"bytes,1,opt,name=connection,proto3" json:"connection,omitempty"`
@@ -150,7 +153,8 @@ func (m *QueryConnectionResponse) GetProofHeight() uint64 {
 	return 0
 }
 
-// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+// QueryConnectionsRequest is the request type for the Query/Connections RPC
+// method
 type QueryConnectionsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -195,7 +199,8 @@ func (m *QueryConnectionsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+// QueryConnectionsResponse is the response type for the Query/Connections RPC
+// method.
 type QueryConnectionsResponse struct {
 	// list of stored connections of the chain.
 	Connections []*IdentifiedConnection `protobuf:"bytes,1,rep,name=connections,proto3" json:"connections,omitempty"`
@@ -259,8 +264,8 @@ func (m *QueryConnectionsResponse) GetHeight() int64 {
 	return 0
 }
 
-// QueryClientConnectionsRequest is the request type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsRequest is the request type for the
+// Query/ClientConnections RPC method
 type QueryClientConnectionsRequest struct {
 	// client identifier associated with a connection
 	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -306,8 +311,8 @@ func (m *QueryClientConnectionsRequest) GetClientID() string {
 	return ""
 }
 
-// QueryClientConnectionsResponse is the response type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsResponse is the response type for the
+// Query/ClientConnections RPC method
 type QueryClientConnectionsResponse struct {
 	// slice of all the connection paths associated with a client.
 	ConnectionPaths []string `protobuf:"bytes,1,rep,name=connection_paths,json=connectionPaths,proto3" json:"connection_paths,omitempty"`
@@ -380,6 +385,265 @@ func (m *QueryClientConnectionsResponse) GetProofHeight() uint64 {
 	return 0
 }
 
+// QueryConnectionClientStateRequest is the request type for the
+// Query/ConnectionClientState RPC method
+type QueryConnectionClientStateRequest struct {
+	// connection identifier
+	ConnectionID string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" yaml:"connection_id"`
+}
+
+func (m *QueryConnectionClientStateRequest) Reset()         { *m = QueryConnectionClientStateRequest{} }
+func (m *QueryConnectionClientStateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionClientStateRequest) ProtoMessage()    {}
+func (*QueryConnectionClientStateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ee60d8b08ce3606, []int{6}
+}
+func (m *QueryConnectionClientStateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionClientStateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionClientStateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionClientStateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionClientStateRequest.Merge(m, src)
+}
+func (m *QueryConnectionClientStateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionClientStateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionClientStateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionClientStateRequest proto.InternalMessageInfo
+
+func (m *QueryConnectionClientStateRequest) GetConnectionID() string {
+	if m != nil {
+		return m.ConnectionID
+	}
+	return ""
+}
+
+// QueryConnectionClientStateResponse is the response type for the
+// Query/ConnectionClientState RPC method
+type QueryConnectionClientStateResponse struct {
+	// client state associated with the channel
+	IdentifiedClientState *types.IdentifiedClientState `protobuf:"bytes,1,opt,name=identified_client_state,json=identifiedClientState,proto3" json:"identified_client_state,omitempty"`
+	// merkle proof of existence
+	Proof []byte `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof,omitempty"`
+	// merkle proof path
+	ProofPath string `protobuf:"bytes,3,opt,name=proof_path,json=proofPath,proto3" json:"proof_path,omitempty"`
+	// height at which the proof was retrieved
+	ProofHeight uint64 `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+}
+
+func (m *QueryConnectionClientStateResponse) Reset()         { *m = QueryConnectionClientStateResponse{} }
+func (m *QueryConnectionClientStateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionClientStateResponse) ProtoMessage()    {}
+func (*QueryConnectionClientStateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ee60d8b08ce3606, []int{7}
+}
+func (m *QueryConnectionClientStateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionClientStateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionClientStateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionClientStateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionClientStateResponse.Merge(m, src)
+}
+func (m *QueryConnectionClientStateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionClientStateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionClientStateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionClientStateResponse proto.InternalMessageInfo
+
+func (m *QueryConnectionClientStateResponse) GetIdentifiedClientState() *types.IdentifiedClientState {
+	if m != nil {
+		return m.IdentifiedClientState
+	}
+	return nil
+}
+
+func (m *QueryConnectionClientStateResponse) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+func (m *QueryConnectionClientStateResponse) GetProofPath() string {
+	if m != nil {
+		return m.ProofPath
+	}
+	return ""
+}
+
+func (m *QueryConnectionClientStateResponse) GetProofHeight() uint64 {
+	if m != nil {
+		return m.ProofHeight
+	}
+	return 0
+}
+
+// QueryConnectionConsensusStateRequest is the request type for the
+// Query/ConnectionConsensusState RPC method
+type QueryConnectionConsensusStateRequest struct {
+	// connection identifier
+	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	Height       uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+}
+
+func (m *QueryConnectionConsensusStateRequest) Reset()         { *m = QueryConnectionConsensusStateRequest{} }
+func (m *QueryConnectionConsensusStateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionConsensusStateRequest) ProtoMessage()    {}
+func (*QueryConnectionConsensusStateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ee60d8b08ce3606, []int{8}
+}
+func (m *QueryConnectionConsensusStateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionConsensusStateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionConsensusStateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionConsensusStateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionConsensusStateRequest.Merge(m, src)
+}
+func (m *QueryConnectionConsensusStateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionConsensusStateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionConsensusStateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionConsensusStateRequest proto.InternalMessageInfo
+
+func (m *QueryConnectionConsensusStateRequest) GetConnectionID() string {
+	if m != nil {
+		return m.ConnectionID
+	}
+	return ""
+}
+
+func (m *QueryConnectionConsensusStateRequest) GetHeight() uint64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+// QueryConnectionConsensusStateResponse is the response type for the
+// Query/ConnectionConsensusState RPC method
+type QueryConnectionConsensusStateResponse struct {
+	// consensus state associated with the channel
+	ConsensusState *types1.Any `protobuf:"bytes,1,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty"`
+	// client ID associated with the consensus state
+	ClientID string `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	// merkle proof of existence
+	Proof []byte `protobuf:"bytes,3,opt,name=proof,proto3" json:"proof,omitempty"`
+	// merkle proof path
+	ProofPath string `protobuf:"bytes,4,opt,name=proof_path,json=proofPath,proto3" json:"proof_path,omitempty"`
+	// height at which the proof was retrieved
+	ProofHeight uint64 `protobuf:"varint,5,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+}
+
+func (m *QueryConnectionConsensusStateResponse) Reset()         { *m = QueryConnectionConsensusStateResponse{} }
+func (m *QueryConnectionConsensusStateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryConnectionConsensusStateResponse) ProtoMessage()    {}
+func (*QueryConnectionConsensusStateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ee60d8b08ce3606, []int{9}
+}
+func (m *QueryConnectionConsensusStateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConnectionConsensusStateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConnectionConsensusStateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConnectionConsensusStateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConnectionConsensusStateResponse.Merge(m, src)
+}
+func (m *QueryConnectionConsensusStateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConnectionConsensusStateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConnectionConsensusStateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConnectionConsensusStateResponse proto.InternalMessageInfo
+
+func (m *QueryConnectionConsensusStateResponse) GetConsensusState() *types1.Any {
+	if m != nil {
+		return m.ConsensusState
+	}
+	return nil
+}
+
+func (m *QueryConnectionConsensusStateResponse) GetClientID() string {
+	if m != nil {
+		return m.ClientID
+	}
+	return ""
+}
+
+func (m *QueryConnectionConsensusStateResponse) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+func (m *QueryConnectionConsensusStateResponse) GetProofPath() string {
+	if m != nil {
+		return m.ProofPath
+	}
+	return ""
+}
+
+func (m *QueryConnectionConsensusStateResponse) GetProofHeight() uint64 {
+	if m != nil {
+		return m.ProofHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryConnectionRequest)(nil), "ibc.connection.QueryConnectionRequest")
 	proto.RegisterType((*QueryConnectionResponse)(nil), "ibc.connection.QueryConnectionResponse")
@@ -387,47 +651,66 @@ func init() {
 	proto.RegisterType((*QueryConnectionsResponse)(nil), "ibc.connection.QueryConnectionsResponse")
 	proto.RegisterType((*QueryClientConnectionsRequest)(nil), "ibc.connection.QueryClientConnectionsRequest")
 	proto.RegisterType((*QueryClientConnectionsResponse)(nil), "ibc.connection.QueryClientConnectionsResponse")
+	proto.RegisterType((*QueryConnectionClientStateRequest)(nil), "ibc.connection.QueryConnectionClientStateRequest")
+	proto.RegisterType((*QueryConnectionClientStateResponse)(nil), "ibc.connection.QueryConnectionClientStateResponse")
+	proto.RegisterType((*QueryConnectionConsensusStateRequest)(nil), "ibc.connection.QueryConnectionConsensusStateRequest")
+	proto.RegisterType((*QueryConnectionConsensusStateResponse)(nil), "ibc.connection.QueryConnectionConsensusStateResponse")
 }
 
 func init() { proto.RegisterFile("ibc/connection/query.proto", fileDescriptor_5ee60d8b08ce3606) }
 
 var fileDescriptor_5ee60d8b08ce3606 = []byte{
-	// 556 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcf, 0x6e, 0xd3, 0x30,
-	0x1c, 0xae, 0xdb, 0x6d, 0x5a, 0x7f, 0x2d, 0x30, 0xac, 0x69, 0x44, 0x91, 0x9a, 0x96, 0x08, 0x6d,
-	0x1d, 0x52, 0x13, 0xd6, 0x09, 0x6e, 0x5c, 0xc6, 0x18, 0x94, 0x0b, 0x25, 0x47, 0x2e, 0x55, 0xfe,
-	0x78, 0xa9, 0x05, 0x8b, 0xb3, 0xda, 0x45, 0xec, 0x2d, 0x78, 0x07, 0x5e, 0x80, 0x67, 0x80, 0x0b,
-	0xc7, 0x1d, 0x39, 0x4d, 0xa8, 0x7d, 0x11, 0x14, 0x3b, 0x9d, 0xb3, 0xb6, 0x53, 0xb9, 0xec, 0x54,
-	0xc7, 0xbf, 0xef, 0xfb, 0xf9, 0xf3, 0xf7, 0xb9, 0x3f, 0x30, 0x69, 0x10, 0xba, 0x21, 0x4b, 0x12,
-	0x12, 0x0a, 0xca, 0x12, 0xf7, 0x7c, 0x4c, 0x46, 0x17, 0x4e, 0x3a, 0x62, 0x82, 0xe1, 0xfb, 0x34,
-	0x08, 0x1d, 0x5d, 0x33, 0xb7, 0x63, 0x16, 0x33, 0x59, 0x72, 0xb3, 0x95, 0x42, 0x99, 0x4f, 0x43,
-	0xc6, 0xcf, 0x18, 0x77, 0x03, 0x9f, 0x13, 0x45, 0x77, 0xbf, 0x1c, 0x04, 0x44, 0xf8, 0x07, 0x6e,
-	0xea, 0xc7, 0x34, 0xf1, 0x33, 0x6e, 0x8e, 0x6d, 0xce, 0x9d, 0xa6, 0x97, 0x0a, 0x60, 0xbf, 0x87,
-	0x9d, 0x0f, 0x59, 0x8b, 0x57, 0xd7, 0x05, 0x8f, 0x9c, 0x8f, 0x09, 0x17, 0xf8, 0x39, 0xdc, 0xd3,
-	0xe8, 0x01, 0x8d, 0x0c, 0xd4, 0x42, 0xed, 0xea, 0xd1, 0xd6, 0xe4, 0xaa, 0x59, 0xd7, 0xe8, 0xde,
-	0xb1, 0x57, 0xd7, 0xb0, 0x5e, 0x64, 0xff, 0x40, 0xf0, 0x68, 0xa1, 0x23, 0x4f, 0x59, 0xc2, 0x09,
-	0x7e, 0x09, 0xa0, 0xb1, 0xb2, 0x5f, 0xad, 0xdb, 0x70, 0x6e, 0x5e, 0xda, 0xd1, 0xbc, 0xd7, 0x49,
-	0xe4, 0x15, 0x08, 0x78, 0x1b, 0xd6, 0xd3, 0x11, 0x63, 0xa7, 0x46, 0xb9, 0x85, 0xda, 0x75, 0x4f,
-	0x7d, 0xe0, 0x06, 0x80, 0x5c, 0x0c, 0x52, 0x5f, 0x0c, 0x8d, 0x4a, 0x26, 0xd2, 0xab, 0xca, 0x9d,
-	0xbe, 0x2f, 0x86, 0xf8, 0x31, 0xd4, 0x55, 0x79, 0x48, 0x68, 0x3c, 0x14, 0xc6, 0x5a, 0x0b, 0xb5,
-	0xd7, 0xbc, 0x9a, 0xdc, 0x7b, 0x2b, 0xb7, 0x6c, 0x7f, 0x41, 0x31, 0x9f, 0x99, 0x70, 0x02, 0xa0,
-	0x3d, 0xcd, 0x15, 0xef, 0x3a, 0x2a, 0x00, 0x27, 0x0b, 0xc0, 0x51, 0xf9, 0xe5, 0x01, 0x38, 0x7d,
-	0x3f, 0x26, 0x39, 0xd7, 0x2b, 0x30, 0xed, 0x5f, 0x08, 0x8c, 0xc5, 0x33, 0x72, 0x5b, 0x4e, 0xa0,
-	0xa6, 0x6f, 0xc9, 0x0d, 0xd4, 0xaa, 0xb4, 0x6b, 0xdd, 0x27, 0xf3, 0xbe, 0xf4, 0x22, 0x92, 0x08,
-	0x7a, 0x4a, 0x49, 0x54, 0x70, 0xb6, 0x48, 0xc4, 0x6f, 0x6e, 0x88, 0x2d, 0x4b, 0xb1, 0x7b, 0x2b,
-	0xc5, 0x2a, 0x11, 0x45, 0xb5, 0x78, 0x07, 0x36, 0x72, 0xb7, 0x32, 0x3b, 0x2b, 0x5e, 0xfe, 0x65,
-	0xbf, 0x83, 0x86, 0xba, 0xc4, 0x67, 0x4a, 0x12, 0xb1, 0xc4, 0xae, 0x7d, 0xa8, 0x86, 0xb2, 0xa6,
-	0xdf, 0x4b, 0x7d, 0x72, 0xd5, 0xdc, 0x54, 0x84, 0xde, 0xb1, 0xb7, 0xa9, 0xca, 0xbd, 0xc8, 0xfe,
-	0x8e, 0xc0, 0xba, 0xad, 0x59, 0xee, 0xcb, 0x3e, 0x6c, 0x15, 0x5e, 0x60, 0x16, 0xaf, 0x32, 0xa7,
-	0xea, 0x3d, 0xd0, 0xfb, 0x59, 0xc8, 0xfc, 0xae, 0x9e, 0x46, 0xf7, 0x67, 0x19, 0xd6, 0xa5, 0x4a,
-	0x3c, 0x00, 0xd0, 0x1a, 0xf1, 0xee, 0x7c, 0x3a, 0xcb, 0xff, 0x44, 0xe6, 0xde, 0x4a, 0x9c, 0xba,
-	0xab, 0x5d, 0xc2, 0x01, 0xd4, 0x0a, 0x26, 0xe0, 0x55, 0xcc, 0x99, 0xe7, 0x66, 0x7b, 0x35, 0xf0,
-	0xfa, 0x0c, 0x01, 0x0f, 0x17, 0xec, 0xc6, 0x9d, 0xe5, 0x0d, 0x6e, 0xc9, 0xd8, 0x74, 0xfe, 0x17,
-	0x3e, 0x3b, 0xf5, 0xa8, 0xff, 0x7b, 0x62, 0xa1, 0xcb, 0x89, 0x85, 0xfe, 0x4e, 0x2c, 0xf4, 0x6d,
-	0x6a, 0x95, 0x2e, 0xa7, 0x56, 0xe9, 0xcf, 0xd4, 0x2a, 0x7d, 0x7c, 0x11, 0x53, 0x31, 0x1c, 0x07,
-	0x4e, 0xc8, 0xce, 0xdc, 0x7c, 0xaa, 0xa9, 0x9f, 0x0e, 0x8f, 0x3e, 0xb9, 0x5f, 0xdd, 0x6c, 0x7a,
-	0x3d, 0x3b, 0xec, 0x14, 0x06, 0x98, 0xb8, 0x48, 0x09, 0x0f, 0x36, 0xe4, 0xf0, 0x3a, 0xfc, 0x17,
-	0x00, 0x00, 0xff, 0xff, 0x77, 0xdb, 0xec, 0x23, 0x4d, 0x05, 0x00, 0x00,
+	// 787 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0xd3, 0x4a,
+	0x14, 0xce, 0x24, 0x69, 0xd5, 0x9c, 0xe4, 0xf6, 0xf6, 0x8e, 0xd2, 0x36, 0xd7, 0x52, 0x93, 0xd4,
+	0xea, 0x6d, 0xd3, 0x2b, 0xd5, 0xa6, 0x29, 0x45, 0x08, 0x89, 0x05, 0xa5, 0x14, 0x82, 0x84, 0x28,
+	0x66, 0x05, 0x12, 0x8a, 0xec, 0xd8, 0x75, 0x2c, 0x5a, 0x4f, 0xda, 0x99, 0x20, 0xb2, 0x63, 0xcb,
+	0x02, 0x89, 0x77, 0xe0, 0x05, 0x78, 0x07, 0x36, 0x2c, 0xcb, 0x0a, 0x56, 0x15, 0x4a, 0x57, 0x6c,
+	0x79, 0x02, 0x64, 0xcf, 0x24, 0xb6, 0x13, 0xa7, 0x6e, 0x17, 0x5d, 0xd9, 0x9e, 0xf3, 0x33, 0xdf,
+	0xf9, 0xce, 0x39, 0x9f, 0x0c, 0x92, 0x63, 0xb4, 0xd4, 0x16, 0x71, 0x5d, 0xab, 0xc5, 0x1c, 0xe2,
+	0xaa, 0xc7, 0x5d, 0xeb, 0xa4, 0xa7, 0x74, 0x4e, 0x08, 0x23, 0x78, 0xd6, 0x31, 0x5a, 0x4a, 0x60,
+	0x93, 0x8a, 0x36, 0xb1, 0x89, 0x6f, 0x52, 0xbd, 0x37, 0xee, 0x25, 0xfd, 0xdf, 0x22, 0xf4, 0x88,
+	0x50, 0xd5, 0xd0, 0xa9, 0xc5, 0xc3, 0xd5, 0x37, 0x9b, 0x86, 0xc5, 0xf4, 0x4d, 0xb5, 0xa3, 0xdb,
+	0x8e, 0xab, 0x7b, 0xb1, 0xc2, 0x77, 0xd1, 0xbf, 0xed, 0xd0, 0xb1, 0x5c, 0x26, 0x1e, 0xc2, 0x50,
+	0x19, 0x81, 0x11, 0xbc, 0x0a, 0x87, 0x7f, 0x6d, 0x42, 0xec, 0x43, 0x4b, 0xf5, 0xbf, 0x8c, 0xee,
+	0x81, 0xaa, 0xbb, 0x02, 0xa6, 0xfc, 0x14, 0x16, 0x9e, 0x79, 0xd7, 0xde, 0x1f, 0xc6, 0x68, 0xd6,
+	0x71, 0xd7, 0xa2, 0x0c, 0x6f, 0xc3, 0x5f, 0x41, 0xa2, 0xa6, 0x63, 0x96, 0x50, 0x15, 0xd5, 0x72,
+	0x3b, 0x73, 0xfd, 0xb3, 0x4a, 0x21, 0xf0, 0x6e, 0xec, 0x6a, 0x85, 0xc0, 0xad, 0x61, 0xca, 0x9f,
+	0x11, 0x2c, 0x8e, 0x65, 0xa4, 0x1d, 0xe2, 0x52, 0x0b, 0xdf, 0x05, 0x08, 0x7c, 0xfd, 0x7c, 0xf9,
+	0xfa, 0x92, 0x12, 0x25, 0x4a, 0x09, 0xe2, 0x1e, 0xb8, 0xa6, 0x16, 0x0a, 0xc0, 0x45, 0x98, 0xea,
+	0x9c, 0x10, 0x72, 0x50, 0x4a, 0x57, 0x51, 0xad, 0xa0, 0xf1, 0x0f, 0xbc, 0x04, 0xe0, 0xbf, 0x34,
+	0x3b, 0x3a, 0x6b, 0x97, 0x32, 0x1e, 0x48, 0x2d, 0xe7, 0x9f, 0xec, 0xeb, 0xac, 0x8d, 0x97, 0xa1,
+	0xc0, 0xcd, 0x6d, 0xcb, 0xb1, 0xdb, 0xac, 0x94, 0xad, 0xa2, 0x5a, 0x56, 0xcb, 0xfb, 0x67, 0x8f,
+	0xfc, 0x23, 0x59, 0x1f, 0x43, 0x4c, 0x07, 0x24, 0xec, 0x01, 0x04, 0x7d, 0x10, 0x88, 0x57, 0x15,
+	0xde, 0x34, 0xc5, 0x6b, 0x9a, 0xc2, 0x7b, 0x2e, 0x9a, 0xa6, 0xec, 0xeb, 0xb6, 0x25, 0x62, 0xb5,
+	0x50, 0xa4, 0xfc, 0x05, 0x41, 0x69, 0xfc, 0x0e, 0x41, 0xcb, 0x1e, 0xe4, 0x83, 0x2a, 0x69, 0x09,
+	0x55, 0x33, 0xb5, 0x7c, 0x7d, 0x65, 0x94, 0x97, 0x86, 0x69, 0xb9, 0xcc, 0x39, 0x70, 0x2c, 0x33,
+	0xc4, 0x6c, 0x38, 0x10, 0x3f, 0x8c, 0x80, 0x4d, 0xfb, 0x60, 0xd7, 0x12, 0xc1, 0x72, 0x10, 0x61,
+	0xb4, 0x78, 0x01, 0xa6, 0x05, 0x5b, 0x1e, 0x9d, 0x19, 0x4d, 0x7c, 0xc9, 0x8f, 0x61, 0x89, 0x17,
+	0xe1, 0x4f, 0x5f, 0x0c, 0x5d, 0xeb, 0x90, 0xe3, 0x93, 0x19, 0xcc, 0x4b, 0xa1, 0x7f, 0x56, 0x99,
+	0xe1, 0x01, 0x8d, 0x5d, 0x6d, 0x86, 0x9b, 0x1b, 0xa6, 0xfc, 0x09, 0x41, 0x79, 0x52, 0x32, 0xc1,
+	0xcb, 0x3a, 0xcc, 0x85, 0x26, 0xd0, 0x6b, 0x2f, 0x27, 0x27, 0xa7, 0xfd, 0x1d, 0x9c, 0x7b, 0x4d,
+	0xa6, 0xd7, 0x36, 0x1a, 0xaf, 0x60, 0x79, 0xa4, 0x6d, 0x1c, 0xee, 0x73, 0xa6, 0xb3, 0x41, 0xa3,
+	0xf1, 0x6d, 0x48, 0x0f, 0xcb, 0xad, 0x8d, 0xae, 0xc7, 0xef, 0xb3, 0x4a, 0xb1, 0xa7, 0x1f, 0x1d,
+	0xde, 0x91, 0x23, 0xdb, 0x24, 0x6b, 0x69, 0xc7, 0x94, 0xbf, 0x23, 0x90, 0x2f, 0xca, 0x2f, 0x88,
+	0x78, 0x01, 0x8b, 0xce, 0xb0, 0xfb, 0x4d, 0xc1, 0x30, 0xf5, 0x5c, 0xc4, 0x48, 0x2e, 0xf3, 0x61,
+	0xe1, 0xa2, 0x10, 0x1a, 0x94, 0x50, 0xae, 0x79, 0x27, 0xee, 0xf8, 0xda, 0x88, 0xfb, 0x80, 0x60,
+	0x65, 0xb4, 0x32, 0xaf, 0x16, 0x97, 0x76, 0x69, 0x84, 0xbc, 0x27, 0xf1, 0x32, 0x73, 0x79, 0x1e,
+	0x23, 0xf2, 0x13, 0x1a, 0xdd, 0xb4, 0x0f, 0x6a, 0x30, 0xba, 0xbf, 0x10, 0xfc, 0x97, 0x80, 0x67,
+	0x28, 0x52, 0xde, 0x74, 0x71, 0x4b, 0x84, 0xe4, 0xa2, 0xc2, 0x65, 0x54, 0x19, 0xc8, 0xa8, 0x72,
+	0xcf, 0xed, 0x69, 0xb3, 0xad, 0x48, 0x9a, 0xe8, 0x0a, 0xa4, 0x2f, 0x5a, 0x81, 0x80, 0xfb, 0xcc,
+	0x64, 0xee, 0xb3, 0x49, 0xdc, 0x4f, 0x8d, 0x71, 0x5f, 0xff, 0x96, 0x85, 0x29, 0xbf, 0x56, 0xdc,
+	0x04, 0x08, 0xea, 0xc5, 0xab, 0xa3, 0x92, 0x12, 0xaf, 0xfc, 0xd2, 0x5a, 0xa2, 0x1f, 0xa7, 0x4a,
+	0x4e, 0x61, 0x03, 0xf2, 0xa1, 0xcd, 0xc5, 0x49, 0x91, 0x03, 0xa1, 0x90, 0x6a, 0xc9, 0x8e, 0xc3,
+	0x3b, 0x18, 0xfc, 0x33, 0xa6, 0x11, 0x78, 0x23, 0x3e, 0xc1, 0x04, 0x61, 0x92, 0x94, 0xcb, 0xba,
+	0x0f, 0x6f, 0x7d, 0x87, 0x60, 0x3e, 0x76, 0x2b, 0xf1, 0x66, 0x02, 0xf6, 0x71, 0x85, 0x90, 0xea,
+	0x57, 0x09, 0x19, 0x42, 0x78, 0x8f, 0xa0, 0x34, 0x69, 0x5c, 0xf1, 0xcd, 0xa4, 0x94, 0x71, 0xdb,
+	0x26, 0x6d, 0x5f, 0x31, 0x6a, 0x80, 0x65, 0x67, 0xff, 0x6b, 0xbf, 0x8c, 0x4e, 0xfb, 0x65, 0xf4,
+	0xb3, 0x5f, 0x46, 0x1f, 0xcf, 0xcb, 0xa9, 0xd3, 0xf3, 0x72, 0xea, 0xc7, 0x79, 0x39, 0xf5, 0xf2,
+	0x96, 0xed, 0xb0, 0x76, 0xd7, 0x50, 0x5a, 0xe4, 0x48, 0x15, 0x7f, 0x33, 0xfc, 0xb1, 0x41, 0xcd,
+	0xd7, 0xea, 0x5b, 0xd5, 0xfb, 0x39, 0xb9, 0xb1, 0xb5, 0x11, 0xfa, 0x3f, 0x61, 0xbd, 0x8e, 0x45,
+	0x8d, 0x69, 0x7f, 0x8d, 0xb6, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0xcd, 0x52, 0x4d, 0x28, 0x45,
+	0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -446,8 +729,15 @@ type QueryClient interface {
 	Connection(ctx context.Context, in *QueryConnectionRequest, opts ...grpc.CallOption) (*QueryConnectionResponse, error)
 	// Connections queries all the IBC connections of a chain.
 	Connections(ctx context.Context, in *QueryConnectionsRequest, opts ...grpc.CallOption) (*QueryConnectionsResponse, error)
-	// ClientConnections queries the connection paths associated with a client state.
+	// ClientConnections queries the connection paths associated with a client
+	// state.
 	ClientConnections(ctx context.Context, in *QueryClientConnectionsRequest, opts ...grpc.CallOption) (*QueryClientConnectionsResponse, error)
+	// ConnectionClientState queries the client state associated with the
+	// connection
+	ConnectionClientState(ctx context.Context, in *QueryConnectionClientStateRequest, opts ...grpc.CallOption) (*QueryConnectionClientStateResponse, error)
+	// ConnectionConsensusState queries the consensus state associated with the
+	// connection
+	ConnectionConsensusState(ctx context.Context, in *QueryConnectionConsensusStateRequest, opts ...grpc.CallOption) (*QueryConnectionConsensusStateResponse, error)
 }
 
 type queryClient struct {
@@ -485,14 +775,39 @@ func (c *queryClient) ClientConnections(ctx context.Context, in *QueryClientConn
 	return out, nil
 }
 
+func (c *queryClient) ConnectionClientState(ctx context.Context, in *QueryConnectionClientStateRequest, opts ...grpc.CallOption) (*QueryConnectionClientStateResponse, error) {
+	out := new(QueryConnectionClientStateResponse)
+	err := c.cc.Invoke(ctx, "/ibc.connection.Query/ConnectionClientState", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ConnectionConsensusState(ctx context.Context, in *QueryConnectionConsensusStateRequest, opts ...grpc.CallOption) (*QueryConnectionConsensusStateResponse, error) {
+	out := new(QueryConnectionConsensusStateResponse)
+	err := c.cc.Invoke(ctx, "/ibc.connection.Query/ConnectionConsensusState", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Connection queries an IBC connection end.
 	Connection(context.Context, *QueryConnectionRequest) (*QueryConnectionResponse, error)
 	// Connections queries all the IBC connections of a chain.
 	Connections(context.Context, *QueryConnectionsRequest) (*QueryConnectionsResponse, error)
-	// ClientConnections queries the connection paths associated with a client state.
+	// ClientConnections queries the connection paths associated with a client
+	// state.
 	ClientConnections(context.Context, *QueryClientConnectionsRequest) (*QueryClientConnectionsResponse, error)
+	// ConnectionClientState queries the client state associated with the
+	// connection
+	ConnectionClientState(context.Context, *QueryConnectionClientStateRequest) (*QueryConnectionClientStateResponse, error)
+	// ConnectionConsensusState queries the consensus state associated with the
+	// connection
+	ConnectionConsensusState(context.Context, *QueryConnectionConsensusStateRequest) (*QueryConnectionConsensusStateResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -507,6 +822,12 @@ func (*UnimplementedQueryServer) Connections(ctx context.Context, req *QueryConn
 }
 func (*UnimplementedQueryServer) ClientConnections(ctx context.Context, req *QueryClientConnectionsRequest) (*QueryClientConnectionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientConnections not implemented")
+}
+func (*UnimplementedQueryServer) ConnectionClientState(ctx context.Context, req *QueryConnectionClientStateRequest) (*QueryConnectionClientStateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConnectionClientState not implemented")
+}
+func (*UnimplementedQueryServer) ConnectionConsensusState(ctx context.Context, req *QueryConnectionConsensusStateRequest) (*QueryConnectionConsensusStateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConnectionConsensusState not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -567,6 +888,42 @@ func _Query_ClientConnections_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ConnectionClientState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConnectionClientStateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ConnectionClientState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.connection.Query/ConnectionClientState",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ConnectionClientState(ctx, req.(*QueryConnectionClientStateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ConnectionConsensusState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConnectionConsensusStateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ConnectionConsensusState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.connection.Query/ConnectionConsensusState",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ConnectionConsensusState(ctx, req.(*QueryConnectionConsensusStateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ibc.connection.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -582,6 +939,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientConnections",
 			Handler:    _Query_ClientConnections_Handler,
+		},
+		{
+			MethodName: "ConnectionClientState",
+			Handler:    _Query_ConnectionClientState_Handler,
+		},
+		{
+			MethodName: "ConnectionConsensusState",
+			Handler:    _Query_ConnectionConsensusState_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -842,6 +1207,186 @@ func (m *QueryClientConnectionsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryConnectionClientStateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionClientStateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionClientStateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ConnectionID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryConnectionClientStateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionClientStateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionClientStateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProofHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ProofHeight))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.ProofPath) > 0 {
+		i -= len(m.ProofPath)
+		copy(dAtA[i:], m.ProofPath)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ProofPath)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.IdentifiedClientState != nil {
+		{
+			size, err := m.IdentifiedClientState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryConnectionConsensusStateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionConsensusStateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionConsensusStateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Height != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ConnectionID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryConnectionConsensusStateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConnectionConsensusStateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConnectionConsensusStateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProofHeight != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ProofHeight))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.ProofPath) > 0 {
+		i -= len(m.ProofPath)
+		copy(dAtA[i:], m.ProofPath)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ProofPath)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ClientID) > 0 {
+		i -= len(m.ClientID)
+		copy(dAtA[i:], m.ClientID)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ClientID)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ConsensusState != nil {
+		{
+			size, err := m.ConsensusState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -949,6 +1494,87 @@ func (m *QueryClientConnectionsResponse) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ProofPath)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.ProofHeight != 0 {
+		n += 1 + sovQuery(uint64(m.ProofHeight))
+	}
+	return n
+}
+
+func (m *QueryConnectionClientStateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ConnectionID)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryConnectionClientStateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.IdentifiedClientState != nil {
+		l = m.IdentifiedClientState.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ProofPath)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.ProofHeight != 0 {
+		n += 1 + sovQuery(uint64(m.ProofHeight))
+	}
+	return n
+}
+
+func (m *QueryConnectionConsensusStateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ConnectionID)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Height != 0 {
+		n += 1 + sovQuery(uint64(m.Height))
+	}
+	return n
+}
+
+func (m *QueryConnectionConsensusStateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ConsensusState != nil {
+		l = m.ConsensusState.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ClientID)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	l = len(m.Proof)
 	if l > 0 {
@@ -1673,6 +2299,575 @@ func (m *QueryClientConnectionsResponse) Unmarshal(dAtA []byte) error {
 			m.ProofPath = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			m.ProofHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProofHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionClientStateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionClientStateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionClientStateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionClientStateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionClientStateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionClientStateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IdentifiedClientState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IdentifiedClientState == nil {
+				m.IdentifiedClientState = &types.IdentifiedClientState{}
+			}
+			if err := m.IdentifiedClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProofPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			m.ProofHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProofHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionConsensusStateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionConsensusStateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionConsensusStateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConnectionConsensusStateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConnectionConsensusStateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConnectionConsensusStateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ConsensusState == nil {
+				m.ConsensusState = &types1.Any{}
+			}
+			if err := m.ConsensusState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProofPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
 			}

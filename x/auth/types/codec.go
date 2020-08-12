@@ -26,6 +26,13 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&BaseAccount{},
 		&ModuleAccount{},
 	)
+
+	registry.RegisterInterface(
+		"cosmos.auth.GenesisAccount",
+		(*GenesisAccount)(nil),
+		&BaseAccount{},
+		&ModuleAccount{},
+	)
 }
 
 // RegisterKeyTypeCodec registers an external concrete type defined in
@@ -37,7 +44,7 @@ func RegisterKeyTypeCodec(o interface{}, name string) {
 var (
 	amino = codec.New()
 
-	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

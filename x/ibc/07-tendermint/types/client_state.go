@@ -133,7 +133,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	merkleProof, _, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	sequence uint64,
 	commitmentBytes []byte,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	sequence uint64,
 	acknowledgement []byte,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -315,7 +315,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	channelID string,
 	sequence uint64,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	merkleProof, consensusState, err := sanitizeVerificationArgs(store, cdc, cs, height, prefix, proof)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -363,10 +363,10 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
-// sanitizeVerificationArgs perfoms the basic checks on the arguments that are
+// produceVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions and returns the unmarshalled
 // merkle proof, the consensus state and an error if one occurred.
-func sanitizeVerificationArgs(
+func produceVerificationArgs(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	cs ClientState,

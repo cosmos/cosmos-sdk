@@ -59,12 +59,12 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 		sdk.NewCoin(denom, s.network.Config.AccountTokens),
 		*bankRes.GetBalance(),
 	)
-	fmt.Println("TEST header=", header)
 	blockHeight := header.Get(baseapp.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
-	val0.ClientCtx = val0.ClientCtx.WithHeight(1)
+	val0.ClientCtx = val0.ClientCtx.WithHeight(1) // We set clientCtx to height 1
+	bankClient = banktypes.NewQueryClient(val0.ClientCtx)
 	bankRes, err = bankClient.Balance(
 		context.Background(),
 		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},

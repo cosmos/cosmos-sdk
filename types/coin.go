@@ -91,7 +91,7 @@ func (coin Coin) IsEqual(other Coin) bool {
 	return coin.Amount.Equal(other.Amount)
 }
 
-// Adds amounts of two coins with same denom. If the coins differ in denom then
+// Add adds amounts of two coins with same denom. If the coins differ in denom then
 // it panics.
 func (coin Coin) Add(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
@@ -101,7 +101,7 @@ func (coin Coin) Add(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
-// Subtracts amounts of two coins with same denom. If the coins differ in denom
+// Sub subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Sub(coinB Coin) Coin {
 	if coin.Denom != coinB.Denom {
@@ -200,8 +200,15 @@ func (coins Coins) IsValid() bool {
 		}
 
 		lowDenom := coins[0].Denom
+		seenDenoms := make(map[string]bool)
+		seenDenoms[strings.ToUpper(lowDenom)] = true
+
 		for _, coin := range coins[1:] {
-			if strings.ToLower(coin.Denom) != coin.Denom {
+			denomUpper := strings.ToUpper(coin.Denom)
+			if seenDenoms[denomUpper] {
+				return false
+			}
+			if err := ValidateDenom(coins[0].Denom); err != nil {
 				return false
 			}
 			if coin.Denom <= lowDenom {
@@ -213,6 +220,7 @@ func (coins Coins) IsValid() bool {
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
+			seenDenoms[denomUpper] = true
 		}
 
 		return true
@@ -463,7 +471,7 @@ func (coins Coins) Empty() bool {
 	return len(coins) == 0
 }
 
-// Returns the amount of a denom from coins
+// AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
 	mustValidateDenom(denom)
 
@@ -668,19 +676,20 @@ type findDupDescriptor interface {
 	Len() int
 }
 
-// findDup works on the assumption that coins is sorted
+// findDup iterates over all the coins and returns the index on the first occurrence of a duplicated
+// denomination. If no duplicated coin is found it returns -1.
 func findDup(coins findDupDescriptor) int {
 	if coins.Len() <= 1 {
 		return -1
 	}
 
-	prevDenom := strings.ToUpper(coins.GetDenomByIndex(0))
-	for i := 1; i < coins.Len(); i++ {
-		coinLower := strings.ToUpper(coins.GetDenomByIndex(i))
-		if coinLower == prevDenom {
+	seenDenoms := make(map[string]bool)
+	for i := 0; i < coins.Len(); i++ {
+		coinUpper := strings.ToUpper(coins.GetDenomByIndex(i))
+		if seenDenoms[coinUpper] {
 			return i
 		}
-		prevDenom = coinLower
+		seenDenoms[coinUpper] = true
 	}
 
 	return -1

@@ -518,8 +518,15 @@ func (coins DecCoins) IsValid() bool {
 		}
 
 		lowDenom := coins[0].Denom
+		seenDenoms := make(map[string]bool)
+		seenDenoms[strings.ToUpper(lowDenom)] = true
+
 		for _, coin := range coins[1:] {
-			if strings.ToLower(coin.Denom) != coin.Denom {
+			denomUpper := strings.ToUpper(coin.Denom)
+			if seenDenoms[denomUpper] {
+				return false
+			}
+			if err := ValidateDenom(coins[0].Denom); err != nil {
 				return false
 			}
 			if coin.Denom <= lowDenom {

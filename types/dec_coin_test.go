@@ -546,7 +546,7 @@ func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
 			"valid coins should have passed",
 		},
 		{
-			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)}),
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "0BTC", Amount: NewDec(10)}),
 			false,
 			"invalid denoms",
 		},

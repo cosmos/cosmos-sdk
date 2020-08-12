@@ -57,6 +57,14 @@ func TestIsEqualCoin(t *testing.T) {
 }
 
 func TestCoinIsValid(t *testing.T) {
+	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
+	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
+	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
+
+	loremIpsum = strings.ReplaceAll(loremIpsum, " ", "")
+	loremIpsum = strings.ReplaceAll(loremIpsum, ".", "")
+	loremIpsum = strings.ReplaceAll(loremIpsum, ",", "")
+
 	cases := []struct {
 		coin       Coin
 		expectPass bool
@@ -67,8 +75,8 @@ func TestCoinIsValid(t *testing.T) {
 		{Coin{"Atom", NewInt(1)}, true},
 		{Coin{"ATOM", NewInt(1)}, true},
 		{Coin{"a", NewInt(1)}, false},
-		{Coin{"a very long coin denom", NewInt(1)}, false},
-		{Coin{"atOm", NewInt(1)}, false},
+		{Coin{loremIpsum, NewInt(1)}, false},
+		{Coin{"atOm", NewInt(1)}, true},
 		{Coin{"     ", NewInt(1)}, false},
 	}
 
@@ -392,6 +400,11 @@ func TestCoins(t *testing.T) {
 		{"mineral", NewInt(1)},
 		{"tree", NewInt(1)},
 	}
+	goodCaps := Coins{
+		{"GAS", NewInt(1)},
+		{"MINERAL", NewInt(1)},
+		{"TREE", NewInt(1)},
+	}
 	mixedCase1 := Coins{
 		{"gAs", NewInt(1)},
 		{"MineraL", NewInt(1)},
@@ -438,12 +451,21 @@ func TestCoins(t *testing.T) {
 		{"GAS", NewInt(1)},
 		{"gAs", NewInt(1)},
 	}
+	dup3 := Coins{
+		{"GAS", NewInt(1)},
+		{"gas", NewInt(1)},
+		{"MINERAL", NewInt(1)},
+		{"mineral", NewInt(1)},
+		{"tree", NewInt(1)},
+		{"TREE", NewInt(1)},
+	}
 	neg := Coins{
 		{"gas", NewInt(-1)},
 		{"mineral", NewInt(1)},
 	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
+	assert.True(t, goodCaps.IsValid(), "Coins all caps are valid")
 	assert.True(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
 	assert.True(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
 	assert.True(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
@@ -459,6 +481,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, dup1.IsValid(), "Duplicate coin")
 	assert.False(t, dup2.IsValid(), "Duplicate coin with uppercase")
+	assert.False(t, dup3.Sort().IsValid(), "Duplicate coins with uppercase")
 	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 

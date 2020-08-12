@@ -10,7 +10,6 @@ import (
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -33,12 +32,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 		case connectiontypes.SubModuleName:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connectiontypes.SubModuleName)
 		case channeltypes.SubModuleName:
-			switch path[1] {
-			case channeltypes.QueryChannelClientState:
-				res, err = channelkeeper.QuerierChannelClientState(ctx, req, k.ChannelKeeper, legacyQuerierCdc)
-			default:
-				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channeltypes.SubModuleName)
-			}
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channeltypes.SubModuleName)
 		default:
 			err = sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")
 		}

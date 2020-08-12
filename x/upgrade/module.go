@@ -42,7 +42,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the upgrade types on the amino codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 

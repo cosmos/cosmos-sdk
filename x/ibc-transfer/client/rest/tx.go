@@ -37,7 +37,7 @@ func transferHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[restChannelID]
 
 		var req TransferTxReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

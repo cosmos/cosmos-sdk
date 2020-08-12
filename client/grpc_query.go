@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
@@ -12,7 +13,6 @@ import (
 	"google.golang.org/grpc/encoding/proto"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -46,7 +46,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md := metadata.Pairs(baseapp.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {

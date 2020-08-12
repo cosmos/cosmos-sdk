@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 		sdk.NewCoin(denom, s.network.Config.AccountTokens),
 		*bankRes.GetBalance(),
 	)
-	blockHeight := header.Get(baseapp.GRPCBlockHeightHeader)
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
 		grpc.Header(&header),
 	)
-	blockHeight = header.Get(baseapp.GRPCBlockHeightHeader)
+	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
 }
 

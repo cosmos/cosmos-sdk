@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // AccountRetriever defines the properties of a type that can be used to
@@ -36,9 +36,9 @@ func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr s
 		return nil, 0, err
 	}
 
-	blockHeight := header.Get(servergrpc.GRPCBlockHeightHeader)
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 	if l := len(blockHeight); l != 1 {
-		return nil, 0, fmt.Errorf("unexpected '%s' header length; got %d, expected: %d", servergrpc.GRPCBlockHeightHeader, l, 1)
+		return nil, 0, fmt.Errorf("unexpected '%s' header length; got %d, expected: %d", grpctypes.GRPCBlockHeightHeader, l, 1)
 	}
 
 	nBlockHeight, err := strconv.Atoi(blockHeight[0])

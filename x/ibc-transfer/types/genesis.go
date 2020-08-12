@@ -5,16 +5,16 @@ import (
 )
 
 // NewGenesisState creates a new ibc-transfer GenesisState instance.
-func NewGenesisState(portID string, denomTraces Traces) GenesisState {
-	return GenesisState{
+func NewGenesisState(portID string, denomTraces Traces) *GenesisState {
+	return &GenesisState{
 		PortID:      portID,
 		DenomTraces: denomTraces,
 	}
 }
 
 // DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		PortID:      PortID,
 		DenomTraces: Traces{},
 	}

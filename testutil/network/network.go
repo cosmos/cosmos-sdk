@@ -26,7 +26,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -74,7 +73,6 @@ type Config struct {
 	NumValidators    int                        // the total number of validators to create and bond
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	Passphrase       string                     // the passphrase provided to the test keyring
 	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
 	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
 	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
@@ -82,6 +80,7 @@ type Config struct {
 	EnableLogging    bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
 	SigningAlgo      string                     // signing algorithm for keys
+	KeyringOptions   []keyring.Option
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -101,13 +100,13 @@ func DefaultConfig() Config {
 		NumValidators:    4,
 		BondDenom:        sdk.DefaultBondDenom,
 		MinGasPrices:     fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		Passphrase:       clientkeys.DefaultKeyPass,
 		AccountTokens:    sdk.TokensFromConsensusPower(1000),
 		StakingTokens:    sdk.TokensFromConsensusPower(500),
 		BondedTokens:     sdk.TokensFromConsensusPower(100),
 		PruningStrategy:  storetypes.PruningOptionNothing,
 		CleanupDir:       true,
 		SigningAlgo:      string(hd.Secp256k1Type),
+		KeyringOptions:   []keyring.Option{},
 	}
 }
 
@@ -256,7 +255,7 @@ func New(t *testing.T, cfg Config) *Network {
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, cfg.KeyringOptions...)
 		require.NoError(t, err)
 
 		keyringAlgos, _ := kb.SupportedAlgorithms()

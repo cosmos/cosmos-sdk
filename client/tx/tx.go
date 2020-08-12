@@ -374,8 +374,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 
 	pubKey := key.GetPubKey()
 	signerData := authsigning.SignerData{
-		ChainID:       txf.chainID,
-		AccountNumber: txf.accountNumber,
+		ChainID:         txf.chainID,
+		AccountNumber:   txf.accountNumber,
+		AccountSequence: txf.sequence,
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on

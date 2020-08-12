@@ -29,6 +29,7 @@ import (
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -80,6 +81,7 @@ type Config struct {
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableLogging    bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
+	SigningAlgo      string                     // signing algorithm for keys
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -105,6 +107,7 @@ func DefaultConfig() Config {
 		BondedTokens:     sdk.TokensFromConsensusPower(100),
 		PruningStrategy:  storetypes.PruningOptionNothing,
 		CleanupDir:       true,
+		SigningAlgo:      string(hd.Secp256k1Type),
 	}
 }
 
@@ -256,7 +259,11 @@ func New(t *testing.T, cfg Config) *Network {
 		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf)
 		require.NoError(t, err)
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, cfg.Passphrase, true)
+		keyringAlgos, _ := kb.SupportedAlgorithms()
+		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
+		require.NoError(t, err)
+
+		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		require.NoError(t, err)
 
 		info := map[string]string{"secret": secret}

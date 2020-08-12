@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -22,15 +22,10 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-
-	homeDir, err := ioutil.TempDir(os.TempDir(), "x_upgrade_keeper_test")
-	s.Require().NoError(err)
-
-	// recreate keeper in order to use a custom home path
-	app.UpgradeKeeper = keeper.NewKeeper(
+	homeDir := filepath.Join(os.TempDir(), "x_upgrade_keeper_test")
+	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
 		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir,
 	)
-
 	s.homeDir = homeDir
 	s.app = app
 }

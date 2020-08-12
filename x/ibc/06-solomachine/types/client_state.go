@@ -24,19 +24,19 @@ type ClientState struct {
 
 	ChainID string `json:"chain_id" yaml:"chain_id"`
 
-	// Frozen status of the client
-	Frozen bool `json:"frozen" yaml:"frozen"`
+	// FrozenHeight of the client
+	FrozenHeight uint64 `json:"frozen" yaml:"frozen"`
 
 	// Current consensus state of the client
 	ConsensusState ConsensusState `json:"consensus_state" yaml:"consensus_state"`
 }
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(id, chainID string, consensusState ConsensusState) ClientState {
+func NewClientState(id, chainID string, frozenHeight uint64, consensusState ConsensusState) ClientState {
 	return ClientState{
 		ID:             id,
 		ChainID:        chainID,
-		Frozen:         false,
+		FrozenHeight:   0,
 		ConsensusState: consensusState,
 	}
 }
@@ -63,7 +63,12 @@ func (cs ClientState) GetLatestHeight() uint64 {
 
 // IsFrozen returns true if the client is frozen
 func (cs ClientState) IsFrozen() bool {
-	return cs.Frozen
+	return cs.FrozenHeight != 0
+}
+
+// GetFrozenHeight returns the frozen height of the client
+func (cs ClientState) GetFrozenHeight() uint64 {
+	return cs.FrozenHeight
 }
 
 // GetProofSpecs returns nil proof specs since client state verification uses signatures.
@@ -83,15 +88,14 @@ func (cs ClientState) Validate() error {
 // Solo Machine client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
-	aminoCdc *codec.Codec,
+	cdc codec.BinaryMarshaler,
 	root commitmentexported.Root,
 	sequence uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
-	_ clientexported.ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -104,7 +108,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data, err := ConsensusStateSignBytes(aminoCdc, sequence, signature.Timestamp, path, cs.ConsensusState)
+	data, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -115,7 +119,7 @@ func (cs ClientState) VerifyClientConsensusState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -123,13 +127,12 @@ func (cs ClientState) VerifyClientConsensusState(
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -152,7 +155,7 @@ func (cs ClientState) VerifyConnectionState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -160,14 +163,13 @@ func (cs ClientState) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -190,7 +192,7 @@ func (cs ClientState) VerifyChannelState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -198,7 +200,7 @@ func (cs ClientState) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -206,7 +208,6 @@ func (cs ClientState) VerifyPacketCommitment(
 	channelID string,
 	packetSequence uint64,
 	commitmentBytes []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -226,7 +227,7 @@ func (cs ClientState) VerifyPacketCommitment(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -234,7 +235,7 @@ func (cs ClientState) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -242,7 +243,6 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	channelID string,
 	packetSequence uint64,
 	acknowledgement []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -262,7 +262,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -271,14 +271,13 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	packetSequence uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -298,7 +297,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -306,14 +305,13 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
@@ -333,7 +331,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cs)
+	setClientState(store, cdc, cs)
 	return nil
 }
 
@@ -341,7 +339,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 // shared between the verification functions and returns the unmarshalled
 // proof representing the signature and timestamp.
 func sanitizeVerificationArgs(
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
@@ -393,7 +391,10 @@ func sanitizeVerificationArgs(
 }
 
 // sets the client state to the store
-func setClientState(store sdk.KVStore, clientState clientexported.ClientState) {
-	bz := amino.MustMarshalBinaryBare(clientState)
+func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState clientexported.ClientState) {
+	bz, err := codec.MarshalAny(cdc, clientState)
+	if err != nil {
+		panic(err)
+	}
 	store.Set(host.KeyClientState(), bz)
 }

@@ -49,12 +49,12 @@ func HeaderSignBytes(header Header) []byte {
 //
 // Format: {sequence}{timestamp}{path}{consensus-state}
 func ConsensusStateSignBytes(
-	cdc *codec.Codec,
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	consensusState ConsensusState,
 ) ([]byte, error) {
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := codec.MarshalAny(cdc, consensusState)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func ConsensusStateSignBytes(
 //
 // Format: {sequence}{timestamp}{path}{connection-end}
 func ConnectionStateSignBytes(
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	connectionEnd connectionexported.ConnectionI,
@@ -98,7 +98,7 @@ func ConnectionStateSignBytes(
 //
 // Format: {sequence}{timestamp}{path}{channel-end}
 func ChannelStateSignBytes(
-	cdc codec.Marshaler,
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	channelEnd channelexported.ChannelI,

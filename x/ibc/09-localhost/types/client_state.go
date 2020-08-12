@@ -91,7 +91,6 @@ func (cs ClientState) VerifyConnectionState(
 	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
@@ -130,7 +129,6 @@ func (cs ClientState) VerifyChannelState(
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
@@ -170,7 +168,6 @@ func (cs ClientState) VerifyPacketCommitment(
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
@@ -204,7 +201,6 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -238,7 +234,6 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	portID,
 	channelID string,
 	sequence uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -264,7 +259,6 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {

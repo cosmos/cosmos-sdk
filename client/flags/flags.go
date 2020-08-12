@@ -63,6 +63,7 @@ const (
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
+	FlagKeyAlgorithm     = "algo"
 )
 
 // LineBreak can be included in a command list to provide a blank line

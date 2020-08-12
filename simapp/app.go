@@ -504,6 +504,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server) {
 	clientCtx := apiSvr.ClientCtx
+	// amino is needed here for backwards compatibility of REST routes
 	clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)

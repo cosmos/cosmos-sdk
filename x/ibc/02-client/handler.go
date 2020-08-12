@@ -25,6 +25,12 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 		// Localhost consensus height is chain's blockheight
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
+		consState := msg.GetConsensusState()
+		if consState == nil {
+			return nil, sdkerrors.Wrap(
+				types.ErrInvalidConsensus, "non localhost MsgCreateClient must produce valid consensus state, got nil",
+			)
+		}
 		consensusHeight = msg.GetConsensusState().GetHeight()
 	}
 

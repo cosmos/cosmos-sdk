@@ -7,14 +7,14 @@ import (
 func (suite *SoloMachineTestSuite) TestMsgCreateClientValidateBasic() {
 	cases := []struct {
 		name    string
-		msg     solomachinetypes.MsgCreateClient
+		msg     *solomachinetypes.MsgCreateClient
 		expPass bool
 	}{
 		{"valid msg", solomachinetypes.NewMsgCreateClient(suite.clientID, suite.ConsensusState()), true},
 		{"invalid client id", solomachinetypes.NewMsgCreateClient("(BADCLIENTID)", suite.ConsensusState()), false},
-		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{0, suite.pubKey, timestamp}), false},
-		{"invalid consensus state with zero timestamp", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{1, suite.pubKey, 0}), false},
-		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, solomachinetypes.ConsensusState{suite.sequence, nil, timestamp}), false},
+		{"invalid consensus state with zero sequence", solomachinetypes.NewMsgCreateClient(suite.clientID, &solomachinetypes.ConsensusState{0, suite.pubKey, timestamp}), false},
+		{"invalid consensus state with zero timestamp", solomachinetypes.NewMsgCreateClient(suite.clientID, &solomachinetypes.ConsensusState{1, suite.pubKey, 0}), false},
+		{"invalid consensus state with nil pubkey", solomachinetypes.NewMsgCreateClient(suite.clientID, &solomachinetypes.ConsensusState{suite.sequence, nil, timestamp}), false},
 	}
 
 	for i, tc := range cases {
@@ -32,7 +32,7 @@ func (suite *SoloMachineTestSuite) TestMsgUpdateClientValidateBasic() {
 
 	cases := []struct {
 		name    string
-		msg     solomachinetypes.MsgUpdateClient
+		msg     *solomachinetypes.MsgUpdateClient
 		expPass bool
 	}{
 		{"valid msg", solomachinetypes.NewMsgUpdateClient(suite.clientID, header), true},

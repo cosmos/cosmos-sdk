@@ -17,7 +17,7 @@ func (suite *SoloMachineTestSuite) TestConsensusState() {
 func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 	testCases := []struct {
 		name           string
-		consensusState solomachinetypes.ConsensusState
+		consensusState *solomachinetypes.ConsensusState
 		expPass        bool
 	}{
 		{
@@ -27,7 +27,7 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.ConsensusState{
+			&solomachinetypes.ConsensusState{
 				Sequence: 0,
 				PubKey:   suite.pubKey,
 			},
@@ -35,7 +35,7 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 		},
 		{
 			"pubkey is nil",
-			solomachinetypes.ConsensusState{
+			&solomachinetypes.ConsensusState{
 				Sequence: suite.sequence,
 				PubKey:   nil,
 			},

@@ -15,8 +15,8 @@ var (
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(id string, consensusState ConsensusState) MsgCreateClient {
-	return MsgCreateClient{
+func NewMsgCreateClient(id string, consensusState *ConsensusState) *MsgCreateClient {
+	return &MsgCreateClient{
 		ClientID:       id,
 		ConsensusState: consensusState,
 	}
@@ -67,8 +67,8 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header) MsgUpdateClient {
-	return MsgUpdateClient{
+func NewMsgUpdateClient(id string, header Header) *MsgUpdateClient {
+	return &MsgUpdateClient{
 		ClientID: id,
 		Header:   header,
 	}
@@ -114,8 +114,8 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
-	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(e Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.

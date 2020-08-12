@@ -1,10 +1,11 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	types "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -27,7 +28,7 @@ var (
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
@@ -37,22 +38,22 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"invalid client id",
-			solomachinetypes.NewClientState("(testClientID)", "", suite.ConsensusState()),
+			types.NewClientState("(testClientID)", "", suite.ConsensusState()),
 			false,
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{0, suite.pubKey, timestamp}),
+			types.NewClientState(suite.clientID, "", &types.ConsensusState{0, suite.pubKey, timestamp}),
 			false,
 		},
 		{
 			"timstamp is zero",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{1, suite.pubKey, 0}),
+			types.NewClientState(suite.clientID, "", &types.ConsensusState{1, suite.pubKey, 0}),
 			false,
 		},
 		{
 			"pubkey is empty",
-			solomachinetypes.NewClientState(suite.clientID, "", solomachinetypes.ConsensusState{suite.sequence, nil, timestamp}),
+			types.NewClientState(suite.clientID, "", &types.ConsensusState{suite.sequence, nil, timestamp}),
 			false,
 		},
 	}
@@ -76,7 +77,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	suite.Require().NoError(err)
 
 	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	bz, err := suite.aminoCdc.MarshalBinaryBare(suite.ClientState().ConsensusState)
+	bz, err := codec.MarshalAny(suite.cdc, suite.ClientState().ConsensusState)
 	suite.Require().NoError(err)
 	value = append(value, bz...)
 
@@ -85,7 +86,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -106,7 +107,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -131,7 +132,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.cdc, suite.aminoCdc, nil, suite.sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, nil, suite.sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
 		)
 
 		if tc.expPass {
@@ -145,8 +146,8 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
-	counterparty := connection.NewCounterparty("clientB", testConnectionID, prefix)
-	conn := connection.NewConnectionEnd(connection.OPEN, testConnectionID, "clientA", counterparty, []string{"1.0.0"})
+	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
+	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
 	suite.Require().NoError(err)
@@ -161,7 +162,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -182,7 +183,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -207,7 +208,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testConnectionID, conn, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
@@ -222,8 +223,8 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
-	counterparty := channel.NewCounterparty(testPortID, testChannelID)
-	ch := channel.NewChannel(channel.OPEN, channel.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
@@ -238,7 +239,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -259,7 +260,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -284,7 +285,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
@@ -303,15 +304,22 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.sequence))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	value = append(value, commitmentBytes...)
+	value := types.PacketCommitmentSignBytes(suite.sequence, suite.timestamp, path, commitmentBytes)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -332,7 +340,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -356,14 +364,14 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, commitmentBytes, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, commitmentBytes,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -384,7 +392,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -405,7 +413,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -430,7 +438,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, ack, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, ack,
 		)
 
 		if tc.expPass {
@@ -455,7 +463,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -476,7 +484,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -501,7 +509,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence,
 		)
 
 		if tc.expPass {
@@ -528,7 +536,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 
 	testCases := []struct {
 		name        string
-		clientState solomachinetypes.ClientState
+		clientState *types.ClientState
 		prefix      commitmentexported.Prefix
 		proof       []byte
 		expPass     bool
@@ -549,7 +557,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			solomachinetypes.ClientState{suite.clientID, "", true, suite.ConsensusState()},
+			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -574,7 +582,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv, tc.clientState.ConsensusState,
+			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {

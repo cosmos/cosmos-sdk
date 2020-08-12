@@ -26,6 +26,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	clienttypes.RegisterInterfaces(registry)
 	connectiontypes.RegisterInterfaces(registry)
 	channeltypes.RegisterInterfaces(registry)
+	solomachinetypes.RegisterInterfaces(registry)
 	ibctmtypes.RegisterInterfaces(registry)
 	localhosttypes.RegisterInterfaces(registry)
 	commitmenttypes.RegisterInterfaces(registry)

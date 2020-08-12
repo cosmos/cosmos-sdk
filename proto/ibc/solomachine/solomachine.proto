@@ -5,7 +5,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/crypto/v1beta1/crypto.proto";
-import "google/protobuf/any.proto";
 
 // ClientState defines a solo machine client that tracks the current consensus
 // state and if the client is frozen.
@@ -17,8 +16,8 @@ message ClientState {
   // chainID for the connected solo machine
   string chain_id = 2 [(gogoproto.customname) = "ChainID"];
   // frozen height of the solo machine
-  uint64              frozen_height = 3;
-  google.protobuf.Any consensus_state = 4;
+  uint64         frozen_height = 3;
+  ConsensusState consensus_state = 4;
 }
 
 // ConsensusState defines a solo machine consensus state
@@ -81,7 +80,7 @@ message MsgCreateClient {
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   ConsensusState consensus_state = 2
-      [(gogoproto.customname) = "ConsensusState", (gogoproto.nullable) = false];
+      [(gogoproto.customname) = "ConsensusState"];
 }
 
 // MsgUpdateClient defines a message to update an IBC client

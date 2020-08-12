@@ -15,25 +15,11 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState of a Solo Machine represents whether or not the client is frozen.
-type ClientState struct {
-	// Client ID
-	ID string `json:"id" yaml:"id"`
-
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-
-	// FrozenHeight of the client
-	FrozenHeight uint64 `json:"frozen" yaml:"frozen"`
-
-	// Current consensus state of the client
-	ConsensusState ConsensusState `json:"consensus_state" yaml:"consensus_state"`
-}
+var _ clientexported.ClientState = &ClientState{}
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(id, chainID string, frozenHeight uint64, consensusState ConsensusState) ClientState {
-	return ClientState{
+func NewClientState(id, chainID string, consensusState *ConsensusState) *ClientState {
+	return &ClientState{
 		ID:             id,
 		ChainID:        chainID,
 		FrozenHeight:   0,
@@ -86,7 +72,7 @@ func (cs ClientState) Validate() error {
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Solo Machine client stored on the target machine.
-func (cs ClientState) VerifyClientConsensusState(
+func (cs *ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	root commitmentexported.Root,
@@ -125,7 +111,7 @@ func (cs ClientState) VerifyClientConsensusState(
 
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
-func (cs ClientState) VerifyConnectionState(
+func (cs *ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -161,7 +147,7 @@ func (cs ClientState) VerifyConnectionState(
 
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
-func (cs ClientState) VerifyChannelState(
+func (cs *ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -198,7 +184,7 @@ func (cs ClientState) VerifyChannelState(
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
-func (cs ClientState) VerifyPacketCommitment(
+func (cs *ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -233,7 +219,7 @@ func (cs ClientState) VerifyPacketCommitment(
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
-func (cs ClientState) VerifyPacketAcknowledgement(
+func (cs *ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -269,7 +255,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
-func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+func (cs *ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -303,7 +289,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
-func (cs ClientState) VerifyNextSequenceRecv(
+func (cs *ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -340,7 +326,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 // proof representing the signature and timestamp.
 func sanitizeVerificationArgs(
 	cdc codec.BinaryMarshaler,
-	cs ClientState,
+	cs *ClientState,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
@@ -378,7 +364,7 @@ func sanitizeVerificationArgs(
 		return Signature{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	_, ok = consensusState.(ConsensusState)
+	_, ok = consensusState.(*ConsensusState)
 	if !ok {
 		return Signature{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
 	}

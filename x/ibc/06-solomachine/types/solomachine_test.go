@@ -24,7 +24,6 @@ type SoloMachineTestSuite struct {
 	suite.Suite
 
 	ctx       sdk.Context
-	aminoCdc  *codec.Codec
 	cdc       codec.Marshaler
 	store     sdk.KVStore
 	privKey   crypto.PrivKey
@@ -38,7 +37,6 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.Codec()
 	suite.cdc = app.AppCodec()
 	suite.privKey = ed25519.GenPrivKey()
 	pubKey, err := std.DefaultPublicKeyCodec{}.Encode(suite.privKey.PubKey())
@@ -51,7 +49,8 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1, Time: time.Now()})
 	suite.store = app.IBCKeeper.ClientKeeper.ClientStore(suite.ctx, clientexported.ClientTypeSoloMachine)
 
-	bz := suite.aminoCdc.MustMarshalBinaryBare(suite.ClientState())
+	bz, err := codec.MarshalAny(suite.cdc, suite.ClientState())
+	suite.Require().NoError(err)
 	suite.store.Set(host.KeyClientState(), bz)
 }
 
@@ -83,12 +82,12 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 	return header
 }
 
-func (suite *SoloMachineTestSuite) ClientState() solomachinetypes.ClientState {
+func (suite *SoloMachineTestSuite) ClientState() *solomachinetypes.ClientState {
 	return solomachinetypes.NewClientState(suite.clientID, "", suite.ConsensusState())
 }
 
-func (suite *SoloMachineTestSuite) ConsensusState() solomachinetypes.ConsensusState {
-	return solomachinetypes.ConsensusState{
+func (suite *SoloMachineTestSuite) ConsensusState() *solomachinetypes.ConsensusState {
+	return &solomachinetypes.ConsensusState{
 		Sequence:  suite.sequence,
 		PubKey:    suite.pubKey,
 		Timestamp: suite.timestamp,
@@ -127,7 +126,8 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	bz := suite.store.Get(host.KeyClientState())
 	suite.Require().NotNil(bz)
 
-	var clientState solomachinetypes.ClientState
-	suite.aminoCdc.MustUnmarshalBinaryBare(bz, &clientState)
-	return clientState.ConsensusState.Sequence
+	var clientState clientexported.ClientState
+	err := codec.UnmarshalAny(suite.cdc, &clientState, bz)
+	suite.Require().NoError(err)
+	return clientState.GetLatestHeight()
 }

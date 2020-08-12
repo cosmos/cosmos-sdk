@@ -22,8 +22,8 @@ var (
 func TestCoin(t *testing.T) {
 	require.Panics(t, func() { NewInt64Coin(testDenom1, -1) })
 	require.Panics(t, func() { NewCoin(testDenom1, NewInt(-1)) })
-	require.Panics(t, func() { NewInt64Coin(strings.ToUpper(testDenom1), 10) })
-	require.Panics(t, func() { NewCoin(strings.ToUpper(testDenom1), NewInt(10)) })
+	require.Equal(t, NewInt(10), NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
+	require.Equal(t, NewInt(10), NewCoin(strings.ToUpper(testDenom1), NewInt(10)).Amount)
 	require.Equal(t, NewInt(5), NewInt64Coin(testDenom1, 5).Amount)
 	require.Equal(t, NewInt(5), NewCoin(testDenom1, NewInt(5)).Amount)
 }
@@ -64,7 +64,8 @@ func TestCoinIsValid(t *testing.T) {
 		{Coin{testDenom1, NewInt(-1)}, false},
 		{Coin{testDenom1, NewInt(0)}, true},
 		{Coin{testDenom1, NewInt(1)}, true},
-		{Coin{"Atom", NewInt(1)}, false},
+		{Coin{"Atom", NewInt(1)}, true},
+		{Coin{"ATOM", NewInt(1)}, true},
 		{Coin{"a", NewInt(1)}, false},
 		{Coin{"a very long coin denom", NewInt(1)}, false},
 		{Coin{"atOm", NewInt(1)}, false},
@@ -403,6 +404,13 @@ func TestCoins(t *testing.T) {
 	mixedCase3 := Coins{
 		{"gAs", NewInt(1)},
 	}
+	multipleIBCDenoms := Coins{
+		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(1)},
+		{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", NewInt(2)},
+	}
+	allCaps := Coins{
+		{"ATOM", NewInt(1)},
+	}
 	empty := NewCoins()
 	badSort1 := Coins{
 		{"tree", NewInt(1)},
@@ -421,10 +429,14 @@ func TestCoins(t *testing.T) {
 		{"tree", NewInt(0)},
 		{"mineral", NewInt(1)},
 	}
-	dup := Coins{
+	dup1 := Coins{
 		{"gas", NewInt(1)},
 		{"gas", NewInt(1)},
 		{"mineral", NewInt(1)},
+	}
+	dup2 := Coins{
+		{"GAS", NewInt(1)},
+		{"gAs", NewInt(1)},
 	}
 	neg := Coins{
 		{"gas", NewInt(-1)},
@@ -432,9 +444,11 @@ func TestCoins(t *testing.T) {
 	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
-	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
-	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
+	assert.True(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
+	assert.True(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
+	assert.True(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
+	assert.True(t, allCaps.IsValid(), "Coins denom contains all uppercase characters")
+	assert.True(t, multipleIBCDenoms.IsValid(), "IBC denominations as per ADR001 should be valid")
 	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, empty.IsAllPositive(), "Expected coins to not be positive: %v", empty)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
@@ -443,7 +457,8 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
-	assert.False(t, dup.IsValid(), "Duplicate coin")
+	assert.False(t, dup1.IsValid(), "Duplicate coin")
+	assert.False(t, dup2.IsValid(), "Duplicate coin with uppercase")
 	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 
@@ -514,7 +529,7 @@ func TestParse(t *testing.T) {
 	for tcIndex, tc := range cases {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
-			require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
+			require.Error(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
 			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
 		}
@@ -609,7 +624,7 @@ func TestAmountOf(t *testing.T) {
 		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
 	}
 
-	assert.Panics(t, func() { cases[0].coins.AmountOf("Invalid") })
+	assert.Panics(t, func() { cases[0].coins.AmountOf("10Invalid") })
 }
 
 func TestCoinsIsAnyGTE(t *testing.T) {

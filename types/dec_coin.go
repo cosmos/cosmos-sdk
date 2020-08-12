@@ -572,9 +572,16 @@ func removeZeroDecCoins(coins DecCoins) DecCoins {
 
 var _ sort.Interface = Coins{}
 
-func (coins DecCoins) Len() int           { return len(coins) }
-func (coins DecCoins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
-func (coins DecCoins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }
+// Len implements sort.Interface for DecCoins
+func (coins DecCoins) Len() int { return len(coins) }
+
+// Less implements sort.Interface for DecCoins. It compares the denominations in uppercase characters.
+func (coins DecCoins) Less(i, j int) bool {
+	return strings.ToUpper(coins[i].Denom) < strings.ToUpper(coins[j].Denom)
+}
+
+// Swap implements sort.Interface for DecCoins
+func (coins DecCoins) Swap(i, j int) { coins[i], coins[j] = coins[j], coins[i] }
 
 // Sort is a helper function to sort the set of decimal coins in-place.
 func (coins DecCoins) Sort() DecCoins {

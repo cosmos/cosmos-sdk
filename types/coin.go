@@ -560,13 +560,20 @@ func removeZeroCoins(coins Coins) Coins {
 //-----------------------------------------------------------------------------
 // Sort interface
 
-func (coins Coins) Len() int           { return len(coins) }
-func (coins Coins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
-func (coins Coins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }
+// Len implements sort.Interface for Coins
+func (coins Coins) Len() int { return len(coins) }
+
+// Less implements sort.Interface for Coins. It compares the denominations in uppercase characters.
+func (coins Coins) Less(i, j int) bool {
+	return strings.ToUpper(coins[i].Denom) < strings.ToUpper(coins[j].Denom)
+}
+
+// Swap implements sort.Interface for Coins
+func (coins Coins) Swap(i, j int) { coins[i], coins[j] = coins[j], coins[i] }
 
 var _ sort.Interface = Coins{}
 
-// Sort is a helper function to sort the set of coins inplace
+// Sort is a helper function to sort the set of coins in-place
 func (coins Coins) Sort() Coins {
 	sort.Sort(coins)
 	return coins
@@ -576,8 +583,8 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 64 characters long.
-	reDnmString = `[a-z][a-z0-9/]{2,63}`
+	// Denominations can be 3 ~ 128 characters long.
+	reDnmString = `[a-zA-Z][a-zA-Z0-9/]{2,127}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
@@ -667,12 +674,13 @@ func findDup(coins findDupDescriptor) int {
 		return -1
 	}
 
-	prevDenom := coins.GetDenomByIndex(0)
+	prevDenom := strings.ToUpper(coins.GetDenomByIndex(0))
 	for i := 1; i < coins.Len(); i++ {
-		if coins.GetDenomByIndex(i) == prevDenom {
+		coinLower := strings.ToUpper(coins.GetDenomByIndex(i))
+		if coinLower == prevDenom {
 			return i
 		}
-		prevDenom = coins.GetDenomByIndex(i)
+		prevDenom = coinLower
 	}
 
 	return -1

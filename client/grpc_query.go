@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
@@ -25,12 +26,17 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	if err != nil {
 		return err
 	}
-	resBz, height, err := ctx.QueryWithData(method, reqBz)
+	req := abci.RequestQuery{
+		Path: method,
+		Data: reqBz,
+	}
+
+	res, err := ctx.QueryABCI(req)
 	if err != nil {
 		return err
 	}
 
-	err = protoCodec.Unmarshal(resBz, reply)
+	err = protoCodec.Unmarshal(res.Value, reply)
 	if err != nil {
 		return err
 	}
@@ -40,7 +46,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md := metadata.Pairs(baseapp.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+	md := metadata.Pairs(baseapp.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {

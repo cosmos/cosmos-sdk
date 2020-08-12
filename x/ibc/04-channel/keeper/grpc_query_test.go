@@ -332,7 +332,8 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryChannelClientStateRequest{
 					PortID:    "test-port-id",
@@ -454,7 +455,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortID:    "test-port-id",

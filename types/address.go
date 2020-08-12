@@ -111,7 +111,7 @@ func VerifyAddressFormat(bz []byte) error {
 		return verifier(bz)
 	}
 	if len(bz) != AddrLen {
-		return errors.New("incorrect address length")
+		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
 	}
 	return nil
 }

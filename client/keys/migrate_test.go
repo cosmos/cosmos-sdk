@@ -18,11 +18,9 @@ func Test_runMigrateCmd(t *testing.T) {
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	copy.Copy("testdata", kbHome)
-	assert.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
 
+	copy.Copy("testdata", kbHome)
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),

@@ -19,8 +19,7 @@ func TestGetMigrationCallback(t *testing.T) {
 }
 
 func TestMigrateGenesis(t *testing.T) {
-	home, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	home := t.TempDir()
 
 	cdc := makeCodec()
 

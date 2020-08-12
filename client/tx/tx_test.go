@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/stretchr/testify/require"
@@ -115,10 +114,9 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	dir, clean := testutil.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
+	dir := t.TempDir()
 	path := hd.CreateHDPath(118, 0, 0).String()
+
 	kr, err := keyring.New(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 

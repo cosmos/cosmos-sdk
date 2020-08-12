@@ -37,9 +37,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
 
 	cmd.SetArgs([]string{
 		"keyname1",
@@ -86,11 +84,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-
-	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
 
 	cmd.SetArgs([]string{
 		"keyname1",

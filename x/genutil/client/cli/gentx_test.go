@@ -47,10 +47,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
-
-	dir, clean := testutil.NewTestCaseDir(s.T())
-	defer clean()
-
+	dir := s.T().TempDir()
 	cmd := GenTxCmd(
 		simapp.ModuleBasics,
 		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)

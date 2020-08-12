@@ -9,20 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestNewLegacyKeyBase(t *testing.T) {
-	dir, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	dir := t.TempDir()
+
 	kb, err := keyring.NewLegacy("keybasename", dir)
 	require.NoError(t, err)
 	require.NoError(t, kb.Close())
 }
 
 func TestLegacyKeybase(t *testing.T) {
-	dir, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	dir := t.TempDir()
 
 	// Backup testdata
 	require.NoError(t, copy.Copy("testdata", dir))

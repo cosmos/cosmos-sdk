@@ -46,9 +46,7 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
 	require.EqualError(t, cmd.Execute(), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
-
+	kbHome := t.TempDir()
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
 

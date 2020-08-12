@@ -20,14 +20,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
+	tempDir := t.TempDir()
 
 	err := createConfigFolder(tempDir)
 	if err != nil {

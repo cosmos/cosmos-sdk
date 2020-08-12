@@ -20,12 +20,9 @@ func Test_runAddCmdBasic(t *testing.T) {
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
-
+	kbHome := t.TempDir()
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")

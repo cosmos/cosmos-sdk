@@ -215,8 +215,11 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			// setup testing conditions
 			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainB.GetConnection(connB)
+
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 
@@ -290,8 +293,11 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			// setup testing conditions
 			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			channel := suite.chainB.GetChannel(channelB)
+
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 
@@ -369,8 +375,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 
@@ -455,8 +463,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 
@@ -540,8 +550,10 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			// need to update chainA's client representing chainB to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 
@@ -629,8 +641,10 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			// need to update chainA's client representing chainB
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 
+			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
-			clientState, _ = clientStateI.(*types.ClientState)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
 
 			prefix = suite.chainB.GetPrefix()
 

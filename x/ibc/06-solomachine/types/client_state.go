@@ -83,7 +83,7 @@ func (cs *ClientState) VerifyClientConsensusState(
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (cs *ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (cs *ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (cs *ClientState) VerifyPacketCommitment(
 	packetSequence uint64,
 	commitmentBytes []byte,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (cs *ClientState) VerifyPacketAcknowledgement(
 	packetSequence uint64,
 	acknowledgement []byte,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (cs *ClientState) VerifyPacketAcknowledgementAbsence(
 	channelID string,
 	packetSequence uint64,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,7 @@ func (cs *ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	signature, err := sanitizeVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func (cs *ClientState) VerifyNextSequenceRecv(
 
 	data := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, proof); err != nil {
+	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
@@ -321,10 +321,10 @@ func (cs *ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
-// sanitizeVerificationArgs perfoms the basic checks on the arguments that are
+// produceVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions and returns the unmarshalled
 // proof representing the signature and timestamp.
-func sanitizeVerificationArgs(
+func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs *ClientState,
 	sequence uint64,

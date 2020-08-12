@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -102,4 +103,74 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 		ConnectionPaths: clientConnectionPaths,
 		ProofHeight:     uint64(ctx.BlockHeight()),
 	}, nil
+}
+
+// ConnectionClientState implements the Query/ConnectionClientState gRPC method
+func (q Keeper) ConnectionClientState(c context.Context, req *types.QueryConnectionClientStateRequest) (*types.QueryConnectionClientStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	connection, found := q.GetConnection(ctx, req.ConnectionID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionID).Error(),
+		)
+	}
+
+	clientState, found := q.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientID).Error(),
+		)
+	}
+
+	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientID, clientState)
+
+	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
+
+}
+
+// ConnectionConsensusState implements the Query/ConnectionConsensusState gRPC method
+func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConnectionConsensusStateRequest) (*types.QueryConnectionConsensusStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	connection, found := q.GetConnection(ctx, req.ConnectionID)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionID).Error(),
+		)
+	}
+
+	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientID, req.Height)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "client-id: %s", connection.ClientID).Error(),
+		)
+	}
+
+	anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return types.NewQueryConnectionConsensusStateResponse(connection.ClientID, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
 }

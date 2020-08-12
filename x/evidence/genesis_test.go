@@ -34,7 +34,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 func (suite *GenesisTestSuite) TestInitGenesis() {
 	var (
-		genesisState types.GenesisState
+		genesisState *types.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)

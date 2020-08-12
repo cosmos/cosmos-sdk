@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -128,14 +129,16 @@ func TestGetProposalsFiltered(t *testing.T) {
 		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
 	}
 
-	for _, tc := range testCases {
-		proposals := app.GovKeeper.GetProposalsFiltered(ctx, tc.params)
-		require.Len(t, proposals, tc.expectedNumResults)
+	for i, tc := range testCases {
+		t.Run(fmt.Sprintf("Test Case %d", i), func(t *testing.T) {
+			proposals := app.GovKeeper.GetProposalsFiltered(ctx, tc.params)
+			require.Len(t, proposals, tc.expectedNumResults)
 
-		for _, p := range proposals {
-			if len(tc.params.ProposalStatus.String()) != 0 {
-				require.Equal(t, tc.params.ProposalStatus, p.Status)
+			for _, p := range proposals {
+				if types.ValidProposalStatus(tc.params.ProposalStatus) {
+					require.Equal(t, tc.params.ProposalStatus, p.Status)
+				}
 			}
-		}
+		})
 	}
 }

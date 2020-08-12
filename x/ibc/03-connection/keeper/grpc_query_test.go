@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -221,6 +222,183 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expPaths, res.ConnectionPaths)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
+	var (
+		req                      *types.QueryConnectionClientStateRequest
+		expIdentifiedClientState clienttypes.IdentifiedClientState
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid connection ID",
+			func() {
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionID: "",
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionID: "test-connection-id",
+				}
+			},
+			false,
+		},
+		{
+			"client state not found",
+			func() {
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				// set connection to empty so clientID is empty
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, types.ConnectionEnd{})
+
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionID: connA.ID,
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+				expClientState := suite.chainA.GetClientState(clientA)
+				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
+
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionID: connA.ID,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ConnectionClientState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(&expIdentifiedClientState, res.IdentifiedClientState)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
+	var (
+		req               *types.QueryConnectionConsensusStateRequest
+		expConsensusState clientexported.ConsensusState
+		expClientID       string
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid connection ID",
+			func() {
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionID: "",
+					Height:       1,
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionID: "test-connection-id",
+					Height:       1,
+				}
+			},
+			false,
+		},
+		{
+			"consensus state not found",
+			func() {
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionID: connA.ID,
+					Height:       uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+				clientState := suite.chainA.GetClientState(clientA)
+				expConsensusState, _ = suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+				suite.Require().NotNil(expConsensusState)
+				expClientID = clientA
+
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionID: connA.ID,
+					Height:       expConsensusState.GetHeight(),
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ConnectionConsensusState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expConsensusState, consensusState)
+				suite.Require().Equal(expClientID, res.ClientID)
 			} else {
 				suite.Require().Error(err)
 			}

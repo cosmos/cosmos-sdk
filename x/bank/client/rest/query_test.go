@@ -102,6 +102,16 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			),
 		},
+		// just for testing GRPC. can be removed
+		{
+			"test GRPC total supply",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
+			&sdk.Coins{},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			),
+		},
 		{
 			"total supply of a specific denom",
 			fmt.Sprintf("%s/bank/total/%s?height=1", baseURL, s.cfg.BondDenom),
@@ -120,6 +130,8 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
+			// can be removed just to have debug log of resp
+			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)
 
 			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)

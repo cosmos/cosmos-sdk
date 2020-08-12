@@ -1,8 +1,6 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
@@ -76,12 +74,18 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	bz, err := codec.MarshalAny(suite.cdc, suite.ClientState().ConsensusState)
+	value, err := types.ConsensusStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, suite.ClientState().ConsensusState)
 	suite.Require().NoError(err)
-	value = append(value, bz...)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -131,13 +135,14 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyClientConsensusState(
 			suite.store, suite.cdc, nil, suite.sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -152,12 +157,18 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	bz, err := suite.cdc.MarshalBinaryBare(&conn)
+	value, err := types.ConnectionStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, conn)
 	suite.Require().NoError(err)
-	value = append(value, bz...)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -207,14 +218,14 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyConnectionState(
 			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -229,12 +240,18 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	bz, err := suite.cdc.MarshalBinaryBare(&ch)
+	value, err := types.ChannelStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, ch)
 	suite.Require().NoError(err)
-	value = append(value, bz...)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -284,14 +301,14 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyChannelState(
 			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -384,10 +401,17 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.sequence))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	value = append(value, ack...)
+	value := types.PacketAcknowledgementSignBytes(suite.sequence, suite.timestamp, path, ack)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -437,14 +461,14 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyPacketAcknowledgement(
 			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, ack,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -456,9 +480,17 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.sequence))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
+	value := types.PacketAcknowledgementAbsenceSignBytes(suite.sequence, suite.timestamp, path)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -508,14 +540,14 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
 			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
@@ -528,10 +560,17 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := append(sdk.Uint64ToBigEndian(suite.sequence), []byte(path.String())...)
-	value = append(value, sdk.Uint64ToBigEndian(nextSeqRecv)...)
+	value := types.NextSequenceRecvSignBytes(suite.sequence, suite.timestamp, path, nextSeqRecv)
 
-	proof, err := suite.privKey.Sign(value)
+	sig, err := suite.privKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.timestamp,
+	}
+
+	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -581,14 +620,14 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	for i, tc := range testCases {
 		tc := tc
 
+		expSeq := tc.clientState.ConsensusState.Sequence + 1
+
 		err := tc.clientState.VerifyNextSequenceRecv(
 			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
 			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
 		} else {
 			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)

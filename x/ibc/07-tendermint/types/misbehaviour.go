@@ -39,12 +39,20 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
 	consBytes1 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header1.TrustedHeight))
+	if consBytes1 == nil {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
+			"could not find trusted consensus state at height %d", tmEvidence.Header1.TrustedHeight)
+	}
 	consensusState1 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes1)
 	tmConsensusState1, ok := consensusState1.(*ConsensusState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &ConsensusState{}, consensusState1)
 	}
 	consBytes2 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header2.TrustedHeight))
+	if consBytes2 == nil {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
+			"could not find trusted consensus state at height %d", tmEvidence.Header2.TrustedHeight)
+	}
 	consensusState2 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes2)
 	tmConsensusState2, ok := consensusState2.(*ConsensusState)
 	if !ok {

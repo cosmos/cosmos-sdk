@@ -202,7 +202,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalID)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Voter.String())
-	require.Equal(t, "Yes", msg.Option.String())
+	require.Equal(t, types.OptionYes, msg.Option)
 	require.Equal(t, "gov", msg.Route())
 	require.Equal(t, types.TypeMsgVote, msg.Type())
 

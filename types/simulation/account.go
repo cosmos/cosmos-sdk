@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,8 @@ type Account struct {
 	PrivKey crypto.PrivKey
 	PubKey  crypto.PubKey
 	Address sdk.AccAddress
+
+	ConsKey crypto.PrivKey
 }
 
 // Equals returns true if two accounts are equal
@@ -42,6 +45,9 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 		accs[i].PrivKey = secp256k1.GenPrivKeyFromSecret(privkeySeed)
 		accs[i].PubKey = accs[i].PrivKey.PubKey()
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
+
+		accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
+
 	}
 
 	return accs

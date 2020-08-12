@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -102,10 +100,6 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
-		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-		valPK := ed25519.GenPrivKeyFromSecret(privkeySeed).PubKey()
-
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
 		if found {
@@ -154,7 +148,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg := types.NewMsgCreateValidator(address, valPK,
+		msg := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(),
 			selfDelegation, description, commission, sdk.OneInt())
 
 		txGen := simappparams.MakeEncodingConfig().TxConfig

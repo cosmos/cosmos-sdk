@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -86,11 +85,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		privkeySeed := make([]byte, 15)
-		simState.Rand.Read(privkeySeed)
-		privKey := ed25519.GenPrivKeyFromSecret(privkeySeed)
-
-		validator := types.NewValidator(valAddr, privKey.PubKey(), types.Description{})
+		validator := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
 		validator.Tokens = sdk.NewInt(simState.InitialStake)
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
 		validator.Commission = commission

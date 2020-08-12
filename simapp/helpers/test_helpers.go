@@ -54,6 +54,7 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	tx.SetMemo(memo)
 	tx.SetFeeAmount(feeAmt)
 	tx.SetGasLimit(gas)
+
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
 		signerData := authsign.SignerData{

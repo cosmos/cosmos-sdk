@@ -425,6 +425,11 @@ func TestCoins(t *testing.T) {
 		{"ATOM", NewInt(1)},
 	}
 	empty := NewCoins()
+	invalidDenom := Coins{
+		{"MineraL", NewInt(1)},
+		{"0TREE", NewInt(1)},
+		{"gAs", NewInt(1)},
+	}
 	badSort1 := Coins{
 		{"tree", NewInt(1)},
 		{"gas", NewInt(1)},
@@ -479,6 +484,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
+	assert.False(t, empty.IsValid(), "Invalid coin")
 	assert.False(t, dup1.IsValid(), "Duplicate coin")
 	assert.False(t, dup2.IsValid(), "Duplicate coin with uppercase")
 	assert.False(t, dup3.Sort().IsValid(), "Duplicate coins with uppercase")
@@ -716,6 +722,7 @@ func TestNewCoins(t *testing.T) {
 	tenatom := NewInt64Coin("atom", 10)
 	tenbtc := NewInt64Coin("btc", 10)
 	zeroeth := NewInt64Coin("eth", 0)
+	invalidCoin := Coin{"0ETH", OneInt()}
 	tests := []struct {
 		name      string
 		coins     Coins
@@ -727,6 +734,7 @@ func TestNewCoins(t *testing.T) {
 		{"sort after create", []Coin{tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
 		{"sort and remove zeroes", []Coin{zeroeth, tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
 		{"panic on dups", []Coin{tenatom, tenatom}, Coins{}, true},
+		{"panic on invalid coin", []Coin{invalidCoin, tenatom}, Coins{}, true},
 	}
 	for _, tt := range tests {
 		tt := tt

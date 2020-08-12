@@ -61,7 +61,10 @@ func SimulationOperations(app App, cdc codec.JSONMarshaler, config simtypes.Conf
 			panic(err)
 		}
 
-		app.LegacyAmino().MustUnmarshalJSON(bz, &simState.AppParams)
+		err = json.Unmarshal(bz, &simState.AppParams)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)

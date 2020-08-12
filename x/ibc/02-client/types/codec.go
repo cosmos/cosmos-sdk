@@ -79,3 +79,14 @@ func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.
 
 	return anyConsensusState
 }
+
+// UnpackConsensusState unpacks an Any into a ConsensusState. It returns an error if the
+// consensus state can't be unpacked into a ConsensusState.
+func UnpackConsensusState(any *codectypes.Any) (exported.ConsensusState, error) {
+	consensusState, ok := any.GetCachedValue().(exported.ConsensusState)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into ConsensusState %T", any)
+	}
+
+	return consensusState, nil
+}

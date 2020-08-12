@@ -45,6 +45,13 @@ message ClientState {
   // Proof specifications used in verifying counterparty state
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+
+  // Latest timestamp when the client was update to
+   google.protobuf.Timestamp  latest_timestamp = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"latest_timestamp\""
+  ];
 }
 
 // ConsensusState defines the consensus state from Tendermint.

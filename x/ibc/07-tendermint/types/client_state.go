@@ -27,7 +27,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
 	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.ProofSpecs,
+		uint64(msg.Header.Height), msg.Header.Time, msg.ProofSpecs,
 	)
 }
 
@@ -35,7 +35,7 @@ func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, specs []*ics23.ProofSpec,
+	latestHeight uint64, latestTimestamp time.Time, specs []*ics23.ProofSpec,
 ) *ClientState {
 	return &ClientState{
 		ChainID:         chainID,
@@ -44,6 +44,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LatestHeight:    latestHeight,
+		LatestTimestamp: latestTimestamp,
 		FrozenHeight:    0,
 		ProofSpecs:      specs,
 	}
@@ -62,6 +63,11 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 // GetLatestHeight returns latest block height.
 func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.LatestHeight
+}
+
+// GetLatestTimestamp returns latest block time.
+func (cs ClientState) GetLatestTimestamp() time.Time {
+	return cs.LatestTimestamp
 }
 
 // IsFrozen returns true if the frozen height has been set.
@@ -408,4 +414,12 @@ func produceVerificationArgs(
 	}
 
 	return merkleProof, consensusState, nil
+}
+
+// Expired returns whether or not the client has passed the trusting period since the last update
+// (in which case no headers can be validated)
+func (cs ClientState) Expired() bool {
+	now := time.Now()
+	expirationTime := cs.LatestTimestamp.Add(cs.TrustingPeriod)
+	return !expirationTime.After(now)
 }

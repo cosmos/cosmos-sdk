@@ -137,6 +137,7 @@ func checkValidity(
 func update(clientState *types.ClientState, header types.Header) (*types.ClientState, *types.ConsensusState) {
 	if uint64(header.Height) > clientState.LatestHeight {
 		clientState.LatestHeight = uint64(header.Height)
+		clientState.LatestTimestamp = header.Time
 	}
 	consensusState := &types.ConsensusState{
 		Height:             uint64(header.Height),

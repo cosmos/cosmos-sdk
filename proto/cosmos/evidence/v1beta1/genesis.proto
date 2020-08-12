@@ -7,6 +7,6 @@ import "google/protobuf/any.proto";
 
 // GenesisState defines the evidence module's genesis state.
 message GenesisState {
-  // evidence defines all the evidences at genesis.
+  // evidence defines all the evidence at genesis.
   repeated google.protobuf.Any evidence = 1;
 }

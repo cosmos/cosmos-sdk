@@ -27,6 +27,7 @@ const (
 	flagTrustLevel                  = "trust-level"
 	flagProofSpecs                  = "proof-specs"
 	flagAllowGovOverrideAfterExpiry = "allow_governance_override_after_expiry"
+	fladAllowGovOverrideAfterMisbehaviour = "allow_governance_override_after_misbehaviour"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC Client as defined
@@ -106,8 +107,12 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
+			agoae, _ := cmd.Flags().GetBool(flagAllowGovOverrideAfterExpiry)
+			agoam, _ := cmd.Flags().GetBool(fladAllowGovOverrideAfterMisbehaviour)
+
 			msg := ibctmtypes.NewMsgCreateClient(
 				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
+				agoae, agoam
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -121,6 +126,7 @@ func NewCreateClientCmd() *cobra.Command {
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
 	cmd.Flags().Bool(flagAllowGovOverrideAfterExpiry, false, "allow governance override after expiry")
+	cmd.Flags().Bool(fladAllowGovOverrideAfterMisbehaviour, false, "allow governance override after misbehaviour")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

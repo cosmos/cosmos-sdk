@@ -30,14 +30,16 @@ var (
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID        string             `json:"client_id" yaml:"client_id"`
-	Header          Header             `json:"header" yaml:"header"`
-	TrustLevel      Fraction           `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
-	ProofSpecs      []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
-	Signer          sdk.AccAddress     `json:"address" yaml:"address"`
+	ClientID                                 string             `json:"client_id" yaml:"client_id"`
+	Header                                   Header             `json:"header" yaml:"header"`
+	TrustLevel                               Fraction           `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod                           time.Duration      `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod                          time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift                            time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs                               []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
+	Signer                                   sdk.AccAddress     `json:"address" yaml:"address"`
+	AllowGovernanceOverrideAfterExpire       bool               `json:"allow_governance_override_after_expiry" yaml:"allow_governance_override_after_expiry"`
+	AllowGovernanceOverrideAfterMisbehaviour bool               `json:"allow_governance_override_after_misbehaviour" yaml:"allow_governance_override_after_misbehaviour"`
 }
 
 // this is a constant to satisfy the linter
@@ -52,18 +54,21 @@ func (msg *MsgCreateClient) ProtoMessage()  {}
 func NewMsgCreateClient(
 	id string, header Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
-	specs []*ics23.ProofSpec, signer sdk.AccAddress,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress, allow_governance_override_after_expiry bool,
+	allow_governance_override_after_misbehaviour bool,
 ) *MsgCreateClient {
 
 	return &MsgCreateClient{
-		ClientID:        id,
-		Header:          header,
-		TrustLevel:      trustLevel,
-		TrustingPeriod:  trustingPeriod,
-		UnbondingPeriod: unbondingPeriod,
-		MaxClockDrift:   maxClockDrift,
-		ProofSpecs:      specs,
-		Signer:          signer,
+		ClientID:                                 id,
+		Header:                                   header,
+		TrustLevel:                               trustLevel,
+		TrustingPeriod:                           trustingPeriod,
+		UnbondingPeriod:                          unbondingPeriod,
+		MaxClockDrift:                            maxClockDrift,
+		ProofSpecs:                               specs,
+		Signer:                                   signer,
+		AllowGovernanceOverrideAfterExpire:       allow_governance_override_after_expiry,
+		AllowGovernanceOverrideAfterMisbehaviour: allow_governance_override_after_misbehaviour,
 	}
 }
 

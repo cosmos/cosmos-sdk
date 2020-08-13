@@ -27,7 +27,8 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
 	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.Header.Time, msg.ProofSpecs,
+		uint64(msg.Header.Height), msg.Header.Time, msg.ProofSpecs, msg.AllowGovernanceOverrideAfterExpire,
+		msg.AllowGovernanceOverrideAfterMisbehaviour,
 	)
 }
 
@@ -36,6 +37,7 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, latestTimestamp time.Time, specs []*ics23.ProofSpec,
+	allowGovernanceOverrideAfterExpire bool, allowGovernanceOverrideAfterMisbehaviour bool
 ) *ClientState {
 	return &ClientState{
 		ChainID:         chainID,
@@ -47,6 +49,8 @@ func NewClientState(
 		LatestTimestamp: latestTimestamp,
 		FrozenHeight:    0,
 		ProofSpecs:      specs,
+		AllowGovernanceOverrideAfterExpiry: allowGovernanceOverrideAfterExpire,
+		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour
 	}
 }
 

@@ -52,6 +52,16 @@ message ClientState {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"latest_timestamp\""
   ];
+
+  // This flag, when set to true, will be used to recover a client which has expired
+  bool allow_governance_override_after_expiry = 11[
+    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_expiry,omitempty\""
+  ];
+  // This flag, when set to true, will be used to unfreeze a client whose chain has experienced a misbehaviour event
+  bool allow_governance_override_after_misbehaviour = 12[
+    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""
+  ];
+  
 }
 
 // ConsensusState defines the consensus state from Tendermint.

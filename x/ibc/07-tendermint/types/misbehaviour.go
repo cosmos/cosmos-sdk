@@ -87,8 +87,8 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// use the default values.
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&
-		ageDuration > consensusParams.Evidence.MaxAgeDuration &&
-		ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks {
+		(ageDuration > consensusParams.Evidence.MaxAgeDuration ||
+			ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
 			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,

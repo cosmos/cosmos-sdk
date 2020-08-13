@@ -643,13 +643,13 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	}{
 		{
 			"invalid address",
-			[]string{val.Address.String(),
+			[]string{addr1.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			true,
 		},
 		{
 			"valid address",
-			[]string{addr1.String(),
+			[]string{val.Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},
@@ -664,6 +664,7 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var acc authtypes.BaseAccount
 				s.Require().NoError(err)

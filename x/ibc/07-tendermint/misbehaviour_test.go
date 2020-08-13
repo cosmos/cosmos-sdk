@@ -1,7 +1,6 @@
 package tendermint_test
 
 import (
-	"bytes"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -28,17 +27,10 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
+	_, suiteVal := suite.valSet.GetByIndex(0)
+
 	// Create signer array and ensure it is in same order as bothValSet
-	var bothSigners []tmtypes.PrivValidator
-
-	pubKey, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
-	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
-		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
-	} else {
-		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
-	}
+	bothSigners := types.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 

@@ -47,7 +47,7 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is set intentionally here, don't migrate it!
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
+		clientCtx = clientCtx.WithLegacyAmino(clientCtx.LegacyAmino)
 		rest.PostProcessResponseBare(w, clientCtx, res)
 	}
 }

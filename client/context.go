@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
@@ -218,12 +219,16 @@ func (ctx Context) PrintOutput(toPrint proto.Message) error {
 // PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
 // and uses amino JSON encoding. It will be removed in the near future!
 func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
-	return ctx.WithJSONMarshaler(ctx.LegacyAmino).printOutput(toPrint)
+	return ctx.WithLegacyAmino(ctx.LegacyAmino).printOutput(toPrint)
 }
 
 func (ctx Context) printOutput(toPrint interface{}) error {
+	msg, ok := toPrint.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", toPrint)
+	}
 	// always serialize JSON initially because proto json can't be directly YAML encoded
-	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
+	out, err := ctx.JSONMarshaler.MarshalJSON(msg)
 	if err != nil {
 		return err
 	}

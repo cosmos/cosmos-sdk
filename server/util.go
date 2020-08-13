@@ -197,15 +197,15 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 //
 // NOTE: The ordering of the keys returned as the resulting JSON message is
 // non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc codec.JSONMarshaler, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
+func InsertKeyJSON(legacyAminoCdc *codec.LegacyAmino, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
 
-	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
+	if err := legacyAminoCdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
 		return nil, err
 	}
 
 	jsonMap[key] = value
-	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
+	bz, err := codec.MarshalJSONIndent(legacyAminoCdc, jsonMap)
 
 	return json.RawMessage(bz), err
 }

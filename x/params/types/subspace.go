@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -103,7 +104,12 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	msg, ok := ptr.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("can't proto marshal %T", ptr))
+	}
+
+	if err := s.cdc.UnmarshalJSON(bz, msg); err != nil {
 		panic(err)
 	}
 }
@@ -120,7 +126,12 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 	s.checkType(key, ptr)
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	msg, ok := ptr.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("can't proto marshal %T", ptr))
+	}
+
+	if err := s.cdc.UnmarshalJSON(bz, msg); err != nil {
 		panic(err)
 	}
 }
@@ -170,7 +181,12 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	bz, err := s.cdc.MarshalJSON(value)
+	msg, ok := value.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("can't proto marshal %T", value))
+	}
+
+	bz, err := s.cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
 	}
@@ -197,7 +213,12 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	dest := reflect.New(ty).Interface()
 	s.GetIfExists(ctx, key, dest)
 
-	if err := s.cdc.UnmarshalJSON(value, dest); err != nil {
+	msg, ok := dest.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("can't proto marshal %T", dest))
+	}
+
+	if err := s.cdc.UnmarshalJSON(value, msg); err != nil {
 		return err
 	}
 

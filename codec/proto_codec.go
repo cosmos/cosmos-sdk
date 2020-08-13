@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/proto"
 )
 
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
@@ -95,7 +96,7 @@ func (pc *ProtoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMars
 	}
 }
 
-func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) {
+func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	m, ok := o.(ProtoMarshaler)
 	if !ok {
 		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
@@ -104,7 +105,7 @@ func (pc *ProtoCodec) MarshalJSON(o interface{}) ([]byte, error) {
 	return ProtoMarshalJSON(m)
 }
 
-func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {
+func (pc *ProtoCodec) MustMarshalJSON(o proto.Message) []byte {
 	bz, err := pc.MarshalJSON(o)
 	if err != nil {
 		panic(err)
@@ -113,7 +114,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o interface{}) []byte {
 	return bz
 }
 
-func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
+func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	m, ok := ptr.(ProtoMarshaler)
 	if !ok {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
@@ -127,7 +128,7 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	return types.UnpackInterfaces(ptr, pc.anyUnpacker)
 }
 
-func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
+func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	if err := pc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}

@@ -1,12 +1,15 @@
 package codec
 
-import "github.com/cosmos/cosmos-sdk/codec/types"
+import (
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/gogo/protobuf/proto"
+)
 
 // HybridCodec defines a codec that utilizes Protobuf for binary encoding
 // and Amino for JSON encoding.
 type HybridCodec struct {
 	proto Marshaler
-	amino Marshaler
+	amino *AminoCodec
 }
 
 func NewHybridCodec(amino *LegacyAmino, unpacker types.AnyUnpacker) Marshaler {
@@ -48,19 +51,19 @@ func (hc *HybridCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMar
 	hc.proto.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
-func (hc *HybridCodec) MarshalJSON(o interface{}) ([]byte, error) {
+func (hc *HybridCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	return hc.amino.MarshalJSON(o)
 }
 
-func (hc *HybridCodec) MustMarshalJSON(o interface{}) []byte {
+func (hc *HybridCodec) MustMarshalJSON(o proto.Message) []byte {
 	return hc.amino.MustMarshalJSON(o)
 }
 
-func (hc *HybridCodec) UnmarshalJSON(bz []byte, ptr interface{}) error {
+func (hc *HybridCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	return hc.amino.UnmarshalJSON(bz, ptr)
 }
 
-func (hc *HybridCodec) MustUnmarshalJSON(bz []byte, ptr interface{}) {
+func (hc *HybridCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	hc.amino.MustUnmarshalJSON(bz, ptr)
 }
 

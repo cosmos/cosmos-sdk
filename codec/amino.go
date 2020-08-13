@@ -19,8 +19,6 @@ type LegacyAmino struct {
 	Amino *amino.Codec
 }
 
-var _ JSONMarshaler = &LegacyAmino{}
-
 func (cdc *LegacyAmino) Seal() {
 	cdc.Amino.Seal()
 }
@@ -38,8 +36,8 @@ func RegisterEvidences(cdc *LegacyAmino) {
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object
 // via an Amino codec. It returns an error if it cannot serialize or indent as
 // JSON.
-func MarshalJSONIndent(m JSONMarshaler, obj interface{}) ([]byte, error) {
-	bz, err := m.MarshalJSON(obj)
+func MarshalJSONIndent(cdc *LegacyAmino, obj interface{}) ([]byte, error) {
+	bz, err := cdc.MarshalJSON(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +51,8 @@ func MarshalJSONIndent(m JSONMarshaler, obj interface{}) ([]byte, error) {
 }
 
 // MustMarshalJSONIndent executes MarshalJSONIndent except it panics upon failure.
-func MustMarshalJSONIndent(m JSONMarshaler, obj interface{}) []byte {
-	bz, err := MarshalJSONIndent(m, obj)
+func MustMarshalJSONIndent(cdc *LegacyAmino, obj interface{}) []byte {
+	bz, err := MarshalJSONIndent(cdc, obj)
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal JSON: %s", err))
 	}

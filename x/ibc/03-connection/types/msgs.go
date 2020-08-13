@@ -50,7 +50,7 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -127,7 +127,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -192,7 +192,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -244,7 +244,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

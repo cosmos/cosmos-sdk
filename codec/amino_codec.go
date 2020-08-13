@@ -6,7 +6,7 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ Marshaler = &AminoCodec{}
+var _ BinaryMarshaler = &AminoCodec{}
 
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}

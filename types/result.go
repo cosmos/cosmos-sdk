@@ -50,10 +50,14 @@ func NewABCIMessageLog(i uint32, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := cdc.MarshalJSON(logs)
-		if err == nil {
-			str = string(raw)
+		var strs []string
+		for _, log := range logs {
+			raw, err := cdc.MarshalJSON(&log)
+			if err == nil {
+				strs = append(strs, string(raw))
+			}
 		}
+		str = strings.Join(strs, " ")
 	}
 
 	return str

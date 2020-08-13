@@ -12,16 +12,18 @@ import (
 // Coin
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if
-// the amount is negative.
+// the amount is negative or if the denomination is invalid.
 func NewCoin(denom string, amount Int) Coin {
-	if err := validate(denom, amount); err != nil {
-		panic(err)
-	}
-
-	return Coin{
+	coin := Coin{
 		Denom:  denom,
 		Amount: amount,
 	}
+
+	if err := coin.Validate(); err != nil {
+		panic(err)
+	}
+
+	return coin
 }
 
 // NewInt64Coin returns a new coin with a denomination and amount. It will panic
@@ -35,26 +37,23 @@ func (coin Coin) String() string {
 	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
 }
 
-// validate returns an error if the Coin has a negative amount or if
+// Validate returns an error if the Coin has a negative amount or if
 // the denom is invalid.
-func validate(denom string, amount Int) error {
-	if err := ValidateDenom(denom); err != nil {
+func (coin Coin) Validate() error {
+	if err := ValidateDenom(coin.Denom); err != nil {
 		return err
 	}
 
-	if amount.IsNegative() {
-		return fmt.Errorf("negative coin amount: %v", amount)
+	if coin.Amount.IsNegative() {
+		return fmt.Errorf("negative coin amount: %v", coin.Amount)
 	}
 
 	return nil
 }
 
-// IsValid returns true if the Coin has a non-negative amount and the denom is vaild.
+// IsValid returns true if the Coin has a non-negative amount and the denom is valid.
 func (coin Coin) IsValid() bool {
-	if err := validate(coin.Denom, coin.Amount); err != nil {
-		return false
-	}
-	return true
+	return coin.Validate() == nil
 }
 
 // IsZero returns if this represents no money
@@ -182,21 +181,26 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
-// IsValid asserts the Coins are sorted, have positive amount,
-// and Denom does not contain upper case characters.
-func (coins Coins) IsValid() bool {
+// Validate checks that the Coins are sorted, have positive amount, and Denom is valid. Otherwise,
+// it returns an error.
+func (coins Coins) Validate() error {
 	switch len(coins) {
 	case 0:
-		return true
+		return nil
+
 	case 1:
 		if err := ValidateDenom(coins[0].Denom); err != nil {
-			return false
+			return err
 		}
-		return coins[0].IsPositive()
+		if !coins[0].IsPositive() {
+			return fmt.Errorf("coin %s amount is not positive", coins[0])
+		}
+		return nil
+
 	default:
 		// check single coin case
-		if !(Coins{coins[0]}).IsValid() {
-			return false
+		if err := (Coins{coins[0]}).Validate(); err != nil {
+			return err
 		}
 
 		lowDenom := coins[0].Denom
@@ -205,16 +209,16 @@ func (coins Coins) IsValid() bool {
 
 		for _, coin := range coins[1:] {
 			if seenDenoms[coin.Denom] {
-				return false
+				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
 			if err := ValidateDenom(coins[0].Denom); err != nil {
-				return false
+				return err
 			}
 			if coin.Denom <= lowDenom {
-				return false
+				return fmt.Errorf("denomination %s is not sorted", coin.Denom)
 			}
 			if !coin.IsPositive() {
-				return false
+				return fmt.Errorf("coin %s amount is not positive", coin.Denom)
 			}
 
 			// we compare each coin against the last denom
@@ -222,8 +226,14 @@ func (coins Coins) IsValid() bool {
 			seenDenoms[coin.Denom] = true
 		}
 
-		return true
+		return nil
 	}
+}
+
+// IsValid calls Validate and returns true when the Coins are sorted, have positive amount, and
+// Denom is valid.
+func (coins Coins) IsValid() bool {
+	return coins.Validate() == nil
 }
 
 // Add adds two sets of coins.
@@ -588,7 +598,8 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 128 characters long.
+	// Denominations can be 3 ~ 128 characters long and support unicode letters, followed by either
+	// a unicode letter, a unicode number or a separator ('/', '_', "-").
 	reDnmString = `\p{L}[\p{L}\p{N}/_-]{2,127}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
@@ -631,7 +642,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 	}
 
 	if err := ValidateDenom(denomStr); err != nil {
-		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
+		return Coin{}, err
 	}
 
 	return NewCoin(denomStr, amount), nil
@@ -661,8 +672,8 @@ func ParseCoins(coinsStr string) (Coins, error) {
 	coins.Sort()
 
 	// validate coins before returning
-	if !coins.IsValid() {
-		return nil, fmt.Errorf("parseCoins invalid: %#v", coins)
+	if err := coins.Validate(); err != nil {
+		return nil, err
 	}
 
 	return coins, nil

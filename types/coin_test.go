@@ -551,7 +551,7 @@ func TestParse(t *testing.T) {
 		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
 		{"1.2btc", false, nil},                // amount must be integer
-		{"5foo-bar", false, nil},              // once more, only letters in coin name
+		{"5foo:bar", false, nil},              // invalid separator
 	}
 
 	for tcIndex, tc := range cases {

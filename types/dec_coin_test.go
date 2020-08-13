@@ -290,36 +290,31 @@ func TestSortDecCoins(t *testing.T) {
 		NewInt64DecCoin("gas", 1),
 		NewInt64DecCoin("mineral", 1),
 	}
-	dup2 := DecCoins{
-		NewInt64DecCoin("GAS", 1),
-		NewInt64DecCoin("gas", 1),
-		NewInt64DecCoin("mineral", 1),
-	}
 
 	cases := []struct {
+		name          string
 		coins         DecCoins
 		before, after bool // valid before/after sort
 	}{
-		{good, true, true},
-		{empty, false, false},
-		{badSort1, false, true},
-		{badSort2, false, true},
-		{badAmt, false, false},
-		{dup, false, false},
-		{dup2, false, false},
+		{"valid coins", good, true, true},
+		{"empty coins", empty, false, false},
+		{"unsorted coins (1)", badSort1, false, true},
+		{"unsorted coins (2)", badSort2, false, true},
+		{"zero amount coins", badAmt, false, false},
+		{"duplicate coins", dup, false, false},
 	}
 
-	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
+	for _, tc := range cases {
+		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting; %s", tc.name)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting;  %s", tc.name)
 	}
 }
 
-func TestDecCoinsIsValid(t *testing.T) {
+func TestDecCoinsValidate(t *testing.T) {
 	testCases := []struct {
-		input    DecCoins
-		expected bool
+		input        DecCoins
+		expectedPass bool
 	}{
 		{DecCoins{}, true},
 		{DecCoins{DecCoin{testDenom1, NewDec(5)}}, true},
@@ -332,12 +327,15 @@ func TestDecCoinsIsValid(t *testing.T) {
 		{DecCoins{DecCoin{testDenom1, NewDec(-5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
 		{DecCoins{DecCoin{"BTC", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, true},
 		{DecCoins{DecCoin{"0BTC", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"BTC", NewDec(5)}, DecCoin{"btc", NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {
-		res := tc.input.IsValid()
-		require.Equal(t, tc.expected, res, "unexpected result for test case #%d, input: %v", i, tc.input)
+		err := tc.input.Validate()
+		if tc.expectedPass {
+			require.NoError(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		} else {
+			require.Error(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		}
 	}
 }
 

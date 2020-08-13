@@ -283,7 +283,8 @@ Buffers for state serialization instead of Amino.
 
 * (types) [\#7027](https://github.com/cosmos/cosmos-sdk/pull/7027) `Coin(s)` and `DecCoin(s)` updates:
   * Bump denomination max length to 128
-  * Allow all caps in denominations
+  * Allow unicode letters and numbers in denominations
+  * Added `Validate` function that returns a descriptive error
 * (baseapp) [\#6186](https://github.com/cosmos/cosmos-sdk/issues/6186) Support emitting events during `AnteHandler` execution.
 * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
 * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.

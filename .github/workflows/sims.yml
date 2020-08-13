@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v2-beta
+      - uses: actions/setup-go@v2.1.2
       - name: install runsim
         run: |
           export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0

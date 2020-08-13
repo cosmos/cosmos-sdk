@@ -81,7 +81,7 @@ the halt-height or if the current block time is greater than or equal to the hal
 node will attempt to gracefully shutdown and the block will not be committed. In addition, the node
 will not be able to commit subsequent blocks.
 
-For profiling and benchmark purposes, CPU profiling can be enabled via the '--cpu-profile' flag
+For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
 which accepts a path for the resulting pprof file.
 `,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {

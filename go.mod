@@ -4,9 +4,11 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.5
+	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
 	github.com/armon/go-metrics v0.3.4
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/confio/ics23-iavl v0.6.0
 	github.com/confio/ics23/go v0.0.0-20200804135649-a9fbc744ca3d
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
@@ -39,6 +41,7 @@ require (
 	github.com/tendermint/iavl v0.14.0
 	github.com/tendermint/tendermint v0.33.8
 	github.com/tendermint/tm-db v0.5.1
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0

@@ -102,7 +102,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 	}
 }
 
-// Next inflation benchmarking
+// Next inflation benchmark
 // BenchmarkNextInflation-4 1000000 1828 ns/op
 func BenchmarkNextInflation(b *testing.B) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
@@ -116,7 +116,7 @@ func BenchmarkNextInflation(b *testing.B) {
 
 }
 
-// Next annual provisions benchmarking
+// Next annual provisions benchmark
 // BenchmarkNextAnnualProvisions-4 5000000 251 ns/op
 func BenchmarkNextAnnualProvisions(b *testing.B) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))

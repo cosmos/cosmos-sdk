@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
@@ -25,15 +24,11 @@ var _ SimulateServiceServer = simulateServer{}
 
 // Simulate implements the SimulateService.Simulate RPC method.
 func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*SimulateResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	fmt.Println("sdkCtx.TxBytes()=", sdkCtx.TxBytes())
-
-	req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().AnyUnpacker())
-
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
+
+	req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().AnyUnpacker())
 
 	txBytes, err := req.Tx.Marshal()
 	if err != nil {

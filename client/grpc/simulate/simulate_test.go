@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 }
 
 func (s IntegrationTestSuite) TestSimulateService() {
-	// Create a dummy x/bank MsgSend
+	// Create a test x/bank MsgSend
 	addr1 := sdk.AccAddress([]byte("from"))
 	addr2 := sdk.AccAddress([]byte("to"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
@@ -61,7 +61,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
-	tx := txBuilder.GetTx()
+	tx := txBuilder.GetProtoTx()
 
 	res, err := s.queryClient.Simulate(
 		context.Background(),

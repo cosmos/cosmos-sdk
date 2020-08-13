@@ -391,3 +391,8 @@ func (t *builder) setSignatures(sigs [][]byte) {
 func (t *builder) GetTx() authsigning.Tx {
 	return t
 }
+
+// GetProtoTx returns the tx as a proto.Message.
+func (t *builder) GetProtoTx() *tx.Tx {
+	return t.tx
+}

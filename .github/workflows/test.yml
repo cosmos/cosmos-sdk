@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -73,7 +73,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.7
+      - uses: codecov/codecov-action@v1.0.12
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -84,7 +84,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -110,7 +110,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.7
+      - uses: codecov/codecov-action@v1.0.12
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -121,7 +121,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -147,7 +147,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.7
+      - uses: codecov/codecov-action@v1.0.12
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -158,7 +158,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -184,7 +184,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.7
+      - uses: codecov/codecov-action@v1.0.12
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"

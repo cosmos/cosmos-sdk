@@ -751,6 +751,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdSubmitProposal()
 			clientCtx := val.ClientCtx
+			flags.AddTxFlagsToCmd(cmd)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

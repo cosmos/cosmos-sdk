@@ -21,6 +21,7 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -29,7 +30,6 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		aminoCdc *codec.Codec,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
@@ -46,7 +46,6 @@ type ClientState interface {
 		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
-		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
@@ -57,7 +56,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
@@ -69,7 +67,6 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
@@ -81,7 +78,6 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
@@ -92,7 +88,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		sequence uint64,
-		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
@@ -103,7 +98,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-		consensusState ConsensusState,
 	) error
 }
 

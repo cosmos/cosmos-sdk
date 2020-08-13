@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
 )
 
 type builder struct {
@@ -34,12 +33,13 @@ type builder struct {
 	pubKeys []crypto.PubKey
 
 	pubkeyCodec types.PublicKeyCodec
+
+	txBodyHasUnknownNonCriticals bool
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
-	_ direct.ProtoTx           = &builder{}
+	_ authsigning.Tx   = &builder{}
+	_ client.TxBuilder = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -122,7 +122,7 @@ func (t *builder) ValidateBasic() error {
 	return nil
 }
 
-func (t *builder) GetBodyBytes() []byte {
+func (t *builder) getBodyBytes() []byte {
 	if len(t.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -138,7 +138,7 @@ func (t *builder) GetBodyBytes() []byte {
 	return t.bodyBz
 }
 
-func (t *builder) GetAuthInfoBytes() []byte {
+func (t *builder) getAuthInfoBytes() []byte {
 	if len(t.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
@@ -212,6 +212,11 @@ func (t *builder) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (t *builder) GetTimeoutHeight() uint64 {
+	return t.tx.Body.TimeoutHeight
+}
+
 func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := t.tx.AuthInfo.SignerInfos
 	sigs := t.tx.Signatures
@@ -251,6 +256,14 @@ func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	t.bodyBz = nil
 
 	return nil
+}
+
+// SetTimeoutHeight sets the transaction's height timeout.
+func (t *builder) SetTimeoutHeight(height uint64) {
+	t.tx.Body.TimeoutHeight = height
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	t.bodyBz = nil
 }
 
 func (t *builder) SetMemo(memo string) {
@@ -375,6 +388,6 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.SigFeeMemoTx {
+func (t *builder) GetTx() authsigning.Tx {
 	return t
 }

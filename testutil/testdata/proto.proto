@@ -3,6 +3,7 @@ package testdata;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 
@@ -340,4 +341,29 @@ message AnyWithExtra {
     google.protobuf.Any a = 1 [(gogoproto.embed) = true];
     int64 b = 3;
     int64 c = 4;
+}
+
+message TestUpdatedTxRaw {
+    bytes body_bytes = 1;
+    bytes auth_info_bytes = 2;
+    repeated bytes signatures = 3;
+    bytes new_field_5 = 5;
+    bytes new_field_1024 = 1024;
+}
+
+message TestUpdatedTxBody {
+    repeated google.protobuf.Any messages = 1;
+    string memo = 2;
+    int64 timeout_height = 3;
+    uint64 some_new_field = 4;
+    string some_new_field_non_critical_field = 1050;
+    repeated google.protobuf.Any extension_options = 1023;
+    repeated google.protobuf.Any non_critical_extension_options = 2047;
+}
+
+message TestUpdatedAuthInfo {
+    repeated cosmos.tx.v1beta1.SignerInfo signer_infos = 1;
+    cosmos.tx.v1beta1.Fee fee = 2;
+    bytes new_field_3 = 3;
+    bytes new_field_1024 = 1024;
 }

@@ -56,7 +56,7 @@ func GetCmdQueryParams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetParams())
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 
@@ -101,7 +101,7 @@ $ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xw
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetRewards())
+			return clientCtx.PrintOutput(&res.Rewards)
 		},
 	}
 
@@ -145,7 +145,7 @@ $ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetCommission())
+			return clientCtx.PrintOutput(&res.Commission)
 		},
 	}
 
@@ -209,7 +209,7 @@ $ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmq
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetSlashes())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -262,7 +262,7 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 					return err
 				}
 
-				return clientCtx.PrintOutput(res.GetRewards())
+				return clientCtx.PrintOutput(res)
 			}
 
 			res, err := queryClient.DelegationTotalRewards(
@@ -309,7 +309,7 @@ $ %s query distribution community-pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetPool())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 

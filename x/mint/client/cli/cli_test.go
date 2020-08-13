@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
 	cfg.GenesisState = genesisState
@@ -114,12 +114,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`"1.000000000000000000"`,
+			`1.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"1.000000000000000000"`,
+			`1.000000000000000000`,
 		},
 	}
 
@@ -155,12 +155,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`"500000000.000000000000000000"`,
+			`500000000.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"500000000.000000000000000000"`,
+			`500000000.000000000000000000`,
 		},
 	}
 

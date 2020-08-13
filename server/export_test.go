@@ -19,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,14 +35,14 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	}
 
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0)
+	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0, simapp.MakeEncodingConfig())
 
 	serverCtx := NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
-	clientCtx := client.Context{}.WithJSONMarshaler(app.Codec())
+	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
 
-	genDoc := newDefaultGenesisDoc(app.Codec())
+	genDoc := newDefaultGenesisDoc()
 	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
 
 	app.InitChain(
@@ -71,7 +70,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
-	err = app.Codec().UnmarshalJSON(output.Bytes(), &exportedGenDoc)
+	err = json.Unmarshal(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
@@ -90,10 +89,10 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
-func newDefaultGenesisDoc(cdc *codec.Codec) *tmtypes.GenesisDoc {
+func newDefaultGenesisDoc() *tmtypes.GenesisDoc {
 	genesisState := simapp.NewDefaultGenesisState()
 
-	stateBytes, err := codec.MarshalJSONIndent(cdc, genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)
 	}

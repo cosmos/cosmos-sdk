@@ -20,8 +20,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -58,7 +59,6 @@ Example:
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -72,10 +72,11 @@ Example:
 			nodeCLIHome, _ := cmd.Flags().GetString(flagNodeCLIHome)
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
+			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
 			return InitTestnet(
-				cmd, config, cdc, clientCtx.TxConfig, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, numValidators,
+				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				nodeDirPrefix, nodeDaemonHome, nodeCLIHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
 	}
@@ -89,6 +90,7 @@ Example:
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	return cmd
 }
@@ -97,11 +99,21 @@ const nodeDirPerm = 0755
 
 // Initialize the testnet
 func InitTestnet(
-	cmd *cobra.Command, nodeConfig *tmconfig.Config, cdc codec.JSONMarshaler,
-	txEncodingConfig client.TxEncodingConfig,
-	mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator,
-	outputDir, chainID, minGasPrices, nodeDirPrefix, nodeDaemonHome,
-	nodeCLIHome, startingIPAddress, keyringBackend string, numValidators int,
+	clientCtx client.Context,
+	cmd *cobra.Command,
+	nodeConfig *tmconfig.Config,
+	mbm module.BasicManager,
+	genBalIterator banktypes.GenesisBalancesIterator,
+	outputDir,
+	chainID,
+	minGasPrices,
+	nodeDirPrefix,
+	nodeDaemonHome,
+	nodeCLIHome,
+	startingIPAddress,
+	keyringBackend,
+	algoStr string,
+	numValidators int,
 ) error {
 
 	if chainID == "" {
@@ -168,8 +180,13 @@ func InitTestnet(
 			return err
 		}
 
-		keyPass := clientkeys.DefaultKeyPass
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, keyPass, true)
+		keyringAlgos, _ := kb.SupportedAlgorithms()
+		algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
+		if err != nil {
+			return err
+		}
+
+		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
@@ -198,7 +215,7 @@ func InitTestnet(
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		valTokens := sdk.TokensFromConsensusPower(100)
-		msg := stakingtypes.NewMsgCreateValidator(
+		createValMsg := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
@@ -207,41 +224,42 @@ func InitTestnet(
 			sdk.OneInt(),
 		)
 
-		tx := authtypes.NewStdTx([]sdk.Msg{msg}, authtypes.StdFee{}, []authtypes.StdSignature{}, memo) //nolint:staticcheck // SA1019: authtypes.StdFee is deprecated
-		txBldr, err := authtypes.NewTxBuilderFromFlags(inBuf, cmd.Flags(), clientDir)
-		if err != nil {
-			return fmt.Errorf("error creating tx: %w", err)
-		}
-
-		txBldr = txBldr.WithChainID(chainID).WithMemo(memo).WithKeybase(kb)
-
-		signedTx, err := txBldr.SignStdTx(nodeDirName, tx, false)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
+		txBuilder := clientCtx.TxConfig.NewTxBuilder()
+		if err := txBuilder.SetMsgs(createValMsg); err != nil {
 			return err
 		}
 
-		txBytes, err := cdc.MarshalJSON(signedTx)
-		if err != nil {
-			_ = os.RemoveAll(outputDir)
+		txBuilder.SetMemo(memo)
+
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
+			WithChainID(chainID).
+			WithMemo(memo).
+			WithKeybase(kb).
+			WithTxConfig(clientCtx.TxConfig)
+
+		if err := tx.Sign(txFactory, nodeDirName, txBuilder); err != nil {
 			return err
 		}
 
-		// gather gentxs folder
-		if err := writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes); err != nil {
-			_ = os.RemoveAll(outputDir)
+		txBz, err := clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+		if err != nil {
+			return err
+		}
+
+		if err := writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz); err != nil {
 			return err
 		}
 
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(cdc, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		cdc, txEncodingConfig, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
+		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -253,16 +271,16 @@ func InitTestnet(
 }
 
 func initGenFiles(
-	cdc codec.JSONMarshaler, mbm module.BasicManager, chainID string,
+	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
 
-	appGenState := mbm.DefaultGenesis(cdc)
+	appGenState := mbm.DefaultGenesis(clientCtx.JSONMarshaler)
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	cdc.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
+	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	if err != nil {
@@ -270,16 +288,16 @@ func initGenFiles(
 	}
 
 	authGenState.Accounts = accounts
-	appGenState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenState)
+	appGenState[authtypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
-	cdc.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
+	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
-	appGenState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankGenState)
+	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(bankGenState)
 
-	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
+	appGenStateJSON, err := codec.MarshalJSONIndent(clientCtx.JSONMarshaler, appGenState)
 	if err != nil {
 		return err
 	}
@@ -300,11 +318,9 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
-	nodeConfig *tmconfig.Config, chainID string,
-	nodeIDs []string, valPubKeys []crypto.PubKey,
-	numValidators int, outputDir, nodeDirPrefix, nodeDaemonHome string,
-	genBalIterator banktypes.GenesisBalancesIterator,
+	clientCtx client.Context, nodeConfig *tmconfig.Config, chainID string,
+	nodeIDs []string, valPubKeys []crypto.PubKey, numValidators int,
+	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
 
 	var appState json.RawMessage
@@ -326,7 +342,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(cdc, txEncodingConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.JSONMarshaler, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

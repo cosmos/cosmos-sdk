@@ -37,43 +37,9 @@ func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }
 
-// EnrichWithGas calculates the gas estimate that would be consumed by the
-// transaction and set the transaction's respective value accordingly.
-func EnrichWithGas(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (authtypes.TxBuilder, error) {
-	_, adjusted, err := simulateMsgs(txBldr, clientCtx, msgs)
-	if err != nil {
-		return txBldr, err
-	}
-
-	return txBldr.WithGas(adjusted), nil
-}
-
-// CalculateGas simulates the execution of a transaction and returns
-// the simulation response obtained by the query and the adjusted gas amount.
-func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), cdc *codec.Codec,
-	txBytes []byte, adjustment float64,
-) (sdk.SimulationResponse, uint64, error) {
-
-	// run a simulation (via /app/simulate query) to
-	// estimate gas and update TxBuilder accordingly
-	rawRes, _, err := queryFunc("/app/simulate", txBytes)
-	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
-	}
-
-	simRes, err := ParseQueryResponse(rawRes)
-	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
-	}
-
-	adjusted := adjustGasEstimate(simRes.GasUsed, adjustment)
-	return simRes, adjusted, nil
-}
-
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.Msg) error {
-	err := tx.GenerateOrBroadcastTxWithFactory(clientCtx, txBldr, msgs...)
+	err := tx.GenerateTx(clientCtx, txBldr, msgs...)
 	return err
 }
 
@@ -187,28 +153,13 @@ func populateAccountFromState(
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
 // Otherwise returns encoder with default logic.
-func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
+func GetTxEncoder(cdc *codec.LegacyAmino) (encoder sdk.TxEncoder) {
 	encoder = sdk.GetConfig().GetTxEncoder()
 	if encoder == nil {
 		encoder = authtypes.DefaultTxEncoder(cdc)
 	}
 
 	return encoder
-}
-
-// simulateMsgs simulates the transaction and returns the simulation response and
-// the adjusted gas value.
-func simulateMsgs(txBldr authtypes.TxBuilder, clientCtx client.Context, msgs []sdk.Msg) (sdk.SimulationResponse, uint64, error) {
-	txBytes, err := txBldr.BuildTxForSim(msgs)
-	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
-	}
-
-	return CalculateGas(clientCtx.QueryWithData, clientCtx.Codec, txBytes, txBldr.GasAdjustment())
-}
-
-func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
-	return uint64(adjustment * float64(estimate))
 }
 
 func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {

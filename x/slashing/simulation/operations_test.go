@@ -24,7 +24,7 @@ func TestWeightedOperations(t *testing.T) {
 	app, ctx := createTestApp(false)
 	ctx.WithChainID("test-chain")
 
-	cdc := app.Codec()
+	cdc := app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
 	s := rand.NewSource(1)

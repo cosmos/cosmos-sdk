@@ -139,10 +139,11 @@ var _ sdk.Tx = (*StdTx)(nil)
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
-	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
-	Fee        StdFee         `json:"fee" yaml:"fee"`
-	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
-	Memo       string         `json:"memo" yaml:"memo"`
+	Msgs          []sdk.Msg      `json:"msg" yaml:"msg"`
+	Fee           StdFee         `json:"fee" yaml:"fee"`
+	Signatures    []StdSignature `json:"signatures" yaml:"signatures"`
+	Memo          string         `json:"memo" yaml:"memo"`
+	TimeoutHeight uint64         `json:"timeout_height" yaml:"timeout_height"`
 }
 
 // Deprecated
@@ -212,6 +213,11 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 // GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }
 
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (tx StdTx) GetTimeoutHeight() uint64 {
+	return tx.TimeoutHeight
+}
+
 // GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
 // pubkeys returned from MsgKeySigners, and the order
@@ -277,15 +283,16 @@ func (tx StdTx) FeePayer() sdk.AccAddress {
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
 	AccountNumber uint64            `json:"account_number" yaml:"account_number"`
-	ChainID       string            `json:"chain_id" yaml:"chain_id"`
-	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
-	Memo          string            `json:"memo" yaml:"memo"`
-	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`
+	TimeoutHeight uint64            `json:"timeout_height,omitempty" yaml:"timeout_height"`
+	ChainID       string            `json:"chain_id" yaml:"chain_id"`
+	Memo          string            `json:"memo" yaml:"memo"`
+	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
+	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
@@ -298,8 +305,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		Memo:          memo,
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
+		TimeoutHeight: timeout,
 	})
-
 	if err != nil {
 		panic(err)
 	}
@@ -314,7 +321,7 @@ type StdSignature struct {
 }
 
 // DefaultTxDecoder logic for standard transaction decoding
-func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
@@ -333,7 +340,7 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultJSONTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var tx = StdTx{}
 
@@ -353,7 +360,7 @@ func DefaultJSONTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 // DefaultTxEncoder logic for standard transaction encoding
-func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
+func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryBare(tx)
 	}
@@ -372,7 +379,7 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
-func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.SignatureV2, error) {
+func StdSignatureToSignatureV2(cdc *codec.LegacyAmino, sig StdSignature) (signing.SignatureV2, error) {
 	pk := sig.GetPubKey()
 	data, err := pubKeySigToSigData(cdc, pk, sig.Signature)
 	if err != nil {
@@ -386,7 +393,7 @@ func StdSignatureToSignatureV2(cdc *codec.Codec, sig StdSignature) (signing.Sign
 }
 
 // SignatureV2ToStdSignature converts a SignatureV2 to a StdSignature
-func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSignature, error) {
+func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) (StdSignature, error) {
 	var (
 		sigBz []byte
 		err   error
@@ -405,7 +412,7 @@ func SignatureV2ToStdSignature(cdc *codec.Codec, sig signing.SignatureV2) (StdSi
 	}, nil
 }
 
-func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
+func pubKeySigToSigData(cdc *codec.LegacyAmino, key crypto.PubKey, sig []byte) (signing.SignatureData, error) {
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{
@@ -444,7 +451,7 @@ func pubKeySigToSigData(cdc *codec.Codec, key crypto.PubKey, sig []byte) (signin
 
 // MultiSignatureDataToAminoMultisignature converts a MultiSignatureData to an AminoMultisignature.
 // Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
-func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
+func MultiSignatureDataToAminoMultisignature(cdc *codec.LegacyAmino, mSig *signing.MultiSignatureData) (multisig.AminoMultisignature, error) {
 	n := len(mSig.Signatures)
 	sigs := make([][]byte, n)
 
@@ -464,7 +471,7 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.Codec, mSig *signing.Mul
 
 // SignatureDataToAminoSignature converts a SignatureData to amino-encoded signature bytes.
 // Only SIGN_MODE_LEGACY_AMINO_JSON is supported.
-func SignatureDataToAminoSignature(cdc *codec.Codec, data signing.SignatureData) ([]byte, error) {
+func SignatureDataToAminoSignature(cdc *codec.LegacyAmino, data signing.SignatureData) ([]byte, error) {
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
 		if data.SignMode != signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {

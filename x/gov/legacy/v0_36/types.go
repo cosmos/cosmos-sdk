@@ -127,7 +127,7 @@ func ValidateAbstract(c Content) error {
 	return nil
 }
 
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
 }

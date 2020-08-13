@@ -82,7 +82,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetProposal())
+			return clientCtx.PrintOutput(&res.Proposal)
 		},
 	}
 
@@ -155,10 +155,10 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			if len(res.GetProposals()) == 0 {
-				return fmt.Errorf("no matching proposals found")
+				return fmt.Errorf("no proposals found")
 			}
 
-			return clientCtx.PrintOutput(res.GetProposals())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -237,7 +237,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			return clientCtx.PrintOutput(res.GetVote())
+			return clientCtx.PrintOutput(&res.Vote)
 		},
 	}
 
@@ -298,7 +298,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 				var votes types.Votes
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &votes)
-				return clientCtx.PrintOutput(votes)
+				return clientCtx.PrintOutputLegacy(votes)
 
 			}
 
@@ -311,11 +311,12 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				context.Background(),
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetVotes())
+			return clientCtx.PrintOutput(res)
 
 		},
 	}
@@ -388,7 +389,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
 			}
 
-			return clientCtx.PrintOutput(deposit)
+			return clientCtx.PrintOutput(&deposit)
 		},
 	}
 
@@ -446,7 +447,8 @@ $ %s query gov deposits 1
 
 				var dep types.Deposits
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &dep)
-				return clientCtx.PrintOutput(dep)
+
+				return clientCtx.PrintOutputLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -458,11 +460,12 @@ $ %s query gov deposits 1
 				context.Background(),
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetDeposits())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -520,7 +523,7 @@ $ %s query gov tally 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetTally())
+			return clientCtx.PrintOutput(&res.Tally)
 		},
 	}
 
@@ -577,11 +580,13 @@ $ %s query gov params
 				return err
 			}
 
-			return clientCtx.PrintOutput(types.NewParams(
+			params := types.NewParams(
 				votingRes.GetVotingParams(),
 				tallyRes.GetTallyParams(),
 				depositRes.GetDepositParams(),
-			))
+			)
+
+			return clientCtx.PrintOutputLegacy(params)
 		},
 	}
 
@@ -636,7 +641,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return clientCtx.PrintOutput(out)
+			return clientCtx.PrintOutputLegacy(out)
 		},
 	}
 
@@ -678,7 +683,7 @@ $ %s query gov proposer 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(prop)
+			return clientCtx.PrintOutputLegacy(prop)
 		},
 	}
 

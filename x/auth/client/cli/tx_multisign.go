@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetSignCommand returns the sign command
@@ -101,7 +100,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
-			accnum, seq, err := types.AccountRetriever{}.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}

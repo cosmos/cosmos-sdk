@@ -96,7 +96,7 @@ func DefaultConfig() Config {
 		TxConfig:          encCfg.TxConfig,
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.NewAccountRetriever(encCfg.Marshaler),
+		AccountRetriever:  authtypes.NewAccountRetriever(encCfg.Amino),
 		AppConstructor:    NewSimApp,
 		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     2 * time.Second,

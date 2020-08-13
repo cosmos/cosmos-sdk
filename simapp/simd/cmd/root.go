@@ -54,7 +54,7 @@ var (
 			WithTxConfig(encodingConfig.TxConfig).
 			WithLegacyAmino(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
+			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Amino)).
 			WithBroadcastMode(flags.BroadcastBlock).
 			WithHomeDir(simapp.DefaultNodeHome)
 )
@@ -79,12 +79,12 @@ func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		withProtoJSON(genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome)),
-		withProtoJSON(genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
+		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		withProtoJSON(genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
-		withProtoJSON(genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig)),
-		withProtoJSON(AddGenesisAccountCmd(simapp.DefaultNodeHome)),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig),
+		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -201,28 +201,4 @@ func exportAppStateAndTMValidators(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
-}
-
-// This is a temporary command middleware to enable proto JSON marshaling for testing.
-// Once proto JSON works everywhere we can remove this and set ProtoCodec as default
-func withProtoJSON(command *cobra.Command) *cobra.Command {
-	existing := command.PersistentPreRunE
-	if existing != nil {
-		command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-			err := existing(cmd, args)
-			if err != nil {
-				return err
-			}
-			return setProtoJSON(cmd, args)
-		}
-	} else {
-		command.PersistentPreRunE = setProtoJSON
-	}
-	return command
-}
-
-func setProtoJSON(cmd *cobra.Command, _ []string) error {
-	clientCtx := client.GetClientContextFromCmd(cmd)
-	clientCtx = clientCtx.WithJSONMarshaler(codec.NewProtoCodec(clientCtx.InterfaceRegistry))
-	return client.SetCmdClientContext(cmd, clientCtx)
 }

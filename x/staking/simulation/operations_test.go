@@ -85,6 +85,7 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 	require.Equal(t, "0.660000000000000000", msg.Commission.MaxRate.String())
 	require.Equal(t, "0.047464127245687382", msg.Commission.Rate.String())
 	require.Equal(t, types.TypeMsgCreateValidator, msg.Type())
+	require.Equal(t, "cosmosvalconspub1zcjduepq280tm686ma80cva9z620dmknd9a858pd2zmq9ackfenfllecjxds0hg9n7", msg.Pubkey)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress.String())
 	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorAddress.String())
 	require.Len(t, futureOperations, 0)

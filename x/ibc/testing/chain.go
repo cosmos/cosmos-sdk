@@ -340,7 +340,7 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 	msg := ibctmtypes.NewMsgCreateClient(
 		clientID, counterparty.LastHeader,
 		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(),
+		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(), false, false,
 	)
 
 	return chain.SendMsgs(msg)

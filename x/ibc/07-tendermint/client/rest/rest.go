@@ -25,15 +25,17 @@ func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 
 // CreateClientReq defines the properties of a create client request's body.
 type CreateClientReq struct {
-	BaseReq         rest.BaseReq        `json:"base_req" yaml:"base_req"`
-	ClientID        string              `json:"client_id" yaml:"client_id"`
-	ChainID         string              `json:"chain_id" yaml:"chain_id"`
-	Header          ibctmtypes.Header   `json:"header" yaml:"header"`
-	TrustLevel      ibctmtypes.Fraction `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod  time.Duration       `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod time.Duration       `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift   time.Duration       `json:"max_clock_drift" yaml:"max_clock_drift"`
-	ProofSpecs      []*ics23.ProofSpec  `json:"proof_specs" yaml:"proof_specs"`
+	BaseReq                                  rest.BaseReq        `json:"base_req" yaml:"base_req"`
+	ClientID                                 string              `json:"client_id" yaml:"client_id"`
+	ChainID                                  string              `json:"chain_id" yaml:"chain_id"`
+	Header                                   ibctmtypes.Header   `json:"header" yaml:"header"`
+	TrustLevel                               ibctmtypes.Fraction `json:"trust_level" yaml:"trust_level"`
+	TrustingPeriod                           time.Duration       `json:"trusting_period" yaml:"trusting_period"`
+	UnbondingPeriod                          time.Duration       `json:"unbonding_period" yaml:"unbonding_period"`
+	MaxClockDrift                            time.Duration       `json:"max_clock_drift" yaml:"max_clock_drift"`
+	ProofSpecs                               []*ics23.ProofSpec  `json:"proof_specs" yaml:"proof_specs"`
+	AllowGovernanceOverrideAfterExpire       bool                `json:"allow_governance_override_after_expiry" yaml:"allow_governance_override_after_expiry"`
+	AllowGovernanceOverrideAfterMisbehaviour bool                `json:"allow_governance_override_after_misbehaviour" yaml:"allow_governance_override_after_misbehaviour"`
 }
 
 // UpdateClientReq defines the properties of a update client request's body.

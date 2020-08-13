@@ -52,7 +52,7 @@ func createClientHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		msg := ibctmtypes.NewMsgCreateClient(
 			req.ClientID, req.Header, req.TrustLevel,
 			req.TrustingPeriod, req.UnbondingPeriod, req.MaxClockDrift,
-			req.ProofSpecs, fromAddr,
+			req.ProofSpecs, fromAddr, req.AllowGovernanceOverrideAfterExpire, req.AllowGovernanceOverrideAfterMisbehaviour,
 		)
 
 		if err := msg.ValidateBasic(); err != nil {

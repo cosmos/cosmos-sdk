@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	flagTrustLevel                  = "trust-level"
-	flagProofSpecs                  = "proof-specs"
-	flagAllowGovOverrideAfterExpiry = "allow_governance_override_after_expiry"
+	flagTrustLevel                        = "trust-level"
+	flagProofSpecs                        = "proof-specs"
+	flagAllowGovOverrideAfterExpiry       = "allow_governance_override_after_expiry"
 	fladAllowGovOverrideAfterMisbehaviour = "allow_governance_override_after_misbehaviour"
 )
 
@@ -112,7 +112,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 			msg := ibctmtypes.NewMsgCreateClient(
 				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
-				agoae, agoam
+				agoae, agoam,
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

@@ -22,17 +22,17 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), true, "success msg should pass"},
-		{types.NewMsgCreateClient("(BADCHAIN)", suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid client id passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid trust level"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero trusting period passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero unbonding period passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), nil), false, "Empty address passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid header"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer), false, "invalid proof specs"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, nil, signer), false, "nil proof specs"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "trusting period not less than unbonding period"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), true, "success msg should pass"},
+		{types.NewMsgCreateClient("(BADCHAIN)", suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "invalid client id passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "invalid trust level"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "zero trusting period passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "zero unbonding period passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), nil, false, false), false, "Empty address passed"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "nil header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "invalid header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer, false, false), false, "invalid proof specs"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, nil, signer, false, false), false, "nil proof specs"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer, false, false), false, "trusting period not less than unbonding period"},
 	}
 
 	for i, tc := range cases {

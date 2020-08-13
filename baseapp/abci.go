@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc/codes"
-
 	grpcstatus "google.golang.org/grpc/status"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -360,8 +359,7 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		err = grpcErrorToSDKError(err)
-		res = sdkerrors.QueryResult(err)
+		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err))
 		res.Height = req.Height
 		return res
 	}
@@ -369,7 +367,7 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 	return res
 }
 
-func grpcErrorToSDKError(err error) error {
+func gRPCErrorToSDKError(err error) error {
 	status, ok := grpcstatus.FromError(err)
 	if !ok {
 		return err

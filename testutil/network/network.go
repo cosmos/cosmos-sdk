@@ -329,8 +329,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithJSONMarshaler(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever).
-			WithInterfaceRegistry(cfg.InterfaceRegistry)
+			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,

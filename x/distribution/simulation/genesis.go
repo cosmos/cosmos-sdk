@@ -77,6 +77,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		},
 	}
 
-	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, distrGenesis))
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(distrGenesis)
+	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, &distrGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&distrGenesis)
 }

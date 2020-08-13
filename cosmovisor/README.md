@@ -134,7 +134,7 @@ If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can acc
 then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
 unpack it into the `upgrades/<name>` folder to be run as if we installed it manually
 
-Note that for this mechanism to provide strong security guarantees, all URLS should include a
+Note that for this mechanism to provide strong security guarantees, all URLs should include a
 sha{256,512} checksum. This ensures that no false binary is run, even if someone hacks the server
 or hijacks the dns. go-getter will always ensure the downloaded file matches the checksum if it
 is provided. And also handles unpacking archives into directories (so these download links should be

@@ -4,14 +4,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
-// GetTxCmd returns the transaction commands for IBC clients
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
-	ics06SoloMachineTxCmd := &cobra.Command{
+// NewTxCmd returns a root CLI command handler for all x/ibc/06-solomachine transaction commands.
+func NewTxCmd() *cobra.Command {
+	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "Solo Machine transaction subcommands",
 		DisableFlagParsing:         true,
@@ -19,11 +17,11 @@ func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics06SoloMachineTxCmd.AddCommand(flags.PostCommands(
-		GetCmdCreateClient(cdc),
-		GetCmdUpdateClient(cdc),
-		GetCmdSubmitMisbehaviour(cdc),
-	)...)
+	txCmd.AddCommand(
+		NewCreateClientCmd(),
+		NewUpdateClientCmd(),
+		NewSubmitMisbehaviourCmd(),
+	)
 
-	return ics06SoloMachineTxCmd
+	return txCmd
 }

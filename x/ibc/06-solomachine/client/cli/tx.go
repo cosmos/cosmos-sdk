@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
@@ -20,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
-// GetCmdCreateClient defines the command to create a new IBC Client.
-func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
+// NewCreateClientCmd defines the command to create a new IBC Client.
+func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create [client-id] [path/to/consensus_state.json]",
 		Short:   "create new solo machine client",
@@ -59,8 +58,8 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdUpdateClient defines the command to update a client.
-func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
+// NewUpdateClientCmd defines the command to update a client.
+func NewUpdateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update [client-id] [path/to/header.json]",
 		Short:   "update existing client with a header",
@@ -97,10 +96,10 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdSubmitMisbehaviour defines the command to submit a misbehaviour to prevent
+// NewSubmitMisbehaviourCmd defines the command to submit a misbehaviour to prevent
 // future updates as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
-func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
+func NewSubmitMisbehaviourCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "misbehaviour [path/to/evidence.json]",
 		Short:   "submit a client misbehaviour",

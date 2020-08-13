@@ -1,8 +1,11 @@
 package cli_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/gogo/protobuf/proto"
 

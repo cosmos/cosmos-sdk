@@ -19,9 +19,9 @@ func TestAccountRetriever(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
-	accRetr := types.NewAccountRetriever(appCodec)
+	accRetr := types.NewAccountRetriever(legacyAmino)
 	addr := []byte("test")
-	bs, err := appCodec.MarshalJSON(types.QueryAccountRequest{Address: addr})
+	bs, err := legacyAmino.MarshalJSON(types.QueryAccountRequest{Address: addr})
 	require.NoError(t, err)
 
 	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount)

@@ -72,8 +72,8 @@ func TestFullAppSimulation(t *testing.T) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-		SimulationOperations(app, app.LegacyAmino(), config),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -104,8 +104,8 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-		SimulationOperations(app, app.LegacyAmino(), config),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -137,12 +137,12 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
-	err = app.LegacyAmino().UnmarshalJSON(appState, &genesisState)
+	err = json.Unmarshal(appState, &genesisState)
 	require.NoError(t, err)
 
 	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	newApp.mm.InitGenesis(ctxB, app.LegacyAmino(), genesisState)
+	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, consensusParams)
 
 	fmt.Printf("comparing stores...\n")
@@ -195,8 +195,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-		SimulationOperations(app, app.LegacyAmino(), config),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -237,8 +237,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-		SimulationOperations(newApp, newApp.LegacyAmino(), config),
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		SimulationOperations(newApp, newApp.AppCodec(), config),
 		newApp.ModuleAccountAddrs(), config,
 	)
 	require.NoError(t, err)
@@ -282,8 +282,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.LegacyAmino(), app.SimulationManager()),
-				SimulationOperations(app, app.LegacyAmino(), config),
+				t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+				SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)

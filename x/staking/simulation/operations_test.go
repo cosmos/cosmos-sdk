@@ -26,7 +26,7 @@ func TestWeightedOperations(t *testing.T) {
 
 	ctx.WithChainID("test-chain")
 
-	cdc := app.LegacyAmino()
+	cdc := app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,

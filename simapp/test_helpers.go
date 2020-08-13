@@ -20,7 +20,6 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -53,7 +52,7 @@ func Setup(isCheckTx bool) *SimApp {
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
-		stateBytes, err := codec.MarshalJSONIndent(app.LegacyAmino(), genesisState)
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
 		}
@@ -83,7 +82,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.LegacyAmino().MustMarshalJSON(authGenesis)
+	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
@@ -111,7 +110,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = app.LegacyAmino().MustMarshalJSON(stakingGenesis)
+	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -121,9 +120,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.LegacyAmino().MustMarshalJSON(bankGenesis)
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	stateBytes, err := codec.MarshalJSONIndent(app.LegacyAmino(), genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts

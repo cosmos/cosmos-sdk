@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -666,10 +668,11 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var acc authtypes.BaseAccount
-				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &acc))
-				s.Require().Equal(val.Address, acc.Address)
+				var any types.Any
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
+				var acc authtypes.AccountI
+				s.Require().NoError(val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})
 	}

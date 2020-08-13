@@ -2,11 +2,8 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
-
-var _ simulation.ClientUnmarshaler = (*Keeper)(nil)
 
 // MustUnmarshalClientState attempts to decode and return an ClientState object from
 // raw encoded bytes. It panics on error.

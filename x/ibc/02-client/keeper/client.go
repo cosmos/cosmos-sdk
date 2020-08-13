@@ -66,7 +66,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		err             error
 	)
 
-	clientState, consensusState, err = clientState.CheckValidityAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
+	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
 
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)

@@ -35,7 +35,7 @@ import (
 // the new latest height
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
-func (cs *ClientState) CheckHeaderAndUpdateState(
+func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
@@ -63,11 +63,11 @@ func (cs *ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(cs, tmConsState, tmHeader, ctx.BlockTime()); err != nil {
+	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime()); err != nil {
 		return nil, nil, err
 	}
 
-	newClientState, consensusState := update(cs, tmHeader)
+	newClientState, consensusState := update(&cs, tmHeader)
 	return newClientState, consensusState, nil
 }
 

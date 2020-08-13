@@ -18,7 +18,7 @@ import (
 // of misbehaviour.Header1
 // Similarly, consensusState2 is the trusted consensus state that corresponds
 // to misbehaviour.Header2
-func (cs *ClientState) CheckMisbehaviourAndUpdateState(
+func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ctx sdk.Context,
 	cdc codec.BinaryMarshaler,
 	clientStore sdk.KVStore,
@@ -67,19 +67,11 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &ConsensusState{}, consensusState2)
 	}
 
-	// use earliest height of trusted consensus states to verify ageBlocks
-	var height uint64
-	if tmConsensusState1.Height < tmConsensusState2.Height {
-		height = tmConsensusState1.Height
-	} else {
-		height = tmConsensusState2.Height
-	}
-
 	// calculate the age of the misbehaviour evidence
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := uint64(infractionHeight) - height
+	ageBlocks := ctx.BlockHeight() - infractionHeight
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -96,7 +88,7 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&
 		ageDuration > consensusParams.Evidence.MaxAgeDuration &&
-		ageBlocks > uint64(consensusParams.Evidence.MaxAgeNumBlocks) {
+		ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
 			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,
@@ -109,18 +101,18 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 	// evidence.ValidateBasic by the client keeper and msg.ValidateBasic
 	// by the base application.
 	if err := checkMisbehaviourHeader(
-		cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
+		&cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header1 in Evidence failed")
 	}
 	if err := checkMisbehaviourHeader(
-		cs, tmConsensusState2, tmEvidence.Header2, ctx.BlockTime(),
+		&cs, tmConsensusState2, tmEvidence.Header2, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Evidence failed")
 	}
 
 	cs.FrozenHeight = uint64(tmEvidence.GetHeight())
-	return cs, nil
+	return &cs, nil
 }
 
 // checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given

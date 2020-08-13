@@ -2,15 +2,14 @@ package types_test
 
 import (
 	"bytes"
+	fmt "fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -48,7 +47,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		consensusState1 clientexported.ConsensusState
 		consensusState2 clientexported.ConsensusState
 		evidence        clientexported.Misbehaviour
-		consensusParams *abci.ConsensusParams
 		timestamp       time.Time
 		expPass         bool
 	}{
@@ -63,7 +61,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			true,
 		},
@@ -78,7 +75,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			true,
 		},
@@ -93,7 +89,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			true,
 		},
@@ -108,7 +103,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			true,
 		},
@@ -123,7 +117,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -138,22 +131,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
-			suite.now,
-			false,
-		},
-		{
-			"invalid tendermint client state",
-			nil,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, altValSet, bothSigners),
-				ChainID:  chainID,
-				ClientID: chainID,
-			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -168,22 +145,20 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
 		{
-			"invalid tendermint consensus state",
+			"trusted consensus state does not exist",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			nil,
+			nil, // consensus state for trusted height - 1 does not exist in store
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
 				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -193,7 +168,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			nil,
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -203,14 +177,11 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.Evidence{
-				Header1: types.CreateTestHeader(chainID, int64(2*height+uint64(simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks)), height,
-					suite.now, bothValSet, bothValSet, bothSigners),
-				Header2: types.CreateTestHeader(chainID, int64(2*height+uint64(simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks)), height,
-					suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now.Add(2 * time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration),
 			false,
 		},
@@ -225,14 +196,13 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
 		{
 			"unbonding period expired",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			types.ConsensusState{Timestamp: time.Time{}, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: bothValsHash},
+			&types.ConsensusState{Timestamp: time.Time{}, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: bothValsHash},
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.Evidence{
 				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
@@ -240,8 +210,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
-			suite.now,
+			suite.now.Add(ubdPeriod),
 			false,
 		},
 		{
@@ -255,7 +224,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -270,7 +238,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -285,7 +252,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -300,7 +266,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
-			simapp.DefaultConsensusParams,
 			suite.now,
 			false,
 		},
@@ -308,18 +273,41 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	for i, tc := range testCases {
 		tc := tc
+		suite.Run(fmt.Sprintf("Case: %s", tc.name), func() {
 
-		clientState, err := tendermint.CheckMisbehaviourAndUpdateState(tc.clientState, tc.consensusState1, tc.consensusState2, tc.evidence, tc.timestamp, tc.consensusParams)
+			// reset suite to create fresh application state
+			suite.SetupTest()
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
-			suite.Require().Equal(uint64(tc.evidence.GetHeight()), clientState.GetFrozenHeight(),
-				"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.evidence.GetHeight(), clientState.GetFrozenHeight())
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-			suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// Set current timestamp in context
+			ctx := suite.chainA.GetContext().WithBlockTime(tc.timestamp)
+			ctx = ctx.WithConsensusParams(simapp.DefaultConsensusParams)
+
+			// Set trusted consensus states in client store
+
+			if tc.consensusState1 != nil {
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, tc.consensusState1.GetHeight(), tc.consensusState1)
+			}
+			if tc.consensusState2 != nil {
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, tc.consensusState2.GetHeight(), tc.consensusState2)
+			}
+
+			clientState, err := tc.clientState.CheckMisbehaviourAndUpdateState(
+				ctx,
+				suite.cdc,
+				suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(ctx, clientID), // pass in clientID prefixed clientStore
+				tc.evidence,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
+				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.name)
+				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
+				suite.Require().Equal(uint64(tc.evidence.GetHeight()), clientState.GetFrozenHeight(),
+					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.evidence.GetHeight(), clientState.GetFrozenHeight())
+			} else {
+				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
+				suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
+			}
+		})
 	}
 }

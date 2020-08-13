@@ -66,7 +66,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/ibc/23-commitmentl and
 	// defined at the application level.
-	SubModuleCdc = codec.NewHybridCodec(amino, codectypes.NewInterfaceRegistry())
+	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
 
 func init() {

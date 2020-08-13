@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -22,21 +21,23 @@ const (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc   codec.Marshaler
-	key   sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey  sdk.StoreKey // []byte -> bool, stores parameter change
-	name  []byte
-	table KeyTable
+	cdc         codec.BinaryMarshaler
+	legacyAmino *codec.LegacyAmino
+	key         sdk.StoreKey // []byte -> []byte, stores parameter
+	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
+	name        []byte
+	table       KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.Marshaler, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
 	return Subspace{
-		cdc:   cdc,
-		key:   key,
-		tkey:  tkey,
-		name:  []byte(name),
-		table: NewKeyTable(),
+		cdc:         cdc,
+		legacyAmino: legacyAmino,
+		key:         key,
+		tkey:        tkey,
+		name:        []byte(name),
+		table:       NewKeyTable(),
 	}
 }
 
@@ -104,12 +105,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
-	msg, ok := ptr.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("can't proto marshal %T", ptr))
-	}
-
-	if err := s.cdc.UnmarshalJSON(bz, msg); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -126,12 +122,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 	s.checkType(key, ptr)
 
-	msg, ok := ptr.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("can't proto marshal %T", ptr))
-	}
-
-	if err := s.cdc.UnmarshalJSON(bz, msg); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -181,12 +172,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	msg, ok := value.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("can't proto marshal %T", value))
-	}
-
-	bz, err := s.cdc.MarshalJSON(msg)
+	bz, err := s.legacyAmino.MarshalJSON(value)
 	if err != nil {
 		panic(err)
 	}
@@ -213,12 +199,7 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	dest := reflect.New(ty).Interface()
 	s.GetIfExists(ctx, key, dest)
 
-	msg, ok := dest.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("can't proto marshal %T", dest))
-	}
-
-	if err := s.cdc.UnmarshalJSON(value, msg); err != nil {
+	if err := s.legacyAmino.UnmarshalJSON(value, dest); err != nil {
 		return err
 	}
 

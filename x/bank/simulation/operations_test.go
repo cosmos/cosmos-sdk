@@ -31,7 +31,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 // TestWeightedOperations tests the weights of the operations.
 func (suite *SimTestSuite) TestWeightedOperations() {
-	cdc := suite.app.LegacyAmino()
+	cdc := suite.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper, suite.app.BankKeeper)

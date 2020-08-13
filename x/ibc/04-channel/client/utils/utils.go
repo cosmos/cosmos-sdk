@@ -139,13 +139,14 @@ func QueryChannelClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryChannelConsensusState(
-	clientCtx client.Context, portID, channelID string, prove bool,
+	clientCtx client.Context, portID, channelID string, height uint64, prove bool,
 ) (*types.QueryChannelConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
 		PortID:    portID,
 		ChannelID: channelID,
+		Height:    height,
 	}
 
 	res, err := queryClient.ChannelConsensusState(context.Background(), req)
@@ -179,7 +180,7 @@ func QueryChannelConsensusState(
 // QueryCounterpartyConsensusState uses the channel Querier to return the
 // counterparty ConsensusState given the source port ID and source channel ID.
 func QueryCounterpartyConsensusState(
-	clientCtx client.Context, portID, channelID string,
+	clientCtx client.Context, portID, channelID string, height uint64,
 ) (clientexported.ConsensusState, uint64, error) {
 	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
 	if err != nil {
@@ -187,7 +188,7 @@ func QueryCounterpartyConsensusState(
 	}
 
 	counterparty := channelRes.Channel.Counterparty
-	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID, false)
+	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID, height, false)
 	if err != nil {
 		return nil, 0, err
 	}

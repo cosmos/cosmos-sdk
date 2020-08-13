@@ -62,7 +62,8 @@ older clients.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Remove `keys update` command.
 * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove CLI and REST handlers for querying `x/evidence` parameters.
 * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
-* (x/gov) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) `ProposalStatus` is now JSON serialized using its protobuf name, so expect names like `PROPOSAL_STATUS_DEPOSIT_PERIOD` as opposed to `DepositPeriod`.
+* (x/gov) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) `ProposalStatus` and `VoteOption` are now JSON serialized using its protobuf name, so expect names like `PROPOSAL_STATUS_DEPOSIT_PERIOD` as opposed to `DepositPeriod`.
+* (x/auth/vesting) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) Custom JSON marshaling of vesting accounts was removed. Vesting accounts are now marshaled using their default proto or amino JSON representation.
 
 ### API Breaking Changes
 
@@ -634,6 +635,12 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+
+## [v0.37.14] - 2020-08-12
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.13](https://github.com/tendermint/tendermint/releases/tag/v0.32.13).
 
 
 ## [v0.37.13] - 2020-06-03

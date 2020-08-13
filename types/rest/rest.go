@@ -303,15 +303,8 @@ func PostProcessResponse(w http.ResponseWriter, ctx client.Context, resp interfa
 		return
 	}
 
-	// TODO: Remove once PubKey Protobuf migration has been completed.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/6886
-	var marshaler codec.JSONMarshaler
-
-	if ctx.JSONMarshaler != nil {
-		marshaler = ctx.JSONMarshaler
-	} else {
-		marshaler = ctx.LegacyAmino
-	}
+	// LegacyAmino used intentionally for REST
+	marshaler := ctx.LegacyAmino
 
 	switch res := resp.(type) {
 	case []byte:

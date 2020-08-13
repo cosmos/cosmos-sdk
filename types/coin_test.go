@@ -768,22 +768,18 @@ func TestMarshalJSONCoins(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			var strs []string
-			for _, coin := range tc.input {
-				bz, err := cdc.MarshalJSON(&coin)
-				require.NoError(t, err)
-				strs = append(strs, string(bz))
+			bz, err := cdc.MarshalJSON(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.strOutput, string(bz))
+
+			var newCoins Coins
+			require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+
+			if tc.input.Empty() {
+				require.Nil(t, newCoins)
+			} else {
+				require.Equal(t, tc.input, newCoins)
 			}
-			require.Equal(t, tc.strOutput, strings.Join(strings.Split(fmt.Sprintf("%v", strs), " "), ","))
-
-			// var newCoins Coins
-			// require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
-
-			// if tc.input.Empty() {
-			// 	require.Nil(t, newCoins)
-			// } else {
-			// 	require.Equal(t, tc.input, newCoins)
-			// }
 		})
 	}
 }

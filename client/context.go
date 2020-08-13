@@ -227,6 +227,7 @@ func (ctx Context) printOutput(toPrint interface{}) error {
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", toPrint)
 	}
+
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(msg)
 	if err != nil {

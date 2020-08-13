@@ -2,7 +2,6 @@ package simulate
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codes "google.golang.org/grpc/codes"
@@ -34,7 +33,6 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("txBytes=", txBytes)
 
 	gasInfo, result, err := s.app.Simulate(txBytes, req.Tx)
 	if err != nil {

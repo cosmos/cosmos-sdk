@@ -84,7 +84,6 @@ func SimulateFromSeed(
 	}
 
 	accs = tmpAccs
-
 	nextValidators := validators
 
 	header := tmproto.Header{
@@ -188,22 +187,18 @@ func SimulateFromSeed(
 
 		if header.ProposerAddress == nil {
 			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
-
 			stopEarly = true
-
 			break
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
-		request = RandomRequestBeginBlock(r, params, validators,
-			pastTimes, pastVoteInfos, eventStats.Tally, header)
+		request = RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, header)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block
 		validators = nextValidators
-		nextValidators = updateValidators(tb, r, params,
-			validators, res.ValidatorUpdates, eventStats.Tally)
+		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 
 		// update the exported params
 		if config.ExportParamsPath != "" && config.ExportParamsHeight == height {

@@ -71,13 +71,13 @@ func TestCoinIsValid(t *testing.T) {
 	}{
 		{Coin{testDenom1, NewInt(-1)}, false},
 		{Coin{testDenom1, NewInt(0)}, true},
-		{Coin{testDenom1, NewInt(1)}, true},
-		{Coin{"Atom", NewInt(1)}, true},
-		{Coin{"ATOM", NewInt(1)}, true},
-		{Coin{"a", NewInt(1)}, false},
-		{Coin{loremIpsum, NewInt(1)}, false},
-		{Coin{"atOm", NewInt(1)}, true},
-		{Coin{"     ", NewInt(1)}, false},
+		{Coin{testDenom1, OneInt()}, true},
+		{Coin{"Atom", OneInt()}, true},
+		{Coin{"ATOM", OneInt()}, true},
+		{Coin{"a", OneInt()}, false},
+		{Coin{loremIpsum, OneInt()}, false},
+		{Coin{"atOm", OneInt()}, true},
+		{Coin{"     ", OneInt()}, false},
 	}
 
 	for i, tc := range cases {
@@ -210,7 +210,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 		{
 			name: "all greater than zero",
 			input: Coins{
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testb", NewInt(2)},
 				{"testc", NewInt(3)},
 				{"testd", NewInt(4)},
@@ -222,7 +222,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 		{
 			name: "zero coin in middle",
 			input: Coins{
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testb", NewInt(2)},
 				{"testc", NewInt(0)},
 				{"testd", NewInt(4)},
@@ -236,7 +236,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 			input: Coins{
 				{"teste", NewInt(5)},
 				{"testc", NewInt(3)},
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testd", NewInt(4)},
 				{"testb", NewInt(0)},
 			},
@@ -271,15 +271,15 @@ func TestCoins_String(t *testing.T) {
 		},
 		{
 			"single coin",
-			Coins{{"tree", NewInt(1)}},
+			Coins{{"tree", OneInt()}},
 			"1tree",
 		},
 		{
 			"multiple coins",
 			Coins{
-				{"tree", NewInt(1)},
-				{"gas", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"tree", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
 			},
 			"1tree,1gas,1mineral",
 		},
@@ -340,7 +340,7 @@ func TestEqualCoins(t *testing.T) {
 
 func TestAddCoins(t *testing.T) {
 	zero := NewInt(0)
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	cases := []struct {
@@ -364,7 +364,7 @@ func TestAddCoins(t *testing.T) {
 
 func TestSubCoins(t *testing.T) {
 	zero := NewInt(0)
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	testCases := []struct {
@@ -426,53 +426,53 @@ func TestCoins_Validate(t *testing.T) {
 		{
 			"valid lower and uppercase coins",
 			Coins{
-				{"GAS", NewInt(1)},
-				{"gAs", NewInt(1)},
+				{"GAS", OneInt()},
+				{"gAs", OneInt()},
 			},
 			true,
 		},
 		{
 			"mixed case (1)",
 			Coins{
-				{"MineraL", NewInt(1)},
-				{"TREE", NewInt(1)},
-				{"gAs", NewInt(1)},
+				{"MineraL", OneInt()},
+				{"TREE", OneInt()},
+				{"gAs", OneInt()},
 			},
 			true,
 		},
 		{
 			"mixed case (2)",
 			Coins{
-				{"gAs", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"gAs", OneInt()},
+				{"mineral", OneInt()},
 			},
 			true,
 		},
 		{
 			"mixed case (3)",
 			Coins{
-				{"gAs", NewInt(1)},
+				{"gAs", OneInt()},
 			},
 			true,
 		},
 		{
 			"unicode letters and numbers",
 			Coins{
-				{"𐀀𐀆𐀉Ⅲ", NewInt(1)},
+				{"𐀀𐀆𐀉Ⅲ", OneInt()},
 			},
 			false,
 		},
 		{
 			"emojis",
 			Coins{
-				{"🤑😋🤔", NewInt(1)},
+				{"🤑😋🤔", OneInt()},
 			},
 			false,
 		},
 		{
 			"IBC denominations (ADR 001)",
 			Coins{
-				{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(1)},
+				{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", OneInt()},
 				{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", NewInt(2)},
 			},
 			true,
@@ -488,38 +488,46 @@ func TestCoins_Validate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid denomination",
+			"invalid denomination (1)",
 			Coins{
-				{"MineraL", NewInt(1)},
-				{"0TREE", NewInt(1)},
-				{"gAs", NewInt(1)},
+				{"MineraL", OneInt()},
+				{"0TREE", OneInt()},
+				{"gAs", OneInt()},
+			},
+			false,
+		},
+		{
+			"invalid denomination (2)",
+			Coins{
+				{"-GAS", OneInt()},
+				{"gAs", OneInt()},
 			},
 			false,
 		},
 		{
 			"bad sort (1)",
 			Coins{
-				{"tree", NewInt(1)},
-				{"gas", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"tree", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
 			},
 			false,
 		},
 		{
 			"bad sort (2)",
 			Coins{
-				{"gas", NewInt(1)},
-				{"tree", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"gas", OneInt()},
+				{"tree", OneInt()},
+				{"mineral", OneInt()},
 			},
 			false,
 		},
 		{
 			"non-positive amount (1)",
 			Coins{
-				{"gas", NewInt(1)},
+				{"gas", OneInt()},
 				{"tree", NewInt(0)},
-				{"mineral", NewInt(1)},
+				{"mineral", OneInt()},
 			},
 			false,
 		},
@@ -527,16 +535,16 @@ func TestCoins_Validate(t *testing.T) {
 			"non-positive amount (2)",
 			Coins{
 				{"gas", NewInt(-1)},
-				{"tree", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"tree", OneInt()},
+				{"mineral", OneInt()},
 			},
 			false,
 		}, {
 			"duplicate denomination",
 			Coins{
-				{"gas", NewInt(1)},
-				{"gas", NewInt(1)},
-				{"mineral", NewInt(1)},
+				{"gas", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
 			},
 			false,
 		},
@@ -553,7 +561,7 @@ func TestCoins_Validate(t *testing.T) {
 }
 
 func TestCoinsGT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllGT(Coins{}))
@@ -565,7 +573,7 @@ func TestCoinsGT(t *testing.T) {
 }
 
 func TestCoinsLT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllLT(Coins{}))
@@ -580,7 +588,7 @@ func TestCoinsLT(t *testing.T) {
 }
 
 func TestCoinsLTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.True(t, Coins{}.IsAllLTE(Coins{}))
@@ -595,7 +603,7 @@ func TestCoinsLTE(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 
 	cases := []struct {
 		input    string
@@ -732,7 +740,7 @@ func TestAmountOf(t *testing.T) {
 }
 
 func TestCoinsIsAnyGTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
@@ -752,7 +760,7 @@ func TestCoinsIsAnyGTE(t *testing.T) {
 }
 
 func TestCoinsIsAllGT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllGT(Coins{}))
@@ -772,7 +780,7 @@ func TestCoinsIsAllGT(t *testing.T) {
 }
 
 func TestCoinsIsAllGTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.True(t, Coins{}.IsAllGTE(Coins{}))

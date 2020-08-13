@@ -219,7 +219,7 @@ func TestSignaturesHD(t *testing.T) {
 		sig, err := priv.Sign(msg)
 		require.Nil(t, err)
 
-		valid := pub.VerifyBytes(msg, sig)
+		valid := pub.VerifySignature(msg, sig)
 		require.True(t, valid, "Is your device using test mnemonic: %s ?", testutil.TestMnemonic)
 	}
 }
@@ -234,7 +234,7 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	sig, err := priv.Sign(msg)
 	require.Nil(t, err)
 
-	valid := pub.VerifyBytes(msg, sig)
+	valid := pub.VerifySignature(msg, sig)
 	require.True(t, valid)
 
 	// now, let's serialize the public key and make sure it still works
@@ -248,7 +248,7 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	// signing with the loaded key should match the original pubkey
 	sig, err = priv.Sign(msg)
 	require.Nil(t, err)
-	valid = pub.VerifyBytes(msg, sig)
+	valid = pub.VerifySignature(msg, sig)
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well

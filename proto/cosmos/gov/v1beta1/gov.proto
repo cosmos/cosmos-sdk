@@ -15,8 +15,6 @@ option (gogoproto.goproto_getters_all)  = false;
 
 // VoteOption defines a vote option
 enum VoteOption {
-  option (gogoproto.enum_stringer)         = false;
-  option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
   // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.

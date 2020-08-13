@@ -170,7 +170,7 @@ func ExamplePaginate() {
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var tempRes sdk.Coin
-		err := app.LegacyAmino().UnmarshalBinaryBare(value, &tempRes)
+		err := app.AppCodec().UnmarshalBinaryBare(value, &tempRes)
 		if err != nil {
 			return err
 		}

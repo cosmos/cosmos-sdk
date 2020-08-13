@@ -144,7 +144,7 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 
 // GetSignBytes implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

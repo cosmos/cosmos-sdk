@@ -18,7 +18,7 @@ import (
 // any merkle proof.
 func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {
 	params := types.NewQueryAllClientsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
 	}
@@ -30,7 +30,7 @@ func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported
 	}
 
 	var clients []exported.ClientState
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clients)
+	err = clientCtx.LegacyAmino.UnmarshalJSON(res, &clients)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
 	}

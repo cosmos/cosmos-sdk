@@ -596,7 +596,7 @@ var _ sort.Interface = DecCoins{}
 // Len implements sort.Interface for DecCoins
 func (coins DecCoins) Len() int { return len(coins) }
 
-// Less implements sort.Interface for DecCoins. It compares the denominations in uppercase characters.
+// Less implements sort.Interface for DecCoins
 func (coins DecCoins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
 
 // Swap implements sort.Interface for DecCoins

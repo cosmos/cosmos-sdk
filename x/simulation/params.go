@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -155,7 +156,7 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
-	cdc := codec.New()
+	cdc := params.MakeEncodingConfig().Marshaler
 
 	var genesisState map[string]json.RawMessage
 

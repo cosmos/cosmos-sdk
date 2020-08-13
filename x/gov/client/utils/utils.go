@@ -18,7 +18,7 @@ func NormalizeVoteOption(option string) string {
 		return types.OptionNoWithVeto.String()
 
 	default:
-		return ""
+		return option
 	}
 }
 

@@ -37,7 +37,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/staking and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

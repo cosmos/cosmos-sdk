@@ -3,6 +3,8 @@ package params_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -74,7 +76,8 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tKeyParams)
+	encCfg := simapp.MakeEncodingConfig()
+	keeper := keeper.NewKeeper(encCfg.Marshaler, encCfg.Amino, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -202,14 +203,14 @@ func TestProcessPostResponse(t *testing.T) {
 	cdc := codec.New()
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
-	ctx = ctx.WithCodec(cdc)
+	ctx = ctx.WithLegacyAmino(cdc)
 
 	// setup expected results
-	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
+	jsonNoIndent, err := ctx.LegacyAmino.MarshalJSON(acc)
 	require.Nil(t, err)
 
 	respNoIndent := rest.NewResponseWithHeight(height, jsonNoIndent)
-	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
+	expectedNoIndent, err := ctx.LegacyAmino.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 
 	// check that negative height writes an error
@@ -306,8 +307,11 @@ func TestParseQueryParamBool(t *testing.T) {
 func TestPostProcessResponseBare(t *testing.T) {
 	t.Parallel()
 
+	encodingConfig := simappparams.MakeEncodingConfig()
+	clientCtx := client.Context{}.
+		WithTxConfig(encodingConfig.TxConfig).
+		WithJSONMarshaler(encodingConfig.Marshaler)
 	// write bytes
-	clientCtx := client.Context{}
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
 
@@ -323,7 +327,6 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, "text string", string(got))
 
 	// write struct and indent response
-	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data := struct {
 		X int    `json:"x"`
@@ -342,7 +345,6 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, "{\"x\":\"10\",\"s\":\"test\"}", string(got))
 
 	// write struct, don't indent response
-	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data = struct {
 		X int    `json:"x"`
@@ -361,7 +363,6 @@ func TestPostProcessResponseBare(t *testing.T) {
 	require.Equal(t, `{"x":"10","s":"test"}`, string(got))
 
 	// test marshalling failure
-	clientCtx = client.Context{}.WithCodec(codec.New())
 	w = httptest.NewRecorder()
 	data2 := badJSONMarshaller{}
 
@@ -401,7 +402,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
-	marshalled, err := ctx.Codec.MarshalJSON(obj)
+	marshalled, err := ctx.LegacyAmino.MarshalJSON(obj)
 	require.NoError(t, err)
 
 	// test using marshalled struct

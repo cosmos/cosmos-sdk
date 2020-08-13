@@ -3,6 +3,7 @@ package server
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,9 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,14 +23,11 @@ const (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(appExporter AppExporter, defaultNodeHome string) *cobra.Command {
+func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
-
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -93,7 +90,10 @@ func ExportCmd(appExporter AppExporter, defaultNodeHome string) *cobra.Command {
 				},
 			}
 
-			encoded, err := codec.MarshalJSONIndent(cdc, doc)
+			// NOTE: for now we're just using standard JSON marshaling for the root GenesisDoc.
+			// These types are in Tendermint, don't support proto and as far as we know, don't need it.
+			// All of the protobuf/amino state is inside AppState
+			encoded, err := json.MarshalIndent(doc, "", " ")
 			if err != nil {
 				return err
 			}

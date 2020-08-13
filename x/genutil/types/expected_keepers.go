@@ -26,7 +26,7 @@ type AccountKeeper interface {
 // GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisAccountsIterator interface {
 	IterateGenesisAccounts(
-		cdc *codec.Codec,
+		cdc *codec.LegacyAmino,
 		appGenesis map[string]json.RawMessage,
 		cb func(auth.AccountI) (stop bool),
 	)

@@ -80,7 +80,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Validator)
+			return clientCtx.PrintOutput(&res.Validator)
 		},
 	}
 
@@ -126,7 +126,7 @@ $ %s query staking validators
 				validators = append(validators, validator)
 			}
 
-			return clientCtx.PrintOutput(validators)
+			return clientCtx.PrintOutputLegacy(validators)
 		},
 	}
 
@@ -179,7 +179,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.UnbondingResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -234,7 +234,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -342,7 +342,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.DelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -397,7 +397,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.DelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -452,7 +452,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Unbond)
+			return clientCtx.PrintOutput(&res.Unbond)
 		},
 	}
 
@@ -506,7 +506,7 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.UnbondingResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -567,7 +567,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -621,7 +621,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -705,7 +705,7 @@ $ %s query staking pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Pool)
+			return clientCtx.PrintOutput(&res.Pool)
 		},
 	}
 
@@ -743,7 +743,7 @@ $ %s query staking params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

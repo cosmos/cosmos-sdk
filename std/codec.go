@@ -15,7 +15,7 @@ import (
 //
 // NOTE: This codec will be deprecated in favor of AppCodec once all modules are
 // migrated.
-func MakeCodec(bm module.BasicManager) *codec.Codec {
+func MakeCodec(bm module.BasicManager) *codec.LegacyAmino {
 	cdc := codec.New()
 
 	bm.RegisterCodec(cdc)
@@ -24,7 +24,7 @@ func MakeCodec(bm module.BasicManager) *codec.Codec {
 	return cdc
 }
 
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	vesting.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)

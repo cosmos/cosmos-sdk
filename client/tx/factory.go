@@ -19,6 +19,7 @@ type Factory struct {
 	accountNumber      uint64
 	sequence           uint64
 	gas                uint64
+	timeoutHeight      uint64
 	gasAdjustment      float64
 	chainID            string
 	memo               string
@@ -48,6 +49,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	accSeq, _ := flagSet.GetUint64(flags.FlagSequence)
 	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
 	memo, _ := flagSet.GetString(flags.FlagMemo)
+	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
 
 	gasStr, _ := flagSet.GetString(flags.FlagGas)
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
@@ -61,6 +63,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 		simulateAndExecute: gasSetting.Simulate,
 		accountNumber:      accNum,
 		sequence:           accSeq,
+		timeoutHeight:      timeoutHeight,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
@@ -85,6 +88,7 @@ func (f Factory) Memo() string                              { return f.memo }
 func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
+func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -170,5 +174,22 @@ func (f Factory) WithGasAdjustment(gasAdj float64) Factory {
 // simulation value.
 func (f Factory) WithSimulateAndExecute(sim bool) Factory {
 	f.simulateAndExecute = sim
+	return f
+}
+
+// SignMode returns the sign mode configured in the Factory
+func (f Factory) SignMode() signing.SignMode {
+	return f.signMode
+}
+
+// WithSignMode returns a copy of the Factory with an updated sign mode value.
+func (f Factory) WithSignMode(mode signing.SignMode) Factory {
+	f.signMode = mode
+	return f
+}
+
+// WithTimeoutHeight returns a copy of the Factory with an updated timeout height.
+func (f Factory) WithTimeoutHeight(height uint64) Factory {
+	f.timeoutHeight = height
 	return f
 }

@@ -3,8 +3,6 @@ package signing_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -12,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -50,17 +49,17 @@ func TestVerifySignature(t *testing.T) {
 		AccountNumber:   acc.GetAccountNumber(),
 		AccountSequence: acc.GetSequence(),
 	}
-	signBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence,
-		fee, msgs, memo)
+	signBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence, 10, fee, msgs, memo)
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
-	stdSig := types.StdSignature{PubKey: pubKey.Bytes(), Signature: signature}
+	stdSig := types.StdSignature{PubKey: pubKey, Signature: signature}
 	sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
 	require.NoError(t, err)
 
 	handler := MakeTestHandlerMap()
 	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, memo)
+	stdTx.TimeoutHeight = 10
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 
@@ -68,18 +67,17 @@ func TestVerifySignature(t *testing.T) {
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
 	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
-	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence,
-		fee, msgs, memo)
+	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence, 10, fee, msgs, memo)
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig1 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig1}
+	stdSig1 := types.StdSignature{PubKey: pubKey, Signature: sig1}
 	sig1V2, err := types.StdSignatureToSignatureV2(cdc, stdSig1)
 	require.NoError(t, err)
 
 	sig2, err := priv1.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig2 := types.StdSignature{PubKey: pubKey.Bytes(), Signature: sig2}
+	stdSig2 := types.StdSignature{PubKey: pubKey, Signature: sig2}
 	sig2V2, err := types.StdSignatureToSignatureV2(cdc, stdSig2)
 	require.NoError(t, err)
 

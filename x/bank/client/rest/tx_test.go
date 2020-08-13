@@ -44,7 +44,8 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 func submitSendReq(val *network.Validator, req bankrest.SendReq) (authtypes.StdTx, error) {
 	url := fmt.Sprintf("%s/bank/accounts/%s/transfers", val.APIAddress, val.Address)
 
-	bz, err := val.ClientCtx.JSONMarshaler.MarshalJSON(req)
+	// NOTE: this uses amino explicitly, don't migrate it!
+	bz, err := val.ClientCtx.LegacyAmino.MarshalJSON(req)
 	if err != nil {
 		return authtypes.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
 	}
@@ -55,7 +56,8 @@ func submitSendReq(val *network.Validator, req bankrest.SendReq) (authtypes.StdT
 	}
 
 	var tx authtypes.StdTx
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &tx)
+	// NOTE: this uses amino explicitly, don't migrate it!
+	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &tx)
 	if err != nil {
 		return authtypes.StdTx{}, errors.Wrap(err, "error unmarshaling to StdTx SendReq response")
 	}

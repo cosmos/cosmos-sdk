@@ -7,10 +7,10 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -31,18 +31,20 @@ func TestDecodeStore(t *testing.T) {
 
 	globalAccNumber := gogotypes.UInt64Value{Value: 10}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
-			Key:   types.AddressStoreKey(delAddr1),
-			Value: accBz,
-		},
-		tmkv.Pair{
-			Key:   types.GlobalAccountNumberKey,
-			Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
-		},
-		tmkv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+	kvPairs := kv.Pairs{
+		Pairs: []kv.Pair{
+			{
+				Key:   types.AddressStoreKey(delAddr1),
+				Value: accBz,
+			},
+			{
+				Key:   types.GlobalAccountNumberKey,
+				Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -59,9 +61,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

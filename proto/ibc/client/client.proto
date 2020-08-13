@@ -1,0 +1,15 @@
+syntax = "proto3";
+package ibc.client;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+// IdentifiedClientState defines a client state with additional client identifier field.
+message IdentifiedClientState {
+  option (gogoproto.goproto_getters) = false;
+  // client identifier
+  string              id           = 1 [(gogoproto.customname) = "ID", (gogoproto.moretags) = "yaml:\"id\""];
+  google.protobuf.Any client_state = 2;
+}

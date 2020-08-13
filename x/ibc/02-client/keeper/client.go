@@ -17,9 +17,8 @@ import (
 //
 // CONTRACT: ClientState was constructed correctly from given initial consensusState
 func (k Keeper) CreateClient(
-	ctx sdk.Context, clientState exported.ClientState, consensusState exported.ConsensusState,
+	ctx sdk.Context, clientID string, clientState exported.ClientState, consensusState exported.ConsensusState,
 ) (exported.ClientState, error) {
-	clientID := clientState.GetID()
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return nil, sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
@@ -34,7 +33,7 @@ func (k Keeper) CreateClient(
 		k.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, clientID, clientState)
 	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
@@ -59,8 +58,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// addition to spec: prevent update if the client is frozen
-	if clientState.IsFrozen() {
+	// prevent update if the client is frozen before or at header height
+	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
@@ -72,9 +71,22 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	switch clientType {
 	case exported.Tendermint:
+		tmHeader, ok := header.(ibctmtypes.Header)
+		if !ok {
+			err = sdkerrors.Wrapf(types.ErrInvalidHeader, "expected tendermint header: %T, got header type: %T", ibctmtypes.Header{}, header)
+			break
+		}
+		// Get the consensus state at the trusted height of header
+		trustedConsState, found := k.GetClientConsensusState(ctx, clientID, tmHeader.TrustedHeight)
+		if !found {
+			return nil, sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find consensus state for trusted header height: %d to verify header against for clientID: %s", tmHeader.TrustedHeight, clientID)
+		}
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.BlockTime(),
+			clientState, trustedConsState, header, ctx.BlockTime(),
 		)
+		if err != nil {
+			err = sdkerrors.Wrapf(err, "failed to update client using trusted consensus state height %d", trustedConsState.GetHeight())
+		}
 	case exported.Localhost:
 		// override client state and update the block height
 		clientState = localhosttypes.NewClientState(
@@ -90,7 +102,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, clientID, clientState)
 
 	// we don't set consensus state for localhost client
 	if header != nil && clientType != exported.Localhost {
@@ -120,17 +132,29 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
-
-	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
-	if !found {
-		return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+	if err := misbehaviour.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "IBC misbehaviour failed validate basic")
 	}
 
 	var err error
 	switch e := misbehaviour.(type) {
 	case ibctmtypes.Evidence:
+		// Get consensus states at TrustedHeight for each header
+		consensusState1, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header1.TrustedHeight)
+		if !found {
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for first header",
+				misbehaviour.GetClientID(), e.Header1.TrustedHeight)
+		}
+		consensusState2, found := k.GetClientConsensusState(ctx, misbehaviour.GetClientID(), e.Header2.TrustedHeight)
+		if !found {
+			return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "could not find ConsensusState for clientID %s at TrustedHeight (%d) for second header",
+				misbehaviour.GetClientID(), e.Header2.TrustedHeight)
+		}
+
+		// TODO: Retrieve consensusparams from client and not context
+		// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
 		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
+			clientState, consensusState1, consensusState2, misbehaviour, ctx.BlockTime(), ctx.ConsensusParams(),
 		)
 
 	default:
@@ -141,7 +165,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return err
 	}
 
-	k.SetClientState(ctx, clientState)
+	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
 
 	return nil

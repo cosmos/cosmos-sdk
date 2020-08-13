@@ -63,7 +63,12 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(tx.GetTx())
+	json, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
+	if err != nil {
+		return err
+	}
+
+	return clientCtx.PrintString(fmt.Sprintf("%s\n", json))
 }
 
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
@@ -133,6 +138,8 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
+// Note that this function returns the legacy StdTx Amino JSON format for compatibility
+// with legacy clients.
 func WriteGeneratedTxResponse(
 	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
@@ -154,7 +161,8 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig)
+		WithTxConfig(ctx.TxConfig).
+		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
@@ -170,7 +178,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.JSONMarshaler, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -180,7 +188,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	output, err := ctx.JSONMarshaler.MarshalJSON(tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	if rest.CheckInternalServerError(w, err) {
+		return
+	}
+
+	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -226,6 +239,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
+	tx.SetTimeoutHeight(txf.TimeoutHeight())
 
 	return tx, nil
 }
@@ -303,53 +317,16 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	return txf, nil
 }
 
-// Helper function to retrieve sign bytes.
-func getSignBytes(
-	signMode signing.SignMode, signerData authsigning.SignerData,
-	txBuilder client.TxBuilder, pubKey crypto.PubKey, txConfig client.TxConfig,
-) ([]byte, error) {
-
-	sigData := signing.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: nil,
-	}
-	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
-	}
-
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
-	// TxBuilder under the hood, and SignerInfos is needed to generated the
-	// sign bytes. This is the reason for setting SetSignatures here, with a
-	// nil signature.
-	//
-	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
-	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here.
-	if err := txBuilder.SetSignatures(sig); err != nil {
-		return nil, err
-	}
-
-	// generate the bytes to be signed
-	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
-	if err != nil {
-		return nil, err
-	}
-
-	return signBytes, nil
-}
-
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
 ) (signing.SignatureV2, error) {
-
 	var sigV2 signing.SignatureV2
 
-	// Generate the bytes to be signed
-	signBytes, err := getSignBytes(signMode, signerData, txBuilder, priv.PubKey(), txConfig)
+	// Generate the bytes to be signed.
+	signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return sigV2, err
 	}
@@ -400,8 +377,28 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		AccountSequence: txf.sequence,
 	}
 
-	// Generate the bytes to be signed
-	signBytes, err := getSignBytes(signMode, signerData, txBuilder, pubKey, txf.txConfig)
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	//
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here.
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+	sig := signing.SignatureV2{
+		PubKey: pubKey,
+		Data:   &sigData,
+	}
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		return err
+	}
+
+	// Generate the bytes to be signed.
+	signBytes, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
@@ -413,11 +410,11 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	// Construct the SignatureV2 struct
-	sigData := signing.SingleSignatureData{
+	sigData = signing.SingleSignatureData{
 		SignMode:  signMode,
 		Signature: sigBytes,
 	}
-	sig := signing.SignatureV2{
+	sig = signing.SignatureV2{
 		PubKey: pubKey,
 		Data:   &sigData,
 	}

@@ -3,14 +3,13 @@ package baseapp
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,6 +19,13 @@ var protoCodec = encoding.GetCodec(proto.Name)
 type GRPCQueryRouter struct {
 	routes      map[string]GRPCQueryHandler
 	anyUnpacker types.AnyUnpacker
+	serviceData []serviceData
+}
+
+// serviceData represents a gRPC service, along with its handler.
+type serviceData struct {
+	serviceDesc *grpc.ServiceDesc
+	handler     interface{}
 }
 
 var _ gogogrpc.Server
@@ -83,6 +89,11 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			}, nil
 		}
 	}
+
+	qrt.serviceData = append(qrt.serviceData, serviceData{
+		serviceDesc: sd,
+		handler:     handler,
+	})
 }
 
 // AnyUnpacker returns the AnyUnpacker for the router

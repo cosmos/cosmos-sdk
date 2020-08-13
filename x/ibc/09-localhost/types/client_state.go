@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
@@ -22,27 +21,14 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = ClientState{}
-
-// ClientState requires (read-only) access to keys outside the client prefix.
-type ClientState struct {
-	ID      string `json:"id" yaml:"id"`
-	ChainID string `json:"chain_id" yaml:"chain_id"`
-	Height  int64  `json:"height" yaml:"height"`
-}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
-func NewClientState(chainID string, height int64) ClientState {
-	return ClientState{
-		ID:      clientexported.Localhost.String(),
+func NewClientState(chainID string, height int64) *ClientState {
+	return &ClientState{
 		ChainID: chainID,
-		Height:  height,
+		Height:  uint64(height),
 	}
-}
-
-// GetID returns the loop-back client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.ID
 }
 
 // GetChainID returns an empty string
@@ -57,12 +43,17 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return uint64(cs.Height)
+	return cs.Height
 }
 
 // IsFrozen returns false.
 func (cs ClientState) IsFrozen() bool {
 	return false
+}
+
+// GetFrozenHeight returns 0.
+func (cs ClientState) GetFrozenHeight() uint64 {
+	return 0
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -73,7 +64,7 @@ func (cs ClientState) Validate() error {
 	if cs.Height <= 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
-	return host.ClientIdentifierValidator(cs.ID)
+	return nil
 }
 
 // GetProofSpecs returns nil since localhost does not have to verify proofs
@@ -81,45 +72,13 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
-// VerifyClientConsensusState verifies a proof of the consensus
-// state of the loop-back client.
-// VerifyClientConsensusState verifies a proof of the consensus state of the
-// Tendermint client stored on the target machine.
+// VerifyClientConsensusState returns an error since a local host client does not store consensus
+// states.
 func (cs ClientState) VerifyClientConsensusState(
-	store sdk.KVStore,
-	_ codec.BinaryMarshaler,
-	aminoCdc *codec.Codec,
-	_ commitmentexported.Root,
-	height uint64,
-	_ string,
-	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
-	_ []byte,
-	consensusState clientexported.ConsensusState,
+	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
+	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, consensusStatePath(cs.GetID()))
-	if err != nil {
-		return err
-	}
-
-	data := store.Get([]byte(path.String()))
-	if len(data) == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrFailedClientConsensusStateVerification, "not found for path %s", path)
-	}
-
-	var prevConsensusState clientexported.ConsensusState
-	if err := aminoCdc.UnmarshalBinaryBare(data, &prevConsensusState); err != nil {
-		return err
-	}
-
-	if consensusState != prevConsensusState {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrFailedClientConsensusStateVerification,
-			"consensus state ≠ previous stored consensus state: \n%v\n≠\n%v", consensusState, prevConsensusState,
-		)
-	}
-
-	return nil
+	return ErrConsensusStatesNotStored
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
@@ -132,7 +91,6 @@ func (cs ClientState) VerifyConnectionState(
 	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
 	if err != nil {
@@ -171,7 +129,6 @@ func (cs ClientState) VerifyChannelState(
 	portID,
 	channelID string,
 	channel channelexported.ChannelI,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
 	if err != nil {
@@ -211,7 +168,6 @@ func (cs ClientState) VerifyPacketCommitment(
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
@@ -245,7 +201,6 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -279,7 +234,6 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	portID,
 	channelID string,
 	sequence uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
@@ -305,7 +259,6 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	_ clientexported.ConsensusState,
 ) error {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
@@ -326,10 +279,4 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	return nil
-}
-
-// consensusStatePath takes an Identifier and returns a Path under which to
-// store the consensus state of a client.
-func consensusStatePath(clientID string) string {
-	return fmt.Sprintf("consensusState/%s", clientID)
 }

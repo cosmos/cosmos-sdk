@@ -1,26 +1,20 @@
 package tx
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing/direct"
-
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type builder struct {
@@ -39,12 +33,13 @@ type builder struct {
 	pubKeys []crypto.PubKey
 
 	pubkeyCodec types.PublicKeyCodec
+
+	txBodyHasUnknownNonCriticals bool
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
-	_ direct.ProtoTx           = &builder{}
+	_ authsigning.Tx   = &builder{}
+	_ client.TxBuilder = &builder{}
 )
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -60,6 +55,10 @@ func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 }
 
 func (t *builder) GetMsgs() []sdk.Msg {
+	if t.tx == nil || t.tx.Body == nil {
+		return nil
+	}
+
 	anys := t.tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
@@ -123,7 +122,7 @@ func (t *builder) ValidateBasic() error {
 	return nil
 }
 
-func (t *builder) GetBodyBytes() []byte {
+func (t *builder) getBodyBytes() []byte {
 	if len(t.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -139,7 +138,7 @@ func (t *builder) GetBodyBytes() []byte {
 	return t.bodyBz
 }
 
-func (t *builder) GetAuthInfoBytes() []byte {
+func (t *builder) getAuthInfoBytes() []byte {
 	if len(t.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
@@ -213,6 +212,11 @@ func (t *builder) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (t *builder) GetTimeoutHeight() uint64 {
+	return t.tx.Body.TimeoutHeight
+}
+
 func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := t.tx.AuthInfo.SignerInfos
 	sigs := t.tx.Signatures
@@ -252,6 +256,14 @@ func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	t.bodyBz = nil
 
 	return nil
+}
+
+// SetTimeoutHeight sets the transaction's height timeout.
+func (t *builder) SetTimeoutHeight(height uint64) {
+	t.tx.Body.TimeoutHeight = height
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	t.bodyBz = nil
 }
 
 func (t *builder) SetMemo(memo string) {
@@ -315,10 +327,67 @@ func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
 	t.pubKeys = nil
 }
 
+// getSignerIndex returns the index of a public key in the GetSigners array. It
+// returns an error if the publicKey is not in GetSigners.
+func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
+	if pubKey == nil {
+		return -1, sdkerrors.Wrap(
+			sdkerrors.ErrInvalidPubKey,
+			"public key is empty",
+		)
+	}
+
+	for i, signer := range t.GetSigners() {
+		if bytes.Equal(signer.Bytes(), pubKey.Address().Bytes()) {
+			return i, nil
+		}
+	}
+
+	return -1, sdkerrors.Wrapf(
+		sdkerrors.ErrInvalidPubKey,
+		"public key %s is not a signer of this tx, call SetMsgs first", pubKey,
+	)
+}
+
+// SetSignerInfo implements TxBuilder.SetSignerInfo.
+func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) error {
+	signerIndex, err := t.getSignerIndex(pubKey)
+	if err != nil {
+		return err
+	}
+
+	pk, err := t.pubkeyCodec.Encode(pubKey)
+	if err != nil {
+		return err
+	}
+
+	n := len(t.GetSigners())
+	// If t.tx.AuthInfo.SignerInfos is empty, we just initialize with some
+	// empty data.
+	if len(t.tx.AuthInfo.SignerInfos) == 0 {
+		t.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, n)
+		for i := 1; i < n; i++ {
+			t.tx.AuthInfo.SignerInfos[i] = &tx.SignerInfo{}
+		}
+	}
+
+	t.tx.AuthInfo.SignerInfos[signerIndex] = &tx.SignerInfo{
+		PublicKey: pk,
+		ModeInfo:  modeInfo,
+	}
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	t.authInfoBz = nil
+	// set cached pubKeys to nil because they no longer match tx.AuthInfo
+	t.pubKeys = nil
+
+	return nil
+}
+
 func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.SigFeeMemoTx {
+func (t *builder) GetTx() authsigning.Tx {
 	return t
 }

@@ -1,19 +1,15 @@
 package ante_test
 
 import (
-	"encoding/json"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *AnteTestSuite) TestValidateBasic() {
@@ -27,21 +23,23 @@ func (suite *AnteTestSuite) TestValidateBasic() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	vbd := ante.NewValidateBasicDecorator()
 	antehandler := sdk.ChainAnteDecorators(vbd)
-	_, err := antehandler(suite.ctx, invalidTx, false)
+	_, err = antehandler(suite.ctx, invalidTx, false)
 
 	suite.Require().NotNil(err, "Did not error on invalid tx")
 
 	privs, accNums, accSeqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	_, err = antehandler(suite.ctx, validTx, false)
 	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
@@ -66,23 +64,25 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	// require that long memos get rejected
 	vmd := ante.NewValidateMemoDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(vmd)
-	_, err := antehandler(suite.ctx, invalidTx, false)
+	_, err = antehandler(suite.ctx, invalidTx, false)
 
 	suite.Require().NotNil(err, "Did not error on tx with high memo")
 
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 
 	// require small memos pass ValidateMemo Decorator
 	_, err = antehandler(suite.ctx, validTx, false)
@@ -100,14 +100,16 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetMsgs(msg)
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
 	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	txBytes, err := json.Marshal(tx)
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
 	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
@@ -134,11 +136,15 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 
 	// simulation must not underestimate gas of this decorator even with nil signatures
-	sigTx := tx.(types.StdTx)
-	sigTx.Signatures = []types.StdSignature{{}}
+	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+	suite.Require().NoError(err)
+	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{
+		PubKey: priv1.PubKey(),
+	}))
+	tx = txBuilder.GetTx()
 
-	simTxBytes, err := json.Marshal(sigTx)
-	suite.Require().Nil(err)
+	simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 	// require that simulated tx is smaller than tx with signatures
 	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
@@ -148,7 +154,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 
 	// run antehandler with simulate=true
-	suite.ctx, err = antehandler(suite.ctx, sigTx, true)
+	suite.ctx, err = antehandler(suite.ctx, tx, true)
 	consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 	// require that antehandler passes and does not underestimate decorator cost
@@ -156,6 +162,51 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 }
 
-func TestAnteBasicTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
+func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
+	suite.SetupTest(true)
+
+	antehandler := sdk.ChainAnteDecorators(ante.TxTimeoutHeightDecorator{})
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	testCases := []struct {
+		name      string
+		timeout   uint64
+		height    int64
+		expectErr bool
+	}{
+		{"default value", 0, 10, false},
+		{"no timeout (greater height)", 15, 10, false},
+		{"no timeout (same height)", 10, 10, false},
+		{"timeout (smaller height)", 9, 10, true},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+
+			suite.txBuilder.SetFeeAmount(feeAmount)
+			suite.txBuilder.SetGasLimit(gasLimit)
+			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+			suite.txBuilder.SetTimeoutHeight(tc.timeout)
+
+			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+			suite.Require().NoError(err)
+
+			ctx := suite.ctx.WithBlockHeight(tc.height)
+			_, err = antehandler(ctx, tx, true)
+			suite.Require().Equal(tc.expectErr, err != nil, err)
+		})
+	}
 }

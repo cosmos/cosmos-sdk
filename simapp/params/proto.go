@@ -13,8 +13,8 @@ import (
 func MakeEncodingConfig() EncodingConfig {
 	amino := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewHybridCodec(amino, interfaceRegistry)
-	txCfg := tx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(marshaler, std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

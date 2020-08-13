@@ -64,7 +64,8 @@ func NewSimApp(val Validator) servertypes.Application {
 // in-process local testing network.
 type Config struct {
 	Codec             codec.Marshaler
-	LegacyAmino       *codec.LegacyAmino
+	LegacyAmino       *codec.LegacyAmino // TODO: Remove!
+	InterfaceRegistry codectypes.InterfaceRegistry
 	InterfaceRegistry codectypes.InterfaceRegistry
 
 	TxConfig         client.TxConfig
@@ -96,7 +97,7 @@ func DefaultConfig() Config {
 		TxConfig:          encCfg.TxConfig,
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.NewAccountRetriever(encCfg.Amino),
+		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewSimApp,
 		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     2 * time.Second,
@@ -329,7 +330,8 @@ func New(t *testing.T, cfg Config) *Network {
 			WithJSONMarshaler(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever)
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithInterfaceRegistry(cfg.InterfaceRegistry)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,

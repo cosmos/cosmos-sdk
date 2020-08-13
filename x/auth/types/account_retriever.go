@@ -21,7 +21,6 @@ type AccountRetriever struct{}
 // error is returned if the query or decoding fails.
 func (ar AccountRetriever) GetAccount(clientCtx client.Context, addr sdk.AccAddress) (AccountI, error) {
 	account, _, err := ar.GetAccountWithHeight(clientCtx, addr)
-
 	return account, err
 }
 

@@ -54,7 +54,7 @@ var (
 			WithTxConfig(encodingConfig.TxConfig).
 			WithLegacyAmino(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Amino)).
+			WithAccountRetriever(types.AccountRetriever{}).
 			WithBroadcastMode(flags.BroadcastBlock).
 			WithHomeDir(simapp.DefaultNodeHome)
 )

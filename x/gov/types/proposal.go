@@ -19,7 +19,7 @@ const DefaultStartingProposalID uint64 = 1
 // NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
 	p := Proposal{
-		ProposalID:       id,
+		ProposalId:       id,
 		Status:           StatusDepositPeriod,
 		FinalTallyResult: EmptyTallyResult(),
 		TotalDeposit:     sdk.NewCoins(),
@@ -112,7 +112,7 @@ func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
 		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
-			prop.ProposalID, prop.Status,
+			prop.ProposalId, prop.Status,
 			prop.ProposalType(), prop.GetTitle())
 	}
 	return strings.TrimSpace(out)

@@ -17,8 +17,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 			panic("invalid client state")
 		}
 
-		k.SetClientState(ctx, client.ClientID, cs)
-		k.SetClientType(ctx, client.ClientID, cs.ClientType())
+		k.SetClientState(ctx, client.ClientId, cs)
+		k.SetClientType(ctx, client.ClientId, cs.ClientType())
 	}
 
 	for _, cs := range gs.ClientsConsensus {
@@ -28,7 +28,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 				panic("invalid consensus state")
 			}
 
-			k.SetClientConsensusState(ctx, cs.ClientID, consensusState.GetHeight(), consensusState)
+			k.SetClientConsensusState(ctx, cs.ClientId, consensusState.GetHeight(), consensusState)
 		}
 	}
 

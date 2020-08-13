@@ -16,7 +16,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// CheckValidityAndUpdateState checks if the provided header is valid, and if valid it will:
+// CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
 // create the consensus state for the header.Height
 // and update the client state if the header height is greater than the latest client state height
 // It returns an error if:
@@ -35,7 +35,7 @@ import (
 // the new latest height
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
-func (cs *ClientState) CheckValidityAndUpdateState(
+func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
@@ -46,14 +46,16 @@ func (cs *ClientState) CheckValidityAndUpdateState(
 		)
 	}
 
-	// Get trusted consensus state and unmarshal from clientStore
+	// Get consensus bytes from clientStore
 	consBytes := clientStore.Get(host.KeyConsensusState(tmHeader.TrustedHeight))
 	if consBytes == nil {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrConsensusStateNotFound, "consensus state not found for trusted height %d", tmHeader.TrustedHeight,
 		)
 	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
 	consState := clienttypes.MustUnmarshalConsensusState(cdc, consBytes)
+	// Cast to tendermint-specific type
 	tmConsState, ok := consState.(*ConsensusState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(

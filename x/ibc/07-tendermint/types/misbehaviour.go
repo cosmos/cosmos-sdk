@@ -38,22 +38,30 @@ func (cs *ClientState) CheckMisbehaviourAndUpdateState(
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
+
+	// Get consensus bytes from clientStore
 	consBytes1 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header1.TrustedHeight))
 	if consBytes1 == nil {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
 			"could not find trusted consensus state at height %d", tmEvidence.Header1.TrustedHeight)
 	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
 	consensusState1 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes1)
+	// Cast to tendermint-specific type
 	tmConsensusState1, ok := consensusState1.(*ConsensusState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &ConsensusState{}, consensusState1)
 	}
+
+	// Get consensus bytes from clientStore
 	consBytes2 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header2.TrustedHeight))
 	if consBytes2 == nil {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
 			"could not find trusted consensus state at height %d", tmEvidence.Header2.TrustedHeight)
 	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
 	consensusState2 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes2)
+	// Cast to tendermint-specific type
 	tmConsensusState2, ok := consensusState2.(*ConsensusState)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &ConsensusState{}, consensusState2)

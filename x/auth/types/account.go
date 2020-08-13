@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
@@ -292,6 +294,8 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 //
 // Many complex conditions can be used in the concrete struct which implements AccountI.
 type AccountI interface {
+	proto.Message
+
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 

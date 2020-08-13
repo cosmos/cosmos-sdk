@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc/codes"
+
+	grpcstatus "google.golang.org/grpc/status"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -356,12 +360,33 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 
 	res, err := handler(ctx, req)
 	if err != nil {
+		err = grpcErrorToSDKError(err)
 		res = sdkerrors.QueryResult(err)
 		res.Height = req.Height
 		return res
 	}
 
 	return res
+}
+
+func grpcErrorToSDKError(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return err
+	}
+
+	switch status.Code() {
+	case codes.NotFound:
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+	case codes.InvalidArgument:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.FailedPrecondition:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.Unauthenticated:
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	default:
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
 }
 
 // createQueryContext creates a new sdk.Context for a query, taking as args

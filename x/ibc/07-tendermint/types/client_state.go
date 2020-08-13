@@ -37,20 +37,20 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, latestTimestamp time.Time, specs []*ics23.ProofSpec,
-	allowGovernanceOverrideAfterExpire bool, allowGovernanceOverrideAfterMisbehaviour bool
+	allowGovernanceOverrideAfterExpire bool, allowGovernanceOverrideAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
-		ChainID:         chainID,
-		TrustLevel:      trustLevel,
-		TrustingPeriod:  trustingPeriod,
-		UnbondingPeriod: ubdPeriod,
-		MaxClockDrift:   maxClockDrift,
-		LatestHeight:    latestHeight,
-		LatestTimestamp: latestTimestamp,
-		FrozenHeight:    0,
-		ProofSpecs:      specs,
-		AllowGovernanceOverrideAfterExpiry: allowGovernanceOverrideAfterExpire,
-		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour
+		ChainID:                                  chainID,
+		TrustLevel:                               trustLevel,
+		TrustingPeriod:                           trustingPeriod,
+		UnbondingPeriod:                          ubdPeriod,
+		MaxClockDrift:                            maxClockDrift,
+		LatestHeight:                             latestHeight,
+		LatestTimestamp:                          latestTimestamp,
+		FrozenHeight:                             0,
+		ProofSpecs:                               specs,
+		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpire,
+		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
 	}
 }
 

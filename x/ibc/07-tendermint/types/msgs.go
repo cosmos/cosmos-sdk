@@ -54,8 +54,8 @@ func (msg *MsgCreateClient) ProtoMessage()  {}
 func NewMsgCreateClient(
 	id string, header Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
-	specs []*ics23.ProofSpec, signer sdk.AccAddress, allow_governance_override_after_expiry bool,
-	allow_governance_override_after_misbehaviour bool,
+	specs []*ics23.ProofSpec, signer sdk.AccAddress, allowGovernanceOverrideAfterExpiry bool,
+	allowGovernanceOverrideAfterMisbehaviour bool,
 ) *MsgCreateClient {
 
 	return &MsgCreateClient{
@@ -67,8 +67,8 @@ func NewMsgCreateClient(
 		MaxClockDrift:                            maxClockDrift,
 		ProofSpecs:                               specs,
 		Signer:                                   signer,
-		AllowGovernanceOverrideAfterExpire:       allow_governance_override_after_expiry,
-		AllowGovernanceOverrideAfterMisbehaviour: allow_governance_override_after_misbehaviour,
+		AllowGovernanceOverrideAfterExpire:       allowGovernanceOverrideAfterExpiry,
+		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
 	}
 }
 

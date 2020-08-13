@@ -33,7 +33,7 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 func connectionOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenInitReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -76,7 +76,7 @@ func connectionOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func connectionOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenTryReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -126,7 +126,7 @@ func connectionOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		connectionID := vars[RestConnectionID]
 
 		var req ConnectionOpenAckReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -174,7 +174,7 @@ func connectionOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		connectionID := vars[RestConnectionID]
 
 		var req ConnectionOpenConfirmReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

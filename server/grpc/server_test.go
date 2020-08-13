@@ -11,10 +11,10 @@ import (
 
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -39,7 +39,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGRPC() {
+func (s *IntegrationTestSuite) TestGRPCServer() {
 	val0 := s.network.Validators[0]
 	conn, err := grpc.Dial(
 		val0.AppConfig.GRPC.Address,
@@ -67,16 +67,16 @@ func (s *IntegrationTestSuite) TestGRPC() {
 		sdk.NewCoin(denom, s.network.Config.AccountTokens),
 		*bankRes.GetBalance(),
 	)
-	blockHeight := header.Get(servergrpc.GRPCBlockHeightHeader)
+	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
 	bankRes, err = bankClient.Balance(
-		metadata.AppendToOutgoingContext(context.Background(), servergrpc.GRPCBlockHeightHeader, "1"), // Add metadata to request
+		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
 		&banktypes.QueryBalanceRequest{Address: val0.Address, Denom: denom},
 		grpc.Header(&header),
 	)
-	blockHeight = header.Get(servergrpc.GRPCBlockHeightHeader)
+	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
 
 	// Test server reflection
@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) TestGRPC() {
 		servicesMap[s.Name] = true
 	}
 	// Make sure the following services are present
-	s.Require().True(servicesMap["cosmos.bank.Query"])
+	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

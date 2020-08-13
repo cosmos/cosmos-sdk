@@ -203,14 +203,14 @@ func TestProcessPostResponse(t *testing.T) {
 	cdc := codec.New()
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
-	ctx = ctx.WithCodec(cdc)
+	ctx = ctx.WithLegacyAmino(cdc)
 
 	// setup expected results
-	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
+	jsonNoIndent, err := ctx.LegacyAmino.MarshalJSON(acc)
 	require.Nil(t, err)
 
 	respNoIndent := rest.NewResponseWithHeight(height, jsonNoIndent)
-	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
+	expectedNoIndent, err := ctx.LegacyAmino.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 
 	// check that negative height writes an error
@@ -402,7 +402,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
-	marshalled, err := ctx.Codec.MarshalJSON(obj)
+	marshalled, err := ctx.LegacyAmino.MarshalJSON(obj)
 	require.NoError(t, err)
 
 	// test using marshalled struct

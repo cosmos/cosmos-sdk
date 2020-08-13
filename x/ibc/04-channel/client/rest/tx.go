@@ -37,7 +37,7 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenInitReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -86,7 +86,7 @@ func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func channelOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenTryReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -145,7 +145,7 @@ func channelOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenAckReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -199,7 +199,7 @@ func channelOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenConfirmReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -252,7 +252,7 @@ func channelCloseInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseInitReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -303,7 +303,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseConfirmReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -349,7 +349,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecvPacketReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

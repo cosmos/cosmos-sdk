@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -17,6 +15,7 @@ import (
 	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +30,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -71,9 +69,9 @@ type TestChain struct {
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
 	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
 	QueryServer   types.QueryServer
 	TxConfig      client.TxConfig
+	Codec         codec.BinaryMarshaler
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -114,7 +112,6 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	}
 
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
 	header := abci.Header{
@@ -130,9 +127,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
-		Querier:       keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc),
 		QueryServer:   app.IBCKeeper,
 		TxConfig:      txConfig,
+		Codec:         app.AppCodec(),
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,

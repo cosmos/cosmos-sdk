@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 
 	yaml "gopkg.in/yaml.v2"
@@ -56,22 +55,11 @@ func (v Vote) Empty() bool {
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {
-	switch str {
-	case "Yes":
-		return OptionYes, nil
-
-	case "Abstain":
-		return OptionAbstain, nil
-
-	case "No":
-		return OptionNo, nil
-
-	case "NoWithVeto":
-		return OptionNoWithVeto, nil
-
-	default:
-		return VoteOption(0xff), fmt.Errorf("'%s' is not a valid vote option", str)
+	option, ok := VoteOption_value[str]
+	if !ok {
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
 	}
+	return VoteOption(option), nil
 }
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.
@@ -94,49 +82,6 @@ func (vo VoteOption) Marshal() ([]byte, error) {
 func (vo *VoteOption) Unmarshal(data []byte) error {
 	*vo = VoteOption(data[0])
 	return nil
-}
-
-// Marshals to JSON using string.
-func (vo VoteOption) MarshalJSON() ([]byte, error) {
-	return json.Marshal(vo.String())
-}
-
-// UnmarshalJSON decodes from JSON assuming Bech32 encoding.
-func (vo *VoteOption) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-
-	if s == "" {
-		*vo = OptionEmpty
-		return nil
-	}
-
-	bz2, err := VoteOptionFromString(s)
-	if err != nil {
-		return err
-	}
-
-	*vo = bz2
-	return nil
-}
-
-// String implements the Stringer interface.
-func (vo VoteOption) String() string {
-	switch vo {
-	case OptionYes:
-		return "Yes"
-	case OptionAbstain:
-		return "Abstain"
-	case OptionNo:
-		return "No"
-	case OptionNoWithVeto:
-		return "NoWithVeto"
-	default:
-		return ""
-	}
 }
 
 // Format implements the fmt.Formatter interface.

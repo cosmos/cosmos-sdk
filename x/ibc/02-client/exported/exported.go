@@ -24,7 +24,7 @@ type ClientState interface {
 	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
-
+	Unfreeze() error
 	// State verification functions
 
 	VerifyClientConsensusState(

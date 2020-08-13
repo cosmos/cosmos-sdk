@@ -280,3 +280,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	return nil
 }
+
+//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
+func (cs ClientState) Unfreeze() error {
+	return nil
+}

@@ -10,21 +10,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
-	clientType := exported.ClientTypeFromString(msg.GetClientType())
+	var (
+		consensusHeight uint64
+		clientState     exported.ClientState
+	)
 
-	var consensusHeight uint64
-
-	clientState := msg.InitializeClientState()
-
-	switch clientType {
-	case exported.Localhost:
+	switch msg.(type) {
+	// localhost is a special case that must initialize client state
+	// from context and not from msg
+	case *localhosttypes.MsgCreateClient:
+		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
 		// Localhost consensus height is chain's blockheight
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
+		clientState = msg.InitializeClientState()
 		if consState := msg.GetConsensusState(); consState != nil {
 			consensusHeight = consState.GetHeight()
 		}

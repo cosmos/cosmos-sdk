@@ -72,8 +72,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
-// CheckHeaderAndUpdateState updates the localhost client
-// It only needs access to the context
+// CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {

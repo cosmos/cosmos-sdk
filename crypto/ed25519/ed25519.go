@@ -160,7 +160,6 @@ func (pubKey PubKeyEd25519) String() string {
 	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey[:])
 }
 
-// nolint: golint
 func (pubKey PubKeyEd25519) Equals(other crypto.PubKey) bool {
 	if otherEd, ok := other.(PubKeyEd25519); ok {
 		return bytes.Equal(pubKey[:], otherEd[:])

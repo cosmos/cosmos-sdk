@@ -516,6 +516,8 @@ github.com/tendermint/go-amino v0.15.1/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoM
 github.com/tendermint/tendermint v0.34.0-rc2/go.mod h1:+AG8ftE2PD4uMVzGSB7c0oH9xbTlIyMeoX0M9r89x3Y=
 github.com/tendermint/tendermint v0.34.0-rc2.0.20200812132357-b1b82c493a9c h1:Etao0mhX+apc+ka6Zs4mJvDUrkictXT6O/eINkZ/oKk=
 github.com/tendermint/tendermint v0.34.0-rc2.0.20200812132357-b1b82c493a9c/go.mod h1:BoHcEpjfpBHc1Be7RQz3AHaXFNObcDG7SNHCev6Or4g=
+github.com/tendermint/tendermint v0.34.0-rc3 h1:d7Fsd5rdbxq4GmJ0kRfx7l7LesQM7e70f0ytWLTQ/Go=
+github.com/tendermint/tendermint v0.34.0-rc3/go.mod h1:BoHcEpjfpBHc1Be7RQz3AHaXFNObcDG7SNHCev6Or4g=
 github.com/tendermint/tm-db v0.6.0 h1:Us30k7H1UDcdqoSPhmP8ztAW/SWV6c6OfsfeCiboTC4=
 github.com/tendermint/tm-db v0.6.0/go.mod h1:xj3AWJ08kBDlCHKijnhJ7mTcDMOikT1r8Poxy2pJn7Q=
 github.com/tendermint/tm-db v0.6.1 h1:w3X87itMPXopcRPlFiqspEKhw4FXihPk2rnFFkP0zGk=

@@ -145,13 +145,8 @@ func NewCoins(coins ...Coin) Coins {
 
 	newCoins.Sort()
 
-	// detect duplicate Denoms
-	if dupIndex := findDup(newCoins); dupIndex != -1 {
-		panic(fmt.Errorf("find duplicate denom: %s", newCoins[dupIndex]))
-	}
-
-	if !newCoins.IsValid() {
-		panic(fmt.Errorf("invalid coin set: %s", newCoins))
+	if err := newCoins.Validate(); err != nil {
+		panic(fmt.Errorf("invalid coin set %s: %w", newCoins, err))
 	}
 
 	return newCoins
@@ -181,8 +176,8 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
-// Validate checks that the Coins are sorted, have positive amount, and Denom is valid. Otherwise,
-// it returns an error.
+// Validate checks that the Coins are sorted, have positive amount, with a valid and unique
+// denomination (i.e no duplicates). Otherwise, it returns an error.
 func (coins Coins) Validate() error {
 	switch len(coins) {
 	case 0:
@@ -211,7 +206,7 @@ func (coins Coins) Validate() error {
 			if seenDenoms[coin.Denom] {
 				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
-			if err := ValidateDenom(coins[0].Denom); err != nil {
+			if err := ValidateDenom(coin.Denom); err != nil {
 				return err
 			}
 			if coin.Denom <= lowDenom {
@@ -230,8 +225,8 @@ func (coins Coins) Validate() error {
 	}
 }
 
-// IsValid calls Validate and returns true when the Coins are sorted, have positive amount, and
-// Denom is valid.
+// IsValid calls Validate and returns true when the Coins are sorted, have positive amount, with a
+// valid and unique denomination (i.e no duplicates).
 func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
 }
@@ -598,9 +593,9 @@ func (coins Coins) Sort() Coins {
 // Parsing
 
 var (
-	// Denominations can be 3 ~ 128 characters long and support unicode letters, followed by either
-	// a unicode letter, a unicode number or a separator ('/', '_', "-").
-	reDnmString = `\p{L}[\p{L}\p{N}/_-]{2,127}`
+	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
+	// a letter, a number or a separator ('/').
+	reDnmString = `[a-zA-Z][a-zA-Z0-9/]{2,127}`
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
@@ -648,9 +643,8 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 	return NewCoin(denomStr, amount), nil
 }
 
-// ParseCoins will parse out a list of coins separated by commas.
-// If nothing is provided, it returns nil Coins.
-// Returned coins are sorted.
+// ParseCoins will parse out a list of coins separated by commas. If nothing is provided, it returns
+// nil Coins. If the coins aren't valid they return an error. Returned coins are sorted.
 func ParseCoins(coinsStr string) (Coins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
@@ -677,28 +671,4 @@ func ParseCoins(coinsStr string) (Coins, error) {
 	}
 
 	return coins, nil
-}
-
-type findDupDescriptor interface {
-	GetDenomByIndex(int) string
-	Len() int
-}
-
-// findDup iterates over all the coins and returns the index on the first occurrence of a duplicated
-// denomination. If no duplicated coin is found it returns -1.
-func findDup(coins findDupDescriptor) int {
-	if coins.Len() <= 1 {
-		return -1
-	}
-
-	seenDenoms := make(map[string]bool)
-	for i := 0; i < coins.Len(); i++ {
-		coin := coins.GetDenomByIndex(i)
-		if seenDenoms[coin] {
-			return i
-		}
-		seenDenoms[coin] = true
-	}
-
-	return -1
 }

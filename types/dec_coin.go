@@ -168,13 +168,8 @@ func NewDecCoins(decCoins ...DecCoin) DecCoins {
 
 	newDecCoins.Sort()
 
-	// detect duplicate Denoms
-	if dupIndex := findDup(newDecCoins); dupIndex != -1 {
-		panic(fmt.Errorf("find duplicate denom: %s", newDecCoins[dupIndex]))
-	}
-
-	if !newDecCoins.IsValid() {
-		panic(fmt.Errorf("invalid coin set: %s", newDecCoins))
+	if err := newDecCoins.Validate(); err != nil {
+		panic(fmt.Errorf("invalid coin set %s: %w", newDecCoins, err))
 	}
 
 	return newDecCoins
@@ -504,8 +499,8 @@ func (coins DecCoins) IsZero() bool {
 	return true
 }
 
-// Validate checks the DecCoins are sorted, have positive amount, and Denom
-// does not contain upper case characters.
+// Validate checks that the DecCoins are sorted, have positive amount, with a valid and unique
+// denomination (i.e no duplicates). Otherwise, it returns an error.
 func (coins DecCoins) Validate() error {
 	switch len(coins) {
 	case 0:
@@ -533,7 +528,7 @@ func (coins DecCoins) Validate() error {
 			if seenDenoms[coin.Denom] {
 				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
-			if err := ValidateDenom(coins[0].Denom); err != nil {
+			if err := ValidateDenom(coin.Denom); err != nil {
 				return err
 			}
 			if coin.Denom <= lowDenom {
@@ -552,8 +547,8 @@ func (coins DecCoins) Validate() error {
 	}
 }
 
-// IsValid asserts the DecCoins are sorted, have positive amount, and Denom
-// does not contain upper case characters.
+// IsValid calls Validate and returns true when the DecCoins are sorted, have positive amount, with a
+// valid and unique denomination (i.e no duplicates).
 func (coins DecCoins) IsValid() bool {
 	return coins.Validate() == nil
 }
@@ -635,9 +630,8 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	return NewDecCoinFromDec(denomStr, amount), nil
 }
 
-// ParseDecCoins will parse out a list of decimal coins separated by commas.
-// If nothing is provided, it returns nil DecCoins. Returned decimal coins are
-// sorted.
+// ParseDecCoins will parse out a list of decimal coins separated by commas. If nothing is provided,
+// it returns nil DecCoins. If the coins aren't valid they return an error. Returned coins are sorted.
 func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {

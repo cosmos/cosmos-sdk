@@ -7,7 +7,7 @@ import "cosmos/bank/v1beta1/bank.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
-// MsgSend - high level transaction of the coin module
+// MsgSend represents a msg to send coins from one account to another.
 message MsgSend {
   option (gogoproto.equal) = true;
 
@@ -23,7 +23,7 @@ message MsgSend {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// MsgMultiSend - high level transaction of the coin module
+// MsgMultiSend represents an arbitrary multi-in, multi-out send msg.
 message MsgMultiSend {
   option (gogoproto.equal) = true;
 

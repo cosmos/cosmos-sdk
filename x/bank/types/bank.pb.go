@@ -27,7 +27,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of bank parameters.
+// Params defines the parameters for the bank module.
 type Params struct {
 	SendEnabled        []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty" yaml:"send_enabled,omitempty"`
 	DefaultSendEnabled bool           `protobuf:"varint,2,opt,name=default_send_enabled,json=defaultSendEnabled,proto3" json:"default_send_enabled,omitempty" yaml:"default_send_enabled,omitempty"`
@@ -79,7 +79,7 @@ func (m *Params) GetDefaultSendEnabled() bool {
 	return false
 }
 
-// Send enabled configuration properties for each denomination
+// SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable).
 type SendEnabled struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Enabled bool   `protobuf:"varint,2,opt,name=enabled,proto3" json:"enabled,omitempty"`
@@ -131,7 +131,7 @@ func (m *SendEnabled) GetEnabled() bool {
 	return false
 }
 
-// Input models transaction input
+// Input models transaction input.
 type Input struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
 	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
@@ -184,7 +184,7 @@ func (m *Input) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// Output models transaction outputs
+// Output models transaction outputs.
 type Output struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
 	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
@@ -276,7 +276,7 @@ func (m *Supply) XXX_DiscardUnknown() {
 var xxx_messageInfo_Supply proto.InternalMessageInfo
 
 // DenomUnits represents a struct that describes different
-// denominations units of the basic token
+// denomination units of the basic token.
 type DenomUnits struct {
 	Denom    string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Exponent uint32   `protobuf:"varint,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
@@ -338,7 +338,7 @@ func (m *DenomUnits) GetAliases() []string {
 }
 
 // Metadata represents a struct that describes
-// a basic token
+// a basic token.
 type Metadata struct {
 	Description string        `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
 	DenomUnits  []*DenomUnits `protobuf:"bytes,2,rep,name=denom_units,json=denomUnits,proto3" json:"denom_units,omitempty"`

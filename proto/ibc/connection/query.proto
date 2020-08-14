@@ -26,19 +26,21 @@ service Query {
   // state.
   rpc ClientConnections(QueryClientConnectionsRequest)
     returns (QueryClientConnectionsResponse) {
-      option (google.api.http).get = "/ibc/connection/v1beta1/client-connections/{client_id}";
+      option (google.api.http).get = "/ibc/connection/v1beta1/client_connections/{client_id}";
   }
 
   // ConnectionClientState queries the client state associated with the
   // connection.
   rpc ConnectionClientState(QueryConnectionClientStateRequest)
     returns (QueryConnectionClientStateResponse) {
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/client_state";
   }
 
   // ConnectionConsensusState queries the consensus state associated with the
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
     returns (QueryConnectionConsensusStateResponse) {
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state";
   }
 }
 

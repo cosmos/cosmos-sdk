@@ -141,7 +141,8 @@ func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() github_com_c
 type ValidatorAccumulatedCommissionRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
-	Accumulated      ValidatorAccumulatedCommission                `protobuf:"bytes,2,opt,name=accumulated,proto3" json:"accumulated" yaml:"accumulated"`
+	// accumulated is the accumulated commission of a validator.
+	Accumulated ValidatorAccumulatedCommission `protobuf:"bytes,2,opt,name=accumulated,proto3" json:"accumulated" yaml:"accumulated"`
 }
 
 func (m *ValidatorAccumulatedCommissionRecord) Reset()         { *m = ValidatorAccumulatedCommissionRecord{} }

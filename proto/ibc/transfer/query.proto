@@ -4,42 +4,48 @@ package ibc.transfer;
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/transfer/transfer.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
-// Query provides defines the gRPC querier service
+// Query provides defines the gRPC querier service.
 service Query {
-  // DenomTrace queries a denomination trace info.
-  rpc DenomTrace(QueryDenomTraceRequest) returns (QueryDenomTraceResponse) {}
+  // DenomTrace queries a denomination trace information.
+  rpc DenomTrace(QueryDenomTraceRequest) returns (QueryDenomTraceResponse) {
+    option (google.api.http).get = "/ibc_transfer/v1beta1/denom_traces/{hash}";
+  }
 
   // DenomTraces queries all denomination traces.
-  rpc DenomTraces(QueryDenomTracesRequest) returns (QueryDenomTracesResponse) {}
+  rpc DenomTraces(QueryDenomTracesRequest) returns (QueryDenomTracesResponse) {
+    option (google.api.http).get = "/ibc_transfer/v1beta1/denom_traces";
+  }
 }
 
 // QueryDenomTraceRequest is the request type for the Query/DenomTrace RPC method
 message QueryDenomTraceRequest {
-  // hex hash of the denomination trace info
+  // hash (in hex format) of the denomination trace information.
   string hash = 1;
 }
 
 // QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC method.
 message QueryDenomTraceResponse {
-  // denomination trace associated with the request hash
+  // denom_trace returns the requested denomination trace information.
   DenomTrace denom_trace = 1;
 }
 
 // QueryConnectionsRequest is the request type for the Query/DenomTraces RPC method
 message QueryDenomTracesRequest {
+   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryConnectionsResponse is the response type for the Query/DenomTraces RPC method.
 message QueryDenomTracesResponse {
-  // list of stored connections of the chain.
+  // denom_traces returns all denominations trace information.
   repeated DenomTrace denom_traces = 1 [
     (gogoproto.castrepeated) = "Traces",
     (gogoproto.nullable) = false
   ];
-  // pagination response
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -4,6 +4,7 @@ package tendermint.types;
 option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "tendermint/types/types.proto";
 import "tendermint/crypto/keys.proto";
 
@@ -12,6 +13,9 @@ import "tendermint/crypto/keys.proto";
 message DuplicateVoteEvidence {
   Vote vote_a = 1;
   Vote vote_b = 2;
+  
+  google.protobuf.Timestamp timestamp = 3
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 message PotentialAmnesiaEvidence {
@@ -19,6 +23,8 @@ message PotentialAmnesiaEvidence {
   Vote vote_b = 2;
 
   int64 height_stamp = 3;
+  google.protobuf.Timestamp timestamp = 4
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 message AmnesiaEvidence {
@@ -35,11 +41,9 @@ message LunaticValidatorEvidence {
   Header header               = 1;
   Vote   vote                 = 2;
   string invalid_header_field = 3;
-}
-
-message PhantomValidatorEvidence {
-  Vote  vote                             = 1;
-  int64 last_height_validator_was_in_set = 2;
+  
+  google.protobuf.Timestamp timestamp = 4
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
 message Evidence {
@@ -49,7 +53,6 @@ message Evidence {
     LunaticValidatorEvidence   lunatic_validator_evidence   = 3;
     PotentialAmnesiaEvidence   potential_amnesia_evidence   = 4;
     AmnesiaEvidence            amnesia_evidence             = 5;
-    PhantomValidatorEvidence   phantom_validator_evidence   = 6;
   }
 }
 

@@ -64,6 +64,7 @@ message RequestInitChain {
   ConsensusParams          consensus_params = 3;
   repeated ValidatorUpdate validators       = 4 [(gogoproto.nullable) = false];
   bytes                    app_state_bytes  = 5;
+  int64                    initial_height   = 6;
 }
 
 message RequestQuery {
@@ -180,6 +181,7 @@ message ResponseSetOption {
 message ResponseInitChain {
   ConsensusParams          consensus_params = 1;
   repeated ValidatorUpdate validators       = 2 [(gogoproto.nullable) = false];
+  bytes                    app_hash         = 3;
 }
 
 message ResponseQuery {
@@ -351,8 +353,11 @@ message VoteInfo {
 
 message Evidence {
   string                    type      = 1;
+  // The offending validator
   Validator                 validator = 2 [(gogoproto.nullable) = false];
+  // The height when the offense occurred 
   int64                     height    = 3;
+  // The corresponding time where the offense occurred
   google.protobuf.Timestamp time      = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true

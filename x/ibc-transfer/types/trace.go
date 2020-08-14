@@ -51,8 +51,8 @@ func (dt DenomTrace) GetPrefix() string {
 	return dt.Path + "/"
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(tracePath +
-// baseDenom)}'. If the trace is empty, it will return the base denomination.
+// IBCDenom a coin denomination for an ICS20 fungible token in the format
+// 'ibc/{hash(tracePath + baseDenom)}'. If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
 	if dt.Path != "" {
 		return fmt.Sprintf("ibc/%s", dt.Hash())
@@ -60,8 +60,8 @@ func (dt DenomTrace) IBCDenom() string {
 	return dt.BaseDenom
 }
 
-// GetFullDenomPath returns the full denomination according to the ICS20 specification: trace + "/"
-// + baseDenom
+// GetFullDenomPath returns the full denomination according to the ICS20 specification:
+// tracePath + "/" + baseDenom
 func (dt DenomTrace) GetFullDenomPath() string {
 	return dt.GetPrefix() + dt.BaseDenom
 }

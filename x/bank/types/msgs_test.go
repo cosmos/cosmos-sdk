@@ -100,27 +100,27 @@ func TestInputValidation(t *testing.T) {
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
-		valid bool
-		txIn  Input
+		expectedErr string // empty means no error expected
+		txIn        Input
 	}{
 		// auth works with different apps
-		{true, NewInput(addr1, someCoins)},
-		{true, NewInput(addr2, someCoins)},
-		{true, NewInput(addr2, multiCoins)},
+		{"", NewInput(addr1, someCoins)},
+		{"", NewInput(addr2, someCoins)},
+		{"", NewInput(addr2, multiCoins)},
 
-		{false, NewInput(emptyAddr, someCoins)},  // empty address
-		{false, NewInput(addr1, emptyCoins)},     // invalid coins
-		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
-		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
+		{"input address missing: invalid address", NewInput(emptyAddr, someCoins)}, // empty address
+		{": invalid coins", NewInput(addr1, emptyCoins)},                           // invalid coins
+		{": invalid coins", NewInput(addr1, emptyCoins2)},                          // invalid coins
+		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)},            // invalid coins
+		{"1eth,1atom: invalid coins", NewInput(addr1, unsortedCoins)},              // unsorted coins
 	}
 
 	for i, tc := range cases {
 		err := tc.txIn.ValidateBasic()
-		if tc.valid {
+		if tc.expectedErr == "" {
 			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			require.NotNil(t, err, "%d", i)
+			require.EqualError(t, err, tc.expectedErr, "%d", i)
 		}
 	}
 }

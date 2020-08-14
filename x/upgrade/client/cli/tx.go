@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -146,7 +145,6 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.MarkFlagRequired(cli.FlagTitle)
 	cmd.MarkFlagRequired(cli.FlagDescription)
-	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

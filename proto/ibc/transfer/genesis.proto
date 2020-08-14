@@ -9,7 +9,6 @@ import "gogoproto/gogo.proto";
 // by the module manager
 message GenesisState {
   string port_id = 1 [
-    (gogoproto.customname) = "PortID",
     (gogoproto.moretags)   = "yaml:\"port_id\""
   ];
 }

@@ -86,6 +86,7 @@ message QuerySupplyOfRequest {
 // QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 message QuerySupplyOfResponse {
   // amount is the supply of the coin.
-  cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false
+  ];
 }

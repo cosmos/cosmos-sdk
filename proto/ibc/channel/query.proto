@@ -2,7 +2,6 @@ syntax = "proto3";
 package ibc.channel;
 
 import "ibc/client/client.proto";
-import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/channel/channel.proto";
 import "google/api/annotations.proto";
@@ -79,9 +78,9 @@ service Query {
 // QueryChannelRequest is the request type for the Query/Channel RPC method
 message QueryChannelRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
 }
 
 // QueryChannelResponse is the response type for the Query/Channel RPC method.
@@ -138,9 +137,9 @@ message QueryConnectionChannelsResponse {
 // RPC method
 message QueryChannelClientStateRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
 }
 
 // QueryChannelClientStateResponse is the Response type for the
@@ -160,9 +159,9 @@ message QueryChannelClientStateResponse {
 // Query/ConsensusState RPC method
 message QueryChannelConsensusStateRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
   // height of the consensus state
   uint64 height = 3;
 }
@@ -173,7 +172,7 @@ message QueryChannelConsensusStateResponse {
   // consensus state associated with the channel
   google.protobuf.Any consensus_state = 1;
   // client ID associated with the consensus state
-  string client_id = 2 [(gogoproto.customname) = "ClientID"];
+  string client_id = 2;
   // merkle proof of existence
   bytes proof = 3;
   // merkle proof path
@@ -186,9 +185,9 @@ message QueryChannelConsensusStateResponse {
 // Query/PacketCommitment RPC method
 message QueryPacketCommitmentRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
   // packet sequence
   uint64 sequence = 3;
 }
@@ -211,9 +210,9 @@ message QueryPacketCommitmentResponse {
 // Query/QueryPacketCommitments RPC method
 message QueryPacketCommitmentsRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
   // pagination request
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
@@ -232,9 +231,9 @@ message QueryPacketCommitmentsResponse {
 // Query/PacketAcknowledgement RPC method
 message QueryPacketAcknowledgementRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
   // packet sequence
   uint64 sequence = 3;
 }
@@ -257,12 +256,11 @@ message QueryPacketAcknowledgementResponse {
 // Query/UnrelayedPackets RPC method
 message QueryUnrelayedPacketsRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
   // list of packet sequences
-  repeated uint64 packet_commitment_sequences = 3
-      [(gogoproto.customname) = "PacketCommitmentSequences"];
+  repeated uint64 packet_commitment_sequences = 3;
   // flag indicating if the return value is packet commitments or
   // acknowledgements
   bool acknowledgements = 4;
@@ -281,9 +279,9 @@ message QueryUnrelayedPacketsResponse {
 // Query/QueryNextSequenceReceiveRequest RPC method
 message QueryNextSequenceReceiveRequest {
   // port unique identifier
-  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string port_id = 1;
   // channel unique identifier
-  string channel_id = 2 [(gogoproto.customname) = "ChannelID"];
+  string channel_id = 2;
 }
 
 // QuerySequenceResponse is the request type for the

@@ -20,14 +20,15 @@ func TestMsgSendRoute(t *testing.T) {
 }
 
 func TestMsgSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("from"))
-	addr2 := sdk.AccAddress([]byte("to"))
+	addr1 := sdk.AccAddress([]byte("from________________"))
+	addr2 := sdk.AccAddress([]byte("to__________________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 	atom123eth123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123))
 	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
-
-	var emptyAddr sdk.AccAddress
 
 	cases := []struct {
 		expectedErr string // empty means no error expected
@@ -37,8 +38,10 @@ func TestMsgSendValidation(t *testing.T) {
 		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"missing sender address: invalid address", NewMsgSend(emptyAddr, addr2, atom123)},
-		{"missing recipient address: invalid address", NewMsgSend(addr1, emptyAddr, atom123)},
+		{"Invalid sender address (incorrect address length (expected: 20, actual: 0)): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"Invalid sender address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addrTooLong, addr2, atom123)},
+		{"Invalid recipient address (incorrect address length (expected: 20, actual: 0)): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"Invalid recipient address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addr1, addrTooLong, atom123)},
 	}
 
 	for _, tc := range cases {

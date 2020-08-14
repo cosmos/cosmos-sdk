@@ -26,12 +26,12 @@ func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
-	if msg.FromAddress.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+	if err := sdk.VerifyAddressFormat(msg.FromAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if msg.ToAddress.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+	if err := sdk.VerifyAddressFormat(msg.ToAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid recipient address (%s)", err)
 	}
 
 	if !msg.Amount.IsValid() {

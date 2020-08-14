@@ -113,7 +113,7 @@ func (dt DenomTrace) Validate() error {
 	return validateTraceIdentifiers(identifiers)
 }
 
-// Traces defines a wrapper type for a slice of IdentifiedDenomTraces.
+// Traces defines a wrapper type for a slice of DenomTrace.
 type Traces []DenomTrace
 
 // Validate performs a basic validation of each denomination trace info.
@@ -122,7 +122,7 @@ func (t Traces) Validate() error {
 	for i, trace := range t {
 		hash := trace.Hash().String()
 		if seenTraces[hash] {
-			return fmt.Errorf("duplicated denomination trace with hash  %s", trace.Hash())
+			return fmt.Errorf("duplicated denomination trace with hash %s", trace.Hash())
 		}
 
 		if err := trace.Validate(); err != nil {
@@ -175,7 +175,7 @@ func ValidateIBCDenom(denom string) error {
 	}
 
 	if _, err := ParseHexHash(denomSplit[1]); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
+		return sdkerrors.Wrapf(err, "invalid denom trace hash %s", denomSplit[1])
 	}
 
 	return nil

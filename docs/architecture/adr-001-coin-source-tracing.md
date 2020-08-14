@@ -141,8 +141,8 @@ func (dt DenomTrace) Hash() tmbytes.HexBytes {
   return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace +
-// baseDenom)}'. If the trace is empty, it will return the base denomination.
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace + baseDenom)}'. 
+// If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
   if dt.Trace != "" {
     return fmt.Sprintf("ibc/%s", dt.Hash())

@@ -125,8 +125,8 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
-	if len(out.Address) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "output address missing")
+	if err := sdk.VerifyAddressFormat(out.Address); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid output address (%s)", err)
 	}
 
 	if !out.Coins.IsValid() {

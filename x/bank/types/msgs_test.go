@@ -129,12 +129,14 @@ func TestInputValidation(t *testing.T) {
 }
 
 func TestOutputValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
 
-	var emptyAddr sdk.AccAddress
 	emptyCoins := sdk.NewCoins()
 	emptyCoins2 := sdk.NewCoins(sdk.NewInt64Coin("eth", 0))
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
@@ -149,7 +151,8 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr2, someCoins)},
 		{"", NewOutput(addr2, multiCoins)},
 
-		{"output address missing: invalid address", NewOutput(emptyAddr, someCoins)},
+		{"Invalid output address (incorrect address length (expected: 20, actual: 0)): invalid address", NewOutput(addrEmpty, someCoins)},
+		{"Invalid output address (incorrect address length (expected: 20, actual: 33)): invalid address", NewOutput(addrTooLong, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins

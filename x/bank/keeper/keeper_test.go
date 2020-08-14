@@ -337,7 +337,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
-	addr3 := sdk.AccAddress([]byte("addr3"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
 	app.AccountKeeper.SetAccount(ctx, acc3)
 

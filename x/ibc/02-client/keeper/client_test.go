@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -257,16 +256,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	pubKey, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
 	// Create signer array and ensure it is in same order as bothValSet
-	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
-		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
-	} else {
-		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
-	}
+	_, suiteVal := suite.valSet.GetByIndex(0)
+	bothSigners := ibctmtypes.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 

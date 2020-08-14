@@ -57,8 +57,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
-		for i, val := range res.Validators {
-			if proto.Equal(&val, &req.Validators[i]) {
+		for i := range res.Validators {
+			if proto.Equal(&res.Validators[i], &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}

@@ -1,7 +1,6 @@
 package tendermint_test
 
 import (
-	"bytes"
 	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -33,16 +32,9 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 
 	signers := []tmtypes.PrivValidator{suite.privVal}
 
-	pubKey, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
 	// Create signer array and ensure it is in same order as bothValSet
-	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
-		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
-	} else {
-		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
-	}
+	_, suiteVal := suite.valSet.GetByIndex(0)
+	bothSigners := types.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
@@ -69,6 +61,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
+			expPass: true,
 		},
 		{
 			name: "successful update with next height and different validator set",

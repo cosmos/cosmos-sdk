@@ -78,8 +78,8 @@ func TestStakingMsgs(t *testing.T) {
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	validator := checkValidator(t, app, sdk.ValAddress(valAddr), true)
-	require.Equal(t, sdk.ValAddress(valAddr), validator.OperatorAddress)
+	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
@@ -88,34 +88,34 @@ func TestStakingMsgs(t *testing.T) {
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
-	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, nil, nil)
+	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
-	validator = checkValidator(t, app, sdk.ValAddress(valAddr), true)
+	validator = checkValidator(t, app, sdk.ValAddress(addr1), true)
 	require.Equal(t, description, validator.Description)
 
 	// delegate
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
-	delegateMsg := types.NewMsgDelegate(addr2, sdk.ValAddress(valAddr), bondCoin)
+	delegateMsg := types.NewMsgDelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{delegateMsg}, []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
-	checkDelegation(t, app, addr2, sdk.ValAddress(valAddr), true, bondTokens.ToDec())
+	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
 
 	// begin unbonding
-	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(valAddr), bondCoin)
+	beginUnbondingMsg := types.NewMsgUndelegate(addr2, sdk.ValAddress(addr1), bondCoin)
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
 	// delegation should exist anymore
-	checkDelegation(t, app, addr2, sdk.ValAddress(valAddr), false, sdk.Dec{})
+	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), false, sdk.Dec{})
 
 	// balance should be the same because bonding not yet complete
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})

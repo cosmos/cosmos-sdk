@@ -95,8 +95,8 @@ func (k Keeper) SendTransfer(
 		prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
 	} else if strings.Contains(token.Denom, "/") {
 		// in the case the user transfers a prefixed denomination,
-		// update the token denomination with the hashed trace info as that's the
-		// representation on the user balance
+		// update the token denomination with the hashed trace info since that is the
+		// internally represented denomination on the user balance
 		denomTrace := types.ParseDenomTrace(token.Denom)
 		token.Denom = denomTrace.IBCDenom()
 	}

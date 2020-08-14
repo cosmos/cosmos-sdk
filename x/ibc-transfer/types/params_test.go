@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidateParams(t *testing.T) {
+	// TODO:
+
 	params := DefaultParams()
 
 	// default params have no error

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	yaml "gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -35,12 +34,6 @@ func DefaultParams() Params {
 // Validate all ibc-transfer module parameters
 func (p Params) Validate() error {
 	return validateTransfersEnabled(p.TransfersEnabled)
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // ParamSetPairs implements params.ParamSet

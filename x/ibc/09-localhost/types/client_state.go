@@ -72,6 +72,25 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
+// CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
+func (cs ClientState) CheckHeaderAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
+) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	return NewClientState(
+		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
+		ctx.BlockHeight(),
+	), nil, nil
+}
+
+// CheckMisbehaviourAndUpdateState implements ClientState
+// Since localhost is the client of the running chain, misbehaviour cannot be submitted to it
+// Thus, CheckMisbehaviourAndUpdateState returns an error for localhost
+func (cs ClientState) CheckMisbehaviourAndUpdateState(
+	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Misbehaviour,
+) (clientexported.ClientState, error) {
+	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "cannot submit misbehaviour to localhost client")
+}
+
 // VerifyClientConsensusState returns an error since a local host client does not store consensus
 // states.
 func (cs ClientState) VerifyClientConsensusState(

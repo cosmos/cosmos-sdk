@@ -424,10 +424,19 @@ func TestCoins_Validate(t *testing.T) {
 			true,
 		},
 		{
-			"valid lower and uppercase coins",
+			"valid lower and uppercase coins (1)",
 			Coins{
 				{"GAS", OneInt()},
 				{"gAs", OneInt()},
+			},
+			true,
+		},
+		{
+			"valid lower and uppercase coins (2)",
+			Coins{
+				{"ATOM", OneInt()},
+				{"Atom", OneInt()},
+				{"atom", OneInt()},
 			},
 			true,
 		},
@@ -622,6 +631,7 @@ func TestParse(t *testing.T) {
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
 		{"1.2btc", false, nil},                // amount must be integer
 		{"5foo:bar", false, nil},              // invalid separator
+		{"10atom10", true, Coins{{"atom10", NewInt(10)}}},
 	}
 
 	for tcIndex, tc := range cases {

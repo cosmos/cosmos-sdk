@@ -619,8 +619,9 @@ func mustValidateDenom(denom string) {
 	}
 }
 
-// ParseCoin parses a cli input for one coin type, returning errors if invalid.
-// This returns an error on an empty string as well.
+// ParseCoin parses a cli input for one coin type, returning errors if invalid or on an empty string
+// as well.
+// Expected format: "{amount}{denomination}"
 func ParseCoin(coinStr string) (coin Coin, err error) {
 	coinStr = strings.TrimSpace(coinStr)
 
@@ -645,6 +646,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 
 // ParseCoins will parse out a list of coins separated by commas. If nothing is provided, it returns
 // nil Coins. If the coins aren't valid they return an error. Returned coins are sorted.
+// Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseCoins(coinsStr string) (Coins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {

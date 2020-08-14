@@ -379,7 +379,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Sequence:      txf.sequence,
 	}
 
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
 	// TxBuilder under the hood, and SignerInfos is needed to generated the
 	// sign bytes. This is the reason for setting SetSignatures here, with a
 	// nil signature.

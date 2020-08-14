@@ -106,7 +106,8 @@ which accepts a path for the resulting pprof file.
 
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
+			// amino is needed here for backwards compatibility of REST routes
+			err := startInProcess(serverCtx, clientCtx.LegacyAmino, appCreator)
 			return err
 		},
 	}
@@ -177,7 +178,8 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppCreator) error {
+// legacyAminoCdc is used for the legacy REST API
+func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -230,7 +232,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppC
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
+			WithJSONMarshaler(legacyAminoCdc).
+			// amino is needed here for backwards compatibility of REST routes
+			WithLegacyAmino(legacyAminoCdc).
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

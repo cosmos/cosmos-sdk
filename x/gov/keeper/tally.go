@@ -33,7 +33,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 		return false
 	})
 
-	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
+	keeper.IterateVotes(ctx, proposal.ProposalId, func(vote types.Vote) bool {
 		// if validator, just record it in the map
 		valAddrStr := sdk.ValAddress(vote.Voter).String()
 		if val, ok := currValidators[valAddrStr]; ok {
@@ -61,7 +61,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 			return false
 		})
 
-		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
+		keeper.deleteVote(ctx, vote.ProposalId, vote.Voter)
 		return false
 	})
 

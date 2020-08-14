@@ -22,8 +22,8 @@ var (
 func TestCoin(t *testing.T) {
 	require.Panics(t, func() { NewInt64Coin(testDenom1, -1) })
 	require.Panics(t, func() { NewCoin(testDenom1, NewInt(-1)) })
-	require.Panics(t, func() { NewInt64Coin(strings.ToUpper(testDenom1), 10) })
-	require.Panics(t, func() { NewCoin(strings.ToUpper(testDenom1), NewInt(10)) })
+	require.Equal(t, NewInt(10), NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
+	require.Equal(t, NewInt(10), NewCoin(strings.ToUpper(testDenom1), NewInt(10)).Amount)
 	require.Equal(t, NewInt(5), NewInt64Coin(testDenom1, 5).Amount)
 	require.Equal(t, NewInt(5), NewCoin(testDenom1, NewInt(5)).Amount)
 }
@@ -57,18 +57,27 @@ func TestIsEqualCoin(t *testing.T) {
 }
 
 func TestCoinIsValid(t *testing.T) {
+	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
+	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
+	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
+
+	loremIpsum = strings.ReplaceAll(loremIpsum, " ", "")
+	loremIpsum = strings.ReplaceAll(loremIpsum, ".", "")
+	loremIpsum = strings.ReplaceAll(loremIpsum, ",", "")
+
 	cases := []struct {
 		coin       Coin
 		expectPass bool
 	}{
 		{Coin{testDenom1, NewInt(-1)}, false},
 		{Coin{testDenom1, NewInt(0)}, true},
-		{Coin{testDenom1, NewInt(1)}, true},
-		{Coin{"Atom", NewInt(1)}, false},
-		{Coin{"a", NewInt(1)}, false},
-		{Coin{"a very long coin denom", NewInt(1)}, false},
-		{Coin{"atOm", NewInt(1)}, false},
-		{Coin{"     ", NewInt(1)}, false},
+		{Coin{testDenom1, OneInt()}, true},
+		{Coin{"Atom", OneInt()}, true},
+		{Coin{"ATOM", OneInt()}, true},
+		{Coin{"a", OneInt()}, false},
+		{Coin{loremIpsum, OneInt()}, false},
+		{Coin{"atOm", OneInt()}, true},
+		{Coin{"     ", OneInt()}, false},
 	}
 
 	for i, tc := range cases {
@@ -201,7 +210,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 		{
 			name: "all greater than zero",
 			input: Coins{
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testb", NewInt(2)},
 				{"testc", NewInt(3)},
 				{"testd", NewInt(4)},
@@ -213,7 +222,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 		{
 			name: "zero coin in middle",
 			input: Coins{
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testb", NewInt(2)},
 				{"testc", NewInt(0)},
 				{"testd", NewInt(4)},
@@ -227,7 +236,7 @@ func TestFilteredZeroCoins(t *testing.T) {
 			input: Coins{
 				{"teste", NewInt(5)},
 				{"testc", NewInt(3)},
-				{"testa", NewInt(1)},
+				{"testa", OneInt()},
 				{"testd", NewInt(4)},
 				{"testb", NewInt(0)},
 			},
@@ -256,25 +265,23 @@ func TestCoins_String(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "empty coins",
-			input:    Coins{},
-			expected: "",
+			"empty coins",
+			Coins{},
+			"",
 		},
 		{
-			name: "single coin",
-			input: Coins{
-				{"tree", NewInt(1)},
-			},
-			expected: "1tree",
+			"single coin",
+			Coins{{"tree", OneInt()}},
+			"1tree",
 		},
 		{
-			name: "multiple coins",
-			input: Coins{
-				{"tree", NewInt(1)},
-				{"gas", NewInt(1)},
-				{"mineral", NewInt(1)},
+			"multiple coins",
+			Coins{
+				{"tree", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
 			},
-			expected: "1tree,1gas,1mineral",
+			"1tree,1gas,1mineral",
 		},
 	}
 
@@ -333,7 +340,7 @@ func TestEqualCoins(t *testing.T) {
 
 func TestAddCoins(t *testing.T) {
 	zero := NewInt(0)
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	cases := []struct {
@@ -357,7 +364,7 @@ func TestAddCoins(t *testing.T) {
 
 func TestSubCoins(t *testing.T) {
 	zero := NewInt(0)
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	testCases := []struct {
@@ -385,70 +392,185 @@ func TestSubCoins(t *testing.T) {
 	}
 }
 
-func TestCoins(t *testing.T) {
-	good := Coins{
-		{"gas", NewInt(1)},
-		{"mineral", NewInt(1)},
-		{"tree", NewInt(1)},
-	}
-	mixedCase1 := Coins{
-		{"gAs", NewInt(1)},
-		{"MineraL", NewInt(1)},
-		{"TREE", NewInt(1)},
-	}
-	mixedCase2 := Coins{
-		{"gAs", NewInt(1)},
-		{"mineral", NewInt(1)},
-	}
-	mixedCase3 := Coins{
-		{"gAs", NewInt(1)},
-	}
-	empty := NewCoins()
-	badSort1 := Coins{
-		{"tree", NewInt(1)},
-		{"gas", NewInt(1)},
-		{"mineral", NewInt(1)},
+func TestCoins_Validate(t *testing.T) {
+	testCases := []struct {
+		name    string
+		coins   Coins
+		expPass bool
+	}{
+		{
+			"valid lowercase coins",
+			Coins{
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
+				{"tree", OneInt()},
+			},
+			true,
+		},
+		{
+			"valid uppercase coins",
+			Coins{
+				{"GAS", OneInt()},
+				{"MINERAL", OneInt()},
+				{"TREE", OneInt()},
+			},
+			true,
+		},
+		{
+			"valid uppercase coin",
+			Coins{
+				{"ATOM", OneInt()},
+			},
+			true,
+		},
+		{
+			"valid lower and uppercase coins (1)",
+			Coins{
+				{"GAS", OneInt()},
+				{"gAs", OneInt()},
+			},
+			true,
+		},
+		{
+			"valid lower and uppercase coins (2)",
+			Coins{
+				{"ATOM", OneInt()},
+				{"Atom", OneInt()},
+				{"atom", OneInt()},
+			},
+			true,
+		},
+		{
+			"mixed case (1)",
+			Coins{
+				{"MineraL", OneInt()},
+				{"TREE", OneInt()},
+				{"gAs", OneInt()},
+			},
+			true,
+		},
+		{
+			"mixed case (2)",
+			Coins{
+				{"gAs", OneInt()},
+				{"mineral", OneInt()},
+			},
+			true,
+		},
+		{
+			"mixed case (3)",
+			Coins{
+				{"gAs", OneInt()},
+			},
+			true,
+		},
+		{
+			"unicode letters and numbers",
+			Coins{
+				{"𐀀𐀆𐀉Ⅲ", OneInt()},
+			},
+			false,
+		},
+		{
+			"emojis",
+			Coins{
+				{"🤑😋🤔", OneInt()},
+			},
+			false,
+		},
+		{
+			"IBC denominations (ADR 001)",
+			Coins{
+				{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", OneInt()},
+				{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", NewInt(2)},
+			},
+			true,
+		},
+		{
+			"empty (1)",
+			NewCoins(),
+			true,
+		},
+		{
+			"empty (2)",
+			Coins{},
+			true,
+		},
+		{
+			"invalid denomination (1)",
+			Coins{
+				{"MineraL", OneInt()},
+				{"0TREE", OneInt()},
+				{"gAs", OneInt()},
+			},
+			false,
+		},
+		{
+			"invalid denomination (2)",
+			Coins{
+				{"-GAS", OneInt()},
+				{"gAs", OneInt()},
+			},
+			false,
+		},
+		{
+			"bad sort (1)",
+			Coins{
+				{"tree", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
+			},
+			false,
+		},
+		{
+			"bad sort (2)",
+			Coins{
+				{"gas", OneInt()},
+				{"tree", OneInt()},
+				{"mineral", OneInt()},
+			},
+			false,
+		},
+		{
+			"non-positive amount (1)",
+			Coins{
+				{"gas", OneInt()},
+				{"tree", NewInt(0)},
+				{"mineral", OneInt()},
+			},
+			false,
+		},
+		{
+			"non-positive amount (2)",
+			Coins{
+				{"gas", NewInt(-1)},
+				{"tree", OneInt()},
+				{"mineral", OneInt()},
+			},
+			false,
+		}, {
+			"duplicate denomination",
+			Coins{
+				{"gas", OneInt()},
+				{"gas", OneInt()},
+				{"mineral", OneInt()},
+			},
+			false,
+		},
 	}
 
-	// both are after the first one, but the second and third are in the wrong order
-	badSort2 := Coins{
-		{"gas", NewInt(1)},
-		{"tree", NewInt(1)},
-		{"mineral", NewInt(1)},
+	for _, tc := range testCases {
+		err := tc.coins.Validate()
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+		} else {
+			require.Error(t, err, tc.name)
+		}
 	}
-	badAmt := Coins{
-		{"gas", NewInt(1)},
-		{"tree", NewInt(0)},
-		{"mineral", NewInt(1)},
-	}
-	dup := Coins{
-		{"gas", NewInt(1)},
-		{"gas", NewInt(1)},
-		{"mineral", NewInt(1)},
-	}
-	neg := Coins{
-		{"gas", NewInt(-1)},
-		{"mineral", NewInt(1)},
-	}
-
-	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
-	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
-	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
-	assert.True(t, good.IsAllPositive(), "Expected coins to be positive: %v", good)
-	assert.False(t, empty.IsAllPositive(), "Expected coins to not be positive: %v", empty)
-	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
-	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
-	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
-	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
-	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
-	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
-	assert.False(t, dup.IsValid(), "Duplicate coin")
-	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 
 func TestCoinsGT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllGT(Coins{}))
@@ -460,7 +582,7 @@ func TestCoinsGT(t *testing.T) {
 }
 
 func TestCoinsLT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllLT(Coins{}))
@@ -475,7 +597,7 @@ func TestCoinsLT(t *testing.T) {
 }
 
 func TestCoinsLTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.True(t, Coins{}.IsAllLTE(Coins{}))
@@ -490,7 +612,7 @@ func TestCoinsLTE(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 
 	cases := []struct {
 		input    string
@@ -508,13 +630,14 @@ func TestParse(t *testing.T) {
 		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
 		{"1.2btc", false, nil},                // amount must be integer
-		{"5foo-bar", false, nil},              // once more, only letters in coin name
+		{"5foo:bar", false, nil},              // invalid separator
+		{"10atom10", true, Coins{{"atom10", NewInt(10)}}},
 	}
 
 	for tcIndex, tc := range cases {
 		res, err := ParseCoins(tc.input)
 		if !tc.valid {
-			require.NotNil(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
+			require.Error(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
 			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
 		}
@@ -552,21 +675,35 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	cases := []struct {
-		coins         Coins
-		before, after bool // valid before/after sort
+		name  string
+		coins Coins
+		validBefore,
+		validAfter bool
 	}{
-		{good, true, true},
-		{empty, false, false},
-		{badSort1, false, true},
-		{badSort2, false, true},
-		{badAmt, false, false},
-		{dup, false, false},
+		{"valid coins", good, true, true},
+		{"empty coins", empty, false, false},
+		{"bad sort (1)", badSort1, false, true},
+		{"bad sort (2)", badSort2, false, true},
+		{"zero value coin", badAmt, false, false},
+		{"duplicate coins", dup, false, false},
 	}
 
-	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
+	for _, tc := range cases {
+		err := tc.coins.Validate()
+		if tc.validBefore {
+			require.NoError(t, err, tc.name)
+		} else {
+			require.Error(t, err, tc.name)
+		}
+
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
+
+		err = tc.coins.Validate()
+		if tc.validAfter {
+			require.NoError(t, err, tc.name)
+		} else {
+			require.Error(t, err, tc.name)
+		}
 	}
 }
 
@@ -609,11 +746,11 @@ func TestAmountOf(t *testing.T) {
 		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
 	}
 
-	assert.Panics(t, func() { cases[0].coins.AmountOf("Invalid") })
+	assert.Panics(t, func() { cases[0].coins.AmountOf("10Invalid") })
 }
 
 func TestCoinsIsAnyGTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
@@ -633,7 +770,7 @@ func TestCoinsIsAnyGTE(t *testing.T) {
 }
 
 func TestCoinsIsAllGT(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.False(t, Coins{}.IsAllGT(Coins{}))
@@ -653,7 +790,7 @@ func TestCoinsIsAllGT(t *testing.T) {
 }
 
 func TestCoinsIsAllGTE(t *testing.T) {
-	one := NewInt(1)
+	one := OneInt()
 	two := NewInt(2)
 
 	assert.True(t, Coins{}.IsAllGTE(Coins{}))
@@ -678,6 +815,7 @@ func TestNewCoins(t *testing.T) {
 	tenatom := NewInt64Coin("atom", 10)
 	tenbtc := NewInt64Coin("btc", 10)
 	zeroeth := NewInt64Coin("eth", 0)
+	invalidCoin := Coin{"0ETH", OneInt()}
 	tests := []struct {
 		name      string
 		coins     Coins
@@ -689,6 +827,7 @@ func TestNewCoins(t *testing.T) {
 		{"sort after create", []Coin{tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
 		{"sort and remove zeroes", []Coin{zeroeth, tenbtc, tenatom}, Coins{tenatom, tenbtc}, false},
 		{"panic on dups", []Coin{tenatom, tenatom}, Coins{}, true},
+		{"panic on invalid coin", []Coin{invalidCoin, tenatom}, Coins{}, true},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -710,44 +849,23 @@ func TestCoinsIsAnyGT(t *testing.T) {
 	sixEth := NewInt64Coin("eth", 6)
 	twoBtc := NewInt64Coin("btc", 2)
 
-	require.False(t, Coins{}.IsAnyGT(Coins{}))
-
-	require.False(t, Coins{fiveAtom}.IsAnyGT(Coins{}))
-	require.False(t, Coins{}.IsAnyGT(Coins{fiveAtom}))
-	require.True(t, Coins{fiveAtom}.IsAnyGT(Coins{twoAtom}))
-	require.False(t, Coins{twoAtom}.IsAnyGT(Coins{fiveAtom}))
-
-	require.True(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom, threeEth}))
-	require.False(t, Coins{twoBtc, twoAtom, threeEth}.IsAnyGT(Coins{fiveAtom, sixEth}))
-	require.False(t, Coins{twoAtom, sixEth}.IsAnyGT(Coins{twoBtc, fiveAtom}))
-}
-
-func TestFindDup(t *testing.T) {
-	abc := NewInt64Coin("abc", 10)
-	def := NewInt64Coin("def", 10)
-	ghi := NewInt64Coin("ghi", 10)
-
-	type args struct {
-		coins Coins
-	}
 	tests := []struct {
-		name string
-		args args
-		want int
+		name    string
+		coinsA  Coins
+		coinsB  Coins
+		expPass bool
 	}{
-		{"empty", args{NewCoins()}, -1},
-		{"one coin", args{NewCoins(NewInt64Coin("xyz", 10))}, -1},
-		{"no dups", args{Coins{abc, def, ghi}}, -1},
-		{"dup at first position", args{Coins{abc, abc, def}}, 1},
-		{"dup after first position", args{Coins{abc, def, def}}, 2},
+		{"{} ≤ {}", Coins{}, Coins{}, false},
+		{"{} ≤ 5atom", Coins{}, Coins{fiveAtom}, false},
+		{"5atom > 2atom", Coins{fiveAtom}, Coins{twoAtom}, true},
+		{"2atom ≤ 5atom", Coins{twoAtom}, Coins{fiveAtom}, false},
+		{"2atom,6eth > 2btc,5atom,3eth", Coins{twoAtom, sixEth}, Coins{twoBtc, fiveAtom, threeEth}, true},
+		{"2btc,2atom,3eth ≤ 5atom,6eth", Coins{twoBtc, twoAtom, threeEth}, Coins{fiveAtom, sixEth}, false},
+		{"2atom,6eth ≤ 2btc,5atom", Coins{twoAtom, sixEth}, Coins{twoBtc, fiveAtom}, false},
 	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if got := findDup(tt.args.coins); got != tt.want {
-				t.Errorf("findDup() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, tc := range tests {
+		require.True(t, tc.expPass == tc.coinsA.IsAnyGT(tc.coinsB), tc.name)
 	}
 }
 

@@ -1,16 +1,22 @@
 package cmd_test
 
 import (
-	"os"
+	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
+	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 func TestInitCmd(t *testing.T) {
-	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig())
+	cmd.RootCmd.SetArgs([]string{
+		"init",        // Test the init cmd
+		"simapp-test", // Moniker
+		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
+	})
 
+	err := cmd.Execute()
+	require.NoError(t, err)
 }

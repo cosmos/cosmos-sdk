@@ -35,7 +35,8 @@ import (
 )
 
 var (
-	rootCmd = &cobra.Command{
+	// RootCmd is the root command for simd.
+	RootCmd = &cobra.Command{
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
@@ -71,29 +72,29 @@ func Execute() error {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
-	executor := tmcli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
+	executor := tmcli.PrepareBaseCmd(RootCmd, "", simapp.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
 }
 
 func init() {
 	authclient.Codec = encodingConfig.Marshaler
 
-	rootCmd.AddCommand(
+	RootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig),
 		AddGenesisAccountCmd(simapp.DefaultNodeHome),
-		tmcli.NewCompletionCmd(rootCmd, true),
+		tmcli.NewCompletionCmd(RootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(RootCmd, simapp.DefaultNodeHome, newApp, exportAppStateAndTMValidators)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
-	rootCmd.AddCommand(
+	RootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),

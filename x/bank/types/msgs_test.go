@@ -88,12 +88,14 @@ func TestMsgMultiSendRoute(t *testing.T) {
 }
 
 func TestInputValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
 
-	var emptyAddr sdk.AccAddress
 	emptyCoins := sdk.NewCoins()
 	emptyCoins2 := sdk.NewCoins(sdk.NewInt64Coin("eth", 0))
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
@@ -108,11 +110,12 @@ func TestInputValidation(t *testing.T) {
 		{"", NewInput(addr2, someCoins)},
 		{"", NewInput(addr2, multiCoins)},
 
-		{"input address missing: invalid address", NewInput(emptyAddr, someCoins)}, // empty address
-		{": invalid coins", NewInput(addr1, emptyCoins)},                           // invalid coins
-		{": invalid coins", NewInput(addr1, emptyCoins2)},                          // invalid coins
-		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)},            // invalid coins
-		{"1eth,1atom: invalid coins", NewInput(addr1, unsortedCoins)},              // unsorted coins
+		{"Invalid input address (incorrect address length (expected: 20, actual: 0)): invalid address", NewInput(addrEmpty, someCoins)},
+		{"Invalid input address (incorrect address length (expected: 20, actual: 33)): invalid address", NewInput(addrTooLong, someCoins)},
+		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
+		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
+		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
+		{"1eth,1atom: invalid coins", NewInput(addr1, unsortedCoins)},   // unsorted coins
 	}
 
 	for i, tc := range cases {
@@ -164,8 +167,8 @@ func TestOutputValidation(t *testing.T) {
 }
 
 func TestMsgMultiSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom124 := sdk.NewCoins(sdk.NewInt64Coin("atom", 124))
 	eth123 := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))

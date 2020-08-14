@@ -100,8 +100,8 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
-	if len(in.Address) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "input address missing")
+	if err := sdk.VerifyAddressFormat(in.Address); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid input address (%s)", err)
 	}
 
 	if !in.Coins.IsValid() {

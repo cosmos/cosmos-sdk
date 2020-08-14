@@ -297,7 +297,7 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	app, ctx := suite.app, suite.ctx
 
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
-	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
@@ -305,7 +305,7 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(balances, acc1Balances)
 
-	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
 	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
@@ -329,11 +329,11 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	app, ctx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
-	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 
-	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
@@ -576,10 +576,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
-	addr := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
-	addr3 := sdk.AccAddress([]byte("addr3"))
-	addr4 := sdk.AccAddress([]byte("addr4"))
+	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	addr4 := sdk.AccAddress([]byte("addr4_______________"))
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 

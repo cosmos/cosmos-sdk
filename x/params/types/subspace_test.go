@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,7 +39,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 
 	suite.cdc = encCfg.Marshaler
 	suite.amino = encCfg.Amino
-	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

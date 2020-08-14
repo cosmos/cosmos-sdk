@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -35,18 +36,20 @@ func (s *IntegrationTestSuite) SetupTest() {
 	sdkCtx := app.BaseApp.NewContext(false, abci.Header{})
 	app.AccountKeeper.SetParams(sdkCtx, authtypes.DefaultParams())
 
-	srv := simulate.NewSimulateServer(*app.BaseApp)
+	// Set up TxConfig.
+	encodingConfig := simapp.MakeEncodingConfig()
+	pubKeyCodec := std.DefaultPublicKeyCodec{}
+	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
+
+	// Create new simulation server.
+	srv := simulate.NewSimulateServer(*app.BaseApp, pubKeyCodec, clientCtx.TxConfig)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
 	simulate.RegisterSimulateServiceServer(queryHelper, srv)
 	queryClient := simulate.NewSimulateServiceClient(queryHelper)
 
-	// Set up TxConfig.
-	encodingConfig := simapp.MakeEncodingConfig()
-
 	s.app = app
-	s.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+	s.clientCtx = clientCtx
 	s.queryClient = queryClient
 	s.sdkCtx = sdkCtx
 }

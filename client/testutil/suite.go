@@ -128,9 +128,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   1,
-		Sequence: 2,
+		ChainID:       "test",
+		AccountNumber: 1,
+		Sequence:      2,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -138,9 +138,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   3,
-		Sequence: 4,
+		ChainID:       "test",
+		AccountNumber: 3,
+		Sequence:      4,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)

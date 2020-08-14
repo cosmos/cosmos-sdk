@@ -110,7 +110,7 @@ message SignerInfo {
   ModeInfo mode_info = 2;
 
   // sequence is the sequence of the account, which describes the
-  // number of transactions sent from a given address. It is used to prevent
+  // number of committed transactions signed by a given address. It is used to prevent
   // replay attacks.
   uint64 sequence = 3;
 }

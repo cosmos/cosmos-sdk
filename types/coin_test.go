@@ -633,6 +633,8 @@ func TestParse(t *testing.T) {
 		{"1.2btc", false, nil},                // amount must be integer
 		{"5foo:bar", false, nil},              // invalid separator
 		{"10atom10", true, Coins{{"atom10", NewInt(10)}}},
+		{"200transfer/channelToA/uatom", true, Coins{{"transfer/channelToA/uatom", NewInt(200)}}},
+		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", NewInt(50)}}},
 	}
 
 	for tcIndex, tc := range cases {

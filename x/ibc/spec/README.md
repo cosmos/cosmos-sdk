@@ -55,6 +55,8 @@ which call each ICS submodule's handlers (i.e `x/ibc/{XX-ICS}/handler.go`).
 
 The following ADR provide the design and architecture decision of IBC-related components.
 
+* [ADR 001 - Coin Source Tracing](../../../docs/architecture/adr-001-coin-source-tracing.md): standard to hash the ICS20's fungible token
+denomination trace path in order to support special characters and limit the maximum denomination length.
 * [ADR 17 - Historical Header Module](../../../docs/architecture/adr-017-historical-header-module.md): Introduces the ability to introspect past
 consensus states in order to verify their membership in the counterparty clients.
 * [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.

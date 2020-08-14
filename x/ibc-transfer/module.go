@@ -75,7 +75,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
@@ -118,21 +118,23 @@ func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
-// InitGenesis performs genesis initialization for the ibc transfer module. It returns
+// InitGenesis performs genesis initialization for the ibc-transfer module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-
-	// TODO: check if the IBC transfer module account is set
-	InitGenesis(ctx, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
+// ExportGenesis returns the exported genesis state as raw bytes for the ibc-transfer
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -288,10 +290,12 @@ func (am AppModule) OnRecvPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+
 	acknowledgement := types.FungibleTokenPacketAcknowledgement{
 		Success: true,
 		Error:   "",
 	}
+
 	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
 		acknowledgement = types.FungibleTokenPacketAcknowledgement{
 			Success: false,

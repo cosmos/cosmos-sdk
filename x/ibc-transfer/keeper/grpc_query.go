@@ -75,8 +75,9 @@ func (q Keeper) DenomTraces(c context.Context, req *types.QueryDenomTracesReques
 // Params implements the Query/Params gRPC method
 func (q Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
+	params := q.GetParams(ctx)
 
 	return &types.QueryParamsResponse{
-		Params: q.GetParams(ctx),
+		Params: &params,
 	}, nil
 }

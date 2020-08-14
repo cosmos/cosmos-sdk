@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
-func (suite *KeeperTestSuite) TestQueryConnection() {
+func (suite *KeeperTestSuite) TestQueryDenomTrace() {
 	var (
 		req      *types.QueryDenomTraceRequest
 		expTrace types.DenomTrace
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryConnections() {
+func (suite *KeeperTestSuite) TestQueryDenomTraces() {
 	var (
 		req       *types.QueryDenomTracesRequest
 		expTraces = types.Traces(nil)
@@ -132,4 +132,11 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestQueryParams() {
+	ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+	res, _ := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
+	suite.Require().Equal(types.DefaultParams(), res)
 }

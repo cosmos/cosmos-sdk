@@ -36,7 +36,7 @@ func QueryDelegationRewards(clientCtx client.Context, delAddr, valAddr string) (
 func QueryDelegatorValidators(clientCtx client.Context, delegatorAddr sdk.AccAddress) ([]byte, error) {
 	res, _, err := clientCtx.QueryWithData(
 		fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorValidators),
-		clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
+		clientCtx.LegacyAmino.MustMarshalJSON(types.NewQueryDelegatorParams(delegatorAddr)),
 	)
 	return res, err
 }
@@ -61,7 +61,7 @@ func WithdrawAllDelegatorRewards(clientCtx client.Context, delegatorAddr sdk.Acc
 	}
 
 	var validators []sdk.ValAddress
-	if err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &validators); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalJSON(bz, &validators); err != nil {
 		return nil, err
 	}
 

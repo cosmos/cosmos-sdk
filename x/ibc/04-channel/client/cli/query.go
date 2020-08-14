@@ -192,8 +192,8 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 			}
 
 			req := &types.QueryPacketCommitmentsRequest{
-				PortID:     args[0],
-				ChannelID:  args[1],
+				PortId:     args[0],
+				ChannelId:  args[1],
 				Pagination: pageReq,
 			}
 
@@ -292,8 +292,8 @@ Otherwise, the return value represents:
 			}
 
 			req := &types.QueryUnrelayedPacketsRequest{
-				PortID:                    args[0],
-				ChannelID:                 args[1],
+				PortId:                    args[0],
+				ChannelId:                 args[1],
 				PacketCommitmentSequences: seqs,
 				Acknowledgements:          acknowledgements,
 			}

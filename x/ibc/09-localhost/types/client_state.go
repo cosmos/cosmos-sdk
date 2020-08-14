@@ -26,14 +26,14 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 // NewClientState creates a new ClientState instance
 func NewClientState(chainID string, height int64) *ClientState {
 	return &ClientState{
-		ChainID: chainID,
+		ChainId: chainID,
 		Height:  uint64(height),
 	}
 }
 
 // GetChainID returns an empty string
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is localhost.
@@ -58,7 +58,7 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if strings.TrimSpace(cs.ChainID) == "" {
+	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
 	if cs.Height <= 0 {
@@ -70,6 +70,25 @@ func (cs ClientState) Validate() error {
 // GetProofSpecs returns nil since localhost does not have to verify proofs
 func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
+}
+
+// CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
+func (cs ClientState) CheckHeaderAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
+) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	return NewClientState(
+		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
+		ctx.BlockHeight(),
+	), nil, nil
+}
+
+// CheckMisbehaviourAndUpdateState implements ClientState
+// Since localhost is the client of the running chain, misbehaviour cannot be submitted to it
+// Thus, CheckMisbehaviourAndUpdateState returns an error for localhost
+func (cs ClientState) CheckMisbehaviourAndUpdateState(
+	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Misbehaviour,
+) (clientexported.ClientState, error) {
+	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "cannot submit misbehaviour to localhost client")
 }
 
 // VerifyClientConsensusState returns an error since a local host client does not store consensus

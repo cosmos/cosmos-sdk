@@ -18,7 +18,7 @@ const (
 func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_Existing() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-	cdc, _ := simapp.MakeCodecs()
+	_, cdc := simapp.MakeCodecs()
 
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryEvidence_NonExisting() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc, _ := simapp.MakeCodecs()
+	_, cdc := simapp.MakeCodecs()
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence() {
 
 func (suite *KeeperTestSuite) TestQuerier_QueryAllEvidence_InvalidPagination() {
 	ctx := suite.ctx.WithIsCheckTx(false)
-	cdc, _ := simapp.MakeCodecs()
+	_, cdc := simapp.MakeCodecs()
 	numEvidence := 100
 
 	suite.populateEvidence(ctx, numEvidence)

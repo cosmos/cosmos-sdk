@@ -18,7 +18,7 @@ import (
 // This is then chained with the substore proof, so we prove the root hash from the substore before this
 // and need to pass that (unmodified) as the leaf value of the multistore proof.
 func (si StoreInfo) GetHash() []byte {
-	return si.CommitID.Hash
+	return si.CommitId.Hash
 }
 
 func (ci CommitInfo) toMap() map[string][]byte {

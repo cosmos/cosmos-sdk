@@ -333,16 +333,19 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
-// CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
-// client will be created on the (target) chain.
-func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
-	// construct MsgCreateClient using counterparty
-	msg := ibctmtypes.NewMsgCreateClient(
+func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string) clientexported.MsgCreateClient {
+	return ibctmtypes.NewMsgCreateClient(
 		clientID, counterparty.LastHeader,
 		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(),
 	)
+}
 
+// CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
+// client will be created on the (target) chain.
+func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
+	// construct MsgCreateClient using counterparty
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID)
 	return chain.SendMsgs(msg)
 }
 

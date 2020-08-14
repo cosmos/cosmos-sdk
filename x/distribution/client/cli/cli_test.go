@@ -299,7 +299,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			"{\"slashes\":null,\"pagination\":{}}",
+			"{\"slashes\":[],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
 		},
 		{
 			"text output",
@@ -309,7 +309,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				sdk.ValAddress(val.Address).String(), "1", "3",
 			},
 			false,
-			"pagination: {}\nslashes: null",
+			"pagination:\n  next_key: null\n  total: \"0\"\nslashes: []",
 		},
 	}
 
@@ -820,6 +820,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdSubmitProposal()
+			flags.AddTxFlagsToCmd(cmd)
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)

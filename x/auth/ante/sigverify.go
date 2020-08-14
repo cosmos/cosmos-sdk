@@ -234,7 +234,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; verify correct account number (%d), and chain-id (%s)", acc.GetAccountNumber(), ctx.ChainID())
+					"signature verification failed; please verify account number (%d) and chain-id (%s)", acc.GetAccountNumber(), ctx.ChainID())
 			}
 		}
 	}

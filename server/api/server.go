@@ -73,6 +73,7 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
+	s.registerGRPCRoutes()
 	s.listener = listener
 	var h http.Handler = s.Router
 
@@ -96,7 +97,11 @@ func (s *Server) registerSwaggerUI() {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	s.Router.PathPrefix("/").Handler(staticServer)
+	s.Router.PathPrefix("/legacy").Handler(staticServer)
+}
+
+func (s *Server) registerGRPCRoutes() {
+	s.Router.PathPrefix("/").Handler(s.GRPCRouter)
 }
 
 func (s *Server) registerMetrics() {

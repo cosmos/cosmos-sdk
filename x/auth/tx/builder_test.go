@@ -138,7 +138,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubKey1.Bytes(),
 		},
-		AccountSequence: 1, // Random account sequence
+		AccountSequence: 1, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{

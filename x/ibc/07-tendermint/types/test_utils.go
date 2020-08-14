@@ -69,12 +69,8 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 // The sorting is first by .VotingPower (descending), with secondary index of .Address (ascending).
 func CreateSortedSignerArray(altPrivVal, suitePrivVal tmtypes.PrivValidator,
 	altVal, suiteVal *tmtypes.Validator) []tmtypes.PrivValidator {
-
-	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
 
-	// ValidatorSet is sorted by .VotingPower (descending), with secondary index
-	// of .Address (ascending). Signer array must have the same order.
 	if altVal.VotingPower > suiteVal.VotingPower {
 		bothSigners = []tmtypes.PrivValidator{altPrivVal, suitePrivVal}
 	} else if altVal.VotingPower < suiteVal.VotingPower {
@@ -88,5 +84,4 @@ func CreateSortedSignerArray(altPrivVal, suitePrivVal tmtypes.PrivValidator,
 	}
 
 	return bothSigners
-
 }

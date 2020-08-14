@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"math"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"

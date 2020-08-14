@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -73,10 +72,4 @@ func (h Header) ValidateBasic(chainID string) error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}
 	return nil
-}
-
-// ToABCIHeader parses the header to an ABCI header type.
-// NOTE: only for testing use.
-func (h Header) ToABCIHeader() tmproto.Header {
-	return tmtypes.TM2PB.Header(h.SignedHeader.Header)
 }

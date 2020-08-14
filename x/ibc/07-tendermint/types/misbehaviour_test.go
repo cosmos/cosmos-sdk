@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 

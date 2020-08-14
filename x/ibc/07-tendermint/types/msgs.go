@@ -4,7 +4,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -82,7 +82,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.TrustingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
 	}
-	if err := lite.ValidateTrustLevel(msg.TrustLevel.ToTendermint()); err != nil {
+	if err := light.ValidateTrustLevel(msg.TrustLevel.ToTendermint()); err != nil {
 		return sdkerrors.Wrap(err, "invalid trust level for tendermint light client")
 	}
 	if msg.UnbondingPeriod == 0 {

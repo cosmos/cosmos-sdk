@@ -28,7 +28,7 @@ var (
 	emptyAddr sdk.AccAddress
 
 	coin             = sdk.NewCoin("atom", sdk.NewInt(100))
-	invalidDenomCoin = sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}
+	invalidDenomCoin = sdk.Coin{Denom: "0atom", Amount: sdk.NewInt(100)}
 	negativeCoin     = sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(-100)}
 )
 
@@ -60,7 +60,7 @@ func TestMsgTransferValidation(t *testing.T) {
 		{"too short channel id", NewMsgTransfer(validPort, invalidShortChannel, coin, addr1, addr2, 10, 0), false},
 		{"too long channel id", NewMsgTransfer(validPort, invalidLongChannel, coin, addr1, addr2, 10, 0), false},
 		{"channel id contains non-alpha", NewMsgTransfer(validPort, invalidChannel, coin, addr1, addr2, 10, 0), false},
-		{"invalid amount", NewMsgTransfer(validPort, validChannel, invalidDenomCoin, addr1, addr2, 10, 0), false},
+		{"invalid denom", NewMsgTransfer(validPort, validChannel, invalidDenomCoin, addr1, addr2, 10, 0), false},
 		{"negative coin", NewMsgTransfer(validPort, validChannel, negativeCoin, addr1, addr2, 10, 0), false},
 		{"missing sender address", NewMsgTransfer(validPort, validChannel, coin, emptyAddr, addr2, 10, 0), false},
 		{"missing recipient address", NewMsgTransfer(validPort, validChannel, coin, addr1, "", 10, 0), false},
@@ -70,7 +70,7 @@ func TestMsgTransferValidation(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "valid test case %d failed: %v", i, err)
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
 		} else {
 			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
 		}

@@ -105,6 +105,7 @@ func AppStateRandomizedFn(
 	simState := &module.SimulationState{
 		AppParams:    appParams,
 		Cdc:          cdc,
+		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,

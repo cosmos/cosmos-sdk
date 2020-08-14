@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// deprecated: Codec defines a wrapper for an Amino codec that properly handles protobuf
+// deprecated: LegacyAmino defines a wrapper for an Amino codec that properly handles protobuf
 // types with Any's
 type LegacyAmino struct {
 	Amino *amino.Codec

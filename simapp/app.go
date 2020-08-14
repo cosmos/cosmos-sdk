@@ -445,7 +445,7 @@ func (app *SimApp) BlockedAddrs() map[string]bool {
 	return blockedAddrs
 }
 
-// Codec returns SimApp's codec.
+// LegacyAmino returns SimApp's legacy amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.

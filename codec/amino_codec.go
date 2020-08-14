@@ -1,12 +1,14 @@
 package codec
 
+import "github.com/gogo/protobuf/proto"
+
 // AminoCodec defines a codec that utilizes Codec for both binary and JSON
 // encoding.
 type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ BinaryMarshaler = &AminoCodec{}
+var _ Marshaler = &AminoCodec{}
 
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}
@@ -42,4 +44,20 @@ func (ac *AminoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshale
 
 func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
 	ac.LegacyAmino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
+}
+
+func (ac *AminoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
+	return ac.LegacyAmino.MarshalJSON(o)
+}
+
+func (ac *AminoCodec) MustMarshalJSON(o proto.Message) []byte {
+	return ac.LegacyAmino.MustMarshalJSON(o)
+}
+
+func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
+	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
+}
+
+func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
+	ac.LegacyAmino.MustUnmarshalJSON(bz, ptr)
 }

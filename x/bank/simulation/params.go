@@ -18,7 +18,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeySendEnabled),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(RandomGenesisSendParams(r)))
+				return fmt.Sprintf("%s", types.ModuleCdc.LegacyAmino.MustMarshalJSON(RandomGenesisSendParams(r)))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyDefaultSendEnabled),

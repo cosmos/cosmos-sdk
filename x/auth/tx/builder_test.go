@@ -25,7 +25,7 @@ func TestTxBuilder(t *testing.T) {
 
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	accSeq := uint64(2) // Random account sequence
+	accSeq := uint64(2) // Arbitrary account sequence
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)

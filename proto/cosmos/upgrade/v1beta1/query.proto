@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.upgrade.v1beta1;
 
+import "google/api/annotations.proto";
 import "cosmos/upgrade/v1beta1/upgrade.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
@@ -8,10 +9,14 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 // Query defines the gRPC upgrade querier service.
 service Query {
   // CurrentPlan queries the current upgrade plan.
-  rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {}
+  rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {
+		option (google.api.http).get = "/cosmos/upgrade/v1beta1/current_plan";
+  }
 
   // AppliedPlan queries a previously applied upgrade plan by its name.
-  rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {}
+  rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {
+		option (google.api.http).get = "/cosmos/upgrade/v1beta1/applied_plan/{name}";
+  }
 }
 
 // QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC method.

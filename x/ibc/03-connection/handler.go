@@ -10,7 +10,7 @@ import (
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
 func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenInit) (*sdk.Result, error) {
 	if err := k.ConnOpenInit(
-		ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty,
+		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
@@ -18,10 +18,10 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenInit,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -37,7 +37,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenTry) (*sdk.Result, error) {
 	if err := k.ConnOpenTry(
-		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
+		ctx, msg.ConnectionId, msg.Counterparty, msg.ClientId,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
@@ -47,10 +47,10 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenTry,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -66,21 +66,21 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenAck) (*sdk.Result, error) {
 	if err := k.ConnOpenAck(
-		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
+		ctx, msg.ConnectionId, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open ack failed")
 	}
 
-	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionId)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenAck,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionId),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -96,20 +96,20 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
 func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenConfirm) (*sdk.Result, error) {
 	if err := k.ConnOpenConfirm(
-		ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight,
+		ctx, msg.ConnectionId, msg.ProofAck, msg.ProofHeight,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open confirm failed")
 	}
 
-	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionID)
+	connectionEnd, _ := k.GetConnection(ctx, msg.ConnectionId)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenConfirm,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
-			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientID),
-			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyClientID, connectionEnd.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, connectionEnd.Counterparty.ClientId),
+			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, connectionEnd.Counterparty.ConnectionId),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

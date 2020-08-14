@@ -1,4 +1,4 @@
-package tendermint_test
+package types_test
 
 import (
 	"bytes"
@@ -6,12 +6,11 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-func (suite *TendermintTestSuite) TestCheckValidity() {
+func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
 		clientState    *types.ClientState
 		consensusState *types.ConsensusState
@@ -192,6 +191,12 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		// setup test
 		tc.setup()
 
+		// Set current timestamp in context
+		ctx := suite.chainA.GetContext().WithBlockTime(currentTime)
+
+		// Set trusted consensus state in client store
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, consensusState.Height, consensusState)
+
 		expectedConsensus := &types.ConsensusState{
 			Height:             uint64(newHeader.Height),
 			Timestamp:          newHeader.Time,
@@ -199,7 +204,12 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			NextValidatorsHash: newHeader.NextValidatorsHash,
 		}
 
-		newClientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, consensusState, newHeader, currentTime)
+		newClientState, consensusState, err := clientState.CheckHeaderAndUpdateState(
+			ctx,
+			suite.cdc,
+			suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientID), // pass in clientID prefixed clientStore
+			newHeader,
+		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

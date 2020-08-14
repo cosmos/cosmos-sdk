@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
-	"runtime"
 	"sort"
 	"sync"
 	"testing"
@@ -263,7 +262,7 @@ func genRandBlocks(n int) (blocks []*tmtypes.Block) {
 	return
 }
 
-var blocks = genRandBlocks(100000)
+var blocks = genRandBlocks(5000000)
 
 var registry = retrieveTypeURLs(
 	new(tmtypes.Block),
@@ -292,9 +291,6 @@ func TestCompresseDBVsBoltDB(t *testing.T) {
 }
 
 func TestCompresseDBVsRocksDB(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skipf("Not supported on %q, can only run on linux", runtime.GOOS)
-	}
 	anyCompDB, rocksDB := testCompresseDBVsNativeDB(t, dbm.RocksDBBackend)
 	defer anyCompDB.Close()
 	defer rocksDB.Close()

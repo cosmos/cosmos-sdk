@@ -8,7 +8,9 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -18,9 +20,8 @@ type mockValidator struct {
 }
 
 func (mv mockValidator) String() string {
-	return fmt.Sprintf("mockValidator{%s:%X power:%v state:%v}",
-		mv.val.PubKey.Type,
-		mv.val.PubKey.Data,
+	return fmt.Sprintf("mockValidator{%s power:%v state:%v}",
+		mv.val.PubKey.String(),
 		mv.val.Power,
 		mv.livenessState)
 }
@@ -32,9 +33,8 @@ func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate, params Par
 	validators := make(mockValidators)
 
 	for _, validator := range abciVals {
-		str := fmt.Sprintf("%v", validator.PubKey)
-		liveliness := GetMemberOfInitialState(r,
-			params.InitialLivenessWeightings())
+		str := fmt.Sprintf("%X", validator.PubKey.GetEd25519())
+		liveliness := GetMemberOfInitialState(r, params.InitialLivenessWeightings())
 
 		validators[str] = mockValidator{
 			val:           validator,
@@ -72,7 +72,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 	key := keys[r.Intn(len(keys))]
 
 	proposer := vals[key].val
-	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)
+	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
 	if err != nil { //nolint:wsl
 		panic(err)
 	}
@@ -80,18 +80,22 @@ func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 	return pk.Address()
 }
 
-// updateValidators mimicks Tendermint's update logic
-// nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, params Params,
-	current map[string]mockValidator, updates []abci.ValidatorUpdate,
+// updateValidators mimics Tendermint's update logic.
+func updateValidators(
+	tb testing.TB,
+	r *rand.Rand,
+	params Params,
+	current map[string]mockValidator,
+	updates []abci.ValidatorUpdate,
+	event func(route, op, evResult string),
+) map[string]mockValidator {
 
-	event func(route, op, evResult string)) map[string]mockValidator {
 	for _, update := range updates {
-		str := fmt.Sprintf("%v", update.PubKey)
+		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
 		if update.Power == 0 {
 			if _, ok := current[str]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator")
+				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
 			}
 
 			event("end_block", "validator_updates", "kicked")
@@ -119,7 +123,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header abci.Header) abci.RequestBeginBlock {
+	event func(route, op, evResult string), header tmproto.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,
@@ -149,7 +153,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 			event("begin_block", "signing", "missed")
 		}
 
-		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
+		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		if err != nil {
 			panic(err)
 		}

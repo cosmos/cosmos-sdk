@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -145,7 +146,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc codec.JSONMarshaler, que
 
 func TestQueries(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	appCodec := legacyQuerierCdc
 	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
@@ -293,7 +294,7 @@ func TestQueries(t *testing.T) {
 
 func TestPaginatedVotesQuery(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	legacyQuerierCdc := app.LegacyAmino()
 
 	proposal := types.Proposal{

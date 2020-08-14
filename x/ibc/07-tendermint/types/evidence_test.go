@@ -1,14 +1,15 @@
 package types_test
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
@@ -44,16 +45,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 
 	signers := []tmtypes.PrivValidator{suite.privVal}
 
-	pubKey, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
 	// Create signer array and ensure it is in same order as bothValSet
-	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
-		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
-	} else {
-		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
-	}
+	_, suiteVal := suite.valSet.GetByIndex(0)
+	bothSigners := types.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
@@ -194,7 +188,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmproto.PrecommitType, altValSet)
 				var err error
 				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err
@@ -211,7 +205,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmtypes.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmproto.PrecommitType, altValSet)
 				var err error
 				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				return err

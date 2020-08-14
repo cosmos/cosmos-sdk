@@ -23,27 +23,30 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 	switch key := key.Sum.(type) {
 	case *types.PublicKey_Secp256K1:
 		n := len(key.Secp256K1)
-		if n != secp256k1.PubKeySecp256k1Size {
+		if n != secp256k1.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for secp256k1 public key", n)
 		}
-		var res secp256k1.PubKeySecp256k1
-		copy(res[:], key.Secp256K1)
+
+		res := make(secp256k1.PubKey, secp256k1.PubKeySize)
+		copy(res, key.Secp256K1)
 		return res, nil
 	case *types.PublicKey_Ed25519:
 		n := len(key.Ed25519)
-		if n != ed255192.PubKeyEd25519Size {
+		if n != ed255192.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for ed25519 public key", n)
 		}
-		var res ed255192.PubKeyEd25519
-		copy(res[:], key.Ed25519)
+
+		res := make(ed255192.PubKey, ed255192.PubKeySize)
+		copy(res, key.Ed25519)
 		return res, nil
 	case *types.PublicKey_Sr25519:
 		n := len(key.Sr25519)
-		if n != sr25519.PubKeySr25519Size {
+		if n != sr25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for sr25519 public key", n)
 		}
-		var res sr25519.PubKeySr25519
-		copy(res[:], key.Sr25519)
+
+		res := make(sr25519.PubKey, sr25519.PubKeySize)
+		copy(res, key.Sr25519)
 
 		return res, nil
 	case *types.PublicKey_Multisig:
@@ -66,12 +69,12 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 // Encode implements the PublicKeyCodec.Encode method
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	switch key := key.(type) {
-	case secp256k1.PubKeySecp256k1:
-		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key[:]}}, nil
-	case ed255192.PubKeyEd25519:
-		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key[:]}}, nil
-	case sr25519.PubKeySr25519:
-		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key[:]}}, nil
+	case secp256k1.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
+	case ed255192.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
+	case sr25519.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil
 	case multisig.PubKeyMultisigThreshold:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))

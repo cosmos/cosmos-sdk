@@ -2,7 +2,6 @@ package simulate
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,15 +39,12 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 	}
 
 	req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().AnyUnpacker())
-	fmt.Println("HELLO")
 	txBuilder, err := txBuilderFromProto(s.txConfig, s.pubkeyCodec, req.Tx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("txBuilder=", txBuilder)
 
 	txBytes, err := req.Tx.Marshal()
-	fmt.Println("txBytes=", txBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +53,6 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("gasInfo=", gasInfo)
 
 	return &SimulateResponse{
 		GasInfo: &gasInfo,
@@ -90,7 +85,6 @@ func txBuilderFromProto(txConfig client.TxConfig, pubkeyCodec cryptotypes.Public
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("signerInfo.PublicKey", signerInfo.PublicKey)
 		pubKey, err := pubkeyCodec.Decode(signerInfo.PublicKey)
 		if err != nil {
 			return nil, err

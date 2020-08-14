@@ -2,7 +2,6 @@ package simulate_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -103,7 +102,8 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	)
 	s.Require().NoError(err)
 
-	fmt.Println(res)
+	// TODO Better test
+	s.Require().NotEmpty(res)
 }
 
 func TestSimulateTestSuite(t *testing.T) {

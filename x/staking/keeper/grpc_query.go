@@ -269,7 +269,7 @@ func (k Querier) DelegatorValidator(c context.Context, req *types.QueryDelegator
 	return &types.QueryDelegatorValidatorResponse{Validator: validator}, nil
 }
 
-// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address
+// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address
 func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.QueryDelegatorUnbondingDelegationsRequest) (*types.QueryDelegatorUnbondingDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

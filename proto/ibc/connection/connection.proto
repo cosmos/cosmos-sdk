@@ -4,6 +4,7 @@ package ibc.connection;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "ibc/commitment/commitment.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
@@ -29,18 +30,21 @@ message MsgConnectionOpenTry {
   string connection_id = 2 [
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  repeated string counterparty_versions = 4
+  google.protobuf.Any client_state = 3;
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
+  repeated string counterparty_versions = 5
       [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
-  bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64 proof_height = 6;
+  bytes proof_init = 6 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  uint64 proof_height = 7;
+  // proof of client state included in message
+  bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 8
+  bytes proof_consensus = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  uint64 consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes signer = 9
+  bytes signer = 11
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -51,15 +55,18 @@ message MsgConnectionOpenAck {
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   string version = 2;
+  google.protobuf.Any client_state = 3;
   // proof of the initialization the connection on Chain B: `UNITIALIZED ->
   // TRYOPEN`
-  bytes proof_try = 3 [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  bytes proof_try = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
+  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  // proof of client state included in message
+  bytes proof_client = 6 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes proof_consensus = 5 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_height = 6
+  bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  uint64 consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes signer = 7
+  bytes signer = 9
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 

@@ -5,11 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
-
 	_go "github.com/confio/ics23/go"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -18,6 +13,10 @@ import (
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
 	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

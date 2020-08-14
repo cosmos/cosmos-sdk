@@ -20,7 +20,7 @@ func TestDecodeStore(t *testing.T) {
 	connectionID := "connectionidone"
 
 	connection := types.ConnectionEnd{
-		ClientID: "clientidone",
+		ClientId: "clientidone",
 		Versions: []string{"1.0"},
 	}
 
@@ -31,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{
-				Key:   host.KeyClientConnections(connection.ClientID),
+				Key:   host.KeyClientConnections(connection.ClientId),
 				Value: cdc.MustMarshalBinaryBare(&paths),
 			},
 			{

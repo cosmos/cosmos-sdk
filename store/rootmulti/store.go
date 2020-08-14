@@ -219,7 +219,7 @@ func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) type
 		return types.CommitID{}
 	}
 
-	return info.CommitID
+	return info.CommitId
 }
 
 func deleteKVStore(kv types.KVStore) error {
@@ -607,7 +607,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 
 		si := types.StoreInfo{}
 		si.Name = key.Name()
-		si.CommitID = commitID
+		si.CommitId = commitID
 		storeInfos = append(storeInfos, si)
 	}
 

@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{"connection not found",
 			func() {
 				req = &types.QueryConnectionRequest{
-					ConnectionID: ibctesting.InvalidID,
+					ConnectionId: ibctesting.InvalidID,
 				}
 			},
 			false,
@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, expConnection)
 
 				req = &types.QueryConnectionRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 				}
 			},
 			true,
@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 		{"connection not found",
 			func() {
 				req = &types.QueryClientConnectionsRequest{
-					ClientID: ibctesting.InvalidID,
+					ClientId: ibctesting.InvalidID,
 				}
 			},
 			false,
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, expPaths)
 
 				req = &types.QueryClientConnectionsRequest{
-					ClientID: clientA,
+					ClientId: clientA,
 				}
 			},
 			true,
@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 			"invalid connection ID",
 			func() {
 				req = &types.QueryConnectionClientStateRequest{
-					ConnectionID: "",
+					ConnectionId: "",
 				}
 			},
 			false,
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 			"connection not found",
 			func() {
 				req = &types.QueryConnectionClientStateRequest{
-					ConnectionID: "test-connection-id",
+					ConnectionId: "test-connection-id",
 				}
 			},
 			false,
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, types.ConnectionEnd{})
 
 				req = &types.QueryConnectionClientStateRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 				}
 			}, false,
 		},
@@ -287,7 +287,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
 
 				req = &types.QueryConnectionClientStateRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 				}
 			},
 			true,
@@ -337,7 +337,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"invalid connection ID",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionID: "",
+					ConnectionId: "",
 					Height:       1,
 				}
 			},
@@ -347,7 +347,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"connection not found",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionID: "test-connection-id",
+					ConnectionId: "test-connection-id",
 					Height:       1,
 				}
 			},
@@ -359,7 +359,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 					Height:       uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
@@ -375,7 +375,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 					Height:       expConsensusState.GetHeight(),
 				}
 			},
@@ -398,7 +398,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
 				suite.Require().NoError(err)
 				suite.Require().Equal(expConsensusState, consensusState)
-				suite.Require().Equal(expClientID, res.ClientID)
+				suite.Require().Equal(expClientID, res.ClientId)
 			} else {
 				suite.Require().Error(err)
 			}

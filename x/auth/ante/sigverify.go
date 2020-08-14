@@ -337,7 +337,7 @@ func DefaultSigVerificationGasConsumer(
 		if !ok {
 			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
 		}
-		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig)
+		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig.AccountSequence)
 		if err != nil {
 			return err
 		}
@@ -351,7 +351,7 @@ func DefaultSigVerificationGasConsumer(
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
 func ConsumeMultisignatureVerificationGas(
 	meter sdk.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
-	params types.Params, sigV2 signing.SignatureV2,
+	params types.Params, accSeq uint64,
 ) error {
 
 	size := sig.BitArray.Count()
@@ -364,7 +364,7 @@ func ConsumeMultisignatureVerificationGas(
 		sigV2 := signing.SignatureV2{
 			PubKey:          pubkey.GetPubKeys()[i],
 			Data:            sig.Signatures[sigIndex],
-			AccountSequence: sigV2.AccountSequence,
+			AccountSequence: accSeq,
 		}
 		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
 		if err != nil {

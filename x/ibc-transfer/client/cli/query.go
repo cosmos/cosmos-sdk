@@ -85,3 +85,30 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 
 	return cmd
 }
+
+// QueryParamsCmd returns the command handler for ibc-transfer parameter querying.
+func QueryParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "params",
+		Short:   "Query the current ibc-transfer parameters",
+		Long:    "Query the current ibc-transfer parameters",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s query ibc-transfer params", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			return clientCtx.PrintOutput(res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

@@ -52,9 +52,8 @@ func (k Keeper) SendTransfer(
 	timeoutHeight,
 	timeoutTimestamp uint64,
 ) error {
-	params := k.GetParams(ctx)
 
-	if !params.TransfersEnabled {
+	if !k.GetTransfersEnabled(ctx) {
 		return types.ErrTransfersDisabled
 	}
 
@@ -158,9 +157,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return err
 	}
 
-	params := k.GetParams(ctx)
-
-	if !params.TransfersEnabled {
+	if !k.GetTransfersEnabled(ctx) {
 		return types.ErrTransfersDisabled
 	}
 

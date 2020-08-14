@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestQueryDenomTraces() {
 
 func (suite *KeeperTestSuite) TestQueryParams() {
 	ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
-
+	expParams := types.DefaultParams()
 	res, _ := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
-	suite.Require().Equal(types.DefaultParams(), res)
+	suite.Require().Equal(&expParams, res.Params)
 }

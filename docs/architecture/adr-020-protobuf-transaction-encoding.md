@@ -320,8 +320,8 @@ and messages.
 
 ```go
 type AccountRetriever interface {
-  EnsureExists(querier NodeQuerier, addr sdk.AccAddress) error
-  GetAccountNumberSequence(querier NodeQuerier, addr sdk.AccAddress) (uint64, uint64, error)
+  EnsureExists(clientCtx client.Context, addr sdk.AccAddress) error
+  GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error)
 }
 
 type Generator interface {

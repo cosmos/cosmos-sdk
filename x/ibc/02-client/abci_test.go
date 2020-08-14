@@ -3,37 +3,31 @@ package client_test
 import (
 	"testing"
 
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 type ClientTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	coordinator *ibctesting.Coordinator
+
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 func (suite *ClientTestSuite) SetupTest() {
-	isCheckTx := false
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
-	suite.app = simapp.Setup(isCheckTx)
-	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
-
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
 func TestClientTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientTestSuite))
 }
 
+/* TODO: uncomment once simapp is switched to proto
 func (suite *ClientTestSuite) TestBeginBlocker() {
 	prevHeight := suite.ctx.BlockHeight()
 
@@ -55,3 +49,4 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 		prevHeight = int64(localHostClient.GetLatestHeight())
 	}
 }
+*/

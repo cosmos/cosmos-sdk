@@ -2,7 +2,6 @@ package keys
 
 import (
 	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/otiai10/copy"
@@ -11,16 +10,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func Test_runMigrateCmd(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.SetErr(ioutil.Discard)
-	cmd.SetOut(ioutil.Discard)
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	_ = testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
+	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	copy.Copy("testdata", kbHome)
 	assert.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
@@ -34,8 +32,8 @@ func Test_runMigrateCmd(t *testing.T) {
 	assert.NoError(t, cmd.Execute())
 
 	cmd = MigrateCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),

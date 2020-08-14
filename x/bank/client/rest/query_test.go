@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
@@ -14,18 +14,18 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testutil.Config
-	network *testutil.Network
+	cfg     network.Config
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultConfig()
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -75,9 +75,9 @@ func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
@@ -122,9 +122,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType))
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

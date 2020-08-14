@@ -12,11 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/upgrade/current", getCurrentPlanHandler(clientCtx)).Methods("GET")
-	r.HandleFunc("/upgrade/applied/{name}", getDonePlanHandler(clientCtx)).Methods("GET")
-	registerTxRoutes(clientCtx, r)
+func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc(
+		"/upgrade/current", getCurrentPlanHandler(clientCtx),
+	).Methods("GET")
+	r.HandleFunc(
+		"/upgrade/applied/{name}", getDonePlanHandler(clientCtx),
+	).Methods("GET")
 }
 
 func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
@@ -32,7 +34,7 @@ func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *
 		}
 
 		var plan types.Plan
-		err = clientCtx.Codec.UnmarshalBinaryBare(res, &plan)
+		err = clientCtx.LegacyAmino.UnmarshalBinaryBare(res, &plan)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -45,7 +47,7 @@ func getDonePlanHandler(clientCtx client.Context) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 
-		params := types.NewQueryAppliedPlanRequest(name)
+		params := types.QueryAppliedPlanRequest{Name: name}
 		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return

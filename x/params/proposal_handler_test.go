@@ -3,10 +3,11 @@ package params_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/simapp"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,7 +23,7 @@ func validateNoOp(_ interface{}) error { return nil }
 
 type testInput struct {
 	ctx    sdk.Context
-	cdc    *codec.Codec
+	cdc    *codec.LegacyAmino
 	keeper keeper.Keeper
 }
 
@@ -75,8 +76,9 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := keeper.NewKeeper(proposal.ModuleCdc, keyParams, tKeyParams)
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	encCfg := simapp.MakeEncodingConfig()
+	keeper := keeper.NewKeeper(encCfg.Marshaler, encCfg.Amino, keyParams, tKeyParams)
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -23,17 +22,18 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcTxCmd.AddCommand(flags.PostCommands(
+	ibcTxCmd.AddCommand(
 		tendermint.GetTxCmd(),
 		localhost.GetTxCmd(),
 		connection.GetTxCmd(),
 		channel.GetTxCmd(),
-	)...)
+	)
+
 	return ibcTxCmd
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group ibc queries under a subcommand
 	ibcQueryCmd := &cobra.Command{
 		Use:                        host.ModuleName,
@@ -43,10 +43,11 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcQueryCmd.AddCommand(flags.GetCommands(
-		ibcclient.GetQueryCmd(clientCtx),
-		connection.GetQueryCmd(clientCtx),
-		channel.GetQueryCmd(clientCtx),
-	)...)
+	ibcQueryCmd.AddCommand(
+		ibcclient.GetQueryCmd(),
+		connection.GetQueryCmd(),
+		channel.GetQueryCmd(),
+	)
+
 	return ibcQueryCmd
 }

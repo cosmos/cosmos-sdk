@@ -10,42 +10,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
-	clientType := exported.ClientTypeFromString(msg.GetClientType())
-
 	var (
-		clientState     exported.ClientState
 		consensusHeight uint64
+		clientState     exported.ClientState
 	)
 
-	switch clientType {
-	case exported.Tendermint:
-		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
-		if !ok {
-			return nil, sdkerrors.Wrap(types.ErrInvalidClientType, "Msg is not a Tendermint CreateClient msg")
-		}
-		var err error
-
-		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
-		if err != nil {
-			return nil, err
-		}
-		consensusHeight = msg.GetConsensusState().GetHeight()
-	case exported.Localhost:
-		// msg client id is always "localhost"
+	switch msg.(type) {
+	// localhost is a special case that must initialize client state
+	// from context and not from msg
+	case *localhosttypes.MsgCreateClient:
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+		// Localhost consensus height is chain's blockheight
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		return nil, sdkerrors.Wrap(types.ErrInvalidClientType, msg.GetClientType())
+		clientState = msg.InitializeClientState()
+		if consState := msg.GetConsensusState(); consState != nil {
+			consensusHeight = consState.GetHeight()
+		}
 	}
 
 	_, err := k.CreateClient(
-		ctx, clientState, msg.GetConsensusState(),
+		ctx, msg.GetClientID(), clientState, msg.GetConsensusState(),
 	)
 	if err != nil {
 		return nil, err
@@ -76,6 +66,13 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgUpd
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
@@ -92,6 +89,18 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 			)
 		}
 
-		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
+		if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
+			return sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
+		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeSubmitMisbehaviour,
+				sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
+				sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
+				sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", uint64(misbehaviour.GetHeight()))),
+			),
+		)
+		return nil
 	}
 }

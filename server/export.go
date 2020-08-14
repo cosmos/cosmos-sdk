@@ -3,16 +3,17 @@ package server
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,14 +24,11 @@ const (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(appExporter AppExporter) *cobra.Command {
+func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
-
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -78,22 +76,27 @@ func ExportCmd(appExporter AppExporter) *cobra.Command {
 
 			doc.AppState = appState
 			doc.Validators = validators
-			doc.ConsensusParams = &tmtypes.ConsensusParams{
-				Block: tmtypes.BlockParams{
+			doc.ConsensusParams = &tmproto.ConsensusParams{
+				Block: tmproto.BlockParams{
 					MaxBytes:   cp.Block.MaxBytes,
 					MaxGas:     cp.Block.MaxGas,
 					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
-				Evidence: tmtypes.EvidenceParams{
-					MaxAgeNumBlocks: cp.Evidence.MaxAgeNumBlocks,
-					MaxAgeDuration:  cp.Evidence.MaxAgeDuration,
+				Evidence: tmproto.EvidenceParams{
+					MaxAgeNumBlocks:  cp.Evidence.MaxAgeNumBlocks,
+					MaxAgeDuration:   cp.Evidence.MaxAgeDuration,
+					MaxNum:           cp.Evidence.MaxNum,
+					ProofTrialPeriod: cp.Evidence.ProofTrialPeriod,
 				},
-				Validator: tmtypes.ValidatorParams{
+				Validator: tmproto.ValidatorParams{
 					PubKeyTypes: cp.Validator.PubKeyTypes,
 				},
 			}
 
-			encoded, err := codec.MarshalJSONIndent(cdc, doc)
+			// NOTE: for now we're just using standard JSON marshaling for the root GenesisDoc.
+			// These types are in Tendermint, don't support proto and as far as we know, don't need it.
+			// All of the protobuf/amino state is inside AppState
+			encoded, err := json.MarshalIndent(doc, "", " ")
 			if err != nil {
 				return err
 			}
@@ -103,7 +106,7 @@ func ExportCmd(appExporter AppExporter) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")

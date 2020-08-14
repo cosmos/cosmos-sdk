@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 )
 
 // ----------------------------------------------------------------------------
@@ -48,13 +47,6 @@ type (
 	// Event is a type alias for an ABCI Event
 	Event abci.Event
 
-	// Attribute defines an attribute wrapper where the key and value are
-	// strings instead of raw bytes.
-	Attribute struct {
-		Key   string `json:"key"`
-		Value string `json:"value,omitempty"`
-	}
-
 	// Events defines a slice of Event objects
 	Events []Event
 )
@@ -86,8 +78,8 @@ func (a Attribute) String() string {
 }
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
-func (a Attribute) ToKVPair() tmkv.Pair {
-	return tmkv.Pair{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+func (a Attribute) ToKVPair() abci.EventAttribute {
+	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -141,13 +133,6 @@ var (
 )
 
 type (
-	// StringAttribute defines en Event object wrapper where all the attributes
-	// contain key/value pairs that are strings instead of raw bytes.
-	StringEvent struct {
-		Type       string      `json:"type,omitempty"`
-		Attributes []Attribute `json:"attributes,omitempty"`
-	}
-
 	// StringAttributes defines a slice of StringEvents objects.
 	StringEvents []StringEvent
 )

@@ -5,11 +5,45 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
+
+type KeeperTestSuite struct {
+	suite.Suite
+
+	app *simapp.SimApp
+	ctx sdk.Context
+
+	queryClient proposal.QueryClient
+}
+
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.app, suite.ctx = createTestApp(true)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	proposal.RegisterQueryServer(queryHelper, suite.app.ParamsKeeper)
+	suite.queryClient = proposal.NewQueryClient(queryHelper)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
+// returns context and app
+func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+
+	return app, ctx
+}
 
 func validateNoOp(_ interface{}) error { return nil }
 

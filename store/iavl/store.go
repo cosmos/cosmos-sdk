@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
-	ics23iavl "github.com/confio/ics23-iavl"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/iavl"
+	"github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -96,7 +96,7 @@ func (st *Store) GetImmutable(version int64) (*Store, error) {
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.
 func (st *Store) Commit() types.CommitID {
-	defer telemetry.MeasureSince("store", "iavl", "commit")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "commit")
 
 	hash, version, err := st.tree.SaveVersion()
 	if err != nil {
@@ -145,27 +145,28 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
-	defer telemetry.MeasureSince("store", "iavl", "set")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "set")
+	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	st.tree.Set(key, value)
 }
 
 // Implements types.KVStore.
 func (st *Store) Get(key []byte) []byte {
-	defer telemetry.MeasureSince("store", "iavl", "get")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "get")
 	_, value := st.tree.Get(key)
 	return value
 }
 
 // Implements types.KVStore.
 func (st *Store) Has(key []byte) (exists bool) {
-	defer telemetry.MeasureSince("store", "iavl", "has")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "has")
 	return st.tree.Has(key)
 }
 
 // Implements types.KVStore.
 func (st *Store) Delete(key []byte) {
-	defer telemetry.MeasureSince("store", "iavl", "delete")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "delete")
 	st.tree.Remove(key)
 }
 
@@ -226,7 +227,7 @@ func getHeight(tree Tree, req abci.RequestQuery) int64 {
 // if you care to have the latest data to see a tx results, you must
 // explicitly set the height you want to see
 func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
-	defer telemetry.MeasureSince("store", "iavl", "query")
+	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "query")
 
 	if len(req.Data) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrTxDecode, "query cannot be zero length"))
@@ -265,21 +266,28 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		// get proof from tree and convert to merkle.Proof before adding to result
-		res.Proof = getProofFromTree(mtree, req.Data, res.Value != nil)
+		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
-		var KVs []types.KVPair
+		pairs := kv.Pairs{
+			Pairs: make([]kv.Pair, 0),
+		}
 
 		subspace := req.Data
 		res.Key = subspace
 
 		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			KVs = append(KVs, types.KVPair{Key: iterator.Key(), Value: iterator.Value()})
+			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
+		}
+		iterator.Close()
+
+		bz, err := pairs.Marshal()
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal KV pairs: %w", err))
 		}
 
-		iterator.Close()
-		res.Value = cdc.MustMarshalBinaryBare(KVs)
+		res.Value = bz
 
 	default:
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unexpected query path: %v", req.Path))
@@ -291,7 +299,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.Proof {
+func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -299,14 +307,14 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 
 	if exists {
 		// value was found
-		commitmentProof, err = ics23iavl.CreateMembershipProof(tree, key)
+		commitmentProof, err = tree.GetMembershipProof(key)
 		if err != nil {
 			// sanity check: If value was found, membership proof must be creatable
 			panic(fmt.Sprintf("unexpected value for empty proof: %s", err.Error()))
 		}
 	} else {
 		// value wasn't found
-		commitmentProof, err = ics23iavl.CreateNonMembershipProof(tree, key)
+		commitmentProof, err = tree.GetNonMembershipProof(key)
 		if err != nil {
 			// sanity check: If value wasn't found, nonmembership proof must be creatable
 			panic(fmt.Sprintf("unexpected error for nonexistence proof: %s", err.Error()))
@@ -314,7 +322,7 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *merkle.P
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &merkle.Proof{Ops: []merkle.ProofOp{op.ProofOp()}}
+	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
 }
 
 //----------------------------------------
@@ -331,7 +339,7 @@ type iavlIterator struct {
 	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
-	iterCh chan tmkv.Pair
+	iterCh chan kv.Pair
 
 	// Close this to release goroutine.
 	quitCh chan struct{}
@@ -357,7 +365,7 @@ func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool
 		start:     sdk.CopyBytes(start),
 		end:       sdk.CopyBytes(end),
 		ascending: ascending,
-		iterCh:    make(chan tmkv.Pair), // Set capacity > 0?
+		iterCh:    make(chan kv.Pair), // Set capacity > 0?
 		quitCh:    make(chan struct{}),
 		initCh:    make(chan struct{}),
 	}
@@ -374,7 +382,7 @@ func (iter *iavlIterator) iterateRoutine() {
 			select {
 			case <-iter.quitCh:
 				return true // done with iteration.
-			case iter.iterCh <- tmkv.Pair{Key: key, Value: value}:
+			case iter.iterCh <- kv.Pair{Key: key, Value: value}:
 				return false // yay.
 			}
 		},
@@ -437,11 +445,13 @@ func (iter *iavlIterator) Value() []byte {
 
 // Close closes the IAVL iterator by closing the quit channel and waiting for
 // the iterCh to finish/close.
-func (iter *iavlIterator) Close() {
+func (iter *iavlIterator) Close() error {
 	close(iter.quitCh)
 	// wait iterCh to close
 	for range iter.iterCh {
 	}
+
+	return nil
 }
 
 // Error performs a no-op.

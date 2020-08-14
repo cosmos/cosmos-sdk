@@ -6,9 +6,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -60,19 +61,25 @@ func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, m
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	queryClient types.QueryClient
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.app = app
 	suite.ctx = ctx
+	suite.queryClient = queryClient
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
@@ -90,7 +97,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()
 
 	// add module accounts to supply keeper
@@ -153,7 +160,7 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()
 
 	// add module accounts to supply keeper
@@ -207,7 +214,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{Height: 1})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec, _ := simapp.MakeCodecs()
 
 	// add module accounts to supply keeper
@@ -401,7 +408,7 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 func (suite *IntegrationTestSuite) TestValidateBalance() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
@@ -454,9 +461,45 @@ func (suite *IntegrationTestSuite) TestBalance() {
 
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app, ctx := suite.app, suite.ctx
-	enabled := false
-	app.BankKeeper.SetSendEnabled(ctx, enabled)
-	suite.Require().Equal(enabled, app.BankKeeper.GetSendEnabled(ctx))
+	enabled := true
+	params := types.DefaultParams()
+	suite.Require().Equal(enabled, params.DefaultSendEnabled)
+
+	app.BankKeeper.SetParams(ctx, params)
+
+	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+	fooCoin := sdk.NewCoin("foocoin", sdk.OneInt())
+	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
+
+	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+
+	// Both coins should be send enabled.
+	err := app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	suite.Require().NoError(err)
+
+	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
+	params.DefaultSendEnabled = !enabled
+	params = params.SetSendEnabledParam(fooCoin.Denom, enabled)
+	app.BankKeeper.SetParams(ctx, params)
+
+	// Expect our specific override to be enabled, others to be !enabled.
+	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, fooCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+
+	// Foo coin should be send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin)
+	suite.Require().NoError(err)
+
+	// Expect an error when one coin is not send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	suite.Require().Error(err)
+
+	// Expect an error when all coins are not send enabled.
+	err = app.BankKeeper.SendEnabledCoins(ctx, bondCoin, barCoin)
+	suite.Require().Error(err)
 }
 
 func (suite *IntegrationTestSuite) TestHasBalance() {
@@ -491,27 +534,27 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
 	)
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[0])
@@ -531,7 +574,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	app, ctx := suite.app, suite.ctx
 
-	app.BankKeeper.SetSendEnabled(ctx, true)
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -569,11 +612,11 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 	suite.Require().Equal(abci.Event(event1), events[0])
 
@@ -591,34 +634,34 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 
 	event2 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr2.String())},
 	)
 	event3 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
 	event4 := sdk.Event{
 		Type:       types.EventTypeTransfer,
-		Attributes: []tmkv.Pair{},
+		Attributes: []abci.EventAttribute{},
 	}
 	event4.Attributes = append(
 		event4.Attributes,
-		tmkv.Pair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
 	)
 	event4.Attributes = append(
 		event4.Attributes,
-		tmkv.Pair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
 	)
 
 	suite.Require().Equal(abci.Event(event1), events[1])
@@ -630,7 +673,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -661,7 +704,7 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -691,7 +734,7 @@ func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 
@@ -724,7 +767,7 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -758,7 +801,7 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -797,7 +840,7 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -857,7 +900,7 @@ func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
 func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -927,6 +970,74 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+}
+
+func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
+	app, ctx := suite.app, suite.ctx
+
+	metadata := suite.getTestMetadata()
+
+	for i := range []int{1, 2} {
+		app.BankKeeper.SetDenomMetaData(ctx, metadata[i])
+	}
+
+	actualMetadata := app.BankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
+
+	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
+	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
+	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
+	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
+}
+
+func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
+	app, ctx := suite.app, suite.ctx
+
+	expectedMetadata := suite.getTestMetadata()
+	// set metadata
+	for i := range []int{1, 2} {
+		app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
+	}
+	// retrieve metadata
+	actualMetadata := make([]types.Metadata, 0)
+	app.BankKeeper.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		actualMetadata = append(actualMetadata, metadata)
+		return false
+	})
+	// execute checks
+	for i := range []int{1, 2} {
+		suite.Require().Equal(expectedMetadata[i].GetBase(), actualMetadata[i].GetBase())
+		suite.Require().Equal(expectedMetadata[i].GetDisplay(), actualMetadata[i].GetDisplay())
+		suite.Require().Equal(expectedMetadata[i].GetDescription(), actualMetadata[i].GetDescription())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetDenom(), actualMetadata[i].GetDenomUnits()[1].GetDenom())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetExponent(), actualMetadata[i].GetDenomUnits()[1].GetExponent())
+		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetAliases(), actualMetadata[i].GetDenomUnits()[1].GetAliases())
+	}
+}
+
+func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
+	return []types.Metadata{{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*types.DenomUnits{
+			{"uatom", uint32(0), []string{"microatom"}},
+			{"matom", uint32(3), []string{"milliatom"}},
+			{"atom", uint32(6), nil},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	},
+		{
+			Description: "The native staking token of the Token Hub.",
+			DenomUnits: []*types.DenomUnits{
+				{"1token", uint32(5), []string{"decitoken"}},
+				{"2token", uint32(4), []string{"centitoken"}},
+				{"3token", uint32(7), []string{"dekatoken"}},
+			},
+			Base:    "utoken",
+			Display: "token",
+		},
+	}
 }
 
 func TestKeeperTestSuite(t *testing.T) {

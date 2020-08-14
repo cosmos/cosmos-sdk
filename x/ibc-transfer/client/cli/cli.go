@@ -4,8 +4,24 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
+
+// GetQueryCmd returns the query commands for IBC connections
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
+		Use:                        "ibc-transfer",
+		Short:                      "IBC fungible token transfer query subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+	}
+
+	queryCmd.AddCommand(
+		GetCmdQueryDenomTrace(),
+		GetCmdQueryDenomTraces(),
+	)
+
+	return queryCmd
+}
 
 // NewTxCmd returns the transaction commands for IBC fungible token transfer
 func NewTxCmd() *cobra.Command {
@@ -17,9 +33,9 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(flags.PostCommands(
+	txCmd.AddCommand(
 		NewTransferTxCmd(),
-	)...)
+	)
 
 	return txCmd
 }

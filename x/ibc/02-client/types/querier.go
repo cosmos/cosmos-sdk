@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -12,9 +12,7 @@ import (
 
 // query routes supported by the IBC client Querier
 const (
-	QueryAllClients     = "client_states"
-	QueryClientState    = "client_state"
-	QueryConsensusState = "consensus_state"
+	QueryAllClients = "client_states"
 )
 
 // QueryAllClientsParams defines the parameters necessary for querying for all
@@ -43,7 +41,7 @@ type StateResponse struct {
 
 // NewClientStateResponse creates a new StateResponse instance.
 func NewClientStateResponse(
-	clientID string, clientState exported.ClientState, proof *merkle.Proof, height int64,
+	clientID string, clientState exported.ClientState, proof *tmcrypto.ProofOps, height int64,
 ) StateResponse {
 	return StateResponse{
 		ClientState: clientState,
@@ -64,7 +62,7 @@ type ConsensusStateResponse struct {
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
 func NewConsensusStateResponse(
-	clientID string, cs exported.ConsensusState, proof *merkle.Proof, height int64,
+	clientID string, cs exported.ConsensusState, proof *tmcrypto.ProofOps, height int64,
 ) ConsensusStateResponse {
 	return ConsensusStateResponse{
 		ConsensusState: cs,

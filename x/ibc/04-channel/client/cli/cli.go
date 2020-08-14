@@ -4,13 +4,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // GetQueryCmd returns the query commands for IBC channels
-func GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	ics04ChannelQueryCmd := &cobra.Command{
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel query subcommands",
 		DisableFlagParsing:         true,
@@ -18,24 +17,24 @@ func GetQueryCmd(clientCtx client.Context) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
-		GetCmdQueryChannels(clientCtx),
-		GetCmdQueryChannel(clientCtx),
-		GetCmdQueryConnectionChannels(clientCtx),
-		GetCmdQueryChannelClientState(clientCtx),
-		GetCmdQueryPacketCommitment(clientCtx),
-		GetCmdQueryPacketCommitments(clientCtx),
-		GetCmdQueryUnrelayedPackets(clientCtx),
-		GetCmdQueryNextSequenceReceive(clientCtx),
+	queryCmd.AddCommand(
+		GetCmdQueryChannels(),
+		GetCmdQueryChannel(),
+		GetCmdQueryConnectionChannels(),
+		GetCmdQueryChannelClientState(),
+		GetCmdQueryPacketCommitment(),
+		GetCmdQueryPacketCommitments(),
+		GetCmdQueryUnrelayedPackets(),
+		GetCmdQueryNextSequenceReceive(),
 		// TODO: next sequence Send ?
-	)...)
+	)
 
-	return ics04ChannelQueryCmd
+	return queryCmd
 }
 
 // NewTxCmd returns a CLI command handler for all x/ibc channel transaction commands.
 func NewTxCmd() *cobra.Command {
-	ics04ChannelTxCmd := &cobra.Command{
+	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
 		Short:                      "IBC channel transaction subcommands",
 		DisableFlagParsing:         true,
@@ -43,14 +42,14 @@ func NewTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
+	txCmd.AddCommand(
 		NewChannelOpenInitCmd(),
 		NewChannelOpenTryCmd(),
 		NewChannelOpenAckCmd(),
 		NewChannelOpenConfirmCmd(),
 		NewChannelCloseInitCmd(),
 		NewChannelCloseConfirmCmd(),
-	)...)
+	)
 
-	return ics04ChannelTxCmd
+	return txCmd
 }

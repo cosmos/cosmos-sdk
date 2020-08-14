@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -23,7 +24,7 @@ and standard additions here would be better just to add to the Context struct
 type Context struct {
 	ctx           context.Context
 	ms            MultiStore
-	header        abci.Header
+	header        tmproto.Header
 	chainID       string
 	txBytes       []byte
 	logger        log.Logger
@@ -57,8 +58,8 @@ func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
 func (c Context) EventManager() *EventManager { return c.eventManager }
 
 // clone the header before returning
-func (c Context) BlockHeader() abci.Header {
-	var msg = proto.Clone(&c.header).(*abci.Header)
+func (c Context) BlockHeader() tmproto.Header {
+	var msg = proto.Clone(&c.header).(*tmproto.Header)
 	return *msg
 }
 
@@ -67,7 +68,7 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -83,23 +84,27 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	}
 }
 
+// WithContext returns a Context with an updated context.Context.
 func (c Context) WithContext(ctx context.Context) Context {
 	c.ctx = ctx
 	return c
 }
 
+// WithMultiStore returns a Context with an updated MultiStore.
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	c.ms = ms
 	return c
 }
 
-func (c Context) WithBlockHeader(header abci.Header) Context {
+// WithBlockHeader returns a Context with an updated tendermint block header in UTC time.
+func (c Context) WithBlockHeader(header tmproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
 	return c
 }
 
+// WithBlockTime returns a Context with an updated tendermint block header time in UTC time
 func (c Context) WithBlockTime(newTime time.Time) Context {
 	newHeader := c.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
@@ -107,48 +112,57 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithProposer returns a Context with an updated proposer consensus address.
 func (c Context) WithProposer(addr ConsAddress) Context {
 	newHeader := c.BlockHeader()
 	newHeader.ProposerAddress = addr.Bytes()
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithBlockHeight returns a Context with an updated block height.
 func (c Context) WithBlockHeight(height int64) Context {
 	newHeader := c.BlockHeader()
 	newHeader.Height = height
 	return c.WithBlockHeader(newHeader)
 }
 
+// WithChainID returns a Context with an updated chain identifier.
 func (c Context) WithChainID(chainID string) Context {
 	c.chainID = chainID
 	return c
 }
 
+// WithTxBytes returns a Context with an updated txBytes.
 func (c Context) WithTxBytes(txBytes []byte) Context {
 	c.txBytes = txBytes
 	return c
 }
 
+// WithLogger returns a Context with an updated logger.
 func (c Context) WithLogger(logger log.Logger) Context {
 	c.logger = logger
 	return c
 }
 
+// WithVoteInfos returns a Context with an updated consensus VoteInfo.
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
 }
 
+// WithGasMeter returns a Context with an updated transaction GasMeter.
 func (c Context) WithGasMeter(meter GasMeter) Context {
 	c.gasMeter = meter
 	return c
 }
 
+// WithBlockGasMeter returns a Context with an updated block GasMeter
 func (c Context) WithBlockGasMeter(meter GasMeter) Context {
 	c.blockGasMeter = meter
 	return c
 }
 
+// WithIsCheckTx enables or disables CheckTx value for verifying transactions and returns an updated Context
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	c.checkTx = isCheckTx
 	return c
@@ -164,16 +178,19 @@ func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	return c
 }
 
+// WithMinGasPrices returns a Context with an updated minimum gas price value
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 	c.minGasPrice = gasPrices
 	return c
 }
 
+// WithConsensusParams returns a Context with an updated consensus params
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }
 
+// WithEventManager returns a Context with an updated event manager
 func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
 	return c
@@ -229,19 +246,20 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string
 
-const sdkContextKey ContextKey = "sdk-context"
+// SdkContextKey is the key in the context.Context which holds the sdk.Context.
+const SdkContextKey ContextKey = "sdk-context"
 
 // WrapSDKContext returns a stdlib context.Context with the provided sdk.Context's internal
 // context as a value. It is useful for passing an sdk.Context  through methods that take a
 // stdlib context.Context parameter such as generated gRPC methods. To get the original
 // sdk.Context back, call UnwrapSDKContext.
 func WrapSDKContext(ctx Context) context.Context {
-	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
+	return context.WithValue(ctx.ctx, SdkContextKey, ctx)
 }
 
 // UnwrapSDKContext retrieves a Context from a context.Context instance
 // attached with WrapSDKContext. It panics if a Context was not properly
 // attached
 func UnwrapSDKContext(ctx context.Context) Context {
-	return ctx.Value(sdkContextKey).(Context)
+	return ctx.Value(SdkContextKey).(Context)
 }

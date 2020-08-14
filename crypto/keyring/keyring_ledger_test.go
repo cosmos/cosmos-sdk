@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -52,7 +52,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerifyKeyRingWithLedger(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 	kb, err := New("keybasename", "test", dir, nil)
 	require.NoError(t, err)
@@ -77,8 +77,8 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 	require.Equal(t, i1.GetPubKey(), pub1)
 	require.Equal(t, i1.GetPubKey(), pub2)
-	require.True(t, pub1.VerifyBytes(d1, s1))
-	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
+	require.True(t, pub1.VerifySignature(d1, s1))
+	require.True(t, i1.GetPubKey().VerifySignature(d1, s1))
 	require.True(t, bytes.Equal(s1, s2))
 
 	localInfo, _, err := kb.NewMnemonic("test", English, types.FullFundraiserPath, hd.Secp256k1)
@@ -89,7 +89,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 }
 
 func TestAltKeyring_SaveLedgerKey(t *testing.T) {
-	dir, clean := tests.NewTestCaseDir(t)
+	dir, clean := testutil.NewTestCaseDir(t)
 	t.Cleanup(clean)
 
 	keyring, err := New(t.Name(), BackendTest, dir, nil)

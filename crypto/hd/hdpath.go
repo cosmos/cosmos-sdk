@@ -156,17 +156,17 @@ func (p BIP44Params) String() string {
 		p.AddressIndex)
 }
 
-// ComputeMastersFromSeed returns the master public key, master secret, and chain code in hex.
+// ComputeMastersFromSeed returns the master secret key's, and chain code.
 func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
-	masterSecret := []byte("Bitcoin seed")
-	secret, chainCode = i64(masterSecret, seed)
+	curveIdentifier := []byte("Bitcoin seed")
+	secret, chainCode = i64(curveIdentifier, seed)
 
 	return
 }
 
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
-func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path string) ([32]byte, error) {
+func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 
@@ -181,21 +181,21 @@ func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path str
 		idx, err := strconv.Atoi(part)
 
 		if err != nil {
-			return [32]byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
+			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
 		}
 
 		if idx < 0 {
-			return [32]byte{}, errors.New("invalid BIP 32 path: index negative ot too large")
+			return []byte{}, errors.New("invalid BIP 32 path: index negative ot too large")
 		}
 
 		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)
 	}
 
-	var derivedKey [32]byte
-	n := copy(derivedKey[:], data[:])
+	derivedKey := make([]byte, 32)
+	n := copy(derivedKey, data[:])
 
 	if n != 32 || len(data) != 32 {
-		return [32]byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
+		return []byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
 	}
 
 	return derivedKey, nil

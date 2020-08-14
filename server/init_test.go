@@ -8,13 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
 	t.Parallel()
-	addr, mnemonic, err := server.GenerateCoinKey()
+	addr, mnemonic, err := server.GenerateCoinKey(hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test creation
@@ -25,13 +25,13 @@ func TestGenerateCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	kb, err := keyring.New(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
-	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
+	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test key was actually saved
@@ -47,22 +47,22 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
+	dir, cleanup := testutil.NewTestCaseDir(t)
 	t.Cleanup(cleanup)
 
 	kb, err := keyring.New(t.Name(), "test", dir, nil)
 	require.NoError(t, err)
 
 	keyname := "justakey"
-	addr1, _, err := server.GenerateSaveCoinKey(kb, keyname, "012345678", false)
+	addr1, _, err := server.GenerateSaveCoinKey(kb, keyname, false, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = server.GenerateSaveCoinKey(kb, keyname, "012345678", false)
+	_, _, err = server.GenerateSaveCoinKey(kb, keyname, false, hd.Secp256k1)
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := server.GenerateSaveCoinKey(kb, keyname, "012345678", true)
+	addr2, _, err := server.GenerateSaveCoinKey(kb, keyname, true, hd.Secp256k1)
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)

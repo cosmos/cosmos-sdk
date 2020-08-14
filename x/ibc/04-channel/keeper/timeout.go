@@ -30,7 +30,7 @@ func (k Keeper) TimeoutPacket(
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
@@ -44,17 +44,17 @@ func (k Keeper) TimeoutPacket(
 	// NOTE: TimeoutPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -81,14 +81,17 @@ func (k Keeper) TimeoutPacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
 	}
 
 	switch channel.Ordering {
 	case types.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
-			return sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet already received, next sequence receive > packet sequence (%d > %d)", nextSequenceRecv, packet.GetSequence(),
+			)
 		}
 
 		// check that the recv sequence is as claimed
@@ -124,14 +127,14 @@ func (k Keeper) TimeoutExecuted(
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrChannelCapabilityNotFound,
-			"caller does not own capability for channel",
+			"caller does not own capability for channel with capability name %s", capName,
 		)
 	}
 
@@ -155,6 +158,11 @@ func (k Keeper) TimeoutExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -175,28 +183,28 @@ func (k Keeper) TimeoutOnClose(
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, "port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication with capability name %s", capName,
 		)
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -209,7 +217,7 @@ func (k Keeper) TimeoutOnClose(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet commitment bytes are not equal: got (%v), expected (%v)", commitment, types.CommitPacket(packet))
 	}
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
@@ -226,7 +234,7 @@ func (k Keeper) TimeoutOnClose(
 	// check that the opposing channel end has closed
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -237,7 +245,7 @@ func (k Keeper) TimeoutOnClose(
 	case types.ORDERED:
 		// check that packet has not been received
 		if nextSequenceRecv > packet.GetSequence() {
-			return sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+			return sdkerrors.Wrapf(types.ErrInvalidPacket, "packet already received, next sequence receive > packet sequence (%d > %d", nextSequenceRecv, packet.GetSequence())
 		}
 
 		// check that the recv sequence is as claimed
@@ -273,6 +281,11 @@ func (k Keeper) TimeoutOnClose(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 

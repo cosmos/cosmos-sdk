@@ -23,7 +23,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper,
 ) simulation.WeightedOperations {
 
@@ -86,7 +86,9 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		tx := helpers.GenTx(
+		txGen := simappparams.MakeEncodingConfig().TxConfig
+		tx, err := helpers.GenTx(
+			txGen,
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
@@ -95,6 +97,9 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+		}
 
 		_, res, err := app.Deliver(tx)
 

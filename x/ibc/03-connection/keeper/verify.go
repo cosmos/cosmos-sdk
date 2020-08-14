@@ -30,10 +30,14 @@ func (k Keeper) VerifyClientConsensusState(
 		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
 	}
 
-	return clientState.VerifyClientConsensusState(
-		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, k.aminoCdc, targetConsState.GetRoot(), height,
+	if err := clientState.VerifyClientConsensusState(
+		k.clientKeeper.ClientStore(ctx, clientID), k.cdc, targetConsState.GetRoot(), height,
 		connection.GetCounterparty().GetClientID(), consensusHeight, connection.GetCounterparty().GetPrefix(), proof, consensusState,
-	)
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed consensus state verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
@@ -51,21 +55,14 @@ func (k Keeper) VerifyConnectionState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
+	if err := clientState.VerifyConnectionState(
+		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
+		connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed connection state verification for client (%s)", connection.GetClientID())
 	}
 
-	return clientState.VerifyConnectionState(
-		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
-		connection.GetCounterparty().GetPrefix(), proof, connectionID, connectionEnd, consensusState,
-	)
+	return nil
 }
 
 // VerifyChannelState verifies a proof of the channel state of the specified
@@ -84,22 +81,15 @@ func (k Keeper) VerifyChannelState(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
-	}
-
-	return clientState.VerifyChannelState(
+	if err := clientState.VerifyChannelState(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof,
-		portID, channelID, channel, consensusState,
-	)
+		portID, channelID, channel,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed channel state verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
@@ -119,22 +109,15 @@ func (k Keeper) VerifyPacketCommitment(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
-	}
-
-	return clientState.VerifyPacketCommitment(
+	if err := clientState.VerifyPacketCommitment(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
-		sequence, commitmentBytes, consensusState,
-	)
+		sequence, commitmentBytes,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed packet commitment verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
@@ -154,22 +137,15 @@ func (k Keeper) VerifyPacketAcknowledgement(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
-	}
-
-	return clientState.VerifyPacketAcknowledgement(
+	if err := clientState.VerifyPacketAcknowledgement(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
-		sequence, acknowledgement, consensusState,
-	)
+		sequence, acknowledgement,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed packet acknowledgement verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }
 
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
@@ -189,22 +165,15 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
-	}
-
-	return clientState.VerifyPacketAcknowledgementAbsence(
+	if err := clientState.VerifyPacketAcknowledgementAbsence(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
-		sequence, consensusState,
-	)
+		sequence,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed packet acknowledgement absence verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
@@ -223,20 +192,13 @@ func (k Keeper) VerifyNextSequenceRecv(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	// TODO: move to specific clients; blocked by #5502
-	consensusState, found := k.clientKeeper.GetClientConsensusState(
-		ctx, connection.GetClientID(), height,
-	)
-	if !found {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound,
-			"clientID (%s), height (%d)", connection.GetClientID(), height,
-		)
-	}
-
-	return clientState.VerifyNextSequenceRecv(
+	if err := clientState.VerifyNextSequenceRecv(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
-		nextSequenceRecv, consensusState,
-	)
+		nextSequenceRecv,
+	); err != nil {
+		return sdkerrors.Wrapf(err, "failed next sequence receive verification for client (%s)", connection.GetClientID())
+	}
+
+	return nil
 }

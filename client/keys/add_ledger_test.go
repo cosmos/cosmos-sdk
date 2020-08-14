@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,10 +34,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
+	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
 
@@ -49,11 +49,11 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
 	require.NoError(t, cmd.Execute())
 
@@ -84,11 +84,11 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
+	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
 	require.NotNil(t, kbHome)
 	t.Cleanup(kbCleanUp)
 
@@ -97,7 +97,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})

@@ -42,7 +42,7 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) PubKey {
 //
 // NOTE: VerifyMultisignature should preferred to VerifyBytes which only works
 // with amino multisignatures.
-func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) bool {
+func (pk PubKeyMultisigThreshold) VerifySignature(msg []byte, marshalledSig []byte) bool {
 	var sig AminoMultisignature
 	err := Cdc.UnmarshalBinaryBare(marshalledSig, &sig)
 	if err != nil {
@@ -65,7 +65,7 @@ func (pk PubKeyMultisigThreshold) VerifyBytes(msg []byte, marshalledSig []byte) 
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			if !pk.PubKeys[i].VerifyBytes(msg, sig.Sigs[sigIndex]) {
+			if !pk.PubKeys[i].VerifySignature(msg, sig.Sigs[sigIndex]) {
 				return false
 			}
 			sigIndex++
@@ -102,7 +102,7 @@ func (pk PubKeyMultisigThreshold) VerifyMultisignature(getSignBytes GetSignBytes
 				if err != nil {
 					return err
 				}
-				if !pk.PubKeys[i].VerifyBytes(msg, si.Signature) {
+				if !pk.PubKeys[i].VerifySignature(msg, si.Signature) {
 					return err
 				}
 			case *signing.MultiSignatureData:
@@ -154,3 +154,10 @@ func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
 	}
 	return true
 }
+
+// GetThreshold implements the PubKey.GetThreshold method
+func (pk PubKeyMultisigThreshold) GetThreshold() uint {
+	return pk.K
+}
+
+func (pk PubKeyMultisigThreshold) Type() string { return "PubKeyMultisigThreshold" }

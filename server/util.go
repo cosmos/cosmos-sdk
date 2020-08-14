@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -17,10 +18,12 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -126,7 +129,6 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		tmcfg.WriteConfigFile(configFile, conf)
 	} else {
@@ -141,6 +143,8 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 			return nil, err
 		}
 	}
+
+	conf.SetRoot(rootDir)
 
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
@@ -163,7 +167,7 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExporter) {
+func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter) {
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
@@ -177,11 +181,11 @@ func AddCommands(rootCmd *cobra.Command, appCreator AppCreator, appExport AppExp
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(appCreator),
+		StartCmd(appCreator, defaultNodeHome),
 		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(appExport),
+		ExportCmd(appExport, defaultNodeHome),
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)
@@ -283,4 +287,20 @@ func addrToIP(addr net.Addr) net.IP {
 		ip = v.IP
 	}
 	return ip
+}
+
+func openDB(rootDir string) (dbm.DB, error) {
+	dataDir := filepath.Join(rootDir, "data")
+	return sdk.NewLevelDB("application", dataDir)
+}
+
+func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
+	if traceWriterFile == "" {
+		return
+	}
+	return os.OpenFile(
+		traceWriterFile,
+		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
+		0666,
+	)
 }

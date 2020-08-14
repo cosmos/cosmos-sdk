@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
@@ -38,7 +39,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -55,6 +56,8 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -87,7 +90,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -95,12 +98,12 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			// TODO: parse strings?
 			counterpartyVersions := args[5]
 
-			proofInit, err := utils.ParseProof(clientCtx.Codec, args[6])
+			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[6])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[7])
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[7])
 			if err != nil {
 				return err
 			}
@@ -124,6 +127,8 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -149,12 +154,12 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[2])
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
@@ -180,6 +185,8 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -204,7 +211,7 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofAck, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofAck, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
@@ -225,6 +232,8 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

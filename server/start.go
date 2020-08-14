@@ -17,12 +17,15 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -30,6 +33,7 @@ import (
 const (
 	flagWithTendermint     = "with-tendermint"
 	flagAddress            = "address"
+	flagTransport          = "transport"
 	flagTraceStore         = "trace-store"
 	flagCPUProfile         = "cpu-profile"
 	FlagMinGasPrices       = "minimum-gas-prices"
@@ -46,9 +50,15 @@ const (
 	FlagPruningInterval   = "pruning-interval"
 )
 
+// GRPC-related flags.
+const (
+	flagGRPCEnable  = "grpc.enable"
+	flagGRPCAddress = "grpc.address"
+)
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
-func StartCmd(appCreator AppCreator) *cobra.Command {
+func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -96,14 +106,16 @@ which accepts a path for the resulting pprof file.
 
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
+			// amino is needed here for backwards compatibility of REST routes
+			err := startInProcess(serverCtx, clientCtx.LegacyAmino, appCreator)
 			return err
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, "", "The application home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with tendermint")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
+	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
@@ -118,13 +130,17 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 
+	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
+	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
+
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
 }
 
-func startStandAlone(ctx *Context, appCreator AppCreator) error {
+func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	addr := ctx.Viper.GetString(flagAddress)
+	transport := ctx.Viper.GetString(flagTransport)
 	home := ctx.Viper.GetString(flags.FlagHome)
 
 	db, err := openDB(home)
@@ -140,7 +156,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	svr, err := server.NewServer(addr, "socket", app)
+	svr, err := server.NewServer(addr, transport, app)
 	if err != nil {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
@@ -162,7 +178,8 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator) error {
+// legacyAminoCdc is used for the legacy REST API
+func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -215,9 +232,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
-			WithClient(local.New(tmNode)).
-			WithTrustNode(true)
+			WithJSONMarshaler(legacyAminoCdc).
+			// amino is needed here for backwards compatibility of REST routes
+			WithLegacyAmino(legacyAminoCdc).
+			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
@@ -234,6 +252,14 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 		case err := <-errCh:
 			return err
 		case <-time.After(5 * time.Second): // assume server started successfully
+		}
+	}
+
+	var grpcSrv *grpc.Server
+	if config.GRPC.Enable {
+		grpcSrv, err = servergrpc.StartGRPCServer(app, config.GRPC.Address)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -268,6 +294,10 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator AppCreator
 
 		if apiSrv != nil {
 			_ = apiSrv.Close()
+		}
+
+		if grpcSrv != nil {
+			grpcSrv.Stop()
 		}
 
 		ctx.Logger.Info("exiting...")

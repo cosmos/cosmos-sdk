@@ -3,7 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/cosmos/cosmos-sdk/client/testutil"
 
@@ -14,15 +16,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func testCodec() *codec.Codec {
+func testCodec() *codec.LegacyAmino {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
+	cryptoAmino.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }
 
-func TestStdTxGenerator(t *testing.T) {
+func TestStdTxConfig(t *testing.T) {
 	cdc := testCodec()
-	txGen := types.StdTxGenerator{Cdc: cdc}
-	suite.Run(t, testutil.NewTxGeneratorTestSuite(txGen))
+	txGen := types.StdTxConfig{Cdc: cdc}
+	suite.Run(t, testutil.NewTxConfigTestSuite(txGen))
 }

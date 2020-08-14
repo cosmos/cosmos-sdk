@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
-
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -28,8 +27,8 @@ var (
 
 func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 1)
-	ctx := app.NewContext(true, abci.Header{})
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 1, simapp.MakeEncodingConfig())
+	ctx := app.NewContext(true, tmproto.Header{})
 
 	constantFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
 	app.CrisisKeeper.SetConstantFee(ctx, constantFee)

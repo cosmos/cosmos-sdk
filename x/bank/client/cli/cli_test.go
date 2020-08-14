@@ -1,37 +1,42 @@
 package cli_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg     testutil.Config
-	network *testutil.Network
+	cfg     network.Config
+	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testutil.DefaultConfig()
+	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = testutil.NewTestNetwork(s.T(), cfg)
+	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -43,12 +48,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGetBalancesCmd() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
@@ -62,19 +62,24 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			"total account balance",
 			[]string{
 				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
-			),
+			&types.QueryAllBalancesResponse{},
+			&types.QueryAllBalancesResponse{
+				Balances: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+				),
+				Pagination: &query.PageResponse{},
+			},
 		},
 		{
 			"total account balance of a specific denom",
 			[]string{
 				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
@@ -84,7 +89,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		},
 		{
 			"total account balance of a bogus denom",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			&sdk.Coin{},
 			sdk.NewCoin("foobar", sdk.ZeroInt()),
@@ -95,11 +100,15 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
+			cmd := cli.GetBalancesCmd()
+			_, out := testutil.ApplyMockIO(cmd)
 
-			cmd := cli.GetBalancesCmd(clientCtx)
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -107,7 +116,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -115,49 +124,47 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
-	buf := new(bytes.Buffer)
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	testCases := []struct {
 		name      string
 		args      []string
 		expectErr bool
-		respType  fmt.Stringer
-		expected  fmt.Stringer
+		respType  proto.Message
+		expected  proto.Message
 	}{
 		{
-			"total supply",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
-			false,
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
+			name: "total supply",
+			args: []string{
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			respType: &types.QueryTotalSupplyResponse{},
+			expected: &types.QueryTotalSupplyResponse{
+				Supply: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+				)},
 		},
 		{
-			"total supply of a specific denomination",
-			[]string{
+			name: "total supply of a specific denomination",
+			args: []string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=%s", cli.FlagDenom, s.cfg.BondDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&sdk.Coin{},
-			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
 		},
 		{
-			"total supply of a bogus denom",
-			[]string{
+			name: "total supply of a bogus denom",
+			args: []string{
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			respType: &sdk.Coin{},
+			expected: &sdk.Coin{"foobar", sdk.ZeroInt()},
 		},
 	}
 
@@ -165,11 +172,15 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
+			cmd := cli.GetCmdQueryTotalSupply()
+			_, out := testutil.ApplyMockIO(cmd)
 
-			cmd := cli.GetCmdQueryTotalSupply(clientCtx)
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
+			clientCtx := val.ClientCtx.WithOutput(out)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+			out.Reset()
 			cmd.SetArgs(tc.args)
 
 			err := cmd.ExecuteContext(ctx)
@@ -177,17 +188,43 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(buf.Bytes(), tc.respType), buf.String())
-				s.Require().Equal(tc.expected.String(), tc.respType.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().Equal(tc.expected, tc.respType)
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewSendTxCmd() {
-	buf := new(bytes.Buffer)
+func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx.WithOutput(buf)
+
+	clientCtx := val.ClientCtx
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	from := val.Address
+	to := val.Address
+	amount := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+	args := []string{
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	}
+
+	bz, err := banktestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	s.Require().NoError(err)
+	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
+	s.Require().NoError(err)
+	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
+}
+
+func (s *IntegrationTestSuite) TestNewSendTxCmd() {
+	val := s.network.Validators[0]
 
 	testCases := []struct {
 		name         string
@@ -198,24 +235,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		respType     fmt.Stringer
 		expectedCode uint32
 	}{
-		{
-			"valid transaction (gen-only)",
-			val.Address,
-			val.Address,
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-			},
-			false,
-			&sdk.TxResponse{},
-			0,
-		},
 		{
 			"valid transaction",
 			val.Address,
@@ -274,19 +293,17 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			buf.Reset()
+			clientCtx := val.ClientCtx
 
-			cmd := cli.NewSendTxCmd()
-			cmd.SetErr(buf)
-			cmd.SetOut(buf)
-			cmd.SetArgs(tc.args)
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-			out, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out, tc.respType), string(out))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

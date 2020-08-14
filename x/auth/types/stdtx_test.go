@@ -4,29 +4,52 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
-
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 var (
 	priv = ed25519.GenPrivKey()
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
+
+// Deprecated, use fee amount and gas limit separately on TxBuilder.
+func NewTestStdFee() StdFee {
+	return NewStdFee(100000,
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
+	)
+}
+
+// Deprecated, use TxBuilder.
+func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, timeout uint64, fee StdFee) sdk.Tx {
+	sigs := make([]StdSignature, len(privs))
+	for i, priv := range privs {
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], timeout, fee, msgs, "")
+
+		sig, err := priv.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
+	}
+
+	tx := NewStdTx(msgs, fee, sigs, "")
+	return tx
+}
 
 func TestStdTx(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
@@ -43,12 +66,13 @@ func TestStdTx(t *testing.T) {
 
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
-		chainID  string
-		accnum   uint64
-		sequence uint64
-		fee      StdFee
-		msgs     []sdk.Msg
-		memo     string
+		chainID       string
+		accnum        uint64
+		sequence      uint64
+		timeoutHeight uint64
+		fee           StdFee
+		msgs          []sdk.Msg
+		memo          string
 	}
 	defaultFee := NewTestStdFee()
 	tests := []struct {
@@ -56,22 +80,26 @@ func TestStdSignBytes(t *testing.T) {
 		want string
 	}{
 		{
-			args{"1234", 3, 6, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			args{"1234", 3, 6, 10, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
+			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\",\"timeout_height\":\"10\"}", addr),
+		},
+		{
+			args{"1234", 3, 6, 0, defaultFee, []sdk.Msg{testdata.NewTestMsg(addr)}, "memo"},
 			fmt.Sprintf("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"100000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}", addr),
 		},
 	}
 	for i, tc := range tests {
-		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.fee, tc.args.msgs, tc.args.memo))
+		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, tc.args.msgs, tc.args.memo))
 		require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 	}
 }
 
 func TestTxValidateBasic(t *testing.T) {
-	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, tmproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, _, addr1 := KeyTestPubAddr()
-	priv2, _, addr2 := KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	priv2, _, addr2 := testdata.KeyTestPubAddr()
 
 	// msg and signatures
 	msg1 := testdata.NewTestMsg(addr1, addr2)
@@ -82,7 +110,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFee := NewTestStdFee()
 	badFee.Amount[0].Amount = sdk.NewInt(-5)
-	tx := NewTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx := NewTestTx(ctx, nil, nil, nil, nil, 0, badFee)
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
@@ -91,7 +119,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -100,7 +128,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -110,7 +138,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail with invalid gas supplied
 	badFee = NewTestStdFee()
 	badFee.Gas = 9223372036854775808
-	tx = NewTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx = NewTestTx(ctx, nil, nil, nil, nil, 0, badFee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -119,7 +147,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, 0, fee)
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)
@@ -148,7 +176,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestStdSignatureMarshalYAML(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		sig    StdSignature
@@ -159,11 +187,11 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 			"|\n  pubkey: \"\"\n  signature: \"\"\n",
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: []byte("dummySig")},
+			StdSignature{PubKey: pubKey, Signature: []byte("dummySig")},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: 64756D6D79536967\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 		{
-			StdSignature{PubKey: pubKey.Bytes(), Signature: nil},
+			StdSignature{PubKey: pubKey, Signature: nil},
 			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)),
 		},
 	}
@@ -176,12 +204,12 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 }
 
 func TestSignatureV2Conversions(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	RegisterCodec(cdc)
 	dummy := []byte("dummySig")
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 
 	sigV2, err := StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, err)
@@ -196,7 +224,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.Equal(t, dummy, sigBz)
 
 	// multisigs
-	_, pubKey2, _ := KeyTestPubAddr()
+	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	multiPK := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{
 		pubKey, pubKey2,
 	})
@@ -222,7 +250,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 	require.NoError(t, err)
 
 	sigV2, err = StdSignatureToSignatureV2(cdc, StdSignature{
-		PubKey:    multiPK.Bytes(),
+		PubKey:    multiPK,
 		Signature: msig,
 	})
 	require.NoError(t, err)
@@ -231,22 +259,23 @@ func TestSignatureV2Conversions(t *testing.T) {
 }
 
 func TestGetSignaturesV2(t *testing.T) {
-	_, pubKey, _ := KeyTestPubAddr()
+	_, pubKey, _ := testdata.KeyTestPubAddr()
 	dummy := []byte("dummySig")
 
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	RegisterCodec(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	sig := StdSignature{PubKey: pubKey.Bytes(), Signature: dummy}
+	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 	stdTx := NewStdTx([]sdk.Msg{testdata.NewTestMsg()}, fee, []StdSignature{sig}, "testsigs")
 
 	sigs, err := stdTx.GetSignaturesV2()
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, sigs[0].PubKey.Bytes(), sig.GetPubKey().Bytes())
+	require.Equal(t, cdc.MustMarshalBinaryBare(sigs[0].PubKey), cdc.MustMarshalBinaryBare(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

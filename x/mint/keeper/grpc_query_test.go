@@ -4,12 +4,13 @@ import (
 	gocontext "context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type MintTestSuite struct {
@@ -22,7 +23,7 @@ type MintTestSuite struct {
 
 func (suite *MintTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MintKeeper)

@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -24,7 +23,7 @@ var (
 	valAddr1 = sdk.ValAddress(delPk1.Address())
 )
 
-func makeTestCodec() (cdc *codec.Codec) {
+func makeTestCodec() (cdc *codec.LegacyAmino) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
@@ -43,14 +42,16 @@ func TestDecodeStore(t *testing.T) {
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: sdk.OneInt()})},
-		tmkv.Pair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&val)},
-		tmkv.Pair{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-		tmkv.Pair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&del)},
-		tmkv.Pair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&ubd)},
-		tmkv.Pair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&red)},
-		tmkv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: sdk.OneInt()})},
+			{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryBare(&val)},
+			{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+			{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&del)},
+			{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&ubd)},
+			{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryBare(&red)},
+			{Key: []byte{0x99}, Value: []byte{0x99}},
+		},
 	}
 
 	tests := []struct {
@@ -70,9 +71,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

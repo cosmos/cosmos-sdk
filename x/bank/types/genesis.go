@@ -12,20 +12,6 @@ import (
 
 var _ exported.GenesisBalance = (*Balance)(nil)
 
-// GenesisState defines the bank module's genesis state.
-type GenesisState struct {
-	SendEnabled bool      `json:"send_enabled" yaml:"send_enabled"`
-	Balances    []Balance `json:"balances" yaml:"balances"`
-	Supply      sdk.Coins `json:"supply" yaml:"supply"`
-}
-
-// Balance defines an account address and balance pair used in the bank module's
-// genesis state.
-type Balance struct {
-	Address sdk.AccAddress `json:"address" yaml:"address"`
-	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
-}
-
 // GetAddress returns the account address of the Balance object.
 func (b Balance) GetAddress() sdk.AccAddress {
 	return b.Address
@@ -49,30 +35,41 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	return balances
 }
 
+// ValidateGenesis performs basic validation of supply genesis data returning an
+// error for any failed validation criteria.
+func ValidateGenesis(data GenesisState) error {
+	if err := data.Params.Validate(); err != nil {
+		return err
+	}
+
+	return NewSupply(data.Supply).ValidateBasic()
+}
+
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(sendEnabled bool, balances []Balance, supply sdk.Coins) GenesisState {
-	return GenesisState{
-		SendEnabled: sendEnabled,
-		Balances:    balances,
-		Supply:      supply,
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) *GenesisState {
+	return &GenesisState{
+		Params:        params,
+		Balances:      balances,
+		Supply:        supply,
+		DenomMetadata: denomMetaData,
 	}
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
-func DefaultGenesisState() GenesisState {
-	return NewGenesisState(true, []Balance{}, DefaultSupply().GetTotal())
+func DefaultGenesisState() *GenesisState {
+	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
 
-	return genesisState
+	return &genesisState
 }
 
 // GenesisAccountIterator implements genesis account iteration.

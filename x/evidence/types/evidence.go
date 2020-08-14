@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Evidence type constants
@@ -34,7 +34,11 @@ func (e *Equivocation) String() string {
 
 // Hash returns the hash of an Equivocation object.
 func (e *Equivocation) Hash() tmbytes.HexBytes {
-	return tmhash.Sum(ModuleCdc.MustMarshalBinaryBare(e))
+	bz, err := e.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return tmhash.Sum(bz)
 }
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.

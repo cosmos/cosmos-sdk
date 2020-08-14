@@ -24,7 +24,7 @@ func (k Keeper) SendPacket(
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "packet failed basic validation")
 	}
 
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -40,20 +40,20 @@ func (k Keeper) SendPacket(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -128,6 +128,11 @@ func (k Keeper) SendPacket(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -159,17 +164,17 @@ func (k Keeper) RecvPacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if packet.GetSourcePort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetSourceChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -267,9 +272,9 @@ func (k Keeper) PacketExecuted(
 
 	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
@@ -313,6 +318,11 @@ func (k Keeper) PacketExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -336,7 +346,7 @@ func (k Keeper) AcknowledgePacket(
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
@@ -351,17 +361,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -381,14 +391,14 @@ func (k Keeper) AcknowledgePacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
 		packet.GetSequence(), acknowledgement,
 	); err != nil {
-		return sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
+		return sdkerrors.Wrap(err, "packet acknowledgement verification failed")
 	}
 
 	// assert packets acknowledged in order
@@ -426,15 +436,15 @@ func (k Keeper) AcknowledgementExecuted(
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
@@ -469,6 +479,11 @@ func (k Keeper) AcknowledgementExecuted(
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 

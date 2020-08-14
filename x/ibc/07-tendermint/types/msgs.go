@@ -4,8 +4,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,16 +23,16 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = &MsgCreateClient{}
-	_ clientexported.MsgUpdateClient     = &MsgUpdateClient{}
-	_ evidenceexported.MsgSubmitEvidence = &MsgSubmitClientMisbehaviour{}
+	_ clientexported.MsgCreateClient     = (*MsgCreateClient)(nil)
+	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
+	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
 	ClientID        string             `json:"client_id" yaml:"client_id"`
 	Header          Header             `json:"header" yaml:"header"`
-	TrustLevel      tmmath.Fraction    `json:"trust_level" yaml:"trust_level"`
+	TrustLevel      Fraction           `json:"trust_level" yaml:"trust_level"`
 	TrustingPeriod  time.Duration      `json:"trusting_period" yaml:"trusting_period"`
 	UnbondingPeriod time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
 	MaxClockDrift   time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
@@ -45,18 +44,18 @@ type MsgCreateClient struct {
 const TODO = "TODO"
 
 // dummy implementation of proto.Message
-func (msg MsgCreateClient) Reset()         {}
-func (msg MsgCreateClient) String() string { return TODO }
-func (msg MsgCreateClient) ProtoMessage()  {}
+func (msg *MsgCreateClient) Reset()         {}
+func (msg *MsgCreateClient) String() string { return TODO }
+func (msg *MsgCreateClient) ProtoMessage()  {}
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, header Header, trustLevel tmmath.Fraction,
+	id string, header Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
 	specs []*ics23.ProofSpec, signer sdk.AccAddress,
-) MsgCreateClient {
+) *MsgCreateClient {
 
-	return MsgCreateClient{
+	return &MsgCreateClient{
 		ClientID:        id,
 		Header:          header,
 		TrustLevel:      trustLevel,
@@ -83,8 +82,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.TrustingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidTrustingPeriod, "duration cannot be 0")
 	}
-	if err := lite.ValidateTrustLevel(msg.TrustLevel); err != nil {
-		return err
+	if err := light.ValidateTrustLevel(msg.TrustLevel.ToTendermint()); err != nil {
+		return sdkerrors.Wrap(err, "invalid trust level for tendermint light client")
 	}
 	if msg.UnbondingPeriod == 0 {
 		return sdkerrors.Wrap(ErrInvalidUnbondingPeriod, "duration cannot be 0")
@@ -141,12 +140,20 @@ func (msg MsgCreateClient) GetClientType() string {
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
 	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
-	return ConsensusState{
-		Timestamp:    msg.Header.Time,
-		Root:         root,
-		Height:       uint64(msg.Header.Height),
-		ValidatorSet: msg.Header.ValidatorSet,
+	return &ConsensusState{
+		Timestamp:          msg.Header.Time,
+		Root:               root,
+		Height:             uint64(msg.Header.Height),
+		NextValidatorsHash: msg.Header.NextValidatorsHash,
 	}
+}
+
+// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
+func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
+	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
+		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
+		uint64(msg.Header.Height), msg.ProofSpecs,
+	)
 }
 
 // MsgUpdateClient defines a message to update an IBC client
@@ -157,13 +164,13 @@ type MsgUpdateClient struct {
 }
 
 // dummy implementation of proto.Message
-func (msg MsgUpdateClient) Reset()         {}
-func (msg MsgUpdateClient) String() string { return TODO }
-func (msg MsgUpdateClient) ProtoMessage()  {}
+func (msg *MsgUpdateClient) Reset()         {}
+func (msg *MsgUpdateClient) String() string { return TODO }
+func (msg *MsgUpdateClient) ProtoMessage()  {}
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) MsgUpdateClient {
-	return MsgUpdateClient{
+func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+	return &MsgUpdateClient{
 		ClientID: id,
 		Header:   header,
 		Signer:   signer,

@@ -3,21 +3,36 @@ package simulation
 // DONTCOVER
 
 import (
+	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// Simulation parameter constants
-const (
-	SendEnabled = "send_enabled"
-)
+// RandomGenesisDefaultSendParam computes randomized allow all send transfers param for the bank module
+func RandomGenesisDefaultSendParam(r *rand.Rand) bool {
+	// 90% chance of transfers being enable or P(a) = 0.9 for success
+	return r.Int63n(101) <= 90
+}
 
-// GenSendEnabled randomized SendEnabled
-func GenSendEnabled(r *rand.Rand) bool {
-	return r.Int63n(101) <= 95 // 95% chance of transfers being enabled
+// RandomGenesisSendParams randomized Parameters for the bank module
+func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
+	params := types.DefaultParams()
+	// 90% chance of transfers being DefaultSendEnabled=true or P(a) = 0.9 for success
+	// 50% of the time add an additional denom specific record (P(b) = 0.475 = 0.5 * 0.95)
+	if r.Int63n(101) <= 50 {
+		// set send enabled 95% of the time
+		bondEnabled := r.Int63n(101) <= 95
+		params = params.SetSendEnabledParam(
+			sdk.DefaultBondDenom,
+			bondEnabled)
+	}
+
+	// overall probability of enabled for bond denom is 94.75% (P(a)+P(b) - P(a)*P(b))
+	return params.SendEnabled
 }
 
 // RandomGenesisAccounts returns a slice of account balances. Each account has
@@ -37,16 +52,31 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
-	var sendEnabled bool
+	var sendEnabledParams types.SendEnabledParams
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SendEnabled, &sendEnabled, simState.Rand,
-		func(r *rand.Rand) { sendEnabled = GenSendEnabled(r) },
+		simState.Cdc, string(types.KeySendEnabled), &sendEnabledParams, simState.Rand,
+		func(r *rand.Rand) { sendEnabledParams = RandomGenesisSendParams(r) },
+	)
+
+	var defaultSendEnabledParam bool
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
+		func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendParam(r) },
 	)
 
 	numAccs := int64(len(simState.Accounts))
 	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
 	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
 
-	bankGenesis := types.NewGenesisState(sendEnabled, RandomGenesisBalances(simState), supply)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
+	bankGenesis := types.GenesisState{
+		Params: types.Params{
+			SendEnabled:        sendEnabledParams,
+			DefaultSendEnabled: defaultSendEnabledParam,
+		},
+		Balances: RandomGenesisBalances(simState),
+		Supply:   supply,
+	}
+
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, &bankGenesis.Params))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&bankGenesis)
 }

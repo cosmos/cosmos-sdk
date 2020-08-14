@@ -63,7 +63,7 @@ func NewApp(...) *App {
   // Initialize and seal the capability keeper so all persistent capabilities
   // are loaded in-memory and prevent any further modules from creating scoped
   // sub-keepers.
-  ctx := app.BaseApp.NewContext(true, abci.Header{})
+  ctx := app.BaseApp.NewContext(true, tmproto.Header{})
   app.capabilityKeeper.InitializeAndSeal(ctx)
 
   return app

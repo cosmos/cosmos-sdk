@@ -9,13 +9,11 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
-
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -49,26 +47,26 @@ func NewCreateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus header file")
 				}
 			}
 
 			var (
-				trustLevel tmmath.Fraction
+				trustLevel ibctmtypes.Fraction
 				specs      []*ics23.ProofSpec
 			)
 
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = lite.DefaultTrustLevel
+				trustLevel = ibctmtypes.NewFractionFromTm(light.DefaultTrustLevel)
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {
@@ -94,13 +92,13 @@ func NewCreateClientCmd() *cobra.Command {
 			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
-			} else if err := clientCtx.Codec.UnmarshalJSON([]byte(spc), &specs); err != nil {
+			} else if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(spc), &specs); err != nil {
 				// check for file path if JSON input not provided
 				contents, err := ioutil.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &specs); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &specs); err != nil {
 					return errors.Wrap(err, "error unmarshalling proof specs file")
 				}
 			}
@@ -119,6 +117,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -126,7 +125,7 @@ func NewCreateClientCmd() *cobra.Command {
 // NewUpdateClientCmd defines the command to update a client as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func NewUpdateClientCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "update [client-id] [path/to/header.json]",
 		Short: "update existing client with a header",
 		Long:  "update existing tendermint client with a tendermint header",
@@ -145,13 +144,13 @@ func NewUpdateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -164,13 +163,17 @@ func NewUpdateClientCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewSubmitMisbehaviourCmd defines the command to submit a misbehaviour to invalidate
 // previous state roots and prevent future updates as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func NewSubmitMisbehaviourCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "misbehaviour [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
@@ -187,13 +190,13 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			}
 
 			var ev evidenceexported.Evidence
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &ev); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &ev); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}
@@ -206,25 +209,29 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
-func parseFraction(fraction string) (tmmath.Fraction, error) {
+func parseFraction(fraction string) (ibctmtypes.Fraction, error) {
 	fr := strings.Split(fraction, "/")
 	if len(fr) != 2 || fr[0] == fraction {
-		return tmmath.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
+		return ibctmtypes.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
 	numerator, err := strconv.ParseInt(fr[0], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
+		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
 	}
 
 	denominator, err := strconv.ParseInt(fr[1], 10, 64)
 	if err != nil {
-		return tmmath.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
+		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
 	}
 
-	return tmmath.Fraction{
+	return ibctmtypes.Fraction{
 		Numerator:   numerator,
 		Denominator: denominator,
 	}, nil

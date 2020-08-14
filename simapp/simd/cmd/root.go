@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/cli"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -21,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +42,7 @@ var (
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
+
 			return server.InterceptConfigsPreRunHandler(cmd)
 		},
 	}
@@ -46,11 +50,13 @@ var (
 	encodingConfig = simapp.MakeEncodingConfig()
 	initClientCtx  = client.Context{}.
 			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithTxGenerator(encodingConfig.TxGenerator).
-			WithCodec(encodingConfig.Amino).
+			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+			WithTxConfig(encodingConfig.TxConfig).
+			WithLegacyAmino(encodingConfig.Amino).
 			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock)
+			WithAccountRetriever(types.AccountRetriever{}).
+			WithBroadcastMode(flags.BroadcastBlock).
+			WithHomeDir(simapp.DefaultNodeHome)
 )
 
 // Execute executes the root command.
@@ -65,7 +71,7 @@ func Execute() error {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
-	executor := cli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
+	executor := tmcli.PrepareBaseCmd(rootCmd, "", simapp.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
 }
 
@@ -76,22 +82,22 @@ func init() {
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig),
 		AddGenesisAccountCmd(simapp.DefaultNodeHome),
-		cli.NewCompletionCmd(rootCmd, true),
+		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, exportAppStateAndTMValidators)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(),
+		keys.Commands(simapp.DefaultNodeHome),
 	)
 }
 
@@ -106,15 +112,15 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(encodingConfig.Amino),
-		rpc.ValidatorCommand(encodingConfig.Amino),
+		authcmd.GetAccountCmd(),
+		rpc.ValidatorCommand(),
 		rpc.BlockCommand(),
-		authcmd.QueryTxsByEventsCmd(encodingConfig.Amino),
-		authcmd.QueryTxCmd(encodingConfig.Amino),
+		authcmd.QueryTxsByEventsCmd(),
+		authcmd.QueryTxCmd(),
 	)
 
-	simapp.ModuleBasics.AddQueryCommands(cmd, initClientCtx)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
+	simapp.ModuleBasics.AddQueryCommands(cmd)
+	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
@@ -129,24 +135,24 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetSignCommand(initClientCtx),
-		authcmd.GetSignBatchCommand(encodingConfig.Amino),
-		authcmd.GetMultiSignCommand(initClientCtx),
-		authcmd.GetValidateSignaturesCommand(initClientCtx),
+		authcmd.GetSignCommand(),
+		authcmd.GetSignBatchCommand(),
+		authcmd.GetMultiSignCommand(),
+		authcmd.GetValidateSignaturesCommand(),
 		flags.LineBreak,
-		authcmd.GetBroadcastCommand(initClientCtx),
-		authcmd.GetEncodeCommand(initClientCtx),
-		authcmd.GetDecodeCommand(initClientCtx),
+		authcmd.GetBroadcastCommand(),
+		authcmd.GetEncodeCommand(),
+		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
 	)
 
-	simapp.ModuleBasics.AddTxCommands(cmd, initClientCtx)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "network chain ID")
+	simapp.ModuleBasics.AddTxCommands(cmd)
+	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.AppOptions) server.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
@@ -167,6 +173,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.A
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		encodingConfig,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -180,15 +187,17 @@ func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 
+	encCfg := simapp.MakeEncodingConfig()
+	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var simApp *simapp.SimApp
 	if height != -1 {
-		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1))
+		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg)
 
 		if err := simApp.LoadHeight(height); err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
-		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1))
+		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)

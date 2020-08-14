@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	_ clientexported.MsgCreateClient = &MsgCreateClient{}
+	_ clientexported.MsgCreateClient = (*MsgCreateClient)(nil)
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -63,5 +63,12 @@ func (msg MsgCreateClient) GetClientType() string {
 
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
+	return nil
+}
+
+// InitializeClientState implements clientexported.MsgCreateClient
+// localhost is a special case that require the running chain's context to initialize
+// the client state, thus this function is a no-op
+func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 	return nil
 }

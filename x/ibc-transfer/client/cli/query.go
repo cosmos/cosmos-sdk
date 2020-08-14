@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
-// GetCmdQueryDenomTraces defines the command to query all the denomination trace infos
+// GetCmdQueryDenomTraces defines the command to query all the denomination trace information
 // that this chain mantains.
 func GetCmdQueryDenomTraces() *cobra.Command {
 	cmd := &cobra.Command{
@@ -48,12 +48,12 @@ func GetCmdQueryDenomTraces() *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "denominations trace")
+	flags.AddPaginationFlagsToCmd(cmd, "denomination traces")
 
 	return cmd
 }
 
-// GetCmdQueryDenomTrace defines the command to query a a denomination trace from a given hash.
+// GetCmdQueryDenomTrace defines the command to query a denomination trace from a given hash.
 func GetCmdQueryDenomTrace() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "denom-trace [hash]",

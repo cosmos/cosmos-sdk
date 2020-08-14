@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	fmt "fmt"
+	"sort"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -116,6 +117,23 @@ func (t Traces) Validate() error {
 		seenTraces[hash] = true
 	}
 	return nil
+}
+
+var _ sort.Interface = Traces{}
+
+// Len implements sort.Interface for Traces
+func (t Traces) Len() int { return len(t) }
+
+// Less implements sort.Interface for Traces
+func (t Traces) Less(i, j int) bool { return t[i].GetFullDenomPath() < t[j].GetFullDenomPath() }
+
+// Swap implements sort.Interface for Traces
+func (t Traces) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
+
+// Sort is a helper function to sort the set of denomination traces in-place
+func (t Traces) Sort() Traces {
+	sort.Sort(t)
+	return t
 }
 
 // ValidatePrefixedDenom checks that the denomination for an IBC fungible token packet denom is correctly prefixed.

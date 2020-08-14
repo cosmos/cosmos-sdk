@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestGenesis() {
 	genesis := suite.chainA.App.TransferKeeper.ExportGenesis(suite.chainA.GetContext())
 
 	suite.Require().Equal(types.PortID, genesis.PortId)
-	suite.Require().Equal(traces, genesis.DenomTraces)
+	suite.Require().Equal(traces.Sort(), genesis.DenomTraces)
 
 	suite.Require().NotPanics(func() {
 		suite.chainA.App.TransferKeeper.InitGenesis(suite.chainA.GetContext(), *genesis)

@@ -145,7 +145,7 @@ func (k Keeper) GetAllDenomTraces(ctx sdk.Context) types.Traces {
 		return false
 	})
 
-	return traces
+	return traces.Sort()
 }
 
 // IterateDenomTraces iterates over the denomination traces in the store

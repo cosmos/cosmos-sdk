@@ -30,23 +30,23 @@ func TestMsgSendValidation(t *testing.T) {
 	var emptyAddr sdk.AccAddress
 
 	cases := []struct {
-		valid bool
-		tx    *MsgSend
+		expectedErr string // empty means no error expected
+		msg         *MsgSend
 	}{
-		{true, NewMsgSend(addr1, addr2, atom123)},       // valid send
-		{true, NewMsgSend(addr1, addr2, atom123eth123)}, // valid send with multiple coins
-		{false, NewMsgSend(addr1, addr2, atom0)},        // non positive coin
-		{false, NewMsgSend(addr1, addr2, atom123eth0)},  // non positive coin in multicoins
-		{false, NewMsgSend(emptyAddr, addr2, atom123)},  // empty from addr
-		{false, NewMsgSend(addr1, emptyAddr, atom123)},  // empty to addr
+		{"", NewMsgSend(addr1, addr2, atom123)},                                // valid send
+		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
+		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
+		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
+		{"missing sender address: invalid address", NewMsgSend(emptyAddr, addr2, atom123)},
+		{"missing recipient address: invalid address", NewMsgSend(addr1, emptyAddr, atom123)},
 	}
 
 	for _, tc := range cases {
-		err := tc.tx.ValidateBasic()
-		if tc.valid {
+		err := tc.msg.ValidateBasic()
+		if tc.expectedErr == "" {
 			require.Nil(t, err)
 		} else {
-			require.NotNil(t, err)
+			require.EqualError(t, err, tc.expectedErr)
 		}
 	}
 }

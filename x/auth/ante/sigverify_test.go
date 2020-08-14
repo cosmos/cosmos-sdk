@@ -102,7 +102,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		sigV2 := signing.SignatureV2{
 			PubKey:          tt.args.pubkey,
 			Data:            tt.args.sig,
-			AccountSequence: 2, // Random account sequence
+			AccountSequence: 2, // Arbitrary account sequence
 		}
 		err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, sigV2, tt.args.params)
 

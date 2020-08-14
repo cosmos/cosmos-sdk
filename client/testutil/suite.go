@@ -158,8 +158,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set signature
 	sigData1.Signature = sigBz
-	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: 2}
-	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: 4}
+	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
+	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()

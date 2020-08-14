@@ -26,6 +26,6 @@ func (suite *KeeperTestSuite) TestGenesis() {
 	genesis := suite.chainA.App.TransferKeeper.ExportGenesis(suite.chainA.GetContext())
 
 	suite.Require().NotPanics(func() {
-		suite.chainA.App.TransferKeeper.InitGenesis(suite.chainA.GetContext(), genesis)
+		suite.chainA.App.TransferKeeper.InitGenesis(suite.chainA.GetContext(), *genesis)
 	})
 }

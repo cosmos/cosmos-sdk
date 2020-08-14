@@ -22,7 +22,7 @@ func TestGetSetProposal(t *testing.T) {
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalID
+	proposalID := proposal.ProposalId
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	gotProposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
@@ -44,14 +44,14 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
-	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalId)
 	require.True(t, ok)
 
 	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	require.Equal(t, proposalID, proposal.ProposalID)
+	require.Equal(t, proposalID, proposal.ProposalId)
 	activeIterator.Close()
 }
 

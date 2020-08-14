@@ -7,12 +7,12 @@ import (
 // DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		PortID: PortID,
+		PortId: PortID,
 	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	return host.PortIdentifierValidator(gs.PortID)
+	return host.PortIdentifierValidator(gs.PortId)
 }

@@ -14,8 +14,8 @@ type IBCModule interface {
 		ctx sdk.Context,
 		order channeltypes.Order,
 		connectionHops []string,
-		portID string,
-		channelID string,
+		portId string,
+		channelId string,
 		channelCap *capability.Capability,
 		counterParty channeltypes.Counterparty,
 		version string,
@@ -25,8 +25,8 @@ type IBCModule interface {
 		ctx sdk.Context,
 		order channeltypes.Order,
 		connectionHops []string,
-		portID,
-		channelID string,
+		portId,
+		channelId string,
 		channelCap *capability.Capability,
 		counterparty channeltypes.Counterparty,
 		version,
@@ -35,27 +35,27 @@ type IBCModule interface {
 
 	OnChanOpenAck(
 		ctx sdk.Context,
-		portID,
-		channelID string,
+		portId,
+		channelId string,
 		counterpartyVersion string,
 	) error
 
 	OnChanOpenConfirm(
 		ctx sdk.Context,
-		portID,
-		channelID string,
+		portId,
+		channelId string,
 	) error
 
 	OnChanCloseInit(
 		ctx sdk.Context,
-		portID,
-		channelID string,
+		portId,
+		channelId string,
 	) error
 
 	OnChanCloseConfirm(
 		ctx sdk.Context,
-		portID,
-		channelID string,
+		portId,
+		channelId string,
 	) error
 
 	// OnRecvPacket must return the acknowledgement bytes

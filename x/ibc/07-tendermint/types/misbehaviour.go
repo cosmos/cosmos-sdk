@@ -1,14 +1,14 @@
-package tendermint
+package types
 
 import (
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -18,53 +18,64 @@ import (
 // of misbehaviour.Header1
 // Similarly, consensusState2 is the trusted consensus state that corresponds
 // to misbehaviour.Header2
-func CheckMisbehaviourAndUpdateState(
-	clientState clientexported.ClientState,
-	consensusState1, consensusState2 clientexported.ConsensusState,
+func (cs ClientState) CheckMisbehaviourAndUpdateState(
+	ctx sdk.Context,
+	cdc codec.BinaryMarshaler,
+	clientStore sdk.KVStore,
 	misbehaviour clientexported.Misbehaviour,
-	currentTimestamp time.Time,
-	consensusParams *abci.ConsensusParams,
 ) (clientexported.ClientState, error) {
 
-	// cast the interface to specific types before checking for misbehaviour
-	tmClientState, ok := clientState.(*types.ClientState)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", &types.ClientState{}, clientState)
-	}
-
 	// If client is already frozen at earlier height than evidence, return with error
-	if tmClientState.IsFrozen() && tmClientState.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
+	if cs.IsFrozen() && cs.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
-			"client is already frozen at earlier height %d than misbehaviour height %d", tmClientState.FrozenHeight, misbehaviour.GetHeight())
+			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmConsensusState1, ok := consensusState1.(*types.ConsensusState)
+	tmEvidence, ok := misbehaviour.(Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &types.ConsensusState{}, consensusState1)
-	}
-	tmConsensusState2, ok := consensusState2.(*types.ConsensusState)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &types.ConsensusState{}, consensusState2)
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, Evidence{})
 	}
 
-	tmEvidence, ok := misbehaviour.(types.Evidence)
+	// Retrieve trusted consensus states for each Header in misbehaviour
+	// and unmarshal from clientStore
+
+	// Get consensus bytes from clientStore
+	consBytes1 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header1.TrustedHeight))
+	if consBytes1 == nil {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
+			"could not find trusted consensus state at height %d", tmEvidence.Header1.TrustedHeight)
+	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
+	consensusState1 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes1)
+	// Cast to tendermint-specific type
+	tmConsensusState1, ok := consensusState1.(*ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, types.Evidence{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &ConsensusState{}, consensusState1)
 	}
 
-	// use earliest height of trusted consensus states to verify ageBlocks
-	var height uint64
-	if tmConsensusState1.Height < tmConsensusState2.Height {
-		height = tmConsensusState1.Height
-	} else {
-		height = tmConsensusState2.Height
+	// Get consensus bytes from clientStore
+	consBytes2 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header2.TrustedHeight))
+	if consBytes2 == nil {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
+			"could not find trusted consensus state at height %d", tmEvidence.Header2.TrustedHeight)
+	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
+	consensusState2 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes2)
+	// Cast to tendermint-specific type
+	tmConsensusState2, ok := consensusState2.(*ConsensusState)
+	if !ok {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &ConsensusState{}, consensusState2)
 	}
 
 	// calculate the age of the misbehaviour evidence
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
-	ageDuration := currentTimestamp.Sub(infractionTime)
-	ageBlocks := uint64(infractionHeight) - height
+	ageDuration := ctx.BlockTime().Sub(infractionTime)
+	ageBlocks := int64(cs.LatestHeight) - infractionHeight
+
+	// TODO: Retrieve consensusparams from client state and not context
+	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
+	consensusParams := ctx.ConsensusParams()
 
 	// Reject misbehaviour if the age is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
@@ -76,8 +87,8 @@ func CheckMisbehaviourAndUpdateState(
 	// use the default values.
 	if consensusParams != nil &&
 		consensusParams.Evidence != nil &&
-		ageDuration > consensusParams.Evidence.MaxAgeDuration &&
-		ageBlocks > uint64(consensusParams.Evidence.MaxAgeNumBlocks) {
+		(ageDuration > consensusParams.Evidence.MaxAgeDuration ||
+			ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence,
 			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
 			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,
@@ -90,24 +101,24 @@ func CheckMisbehaviourAndUpdateState(
 	// evidence.ValidateBasic by the client keeper and msg.ValidateBasic
 	// by the base application.
 	if err := checkMisbehaviourHeader(
-		tmClientState, tmConsensusState1, tmEvidence.Header1, currentTimestamp,
+		&cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header1 in Evidence failed")
 	}
 	if err := checkMisbehaviourHeader(
-		tmClientState, tmConsensusState2, tmEvidence.Header2, currentTimestamp,
+		&cs, tmConsensusState2, tmEvidence.Header2, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Evidence failed")
 	}
 
-	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
-	return tmClientState, nil
+	cs.FrozenHeight = uint64(tmEvidence.GetHeight())
+	return &cs, nil
 }
 
 // checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given
 // a trusted ConsensusState
 func checkMisbehaviourHeader(
-	clientState *types.ClientState, consState *types.ConsensusState, header types.Header, currentTimestamp time.Time,
+	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,
 ) error {
 	// check the trusted fields for the header against ConsensusState
 	if err := checkTrustedHeader(header, consState); err != nil {
@@ -117,7 +128,7 @@ func checkMisbehaviourHeader(
 	// assert that the timestamp is not from more than an unbonding period ago
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.UnbondingPeriod {
 		return sdkerrors.Wrapf(
-			types.ErrUnbondingPeriodExpired,
+			ErrUnbondingPeriodExpired,
 			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%s >= %s)",
 			currentTimestamp.Sub(consState.Timestamp), clientState.UnbondingPeriod,
 		)

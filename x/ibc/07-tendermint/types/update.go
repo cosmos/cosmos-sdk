@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 import (
 	"bytes"
@@ -7,14 +7,16 @@ import (
 	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// CheckValidityAndUpdateState checks if the provided header is valid, and if valid it will:
+// CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
 // create the consensus state for the header.Height
 // and update the client state if the header height is greater than the latest client state height
 // It returns an error if:
@@ -33,44 +35,47 @@ import (
 // the new latest height
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
-func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, consState clientexported.ConsensusState,
-	header clientexported.Header, currentTimestamp time.Time,
+func (cs ClientState) CheckHeaderAndUpdateState(
+	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
+	header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmClientState, ok := clientState.(*types.ClientState)
+	tmHeader, ok := header.(Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidClientType, "expected type %T, got %T", types.ClientState{}, clientState,
+			clienttypes.ErrInvalidHeader, "expected type %T, got %T", Header{}, header,
 		)
 	}
 
-	tmConsState, ok := consState.(*types.ConsensusState)
+	// Get consensus bytes from clientStore
+	consBytes := clientStore.Get(host.KeyConsensusState(tmHeader.TrustedHeight))
+	if consBytes == nil {
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrConsensusStateNotFound, "consensus state not found for trusted height %d", tmHeader.TrustedHeight,
+		)
+	}
+	// Unmarshal consensus bytes into clientexported.ConensusState
+	consState := clienttypes.MustUnmarshalConsensusState(cdc, consBytes)
+	// Cast to tendermint-specific type
+	tmConsState, ok := consState.(*ConsensusState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidConsensus, "expected type %T, got %T", types.ConsensusState{}, consState,
+			clienttypes.ErrInvalidConsensus, "expected type %T, got %T", ConsensusState{}, consState,
 		)
 	}
 
-	tmHeader, ok := header.(types.Header)
-	if !ok {
-		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader, "expected type %T, got %T", types.Header{}, header,
-		)
-	}
-
-	if err := checkValidity(tmClientState, tmConsState, tmHeader, currentTimestamp); err != nil {
+	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime()); err != nil {
 		return nil, nil, err
 	}
 
-	tmClientState, consensusState := update(tmClientState, tmHeader)
-	return tmClientState, consensusState, nil
+	newClientState, consensusState := update(&cs, tmHeader)
+	return newClientState, consensusState, nil
 }
 
 // checkTrustedHeader checks that consensus state matches trusted fields of Header
-func checkTrustedHeader(header types.Header, consState *types.ConsensusState) error {
+func checkTrustedHeader(header Header, consState *ConsensusState) error {
 	if header.TrustedHeight != consState.Height {
 		return sdkerrors.Wrapf(
-			types.ErrInvalidHeaderHeight,
+			ErrInvalidHeaderHeight,
 			"trusted header height %d does not match consensus state height %d",
 			header.TrustedHeight, consState.Height,
 		)
@@ -80,7 +85,7 @@ func checkTrustedHeader(header types.Header, consState *types.ConsensusState) er
 	tvalHash := header.TrustedValidators.Hash()
 	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
 		return sdkerrors.Wrapf(
-			types.ErrInvalidValidatorSet,
+			ErrInvalidValidatorSet,
 			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
 			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
 		)
@@ -91,8 +96,8 @@ func checkTrustedHeader(header types.Header, consState *types.ConsensusState) er
 // checkValidity checks if the Tendermint header is valid.
 // CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
-	clientState *types.ClientState, consState *types.ConsensusState,
-	header types.Header, currentTimestamp time.Time,
+	clientState *ClientState, consState *ConsensusState,
+	header Header, currentTimestamp time.Time,
 ) error {
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -134,11 +139,11 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState *types.ClientState, header types.Header) (*types.ClientState, *types.ConsensusState) {
+func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
 	if uint64(header.Height) > clientState.LatestHeight {
 		clientState.LatestHeight = uint64(header.Height)
 	}
-	consensusState := &types.ConsensusState{
+	consensusState := &ConsensusState{
 		Height:             uint64(header.Height),
 		Timestamp:          header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),

@@ -20,7 +20,7 @@ func TestDeposits(t *testing.T) {
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalID
+	proposalID := proposal.ProposalId
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5)))

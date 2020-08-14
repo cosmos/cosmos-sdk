@@ -148,6 +148,14 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	}
 }
 
+// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
+func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
+	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
+		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
+		uint64(msg.Header.Height), msg.ProofSpecs,
+	)
+}
+
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
 	ClientID string         `json:"client_id" yaml:"client_id"`

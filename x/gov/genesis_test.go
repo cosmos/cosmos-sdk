@@ -34,11 +34,11 @@ func TestImportExportQueues(t *testing.T) {
 	proposal := TestProposal
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
-	proposalID1 := proposal1.ProposalID
+	proposalID1 := proposal1.ProposalId
 
 	proposal2, err := app.GovKeeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
-	proposalID2 := proposal2.ProposalID
+	proposalID2 := proposal2.ProposalId
 
 	votingStarted, err := app.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], app.GovKeeper.GetDepositParams(ctx).MinDeposit)
 	require.NoError(t, err)
@@ -140,8 +140,8 @@ func TestEqualProposals(t *testing.T) {
 	require.False(t, state1.Equal(state2))
 
 	// Now make proposals identical by setting both IDs to 55
-	proposal1.ProposalID = 55
-	proposal2.ProposalID = 55
+	proposal1.ProposalId = 55
+	proposal2.ProposalId = 55
 	require.Equal(t, proposal1, proposal1)
 	require.Equal(t, proposal1, proposal2)
 

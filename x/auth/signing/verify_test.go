@@ -45,11 +45,11 @@ func TestVerifySignature(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	signerData := signing.SignerData{
-		ChainID:         chainId,
-		AccountNumber:   acc.GetAccountNumber(),
-		AccountSequence: acc.GetSequence(),
+		ChainID:       chainId,
+		AccountNumber: acc.GetAccountNumber(),
+		Sequence:      acc.GetSequence(),
 	}
-	signBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence, 10, fee, msgs, memo)
+	signBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
@@ -67,7 +67,7 @@ func TestVerifySignature(t *testing.T) {
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
 	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
-	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.AccountSequence, 10, fee, msgs, memo)
+	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)

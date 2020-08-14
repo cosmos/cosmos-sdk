@@ -116,9 +116,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			signingData := signing.SignerData{
-				ChainID:         txFactory.ChainID(),
-				AccountNumber:   txFactory.AccountNumber(),
-				AccountSequence: txFactory.Sequence(),
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
 			}
 
 			for _, sig := range sigs {
@@ -134,9 +134,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		sigV2 := signingtypes.SignatureV2{
-			PubKey:          multisigPub,
-			Data:            multisigSig,
-			AccountSequence: txFactory.Sequence(),
+			PubKey:   multisigPub,
+			Data:     multisigSig,
+			Sequence: txFactory.Sequence(),
 		}
 
 		err = txBuilder.SetSignatures(sigV2)

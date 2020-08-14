@@ -230,9 +230,9 @@ func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			return nil, err
 		}
 		res[i] = signing.SignatureV2{
-			PubKey:          pubKeys[i],
-			Data:            sigData,
-			AccountSequence: si.GetAccountSequence(),
+			PubKey:   pubKeys[i],
+			Data:     sigData,
+			Sequence: si.GetSequence(),
 		}
 	}
 
@@ -308,9 +308,9 @@ func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 			return err
 		}
 		signerInfos[i] = &tx.SignerInfo{
-			PublicKey:       pk,
-			ModeInfo:        modeInfo,
-			AccountSequence: sig.AccountSequence,
+			PublicKey: pk,
+			ModeInfo:  modeInfo,
+			Sequence:  sig.Sequence,
 		}
 	}
 

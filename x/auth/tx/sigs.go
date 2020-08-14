@@ -144,9 +144,9 @@ func (g config) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error)
 		data := signing.SignatureDataFromProto(desc.Data)
 
 		sigs[i] = signing.SignatureV2{
-			PubKey:          pubKey,
-			Data:            data,
-			AccountSequence: desc.AccountSequence,
+			PubKey:   pubKey,
+			Data:     data,
+			Sequence: desc.Sequence,
 		}
 	}
 

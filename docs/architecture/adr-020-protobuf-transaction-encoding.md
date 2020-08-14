@@ -105,10 +105,10 @@ message SignerInfo {
     // ModeInfo describes the signing mode of the signer and is a nested
     // structure to support nested multisig pubkey's
     ModeInfo mode_info = 2;
-    // account_sequence is the sequence of the account, which describes the
+    // sequence is the sequence of the account, which describes the
     // number of transactions sent from a given address. It is used to prevent
     // replay attacks.
-    uint64 account_sequence = 3;
+    uint64 sequence = 3;
 }
 
 message ModeInfo {

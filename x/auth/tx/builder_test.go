@@ -40,7 +40,7 @@ func TestTxBuilder(t *testing.T) {
 				},
 			},
 		},
-		AccountSequence: accSeq,
+		Sequence: accSeq,
 	})
 
 	var sig signing.SignatureV2
@@ -50,7 +50,7 @@ func TestTxBuilder(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubkey.Bytes(),
 		},
-		AccountSequence: accSeq,
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
@@ -138,7 +138,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubKey1.Bytes(),
 		},
-		AccountSequence: 1, // Arbitrary account sequence
+		Sequence: 1, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{
@@ -147,7 +147,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubKey2.Bytes(),
 		},
-		AccountSequence: 2, // Arbitrary account sequence
+		Sequence: 2, // Arbitrary account sequence
 	}
 
 	err := txBuilder.SetMsgs(msgs...)

@@ -115,10 +115,10 @@ type SignatureDescriptor struct {
 	// public_key is the public key of the signer
 	PublicKey *types.PublicKey          `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	Data      *SignatureDescriptor_Data `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	// account_sequence is the sequence of the account, which describes the
+	// sequence is the sequence of the account, which describes the
 	// number of transactions sent from a given address. It is used to prevent
 	// replay attacks.
-	AccountSequence uint64 `protobuf:"varint,3,opt,name=account_sequence,json=accountSequence,proto3" json:"account_sequence,omitempty"`
+	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,json=Sequence,proto3" json:"sequence,omitempty"`
 }
 
 func (m *SignatureDescriptor) Reset()         { *m = SignatureDescriptor{} }
@@ -168,9 +168,9 @@ func (m *SignatureDescriptor) GetData() *SignatureDescriptor_Data {
 	return nil
 }
 
-func (m *SignatureDescriptor) GetAccountSequence() uint64 {
+func (m *SignatureDescriptor) GetSequence() uint64 {
 	if m != nil {
-		return m.AccountSequence
+		return m.Sequence
 	}
 	return 0
 }
@@ -481,8 +481,8 @@ func (m *SignatureDescriptor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.AccountSequence != 0 {
-		i = encodeVarintSigning(dAtA, i, uint64(m.AccountSequence))
+	if m.Sequence != 0 {
+		i = encodeVarintSigning(dAtA, i, uint64(m.Sequence))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -711,8 +711,8 @@ func (m *SignatureDescriptor) Size() (n int) {
 		l = m.Data.Size()
 		n += 1 + l + sovSigning(uint64(l))
 	}
-	if m.AccountSequence != 0 {
-		n += 1 + sovSigning(uint64(m.AccountSequence))
+	if m.Sequence != 0 {
+		n += 1 + sovSigning(uint64(m.Sequence))
 	}
 	return n
 }
@@ -984,9 +984,9 @@ func (m *SignatureDescriptor) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccountSequence", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
-			m.AccountSequence = 0
+			m.Sequence = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSigning
@@ -996,7 +996,7 @@ func (m *SignatureDescriptor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AccountSequence |= uint64(b&0x7F) << shift
+				m.Sequence |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

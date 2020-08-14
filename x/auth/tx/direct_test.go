@@ -43,16 +43,16 @@ func TestDirectModeHandler(t *testing.T) {
 				},
 			},
 		},
-		AccountSequence: accSeq,
+		Sequence: accSeq,
 	})
 
 	sigData := &signingtypes.SingleSignatureData{
 		SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
 	}
 	sig := signingtypes.SignatureV2{
-		PubKey:          pubkey,
-		Data:            sigData,
-		AccountSequence: accSeq,
+		PubKey:   pubkey,
+		Data:     sigData,
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}

@@ -19,8 +19,8 @@ type SignatureV2 struct {
 	// the signatures themselves for either single or multi-signatures.
 	Data SignatureData
 
-	// AccountSequence is the sequence of this account.
-	AccountSequence uint64
+	// Sequence is the sequence of this account.
+	Sequence uint64
 }
 
 // SignatureDataToProto converts a SignatureData to SignatureDescriptor_Data.

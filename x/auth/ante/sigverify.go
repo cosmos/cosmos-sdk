@@ -141,9 +141,9 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 		// make a SignatureV2 with PubKey filled in from above
 		sig = signing.SignatureV2{
-			PubKey:          pubKey,
-			Data:            sig.Data,
-			AccountSequence: sig.AccountSequence,
+			PubKey:   pubKey,
+			Data:     sig.Data,
+			Sequence: sig.Sequence,
 		}
 
 		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, params)
@@ -209,10 +209,10 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// Check account sequence number.
-		if sig.AccountSequence != acc.GetSequence() {
+		if sig.Sequence != acc.GetSequence() {
 			return ctx, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongAccountSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.AccountSequence,
+				sdkerrors.ErrWrongSequence,
+				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
 		}
 
@@ -224,9 +224,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			accNum = acc.GetAccountNumber()
 		}
 		signerData := authsigning.SignerData{
-			ChainID:         chainID,
-			AccountNumber:   accNum,
-			AccountSequence: acc.GetSequence(),
+			ChainID:       chainID,
+			AccountNumber: accNum,
+			Sequence:      acc.GetSequence(),
 		}
 
 		if !simulate {
@@ -337,7 +337,7 @@ func DefaultSigVerificationGasConsumer(
 		if !ok {
 			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
 		}
-		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig.AccountSequence)
+		err := ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params, sig.Sequence)
 		if err != nil {
 			return err
 		}
@@ -362,9 +362,9 @@ func ConsumeMultisignatureVerificationGas(
 			continue
 		}
 		sigV2 := signing.SignatureV2{
-			PubKey:          pubkey.GetPubKeys()[i],
-			Data:            sig.Signatures[sigIndex],
-			AccountSequence: accSeq,
+			PubKey:   pubkey.GetPubKeys()[i],
+			Data:     sig.Signatures[sigIndex],
+			Sequence: accSeq,
 		}
 		err := DefaultSigVerificationGasConsumer(meter, sigV2, params)
 		if err != nil {

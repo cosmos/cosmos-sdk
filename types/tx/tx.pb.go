@@ -398,10 +398,10 @@ type SignerInfo struct {
 	// mode_info describes the signing mode of the signer and is a nested
 	// structure to support nested multisig pubkey's
 	ModeInfo *ModeInfo `protobuf:"bytes,2,opt,name=mode_info,json=modeInfo,proto3" json:"mode_info,omitempty"`
-	// account_sequence is the sequence of the account, which describes the
+	// sequence is the sequence of the account, which describes the
 	// number of transactions sent from a given address. It is used to prevent
 	// replay attacks.
-	AccountSequence uint64 `protobuf:"varint,3,opt,name=account_sequence,json=accountSequence,proto3" json:"account_sequence,omitempty"`
+	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,json=Sequence,proto3" json:"sequence,omitempty"`
 }
 
 func (m *SignerInfo) Reset()         { *m = SignerInfo{} }
@@ -451,9 +451,9 @@ func (m *SignerInfo) GetModeInfo() *ModeInfo {
 	return nil
 }
 
-func (m *SignerInfo) GetAccountSequence() uint64 {
+func (m *SignerInfo) GetSequence() uint64 {
 	if m != nil {
-		return m.AccountSequence
+		return m.Sequence
 	}
 	return 0
 }
@@ -1080,8 +1080,8 @@ func (m *SignerInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.AccountSequence != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.AccountSequence))
+	if m.Sequence != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Sequence))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1453,8 +1453,8 @@ func (m *SignerInfo) Size() (n int) {
 		l = m.ModeInfo.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.AccountSequence != 0 {
-		n += 1 + sovTx(uint64(m.AccountSequence))
+	if m.Sequence != 0 {
+		n += 1 + sovTx(uint64(m.Sequence))
 	}
 	return n
 }
@@ -2464,9 +2464,9 @@ func (m *SignerInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccountSequence", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
-			m.AccountSequence = 0
+			m.Sequence = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2476,7 +2476,7 @@ func (m *SignerInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AccountSequence |= uint64(b&0x7F) << shift
+				m.Sequence |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -96,7 +96,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
-			AccountSequence: accSeqs[i],
+			Sequence: accSeqs[i],
 		}
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -110,9 +110,9 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
-			ChainID:         chainID,
-			AccountNumber:   accNums[i],
-			AccountSequence: accSeqs[i],
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,

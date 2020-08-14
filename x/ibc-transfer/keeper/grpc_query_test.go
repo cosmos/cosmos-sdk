@@ -126,8 +126,7 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				// FIXME: response is non-deterministic so we can't use Equal!
-				suite.Require().ElementsMatch(expTraces, res.DenomTraces)
+				suite.Require().Equal(expTraces.Sort(), res.DenomTraces)
 			} else {
 				suite.Require().Error(err)
 			}

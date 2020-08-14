@@ -42,7 +42,7 @@ service Query {
 // method
 message QueryConnectionRequest {
   // connection unique identifier
-  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
+  string connection_id = 1;
 }
 
 // QueryConnectionResponse is the response type for the Query/Connection RPC
@@ -80,7 +80,7 @@ message QueryConnectionsResponse {
 // Query/ClientConnections RPC method
 message QueryClientConnectionsRequest {
   // client identifier associated with a connection
-  string client_id = 1 [(gogoproto.customname) = "ClientID"];
+  string client_id = 1;
 }
 
 // QueryClientConnectionsResponse is the response type for the
@@ -100,8 +100,7 @@ message QueryClientConnectionsResponse {
 // Query/ConnectionClientState RPC method
 message QueryConnectionClientStateRequest {
   // connection identifier
-  string id = 1 [
-    (gogoproto.customname) = "ConnectionID",
+  string connection_id = 1 [
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
 }
@@ -124,7 +123,6 @@ message QueryConnectionClientStateResponse {
 message QueryConnectionConsensusStateRequest {
   // connection identifier
   string connection_id = 1 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   uint64 height = 2;
@@ -136,7 +134,7 @@ message QueryConnectionConsensusStateResponse {
   // consensus state associated with the channel
   google.protobuf.Any consensus_state = 1;
   // client ID associated with the consensus state
-  string client_id = 2 [(gogoproto.customname) = "ClientID"];
+  string client_id = 2;
   // merkle proof of existence
   bytes proof = 3;
   // merkle proof path

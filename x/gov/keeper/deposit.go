@@ -25,7 +25,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryBare(&deposit)
-	store.Set(types.DepositKey(deposit.ProposalID, deposit.Depositor), bz)
+	store.Set(types.DepositKey(deposit.ProposalId, deposit.Depositor), bz)
 }
 
 // GetAllDeposits returns all the deposits from the store

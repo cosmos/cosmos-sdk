@@ -25,7 +25,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the evidence module's genesis state.
 type GenesisState struct {
-	// evidence defines all the evidences at genesis.
+	// evidence defines all the evidence at genesis.
 	Evidence []*types.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`
 }
 

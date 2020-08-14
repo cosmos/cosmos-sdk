@@ -30,7 +30,7 @@ func NewClientState(
 	latestHeight uint64, specs []*ics23.ProofSpec,
 ) *ClientState {
 	return &ClientState{
-		ChainID:         chainID,
+		ChainId:         chainID,
 		TrustLevel:      trustLevel,
 		TrustingPeriod:  trustingPeriod,
 		UnbondingPeriod: ubdPeriod,
@@ -43,7 +43,7 @@ func NewClientState(
 
 // GetChainID returns the chain-id
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is tendermint.
@@ -69,7 +69,7 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if strings.TrimSpace(cs.ChainID) == "" {
+	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
 	}
 	if err := lite.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {

@@ -25,12 +25,11 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 
 	suite.cdc = app.LegacyAmino()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.keeper = app.IBCKeeper
-	suite.querier = keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc)
+	suite.querier = keeper.NewQuerier(*app.IBCKeeper, app.LegacyAmino())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

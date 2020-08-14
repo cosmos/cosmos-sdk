@@ -98,6 +98,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(types.ModuleCdc, stakingGenesis.Params))
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(types.ModuleCdc.LegacyAmino, stakingGenesis.Params))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

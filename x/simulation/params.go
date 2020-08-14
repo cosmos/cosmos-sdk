@@ -157,11 +157,13 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
-	cdc := params.MakeEncodingConfig().Marshaler
+	encodingConfig := params.MakeEncodingConfig()
+	cdc := encodingConfig.Marshaler
+	amino := encodingConfig.Amino
 
 	var genesisState map[string]json.RawMessage
 
-	cdc.UnmarshalJSON(appState, &genesisState)
+	amino.UnmarshalJSON(appState, &genesisState)
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
 
@@ -178,7 +180,7 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
 	}
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(amino, consensusParams))
 
 	return consensusParams
 }

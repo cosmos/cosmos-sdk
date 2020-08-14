@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
@@ -17,13 +18,17 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.New()
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,
+		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
@@ -42,7 +47,9 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.New()
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -55,9 +62,10 @@ func TestRandomizedGenState1(t *testing.T) {
 			module.SimulationState{}, "invalid memory address or nil pointer dereference"},
 		{ // panic => reason: incomplete initialization of the simState
 			module.SimulationState{
-				AppParams: make(simtypes.AppParams),
-				Cdc:       cdc,
-				Rand:      r,
+				AppParams:   make(simtypes.AppParams),
+				Cdc:         cdc,
+				LegacyAmino: legacyAmino,
+				Rand:        r,
 			}, "assignment to entry in nil map"},
 	}
 

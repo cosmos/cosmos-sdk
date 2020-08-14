@@ -102,6 +102,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		types.NewTallyParams(quorum, threshold, veto),
 	)
 
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, govGenesis))
+	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.LegacyAmino, govGenesis))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
 }

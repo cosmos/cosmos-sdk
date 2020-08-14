@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -100,7 +101,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		out, err := clientCtx.JSONMarshaler.MarshalJSON(tx)
+		msg, ok := tx.(proto.Message)
+		if !ok {
+			return fmt.Errorf("can't proto marshal %T", tx)
+		}
+
+		out, err := clientCtx.JSONMarshaler.MarshalJSON(msg)
 		if err != nil {
 			return err
 		}
@@ -108,7 +114,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", out)
 
 		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
+		ok, err = input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
 
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")

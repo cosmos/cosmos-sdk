@@ -69,7 +69,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
+			legacyAmino := clientCtx.LegacyAmino
 
 			var err error
 
@@ -82,7 +82,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			var initialState types.AppMap
-			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
+			if err := legacyAmino.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
@@ -94,7 +94,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			// TODO: handler error from migrationFunc call
 			newGenState := migrationFunc(initialState)
 
-			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
+			genDoc.AppState, err = legacyAmino.MarshalJSON(newGenState)
 			if err != nil {
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
@@ -116,7 +116,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := codec.MarshalJSONIndent(cdc, genDoc)
+			bz, err := codec.MarshalJSONIndent(legacyAmino, genDoc)
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}

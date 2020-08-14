@@ -72,7 +72,7 @@ func TestFullAppSimulation(t *testing.T) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.LegacyAmino(), app.SimulationManager()),
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -104,7 +104,7 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.LegacyAmino(), app.SimulationManager()),
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -195,7 +195,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.LegacyAmino(), app.SimulationManager()),
 		SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -237,7 +237,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.AppCodec(), app.LegacyAmino(), app.SimulationManager()),
 		SimulationOperations(newApp, newApp.AppCodec(), config),
 		newApp.ModuleAccountAddrs(), config,
 	)
@@ -282,7 +282,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+				t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.LegacyAmino(), app.SimulationManager()),
 				SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(), config,
 			)

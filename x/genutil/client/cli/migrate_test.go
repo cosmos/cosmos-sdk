@@ -30,7 +30,7 @@ func TestMigrateGenesis(t *testing.T) {
 	cmd := MigrateGenesisCmd()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	clientCtx := client.Context{}.WithJSONMarshaler(cdc)
+	clientCtx := client.Context{}.WithLegacyAmino(cdc)
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 

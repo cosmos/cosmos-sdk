@@ -55,6 +55,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		ChannelGenesis:    channelGenesisState,
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", host.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, &ibcGenesis))
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", host.ModuleName, codec.MustMarshalJSONIndent(simState.LegacyAmino, &ibcGenesis))
 	simState.GenState[host.ModuleName] = simState.Cdc.MustMarshalJSON(&ibcGenesis)
 }

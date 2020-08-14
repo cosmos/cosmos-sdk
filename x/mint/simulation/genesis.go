@@ -87,6 +87,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	mintGenesis := types.NewGenesisState(types.InitialMinter(inflation), params)
 
-	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, mintGenesis))
+	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.LegacyAmino, mintGenesis))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }

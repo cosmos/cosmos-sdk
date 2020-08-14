@@ -99,6 +99,7 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // GenesisState generator function
 type SimulationState struct {
 	AppParams    simulation.AppParams
+	LegacyAmino  *codec.LegacyAmino
 	Cdc          codec.JSONMarshaler                  // application codec
 	Rand         *rand.Rand                           // random number
 	GenState     map[string]json.RawMessage           // genesis state
@@ -109,4 +110,5 @@ type SimulationState struct {
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
 	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
 	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
+
 }

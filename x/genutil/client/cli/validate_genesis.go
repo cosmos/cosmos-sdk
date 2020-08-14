@@ -24,6 +24,7 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			cdc := clientCtx.JSONMarshaler
+			legacyAmino := clientCtx.LegacyAmino
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string
@@ -41,7 +42,7 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 			}
 
 			var genState map[string]json.RawMessage
-			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
+			if err = legacyAmino.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 

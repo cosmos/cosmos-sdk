@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -17,10 +18,10 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
-	// Make sure to register cdc.
-	// otherwise the test will panic
-	types.RegisterCodec(cdc)
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+	legacyAmino := codec.New()
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -28,6 +29,7 @@ func TestRandomizedGenState(t *testing.T) {
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,
+		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),

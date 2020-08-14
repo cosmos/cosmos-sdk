@@ -145,7 +145,7 @@ func queryHeaderHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		res := clientCtx.JSONMarshaler.MustMarshalJSON(header)
+		res := clientCtx.LegacyAmino.MustMarshalJSON(header)
 		clientCtx = clientCtx.WithHeight(height)
 		rest.PostProcessResponse(w, clientCtx, res)
 	}

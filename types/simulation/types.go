@@ -2,12 +2,14 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 type WeightedProposalContent interface {
@@ -137,7 +139,12 @@ type AppParams map[string]json.RawMessage
 // case of operation weights where Rand is not used).
 func (sp AppParams) GetOrGenerate(cdc codec.JSONMarshaler, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
-		cdc.MustUnmarshalJSON(v, ptr)
+		msg, ok := ptr.(proto.Message)
+		if !ok {
+			panic(fmt.Errorf("can't proto marshal %T", ptr))
+		}
+
+		cdc.MustUnmarshalJSON(v, msg)
 		return
 	}
 

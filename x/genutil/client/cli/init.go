@@ -45,8 +45,8 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.Ra
 	}
 }
 
-func displayInfo(cdc codec.JSONMarshaler, info printInfo) error {
-	out, err := codec.MarshalJSONIndent(cdc, info)
+func displayInfo(legacyAmino *codec.LegacyAmino, info printInfo) error {
+	out, err := codec.MarshalJSONIndent(legacyAmino, info)
 	if err != nil {
 		return err
 	}
@@ -67,6 +67,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.JSONMarshaler
+			legacyAmino := clientCtx.LegacyAmino
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -91,7 +92,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			if !overwrite && tmos.FileExists(genFile) {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
-			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis(cdc))
+			appState, err := codec.MarshalJSONIndent(legacyAmino, mbm.DefaultGenesis(cdc))
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshall default genesis state")
 			}
@@ -118,7 +119,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-			return displayInfo(cdc, toPrint)
+			return displayInfo(legacyAmino, toPrint)
 		},
 	}
 

@@ -116,7 +116,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().NoError(clientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -303,7 +303,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				s.Require().NoError(clientCtx.LegacyAmino.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

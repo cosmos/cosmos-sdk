@@ -15,7 +15,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -55,7 +54,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	s.ctx = app.BaseApp.NewContext(false, abci.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
-	s.querier = s.module.LegacyQuerierHandler(codec.NewAminoCodec(app.LegacyAmino()))
+	s.querier = s.module.LegacyQuerierHandler(app.LegacyAmino())
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return s
 }

@@ -40,6 +40,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
+			legacyAmino := clientCtx.LegacyAmino
 			cdc := depCdc.(codec.Marshaler)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
@@ -113,7 +114,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			}
 
 			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(depCdc, genFile)
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
@@ -140,7 +141,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			}
 			authGenState.Accounts = genAccs
 
-			authGenStateBz, err := cdc.MarshalJSON(authGenState)
+			authGenStateBz, err := cdc.MarshalJSON(&authGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 			}
@@ -158,7 +159,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[banktypes.ModuleName] = bankGenStateBz
 
-			appStateJSON, err := cdc.MarshalJSON(appState)
+			appStateJSON, err := legacyAmino.MarshalJSON(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}

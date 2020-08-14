@@ -33,6 +33,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	evidenceGenesis := types.NewGenesisState(ev)
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, evidenceGenesis))
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.LegacyAmino, evidenceGenesis))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(evidenceGenesis)
 }

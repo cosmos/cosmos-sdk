@@ -108,6 +108,13 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
 	require.Equal(t, pubkey.Bytes(), txBuilder.GetPubKeys()[0].Bytes())
 
+	any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	require.NoError(t, err)
+	txBuilder.SetExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())
+	txBuilder.SetNonCriticalExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
+
 	txBuilder = &builder{}
 	require.NotPanics(t, func() {
 		_ = txBuilder.GetMsgs()

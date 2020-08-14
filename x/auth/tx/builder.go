@@ -48,8 +48,8 @@ var (
 type ExtensionOptionsTxBuilder interface {
 	client.TxBuilder
 
-	SetExtensionOptions([]*codectypes.Any)
-	SetNonCriticalExtensionOptions([]*codectypes.Any)
+	SetExtensionOptions(...*codectypes.Any)
+	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
@@ -410,12 +410,12 @@ func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return t.tx.Body.NonCriticalExtensionOptions
 }
 
-func (t *builder) SetExtensionOptions(extOpts []*codectypes.Any) {
+func (t *builder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	t.tx.Body.ExtensionOptions = extOpts
 	t.bodyBz = nil
 }
 
-func (t *builder) SetNonCriticalExtensionOptions(extOpts []*codectypes.Any) {
+func (t *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	t.tx.Body.NonCriticalExtensionOptions = extOpts
 	t.bodyBz = nil
 }

@@ -52,7 +52,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, dec1, govGenesis.TallyParams.Quorum)
 	require.Equal(t, dec2, govGenesis.TallyParams.Threshold)
 	require.Equal(t, dec3, govGenesis.TallyParams.Veto)
-	require.Equal(t, uint64(0x28), govGenesis.StartingProposalID)
+	require.Equal(t, uint64(0x28), govGenesis.StartingProposalId)
 	require.Equal(t, types.Deposits{}, govGenesis.Deposits)
 	require.Equal(t, types.Votes{}, govGenesis.Votes)
 	require.Equal(t, types.Proposals{}, govGenesis.Proposals)

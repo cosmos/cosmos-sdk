@@ -820,6 +820,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdSubmitProposal()
+			flags.AddTxFlagsToCmd(cmd)
 			_, out := testutil.ApplyMockIO(cmd)
 
 			clientCtx := val.ClientCtx.WithOutput(out)

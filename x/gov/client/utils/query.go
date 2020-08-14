@@ -58,7 +58,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 
 				deposits = append(deposits, types.Deposit{
 					Depositor:  depMsg.Depositor,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
 				})
 			}
@@ -102,7 +102,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
-						ProposalID: params.ProposalID,
+						ProposalId: params.ProposalID,
 						Option:     voteMsg.Option,
 					})
 				}
@@ -151,7 +151,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Option:     voteMsg.Option,
 				}
 
@@ -192,7 +192,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 
 				deposit := types.Deposit{
 					Depositor:  depMsg.Depositor,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
 				}
 

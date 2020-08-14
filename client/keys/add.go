@@ -227,7 +227,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 
 	recover, _ := cmd.Flags().GetBool(flagRecover)
 	if recover {
-		mnemonic, err = input.GetString(bip39Message, inBuf)
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
 		}
@@ -235,8 +235,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			return errors.New("invalid mnemonic")
 		}
 	} else if interactive {
-		bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."
-		mnemonic, err = input.GetString(bip39Message, inBuf)
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
 		if err != nil {
 			return err
 		}

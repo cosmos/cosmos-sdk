@@ -2,14 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -195,6 +198,47 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
 	}
 	return consensusState, true
+}
+
+// ValidateClient validates the client parameters for a client of the running chain
+func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState) error {
+	tmClient, ok := clientState.(*ibctmtypes.ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client must be a Tendermint client, expected: %T, got: %T",
+			&ibctmtypes.ClientState{}, tmClient)
+	}
+
+	if ctx.ChainID() != tmClient.ChainId {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid chain-id. expected: %s, got: %s",
+			ctx.ChainID(), tmClient.ChainId)
+	}
+
+	if uint64(ctx.BlockHeight()) < tmClient.LatestHeight {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
+			tmClient.LatestHeight, ctx.BlockHeight())
+	}
+
+	expectedProofSpecs := commitmenttypes.GetSDKSpecs()
+	if !reflect.DeepEqual(expectedProofSpecs, tmClient.ProofSpecs) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid proof specs. expected: %v got: %v",
+			expectedProofSpecs, tmClient.ProofSpecs)
+	}
+
+	if err := light.ValidateTrustLevel(tmClient.TrustLevel.ToTendermint()); err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "trust-level invalid: %v", err)
+	}
+
+	expectedUbdPeriod := k.stakingKeeper.UnbondingTime(ctx)
+	if expectedUbdPeriod == tmClient.UnbondingPeriod {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid unbonding period. expected: %s, got: %s",
+			expectedUbdPeriod, tmClient.UnbondingPeriod)
+	}
+
+	if tmClient.UnbondingPeriod < tmClient.TrustingPeriod {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "Unbonding period must be greater than trusting period. unbonding period %d < trusting period %d",
+			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
+	}
+	return nil
 }
 
 // IterateClients provides an iterator over all stored light client State

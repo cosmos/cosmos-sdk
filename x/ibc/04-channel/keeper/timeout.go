@@ -44,17 +44,17 @@ func (k Keeper) TimeoutPacket(
 	// NOTE: TimeoutPacket is called by the AnteHandler which acts upon the packet.Route(),
 	// so the capability authentication can be omitted here
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -194,17 +194,17 @@ func (k Keeper) TimeoutOnClose(
 		)
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -234,7 +234,7 @@ func (k Keeper) TimeoutOnClose(
 	// check that the opposing channel end has closed
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofClosed,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err

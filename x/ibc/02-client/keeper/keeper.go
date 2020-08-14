@@ -140,7 +140,7 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 		}
 
 		clientConsState := types.ClientConsensusStates{
-			ClientID:        clientID,
+			ClientId:        clientID,
 			ConsensusStates: []*codectypes.Any{anyConsensusState},
 		}
 

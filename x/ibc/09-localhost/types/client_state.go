@@ -26,14 +26,14 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 // NewClientState creates a new ClientState instance
 func NewClientState(chainID string, height int64) *ClientState {
 	return &ClientState{
-		ChainID: chainID,
+		ChainId: chainID,
 		Height:  uint64(height),
 	}
 }
 
 // GetChainID returns an empty string
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is localhost.
@@ -58,7 +58,7 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if strings.TrimSpace(cs.ChainID) == "" {
+	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
 	if cs.Height <= 0 {

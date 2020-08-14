@@ -30,7 +30,7 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 		ChainID:            chainID,
 		Height:             height,
 		Time:               timestamp,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), math.MaxUint32, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,

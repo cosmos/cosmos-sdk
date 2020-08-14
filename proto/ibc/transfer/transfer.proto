@@ -52,10 +52,11 @@ message FungibleTokenPacketAcknowledgement {
 }
 
 // DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
-// information
+// information path.
 message DenomTrace {
-  // chain of port/channel identifiers used for tracing the source of the fungible token
-  string trace = 1;
-  // base denomination of the relayed fungible token
+  // path defines the chain of port/channel identifiers used for tracing the source of the fungible
+  // token.
+  string path = 1;
+  // base denomination of the relayed fungible token.
   string base_denom = 2;
 }

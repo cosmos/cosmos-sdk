@@ -8,21 +8,21 @@ import (
 
 func (suite *KeeperTestSuite) TestGenesis() {
 	var (
-		traceStr string
-		traces   types.Traces
+		path   string
+		traces types.Traces
 	)
 
 	for i := 0; i < 5; i++ {
 		prefix := fmt.Sprintf("transfer/channelToChain%d", i)
 		if i == 0 {
-			traceStr = prefix
+			path = prefix
 		} else {
-			traceStr = prefix + "/" + traceStr
+			path = prefix + "/" + path
 		}
 
 		denomTrace := types.DenomTrace{
 			BaseDenom: "uatom",
-			Trace:     traceStr,
+			Path:      path,
 		}
 		traces = append(types.Traces{denomTrace}, traces...)
 		suite.chainA.App.TransferKeeper.SetDenomTrace(suite.chainA.GetContext(), denomTrace)

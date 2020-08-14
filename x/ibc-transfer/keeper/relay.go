@@ -77,35 +77,24 @@ func (k Keeper) SendTransfer(
 	}
 
 	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
-	prefixedDenom := token.Denom
+	fullDenomPath := token.Denom
+
+	var err error
 
 	// deconstruct the token denomination into the denomination trace info
 	// to determine if the sender is the source chain
 	if strings.HasPrefix(token.Denom, "ibc/") {
-		hexHash := token.Denom[4:]
-		hash, err := types.ParseHexHash(hexHash)
+		fullDenomPath, err = k.DenomPathFromHash(ctx, token.Denom)
 		if err != nil {
 			return err
 		}
-
-		denomTrace, found := k.GetDenomTrace(ctx, hash)
-		if !found {
-			return sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
-		}
-		prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
-	} else if strings.Contains(token.Denom, "/") {
-		// in the case the user transfers a prefixed denomination,
-		// update the token denomination with the hashed trace info since that is the
-		// internally represented denomination on the user balance
-		denomTrace := types.ParseDenomTrace(token.Denom)
-		token.Denom = denomTrace.IBCDenom()
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
 	// chain inside the packet data. The receiving chain will perform denom
 	// prefixing as necessary.
 
-	if types.SenderChainIsSource(sourcePort, sourceChannel, prefixedDenom) {
+	if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
 		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
@@ -135,7 +124,7 @@ func (k Keeper) SendTransfer(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		prefixedDenom, token.Amount.Uint64(), sender.String(), receiver,
+		fullDenomPath, token.Amount.Uint64(), sender.String(), receiver,
 	)
 
 	packet := channeltypes.NewPacket(
@@ -275,4 +264,22 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	}
 
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token))
+}
+
+// DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
+// compoenent.
+func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
+	hexHash := denom[4:]
+	hash, err := types.ParseHexHash(hexHash)
+	if err != nil {
+		return "", sdkerrors.Wrap(types.ErrInvalidDenomForTransfer, err.Error())
+	}
+
+	denomTrace, found := k.GetDenomTrace(ctx, hash)
+	if !found {
+		return "", sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
+	}
+
+	fullDenomPath := denomTrace.GetFullDenomPath()
+	return fullDenomPath, nil
 }

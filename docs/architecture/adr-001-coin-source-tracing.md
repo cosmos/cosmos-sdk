@@ -125,7 +125,7 @@ The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
 // information
 message DenomTrace {
   // chain of port/channel identifiers used for tracing the source of the fungible token
-  string trace = 1;
+  string path = 1;
   // base denomination of the relayed fungible token
   string base_denom = 2;
 }
@@ -148,31 +148,6 @@ func (dt DenomTrace) IBCDenom() string {
     return fmt.Sprintf("ibc/%s", dt.Hash())
   }
   return dt.BaseDenom
-}
-```
-
-In order to trim the denomination trace prefix when sending/receiving fungible tokens, the `RemovePrefix` function is provided.
-
-> NOTE: the prefix addition must be done on the client side.
-
-```golang
-// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already
-// empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators
-// it will return an error.
-func (dt *DenomTrace) RemovePrefix() {
-  if dt.Trace == "" {
-    return
-  }
-
-  traceSplit := strings.SplitN(dt.Trace, "/", 3)
-
-  switch {
-  // NOTE: other cases are checked during msg validation
-  case len(traceSplit) == 2:
-    dt.Trace = ""
-  case len(traceSplit) == 3:
-    dt.Trace = traceSplit[2]
-  }
 }
 ```
 

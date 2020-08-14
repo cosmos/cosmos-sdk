@@ -20,20 +20,20 @@ import (
 //
 // Examples:
 //
-// 	- "portidone/channelidone/uatom" => DenomTrace{Trace: "portidone/channelidone", BaseDenom: "uatom"}
-// 	- "uatom" => DenomTrace{Trace: "", BaseDenom: "uatom"}
+// 	- "portidone/channelidone/uatom" => DenomTrace{Path: "portidone/channelidone", BaseDenom: "uatom"}
+// 	- "uatom" => DenomTrace{Path: "", BaseDenom: "uatom"}
 func ParseDenomTrace(rawDenom string) DenomTrace {
 	denomSplit := strings.Split(rawDenom, "/")
 
 	if denomSplit[0] == rawDenom {
 		return DenomTrace{
-			Trace:     "",
+			Path:      "",
 			BaseDenom: rawDenom,
 		}
 	}
 
 	return DenomTrace{
-		Trace:     strings.Join(denomSplit[:len(denomSplit)-1], "/"),
+		Path:      strings.Join(denomSplit[:len(denomSplit)-1], "/"),
 		BaseDenom: denomSplit[len(denomSplit)-1],
 	}
 }
@@ -42,40 +42,27 @@ func ParseDenomTrace(rawDenom string) DenomTrace {
 //
 // hash = sha256(trace + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
-	return tmhash.Sum([]byte(dt.GetPrefix() + dt.BaseDenom))
+	return tmhash.Sum([]byte(dt.GetFullDenomPath()))
 }
 
 // GetPrefix returns the receiving denomination prefix composed by the trace info and a separator.
 func (dt DenomTrace) GetPrefix() string {
-	return dt.Trace + "/"
+	return dt.Path + "/"
 }
 
 // IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace +
 // baseDenom)}'. If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
-	if dt.Trace != "" {
+	if dt.Path != "" {
 		return fmt.Sprintf("ibc/%s", dt.Hash())
 	}
 	return dt.BaseDenom
 }
 
-// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already
-// empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators
-// it will return an error.
-func (dt *DenomTrace) RemovePrefix() {
-	if dt.Trace == "" {
-		return
-	}
-
-	traceSplit := strings.SplitN(dt.Trace, "/", 3)
-
-	switch {
-	// NOTE: other cases are checked during msg validation
-	case len(traceSplit) == 2:
-		dt.Trace = ""
-	case len(traceSplit) == 3:
-		dt.Trace = traceSplit[2]
-	}
+// GetFullDenomPath returns the full denomination according to the ICS20 specification: trace + "/"
+// + baseDenom
+func (dt DenomTrace) GetFullDenomPath() string {
+	return dt.GetPrefix() + dt.BaseDenom
 }
 
 func validateTraceIdentifiers(identifiers []string) error {
@@ -99,17 +86,15 @@ func validateTraceIdentifiers(identifiers []string) error {
 func (dt DenomTrace) Validate() error {
 	// empty trace is accepted when token lives on the original chain
 	switch {
-	case dt.Trace == "" && dt.BaseDenom != "":
+	case dt.Path == "" && dt.BaseDenom != "":
 		return nil
-	case strings.TrimSpace(dt.Trace) == "" && strings.TrimSpace(dt.BaseDenom) == "":
-		return fmt.Errorf("cannot have an empty trace and empty base denomination")
-	case dt.Trace != "" && strings.TrimSpace(dt.BaseDenom) == "":
-		return sdkerrors.Wrap(ErrInvalidDenomForTransfer, "denomination cannot be blank")
+	case strings.TrimSpace(dt.BaseDenom) == "":
+		return fmt.Errorf("base denomination cannot be blank")
 	}
 
 	// NOTE: no base denomination validation
 
-	identifiers := strings.Split(dt.Trace, "/")
+	identifiers := strings.Split(dt.Path, "/")
 	return validateTraceIdentifiers(identifiers)
 }
 
@@ -156,10 +141,9 @@ func ValidatePrefixedDenom(denom string) error {
 // ValidateIBCDenom validates that the given denomination is either:
 //
 //  - A valid base denomination (eg: 'uatom')
-//  - A valid trace prefixed denomination  (eg: '{portIDN}/{channelIDN}/.../{portID0}/{channelID0}/baseDenom')
 //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
 func ValidateIBCDenom(denom string) error {
-	denomSplit := strings.Split(denom, "/")
+	denomSplit := strings.SplitN(denom, "/", 2)
 
 	switch {
 	case strings.TrimSpace(denom) == "",
@@ -169,9 +153,6 @@ func ValidateIBCDenom(denom string) error {
 
 	case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
 		return sdk.ValidateDenom(denom)
-
-	case len(denomSplit) > 2:
-		return validateTraceIdentifiers(denomSplit[:len(denomSplit)-1])
 	}
 
 	if _, err := ParseHexHash(denomSplit[1]); err != nil {

@@ -14,7 +14,7 @@ func TestParseDenomTrace(t *testing.T) {
 	}{
 		{"empty denom", "", DenomTrace{}},
 		{"base denom", "uatom", DenomTrace{BaseDenom: "uatom"}},
-		{"trace info", "transfer/channelToA/uatom", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA"}},
+		{"trace info", "transfer/channelToA/uatom", DenomTrace{BaseDenom: "uatom", Path: "transfer/channelToA"}},
 	}
 
 	for _, tc := range testCases {
@@ -30,29 +30,12 @@ func TestDenomTrace_IBCDenom(t *testing.T) {
 		expDenom string
 	}{
 		{"base denom", DenomTrace{BaseDenom: "uatom"}, "uatom"},
-		{"trace info", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA"}, "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2"},
+		{"trace info", DenomTrace{BaseDenom: "uatom", Path: "transfer/channelToA"}, "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2"},
 	}
 
 	for _, tc := range testCases {
 		denom := tc.trace.IBCDenom()
 		require.Equal(t, tc.expDenom, denom, tc.name)
-	}
-}
-
-func TestDenomTrace_RemovePrefix(t *testing.T) {
-	testCases := []struct {
-		name     string
-		trace    DenomTrace
-		expTrace string
-	}{
-		{"no trace", DenomTrace{BaseDenom: "uatom"}, ""},
-		{"single trace info", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA"}, ""},
-		{"multiple trace info", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"}, "transfer/channelToB"},
-	}
-
-	for _, tc := range testCases {
-		tc.trace.RemovePrefix()
-		require.Equal(t, tc.expTrace, tc.trace.Trace, tc.name)
 	}
 }
 
@@ -64,12 +47,12 @@ func TestDenomTrace_Validate(t *testing.T) {
 	}{
 		{"base denom only", DenomTrace{BaseDenom: "uatom"}, false},
 		{"empty DenomTrace", DenomTrace{}, true},
-		{"valid single trace info", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA"}, false},
-		{"valid multiple trace info", DenomTrace{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"}, false},
-		{"single trace identifier", DenomTrace{BaseDenom: "uatom", Trace: "transfer"}, true},
-		{"invalid port ID", DenomTrace{BaseDenom: "uatom", Trace: "(transfer)/channelToA"}, true},
-		{"invalid channel ID", DenomTrace{BaseDenom: "uatom", Trace: "transfer/(channelToA)"}, true},
-		{"empty base denom with trace", DenomTrace{BaseDenom: "", Trace: "transfer/channelToA"}, true},
+		{"valid single trace info", DenomTrace{BaseDenom: "uatom", Path: "transfer/channelToA"}, false},
+		{"valid multiple trace info", DenomTrace{BaseDenom: "uatom", Path: "transfer/channelToA/transfer/channelToB"}, false},
+		{"single trace identifier", DenomTrace{BaseDenom: "uatom", Path: "transfer"}, true},
+		{"invalid port ID", DenomTrace{BaseDenom: "uatom", Path: "(transfer)/channelToA"}, true},
+		{"invalid channel ID", DenomTrace{BaseDenom: "uatom", Path: "transfer/(channelToA)"}, true},
+		{"empty base denom with trace", DenomTrace{BaseDenom: "", Path: "transfer/channelToA"}, true},
 	}
 
 	for _, tc := range testCases {
@@ -89,16 +72,16 @@ func TestTraces_Validate(t *testing.T) {
 		expError bool
 	}{
 		{"empty Traces", Traces{}, false},
-		{"valid multiple trace info", Traces{{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"}}, false},
+		{"valid multiple trace info", Traces{{BaseDenom: "uatom", Path: "transfer/channelToA/transfer/channelToB"}}, false},
 		{
 			"valid multiple trace info",
 			Traces{
-				{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"},
-				{BaseDenom: "uatom", Trace: "transfer/channelToA/transfer/channelToB"},
+				{BaseDenom: "uatom", Path: "transfer/channelToA/transfer/channelToB"},
+				{BaseDenom: "uatom", Path: "transfer/channelToA/transfer/channelToB"},
 			},
 			true,
 		},
-		{"empty base denom with trace", Traces{{BaseDenom: "", Trace: "transfer/channelToA"}}, true},
+		{"empty base denom with trace", Traces{{BaseDenom: "", Path: "transfer/channelToA"}}, true},
 	}
 
 	for _, tc := range testCases {
@@ -146,7 +129,7 @@ func TestValidateIBCDenom(t *testing.T) {
 		{"denom with trace hash", "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", false},
 		{"base denom", "uatom", false},
 		{"empty denom", "", true},
-		{"invalid prefixed denom", "transfer/channelToA/uatom", false},
+		{"invalid prefixed denom", "transfer/channelToA/uatom", true},
 		{"denom 'ibc'", "ibc", true},
 		{"denom 'ibc/'", "ibc/", true},
 		{"invald prefix", "notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
@@ -154,7 +137,6 @@ func TestValidateIBCDenom(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Log(tc.name)
 		err := ValidateIBCDenom(tc.denom)
 		if tc.expError {
 			require.Error(t, err, tc.name)

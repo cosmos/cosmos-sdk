@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{
 			"not found denom trace",
 			func() {
-				expTrace.Trace = "transfer/channelToA/transfer/channelToB"
+				expTrace.Path = "transfer/channelToA/transfer/channelToB"
 				expTrace.BaseDenom = "uatom"
 				req = &types.QueryDenomTraceRequest{
 					Hash: expTrace.Hash().String(),
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{
 			"success",
 			func() {
-				expTrace.Trace = "transfer/channelToA/transfer/channelToB"
+				expTrace.Path = "transfer/channelToA/transfer/channelToB"
 				expTrace.BaseDenom = "uatom"
 				suite.chainA.App.TransferKeeper.SetDenomTrace(suite.chainA.GetContext(), expTrace)
 
@@ -95,9 +95,9 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 		{
 			"success",
 			func() {
-				expTraces = append(expTraces, types.DenomTrace{Trace: "", BaseDenom: "uatom"})
-				expTraces = append(expTraces, types.DenomTrace{Trace: "transfer/channelToB", BaseDenom: "uatom"})
-				expTraces = append(expTraces, types.DenomTrace{Trace: "transfer/channelToA/transfer/channelToB", BaseDenom: "uatom"})
+				expTraces = append(expTraces, types.DenomTrace{Path: "", BaseDenom: "uatom"})
+				expTraces = append(expTraces, types.DenomTrace{Path: "transfer/channelToB", BaseDenom: "uatom"})
+				expTraces = append(expTraces, types.DenomTrace{Path: "transfer/channelToA/transfer/channelToB", BaseDenom: "uatom"})
 
 				for _, trace := range expTraces {
 					suite.chainA.App.TransferKeeper.SetDenomTrace(suite.chainA.GetContext(), trace)

@@ -52,6 +52,12 @@ func (k Keeper) SendTransfer(
 	timeoutHeight,
 	timeoutTimestamp uint64,
 ) error {
+	params := k.GetParams(ctx)
+
+	if !params.TransfersEnabled {
+		return types.ErrTransfersDisabled
+	}
+
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
@@ -150,6 +156,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	// validate packet data upon receiving
 	if err := data.ValidateBasic(); err != nil {
 		return err
+	}
+
+	params := k.GetParams(ctx)
+
+	if !params.TransfersEnabled {
+		return types.ErrTransfersDisabled
 	}
 
 	// decode the receiver address

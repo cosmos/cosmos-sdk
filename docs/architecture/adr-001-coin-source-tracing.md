@@ -115,7 +115,7 @@ trace the token back to the originating chain, as specified on ICS20.
 The new proposed format will be the following:
 
 ```golang
-ibcDenom = "ibc/" + hash(trace + "/" + base denom)
+ibcDenom = "ibc/" + hash(trace path + "/" + base denom)
 ```
 
 The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
@@ -136,15 +136,15 @@ The `IBCDenom` function constructs the `Coin` denomination used when creating th
 ```golang
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields using the following formula:
 //
-// hash = sha256(trace + "/" + baseDenom)
+// hash = sha256(tracePath + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
-  return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
+  return tmhash.Sum(dt.Path + "/" + dt.BaseDenom)
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace + baseDenom)}'. 
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(tracePath + baseDenom)}'. 
 // If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
-  if dt.Trace != "" {
+  if dt.Path != "" {
     return fmt.Sprintf("ibc/%s", dt.Hash())
   }
   return dt.BaseDenom
@@ -199,10 +199,9 @@ func (msg MsgTransfer) ValidateBasic() error {
 // ValidateIBCDenom validates that the given denomination is either:
 //
 //  - A valid base denomination (eg: 'uatom')
-//  - A valid trace prefixed denomination  (eg: '{portIDN}/{channelIDN}/.../{portID0}/{channelID0}/baseDenom')
 //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
 func ValidateIBCDenom(denom string) error {
-  denomSplit := strings.Split(denom, "/")
+  denomSplit := strings.SplitN(denom, "/", 2)
 
   switch {
   case strings.TrimSpace(denom) == "",
@@ -212,13 +211,10 @@ func ValidateIBCDenom(denom string) error {
 
   case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
     return sdk.ValidateDenom(denom)
-
-  case len(denomSplit) > 2:
-    return validateTraceIdentifiers(denomSplit[:len(denomSplit)-1])
   }
 
   if _, err := ParseHexHash(denomSplit[1]); err != nil {
-    return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "invalid denom trace hash %s: %s", denomSplit[1], err)
+    return Wrapf(err, "invalid denom trace hash %s", denomSplit[1])
   }
 
   return nil
@@ -234,33 +230,41 @@ The denomination trace info only needs to be updated when token is received:
 // SendTransfer
 // ...
 
-prefixedDenom := token.Denom
+  fullDenomPath := token.Denom
 
 // deconstruct the token denomination into the denomination trace info
 // to determine if the sender is the source chain
 if strings.HasPrefix(token.Denom, "ibc/") {
-  hexHash := token.Denom[4:]
-  hash, err := types.ParseHexHash(hexHash)
+  fullDenomPath, err = k.DenomPathFromHash(ctx, token.Denom)
   if err != nil {
     return err
+  }
+}
+
+if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
+//...
+```
+
+```golang
+// DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
+// component.
+func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
+  hexHash := denom[4:]
+  hash, err := ParseHexHash(hexHash)
+  if err != nil {
+    return "", Wrap(ErrInvalidDenomForTransfer, err.Error())
   }
 
   denomTrace, found := k.GetDenomTrace(ctx, hash)
   if !found {
-    return sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
+    return "", Wrap(ErrTraceNotFound, hexHash)
   }
-  prefixedDenom = denomTrace.GetPrefix() + denomTrace.BaseDenom
-} else if strings.Contains(token.Denom, "/") {
-  // in the case the user transfers a prefixed denomination,
-  // update the token denomination with the hashed trace info as that's the
-  // representation on the user balance
-  denomTrace := types.ParseDenomTrace(token.Denom)
-  token.Denom = denomTrace.IBCDenom()
-}
 
-if types.SenderChainIsSource(sourcePort, sourceChannel, prefixedDenom) {
-//...
+  fullDenomPath := denomTrace.GetFullDenomPath()
+  return fullDenomPath, nil
+}
 ```
+
 
 ```golang
 // OnRecvPacket

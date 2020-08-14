@@ -41,7 +41,7 @@ func ParseDenomTrace(rawDenom string) DenomTrace {
 
 // Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields using the following formula:
 //
-// hash = sha256(trace + "/" + baseDenom)
+// hash = sha256(tracePath + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
 	return tmhash.Sum([]byte(dt.GetFullDenomPath()))
 }
@@ -51,7 +51,7 @@ func (dt DenomTrace) GetPrefix() string {
 	return dt.Path + "/"
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace +
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(tracePath +
 // baseDenom)}'. If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
 	if dt.Path != "" {

@@ -283,6 +283,7 @@ Buffers for state serialization instead of Amino.
 
 ### Improvements
 
+* (x/ibc-transfer) [\#6871](https://github.com/cosmos/cosmos-sdk/pull/6871) Implement [ADR 001 - Coin Source Tracing](./../../../docs/architecture/adr-001-coin-source-tracing.md).
 * (types) [\#7027](https://github.com/cosmos/cosmos-sdk/pull/7027) `Coin(s)` and `DecCoin(s)` updates:
   * Bump denomination max length to 128
   * Allow uppercase letters and numbers in denominations to support ADR 001

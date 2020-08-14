@@ -138,7 +138,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubKey1.Bytes(),
 		},
-		Sequence: 1, // Arbitrary account sequence
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{
@@ -147,7 +147,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: pubKey2.Bytes(),
 		},
-		Sequence: 2, // Arbitrary account sequence
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	err := txBuilder.SetMsgs(msgs...)

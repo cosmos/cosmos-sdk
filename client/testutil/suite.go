@@ -100,13 +100,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Contains(signModeHandler.Modes(), signModeHandler.DefaultMode())
 
 	// set SignatureV2 without actual signature bytes
+	seq1 := uint64(2) // Arbitrary account sequence
 	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: 2}
+	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
 
+	mseq := uint64(4) // Arbitrary account sequence
 	msigData := multisig.NewMultisig(2)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
-	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: 4}
+	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 
 	// fail validation without required signers
 	err = txBuilder.SetSignatures(sig1)
@@ -130,7 +132,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	signerData := signing.SignerData{
 		ChainID:       "test",
 		AccountNumber: 1,
-		Sequence:      2,
+		Sequence:      seq1,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -140,7 +142,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	signerData = signing.SignerData{
 		ChainID:       "test",
 		AccountNumber: 3,
-		Sequence:      4,
+		Sequence:      mseq,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)

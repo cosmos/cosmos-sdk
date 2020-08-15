@@ -11,6 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -28,7 +30,7 @@ func QueryConnection(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionRequest{
-		ConnectionID: connectionID,
+		ConnectionId: connectionID,
 	}
 
 	return queryClient.Connection(context.Background(), req)
@@ -51,7 +53,7 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func QueryClientConnections(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryClientConnectionsRequest{
-		ClientID: clientID,
+		ClientId: clientID,
 	}
 
 	return queryClient.ClientConnections(context.Background(), req)
@@ -94,12 +96,84 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
 
 	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, res.Height), nil
+}
+
+// QueryConnectionClientState returns the ClientState of a connection end. If
+// prove is true, it performs an ABCI store query in order to retrieve the
+// merkle proof. Otherwise, it uses the gRPC query client.
+func QueryConnectionClientState(
+	clientCtx client.Context, connectionID string, prove bool,
+) (*types.QueryConnectionClientStateResponse, error) {
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConnectionClientStateRequest{
+		ConnectionId: connectionID,
+	}
+
+	res, err := queryClient.ConnectionClientState(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	if prove {
+		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		// use client state returned from ABCI query in case query height differs
+		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.Id, clientState)
+		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, proof, int64(proofHeight))
+	}
+
+	return res, nil
+}
+
+// QueryConnectionConsensusState returns the ConsensusState of a connection end. If
+// prove is true, it performs an ABCI store query in order to retrieve the
+// merkle proof. Otherwise, it uses the gRPC query client.
+func QueryConnectionConsensusState(
+	clientCtx client.Context, connectionID string, height uint64, prove bool,
+) (*types.QueryConnectionConsensusStateResponse, error) {
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConnectionConsensusStateRequest{
+		ConnectionId: connectionID,
+		Height:       height,
+	}
+
+	res, err := queryClient.ConnectionConsensusState(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+	if err != nil {
+		return nil, err
+	}
+
+	if prove {
+		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		if err != nil {
+			return nil, err
+		}
+
+		// use consensus state returned from ABCI query in case query height differs
+		anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
+		if err != nil {
+			return nil, err
+		}
+
+		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
+	}
+
+	return res, nil
 }
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment

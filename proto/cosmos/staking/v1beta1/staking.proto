@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.staking.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types/types.proto";
+import "tendermint/types/types.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -13,10 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // as part of staking module's state, which persists the `n` most recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
-  option (gogoproto.equal) = true;
-
-  tendermint.abci.types.Header header = 1 [(gogoproto.nullable) = false];
-  repeated Validator           valset = 2 [(gogoproto.nullable) = false];
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
+  repeated Validator      valset = 2 [(gogoproto.nullable) = false];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -46,8 +44,8 @@ message Commission {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp update_time = 2 [
+  CommissionRates           commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp update_time      = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true,
     (gogoproto.moretags) = "yaml:\"update_time\""
@@ -85,8 +83,8 @@ message Validator {
   ];
   string consensus_pubkey = 2 [(gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
   bool   jailed           = 3;
-  int32  status = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];
-  string tokens = 5 [
+  int32  status           = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];
+  string tokens           = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
@@ -95,9 +93,9 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  Description description                  = 7 [(gogoproto.nullable) = false];
-  int64       unbonding_height             = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
-  google.protobuf.Timestamp unbonding_time = 9 [
+  Description               description      = 7 [(gogoproto.nullable) = false];
+  int64                     unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
+  google.protobuf.Timestamp unbonding_time   = 9 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true,
     (gogoproto.moretags) = "yaml:\"unbonding_time\""
@@ -113,7 +111,7 @@ message Validator {
 // ValAddresses defines a repeated set of validator addresses.
 message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer) = true;
+  option (gogoproto.stringer)         = true;
 
   repeated bytes addresses = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
@@ -305,10 +303,10 @@ message RedelegationEntryResponse {
   option (gogoproto.equal) = true;
 
   RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
-  string balance = 4 [
-                     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-                     (gogoproto.nullable)   = false
-                     ];
+  string            balance            = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // RedelegationResponse is equivalent to a Redelegation except that its entries
@@ -317,18 +315,18 @@ message RedelegationEntryResponse {
 message RedelegationResponse {
   option (gogoproto.equal) = true;
 
-  Redelegation redelegation = 1 [(gogoproto.nullable) = false];
-  repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
+  Redelegation                       redelegation = 1 [(gogoproto.nullable) = false];
+  repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false];
 }
 
 // Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
 message Pool {
   option (gogoproto.description) = true;
-  option (gogoproto.equal) = true;
-  string not_bonded_tokens = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+  option (gogoproto.equal)       = true;
+  string not_bonded_tokens       = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
                                 (gogoproto.jsontag)    = "not_bonded_tokens",
                                 (gogoproto.nullable)   = false];
-  string bonded_tokens = 2 [(gogoproto.jsontag)    = "bonded_tokens",
+  string bonded_tokens           = 2 [(gogoproto.jsontag)    = "bonded_tokens",
                             (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
                             (gogoproto.nullable)   = false,
                             (gogoproto.moretags)   = "yaml:\"bonded_tokens\""];

@@ -11,7 +11,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
-	tmamino "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
@@ -111,7 +112,7 @@ func VerifyAddressFormat(bz []byte) error {
 		return verifier(bz)
 	}
 	if len(bz) != AddrLen {
-		return errors.New("incorrect address length")
+		return fmt.Errorf("incorrect address length (expected: %d, actual: %d)", AddrLen, len(bz))
 	}
 	return nil
 }
@@ -625,7 +626,7 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 
 	}
 
-	return bech32.ConvertAndEncode(bech32Prefix, pubkey.Bytes())
+	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
 }
 
 // MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
@@ -660,7 +661,7 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 		return nil, err
 	}
 
-	pk, err := tmamino.PubKeyFromBytes(bz)
+	pk, err := cryptocodec.PubKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}

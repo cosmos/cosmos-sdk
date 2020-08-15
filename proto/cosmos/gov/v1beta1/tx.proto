@@ -32,7 +32,6 @@ message MsgVote {
 
   uint64 proposal_id = 1 [
     (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.customname) = "ProposalID",
     (gogoproto.moretags)   = "yaml:\"proposal_id\""
   ];
   bytes      voter  = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -45,7 +44,6 @@ message MsgDeposit {
 
   uint64 proposal_id = 1 [
     (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.customname) = "ProposalID",
     (gogoproto.moretags)   = "yaml:\"proposal_id\""
   ];
   bytes    depositor          = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];

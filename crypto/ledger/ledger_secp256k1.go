@@ -115,7 +115,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey != expectedPubKey {
+	if !pubKey.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
@@ -124,7 +124,7 @@ func ShowAddress(path hd.BIP44Params, expectedPubKey tmcrypto.PubKey,
 		return err
 	}
 
-	if pubKey2 != expectedPubKey {
+	if !pubKey2.Equals(expectedPubKey) {
 		return fmt.Errorf("the key's pubkey does not match with the one retrieved from Ledger. Check that the HD path and device are the correct ones")
 	}
 
@@ -160,6 +160,8 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 	}
 	return false
 }
+
+func (pkl PrivKeyLedgerSecp256k1) Type() string { return "PrivKeyLedgerSecp256k1" }
 
 // warnIfErrors wraps a function and writes a warning to stderr. This is required
 // to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
@@ -244,8 +246,8 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, nil
 }
@@ -268,8 +270,8 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (tmcry
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
-	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+	compressedPublicKey := make(tmsecp256k1.PubKey, tmsecp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
 
 	return compressedPublicKey, addr, nil
 }

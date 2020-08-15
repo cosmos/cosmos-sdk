@@ -25,6 +25,11 @@ type ClientState interface {
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Update and Misbehaviour functions
+
+	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
+	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
+
 	// State verification functions
 
 	VerifyClientConsensusState(
@@ -46,7 +51,6 @@ type ClientState interface {
 		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
-		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
@@ -57,7 +61,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
@@ -69,7 +72,6 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
@@ -81,7 +83,6 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
@@ -92,7 +93,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		sequence uint64,
-		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
@@ -103,7 +103,6 @@ type ClientState interface {
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-		consensusState ConsensusState,
 	) error
 }
 
@@ -144,6 +143,7 @@ type MsgCreateClient interface {
 	GetClientID() string
 	GetClientType() string
 	GetConsensusState() ConsensusState
+	InitializeClientState() ClientState
 }
 
 // MsgUpdateClient defines the msg interface that the

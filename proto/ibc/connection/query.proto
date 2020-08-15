@@ -3,31 +3,57 @@ package ibc.connection;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/client/client.proto";
 import "ibc/connection/connection.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 // Query provides defines the gRPC querier service
 service Query {
   // Connection queries an IBC connection end.
-  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {}
+  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
+		option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}";
+  }
 
   // Connections queries all the IBC connections of a chain.
-  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {}
+  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse) {
+    option (google.api.http).get = "/ibc/connection/v1beta1/connections";
+  }
 
-  // ClientConnections queries the connection paths associated with a client state.
-  rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {}
+  // ClientConnections queries the connection paths associated with a client
+  // state.
+  rpc ClientConnections(QueryClientConnectionsRequest)
+    returns (QueryClientConnectionsResponse) {
+      option (google.api.http).get = "/ibc/connection/v1beta1/client_connections/{client_id}";
+  }
+
+  // ConnectionClientState queries the client state associated with the
+  // connection.
+  rpc ConnectionClientState(QueryConnectionClientStateRequest)
+    returns (QueryConnectionClientStateResponse) {
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/client_state";
+  }
+
+  // ConnectionConsensusState queries the consensus state associated with the
+  // connection.
+  rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
+    returns (QueryConnectionConsensusStateResponse) {
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state";
+  }
 }
 
-// QueryConnectionRequest is the request type for the Query/Connection RPC method
+// QueryConnectionRequest is the request type for the Query/Connection RPC
+// method
 message QueryConnectionRequest {
   // connection unique identifier
-  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"];
+  string connection_id = 1;
 }
 
-// QueryConnectionResponse is the response type for the Query/Connection RPC method.
-// Besides the connection end, it includes a proof and the height from which the
-// proof was retrieved.
+// QueryConnectionResponse is the response type for the Query/Connection RPC
+// method. Besides the connection end, it includes a proof and the height from
+// which the proof was retrieved.
 message QueryConnectionResponse {
   // connection associated with the request identifier
   ibc.connection.ConnectionEnd connection = 1;
@@ -39,12 +65,14 @@ message QueryConnectionResponse {
   uint64 proof_height = 4;
 }
 
-// QueryConnectionsRequest is the request type for the Query/Connections RPC method
+// QueryConnectionsRequest is the request type for the Query/Connections RPC
+// method
 message QueryConnectionsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryConnectionsResponse is the response type for the Query/Connections RPC method.
+// QueryConnectionsResponse is the response type for the Query/Connections RPC
+// method.
 message QueryConnectionsResponse {
   // list of stored connections of the chain.
   repeated ibc.connection.IdentifiedConnection connections = 1;
@@ -54,15 +82,15 @@ message QueryConnectionsResponse {
   int64 height = 3;
 }
 
-// QueryClientConnectionsRequest is the request type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsRequest is the request type for the
+// Query/ClientConnections RPC method
 message QueryClientConnectionsRequest {
   // client identifier associated with a connection
-  string client_id = 1 [(gogoproto.customname) = "ClientID"];
+  string client_id = 1;
 }
 
-// QueryClientConnectionsResponse is the response type for the Query/ClientConnections
-// RPC method
+// QueryClientConnectionsResponse is the response type for the
+// Query/ClientConnections RPC method
 message QueryClientConnectionsResponse {
   // slice of all the connection paths associated with a client.
   repeated string connection_paths = 1;
@@ -72,4 +100,51 @@ message QueryClientConnectionsResponse {
   string proof_path = 3;
   // height at which the proof was generated
   uint64 proof_height = 4;
+}
+
+// QueryConnectionClientStateRequest is the request type for the
+// Query/ConnectionClientState RPC method
+message QueryConnectionClientStateRequest {
+  // connection identifier
+  string connection_id = 1 [
+    (gogoproto.moretags) = "yaml:\"connection_id\""
+  ];
+}
+
+// QueryConnectionClientStateResponse is the response type for the
+// Query/ConnectionClientState RPC method
+message QueryConnectionClientStateResponse {
+  // client state associated with the channel
+  ibc.client.IdentifiedClientState identified_client_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryConnectionConsensusStateRequest is the request type for the
+// Query/ConnectionConsensusState RPC method
+message QueryConnectionConsensusStateRequest {
+  // connection identifier
+  string connection_id = 1 [
+    (gogoproto.moretags) = "yaml:\"connection_id\""
+  ];
+  uint64 height = 2;
+}
+
+// QueryConnectionConsensusStateResponse is the response type for the
+// Query/ConnectionConsensusState RPC method
+message QueryConnectionConsensusStateResponse {
+  // consensus state associated with the channel
+  google.protobuf.Any consensus_state = 1;
+  // client ID associated with the consensus state
+  string client_id = 2;
+  // merkle proof of existence
+  bytes proof = 3;
+  // merkle proof path
+  string proof_path = 4;
+  // height at which the proof was retrieved
+  uint64 proof_height = 5;
 }

@@ -1,25 +1,27 @@
 package keeper_test
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-func testComponents() (codec.Marshaler, sdk.Context, sdk.StoreKey, sdk.StoreKey, paramskeeper.Keeper) {
-	cdc := createTestCodec()
+func testComponents() (*codec.LegacyAmino, sdk.Context, sdk.StoreKey, sdk.StoreKey, paramskeeper.Keeper) {
+	marshaler := simapp.MakeEncodingConfig().Marshaler
+	legacyAmino := createTestCodec()
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := paramskeeper.NewKeeper(cdc, mkey, tkey)
+	keeper := paramskeeper.NewKeeper(marshaler, legacyAmino, mkey, tkey)
 
-	return cdc, ctx, mkey, tkey, keeper
+	return legacyAmino, ctx, mkey, tkey, keeper
 }
 
 type invalid struct{}
@@ -28,12 +30,12 @@ type s struct {
 	I int
 }
 
-func createTestCodec() codec.Marshaler {
+func createTestCodec() *codec.LegacyAmino {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
-	return proposal.NewCodec(cdc)
+	return cdc
 }
 
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
@@ -45,6 +47,6 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 	return ctx
 }

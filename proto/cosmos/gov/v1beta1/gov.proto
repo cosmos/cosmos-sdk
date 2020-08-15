@@ -15,8 +15,6 @@ option (gogoproto.goproto_getters_all)  = false;
 
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
-  option (gogoproto.enum_stringer)         = false;
-  option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
   // VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
@@ -46,7 +44,7 @@ message TextProposal {
 message Deposit {
   option (gogoproto.equal) = true;
 
-  uint64   proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64   proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -56,8 +54,10 @@ message Deposit {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  uint64 proposal_id = 1
-      [(gogoproto.customname) = "ProposalID", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  uint64 proposal_id = 1 [
+    (gogoproto.jsontag) = "id",
+    (gogoproto.moretags) = "yaml:\"id\""
+  ];
   google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
   ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
   TallyResult         final_tally_result = 4
@@ -114,7 +114,7 @@ message TallyResult {
 message Vote {
   option (gogoproto.equal) = true;
 
-  uint64     proposal_id = 1 [(gogoproto.customname) = "ProposalID", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64     proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
 }

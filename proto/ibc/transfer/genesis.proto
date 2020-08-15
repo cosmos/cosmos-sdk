@@ -4,12 +4,16 @@ package ibc.transfer;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 import "gogoproto/gogo.proto";
+import "ibc/transfer/transfer.proto";
 
-// GenesisState is currently only used to ensure that the InitGenesis gets run
-// by the module manager
-message GenesisState {
-  string port_id = 1 [
-    (gogoproto.customname) = "PortID",
-    (gogoproto.moretags)   = "yaml:\"port_id\""
-  ];
+// GenesisState defines the ibc-transfer genesis state
+message GenesisState{
+	string port_id  = 1 [
+	  (gogoproto.moretags) = "yaml:\"port_id\""
+	];
+	repeated DenomTrace denom_traces = 2 [
+		(gogoproto.castrepeated) = "Traces",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"denom_traces\""
+	];
 }

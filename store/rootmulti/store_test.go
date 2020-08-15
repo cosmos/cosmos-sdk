@@ -591,5 +591,5 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 			CommitId: store.LastCommitID(),
 		}.GetHash()
 	}
-	return sdkmaps.SimpleHashFromMap(m)
+	return sdkmaps.HashFromMap(m)
 }

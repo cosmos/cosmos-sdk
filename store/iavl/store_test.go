@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -73,7 +73,7 @@ func TestGetImmutable(t *testing.T) {
 
 	res := newStore.Query(abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
 	require.Equal(t, res.Value, []byte("adios"))
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	require.Panics(t, func() { newStore.Set(nil, nil) })
 	require.Panics(t, func() { newStore.Delete(nil) })

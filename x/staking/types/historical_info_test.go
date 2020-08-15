@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 		NewValidator(valAddr2, pk2, Description{}),
 		NewValidator(valAddr3, pk3, Description{}),
 	}
-	header = abci.Header{
+	header = tmproto.Header{
 		ChainID: "hello",
 		Height:  5,
 	}

@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -79,4 +80,17 @@ func (h Header) ValidateBasic(chainID string) error {
 // NOTE: only for testing use.
 func (h Header) ToABCIHeader() abci.Header {
 	return tmtypes.TM2PB.Header(h.SignedHeader.Header)
+}
+
+// MarshalHeader returns the Header bytes.
+func MarshalHeader(header Header) ([]byte, error) {
+	legacyAmino := codec.New()
+	return legacyAmino.MarshalBinaryBare(header)
+}
+
+// UnmarshalHeader returns the header
+func UnmarshalHeader(value []byte) (header Header, err error) {
+	legacyAmino := codec.New()
+	err = legacyAmino.UnmarshalBinaryBare(value, &header)
+	return header, err
 }

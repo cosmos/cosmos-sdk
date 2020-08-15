@@ -26,7 +26,7 @@ message MsgSubmitProposal {
   bytes proposer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
-// MsgVote defines a message to cast a vote
+// MsgVote defines a message to cast a vote.
 message MsgVote {
   option (gogoproto.equal) = true;
 
@@ -39,7 +39,7 @@ message MsgVote {
   VoteOption option = 3;
 }
 
-// MsgDeposit defines a message to submit a deposit to an existing proposal
+// MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
   option (gogoproto.equal) = true;
 

@@ -9,8 +9,9 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
-// HistoricalInfo contains the historical information that gets stored at
-// each height.
+// HistoricalInfo contains header and validator information for a given block. It is stored
+// as part of staking module's state, which persists the `n` most recent HistoricalInfo
+// (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
   option (gogoproto.equal) = true;
 
@@ -40,7 +41,7 @@ message CommissionRates {
   ];
 }
 
-// Commission defines a commission parameters for a given validator.
+// Commission defines commission parameters for a given validator.
 message Commission {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -65,8 +66,9 @@ message Description {
   string details          = 5;
 }
 
-// Validator defines the total amount of bond shares and their exchange rate to
-// coins. Slashing results in a decrease in the exchange rate, allowing correct
+// Validator defines a validator, together with the total amount of the Validator's
+// bond shares and their exchange rate to coins.
+// Slashing results in a decrease in the exchange rate, allowing correct
 // calculation of future undelegations without iterating over delegators.
 // When coins are delegated to this validator, the validator is credited with a
 // delegation whose number of bond shares is based on the amount of coins
@@ -187,7 +189,7 @@ message Delegation {
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
-// for a single validator in an time-ordered list
+// for a single validator in an time-ordered list.
 message UnbondingDelegation {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -319,7 +321,7 @@ message RedelegationResponse {
   repeated RedelegationEntryResponse entries = 2 [(gogoproto.nullable) = false];
 }
 
-// Pool - tracking bonded and not-bonded token supply of the bond denomination
+// Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
 message Pool {
   option (gogoproto.description) = true;
   option (gogoproto.equal) = true;
@@ -331,4 +333,3 @@ message Pool {
                             (gogoproto.nullable)   = false,
                             (gogoproto.moretags)   = "yaml:\"bonded_tokens\""];
 }
-

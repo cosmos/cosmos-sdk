@@ -100,7 +100,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 	}
 
 	// If more than 1/3 of voters veto, proposal fails
-	if results[types.OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.Veto) {
+	if results[types.OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.VetoThreshold) {
 		return false, true, tallyResults
 	}
 

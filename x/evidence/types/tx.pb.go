@@ -27,8 +27,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
-// Evidence.
+// MsgSubmitEvidence represents a msg that supports submitting arbitrary
+// Evidence of misbehavior such as equivocation or counterfactual signing.
 type MsgSubmitEvidence struct {
 	Submitter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=submitter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"submitter,omitempty"`
 	Evidence  *types.Any                                    `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`

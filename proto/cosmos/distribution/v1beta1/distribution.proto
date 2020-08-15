@@ -106,8 +106,9 @@ message FeePool {
   ];
 }
 
-// CommunityPoolSpendProposal represents the spending of coins from 
-// the community pool.
+// CommunityPoolSpendProposal details a proposal for use of community funds,
+// together with how many coins are proposed to be spent, and to which
+// recipient account.
 message CommunityPoolSpendProposal {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;

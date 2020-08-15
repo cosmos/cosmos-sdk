@@ -421,8 +421,9 @@ func (m *FeePool) GetCommunityPool() github_com_cosmos_cosmos_sdk_types.DecCoins
 	return nil
 }
 
-// CommunityPoolSpendProposal represents the spending of coins from
-// the community pool.
+// CommunityPoolSpendProposal details a proposal for use of community funds,
+// together with how many coins are proposed to be spent, and to which
+// recipient account.
 type CommunityPoolSpendProposal struct {
 	Title       string                                        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string                                        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

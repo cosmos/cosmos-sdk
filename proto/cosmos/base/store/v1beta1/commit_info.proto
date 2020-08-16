@@ -16,7 +16,7 @@ message CommitInfo {
 // between a store name and the commit ID.
 message StoreInfo {
   string   name      = 1;
-  CommitID commit_id = 2 [(gogoproto.nullable) = false, (gogoproto.customname) = "CommitID"];
+  CommitID commit_id = 2 [(gogoproto.nullable) = false];
 }
 
 // CommitID defines the committment information when a specific store is

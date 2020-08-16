@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -46,7 +46,7 @@ func (suite *ProposalHandlerTestSuite) SetupTest() {
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height+1, height, clientTime.Add(time.Second*5), valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.cdc = suite.app.LegacyAmino()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Time: clientTime})
+	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{Time: clientTime})
 
 	suite.consensusState = ibctmtypes.NewConsensusState(clientTime, commitmenttypes.NewMerkleRoot([]byte("hash")), height, valSet.Hash())
 
@@ -58,23 +58,6 @@ func TestProposalHandlerTestSuite(t *testing.T) {
 
 func testClientUpdateProposal(clientID string, header ibctmtypes.Header) (*types.ClientUpdateProposal, error) {
 	return types.NewClientUpdateProposal("Test", "description", clientID, header)
-}
-
-func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandlerPassed2() {
-	ibcKeeper := *suite.app.IBCKeeper
-	clientkeeper := ibcKeeper.ClientKeeper
-
-	clientState := ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), true, true)
-
-	_, err := clientkeeper.CreateClient(suite.ctx, clientID, clientState, suite.consensusState)
-	suite.Require().NoError(err)
-
-	p, err := testClientUpdateProposal(clientID, suite.header)
-	suite.Require().NoError(err)
-
-	hdlr := ibc.NewClientUpdateProposalHandler(ibcKeeper)
-	err = hdlr(suite.ctx, p)
-	suite.Require().NoError(err)
 }
 
 func (suite *ProposalHandlerTestSuite) testClientState(allowGovernanceOverrideAfterExpire bool, isExpire bool, allowGovernanceOverrideAfterMisbehaviour bool, isFrozen bool) *ibctmtypes.ClientState {

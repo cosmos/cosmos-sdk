@@ -20,8 +20,16 @@ type TxSearchMock struct {
 	txs []tmtypes.Tx
 }
 
-func (mock TxSearchMock) TxSearch(query string, prove bool, page, perPage int, orderBy string) (*ctypes.ResultTxSearch, error) {
-	start, end := client.Paginate(len(mock.txs), page, perPage, 100)
+func (mock TxSearchMock) TxSearch(query string, prove bool, page, perPage *int, orderBy string) (*ctypes.ResultTxSearch, error) {
+	if page == nil {
+		*page = 0
+	}
+
+	if perPage == nil {
+		*perPage = 0
+	}
+
+	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
 	if start < 0 || end < 0 {
 		// nil result with nil error crashes utils.QueryTxsByEvents
 		return &ctypes.ResultTxSearch{}, nil

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,15 +23,6 @@ import (
 
 var _ clientexported.ClientState = (*ClientState)(nil)
 
-// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
-	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
-		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.Header.Time, msg.ProofSpecs, msg.AllowGovernanceOverrideAfterExpire,
-		msg.AllowGovernanceOverrideAfterMisbehaviour,
-	)
-}
-
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,
@@ -40,7 +31,7 @@ func NewClientState(
 	allowGovernanceOverrideAfterExpire bool, allowGovernanceOverrideAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
-		ChainID:                                  chainID,
+		ChainId:                                  chainID,
 		TrustLevel:                               trustLevel,
 		TrustingPeriod:                           trustingPeriod,
 		UnbondingPeriod:                          ubdPeriod,
@@ -56,7 +47,7 @@ func NewClientState(
 
 // GetChainID returns the chain-id
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is tendermint.
@@ -87,10 +78,10 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if strings.TrimSpace(cs.ChainID) == "" {
+	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
 	}
-	if err := lite.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
+	if err := light.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {

@@ -17,5 +17,5 @@ func TestExportGenesisFileWithTime(t *testing.T) {
 	t.Cleanup(cleanup)
 
 	fname := filepath.Join(dir, "genesis.json")
-	require.NoError(t, ExportGenesisFileWithTime(fname, "test", nil, json.RawMessage(""), time.Now()))
+	require.NoError(t, ExportGenesisFileWithTime(fname, "test", nil, json.RawMessage(`{"account_owner": "Bob"}`), time.Now()))
 }

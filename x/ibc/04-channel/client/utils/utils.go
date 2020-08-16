@@ -27,8 +27,8 @@ func QueryPacketCommitment(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryPacketCommitmentRequest{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Sequence:  sequence,
 	}
 
@@ -49,7 +49,7 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +71,8 @@ func QueryChannel(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelRequest{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 	}
 
 	return queryClient.Channel(context.Background(), req)
@@ -95,7 +95,7 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +112,8 @@ func QueryChannelClientState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelClientStateRequest{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 	}
 
 	res, err := queryClient.ChannelClientState(context.Background(), req)
@@ -122,13 +122,13 @@ func QueryChannelClientState(
 	}
 
 	if prove {
-		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ID)
+		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.Id)
 		if err != nil {
 			return nil, err
 		}
 
 		// use client state returned from ABCI query in case query height differs
-		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.ID, clientState)
+		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.Id, clientState)
 		res = types.NewQueryChannelClientStateResponse(identifiedClientState, proof, int64(proofHeight))
 	}
 
@@ -144,8 +144,8 @@ func QueryChannelConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Height:    height,
 	}
 
@@ -160,7 +160,7 @@ func QueryChannelConsensusState(
 	}
 
 	if prove {
-		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientID, consensusState.GetHeight())
+		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func QueryChannelConsensusState(
 			return nil, err
 		}
 
-		res = types.NewQueryChannelConsensusStateResponse(res.ClientID, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
+		res = types.NewQueryChannelConsensusStateResponse(res.ClientId, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
 	}
 
 	return res, nil
@@ -188,7 +188,7 @@ func QueryCounterpartyConsensusState(
 	}
 
 	counterparty := channelRes.Channel.Counterparty
-	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortID, counterparty.ChannelID, height, false)
+	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortId, counterparty.ChannelId, height, false)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -213,8 +213,8 @@ func QueryNextSequenceReceive(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryNextSequenceReceiveRequest{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 	}
 
 	return queryClient.NextSequenceReceive(context.Background(), req)
@@ -232,7 +232,7 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

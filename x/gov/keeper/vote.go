@@ -70,7 +70,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryBare(&vote)
-	store.Set(types.VoteKey(vote.ProposalID, vote.Voter), bz)
+	store.Set(types.VoteKey(vote.ProposalId, vote.Voter), bz)
 }
 
 // IterateAllVotes iterates over the all the stored votes and performs a callback function

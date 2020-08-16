@@ -9,10 +9,8 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
-
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -70,7 +68,7 @@ func NewCreateClientCmd() *cobra.Command {
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = ibctmtypes.NewFractionFromTm(lite.DefaultTrustLevel)
+				trustLevel = ibctmtypes.NewFractionFromTm(light.DefaultTrustLevel)
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {

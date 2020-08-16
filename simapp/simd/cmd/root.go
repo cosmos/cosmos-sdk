@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -34,8 +35,21 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-var (
-	rootCmd = &cobra.Command{
+// NewRootCmd creates a new root command for simd. It is called once in the
+// main function.
+func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+	encodingConfig := simapp.MakeEncodingConfig()
+	initClientCtx := client.Context{}.
+		WithJSONMarshaler(encodingConfig.Marshaler).
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithInput(os.Stdin).
+		WithAccountRetriever(types.AccountRetriever{}).
+		WithBroadcastMode(flags.BroadcastBlock).
+		WithHomeDir(simapp.DefaultNodeHome)
+
+	rootCmd := &cobra.Command{
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
@@ -47,20 +61,13 @@ var (
 		},
 	}
 
-	encodingConfig = simapp.MakeEncodingConfig()
-	initClientCtx  = client.Context{}.
-			WithJSONMarshaler(encodingConfig.Marshaler).
-			WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-			WithTxConfig(encodingConfig.TxConfig).
-			WithLegacyAmino(encodingConfig.Amino).
-			WithInput(os.Stdin).
-			WithAccountRetriever(types.NewAccountRetriever(encodingConfig.Marshaler)).
-			WithBroadcastMode(flags.BroadcastBlock).
-			WithHomeDir(simapp.DefaultNodeHome)
-)
+	initRootCmd(rootCmd, encodingConfig)
+
+	return rootCmd, encodingConfig
+}
 
 // Execute executes the root command.
-func Execute() error {
+func Execute(rootCmd *cobra.Command) error {
 	// Create and set a client.Context on the command's Context. During the pre-run
 	// of the root command, a default initialized client.Context is provided to
 	// seed child command execution with values such as AccountRetriver, Keyring,
@@ -75,16 +82,16 @@ func Execute() error {
 	return executor.ExecuteContext(ctx)
 }
 
-func init() {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	authclient.Codec = encodingConfig.Marshaler
 
 	rootCmd.AddCommand(
-		withProtoJSON(genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome)),
-		withProtoJSON(genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
+		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		withProtoJSON(genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome)),
-		withProtoJSON(genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig)),
-		withProtoJSON(AddGenesisAccountCmd(simapp.DefaultNodeHome)),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics, encodingConfig.TxConfig),
+		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -173,7 +180,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		encodingConfig,
+		simapp.MakeEncodingConfig(), // Ideally, we would reuse the one created by NewRootCmd.
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -187,7 +194,7 @@ func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
 
-	encCfg := simapp.MakeEncodingConfig()
+	encCfg := simapp.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var simApp *simapp.SimApp
 	if height != -1 {
@@ -201,28 +208,4 @@ func exportAppStateAndTMValidators(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
-}
-
-// This is a temporary command middleware to enable proto JSON marshaling for testing.
-// Once proto JSON works everywhere we can remove this and set ProtoCodec as default
-func withProtoJSON(command *cobra.Command) *cobra.Command {
-	existing := command.PersistentPreRunE
-	if existing != nil {
-		command.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-			err := existing(cmd, args)
-			if err != nil {
-				return err
-			}
-			return setProtoJSON(cmd, args)
-		}
-	} else {
-		command.PersistentPreRunE = setProtoJSON
-	}
-	return command
-}
-
-func setProtoJSON(cmd *cobra.Command, _ []string) error {
-	clientCtx := client.GetClientContextFromCmd(cmd)
-	clientCtx = clientCtx.WithJSONMarshaler(codec.NewProtoCodec(clientCtx.InterfaceRegistry))
-	return client.SetCmdClientContext(cmd, clientCtx)
 }

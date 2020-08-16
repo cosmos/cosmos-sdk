@@ -9,7 +9,6 @@ import "google/protobuf/any.proto";
 // GenesisClientState defines an identified ClientState as protobuf Any format.
 message GenesisClientState {
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
@@ -17,9 +16,7 @@ message GenesisClientState {
 
 // ClientConsensusStates defines all the stored consensus states for a given client.
 message ClientConsensusStates {
-  string client_id = 1 [
-    (gogoproto.customname) = "ClientID"
-  ];
+  string client_id = 1;
   repeated google.protobuf.Any consensus_states = 2 [
     (gogoproto.moretags) = "yaml:\"consensus_states\""
   ];

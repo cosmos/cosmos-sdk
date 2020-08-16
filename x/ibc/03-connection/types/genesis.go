@@ -9,7 +9,7 @@ import (
 // NewConnectionPaths creates a ConnectionPaths instance.
 func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 	return ConnectionPaths{
-		ClientID: id,
+		ClientId: id,
 		Paths:    paths,
 	}
 }
@@ -42,7 +42,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for i, conPaths := range gs.ClientConnectionPaths {
-		if err := host.ClientIdentifierValidator(conPaths.ClientID); err != nil {
+		if err := host.ClientIdentifierValidator(conPaths.ClientId); err != nil {
 			return fmt.Errorf("invalid client connection path %d: %w", i, err)
 		}
 		for _, path := range conPaths.Paths {

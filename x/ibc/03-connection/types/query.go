@@ -38,13 +38,13 @@ func NewQueryClientConnectionsResponse(
 // NewQueryClientConnectionsRequest creates a new QueryClientConnectionsRequest instance
 func NewQueryClientConnectionsRequest(clientID string) *QueryClientConnectionsRequest {
 	return &QueryClientConnectionsRequest{
-		ClientID: clientID,
+		ClientId: clientID,
 	}
 }
 
 // NewQueryConnectionClientStateResponse creates a newQueryConnectionClientStateResponse instance
 func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryConnectionClientStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.ID, host.ClientStatePath()), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.Id, host.ClientStatePath()), "/"))
 	return &QueryConnectionClientStateResponse{
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,
@@ -58,7 +58,7 @@ func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState
 	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(consensusStateHeight)), "/"))
 	return &QueryConnectionConsensusStateResponse{
 		ConsensusState: anyConsensusState,
-		ClientID:       clientID,
+		ClientId:       clientID,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),
 		ProofHeight:    uint64(height),

@@ -77,7 +77,7 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	if pubKey == nil {
 		acc.PubKey = nil
 	} else {
-		acc.PubKey = pubKey.Bytes()
+		acc.PubKey = amino.MustMarshalBinaryBare(pubKey)
 	}
 
 	return nil

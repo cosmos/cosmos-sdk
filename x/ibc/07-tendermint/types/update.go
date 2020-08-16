@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -127,7 +127,7 @@ func checkValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err := lite.Verify(
+	err := light.Verify(
 		clientState.GetChainID(), &signedHeader,
 		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),

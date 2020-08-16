@@ -6,6 +6,7 @@ const (
 	EventTypePacket       = "fungible_token_packet"
 	EventTypeTransfer     = "ibc_transfer"
 	EventTypeChannelClose = "channel_closed"
+	EventTypeDenomTrace   = "denomination_trace"
 
 	AttributeKeyReceiver       = "receiver"
 	AttributeKeyDenom          = "denom"
@@ -15,4 +16,5 @@ const (
 	AttributeKeyRefundAmount   = "refund_amount"
 	AttributeKeyAckSuccess     = "success"
 	AttributeKeyAckError       = "error"
+	AttributeKeyTraceHash      = "trace_hash"
 )

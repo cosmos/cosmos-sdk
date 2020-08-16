@@ -61,6 +61,6 @@ func (cup ClientUpdateProposal) String() string {
   Description: %s
   ClientID:   %s
   Header:      %s
-`, cup.Title, cup.Description, cup.ClientID, cup.Header))
+`, cup.Title, cup.Description, cup.ClientId, cup.Header))
 	return b.String()
 }

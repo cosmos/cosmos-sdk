@@ -109,7 +109,7 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 
 // HandleClientUpdateProposal is a handler for executing a passed client update proposal
 func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.ClientUpdateProposal) error {
-	clientState, found := k.GetClientState(ctx, p.ClientID)
+	clientState, found := k.GetClientState(ctx, p.ClientId)
 	if !found {
 		return types.ErrClientNotFound
 	}
@@ -126,7 +126,7 @@ func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.Cl
 
 		if tmClientState.AllowGovernanceOverrideAfterMisbehaviour && tmClientState.IsFrozen() {
 			tmClientState.Unfreeze()
-			k.SetClientState(ctx, p.ClientID, tmClientState)
+			k.SetClientState(ctx, p.ClientId, tmClientState)
 			updateClientFlag = true
 		}
 
@@ -135,7 +135,7 @@ func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.Cl
 			if err != nil {
 				return types.ErrInvalidHeader
 			}
-			if _, err = k.UpdateClient(ctx, p.ClientID, tmtHeader); err != nil {
+			if _, err = k.UpdateClient(ctx, p.ClientId, tmtHeader); err != nil {
 				return err
 			}
 

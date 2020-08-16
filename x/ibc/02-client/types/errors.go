@@ -6,6 +6,7 @@ import (
 
 // IBC client sentinel errors
 var (
+	ErrFailUpdateClient                       = sdkerrors.Register(SubModuleName, 1, "unable to update light client")
 	ErrClientExists                           = sdkerrors.Register(SubModuleName, 2, "light client already exists")
 	ErrClientNotFound                         = sdkerrors.Register(SubModuleName, 3, "light client not found")
 	ErrClientFrozen                           = sdkerrors.Register(SubModuleName, 4, "light client is frozen due to misbehaviour")

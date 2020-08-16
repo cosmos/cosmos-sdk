@@ -429,7 +429,7 @@ func (cs ClientState) Expired() bool {
 }
 
 //Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
-func (cs ClientState) Unfreeze() error {
+func (cs *ClientState) Unfreeze() error {
 	cs.FrozenHeight = 0
 	return nil
 }

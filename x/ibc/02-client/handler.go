@@ -122,7 +122,7 @@ func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.Cl
 	clientType := clientState.ClientType()
 	switch clientType {
 	case exported.Tendermint:
-		tmClientState := clientState.(ibctmtypes.ClientState)
+		tmClientState := clientState.(*ibctmtypes.ClientState)
 
 		updateClientFlag := false
 		if tmClientState.AllowGovernanceOverrideAfterExpiry && tmClientState.Expired() {
@@ -144,6 +144,8 @@ func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.Cl
 				return err
 			}
 
+		} else {
+			return types.ErrFailUpdateClient
 		}
 
 	case exported.Localhost:

@@ -11,6 +11,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
@@ -18,11 +19,6 @@ import (
 	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
 	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-)
-
-const (
-	flagGenesisTime = "genesis-time"
-	flagChainID     = "chain-id"
 )
 
 // Allow applications to extend and modify the migration process.
@@ -99,7 +95,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
 
-			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
+			genesisTime, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if genesisTime != "" {
 				var t time.Time
 
@@ -111,7 +107,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainID, _ := cmd.Flags().GetString(flagChainID)
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID != "" {
 				genDoc.ChainID = chainID
 			}
@@ -131,8 +127,8 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 		},
 	}
 
-	cmd.Flags().String(flagGenesisTime, "", "override genesis_time with this flag")
-	cmd.Flags().String(flagChainID, "", "override chain_id with this flag")
+	cmd.Flags().String(flags.FlagChainID, "", "override genesis_time with this flag")
+	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd
 }

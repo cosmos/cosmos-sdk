@@ -7,12 +7,18 @@ import (
 )
 
 const (
-	// DefaultTransfersEnabled enabled
-	DefaultTransfersEnabled = true
+	// DefaultSendEnabled enabled
+	DefaultSendEnabled = true
+	// DefaultReceiveEnabled enabled
+	DefaultReceiveEnabled = true
 )
 
-// KeyTransfersEnabled is store's key for TransfersEnabled Params
-var KeyTransfersEnabled = []byte("TransfersEnabled")
+var (
+	// KeySendEnabled is store's key for SendEnabled Params
+	KeySendEnabled = []byte("SendEnabled")
+	// KeyReceiveEnabled is store's key for ReceiveEnabled Params
+	KeyReceiveEnabled = []byte("ReceiveEnabled")
+)
 
 // ParamKeyTable type declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
@@ -20,30 +26,36 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new parameter configuration for the ibc transfer module
-func NewParams(enableTransfers bool) Params {
+func NewParams(enableSend, enableReceive bool) Params {
 	return Params{
-		TransfersEnabled: enableTransfers,
+		SendEnabled:    enableSend,
+		ReceiveEnabled: enableReceive,
 	}
 }
 
 // DefaultParams is the default parameter configuration for the ibc-transfer module
 func DefaultParams() Params {
-	return NewParams(DefaultTransfersEnabled)
+	return NewParams(DefaultSendEnabled, DefaultReceiveEnabled)
 }
 
 // Validate all ibc-transfer module parameters
 func (p Params) Validate() error {
-	return validateTransfersEnabled(p.TransfersEnabled)
+	if err := validateEnabled(p.SendEnabled); err != nil {
+		return err
+	}
+
+	return validateEnabled(p.ReceiveEnabled)
 }
 
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyTransfersEnabled, p.TransfersEnabled, validateTransfersEnabled),
+		paramtypes.NewParamSetPair(KeySendEnabled, p.SendEnabled, validateEnabled),
+		paramtypes.NewParamSetPair(KeyReceiveEnabled, p.ReceiveEnabled, validateEnabled),
 	}
 }
 
-func validateTransfersEnabled(i interface{}) error {
+func validateEnabled(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

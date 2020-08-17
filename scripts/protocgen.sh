@@ -23,8 +23,6 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   proto_files=${proto_files}" ${dir:2}/*.proto"
 done
 
-echo $proto_files
-
 protoc ${proto_files} \
 -I "proto" \
 -I "third_party/proto" \

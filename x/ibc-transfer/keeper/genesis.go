@@ -26,6 +26,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 		}
 	}
 
+	k.SetParams(ctx, state.Params)
+
 	// check if the module account exists
 	moduleAcc := k.GetTransferAccount(ctx)
 	if moduleAcc == nil {
@@ -38,5 +40,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		PortId:      k.GetPort(ctx),
 		DenomTraces: k.GetAllDenomTraces(ctx),
+		Params:      k.GetParams(ctx),
 	}
 }

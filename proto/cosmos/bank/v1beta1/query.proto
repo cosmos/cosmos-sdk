@@ -98,5 +98,5 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
-  Params Params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false];
 }

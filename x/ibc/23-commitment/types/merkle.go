@@ -5,12 +5,12 @@ import (
 	"net/url"
 
 	ics23 "github.com/confio/ics23/go"
+	"github.com/gogo/protobuf/proto"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // var representing the proofspecs for a SDK chain
@@ -346,7 +346,7 @@ func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
 
 // Empty returns true if the root is empty
 func (proof MerkleProof) Empty() bool {
-	return proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+	return proto.Equal(&proof, nil) || proto.Equal(&proof, &MerkleProof{}) || proto.Equal(&proof, &tmcrypto.ProofOps{})
 }
 
 // ValidateBasic checks if the proof is empty.

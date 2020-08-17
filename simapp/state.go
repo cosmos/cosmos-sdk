@@ -153,7 +153,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, legacyAmino
 			panic(err)
 		}
 
-		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
 		a, ok := acc.GetCachedValue().(authtypes.AccountI)
 		if !ok {

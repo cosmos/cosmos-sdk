@@ -9,7 +9,9 @@
     },
     "evidence": {
       "max_age_num_blocks": "100000",
-      "max_age_duration": "172800000000000"
+      "max_age_duration": "172800000000000",
+      "max_num": 50,
+      "proof_trial_period": "50000"
     },
     "validator": {
       "pub_key_types": [
@@ -23,57 +25,62 @@
       "params": {
         "default_send_enabled": true
       },
-      "balances": [	{"address": "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4",
-			    "coins": [
-			      {
-				"denom": "nametoken",
-				"amount": "1000"
-			      },
-			      {
-				"denom": "stake",
-				"amount": "100000000"
-			      }
-			    ]
-			},
-			{	"address": "cosmos1xztun2634zplhajda7tmjaxy488qj44n765t58",
-			    "coins": [
-			      {
-				"denom": "nametoken",
-				"amount": "1000"
-			      },
-			      {
-				"denom": "stake",
-				"amount": "100000000"
-			      }
-			    ]
-			}
-		],
-	
+      "balances": [
+        {
+          "address": "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4",
+          "coins": [
+            {
+              "denom": "nametoken",
+              "amount": "1000"
+            },
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
+        },
+        {
+          "address": "cosmos1xztun2634zplhajda7tmjaxy488qj44n765t58",
+          "coins": [
+            {
+              "denom": "nametoken",
+              "amount": "1000"
+            },
+            {
+              "denom": "stake",
+              "amount": "100000000"
+            }
+          ]
+        }
+      ],
       "supply": [],
-	"denom_metadata": [{ 
-		"description": "The native staking token of the Cosmos Hub.",
-		"denom_units": [ {
-				      "denom": "uatom",
-				      "exponent": 0,
-				      "aliases": [
-					"microatom"
-					 ]
-				  },
-				    {
-				      "denom": "matom",
-				      "exponent": 3,
-				      "aliases": [
-					"milliatom"
-				      ]
-				    },
-				    {
-				      "denom": "atom",
-				      "exponent": 6
-				    }],
-		"base": "uatom",
-	  	"display": "atom"
-	}]
-
+      "denom_metadata": [
+        {
+          "description": "The native staking token of the Cosmos Hub.",
+          "denom_units": [
+            {
+              "denom": "uatom",
+              "exponent": 0,
+              "aliases": [
+                "microatom"
+              ]
+            },
+            {
+              "denom": "matom",
+              "exponent": 3,
+              "aliases": [
+                "milliatom"
+              ]
+            },
+            {
+              "denom": "atom",
+              "exponent": 6
+            }
+          ],
+          "base": "uatom",
+          "display": "atom"
+        }
+      ]
     },
     "genutil": {
       "gentxs": []

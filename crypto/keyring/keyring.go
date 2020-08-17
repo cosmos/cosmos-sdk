@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/crypto/armor"
+
 	"github.com/99designs/keyring"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -18,7 +20,6 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -197,7 +198,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return armor.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -209,7 +210,7 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	return ks.ExportPubKeyArmor(info.GetName())
 }
 
-func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
+func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (string, error) {
 	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
@@ -220,7 +221,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 		return "", err
 	}
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return armor.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
@@ -260,12 +261,12 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 	return ks.ExportPrivKeyArmor(byAddress.GetName(), encryptPassphrase)
 }
 
-func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
+func (ks keystore) ImportPrivKey(uid, armorStr, passphrase string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := armor.UnarmorDecryptPrivKey(armorStr, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
@@ -278,12 +279,12 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
+func (ks keystore) ImportPubKey(uid string, armorStr string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := armor.UnarmorPubKeyBytes(armorStr)
 	if err != nil {
 		return err
 	}

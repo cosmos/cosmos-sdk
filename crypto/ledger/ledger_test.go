@@ -6,8 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
+	tmcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/testutil"

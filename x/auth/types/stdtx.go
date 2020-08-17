@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // MaxGasWanted defines the max gas allowed.

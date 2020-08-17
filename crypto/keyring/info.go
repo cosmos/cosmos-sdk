@@ -3,8 +3,7 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types"

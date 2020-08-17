@@ -3,8 +3,9 @@ package multisig
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
@@ -139,7 +140,7 @@ func (pk PubKeyMultisigThreshold) Address() crypto.Address {
 
 // Equals returns true iff pk and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
+func (pk PubKeyMultisigThreshold) Equals(other tmcrypto.PubKey) bool {
 	otherKey, sameType := other.(PubKeyMultisigThreshold)
 	if !sameType {
 		return false

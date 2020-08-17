@@ -7,9 +7,12 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
-	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+
+	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
@@ -43,7 +46,7 @@ type (
 		// CachedPubKey should be private, but we want to encode it via
 		// go-amino so we can view the address later, even without having the
 		// ledger attached.
-		CachedPubKey tmcrypto.PubKey
+		CachedPubKey crypto.PubKey
 		Path         hd.BIP44Params
 	}
 )

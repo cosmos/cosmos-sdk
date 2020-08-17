@@ -3,7 +3,7 @@ package signing
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto"
 )
 
 // SignatureV2 is a convenience type that is easier to use in application logic

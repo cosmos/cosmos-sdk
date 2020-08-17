@@ -1,15 +1,17 @@
-package crypto
+package armor
 
 import (
 	"encoding/hex"
 	"fmt"
 
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+
 	"github.com/tendermint/crypto/bcrypt"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -144,14 +146,14 @@ func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string, algo string)
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
 func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
-	saltBytes = crypto.CRandBytes(16)
+	saltBytes = tmcrypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 
 	if err != nil {
 		panic(sdkerrors.Wrap(err, "error generating bcrypt key from passphrase"))
 	}
 
-	key = crypto.Sha256(key) // get 32 bytes
+	key = tmcrypto.Sha256(key) // get 32 bytes
 	privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
 
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
@@ -196,7 +198,7 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 		return privKey, sdkerrors.Wrap(err, "error generating bcrypt key from passphrase")
 	}
 
-	key = crypto.Sha256(key) // Get 32 bytes
+	key = tmcrypto.Sha256(key) // Get 32 bytes
 
 	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 	if err != nil && err.Error() == "Ciphertext decryption failed" {

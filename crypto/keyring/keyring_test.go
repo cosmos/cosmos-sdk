@@ -5,6 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/armor"
+
 	"github.com/99designs/keyring"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
@@ -12,7 +16,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -26,7 +29,7 @@ const (
 )
 
 func init() {
-	crypto.BcryptSecurityParameter = 1
+	armor.BcryptSecurityParameter = 1
 }
 
 func TestNewKeyring(t *testing.T) {
@@ -392,7 +395,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 	require.NoError(t, err)
 	multi := multisig.PubKeyMultisigThreshold{
 		K:       1,
-		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
+		PubKeys: []crypto.PubKey{secp256k1.GenPrivKey().PubKey()},
 	}
 	_, err = kb.SaveMultisig("multi", multi)
 	require.NoError(t, err)
@@ -980,7 +983,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	require.NoError(t, err)
 
 	key := "multi"
-	pub := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{mnemonic1.GetPubKey(), mnemonic2.GetPubKey()})
+	pub := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{mnemonic1.GetPubKey(), mnemonic2.GetPubKey()})
 
 	info, err := keyring.SaveMultisig(key, pub)
 	require.Nil(t, err)

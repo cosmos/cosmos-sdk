@@ -5,12 +5,13 @@ import (
 	"io"
 	"strings"
 
+	armor2 "github.com/cosmos/cosmos-sdk/crypto/armor"
+
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -117,7 +118,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			return nil, err
 		}
 
-		priv, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv, _, err = armor2.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -139,7 +140,7 @@ func (kb dbKeybase) Export(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	return crypto.ArmorInfoBytes(bz), nil
+	return armor2.ArmorInfoBytes(bz), nil
 }
 
 // ExportPubKey returns public keys in ASCII armored format. It retrieves a Info
@@ -159,7 +160,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return
 	}
 
-	return crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
+	return armor2.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
 }
 
 // ExportPrivKey returns a private key in ASCII armored format.
@@ -177,7 +178,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 		return "", err
 	}
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return armor2.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // Close the underlying storage.
@@ -215,7 +216,7 @@ func (m keyringMigrator) Import(uid string, armor string) error {
 		return fmt.Errorf("cannot overwrite key %q", uid)
 	}
 
-	infoBytes, err := crypto.UnarmorInfoBytes(armor)
+	infoBytes, err := armor2.UnarmorInfoBytes(armor)
 	if err != nil {
 		return err
 	}

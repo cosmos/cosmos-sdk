@@ -49,6 +49,11 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				denomTrace := types.ParseDenomTrace(coin.Denom)
+				coin.Denom = denomTrace.IBCDenom()
+			}
+
 			timeoutHeight, err := cmd.Flags().GetUint64(flagPacketTimeoutHeight)
 			if err != nil {
 				return err

@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -170,10 +169,10 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   -1,
 		},
-		Validator: &abci.ValidatorParams{
-			PubKeyTypes: []string{types.ABCIPubKeyTypeSecp256k1, types.ABCIPubKeyTypeEd25519},
+		Validator: &tmproto.ValidatorParams{
+			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},
 		},
-		Evidence: &abci.EvidenceParams{
+		Evidence: &tmproto.EvidenceParams{
 			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},

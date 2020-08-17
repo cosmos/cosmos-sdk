@@ -2,7 +2,6 @@ package reflection_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -44,7 +43,6 @@ func (s IntegrationTestSuite) TestSimulateService() {
 		&reflection.ListAllInterfacesRequest{},
 	)
 	s.Require().NoError(err)
-	fmt.Println(resIface.GetInterfaceNames())
 	s.Require().Contains(resIface.GetInterfaceNames(), iface)
 
 	// Test that "cosmos.evidence.v1beta1.Evidence" has at least the

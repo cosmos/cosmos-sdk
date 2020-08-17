@@ -207,6 +207,7 @@ func (chain *TestChain) NextBlock() {
 
 	// increment the current header
 	chain.CurrentHeader = tmproto.Header{
+		ChainID: chain.ChainID,
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
@@ -229,6 +230,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		msgs,
+		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,

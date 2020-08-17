@@ -229,7 +229,7 @@ func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState
 	}
 
 	expectedUbdPeriod := k.stakingKeeper.UnbondingTime(ctx)
-	if expectedUbdPeriod == tmClient.UnbondingPeriod {
+	if expectedUbdPeriod != tmClient.UnbondingPeriod {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid unbonding period. expected: %s, got: %s",
 			expectedUbdPeriod, tmClient.UnbondingPeriod)
 	}

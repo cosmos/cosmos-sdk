@@ -1,0 +1,68 @@
+syntax = "proto3";
+package tendermint.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "tendermint/types/types.proto";
+import "tendermint/crypto/keys.proto";
+
+// DuplicateVoteEvidence contains evidence a validator signed two conflicting
+// votes.
+message DuplicateVoteEvidence {
+  Vote vote_a = 1;
+  Vote vote_b = 2;
+  
+  google.protobuf.Timestamp timestamp = 3
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message PotentialAmnesiaEvidence {
+  Vote vote_a = 1;
+  Vote vote_b = 2;
+
+  int64 height_stamp = 3;
+  google.protobuf.Timestamp timestamp = 4
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message AmnesiaEvidence {
+  PotentialAmnesiaEvidence potential_amnesia_evidence = 1;
+  ProofOfLockChange        polc                       = 2;
+}
+
+message ConflictingHeadersEvidence {
+  SignedHeader h1 = 1;
+  SignedHeader h2 = 2;
+}
+
+message LunaticValidatorEvidence {
+  Header header               = 1;
+  Vote   vote                 = 2;
+  string invalid_header_field = 3;
+  
+  google.protobuf.Timestamp timestamp = 4
+    [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message Evidence {
+  oneof sum {
+    DuplicateVoteEvidence      duplicate_vote_evidence      = 1;
+    ConflictingHeadersEvidence conflicting_headers_evidence = 2;
+    LunaticValidatorEvidence   lunatic_validator_evidence   = 3;
+    PotentialAmnesiaEvidence   potential_amnesia_evidence   = 4;
+    AmnesiaEvidence            amnesia_evidence             = 5;
+  }
+}
+
+// EvidenceData contains any evidence of malicious wrong-doing by validators
+message EvidenceData {
+  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
+  bytes             hash     = 2;
+}
+
+message ProofOfLockChange {
+  repeated Vote               votes   = 1;
+  tendermint.crypto.PublicKey pub_key = 2;
+}

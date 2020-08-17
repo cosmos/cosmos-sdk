@@ -20,10 +20,10 @@ func NewReflectionServiceServer(interfaceRegistry types.InterfaceRegistry) Refle
 
 var _ ReflectionServiceServer = (*reflectionServiceServer)(nil)
 
-func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListInterfacesRequest) (*ListInterfacesResponse, error) {
+func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
 	ifaces := r.interfaceRegistry.ListAllInterfaces()
 
-	return &ListInterfacesResponse{InterfaceNames: ifaces}, nil
+	return &ListAllInterfacesResponse{InterfaceNames: ifaces}, nil
 }
 
 func (r reflectionServiceServer) ListImplementations(_ context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {

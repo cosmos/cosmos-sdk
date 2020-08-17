@@ -41,7 +41,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	// interfaces.
 	resIface, err := s.queryClient.ListAllInterfaces(
 		context.Background(),
-		&reflection.ListInterfacesRequest{},
+		&reflection.ListAllInterfacesRequest{},
 	)
 	s.Require().NoError(err)
 	fmt.Println(resIface.GetInterfaceNames())

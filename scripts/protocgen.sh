@@ -2,6 +2,8 @@
 
 set -eo pipefail
 
+proto_files=''
+
 proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   protoc \
@@ -17,7 +19,16 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   -I "third_party/proto" \
   --grpc-gateway_out=logtostderr=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
+
+  proto_files=${proto_files}" ${dir:2}/*.proto"
 done
+
+echo $proto_files
+
+protoc ${proto_files} \
+-I "proto" \
+-I "third_party/proto" \
+--swagger_out=allow_merge=true,logtostderr=true:. 
 
 # generate codec/testdata proto code
 protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\

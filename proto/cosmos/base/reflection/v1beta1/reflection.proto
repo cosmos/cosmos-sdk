@@ -8,6 +8,7 @@ service ReflectionService {
     // ListAllInterfaces lists all the interfaces registered in the interface
     // registry.
     rpc ListAllInterfaces(ListAllInterfacesRequest) returns (ListAllInterfacesResponse) {};
+
     // ListImplementations list all the concrete types that implement a given
     // interface.
     rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {};

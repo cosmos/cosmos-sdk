@@ -15,7 +15,7 @@ import (
 func TestGRPCRouter(t *testing.T) {
 	qr := NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
-	qr.SetAnyUnpacker(interfaceRegistry)
+	qr.SetInterfaceRegistry(interfaceRegistry)
 	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
 	helper := &QueryServiceTestHelper{
 		GRPCQueryRouter: qr,

@@ -6,56 +6,55 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	clientCtx   client.Context
-	queryClient reflection.
-	sdkCtx      sdk.Context
+	queryClient reflection.ReflectionServiceClient
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	app := simapp.Setup(false)
-	sdkCtx := app.BaseApp.NewContext(false, abci.Header{})
 
-	srv := 
+	srv := reflection.NewReflectionServiceServer(app.InterfaceRegistry())
 
+	sdkCtx := app.BaseApp.NewContext(false, tmproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
-	reflection.RegisterSimulateServiceServer(queryHelper, srv)
-	queryClient := reflection.NewSimulateServiceClient(queryHelper)
 
-	s.app = app
-	s.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+	reflection.RegisterReflectionServiceServer(queryHelper, srv)
+	queryClient := reflection.NewReflectionServiceClient(queryHelper)
+
 	s.queryClient = queryClient
-	s.sdkCtx = sdkCtx
 }
 
 func (s IntegrationTestSuite) TestSimulateService() {
-	
-	res, err := s.queryClient.Simulate(
+	// We will test the following interface for testing.
+	var iface = "cosmos.evidence.v1beta1.Evidence"
+
+	// Test that "cosmos.evidence.v1beta1.Evidence" is included in the
+	// interfaces.
+	resIface, err := s.queryClient.ListInterfaces(
 		context.Background(),
-		&reflection.SimulateRequest{Tx: txBuilder.GetProtoTx()},
+		&reflection.ListInterfacesRequest{},
 	)
 	s.Require().NoError(err)
+	fmt.Println(resIface.GetInterfaceNames())
+	s.Require().Contains(resIface.GetInterfaceNames(), iface)
 
-	fmt.Println(res)
+	// Test that "cosmos.evidence.v1beta1.Evidence" has at least the
+	// Equivocation implementations.
+	resImpl, err := s.queryClient.ListImplementations(
+		context.Background(),
+		&reflection.ListImplementationsRequest{InterfaceName: iface},
+	)
+	s.Require().NoError(err)
+	s.Require().Contains(resImpl.GetImplementationMessageNames(), "/cosmos.evidence.v1beta1.Equivocation")
 }
 
 func TestSimulateTestSuite(t *testing.T) {

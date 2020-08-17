@@ -133,7 +133,7 @@ func (registry *interfaceRegistry) ListImplementations(ifaceName string) []strin
 		return []string{}
 	}
 
-	impls, ok := registry.interfaceImpls[typ]
+	impls, ok := registry.interfaceImpls[typ.Elem()]
 	if !ok {
 		return []string{}
 	}

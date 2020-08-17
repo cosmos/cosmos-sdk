@@ -18,7 +18,7 @@ func NewReflectionServiceServer(interfaceRegistry types.InterfaceRegistry) Refle
 	return &reflectionServiceServer{interfaceRegistry: interfaceRegistry}
 }
 
-var _ ReflectionServiceServer = &reflectionServiceServer{}
+var _ ReflectionServiceServer = (*reflectionServiceServer)(nil)
 
 func (r reflectionServiceServer) ListInterfaces(_ context.Context, _ *ListInterfacesRequest) (*ListInterfacesResponse, error) {
 	ifaces := r.interfaceRegistry.ListInterfaces()
@@ -26,16 +26,16 @@ func (r reflectionServiceServer) ListInterfaces(_ context.Context, _ *ListInterf
 	return &ListInterfacesResponse{InterfaceNames: ifaces}, nil
 }
 
-func (r reflectionServiceServer) ListImplementations(_ context.Context, request *ListImplementationsRequest) (*ListImplementationsResponse, error) {
-	if request == nil {
+func (r reflectionServiceServer) ListImplementations(_ context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if len(request.InterfaceName) == 0 {
+	if req.InterfaceName == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid interface name")
 	}
 
-	impls := r.interfaceRegistry.ListImplementations(request.InterfaceName)
+	impls := r.interfaceRegistry.ListImplementations(req.InterfaceName)
 
 	return &ListImplementationsResponse{ImplementationMessageNames: impls}, nil
 }

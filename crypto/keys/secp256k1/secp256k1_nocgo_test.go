@@ -22,14 +22,14 @@ func TestSignatureVerificationAndRejectUpperS(t *testing.T) {
 		require.False(t, sig.S.Cmp(secp256k1halfN) > 0)
 
 		pub := priv.PubKey()
-		require.True(t, pub.VerifyBytes(msg, sigStr))
+		require.True(t, pub.VerifySignature(msg, sigStr))
 
 		// malleate:
 		sig.S.Sub(secp256k1.S256().CurveParams.N, sig.S)
 		require.True(t, sig.S.Cmp(secp256k1halfN) > 0)
 		malSigStr := serializeSig(sig)
 
-		require.False(t, pub.VerifyBytes(msg, malSigStr),
+		require.False(t, pub.VerifySignature(msg, malSigStr),
 			"VerifyBytes incorrect with malleated & invalid S. sig=%v, key=%v",
 			sig,
 			priv,

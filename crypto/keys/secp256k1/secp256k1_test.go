@@ -36,15 +36,13 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKeySecp256k1
-		copy(priv[:], privB)
+		var priv secp256k1.PrivKey = privB
 
 		pubKey := priv.PubKey()
-		pubT, _ := pubKey.(secp256k1.PubKeySecp256k1)
-		pub := pubT[:]
-		addr := pubKey.Address()
+		pubT, _ := pubKey.(secp256k1.PubKey)
 
-		assert.Equal(t, pub, pubB, "Expected pub keys to match")
+		addr := pubKey.Address()
+		assert.Equal(t, pubT, secp256k1.PubKey(pubB), "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")
 	}
 }
@@ -57,12 +55,12 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	sig, err := privKey.Sign(msg)
 	require.Nil(t, err)
 
-	assert.True(t, pubKey.VerifyBytes(msg, sig))
+	assert.True(t, pubKey.VerifySignature(msg, sig))
 
 	// Mutate the signature, just one bit.
 	sig[3] ^= byte(0x01)
 
-	assert.False(t, pubKey.VerifyBytes(msg, sig))
+	assert.False(t, pubKey.VerifySignature(msg, sig))
 }
 
 // This test is intended to justify the removal of calls to the underlying library
@@ -86,7 +84,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 	}
 }
 
-func TestGenPrivKeySecp256k1(t *testing.T) {
+func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve oder N
 	N := underlyingSecp256k1.S256().N
 	tests := []struct {
@@ -106,7 +104,7 @@ func TestGenPrivKeySecp256k1(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotPrivKey := secp256k1.GenPrivKeySecp256k1(tt.secret)
+			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)
 			// interpret as a big.Int and make sure it is a valid field element:
 			fe := new(big.Int).SetBytes(gotPrivKey[:])

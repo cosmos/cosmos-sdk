@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -28,7 +27,7 @@ var (
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
-func NewTxCmd(clientCtx client.Context) *cobra.Command {
+func NewTxCmd() *cobra.Command {
 	stakingTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Staking transaction subcommands",
@@ -38,22 +37,26 @@ func NewTxCmd(clientCtx client.Context) *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(
-		NewCreateValidatorCmd(clientCtx),
-		NewEditValidatorCmd(clientCtx),
-		NewDelegateCmd(clientCtx),
-		NewRedelegateCmd(clientCtx),
-		NewUnbondCmd(clientCtx),
+		NewCreateValidatorCmd(),
+		NewEditValidatorCmd(),
+		NewDelegateCmd(),
+		NewRedelegateCmd(),
+		NewUnbondCmd(),
 	)
 
 	return stakingTxCmd
 }
 
-func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
+func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
@@ -61,6 +64,7 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
@@ -83,12 +87,16 @@ func NewCreateValidatorCmd(clientCtx client.Context) *cobra.Command {
 	return cmd
 }
 
-func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
+func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := clientCtx.WithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			valAddr := clientCtx.GetFromAddress()
 
@@ -97,13 +105,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
 			details, _ := cmd.Flags().GetString(FlagDetails)
-			description := types.NewDescription(
-				moniker,
-				identity,
-				website,
-				security,
-				details,
-			)
+			description := types.NewDescription(moniker, identity, website, security, details)
 
 			var newRate *sdk.Dec
 
@@ -134,8 +136,7 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			// build and sign the transaction, then broadcast to Tendermint
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -147,7 +148,9 @@ func NewEditValidatorCmd(clientCtx client.Context) *cobra.Command {
 	return cmd
 }
 
-func NewDelegateCmd(clientCtx client.Context) *cobra.Command {
+func NewDelegateCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
@@ -156,9 +159,9 @@ func NewDelegateCmd(clientCtx client.Context) *cobra.Command {
 			fmt.Sprintf(`Delegate an amount of liquid coins to a validator from your wallet.
 
 Example:
-$ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+$ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -184,7 +187,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -193,7 +196,9 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 	return cmd
 }
 
-func NewRedelegateCmd(clientCtx client.Context) *cobra.Command {
+func NewRedelegateCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "Redelegate illiquid tokens from one validator to another",
@@ -202,9 +207,9 @@ func NewRedelegateCmd(clientCtx client.Context) *cobra.Command {
 			fmt.Sprintf(`Redelegate an amount of illiquid staking tokens from one validator to another.
 
 Example:
-$ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
+$ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100stake --from mykey
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr, bech32PrefixValAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -235,7 +240,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -244,7 +249,9 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 	return cmd
 }
 
-func NewUnbondCmd(clientCtx client.Context) *cobra.Command {
+func NewUnbondCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "unbond [validator-addr] [amount]",
 		Short: "Unbond shares from a validator",
@@ -253,9 +260,9 @@ func NewUnbondCmd(clientCtx client.Context) *cobra.Command {
 			fmt.Sprintf(`Unbond an amount of bonded shares from a validator.
 
 Example:
-$ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
+$ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from mykey
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -281,7 +288,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -397,8 +404,7 @@ type TxCreateValidatorConfig struct {
 	CommissionMaxChangeRate string
 	MinSelfDelegation       string
 
-	TrustNode bool
-	PubKey    string
+	PubKey string
 
 	IP              string
 	Website         string
@@ -470,7 +476,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	}
 
 	c.NodeID = nodeID
-	c.TrustNode = true
 	c.PubKey = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey)
 	c.Website = website
 	c.SecurityContact = securityContact
@@ -503,7 +508,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr authtypes.TxBuilder, generateOnly bool) (authtypes.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoin(amounstStr)
 

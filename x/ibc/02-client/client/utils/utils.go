@@ -39,6 +39,7 @@ func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported
 
 // QueryClientState queries the store to get the light client state and a merkle
 // proof.
+// TODO: delete
 func QueryClientState(
 	clientCtx client.Context, clientID string, prove bool,
 ) (types.StateResponse, error) {
@@ -54,17 +55,49 @@ func QueryClientState(
 	}
 
 	var clientState exported.ClientState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
-	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.Proof, res.Height)
+	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.ProofOps, res.Height)
 
 	return clientStateRes, nil
 }
 
+// QueryClientState queries the store to get the light client state and a merkle
+// proof.
+func QueryClientStateABCI(
+	clientCtx client.Context, clientID string,
+) (exported.ClientState, []byte, uint64, error) {
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
+		Prove: true,
+	}
+
+	res, err := clientCtx.QueryABCI(req)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	var clientState exported.ClientState
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+		return nil, nil, 0, err
+	}
+
+	// FIXME: height + 1 is returned as the proof height
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
+	return clientState, proofBz, uint64(res.Height + 1), nil
+}
+
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
+// TODO: delete
 func QueryConsensusState(
 	clientCtx client.Context, clientID string, height uint64, prove bool,
 ) (types.ConsensusStateResponse, error) {
@@ -82,11 +115,43 @@ func QueryConsensusState(
 	}
 
 	var cs exported.ConsensusState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
-	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
+	return types.NewConsensusStateResponse(clientID, cs, res.ProofOps, res.Height), nil
+}
+
+// QueryConsensusState queries the store to get the consensus state of a light
+// client and a merkle proof of its existence or non-existence.
+func QueryConsensusStateABCI(
+	clientCtx client.Context, clientID string, height uint64,
+) (exported.ConsensusState, []byte, uint64, error) {
+
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
+		Prove: true,
+	}
+
+	res, err := clientCtx.QueryABCI(req)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	var cs exported.ConsensusState
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+		return nil, nil, 0, err
+	}
+
+	// FIXME: height + 1 is returned as the proof height
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
+	return cs, proofBz, uint64(res.Height + 1), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate
@@ -109,7 +174,10 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 		return ibctmtypes.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := 0
+	count := 10_000
+
+	validators, err := node.Validators(&height, &page, &count)
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -124,33 +192,37 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusState, int64, error) {
+func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusState, int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := 0
+	count := 10_000
+
+	nextHeight := height + 1
+	nextVals, err := node.Validators(&nextHeight, &page, &count)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	state := ibctmtypes.ConsensusState{
-		Timestamp:    commit.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+	state := &ibctmtypes.ConsensusState{
+		Timestamp:          commit.Time,
+		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
+		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 
 	return state, height, nil

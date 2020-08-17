@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/base64"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,8 +19,8 @@ func NewMsgChannelOpenInit(
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenInit{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Channel:   channel,
 		Signer:    signer,
 	}
@@ -39,10 +38,10 @@ func (msg MsgChannelOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
@@ -51,7 +50,7 @@ func (msg MsgChannelOpenInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -70,8 +69,8 @@ func NewMsgChannelOpenTry(
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
-		PortID:              portID,
-		ChannelID:           channelID,
+		PortId:              portID,
+		ChannelId:           channelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
 		ProofInit:           proofInit,
@@ -92,14 +91,11 @@ func (msg MsgChannelOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenTry) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
@@ -113,7 +109,7 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenTry) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -129,8 +125,8 @@ func NewMsgChannelOpenAck(
 	signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
-		PortID:              portID,
-		ChannelID:           channelID,
+		PortId:              portID,
+		ChannelId:           channelID,
 		CounterpartyVersion: cpv,
 		ProofTry:            proofTry,
 		ProofHeight:         proofHeight,
@@ -150,14 +146,11 @@ func (msg MsgChannelOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenAck) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
-	}
-	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
@@ -171,7 +164,7 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenAck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -187,8 +180,8 @@ func NewMsgChannelOpenConfirm(
 	signer sdk.AccAddress,
 ) *MsgChannelOpenConfirm {
 	return &MsgChannelOpenConfirm{
-		PortID:      portID,
-		ChannelID:   channelID,
+		PortId:      portID,
+		ChannelId:   channelID,
 		ProofAck:    proofAck,
 		ProofHeight: proofHeight,
 		Signer:      signer,
@@ -207,10 +200,10 @@ func (msg MsgChannelOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenConfirm) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if len(msg.ProofAck) == 0 {
@@ -225,7 +218,7 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -240,8 +233,8 @@ func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
 ) *MsgChannelCloseInit {
 	return &MsgChannelCloseInit{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Signer:    signer,
 	}
 }
@@ -258,10 +251,10 @@ func (msg MsgChannelCloseInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseInit) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
@@ -270,7 +263,7 @@ func (msg MsgChannelCloseInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelCloseInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -286,8 +279,8 @@ func NewMsgChannelCloseConfirm(
 	signer sdk.AccAddress,
 ) *MsgChannelCloseConfirm {
 	return &MsgChannelCloseConfirm{
-		PortID:      portID,
-		ChannelID:   channelID,
+		PortId:      portID,
+		ChannelId:   channelID,
 		ProofInit:   proofInit,
 		ProofHeight: proofHeight,
 		Signer:      signer,
@@ -306,10 +299,10 @@ func (msg MsgChannelCloseConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseConfirm) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if len(msg.ProofInit) == 0 {
@@ -324,7 +317,7 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -332,14 +325,14 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = &MsgPacket{}
+var _ sdk.Msg = &MsgRecvPacket{}
 
-// NewMsgPacket constructs new MsgPacket
-func NewMsgPacket(
+// NewMsgRecvPacket constructs new MsgRecvPacket
+func NewMsgRecvPacket(
 	packet Packet, proof []byte, proofHeight uint64,
 	signer sdk.AccAddress,
-) *MsgPacket {
-	return &MsgPacket{
+) *MsgRecvPacket {
+	return &MsgRecvPacket{
 		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
@@ -348,12 +341,12 @@ func NewMsgPacket(
 }
 
 // Route implements sdk.Msg
-func (msg MsgPacket) Route() string {
+func (msg MsgRecvPacket) Route() string {
 	return host.RouterKey
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgPacket) ValidateBasic() error {
+func (msg MsgRecvPacket) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
@@ -368,25 +361,25 @@ func (msg MsgPacket) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgPacket) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+func (msg MsgRecvPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetDataSignBytes returns the base64-encoded bytes used for the
 // data field when signing the packet.
-func (msg MsgPacket) GetDataSignBytes() []byte {
+func (msg MsgRecvPacket) GetDataSignBytes() []byte {
 	s := "\"" + base64.StdEncoding.EncodeToString(msg.Packet.Data) + "\""
 	return []byte(s)
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
 // Type implements sdk.Msg
-func (msg MsgPacket) Type() string {
-	return "ics04/opaque"
+func (msg MsgRecvPacket) Type() string {
+	return "recv_packet"
 }
 
 var _ sdk.Msg = &MsgTimeout{}
@@ -427,7 +420,7 @@ func (msg MsgTimeout) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgTimeout) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -437,7 +430,7 @@ func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgTimeout) Type() string {
-	return "ics04/timeout"
+	return "timeout_packet"
 }
 
 var _ sdk.Msg = &MsgAcknowledgement{}
@@ -464,9 +457,6 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if len(msg.Acknowledgement) > 100 {
-		return sdkerrors.Wrap(ErrAcknowledgementTooLong, "acknowledgement cannot exceed 100 bytes")
-	}
 	if msg.ProofHeight == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
 	}
@@ -479,7 +469,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgAcknowledgement) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -489,5 +479,5 @@ func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 
 // Type implements sdk.Msg
 func (msg MsgAcknowledgement) Type() string {
-	return "ics04/opaque"
+	return "acknowledge_packet"
 }

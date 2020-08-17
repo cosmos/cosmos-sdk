@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +16,8 @@ import (
 
 func TestNewQuerier(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -36,14 +39,15 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var params types.Params
 
 	res, sdkErr := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := app.Codec().UnmarshalJSON(res, &params)
+	err := app.LegacyAmino().UnmarshalJSON(res, &params)
 	require.NoError(t, err)
 
 	require.Equal(t, app.MintKeeper.GetParams(ctx), params)
@@ -51,14 +55,15 @@ func TestQueryParams(t *testing.T) {
 
 func TestQueryInflation(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var inflation sdk.Dec
 
 	res, sdkErr := querier(ctx, []string{types.QueryInflation}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := app.Codec().UnmarshalJSON(res, &inflation)
+	err := app.LegacyAmino().UnmarshalJSON(res, &inflation)
 	require.NoError(t, err)
 
 	require.Equal(t, app.MintKeeper.GetMinter(ctx).Inflation, inflation)
@@ -66,14 +71,15 @@ func TestQueryInflation(t *testing.T) {
 
 func TestQueryAnnualProvisions(t *testing.T) {
 	app, ctx := createTestApp(true)
-	querier := keep.NewQuerier(app.MintKeeper)
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
+	querier := keep.NewQuerier(app.MintKeeper, legacyQuerierCdc)
 
 	var annualProvisions sdk.Dec
 
 	res, sdkErr := querier(ctx, []string{types.QueryAnnualProvisions}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := app.Codec().UnmarshalJSON(res, &annualProvisions)
+	err := app.LegacyAmino().UnmarshalJSON(res, &annualProvisions)
 	require.NoError(t, err)
 
 	require.Equal(t, app.MintKeeper.GetMinter(ctx).AnnualProvisions, annualProvisions)

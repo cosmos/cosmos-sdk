@@ -17,17 +17,17 @@ import (
 var _ types.QueryServer = AccountKeeper{}
 
 // Account returns account details based on address
-func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Address.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	account := k.GetAccount(ctx, req.Address)
+	account := ak.GetAccount(ctx, req.Address)
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}
@@ -40,15 +40,15 @@ func (k AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest
 	return &types.QueryAccountResponse{Account: acc}, nil
 }
 
-// Parameters returns parameters of auth module
-func (k AccountKeeper) Parameters(c context.Context, req *types.QueryParametersRequest) (*types.QueryParametersResponse, error) {
+// Params returns parameters of auth module
+func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
+	params := ak.GetParams(ctx)
 
-	return &types.QueryParametersResponse{Params: params}, nil
+	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // ConvertAccount converts AccountI to Any type

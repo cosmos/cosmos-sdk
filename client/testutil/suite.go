@@ -6,11 +6,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/client"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -260,7 +259,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.T().Log("decode transaction")
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	tx3, ok := tx2.(signing.SigFeeMemoTx)
+	tx3, ok := tx2.(signing.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -277,7 +276,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.T().Log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
-	tx3, ok = tx2.(signing.SigFeeMemoTx)
+	tx3, ok = tx2.(signing.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -285,4 +284,23 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
+}
+
+func (s *TxConfigTestSuite) TestWrapTxBuilder() {
+	_, _, addr := testdata.KeyTestPubAddr()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
+	msg := testdata.NewTestMsg(addr)
+
+	txBuilder := s.TxConfig.NewTxBuilder()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
+	err := txBuilder.SetMsgs(msg)
+	s.Require().NoError(err)
+
+	newTxBldr, err := s.TxConfig.WrapTxBuilder(txBuilder.GetTx())
+	s.Require().NoError(err)
+	s.Require().Equal(txBuilder, newTxBldr)
 }

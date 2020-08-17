@@ -4,12 +4,17 @@ package types
 const (
 	EventTypeTimeout      = "timeout"
 	EventTypePacket       = "fungible_token_packet"
+	EventTypeTransfer     = "ibc_transfer"
 	EventTypeChannelClose = "channel_closed"
+	EventTypeDenomTrace   = "denomination_trace"
 
 	AttributeKeyReceiver       = "receiver"
-	AttributeKeyValue          = "value"
+	AttributeKeyDenom          = "denom"
+	AttributeKeyAmount         = "amount"
 	AttributeKeyRefundReceiver = "refund_receiver"
-	AttributeKeyRefundValue    = "refund_value"
+	AttributeKeyRefundDenom    = "refund_denom"
+	AttributeKeyRefundAmount   = "refund_amount"
 	AttributeKeyAckSuccess     = "success"
 	AttributeKeyAckError       = "error"
+	AttributeKeyTraceHash      = "trace_hash"
 )

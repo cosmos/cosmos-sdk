@@ -7,14 +7,14 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
+func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(clientCtx)).Methods("POST")
 	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(clientCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(clientCtx)).Methods("POST")
@@ -37,7 +37,7 @@ func registerTxRoutes(clientCtx client.Context, r *mux.Router) {
 func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenInitReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -69,7 +69,7 @@ func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -86,7 +86,7 @@ func channelOpenInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func channelOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenTryReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -121,7 +121,7 @@ func channelOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -145,7 +145,7 @@ func channelOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenAckReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -175,7 +175,7 @@ func channelOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -199,7 +199,7 @@ func channelOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelOpenConfirmReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -228,7 +228,7 @@ func channelOpenConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -252,7 +252,7 @@ func channelCloseInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseInitReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -279,7 +279,7 @@ func channelCloseInitHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -303,7 +303,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		channelID := vars[RestChannelID]
 
 		var req ChannelCloseConfirmReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -332,7 +332,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
 
@@ -349,7 +349,7 @@ func channelCloseConfirmHandlerFn(clientCtx client.Context) http.HandlerFunc {
 func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecvPacketReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -365,7 +365,7 @@ func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgPacket(
+		msg := types.NewMsgRecvPacket(
 			req.Packet,
 			req.Proofs,
 			req.Height,
@@ -377,6 +377,6 @@ func recvPacketHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

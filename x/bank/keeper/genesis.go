@@ -34,27 +34,11 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 }
 
 // ExportGenesis returns the bank module's genesis state.
-func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
-	balancesSet := make(map[string]sdk.Coins)
-
-	k.IterateAllBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
-		balancesSet[addr.String()] = balancesSet[addr.String()].Add(balance)
-		return false
-	})
-
-	balances := []types.Balance{}
-
-	for addrStr, coins := range balancesSet {
-		addr, err := sdk.AccAddressFromBech32(addrStr)
-		if err != nil {
-			panic(fmt.Errorf("failed to convert address from string: %w", err))
-		}
-
-		balances = append(balances, types.Balance{
-			Address: addr,
-			Coins:   coins,
-		})
-	}
-
-	return types.NewGenesisState(k.GetParams(ctx), balances, k.GetSupply(ctx).GetTotal())
+func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	return types.NewGenesisState(
+		k.GetParams(ctx),
+		k.GetAccountsBalances(ctx),
+		k.GetSupply(ctx).GetTotal(),
+		k.GetAllDenomMetaData(ctx),
+	)
 }

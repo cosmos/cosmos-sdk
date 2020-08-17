@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/armon/go-metrics"
+	metrics "github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +42,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 
-	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalID, msg.GetProposer(), msg.GetInitialDeposit())
+	votingStarted, err := keeper.AddDeposit(ctx, proposal.ProposalId, msg.GetProposer(), msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
 	}
@@ -58,20 +58,20 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.GetContent().ProposalType()))
 	if votingStarted {
 		submitEvent = submitEvent.AppendAttributes(
-			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
+			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalId)),
 		)
 	}
 
 	ctx.EventManager().EmitEvent(submitEvent)
 
 	return &sdk.Result{
-		Data:   types.GetProposalIDBytes(proposal.ProposalID),
+		Data:   types.GetProposalIDBytes(proposal.ProposalId),
 		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDeposit) (*sdk.Result, error) {
-	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
+	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalId, msg.Depositor, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDepos
 		[]string{types.ModuleName, "deposit"},
 		1,
 		[]metrics.Label{
-			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalID))),
+			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
 		},
 	)
 
@@ -96,7 +96,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDepos
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeProposalDeposit,
-				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
 			),
 		)
 	}
@@ -105,7 +105,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDepos
 }
 
 func handleMsgVote(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgVote) (*sdk.Result, error) {
-	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
+	err := keeper.AddVote(ctx, msg.ProposalId, msg.Voter, msg.Option)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func handleMsgVote(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgVote) (*
 		[]string{types.ModuleName, "vote"},
 		1,
 		[]metrics.Label{
-			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalID))),
+			telemetry.NewLabel("proposal_id", strconv.Itoa(int(msg.ProposalId))),
 		},
 	)
 

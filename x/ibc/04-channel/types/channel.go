@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -69,36 +67,33 @@ func (ch Channel) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection hop ID")
 	}
-	if strings.TrimSpace(ch.Version) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "channel version can't be blank")
-	}
 	return ch.Counterparty.ValidateBasic()
 }
 
 // NewCounterparty returns a new Counterparty instance
 func NewCounterparty(portID, channelID string) Counterparty {
 	return Counterparty{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 	}
 }
 
 // GetPortID implements CounterpartyI interface
 func (c Counterparty) GetPortID() string {
-	return c.PortID
+	return c.PortId
 }
 
 // GetChannelID implements CounterpartyI interface
 func (c Counterparty) GetChannelID() string {
-	return c.ChannelID
+	return c.ChannelId
 }
 
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(c.PortID); err != nil {
+	if err := host.PortIdentifierValidator(c.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty port ID")
 	}
-	if err := host.ChannelIdentifierValidator(c.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(c.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
 	}
 	return nil
@@ -112,17 +107,17 @@ func NewIdentifiedChannel(portID, channelID string, ch Channel) IdentifiedChanne
 		Counterparty:   ch.Counterparty,
 		ConnectionHops: ch.ConnectionHops,
 		Version:        ch.Version,
-		PortID:         portID,
-		ChannelID:      channelID,
+		PortId:         portID,
+		ChannelId:      channelID,
 	}
 }
 
 // ValidateBasic performs a basic validation of the identifiers and channel fields.
 func (ic IdentifiedChannel) ValidateBasic() error {
-	if err := host.ChannelIdentifierValidator(ic.ChannelID); err != nil {
+	if err := host.ChannelIdentifierValidator(ic.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
-	if err := host.PortIdentifierValidator(ic.PortID); err != nil {
+	if err := host.PortIdentifierValidator(ic.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	channel := NewChannel(ic.State, ic.Ordering, ic.Counterparty, ic.ConnectionHops, ic.Version)

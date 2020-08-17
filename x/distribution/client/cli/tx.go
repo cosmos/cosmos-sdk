@@ -77,6 +77,8 @@ func newSplitAndApply(
 }
 
 func NewWithdrawRewardsCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -85,10 +87,10 @@ func NewWithdrawRewardsCmd() *cobra.Command {
 and optionally withdraw validator commission if the delegation address given is a validator operator.
 
 Example:
-$ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
-$ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
+$ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+$ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
 `,
-				version.AppName, version.AppName,
+				version.AppName, bech32PrefixValAddr, version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -123,6 +125,7 @@ $ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 
 	cmd.Flags().Bool(FlagCommission, false, "Withdraw the validator's commission in addition to the rewards")
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -167,10 +170,13 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 	cmd.Flags().Int(FlagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
 func NewSetWithdrawAddrCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -178,9 +184,9 @@ func NewSetWithdrawAddrCmd() *cobra.Command {
 			fmt.Sprintf(`Set the withdraw address for rewards associated with a delegator address.
 
 Example:
-$ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
+$ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -207,6 +213,7 @@ $ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
@@ -247,11 +254,14 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
 func GetCmdSubmitProposal() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -268,12 +278,12 @@ Where proposal.json contains:
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
-  "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
+  "recipient": "%s1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
   "amount": "1000stake",
   "deposit": "1000stake"
 }
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -283,7 +293,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseCommunityPoolSpendProposalJSON(clientCtx.JSONMarshaler, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalJSON(clientCtx.LegacyAmino, args[0])
 			if err != nil {
 				return err
 			}
@@ -314,6 +324,5 @@ Where proposal.json contains:
 		},
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

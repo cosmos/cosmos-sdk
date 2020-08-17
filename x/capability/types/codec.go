@@ -6,7 +6,7 @@ import (
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // capability module.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Capability{}, "cosmos-sdk/Capability", nil)
 	cdc.RegisterConcrete(Owner{}, "cosmos-sdk/Owner", nil)
 	cdc.RegisterConcrete(&CapabilityOwners{}, "cosmos-sdk/CapabilityOwners", nil)

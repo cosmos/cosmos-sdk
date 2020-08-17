@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -37,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{"connection not found",
 			func() {
 				req = &types.QueryConnectionRequest{
-					ConnectionID: ibctesting.InvalidID,
+					ConnectionId: ibctesting.InvalidID,
 				}
 			},
 			false,
@@ -50,11 +51,11 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 				counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
-				expConnection = types.NewConnectionEnd(types.INIT, connA.ID, clientA, counterparty, types.GetCompatibleEncodedVersions())
+				expConnection = types.NewConnectionEnd(types.INIT, clientA, counterparty, types.GetCompatibleEncodedVersions())
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, expConnection)
 
 				req = &types.QueryConnectionRequest{
-					ConnectionID: connA.ID,
+					ConnectionId: connA.ID,
 				}
 			},
 			true,
@@ -84,7 +85,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 func (suite *KeeperTestSuite) TestQueryConnections() {
 	var (
 		req            *types.QueryConnectionsRequest
-		expConnections = []*types.ConnectionEnd{}
+		expConnections = []*types.IdentifiedConnection{}
 	)
 
 	testCases := []struct {
@@ -119,11 +120,15 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 				counterparty2 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix())
 				counterparty3 := types.NewCounterparty(clientB1, connB2.ID, suite.chainB.GetPrefix())
 
-				conn1 := types.NewConnectionEnd(types.OPEN, connA0.ID, clientA, counterparty1, types.GetCompatibleEncodedVersions())
-				conn2 := types.NewConnectionEnd(types.INIT, connA1.ID, clientA, counterparty2, types.GetCompatibleEncodedVersions())
-				conn3 := types.NewConnectionEnd(types.OPEN, connA2.ID, clientA1, counterparty3, types.GetCompatibleEncodedVersions())
+				conn1 := types.NewConnectionEnd(types.OPEN, clientA, counterparty1, types.GetCompatibleEncodedVersions())
+				conn2 := types.NewConnectionEnd(types.INIT, clientA, counterparty2, types.GetCompatibleEncodedVersions())
+				conn3 := types.NewConnectionEnd(types.OPEN, clientA1, counterparty3, types.GetCompatibleEncodedVersions())
 
-				expConnections = []*types.ConnectionEnd{&conn1, &conn2, &conn3}
+				iconn1 := types.NewIdentifiedConnection(connA0.ID, conn1)
+				iconn2 := types.NewIdentifiedConnection(connA1.ID, conn2)
+				iconn3 := types.NewIdentifiedConnection(connA2.ID, conn3)
+
+				expConnections = []*types.IdentifiedConnection{&iconn1, &iconn2, &iconn3}
 
 				req = &types.QueryConnectionsRequest{
 					Pagination: &query.PageRequest{
@@ -183,7 +188,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 		{"connection not found",
 			func() {
 				req = &types.QueryClientConnectionsRequest{
-					ClientID: ibctesting.InvalidID,
+					ClientId: ibctesting.InvalidID,
 				}
 			},
 			false,
@@ -197,7 +202,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, expPaths)
 
 				req = &types.QueryClientConnectionsRequest{
-					ClientID: clientA,
+					ClientId: clientA,
 				}
 			},
 			true,
@@ -217,6 +222,183 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expPaths, res.ConnectionPaths)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
+	var (
+		req                      *types.QueryConnectionClientStateRequest
+		expIdentifiedClientState clienttypes.IdentifiedClientState
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid connection ID",
+			func() {
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionId: "",
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionId: "test-connection-id",
+				}
+			},
+			false,
+		},
+		{
+			"client state not found",
+			func() {
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				// set connection to empty so clientID is empty
+				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, types.ConnectionEnd{})
+
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionId: connA.ID,
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+				expClientState := suite.chainA.GetClientState(clientA)
+				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
+
+				req = &types.QueryConnectionClientStateRequest{
+					ConnectionId: connA.ID,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ConnectionClientState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(&expIdentifiedClientState, res.IdentifiedClientState)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
+	var (
+		req               *types.QueryConnectionConsensusStateRequest
+		expConsensusState clientexported.ConsensusState
+		expClientID       string
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid connection ID",
+			func() {
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionId: "",
+					Height:       1,
+				}
+			},
+			false,
+		},
+		{
+			"connection not found",
+			func() {
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionId: "test-connection-id",
+					Height:       1,
+				}
+			},
+			false,
+		},
+		{
+			"consensus state not found",
+			func() {
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionId: connA.ID,
+					Height:       uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+				}
+			}, false,
+		},
+		{
+			"success",
+			func() {
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+				clientState := suite.chainA.GetClientState(clientA)
+				expConsensusState, _ = suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+				suite.Require().NotNil(expConsensusState)
+				expClientID = clientA
+
+				req = &types.QueryConnectionConsensusStateRequest{
+					ConnectionId: connA.ID,
+					Height:       expConsensusState.GetHeight(),
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ConnectionConsensusState(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
+				suite.Require().NoError(err)
+				suite.Require().Equal(expConsensusState, consensusState)
+				suite.Require().Equal(expClientID, res.ClientId)
 			} else {
 				suite.Require().Error(err)
 			}

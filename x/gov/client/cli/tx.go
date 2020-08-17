@@ -20,7 +20,7 @@ import (
 const (
 	FlagTitle        = "title"
 	FlagDescription  = "description"
-	flagProposalType = "type"
+	FlagProposalType = "type"
 	FlagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagDepositor    = "depositor"
@@ -41,7 +41,7 @@ type proposal struct {
 var ProposalFlags = []string{
 	FlagTitle,
 	FlagDescription,
-	flagProposalType,
+	FlagProposalType,
 	FlagDeposit,
 }
 
@@ -61,6 +61,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 
 	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range propCmds {
+		flags.AddTxFlagsToCmd(propCmd)
 		cmdSubmitProp.AddCommand(propCmd)
 	}
 
@@ -110,7 +111,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			proposal, err := parseSubmitProposalFlags(cmd.Flags())
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
 
 			amount, err := sdk.ParseCoins(proposal.Deposit)
@@ -120,24 +121,24 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 
 			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
 
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.FromAddress)
+			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid message: %w", err)
 			}
 
 			if err = msg.ValidateBasic(); err != nil {
-				return err
+				return fmt.Errorf("message validation failed: %w", err)
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "title of proposal")
-	cmd.Flags().String(FlagDescription, "", "description of proposal")
-	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
-	cmd.Flags().String(FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(FlagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagTitle, "", "The proposal title")
+	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -187,7 +188,7 @@ $ %s tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -242,7 +243,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

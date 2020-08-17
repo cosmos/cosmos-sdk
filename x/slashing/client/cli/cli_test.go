@@ -60,13 +60,14 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	}{
 		{"invalid address", []string{"foo"}, true, ``},
 		{
-			"valid address (default output)",
+			"valid address (json output)",
 			[]string{
 				valConsPubKey,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
-			fmt.Sprintf(`{"address":"%s","jailed_until":"1970-01-01T00:00:00Z"}`, sdk.ConsAddress(val.PubKey.Address())),
+			fmt.Sprintf("{\"address\":\"%s\",\"start_height\":\"0\",\"index_offset\":\"0\",\"jailed_until\":\"1970-01-01T00:00:00Z\",\"tombstoned\":false,\"missed_blocks_counter\":\"0\"}", sdk.ConsAddress(val.PubKey.Address())),
 		},
 		{
 			"valid address (text output)",
@@ -77,7 +78,11 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 			},
 			false,
 			fmt.Sprintf(`address: %s
-jailed_until: "1970-01-01T00:00:00Z"`, sdk.ConsAddress(val.PubKey.Address())),
+index_offset: "0"
+jailed_until: "1970-01-01T00:00:00Z"
+missed_blocks_counter: "0"
+start_height: "0"
+tombstoned: false`, sdk.ConsAddress(val.PubKey.Address())),
 		},
 	}
 
@@ -116,14 +121,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		expectedOutput string
 	}{
 		{
-			"default output",
-			[]string{},
-			`{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600000000000","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"}`,
+			"json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600s","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`downtime_jail_duration: "600000000000"
+			`downtime_jail_duration: 600s
 min_signed_per_window: "0.500000000000000000"
 signed_blocks_window: "100"
 slash_fraction_double_sign: "0.050000000000000000"

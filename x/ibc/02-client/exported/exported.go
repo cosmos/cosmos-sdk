@@ -17,20 +17,24 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetID() string
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
+	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
+
+	// Update and Misbehaviour functions
+
+	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
+	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
 
 	// State verification functions
 
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
-		aminoCdc *codec.Codec,
+		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
 		height uint64,
 		counterpartyClientIdentifier string,
@@ -41,28 +45,26 @@ type ClientState interface {
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
-		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -70,11 +72,10 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -82,29 +83,26 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
-		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height uint64,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-		consensusState ConsensusState,
 	) error
 }
 
@@ -145,6 +143,7 @@ type MsgCreateClient interface {
 	GetClientID() string
 	GetClientType() string
 	GetConsensusState() ConsensusState
+	InitializeClientState() ClientState
 }
 
 // MsgUpdateClient defines the msg interface that the

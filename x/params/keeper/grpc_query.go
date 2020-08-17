@@ -13,8 +13,8 @@ import (
 
 var _ proposal.QueryServer = Keeper{}
 
-// Parameters returns subspace params
-func (k Keeper) Parameters(c context.Context, req *proposal.QueryParametersRequest) (*proposal.QueryParametersResponse, error) {
+// Params returns subspace params
+func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -30,7 +30,7 @@ func (k Keeper) Parameters(c context.Context, req *proposal.QueryParametersReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 	rawValue := ss.GetRaw(ctx, []byte(req.Key))
-	params := proposal.NewParamChange(req.Subspace, req.Key, string(rawValue))
+	param := proposal.NewParamChange(req.Subspace, req.Key, string(rawValue))
 
-	return &proposal.QueryParametersResponse{Params: params}, nil
+	return &proposal.QueryParamsResponse{Param: param}, nil
 }

@@ -40,8 +40,14 @@ func KeyPrefixBytes(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/", prefix))
 }
 
+// FullClientPath returns the full path of a specific client path in the format:
+// "clients/{clientID}/{path}" as a string.
+func FullClientPath(clientID string, path string) string {
+	return string(FullKeyClientPath(clientID, []byte(path)))
+}
+
 // FullKeyClientPath returns the full path of specific client path in the format:
-// "clients/{clientID}/{path}".
+// "clients/{clientID}/{path}" as a byte array.
 func FullKeyClientPath(clientID string, path []byte) []byte {
 	return append(KeyClientStorePrefix, append([]byte("/"+clientID+"/"), path...)...)
 }
@@ -93,7 +99,7 @@ func ClientConnectionsPath(clientID string) string {
 
 // ConnectionPath defines the path under which connection paths are stored
 func ConnectionPath(connectionID string) string {
-	return fmt.Sprintf("connections/%s", connectionID)
+	return fmt.Sprintf("%s/%s", KeyConnectionPrefix, connectionID)
 }
 
 // KeyClientConnections returns the store key for the connectios of a given client

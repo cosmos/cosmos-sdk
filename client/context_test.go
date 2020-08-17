@@ -2,20 +2,20 @@ package client_test
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestMain(m *testing.M) {
@@ -71,7 +71,7 @@ x: "10"
 	// amino
 	//
 	amino := testdata.NewTestAmino()
-	ctx = ctx.WithJSONMarshaler(codec.NewAminoCodec(&codec.Codec{Amino: amino}))
+	ctx = ctx.WithJSONMarshaler(codec.NewAminoCodec(&codec.LegacyAmino{Amino: amino}))
 
 	// json
 	buf = &bytes.Buffer{}
@@ -99,4 +99,17 @@ value:
       size: big
   x: "10"
 `, string(buf.Bytes()))
+}
+
+func TestCLIQueryConn(t *testing.T) {
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 1
+
+	n := network.New(t, cfg)
+	defer n.Cleanup()
+
+	testClient := testdata.NewTestServiceClient(n.Validators[0].ClientCtx)
+	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
+	require.NoError(t, err)
+	require.Equal(t, "hello", res.Message)
 }

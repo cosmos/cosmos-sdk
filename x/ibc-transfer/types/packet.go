@@ -23,8 +23,11 @@ var (
 
 // NewFungibleTokenPacketData contructs a new FungibleTokenPacketData instance
 func NewFungibleTokenPacketData(
-	amount sdk.Coins, sender, receiver string) FungibleTokenPacketData {
+	denom string, amount uint64,
+	sender, receiver string,
+) FungibleTokenPacketData {
 	return FungibleTokenPacketData{
+		Denom:    denom,
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
@@ -33,11 +36,8 @@ func NewFungibleTokenPacketData(
 
 // ValidateBasic is used for validating the token transfer
 func (ftpd FungibleTokenPacketData) ValidateBasic() error {
-	if !ftpd.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, ftpd.Amount.String())
-	}
-	if !ftpd.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, ftpd.Amount.String())
+	if ftpd.Amount == 0 {
+		return sdkerrors.Wrap(ErrInvalidAmount, "amount cannot be 0")
 	}
 	if strings.TrimSpace(ftpd.Sender) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
@@ -45,15 +45,15 @@ func (ftpd FungibleTokenPacketData) ValidateBasic() error {
 	if strings.TrimSpace(ftpd.Receiver) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
 	}
-	return nil
+	return ValidatePrefixedDenom(ftpd.Denom)
 }
 
 // GetBytes is a helper for serialising
 func (ftpd FungibleTokenPacketData) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ftpd))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ftpd))
 }
 
 // GetBytes is a helper for serialising
 func (ack FungibleTokenPacketAcknowledgement) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ack))
 }

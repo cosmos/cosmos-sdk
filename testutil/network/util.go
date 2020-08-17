@@ -1,6 +1,7 @@
 package network
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"time"
 
@@ -13,8 +14,8 @@ import (
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -60,8 +61,7 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if val.APIAddress != "" {
 		val.ClientCtx = val.ClientCtx.
-			WithClient(val.RPCClient).
-			WithTrustNode(true)
+			WithClient(val.RPCClient)
 
 		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
@@ -81,6 +81,15 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.api = apiSrv
+	}
+
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
 	}
 
 	return nil
@@ -106,7 +115,8 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
+			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
 		if err != nil {
 			return err
 		}
@@ -126,17 +136,22 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
 
-	authGenState.Accounts = genAccounts
-	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(authGenState)
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	if err != nil {
+		return err
+	}
+
+	authGenState.Accounts = accounts
+	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
 
 	bankGenState.Balances = genBalances
-	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(bankGenState)
+	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
 
-	appGenStateJSON, err := codec.MarshalJSONIndent(cfg.Codec, cfg.GenesisState)
+	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")
 	if err != nil {
 		return err
 	}

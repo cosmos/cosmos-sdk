@@ -14,7 +14,7 @@ A light client is created using the `MsgCreateClient`.
 
 ```go
 type MsgCreateClient struct {
-  ClientID        string
+  ClientId        string
   ClientType      string
   ConsensusState  ConsensusState
   Signer          sdk.AccAddress
@@ -23,7 +23,7 @@ type MsgCreateClient struct {
 
 This message is expected to fail if:
 
-- `ClientID` is invalid (not alphanumeric or not within 10-20 characters)
+- `ClientId` is invalid (not alphanumeric or not within 10-20 characters)
 - `ClientType` is not registered
 - `ConsensusState` is empty
 - `Signer` is empty
@@ -39,7 +39,7 @@ A light client is updated with a new header using the `MsgUpdateClient`.
 
 ```go
 type MsgUpdateClient struct {
-  ClientID string
+  ClientId string
   Header   Header
   Signer   sdk.AccAddress
 }
@@ -47,7 +47,7 @@ type MsgUpdateClient struct {
 
 This message is expected to fail if:
 
-- `ClientID` is invalid (not alphanumeric or not within 10-20 characters)
+- `ClientId` is invalid (not alphanumeric or not within 10-20 characters)
 - `Header` is empty
 - `Signer` is empty
 - A Client hasn't been created for the given ID
@@ -65,16 +65,16 @@ A connection is initialized on a light client using the `MsgConnectionOpenInit`.
 
 ```go
 type MsgConnectionOpenInit struct {
-	ClientID     string                                       
-	ConnectionID string                                        
+	ClientId     string                                       
+	ConnectionId string                                        
 	Counterparty Counterparty                                  
 	Signer       sdk.AccAddress
 }
 ```
 
 This message is expected to fail if:
-- `ClientID` is invalid (see naming requirements)
-- `ConnectionID` is invalid (see naming requirements)
+- `ClientId` is invalid (see naming requirements)
+- `ConnectionId` is invalid (see naming requirements)
 - `Counterparty` is empty
 - `Signer` is empty
 - A Client hasn't been created for the given ID
@@ -89,8 +89,8 @@ using the `MsgConnectionOpenTry`.
 
 ```go
 type MsgConnectionOpenTry struct {
-	ClientID             string       
-	ConnectionID         string      
+	ClientId             string       
+	ConnectionId         string      
 	Counterparty         Counterparty 
 	CounterpartyVersions []string     
 	ProofInit            []byte 
@@ -102,8 +102,8 @@ type MsgConnectionOpenTry struct {
 ```
 
 This message is expected to fail if:
-- `ClientID` is invalid (see naming requirements)
-- `ConnectionID` is invalid (see naming requirements)
+- `ClientId` is invalid (see naming requirements)
+- `ConnectionId` is invalid (see naming requirements)
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty 
 - `ProofInit` is empty
@@ -125,7 +125,7 @@ using the `MsgConnectionOpenAck`.
 
 ```go
 type MsgConnectionOpenAck struct {
-	ConnectionID    string 
+	ConnectionId    string 
 	Version         string 
 	ProofTry        []byte 
 	ProofHeight     uint64 
@@ -136,7 +136,7 @@ type MsgConnectionOpenAck struct {
 ```
 
 This message is expected to fail if:
-- `ConnectionID` is invalid (see naming requirements)
+- `ConnectionId` is invalid (see naming requirements)
 - `Version` is empty
 - `ProofTry` is empty
 - `ProofHeight` is zero
@@ -155,7 +155,7 @@ the `MsgConnectionOpenConfirm`.
 
 ```go
 type MsgConnectionOpenConfirm struct {
-	ConnectionID string 
+	ConnectionId string 
 	ProofAck     []byte   
 	ProofHeight  uint64    
 	Signer       sdk.AccAddress 
@@ -163,7 +163,7 @@ type MsgConnectionOpenConfirm struct {
 ```
 
 This message is expected to fail if:
-- `ConnectionID` is invalid (see naming requirements)
+- `ConnectionId` is invalid (see naming requirements)
 - `ProofAck` is empty
 - `ProofHeight` is zero
 - `Signer` is empty
@@ -181,16 +181,16 @@ message.
 
 ```go
 type MsgChannelOpenInit struct {
-  PortID    string
-  ChannelID string
+  PortId    string
+  ChannelId string
   Channel   Channel
   Signer    sdk.AccAddress
 }
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `Channel` is empty
 - `Signer` is empty
 - A Channel End exists for the given Channel ID and Port ID
@@ -205,8 +205,8 @@ the `MsgChannelOpenTry` message.
 
 ```go
 type MsgChannelOpenTry struct {
-	PortID              string    
-	ChannelID           string   
+	PortId              string    
+	ChannelId           string   
 	Channel             Channel 
 	CounterpartyVersion string 
 	ProofInit           []byte
@@ -216,8 +216,8 @@ type MsgChannelOpenTry struct {
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `Channel` is empty
 - `CounterpartyVersion` is empty
 - `ProofInit` is empty
@@ -235,8 +235,8 @@ A channel handshake is opened by a chain A using the `MsgChannelOpenAck` message
 
 ```go
 type MsgChannelOpenAck struct {
-	PortID              string    
-	ChannelID           string   
+	PortId              string    
+	ChannelId           string   
 	CounterpartyVersion string 
 	ProofTry            []byte
 	ProofHeight         uint64
@@ -245,8 +245,8 @@ type MsgChannelOpenAck struct {
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `CounterpartyVersion` is empty
 - `ProofTry` is empty
 - `ProofHeight` is zero
@@ -262,8 +262,8 @@ message.
 
 ```go
 type MsgChannelOpenConfirm struct {
-	PortID              string    
-	ChannelID           string   
+	PortId              string    
+	ChannelId           string   
 	ProofAck            []byte
 	ProofHeight         uint64
 	Signer              sdk.AccAddress 
@@ -271,8 +271,8 @@ type MsgChannelOpenConfirm struct {
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `ProofAck` is empty
 - `ProofHeight` is zero
 - `Signer` is empty
@@ -286,15 +286,15 @@ A channel is closed on chain A using the `MsgChannelCloseInit`.
 
 ```go
 type MsgChannelCloseInit struct {
-	PortID    string   
-	ChannelID string  
+	PortId    string   
+	ChannelId string  
 	Signer    sdk.AccAddress 
 }
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `Signer` is empty
 - A Channel for the given Port ID and Channel ID does not exist or is already closed
 
@@ -306,8 +306,8 @@ A channel is closed on chain B using the `MsgChannelCloseConfirm`.
 
 ```go
 type MsgChannelCloseConfirm struct {
-	PortID      string 
-	ChannelID   string   
+	PortId      string 
+	ChannelId   string   
 	ProofInit   []byte  
 	ProofHeight uint64 
 	Signer      sdk.AccAddress 
@@ -315,8 +315,8 @@ type MsgChannelCloseConfirm struct {
 ```
 
 This message is expected to fail if:
-- `PortID` is invalid (see naming requirements)
-- `ChannelID` is invalid (see naming requirements)
+- `PortId` is invalid (see naming requirements)
+- `ChannelId` is invalid (see naming requirements)
 - `ProofInit` is empty
 - `ProofHeight` is zero
 - `Signer` is empty

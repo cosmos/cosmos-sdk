@@ -7,7 +7,9 @@ import (
 // IBC channel sentinel errors
 var (
 	ErrInvalidPacketTimeout    = sdkerrors.Register(ModuleName, 2, "invalid packet timeout")
-	ErrOnlyOneDenomAllowed     = sdkerrors.Register(ModuleName, 3, "only one denom allowed")
-	ErrInvalidDenomForTransfer = sdkerrors.Register(ModuleName, 4, "invalid denomination for cross-chain transfer")
-	ErrInvalidVersion          = sdkerrors.Register(ModuleName, 5, "invalid ICS20 version")
+	ErrInvalidDenomForTransfer = sdkerrors.Register(ModuleName, 3, "invalid denomination for cross-chain transfer")
+	ErrInvalidVersion          = sdkerrors.Register(ModuleName, 4, "invalid ICS20 version")
+	ErrInvalidAmount           = sdkerrors.Register(ModuleName, 5, "invalid token amount")
+	ErrTraceNotFound           = sdkerrors.Register(ModuleName, 6, "denomination trace not found")
+	ErrTransfersDisabled       = sdkerrors.Register(ModuleName, 7, "fungible token transfers to/from this chain are disabled")
 )

@@ -9,9 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
@@ -199,14 +201,10 @@ func (coord *Coordinator) SendPacket(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // PacketExecuted receives a packet through the channel keeper on the source chain and updates the
@@ -222,14 +220,10 @@ func (coord *Coordinator) PacketExecuted(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // AcknowledgementExecuted deletes the packet commitment with the given
@@ -245,14 +239,59 @@ func (coord *Coordinator) AcknowledgementExecuted(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
-	); err != nil {
+	)
+}
+
+// RecvPacket receives a channel packet on the counterparty chain and updates
+// the client on the source chain representing the counterparty.
+func (coord *Coordinator) RecvPacket(
+	source, counterparty *TestChain,
+	sourceClient string,
+	packet channeltypes.Packet,
+) error {
+	// get proof of packet commitment on source
+	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+	proof, proofHeight := source.QueryProof(packetKey)
+
+	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
+
+	// receive on counterparty and update source client
+	return coord.SendMsgs(counterparty, source, sourceClient, recvMsg)
+}
+
+// AcknowledgePacket acknowledges on the source chain the packet received on
+// the counterparty chain and updates the client on the counterparty representing
+// the source chain.
+// TODO: add a query for the acknowledgement by events
+// - https://github.com/cosmos/cosmos-sdk/issues/6509
+func (coord *Coordinator) AcknowledgePacket(
+	source, counterparty *TestChain,
+	counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	// get proof of acknowledgement on counterparty
+	packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	proof, proofHeight := counterparty.QueryProof(packetKey)
+
+	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
+	return coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg)
+}
+
+// RelayPacket receives a channel packet on counterparty, queries the ack
+// and acknowledges the packet on source. The clients are updated as needed.
+func (coord *Coordinator) RelayPacket(
+	source, counterparty *TestChain,
+	sourceClient, counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	if err := coord.RecvPacket(source, counterparty, sourceClient, packet); err != nil {
 		return err
 	}
 
-	return nil
+	return coord.AcknowledgePacket(source, counterparty, counterpartyClient, packet, ack)
 }
 
 // IncrementTime iterates through all the TestChain's and increments their current header time
@@ -264,6 +303,22 @@ func (coord *Coordinator) IncrementTime() {
 		chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(timeIncrement)
 		chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
 	}
+}
+
+// SendMsgs delivers the provided messages to the chain. The counterparty
+// client is updated with the new source consensus state.
+func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs ...sdk.Msg) error {
+	if err := source.SendMsgs(msgs...); err != nil {
+		return err
+	}
+
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	return coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, clientexported.Tendermint,
+	)
 }
 
 // GetChain returns the TestChain using the given chainID and returns an error if it does
@@ -342,14 +397,10 @@ func (coord *Coordinator) ConnOpenTry(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ConnOpenAck initializes a connection on the source chain with the state OPEN
@@ -365,14 +416,10 @@ func (coord *Coordinator) ConnOpenAck(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ConnOpenConfirm initializes a connection on the source chain with the state OPEN
@@ -387,14 +434,10 @@ func (coord *Coordinator) ConnOpenConfirm(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		counterpartyConnection.ClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ChanOpenInit initializes a channel on the source chain with the state INIT
@@ -447,14 +490,10 @@ func (coord *Coordinator) ChanOpenTry(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		connection.CounterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ChanOpenAck initializes a channel on the source chain with the state OPEN
@@ -470,14 +509,10 @@ func (coord *Coordinator) ChanOpenAck(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ChanOpenConfirm initializes a channel on the source chain with the state OPEN
@@ -493,14 +528,10 @@ func (coord *Coordinator) ChanOpenConfirm(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // ChanCloseInit closes a channel on the source chain resulting in the channels state
@@ -518,14 +549,10 @@ func (coord *Coordinator) ChanCloseInit(
 	coord.IncrementTime()
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		channel.CounterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // SetChannelClosed sets a channel state to CLOSED.
@@ -541,12 +568,8 @@ func (coord *Coordinator) SetChannelClosed(
 	coord.CommitBlock(source)
 
 	// update source client on counterparty connection
-	if err := coord.UpdateClient(
+	return coord.UpdateClient(
 		counterparty, source,
 		testChannel.CounterpartyClientID, clientexported.Tendermint,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }

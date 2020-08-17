@@ -5,12 +5,12 @@ import (
 	"net/url"
 
 	ics23 "github.com/confio/ics23/go"
+	"github.com/gogo/protobuf/proto"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // var representing the proofspecs for a SDK chain
@@ -41,11 +41,6 @@ func (mr MerkleRoot) GetHash() []byte {
 	return mr.Hash
 }
 
-// GetCommitmentType implements RootI interface
-func (MerkleRoot) GetCommitmentType() exported.Type {
-	return exported.Merkle
-}
-
 // Empty returns true if the root is empty
 func (mr MerkleRoot) Empty() bool {
 	return len(mr.GetHash()) == 0
@@ -58,11 +53,6 @@ func NewMerklePrefix(keyPrefix []byte) MerklePrefix {
 	return MerklePrefix{
 		KeyPrefix: keyPrefix,
 	}
-}
-
-// GetCommitmentType implements Prefix interface
-func (MerklePrefix) GetCommitmentType() exported.Type {
-	return exported.Merkle
 }
 
 // Bytes returns the key prefix bytes
@@ -87,11 +77,6 @@ func NewMerklePath(keyPathStr []string) MerklePath {
 	return MerklePath{
 		KeyPath: merkleKeyPath,
 	}
-}
-
-// GetCommitmentType implements PathI
-func (MerklePath) GetCommitmentType() exported.Type {
-	return exported.Merkle
 }
 
 // String implements fmt.Stringer.
@@ -131,11 +116,6 @@ func ApplyPrefix(prefix exported.Prefix, path string) (MerklePath, error) {
 }
 
 var _ exported.Proof = (*MerkleProof)(nil)
-
-// GetCommitmentType implements ProofI
-func (MerkleProof) GetCommitmentType() exported.Type {
-	return exported.Merkle
-}
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
 func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exported.Root, path exported.Path, value []byte) error {
@@ -366,7 +346,7 @@ func convertProofs(mproof MerkleProof) ([]*ics23.CommitmentProof, error) {
 
 // Empty returns true if the root is empty
 func (proof MerkleProof) Empty() bool {
-	return proof.Proof.Equal(nil) || proof.Equal(MerkleProof{}) || proof.Proof.Equal(nil) || proof.Proof.Equal(merkle.Proof{})
+	return proto.Equal(&proof, nil) || proto.Equal(&proof, &MerkleProof{}) || proto.Equal(&proof, &tmcrypto.ProofOps{})
 }
 
 // ValidateBasic checks if the proof is empty.

@@ -3,20 +3,22 @@ package ante_test
 import (
 	"errors"
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -36,16 +38,29 @@ type AnteTestSuite struct {
 	txBuilder   client.TxBuilder
 }
 
+// returns context and app with params set on account keeper
+func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(isCheckTx)
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+
+	return app, ctx
+}
+
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.app, suite.ctx = createTestApp(isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, types.LegacyAminoJSONHandler{})
 
-	// set up the TxBuilder
-	encodingConfig := simappparams.MakeEncodingConfig()
+	// Set up TxConfig.
+	encodingConfig := simapp.MakeEncodingConfig()
+	// We're using TestMsg amino encoding in some tests, so register it here.
+	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
+
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant
@@ -70,8 +85,28 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) xauthsigning.SigFeeMemoTx {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+	// First round: we gather all the signer infos. We use the "set empty
+	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
+	for _, priv := range privs {
+		sigV2 := signing.SignatureV2{
+			PubKey: priv.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				Signature: nil,
+			},
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
+	err := suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Second round: all signer infos are set, so each signer can sign.
+	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
 			ChainID:         chainID,
@@ -79,13 +114,18 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 			AccountSequence: accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxConfig)
-		suite.Require().NoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		sigsV2 = append(sigsV2, sigV2)
 	}
-	suite.txBuilder.SetSignatures(sigsV2...)
+	err = suite.txBuilder.SetSignatures(sigsV2...)
+	if err != nil {
+		return nil, err
+	}
 
-	return suite.txBuilder.GetTx()
+	return suite.txBuilder.GetTx(), nil
 }
 
 // TestCase represents a test case used in test tables.
@@ -100,21 +140,39 @@ type TestCase struct {
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) RunTestCase(privs []crypto.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
 	suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-		suite.txBuilder.SetMsgs(msgs...)
+		suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
-		tx := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
-		newCtx, err := suite.anteHandler(suite.ctx, tx, tc.simulate)
+		// Theoretically speaking, ante handler unit tests should only test
+		// ante handlers, but here we sometimes also test the tx creation
+		// process.
+		tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 		if tc.expPass {
-			suite.Require().NoError(err)
+			suite.Require().NoError(txErr)
+			suite.Require().NoError(anteErr)
 			suite.Require().NotNil(newCtx)
 
 			suite.ctx = newCtx
 		} else {
-			suite.Require().Error(err)
-			suite.Require().True(errors.Is(err, tc.expErr))
+			switch {
+			case txErr != nil:
+				suite.Require().Error(txErr)
+				suite.Require().True(errors.Is(txErr, tc.expErr))
+
+			case anteErr != nil:
+				suite.Require().Error(anteErr)
+				suite.Require().True(errors.Is(anteErr, tc.expErr))
+
+			default:
+				suite.Fail("expected one of txErr,anteErr to be an error")
+			}
 		}
 	})
+}
+
+func TestAnteTestSuite(t *testing.T) {
+	suite.Run(t, new(AnteTestSuite))
 }

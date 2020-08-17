@@ -5,16 +5,15 @@ import (
 	"io"
 	"os"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
-
-	tmlite "github.com/tendermint/tendermint/lite"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -36,7 +35,6 @@ type Context struct {
 	From              string
 	BroadcastMode     string
 	FromName          string
-	TrustNode         bool
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
@@ -45,10 +43,9 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
-	Verifier          tmlite.Verifier
 
 	// TODO: Deprecated (remove).
-	Codec *codec.Codec
+	LegacyAmino *codec.LegacyAmino
 }
 
 // WithKeyring returns a copy of the context with an updated keyring.
@@ -71,8 +68,8 @@ func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
 
 // WithCodec returns a copy of the context with an updated codec.
 // TODO: Deprecated (remove).
-func (ctx Context) WithCodec(cdc *codec.Codec) Context {
-	ctx.Codec = cdc
+func (ctx Context) WithLegacyAmino(cdc *codec.LegacyAmino) Context {
+	ctx.LegacyAmino = cdc
 	return ctx
 }
 
@@ -85,12 +82,6 @@ func (ctx Context) WithOutput(w io.Writer) Context {
 // WithFrom returns a copy of the context with an updated from address or name.
 func (ctx Context) WithFrom(from string) Context {
 	ctx.From = from
-	return ctx
-}
-
-// WithTrustNode returns a copy of the context with an updated TrustNode flag.
-func (ctx Context) WithTrustNode(trustNode bool) Context {
-	ctx.TrustNode = trustNode
 	return ctx
 }
 
@@ -128,12 +119,6 @@ func (ctx Context) WithClient(client rpcclient.Client) Context {
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
 func (ctx Context) WithUseLedger(useLedger bool) Context {
 	ctx.UseLedger = useLedger
-	return ctx
-}
-
-// WithVerifier returns a copy of the context with an updated Verifier.
-func (ctx Context) WithVerifier(verifier tmlite.Verifier) Context {
-	ctx.Verifier = verifier
 	return ctx
 }
 
@@ -212,10 +197,31 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
+// PrintString prints the raw string to ctx.Output or os.Stdout
+func (ctx Context) PrintString(str string) error {
+	writer := ctx.Output
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	_, err := writer.Write([]byte(str))
+	return err
+}
+
 // PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) PrintOutput(toPrint interface{}) error {
+func (ctx Context) PrintOutput(toPrint proto.Message) error {
+	return ctx.printOutput(toPrint)
+}
+
+// PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
+// and uses amino JSON encoding. It will be removed in the near future!
+func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+	return ctx.WithJSONMarshaler(ctx.LegacyAmino).printOutput(toPrint)
+}
+
+func (ctx Context) printOutput(toPrint interface{}) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {

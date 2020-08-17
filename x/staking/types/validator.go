@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
@@ -109,12 +110,12 @@ func (v Validators) Swap(i, j int) {
 }
 
 // return the redelegation
-func MustMarshalValidator(cdc codec.Marshaler, validator Validator) []byte {
+func MustMarshalValidator(cdc codec.BinaryMarshaler, validator Validator) []byte {
 	return cdc.MustMarshalBinaryBare(&validator)
 }
 
 // unmarshal a redelegation from a store value
-func MustUnmarshalValidator(cdc codec.Marshaler, value []byte) Validator {
+func MustUnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
 		panic(err)
@@ -124,7 +125,7 @@ func MustUnmarshalValidator(cdc codec.Marshaler, value []byte) Validator {
 }
 
 // unmarshal a redelegation from a store value
-func UnmarshalValidator(cdc codec.Marshaler, value []byte) (v Validator, err error) {
+func UnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) (v Validator, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
 }
@@ -223,8 +224,13 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
+	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		panic(err)
+	}
+
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
+		PubKey: pk,
 		Power:  v.ConsensusPower(),
 	}
 }
@@ -232,8 +238,13 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
+	pk, err := cryptoenc.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		panic(err)
+	}
+
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
+		PubKey: pk,
 		Power:  0,
 	}
 }

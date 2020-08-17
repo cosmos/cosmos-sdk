@@ -9,7 +9,7 @@ import (
 
 // RegisterCodec registers the necessary x/crisis interfaces and concrete types
 // on the provided Amino codec. These types are used for Amino JSON serialization.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVerifyInvariant{}, "cosmos-sdk/MsgVerifyInvariant", nil)
 }
 
@@ -28,7 +28,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/crisis and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino, codectypes.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {

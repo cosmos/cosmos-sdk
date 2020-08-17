@@ -25,15 +25,16 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
-// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
+// ICS20 enabled chains. See ICS Spec here:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type MsgTransfer struct {
 	// the port on which the packet will be sent
 	SourcePort string `protobuf:"bytes,1,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`
 	// the channel by which the packet will be sent
 	SourceChannel string `protobuf:"bytes,2,opt,name=source_channel,json=sourceChannel,proto3" json:"source_channel,omitempty" yaml:"source_channel"`
 	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Token types.Coin `protobuf:"bytes,3,opt,name=token,proto3" json:"token"`
 	// the sender address
 	Sender github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
 	// the recipient address on the destination chain
@@ -93,11 +94,11 @@ func (m *MsgTransfer) GetSourceChannel() string {
 	return ""
 }
 
-func (m *MsgTransfer) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgTransfer) GetToken() types.Coin {
 	if m != nil {
-		return m.Amount
+		return m.Token
 	}
-	return nil
+	return types.Coin{}
 }
 
 func (m *MsgTransfer) GetSender() github_com_cosmos_cosmos_sdk_types.AccAddress {
@@ -129,14 +130,17 @@ func (m *MsgTransfer) GetTimeoutTimestamp() uint64 {
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
-// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+// See FungibleTokenPacketData spec:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 type FungibleTokenPacketData struct {
-	// the tokens to be transferred
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// the token denomination to be transferred
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// the token amount to be transferred
+	Amount uint64 `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
 	// the sender address
-	Sender string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
+	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
 	// the recipient address on the destination chain
-	Receiver string `protobuf:"bytes,3,opt,name=receiver,proto3" json:"receiver,omitempty"`
+	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 }
 
 func (m *FungibleTokenPacketData) Reset()         { *m = FungibleTokenPacketData{} }
@@ -172,11 +176,18 @@ func (m *FungibleTokenPacketData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FungibleTokenPacketData proto.InternalMessageInfo
 
-func (m *FungibleTokenPacketData) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *FungibleTokenPacketData) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *FungibleTokenPacketData) GetAmount() uint64 {
 	if m != nil {
 		return m.Amount
 	}
-	return nil
+	return 0
 }
 
 func (m *FungibleTokenPacketData) GetSender() string {
@@ -193,9 +204,10 @@ func (m *FungibleTokenPacketData) GetReceiver() string {
 	return ""
 }
 
-// FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
-// error msg is empty string on success
-// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+// FungibleTokenPacketAcknowledgement contains a boolean success flag and an
+// optional error msg error msg is empty string on success See spec for
+// onAcknowledgePacket:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 type FungibleTokenPacketAcknowledgement struct {
 	Success bool   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Error   string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
@@ -248,47 +260,159 @@ func (m *FungibleTokenPacketAcknowledgement) GetError() string {
 	return ""
 }
 
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
+// information path.
+type DenomTrace struct {
+	// path defines the chain of port/channel identifiers used for tracing the source of the fungible
+	// token.
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// base denomination of the relayed fungible token.
+	BaseDenom string `protobuf:"bytes,2,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty"`
+}
+
+func (m *DenomTrace) Reset()         { *m = DenomTrace{} }
+func (m *DenomTrace) String() string { return proto.CompactTextString(m) }
+func (*DenomTrace) ProtoMessage()    {}
+func (*DenomTrace) Descriptor() ([]byte, []int) {
+	return fileDescriptor_08134a70fd29e656, []int{3}
+}
+func (m *DenomTrace) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DenomTrace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DenomTrace.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DenomTrace) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DenomTrace.Merge(m, src)
+}
+func (m *DenomTrace) XXX_Size() int {
+	return m.Size()
+}
+func (m *DenomTrace) XXX_DiscardUnknown() {
+	xxx_messageInfo_DenomTrace.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DenomTrace proto.InternalMessageInfo
+
+func (m *DenomTrace) GetPath() string {
+	if m != nil {
+		return m.Path
+	}
+	return ""
+}
+
+func (m *DenomTrace) GetBaseDenom() string {
+	if m != nil {
+		return m.BaseDenom
+	}
+	return ""
+}
+
+// Params defines the set of IBC transfer parameters.
+// NOTE: To prevent a single token from being transferred, set the TransfersEnabled parameter to
+// true and then set the bank module's SendEnabled parameter for the denomination to false.
+type Params struct {
+	// transfers_enabled enables or disables all cross-chain token transfers from/to this chain.
+	TransfersEnabled bool `protobuf:"varint,1,opt,name=transfers_enabled,json=transfersEnabled,proto3" json:"transfers_enabled,omitempty" yaml:"transfers_enabled"`
+}
+
+func (m *Params) Reset()         { *m = Params{} }
+func (m *Params) String() string { return proto.CompactTextString(m) }
+func (*Params) ProtoMessage()    {}
+func (*Params) Descriptor() ([]byte, []int) {
+	return fileDescriptor_08134a70fd29e656, []int{4}
+}
+func (m *Params) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Params) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Params.Merge(m, src)
+}
+func (m *Params) XXX_Size() int {
+	return m.Size()
+}
+func (m *Params) XXX_DiscardUnknown() {
+	xxx_messageInfo_Params.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Params proto.InternalMessageInfo
+
+func (m *Params) GetTransfersEnabled() bool {
+	if m != nil {
+		return m.TransfersEnabled
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*MsgTransfer)(nil), "ibc.transfer.MsgTransfer")
 	proto.RegisterType((*FungibleTokenPacketData)(nil), "ibc.transfer.FungibleTokenPacketData")
 	proto.RegisterType((*FungibleTokenPacketAcknowledgement)(nil), "ibc.transfer.FungibleTokenPacketAcknowledgement")
+	proto.RegisterType((*DenomTrace)(nil), "ibc.transfer.DenomTrace")
+	proto.RegisterType((*Params)(nil), "ibc.transfer.Params")
 }
 
 func init() { proto.RegisterFile("ibc/transfer/transfer.proto", fileDescriptor_08134a70fd29e656) }
 
 var fileDescriptor_08134a70fd29e656 = []byte{
-	// 484 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0x3f, 0x6f, 0xd3, 0x40,
-	0x1c, 0x8d, 0x49, 0x9b, 0x96, 0x4b, 0x8a, 0xe0, 0x28, 0xe5, 0x08, 0xc8, 0x8e, 0x3c, 0x79, 0x49,
-	0x4c, 0x61, 0x40, 0x62, 0x22, 0x29, 0x42, 0x54, 0x08, 0xa9, 0xb2, 0x22, 0x06, 0x96, 0xca, 0x3e,
-	0xff, 0x70, 0x4e, 0x89, 0xef, 0xa2, 0xbb, 0x33, 0xd0, 0x6f, 0xc1, 0x97, 0x60, 0xe1, 0x93, 0x74,
-	0xec, 0xc0, 0xc0, 0x64, 0x50, 0xf2, 0x0d, 0x32, 0x32, 0x21, 0xff, 0x89, 0x89, 0xa5, 0x08, 0x31,
-	0x74, 0xba, 0x7b, 0xef, 0xfd, 0x7e, 0xcf, 0xf7, 0x7b, 0xbe, 0x43, 0x0f, 0x59, 0x40, 0x5d, 0x2d,
-	0x7d, 0xae, 0x3e, 0x80, 0xac, 0x36, 0x83, 0xb9, 0x14, 0x5a, 0xe0, 0x0e, 0x0b, 0xe8, 0x60, 0xcd,
-	0x75, 0x0f, 0x23, 0x11, 0x89, 0x5c, 0x70, 0xb3, 0x5d, 0x51, 0xd3, 0xbd, 0x4b, 0x85, 0x8a, 0x85,
-	0x72, 0x8b, 0xa5, 0x20, 0xed, 0xef, 0x4d, 0xd4, 0x7e, 0xab, 0xa2, 0x71, 0xd9, 0x8a, 0x9f, 0xa1,
-	0xb6, 0x12, 0x89, 0xa4, 0x70, 0x3e, 0x17, 0x52, 0x13, 0xa3, 0x67, 0x38, 0x37, 0x47, 0x47, 0xab,
-	0xd4, 0xc2, 0x17, 0x7e, 0x3c, 0x7b, 0x6e, 0x6f, 0x88, 0xb6, 0x87, 0x0a, 0x74, 0x26, 0xa4, 0xc6,
-	0x2f, 0xd0, 0xad, 0x52, 0xa3, 0x13, 0x9f, 0x73, 0x98, 0x91, 0x1b, 0x79, 0xef, 0x83, 0x55, 0x6a,
-	0xdd, 0xab, 0xf5, 0x96, 0xba, 0xed, 0x1d, 0x14, 0xc4, 0x49, 0x81, 0xf1, 0x3b, 0xd4, 0xf2, 0x63,
-	0x91, 0x70, 0x4d, 0x9a, 0xbd, 0xa6, 0xd3, 0x7e, 0xd2, 0x19, 0x94, 0x27, 0x3d, 0x11, 0x8c, 0x8f,
-	0x1e, 0x5f, 0xa6, 0x56, 0xe3, 0xdb, 0x4f, 0xcb, 0x89, 0x98, 0x9e, 0x24, 0xc1, 0x80, 0x8a, 0xd8,
-	0xad, 0x0d, 0xd4, 0x57, 0xe1, 0xd4, 0xd5, 0x17, 0x73, 0x28, 0x1a, 0x94, 0x57, 0xba, 0xe1, 0x53,
-	0xd4, 0x52, 0xc0, 0x43, 0x90, 0x64, 0xa7, 0x67, 0x38, 0x9d, 0xd1, 0xf1, 0xef, 0xd4, 0xea, 0xff,
-	0x87, 0xcb, 0x90, 0xd2, 0x61, 0x18, 0x4a, 0x50, 0xca, 0x2b, 0x0d, 0x70, 0x17, 0xed, 0x4b, 0xa0,
-	0xc0, 0x3e, 0x82, 0x24, 0xbb, 0xd9, 0x78, 0x5e, 0x85, 0xb3, 0x00, 0x34, 0x8b, 0x41, 0x24, 0xfa,
-	0x7c, 0x02, 0x2c, 0x9a, 0x68, 0xd2, 0xea, 0x19, 0xce, 0xce, 0x66, 0x00, 0x75, 0xdd, 0xf6, 0x0e,
-	0x4a, 0xe2, 0x75, 0x8e, 0xf1, 0x29, 0xba, 0xb3, 0xae, 0xc8, 0x56, 0xa5, 0xfd, 0x78, 0x4e, 0xf6,
-	0x72, 0x93, 0x47, 0xab, 0xd4, 0x22, 0x75, 0x93, 0xaa, 0xc4, 0xf6, 0x6e, 0x97, 0xdc, 0xb8, 0xa2,
-	0xbe, 0x1a, 0xe8, 0xfe, 0xab, 0x84, 0x47, 0x2c, 0x98, 0xc1, 0x58, 0x4c, 0x81, 0x9f, 0xf9, 0x74,
-	0x0a, 0xfa, 0xa5, 0xaf, 0xfd, 0x8d, 0x9c, 0x8d, 0x6b, 0xcd, 0xf9, 0xa8, 0xca, 0x39, 0xff, 0xf3,
-	0x5b, 0x43, 0x6b, 0xd6, 0x43, 0xb3, 0xc7, 0xc8, 0xde, 0x72, 0xcc, 0x21, 0x9d, 0x72, 0xf1, 0x69,
-	0x06, 0x61, 0x04, 0x31, 0x70, 0x8d, 0x09, 0xda, 0x53, 0x09, 0xa5, 0xa0, 0x54, 0x7e, 0x21, 0xf7,
-	0xbd, 0x35, 0xc4, 0x87, 0x68, 0x17, 0xa4, 0x14, 0xeb, 0x4f, 0x16, 0x60, 0xf4, 0xe6, 0x72, 0x61,
-	0x1a, 0x57, 0x0b, 0xd3, 0xf8, 0xb5, 0x30, 0x8d, 0x2f, 0x4b, 0xb3, 0x71, 0xb5, 0x34, 0x1b, 0x3f,
-	0x96, 0x66, 0xe3, 0xfd, 0xf1, 0x3f, 0xa7, 0xfa, 0xec, 0xb2, 0x80, 0xf6, 0xff, 0xbe, 0xb1, 0x6c,
-	0xc8, 0xa0, 0x95, 0x3f, 0x94, 0xa7, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6a, 0x95, 0x43, 0xad,
-	0x80, 0x03, 0x00, 0x00,
+	// 569 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x53, 0x4d, 0x6f, 0xd3, 0x30,
+	0x18, 0x6e, 0x58, 0xd6, 0x6d, 0xde, 0x86, 0xc0, 0x1a, 0x23, 0x1b, 0x90, 0x56, 0x39, 0xf5, 0xb2,
+	0x44, 0x05, 0x21, 0x24, 0x2e, 0xd0, 0x6e, 0x20, 0x26, 0x84, 0x54, 0x85, 0x9e, 0xb8, 0x54, 0x8e,
+	0xf3, 0x92, 0x46, 0x6d, 0xec, 0xca, 0x76, 0x06, 0x13, 0x7f, 0x82, 0xff, 0xc2, 0x9f, 0xd8, 0x71,
+	0x47, 0x4e, 0x15, 0x6a, 0xff, 0x41, 0x8f, 0x9c, 0x90, 0x63, 0xb7, 0xac, 0x68, 0xe2, 0x14, 0x3f,
+	0xcf, 0xfb, 0x91, 0xe7, 0x7d, 0xfc, 0x1a, 0x3d, 0xca, 0x13, 0x1a, 0x29, 0x41, 0x98, 0xfc, 0x0c,
+	0x62, 0x75, 0x08, 0x27, 0x82, 0x2b, 0x8e, 0xf7, 0xf2, 0x84, 0x86, 0x4b, 0xee, 0xf8, 0x20, 0xe3,
+	0x19, 0xaf, 0x02, 0x91, 0x3e, 0x99, 0x9c, 0x63, 0x9f, 0x72, 0x59, 0x70, 0x19, 0x25, 0x44, 0x42,
+	0x74, 0xd1, 0x4e, 0x40, 0x91, 0x76, 0x44, 0x79, 0xce, 0x4c, 0x3c, 0xf8, 0xb1, 0x81, 0x76, 0x3f,
+	0xc8, 0xac, 0x6f, 0xbb, 0xe0, 0x17, 0x68, 0x57, 0xf2, 0x52, 0x50, 0x18, 0x4c, 0xb8, 0x50, 0x9e,
+	0xd3, 0x74, 0x5a, 0x3b, 0xdd, 0xc3, 0xc5, 0xb4, 0x81, 0x2f, 0x49, 0x31, 0x7e, 0x19, 0xdc, 0x08,
+	0x06, 0x31, 0x32, 0xa8, 0xc7, 0x85, 0xc2, 0xaf, 0xd1, 0x5d, 0x1b, 0xa3, 0x43, 0xc2, 0x18, 0x8c,
+	0xbd, 0x3b, 0x55, 0xed, 0xd1, 0x62, 0xda, 0x78, 0xb0, 0x56, 0x6b, 0xe3, 0x41, 0xbc, 0x6f, 0x88,
+	0x53, 0x83, 0xf1, 0x73, 0xb4, 0xa9, 0xf8, 0x08, 0x98, 0xb7, 0xd1, 0x74, 0x5a, 0xbb, 0x4f, 0x8f,
+	0x42, 0x23, 0x3d, 0xd4, 0xd2, 0x43, 0x2b, 0x3d, 0x3c, 0xe5, 0x39, 0xeb, 0xba, 0x57, 0xd3, 0x46,
+	0x2d, 0x36, 0xd9, 0xf8, 0x1c, 0xd5, 0x25, 0xb0, 0x14, 0x84, 0xe7, 0x36, 0x9d, 0xd6, 0x5e, 0xb7,
+	0xfd, 0x7b, 0xda, 0x38, 0xc9, 0x72, 0x35, 0x2c, 0x93, 0x90, 0xf2, 0x22, 0xb2, 0x06, 0x98, 0xcf,
+	0x89, 0x4c, 0x47, 0x91, 0xba, 0x9c, 0x80, 0x0c, 0x3b, 0x94, 0x76, 0xd2, 0x54, 0x80, 0x94, 0xb1,
+	0x6d, 0x80, 0x8f, 0xd1, 0xb6, 0x00, 0x0a, 0xf9, 0x05, 0x08, 0x6f, 0x53, 0xab, 0x8f, 0x57, 0x58,
+	0xcf, 0xa7, 0xf2, 0x02, 0x78, 0xa9, 0x06, 0x43, 0xc8, 0xb3, 0xa1, 0xf2, 0xea, 0x4d, 0xa7, 0xe5,
+	0xde, 0x9c, 0x6f, 0x3d, 0x1e, 0xc4, 0xfb, 0x96, 0x78, 0x57, 0x61, 0x7c, 0x8e, 0xee, 0x2f, 0x33,
+	0xf4, 0x57, 0x2a, 0x52, 0x4c, 0xbc, 0xad, 0xaa, 0xc9, 0xe3, 0xc5, 0xb4, 0xe1, 0xad, 0x37, 0x59,
+	0xa5, 0x04, 0xf1, 0x3d, 0xcb, 0xf5, 0x57, 0xd4, 0x37, 0xf4, 0xf0, 0x6d, 0xc9, 0xb2, 0x3c, 0x19,
+	0x43, 0x5f, 0x9b, 0xd0, 0x23, 0x74, 0x04, 0xea, 0x8c, 0x28, 0x82, 0x0f, 0xd0, 0x66, 0x0a, 0x8c,
+	0x17, 0xe6, 0xea, 0x62, 0x03, 0xf0, 0x21, 0xaa, 0x93, 0x82, 0x97, 0x4c, 0x55, 0xb7, 0xe2, 0xc6,
+	0x16, 0x69, 0xde, 0x9a, 0xb7, 0x51, 0xa5, 0xdf, 0xe6, 0x84, 0xbb, 0xee, 0x44, 0xd0, 0x47, 0xc1,
+	0x2d, 0x3f, 0xef, 0xd0, 0x11, 0xe3, 0x5f, 0xc6, 0x90, 0x66, 0x50, 0x00, 0x53, 0xd8, 0x43, 0x5b,
+	0xb2, 0xa4, 0x14, 0xa4, 0xac, 0x94, 0x6c, 0xc7, 0x4b, 0xa8, 0x15, 0x82, 0x10, 0x5c, 0x98, 0x05,
+	0x89, 0x0d, 0x08, 0x5e, 0x21, 0x74, 0xa6, 0xa5, 0xf6, 0x05, 0xa1, 0x80, 0x31, 0x72, 0x27, 0x44,
+	0x0d, 0xed, 0x10, 0xd5, 0x19, 0x3f, 0x41, 0x48, 0xaf, 0xc2, 0xc0, 0x8c, 0x67, 0x8a, 0x77, 0x34,
+	0x53, 0xd5, 0x05, 0x1f, 0x51, 0xbd, 0x47, 0x04, 0x29, 0x64, 0x65, 0xb4, 0xdd, 0x67, 0x39, 0x00,
+	0x46, 0x92, 0x31, 0xa4, 0x46, 0xc4, 0x9a, 0xd1, 0xff, 0xa6, 0x68, 0xa3, 0x97, 0xdc, 0x1b, 0x43,
+	0x75, 0xdf, 0x5f, 0xcd, 0x7c, 0xe7, 0x7a, 0xe6, 0x3b, 0xbf, 0x66, 0xbe, 0xf3, 0x7d, 0xee, 0xd7,
+	0xae, 0xe7, 0x7e, 0xed, 0xe7, 0xdc, 0xaf, 0x7d, 0x6a, 0xff, 0x77, 0xc5, 0xbe, 0x46, 0x79, 0x42,
+	0x4f, 0xfe, 0x3e, 0x5c, 0xbd, 0x71, 0x49, 0xbd, 0x7a, 0x72, 0xcf, 0xfe, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0x25, 0x11, 0xa0, 0x84, 0xd5, 0x03, 0x00, 0x00,
 }
 
 func (m *MsgTransfer) Marshal() (dAtA []byte, err error) {
@@ -335,20 +459,16 @@ func (m *MsgTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTransfer(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
+	{
+		size, err := m.Token.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintTransfer(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.SourceChannel) > 0 {
 		i -= len(m.SourceChannel)
 		copy(dAtA[i:], m.SourceChannel)
@@ -391,28 +511,26 @@ func (m *FungibleTokenPacketData) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		copy(dAtA[i:], m.Receiver)
 		i = encodeVarintTransfer(dAtA, i, uint64(len(m.Receiver)))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x22
 	}
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
 		copy(dAtA[i:], m.Sender)
 		i = encodeVarintTransfer(dAtA, i, uint64(len(m.Sender)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTransfer(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
+	if m.Amount != 0 {
+		i = encodeVarintTransfer(dAtA, i, uint64(m.Amount))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTransfer(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -457,6 +575,76 @@ func (m *FungibleTokenPacketAcknowledgement) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
+func (m *DenomTrace) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DenomTrace) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DenomTrace) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BaseDenom) > 0 {
+		i -= len(m.BaseDenom)
+		copy(dAtA[i:], m.BaseDenom)
+		i = encodeVarintTransfer(dAtA, i, uint64(len(m.BaseDenom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Path) > 0 {
+		i -= len(m.Path)
+		copy(dAtA[i:], m.Path)
+		i = encodeVarintTransfer(dAtA, i, uint64(len(m.Path)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Params) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TransfersEnabled {
+		i--
+		if m.TransfersEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTransfer(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTransfer(v)
 	base := offset
@@ -482,12 +670,8 @@ func (m *MsgTransfer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTransfer(uint64(l))
 	}
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovTransfer(uint64(l))
-		}
-	}
+	l = m.Token.Size()
+	n += 1 + l + sovTransfer(uint64(l))
 	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTransfer(uint64(l))
@@ -511,11 +695,12 @@ func (m *FungibleTokenPacketData) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovTransfer(uint64(l))
-		}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTransfer(uint64(l))
+	}
+	if m.Amount != 0 {
+		n += 1 + sovTransfer(uint64(m.Amount))
 	}
 	l = len(m.Sender)
 	if l > 0 {
@@ -540,6 +725,35 @@ func (m *FungibleTokenPacketAcknowledgement) Size() (n int) {
 	l = len(m.Error)
 	if l > 0 {
 		n += 1 + l + sovTransfer(uint64(l))
+	}
+	return n
+}
+
+func (m *DenomTrace) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Path)
+	if l > 0 {
+		n += 1 + l + sovTransfer(uint64(l))
+	}
+	l = len(m.BaseDenom)
+	if l > 0 {
+		n += 1 + l + sovTransfer(uint64(l))
+	}
+	return n
+}
+
+func (m *Params) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.TransfersEnabled {
+		n += 2
 	}
 	return n
 }
@@ -645,7 +859,7 @@ func (m *MsgTransfer) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -672,8 +886,7 @@ func (m *MsgTransfer) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Token.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -836,9 +1049,9 @@ func (m *FungibleTokenPacketData) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTransfer
@@ -848,27 +1061,44 @@ func (m *FungibleTokenPacketData) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTransfer
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTransfer
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Amount = append(m.Amount, types.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			m.Amount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTransfer
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Amount |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
@@ -900,7 +1130,7 @@ func (m *FungibleTokenPacketData) Unmarshal(dAtA []byte) error {
 			}
 			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Receiver", wireType)
 			}
@@ -1037,6 +1267,196 @@ func (m *FungibleTokenPacketAcknowledgement) Unmarshal(dAtA []byte) error {
 			}
 			m.Error = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTransfer(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DenomTrace) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTransfer
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DenomTrace: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DenomTrace: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Path", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTransfer
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Path = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTransfer
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTransfer(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTransfer
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Params) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTransfer
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Params: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransfersEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTransfer
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.TransfersEnabled = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTransfer(dAtA[iNdEx:])

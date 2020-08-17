@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,9 +30,10 @@ type IntegrationTestSuite struct {
 	sdkCtx      sdk.Context
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	app := simapp.Setup(false)
-	sdkCtx := app.BaseApp.NewContext(false, abci.Header{})
+	sdkCtx := app.BaseApp.NewContext(false, tmproto.Header{})
+
 	app.AccountKeeper.SetParams(sdkCtx, authtypes.DefaultParams())
 
 	// Set up TxConfig.

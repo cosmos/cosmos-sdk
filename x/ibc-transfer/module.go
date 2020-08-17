@@ -177,7 +177,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 
 //____________________________________________________________________________
 
-// Implement IBCModule callbacks
+// OnChanOpenInit implements the IBCModule interface
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -209,6 +209,7 @@ func (am AppModule) OnChanOpenInit(
 	return nil
 }
 
+// OnChanOpenTry implements the IBCModule interface
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -245,6 +246,7 @@ func (am AppModule) OnChanOpenTry(
 	return nil
 }
 
+// OnChanOpenAck implements the IBCModule interface
 func (am AppModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -257,6 +259,7 @@ func (am AppModule) OnChanOpenAck(
 	return nil
 }
 
+// OnChanOpenConfirm implements the IBCModule interface
 func (am AppModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -265,6 +268,7 @@ func (am AppModule) OnChanOpenConfirm(
 	return nil
 }
 
+// OnChanCloseInit implements the IBCModule interface
 func (am AppModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -274,6 +278,7 @@ func (am AppModule) OnChanCloseInit(
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
 }
 
+// OnChanCloseConfirm implements the IBCModule interface
 func (am AppModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -282,6 +287,7 @@ func (am AppModule) OnChanCloseConfirm(
 	return nil
 }
 
+// OnRecvPacket implements the IBCModule interface
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -318,6 +324,7 @@ func (am AppModule) OnRecvPacket(
 	}, acknowledgement.GetBytes(), nil
 }
 
+// OnAcknowledgementPacket implements the IBCModule interface
 func (am AppModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -361,6 +368,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	}, nil
 }
 
+// OnTimeoutPacket implements the IBCModule interface
 func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -377,6 +385,31 @@ func (am AppModule) OnTimeoutPacket(
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTimeout,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
+			sdk.NewAttribute(types.AttributeKeyRefundDenom, data.Denom),
+			sdk.NewAttribute(types.AttributeKeyRefundAmount, fmt.Sprintf("%d", data.Amount)),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
+}
+
+// OnTimeoutOnClosePacket implements the IBCModule interface
+func (am AppModule) OnTimeoutOnClosePacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) (*sdk.Result, error) {
+	var data types.FungibleTokenPacketData
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTimeoutOnClose,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
 			sdk.NewAttribute(types.AttributeKeyRefundDenom, data.Denom),

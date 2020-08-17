@@ -82,6 +82,16 @@ message MsgTimeout {
   bytes  signer             = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
+// MsgTimeoutOnClose timed-out packet upon channel closure.
+message MsgTimeoutOnClose {
+  Packet packet             = 1 [(gogoproto.nullable) = false];
+  bytes  proof              = 2;
+  bytes  proof_close        = 3 [(gogoproto.moretags) = "yaml:\"proof_close\""];
+  uint64 proof_height       = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
+  uint64 next_sequence_recv = 5 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
+  bytes  signer             = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
 // MsgAcknowledgement receives incoming IBC acknowledgement
 message MsgAcknowledgement {
   Packet packet          = 1 [(gogoproto.nullable) = false];

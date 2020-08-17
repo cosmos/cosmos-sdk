@@ -145,7 +145,7 @@ func (k Keeper) TimeoutExecuted(
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
+	k.Logger(ctx).Info("packet timed-out", "packet", packet)
 
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -268,7 +268,7 @@ func (k Keeper) TimeoutOnClose(
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out on close: %v", packet))
+	k.Logger(ctx).Info("packet timed-out on close", "packet", packet)
 
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{

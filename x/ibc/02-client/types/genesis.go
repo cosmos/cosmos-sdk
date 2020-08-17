@@ -31,7 +31,7 @@ func NewGenesisClientState(clientID string, clientState exported.ClientState) Ge
 	}
 
 	return GenesisClientState{
-		ClientID:    clientID,
+		ClientId:    clientID,
 		ClientState: anyClientState,
 	}
 }
@@ -55,7 +55,7 @@ type ClientsConsensusStates []ClientConsensusStates
 func (ccs ClientsConsensusStates) Len() int { return len(ccs) }
 
 // Less implements sort.Interface
-func (ccs ClientsConsensusStates) Less(i, j int) bool { return ccs[i].ClientID < ccs[j].ClientID }
+func (ccs ClientsConsensusStates) Less(i, j int) bool { return ccs[i].ClientId < ccs[j].ClientId }
 
 // Swap implements sort.Interface
 func (ccs ClientsConsensusStates) Swap(i, j int) { ccs[i], ccs[j] = ccs[j], ccs[i] }
@@ -85,7 +85,7 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 	}
 
 	return ClientConsensusStates{
-		ClientID:        clientID,
+		ClientId:        clientID,
 		ConsensusStates: anyConsensusStates,
 	}
 }
@@ -137,8 +137,8 @@ func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // failure.
 func (gs GenesisState) Validate() error {
 	for i, client := range gs.Clients {
-		if err := host.ClientIdentifierValidator(client.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientID, i, err)
+		if err := host.ClientIdentifierValidator(client.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientId, i, err)
 		}
 
 		clientState, ok := client.ClientState.GetCachedValue().(exported.ClientState)
@@ -151,8 +151,8 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for i, cs := range gs.ClientsConsensus {
-		if err := host.ClientIdentifierValidator(cs.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientID, i, err)
+		if err := host.ClientIdentifierValidator(cs.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientId, i, err)
 		}
 
 		for _, consensusState := range cs.ConsensusStates {

@@ -1,13 +1,12 @@
 syntax = "proto3";
 package cosmos.base.abci.v1beta1;
 
-import "tendermint/abci/types/types.proto";
 import "gogoproto/gogo.proto";
+import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
-
 
 // TxResponse defines a structure containing relevant tx data and metadata. The
 // tags are stringified and the log is JSON decoded.
@@ -35,7 +34,7 @@ message TxResponse {
   int64 gas_used = 10;
   // The request transaction bytes.
   google.protobuf.Any tx = 11;
-  // Time of the previous block. For heights > 1, it's the weighted median of the 
+  // Time of the previous block. For heights > 1, it's the weighted median of the
   // timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time.
   string timestamp = 12;
 }
@@ -45,7 +44,7 @@ message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
   uint32 msg_index = 1;
-  string log = 2;
+  string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
@@ -57,14 +56,14 @@ message ABCIMessageLog {
 message StringEvent {
   option (gogoproto.stringer) = true;
 
-  string type = 1;
+  string             type       = 1;
   repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
 }
 
 // Attribute defines an attribute wrapper where the key and value are
 // strings instead of raw bytes.
 message Attribute {
-  string key = 1;
+  string key   = 1;
   string value = 2;
 }
 
@@ -90,7 +89,7 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message or
   // handler execution.
-  repeated tendermint.abci.types.Event events = 3 [(gogoproto.nullable) = false];
+  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
 }
 
 // SimulationResponse defines the response generated when a transaction is

@@ -188,7 +188,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		valid := tc.key.VerifyBytes(tc.data, tc.sig)
+		valid := tc.key.VerifySignature(tc.data, tc.sig)
 		require.Equal(t, tc.valid, valid, "%d", i)
 	}
 
@@ -549,7 +549,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		valid := tc.key.VerifyBytes(tc.data, tc.sig)
+		valid := tc.key.VerifySignature(tc.data, tc.sig)
 		require.Equal(t, tc.valid, valid, "%d", i)
 	}
 
@@ -788,7 +788,7 @@ func ExampleNew() {
 	if pub.Equals(binfo.GetPubKey()) {
 		fmt.Println("signed by Bob")
 	}
-	if !pub.VerifyBytes(tx, sig) {
+	if !pub.VerifySignature(tx, sig) {
 		fmt.Println("invalid signature")
 	}
 
@@ -1008,7 +1008,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 	sign, key, err := keyring.Sign(uid, msg)
 	require.NoError(t, err)
 
-	require.True(t, key.VerifyBytes(msg, sign))
+	require.True(t, key.VerifySignature(msg, sign))
 }
 
 func TestAltKeyring_SignByAddress(t *testing.T) {
@@ -1027,7 +1027,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 	sign, key, err := keyring.SignByAddress(mnemonic.GetAddress(), msg)
 	require.NoError(t, err)
 
-	require.True(t, key.VerifyBytes(msg, sign))
+	require.True(t, key.VerifySignature(msg, sign))
 }
 
 func TestAltKeyring_ImportExportPrivKey(t *testing.T) {

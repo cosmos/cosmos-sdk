@@ -1,17 +1,15 @@
-package tendermint_test
+package types_test
 
 import (
-	"bytes"
 	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-func (suite *TendermintTestSuite) TestCheckValidity() {
+func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
 		clientState    *types.ClientState
 		consensusState *types.ConsensusState
@@ -33,16 +31,9 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 
 	signers := []tmtypes.PrivValidator{suite.privVal}
 
-	pubKey, err := suite.privVal.GetPubKey()
-	suite.Require().NoError(err)
-
 	// Create signer array and ensure it is in same order as bothValSet
-	var bothSigners []tmtypes.PrivValidator
-	if bytes.Compare(altPubKey.Address(), pubKey.Address()) == -1 {
-		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
-	} else {
-		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
-	}
+	_, suiteVal := suite.valSet.GetByIndex(0)
+	bothSigners := types.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
@@ -192,6 +183,12 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 		// setup test
 		tc.setup()
 
+		// Set current timestamp in context
+		ctx := suite.chainA.GetContext().WithBlockTime(currentTime)
+
+		// Set trusted consensus state in client store
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, consensusState.Height, consensusState)
+
 		expectedConsensus := &types.ConsensusState{
 			Height:             uint64(newHeader.Height),
 			Timestamp:          newHeader.Time,
@@ -199,7 +196,12 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 			NextValidatorsHash: newHeader.NextValidatorsHash,
 		}
 
-		newClientState, consensusState, err := tendermint.CheckValidityAndUpdateState(clientState, consensusState, newHeader, currentTime)
+		newClientState, consensusState, err := clientState.CheckHeaderAndUpdateState(
+			ctx,
+			suite.cdc,
+			suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientID), // pass in clientID prefixed clientStore
+			newHeader,
+		)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)

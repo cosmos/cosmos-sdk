@@ -30,6 +30,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*clientexported.ConsensusState)(nil),
 		&ConsensusState{},
 	)
+	// registry.RegisterImplementations(
+	// 	(*clientexported.Header)(nil),
+	// 	&Header{},
+	// )
 }
 
 var (

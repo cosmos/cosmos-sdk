@@ -121,7 +121,7 @@ func (AppModule) QuerierRoute() string {
 
 // LegacyQuerierHandler returns the ibc module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(*am.keeper, legacyQuerierCdc)
+	return nil
 }
 
 // RegisterQueryService registers the gRPC query service for the ibc module.

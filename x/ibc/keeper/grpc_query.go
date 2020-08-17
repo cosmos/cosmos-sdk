@@ -3,9 +3,25 @@ package keeper
 import (
 	"context"
 
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
+
+// ClientState implements the IBC QueryServer interface
+func (q Keeper) ClientState(c context.Context, req *clienttypes.QueryClientStateRequest) (*clienttypes.QueryClientStateResponse, error) {
+	return q.ClientKeeper.ClientState(c, req)
+}
+
+// ClientStates implements the IBC QueryServer interface
+func (q Keeper) ClientStates(c context.Context, req *clienttypes.QueryClientStatesRequest) (*clienttypes.QueryClientStatesResponse, error) {
+	return q.ClientKeeper.ClientStates(c, req)
+}
+
+// ConsensusState implements the IBC QueryServer interface
+func (q Keeper) ConsensusState(c context.Context, req *clienttypes.QueryConsensusStateRequest) (*clienttypes.QueryConsensusStateResponse, error) {
+	return q.ClientKeeper.ConsensusState(c, req)
+}
 
 // Connection implements the IBC QueryServer interface
 func (q Keeper) Connection(c context.Context, req *connectiontypes.QueryConnectionRequest) (*connectiontypes.QueryConnectionResponse, error) {

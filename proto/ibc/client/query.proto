@@ -1,0 +1,86 @@
+syntax = "proto3";
+package ibc.client;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/client/client.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
+
+// Query provides defines the gRPC querier service
+service Query {
+  // ClientState queries an IBC light client.
+  rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/client_states/{client_id}";
+  }
+
+  // ClientStates queries all the IBC light clients of a chain.
+  rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/client_states";
+  }
+
+  // ConsensusState queries the consensus state associated with a client state.
+  rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_state/{client_id}/{height}";
+  }
+}
+
+// QueryClientStateRequest is the request type for the Query/ClientState RPC
+// method
+message QueryClientStateRequest {
+  // client state unique identifier
+  string client_id = 1;
+}
+
+// QueryClientStateResponse is the response type for the Query/ClientState RPC
+// method. Besides the client state, it includes a proof and the height from
+// which the proof was retrieved.
+message QueryClientStateResponse {
+  // client state associated with the request identifier
+  google.protobuf.Any client_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}
+
+// QueryClientStatesRequest is the request type for the Query/ClientStates RPC
+// method
+message QueryClientStatesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryClientStatesResponse is the response type for the Query/ClientStates RPC
+// method.
+message QueryClientStatesResponse {
+  // list of stored ClientStates of the chain.
+  repeated IdentifiedClientState client_states = 1;
+  // pagination response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  // query block height
+  int64 height = 3;
+}
+
+// QueryConsensusStateRequest is the request type for the Query/ConsensusState RPC method. Besides
+// the consensus state, it includes a proof and the height from which the proof was retrieved.
+message QueryConsensusStateRequest {
+  // client identifier
+  string client_id = 1;
+  // consensus state height
+  uint64 height = 2;
+}
+
+// QueryConsensusStateResponse is the response type for the Query/ConsensusState RPC method
+message QueryConsensusStateResponse {
+  // consensus state associated with the identifier
+  google.protobuf.Any consensus_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  uint64 proof_height = 4;
+}

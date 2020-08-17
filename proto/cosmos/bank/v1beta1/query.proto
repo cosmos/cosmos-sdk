@@ -33,7 +33,7 @@ service Query {
 
   // Params queries the parameters of x/bank module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/slashing/v1beta1/params";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
   }
 }
 

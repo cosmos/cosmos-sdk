@@ -35,7 +35,7 @@ controlled by it. Under this folder, we will see the following:
 
 ```
 .
-├── current -> upgrades/<name>, genesis, etc
+├── current -> genesis or upgrades/<name>
 ├── genesis
 │   └── bin
 │       └── $DAEMON_NAME

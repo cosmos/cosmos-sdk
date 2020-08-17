@@ -73,11 +73,10 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 			cmd := simcmd.AddGenesisAccountCmd(home)
-			arr := []string{
+			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
-				fmt.Sprintf("--%s=home", flags.FlagHome)}
-			cmd.SetArgs(arr)
+				fmt.Sprintf("--%s=home", flags.FlagHome)})
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))

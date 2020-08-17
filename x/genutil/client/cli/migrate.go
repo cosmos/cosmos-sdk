@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+const flagGenesisTime = "genesis-time"
+
 // Allow applications to extend and modify the migration process.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
@@ -95,7 +97,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
 
-			genesisTime, _ := cmd.Flags().GetString(flags.FlagChainID)
+			genesisTime, _ := cmd.Flags().GetString(flagGenesisTime)
 			if genesisTime != "" {
 				var t time.Time
 
@@ -127,7 +129,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 		},
 	}
 
-	cmd.Flags().String(flags.FlagChainID, "", "override genesis_time with this flag")
+	cmd.Flags().String(flagGenesisTime, "", "override genesis_time with this flag")
 	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd

@@ -176,7 +176,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 func NewSetWithdrawAddrCmd() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	
+
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",

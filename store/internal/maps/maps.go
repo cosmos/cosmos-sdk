@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -65,7 +66,7 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
-	return merkle.SimpleHashFromByteSlices(kvsH)
+	return merkle.HashFromByteSlices(kvsH)
 }
 
 // ---------------------------------------------
@@ -168,9 +169,9 @@ func (kv KVPair) Bytes() []byte {
 	return buf[:nlk+nk+nlv+nv]
 }
 
-// SimpleHashFromMap computes a merkle tree from sorted map and returns the merkle
+// HashFromMap computes a merkle tree from sorted map and returns the merkle
 // root.
-func SimpleHashFromMap(m map[string][]byte) []byte {
+func HashFromMap(m map[string][]byte) []byte {
 	mm := newMerkleMap()
 	for k, v := range m {
 		mm.set(k, v)
@@ -179,10 +180,10 @@ func SimpleHashFromMap(m map[string][]byte) []byte {
 	return mm.hash()
 }
 
-// SimpleProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
+// ProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.SimpleProof, []string) {
+func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*tmcrypto.Proof, []string) {
 	sm := newSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
@@ -195,12 +196,12 @@ func SimpleProofsFromMap(m map[string][]byte) ([]byte, map[string]*merkle.Simple
 		kvsBytes[i] = KVPair(kvp).Bytes()
 	}
 
-	rootHash, proofList := merkle.SimpleProofsFromByteSlices(kvsBytes)
-	proofs := make(map[string]*merkle.SimpleProof)
+	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
+	proofs := make(map[string]*tmcrypto.Proof)
 	keys := make([]string, len(proofList))
 
 	for i, kvp := range kvs.Pairs {
-		proofs[string(kvp.Key)] = proofList[i]
+		proofs[string(kvp.Key)] = proofList[i].ToProto()
 		keys[i] = string(kvp.Key)
 	}
 

@@ -49,7 +49,7 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.Proof)
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

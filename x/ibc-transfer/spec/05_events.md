@@ -21,6 +21,7 @@ order: 5
 | fungible_token_packet | receiver      | {receiver}      |
 | fungible_token_packet | denom         | {denom}         |
 | fungible_token_packet | amount        | {amount}        |
+| denomination_trace    | trace_hash    | {hex_hash}      |
 
 ## OnAcknowledgePacket callback
 
@@ -40,8 +41,3 @@ order: 5
 | fungible_token_packet | refund_receiver | {receiver}      |
 | fungible_token_packet | denom           | {denom}         |
 | fungible_token_packet | amount          | {amount}        |
-
-
-
-
-

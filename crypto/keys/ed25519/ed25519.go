@@ -10,7 +10,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 )
 
 //-------------------------------------
@@ -18,8 +17,6 @@ import (
 var _ crypto.PrivKey = PrivKey{}
 
 const (
-	PrivKeyName = "tendermint/PrivKeyEd25519"
-	PubKeyName  = "tendermint/PubKeyEd25519"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivateKeySize is the size, in bytes, of private keys as used in this package.
@@ -33,11 +30,6 @@ const (
 
 	keyType = "ed25519"
 )
-
-func init() {
-	tmjson.RegisterType(PubKey{}, PubKeyName)
-	tmjson.RegisterType(PrivKey{}, PrivKeyName)
-}
 
 // PrivKey implements crypto.PrivKey.
 type PrivKey []byte

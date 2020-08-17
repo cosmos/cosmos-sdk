@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,20 +19,18 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
-
-	cdc := std.DefaultPublicKeyCodec{}
+	txBuilder := newBuilder()
 
 	memo := "sometestmemo"
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 
-	pk, err := cdc.Encode(pubkey)
+	any, err := pubKeyToAny(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
 	signerInfo = append(signerInfo, &txtypes.SignerInfo{
-		PublicKey: pk,
+		PublicKey: any,
 		ModeInfo: &txtypes.ModeInfo{
 			Sum: &txtypes.ModeInfo_Single_{
 				Single: &txtypes.ModeInfo_Single{
@@ -128,7 +125,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdk.NewInt(-5)
-	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
+	txBuilder := newBuilder()
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{

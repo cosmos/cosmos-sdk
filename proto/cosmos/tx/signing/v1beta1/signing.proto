@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.tx.signing.v1beta1;
 
 import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
@@ -34,7 +35,7 @@ message SignatureDescriptors {
 // itself. It is primarily used for coordinating signatures between clients.
 message SignatureDescriptor {
     // public_key is the public key of the signer
-    cosmos.base.crypto.v1beta1.PublicKey public_key = 1;
+    google.protobuf.Any public_key = 1;
 
     Data data = 2;
 

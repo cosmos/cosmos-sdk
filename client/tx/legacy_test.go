@@ -14,7 +14,6 @@ import (
 	tx2 "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	types3 "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -65,7 +64,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupSuite() {
 	encCfg := simapp.MakeEncodingConfig()
 	s.encCfg = encCfg
-	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
+	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
 	s.aminoCfg = types3.StdTxConfig{Cdc: encCfg.Amino}
 }
 
@@ -142,4 +141,8 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	decodedTx, err = s.aminoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, decodedTx)
+}
+
+func TestTestSuite(t *testing.T) {
+	suite.Run(t, &TestSuite{})
 }

@@ -47,7 +47,7 @@ type InterfaceRegistry interface {
 	ListAllInterfaces() []string
 
 	// ListImplementations lists the valid type URLs for the given interface name that can be used
-	// for the provided interface type URL
+	// for the provided interface type URL.
 	ListImplementations(ifaceTypeURL string) []string
 }
 

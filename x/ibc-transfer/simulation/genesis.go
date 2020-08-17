@@ -23,7 +23,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	transferGenesis := types.GenesisState{
-		PortID: portID,
+		PortId: portID,
 	}
 
 	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, &transferGenesis))

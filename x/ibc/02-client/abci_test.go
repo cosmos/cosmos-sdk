@@ -3,8 +3,9 @@ package client_test
 import (
 	"testing"
 
-	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/stretchr/testify/suite"
+
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 type ClientTestSuite struct {

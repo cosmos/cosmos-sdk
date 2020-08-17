@@ -6,6 +6,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MarshalYAML marshals the provided toPrint content with the provided JSON marshaler
+// by encoding JSON, decoding JSON, and then encoding YAML.
 func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint interface{}) ([]byte, error) {
 	bz, err := jsonMarshaler.MarshalJSON(toPrint)
 	if err != nil {

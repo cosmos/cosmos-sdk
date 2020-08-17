@@ -102,38 +102,11 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			),
 		},
-		// just for testing GRPC. can be removed
-		{
-			"test GRPC total supply",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
-		},
-		// just for testing GRPC. can be removed
-		{
-			"GRPC total supply of a specific denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
-		},
 		{
 			"total supply of a specific denom",
 			fmt.Sprintf("%s/bank/total/%s?height=1", baseURL, s.cfg.BondDenom),
 			&sdk.Coin{},
 			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-		},
-		// just for testing GRPC. can be removed
-		{
-			"GRPC total supply of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
-			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
 		},
 		{
 			"total supply of a bogus denom",
@@ -147,7 +120,58 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
-			// can be removed just to have debug log of resp
+			s.Require().NoError(err)
+
+			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
+			s.Require().NoError(err)
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
+		})
+	}
+}
+
+// TODO move these Gateway tests into a separate file
+func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		respType fmt.Stringer
+		expected fmt.Stringer
+	}{
+		{
+			"test GRPC total supply",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
+			&sdk.Coins{},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			),
+		},
+		{
+			"GRPC total supply of a specific denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
+			&sdk.Coins{},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			),
+		},
+		{
+			"GRPC total supply of a bogus denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
+			&sdk.Coin{},
+			sdk.NewCoin("foobar", sdk.ZeroInt()),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			// debug
 			fmt.Println("url", tc.url)
 			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)

@@ -74,10 +74,10 @@ var _ dbm.DB = (*compressDB)(nil)
 
 var serializeMagic = []byte("\\\xfe")
 
-func (cdb *compressDB) SetSync(key, value []byte) error {
+func (cdb *compressDB) Set(key, value []byte) error {
 	indices, err := cdb.potentialIndicesForAny(value)
 	if errors.Is(err, errNoMatch) {
-		return cdb.DB.SetSync(key, value)
+		return cdb.DB.Set(key, value)
 	}
 	if err != nil {
 		return err
@@ -95,11 +95,7 @@ func (cdb *compressDB) SetSync(key, value []byte) error {
 		copy(replace[ni:], replaceBuf[:n])
 		value = bytes.ReplaceAll(value, typeURL, replace)
 	}
-	return cdb.DB.SetSync(key, value)
-}
-
-func (cdb *compressDB) Set(key, value []byte) error {
-	return cdb.SetSync(key, value)
+	return cdb.DB.Set(key, value)
 }
 
 type unfurlingIterator struct {
@@ -183,6 +179,7 @@ func (cdb *compressDB) potentialIndicesForAny(b []byte) (indices [][]byte, err e
 			err = nil
 		}
 	}()
+        indices = make([][]byte, 0, 100)
 	for i := 0; i < len(b); {
 		index := bytes.IndexByte(b[i:], '/')
 		if index < 0 {

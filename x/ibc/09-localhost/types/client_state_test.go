@@ -5,6 +5,7 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 const (
@@ -52,7 +53,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	err := clientState.VerifyClientConsensusState(
 		nil, nil, nil, 0, "", 0, nil, nil, nil,
 	)
-	suite.Require().Error(err)
+	suite.Require().NoError(err)
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
@@ -63,22 +64,13 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		name        string
 		clientState *types.ClientState
 		connection  connectiontypes.ConnectionEnd
-		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
 	}{
 		{
-			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState("chainID", 10),
-			connection:  conn,
-			prefix:      commitmenttypes.MerklePrefix{},
-			expPass:     false,
-		},
-		{
 			name:        "proof verification failed",
 			clientState: types.NewClientState("chainID", 10),
 			connection:  conn,
-			prefix:      commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:       []byte{},
 			expPass:     false,
 		},
@@ -88,7 +80,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection,
+			suite.store, suite.cdc, height, nil, tc.proof, testConnectionID, &tc.connection,
 		)
 
 		if tc.expPass {
@@ -261,34 +253,20 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	testCases := []struct {
-		name        string
-		clientState *types.ClientState
-		prefix      commitmenttypes.MerklePrefix
-		proof       []byte
-		expPass     bool
-	}{
-		{
-			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState("chainID", 10),
-			prefix:      commitmenttypes.MerklePrefix{},
-			expPass:     false,
-		},
-	}
+	clientState := types.NewClientState("chainID", 10)
 
-	for i, tc := range testCases {
-		tc := tc
+	err := clientState.VerifyPacketAcknowledgementAbsence(
+		suite.store, suite.cdc, height, nil, nil, testPortID, testChannelID, testSequence,
+	)
 
-		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence,
-		)
+	suite.Require().NoError(err, "ack absence failed")
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
-	}
+	suite.store.Set(host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("ack"))
+
+	err = clientState.VerifyPacketAcknowledgementAbsence(
+		suite.store, suite.cdc, height, nil, nil, testPortID, testChannelID, testSequence,
+	)
+	suite.Require().Error(err, "ack exists in store")
 }
 
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {

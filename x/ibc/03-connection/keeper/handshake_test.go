@@ -76,6 +76,22 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 		}, true},
+		{"invalid counterparty client", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			// retrieve client state of chainB to pass as counterpartyClient
+			counterpartyClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+			suite.Require().True(found)
+
+			// Set an invalid client of chainA on chainB
+			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClient.ChainId = "wrongchainid"
+
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
+		}, false},
 		{"consensus height >= latest height", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
@@ -229,6 +245,25 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 		}, true},
+		{"invalid counterparty client", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			// retrieve client state of chainB to pass as counterpartyClient
+			counterpartyClient, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainB.GetContext(), clientB)
+			suite.Require().True(found)
+
+			// Set an invalid client of chainA on chainB
+			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
+			suite.Require().True(ok)
+			tmClient.ChainId = "wrongchainid"
+
+			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainB.GetContext(), clientB, tmClient)
+
+			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+			suite.Require().NoError(err)
+		}, false},
 		{"consensus height >= latest height", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)

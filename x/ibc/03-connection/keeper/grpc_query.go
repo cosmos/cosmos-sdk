@@ -23,16 +23,16 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(req.ConnectionId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	connection, found := q.GetConnection(ctx, req.ConnectionID)
+	connection, found := q.GetConnection(ctx, req.ConnectionId)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrap(types.ErrConnectionNotFound, req.ConnectionID).Error(),
+			sdkerrors.Wrap(types.ErrConnectionNotFound, req.ConnectionId).Error(),
 		)
 	}
 
@@ -86,16 +86,16 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.ClientIdentifierValidator(req.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(req.ClientId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	clientConnectionPaths, found := q.GetClientConnectionPaths(ctx, req.ClientID)
+	clientConnectionPaths, found := q.GetClientConnectionPaths(ctx, req.ClientId)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, req.ClientID).Error(),
+			sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, req.ClientId).Error(),
 		)
 	}
 
@@ -111,29 +111,29 @@ func (q Keeper) ConnectionClientState(c context.Context, req *types.QueryConnect
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(req.ConnectionId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	connection, found := q.GetConnection(ctx, req.ConnectionID)
+	connection, found := q.GetConnection(ctx, req.ConnectionId)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionID).Error(),
+			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionId).Error(),
 		)
 	}
 
-	clientState, found := q.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := q.clientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientID).Error(),
+			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientId).Error(),
 		)
 	}
 
-	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientID, clientState)
+	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientId, clientState)
 
 	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
 
@@ -145,25 +145,25 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if err := host.ConnectionIdentifierValidator(req.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(req.ConnectionId); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	connection, found := q.GetConnection(ctx, req.ConnectionID)
+	connection, found := q.GetConnection(ctx, req.ConnectionId)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionID).Error(),
+			sdkerrors.Wrapf(types.ErrConnectionNotFound, "connection-id: %s", req.ConnectionId).Error(),
 		)
 	}
 
-	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientID, req.Height)
+	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, req.Height)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "client-id: %s", connection.ClientID).Error(),
+			sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "client-id: %s", connection.ClientId).Error(),
 		)
 	}
 
@@ -172,5 +172,5 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return types.NewQueryConnectionConsensusStateResponse(connection.ClientID, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
+	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
 }

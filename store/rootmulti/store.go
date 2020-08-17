@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
+	iavltree "github.com/cosmos/iavl"
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	iavltree "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -219,7 +219,7 @@ func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) type
 		return types.CommitID{}
 	}
 
-	return info.CommitID
+	return info.CommitId
 }
 
 func deleteKVStore(kv types.KVStore) error {
@@ -477,7 +477,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	if res.Proof == nil || len(res.Proof.Ops) == 0 {
+	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
 
@@ -496,7 +496,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
 
 	return res
 }
@@ -607,7 +607,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 
 		si := types.StoreInfo{}
 		si.Name = key.Name()
-		si.CommitID = commitID
+		si.CommitId = commitID
 		storeInfos = append(storeInfos, si)
 	}
 

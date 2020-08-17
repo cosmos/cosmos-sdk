@@ -17,8 +17,7 @@ message MsgTransfer {
   // the tokens to be transferred
   cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
-  bytes sender = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes sender = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // the recipient address on the destination chain
   string receiver = 5;
   // Timeout height relative to the current block height.
@@ -26,8 +25,7 @@ message MsgTransfer {
   uint64 timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7
-      [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
@@ -51,4 +49,24 @@ message FungibleTokenPacketData {
 message FungibleTokenPacketAcknowledgement {
   bool success = 1;
   string error = 2;
+}
+
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
+// information path.
+message DenomTrace {
+  // path defines the chain of port/channel identifiers used for tracing the source of the fungible
+  // token.
+  string path = 1;
+  // base denomination of the relayed fungible token.
+  string base_denom = 2;
+}
+
+// Params defines the set of IBC transfer parameters.
+// NOTE: To prevent a single token from being transferred, set the TransfersEnabled parameter to
+// true and then set the bank module's SendEnabled parameter for the denomination to false.
+message Params {
+  // transfers_enabled enables or disables all cross-chain token transfers from/to this chain.
+  bool transfers_enabled = 1 [
+    (gogoproto.moretags) = "yaml:\"transfers_enabled\""
+  ];
 }

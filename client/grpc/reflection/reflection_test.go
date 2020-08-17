@@ -39,7 +39,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 
 	// Test that "cosmos.evidence.v1beta1.Evidence" is included in the
 	// interfaces.
-	resIface, err := s.queryClient.ListInterfaces(
+	resIface, err := s.queryClient.ListAllInterfaces(
 		context.Background(),
 		&reflection.ListInterfacesRequest{},
 	)

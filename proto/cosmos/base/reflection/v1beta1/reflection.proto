@@ -7,7 +7,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/reflection";
 service ReflectionService {
     // ListInterfaces lists all the interfaces registered in the interface
     // registry.
-    rpc ListInterfaces(ListInterfacesRequest) returns (ListInterfacesResponse) {};
+    rpc ListAllInterfaces(ListInterfacesRequest) returns (ListInterfacesResponse) {};
     // ListImplementations list all the concrete types that implement a given
     // interface.
     rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {};

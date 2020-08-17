@@ -43,8 +43,8 @@ type InterfaceRegistry interface {
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 
-	// ListInterfaces list the type URLs of all registered interfaces
-	ListInterfaces() []string
+	// ListAllInterfaces list the type URLs of all registered interfaces
+	ListAllInterfaces() []string
 
 	// ListImplementations lists the valid type URLs for the given interface name that can be used
 	// for the provided interface type URL
@@ -118,7 +118,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	registry.interfaceImpls[ityp] = imap
 }
 
-func (registry *interfaceRegistry) ListInterfaces() []string {
+func (registry *interfaceRegistry) ListAllInterfaces() []string {
 	interfaceNames := registry.interfaceNames
 	keys := make([]string, 0, len(interfaceNames))
 	for key := range interfaceNames {

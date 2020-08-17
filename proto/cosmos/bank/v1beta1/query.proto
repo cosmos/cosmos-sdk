@@ -29,6 +29,8 @@ service Query {
   rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
   }
+
+  // TODO: Params
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.

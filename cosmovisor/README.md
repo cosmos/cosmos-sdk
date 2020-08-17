@@ -21,9 +21,9 @@ Configuration will be passed in the following environmental variables:
 * `DAEMON_HOME` is the location where upgrade binaries should be kept (can
 be `$HOME/.gaiad` or `$HOME/.xrnd`)
 * `DAEMON_NAME` is the name of the binary itself (eg. `xrnd`, `gaiad`, `simd`)
-* `DAEMON_ALLOW_DOWNLOAD_BINARIES` (optional) if set to `on` will enable auto-downloading of new binaries
+* `DAEMON_ALLOW_DOWNLOAD_BINARIES` (optional) if set to `true` will enable auto-downloading of new binaries
 (for security reasons, this is intended for fullnodes rather than validators)
-* `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `on` it will restart the sub-process with the same args
+* `DAEMON_RESTART_AFTER_UPGRADE` (optional) if set to `true` it will restart the sub-process with the same args
 (but new binary) after a successful upgrade. By default, the `cosmovisor` dies afterward and allows the cosmovisor
 to restart it if needed. Note that this will not auto-restart the child if there was an error.
 
@@ -130,7 +130,7 @@ e.g `https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4
 This file contained in link will be retrieved by [go-getter](https://github.com/hashicorp/go-getter) 
 and the "binaries" field will be parsed as above.
 
-If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary,
+If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=true`, and we can access a canonical url for the new binary,
 then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
 unpack it into the `upgrades/<name>` folder to be run as if we installed it manually
 

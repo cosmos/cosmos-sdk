@@ -28,7 +28,7 @@ func InitGenesis(ctx sdk.Context, ak keeper.AccountKeeper, data types.GenesisSta
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
-func ExportGenesis(ctx sdk.Context, ak keeper.AccountKeeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, ak keeper.AccountKeeper) *types.GenesisState {
 	params := ak.GetParams(ctx)
 
 	var genAccounts types.GenesisAccounts

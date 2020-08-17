@@ -57,7 +57,7 @@ func (mr *MockAppModuleBasicMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterCodec mocks base method
-func (m *MockAppModuleBasic) RegisterCodec(arg0 *codec.Codec) {
+func (m *MockAppModuleBasic) RegisterCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterCodec", arg0)
 }
@@ -186,7 +186,7 @@ func (mr *MockAppModuleGenesisMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterCodec mocks base method
-func (m *MockAppModuleGenesis) RegisterCodec(arg0 *codec.Codec) {
+func (m *MockAppModuleGenesis) RegisterCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterCodec", arg0)
 }
@@ -343,7 +343,7 @@ func (mr *MockAppModuleMockRecorder) Name() *gomock.Call {
 }
 
 // RegisterCodec mocks base method
-func (m *MockAppModule) RegisterCodec(arg0 *codec.Codec) {
+func (m *MockAppModule) RegisterCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterCodec", arg0)
 }

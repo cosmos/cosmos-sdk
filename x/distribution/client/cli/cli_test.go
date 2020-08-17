@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
 	cfg.GenesisState = genesisState
@@ -94,17 +94,10 @@ withdraw_addr_enabled: true`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -160,17 +153,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryValidatorOutstandingRewards()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -231,17 +216,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryValidatorCommission()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -299,7 +276,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			"null",
+			"{\"slashes\":[],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
 		},
 		{
 			"text output",
@@ -309,7 +286,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 				sdk.ValAddress(val.Address).String(), "1", "3",
 			},
 			false,
-			"null",
+			"pagination:\n  next_key: null\n  total: \"0\"\nslashes: []",
 		},
 	}
 
@@ -318,17 +295,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryValidatorSlashes()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -389,7 +358,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`[{"denom":"stake","amount":"387.100000000000000000"}]`,
+			`{"rewards":[{"denom":"stake","amount":"387.100000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -416,7 +385,8 @@ total:
 				addr.String(), valAddr.String(),
 			},
 			false,
-			`- amount: "387.100000000000000000"
+			`rewards:
+- amount: "387.100000000000000000"
   denom: stake`,
 		},
 	}
@@ -426,17 +396,9 @@ total:
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryDelegatorRewards()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -461,12 +423,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`[{"denom":"stake","amount":"4.740000000000000000"}]`,
+			`{"pool":[{"denom":"stake","amount":"4.740000000000000000"}]}`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
-			`- amount: "4.740000000000000000"
+			`pool:
+- amount: "4.740000000000000000"
   denom: stake`,
 		},
 	}
@@ -476,17 +439,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryCommunityPool()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -599,17 +555,9 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewWithdrawAllRewardsCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -662,17 +610,9 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewSetWithdrawAddrCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -725,17 +665,9 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewFundCommunityPoolCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -818,17 +750,10 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdSubmitProposal()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
+			flags.AddTxFlagsToCmd(cmd)
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

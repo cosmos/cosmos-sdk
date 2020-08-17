@@ -47,6 +47,8 @@ func GetQueryCmd() *cobra.Command {
 
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "validator [validator-addr]",
 		Short: "Query a validator",
@@ -54,9 +56,9 @@ func GetCmdQueryValidator() *cobra.Command {
 			fmt.Sprintf(`Query details about an individual validator.
 
 Example:
-$ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking validator %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -80,7 +82,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Validator)
+			return clientCtx.PrintOutput(&res.Validator)
 		},
 	}
 
@@ -126,7 +128,7 @@ $ %s query staking validators
 				validators = append(validators, validator)
 			}
 
-			return clientCtx.PrintOutput(validators)
+			return clientCtx.PrintOutputLegacy(validators)
 		},
 	}
 
@@ -137,6 +139,8 @@ $ %s query staking validators
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
 func GetCmdQueryValidatorUnbondingDelegations() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [validator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
@@ -144,9 +148,9 @@ func GetCmdQueryValidatorUnbondingDelegations() *cobra.Command {
 			fmt.Sprintf(`Query delegations that are unbonding _from_ a validator.
 
 Example:
-$ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -179,7 +183,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.UnbondingResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -192,6 +196,8 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations
 // from a validator command.
 func GetCmdQueryValidatorRedelegations() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "redelegations-from [validator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
@@ -199,9 +205,9 @@ func GetCmdQueryValidatorRedelegations() *cobra.Command {
 			fmt.Sprintf(`Query delegations that are redelegating _from_ a validator.
 
 Example:
-$ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking redelegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -234,7 +240,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -246,6 +252,9 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 
 // GetCmdQueryDelegation the query delegation command.
 func GetCmdQueryDelegation() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "delegation [delegator-addr] [validator-addr]",
 		Short: "Query a delegation based on address and validator address",
@@ -253,9 +262,9 @@ func GetCmdQueryDelegation() *cobra.Command {
 			fmt.Sprintf(`Query delegations for an individual delegator on an individual validator.
 
 Example:
-$ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -300,6 +309,8 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
 func GetCmdQueryDelegations() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made by one delegator",
@@ -307,9 +318,9 @@ func GetCmdQueryDelegations() *cobra.Command {
 			fmt.Sprintf(`Query delegations for an individual delegator on all validators.
 
 Example:
-$ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query staking delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -342,7 +353,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.DelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -355,6 +366,8 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
 func GetCmdQueryValidatorDelegations() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
@@ -362,9 +375,9 @@ func GetCmdQueryValidatorDelegations() *cobra.Command {
 			fmt.Sprintf(`Query delegations on an individual validator.
 
 Example:
-$ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking delegations-to %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -397,7 +410,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.DelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -410,6 +423,9 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
 func GetCmdQueryUnbondingDelegation() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegation [delegator-addr] [validator-addr]",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -417,9 +433,9 @@ func GetCmdQueryUnbondingDelegation() *cobra.Command {
 			fmt.Sprintf(`Query unbonding delegations for an individual delegator on an individual validator.
 
 Example:
-$ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking unbonding-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -452,7 +468,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Unbond)
+			return clientCtx.PrintOutput(&res.Unbond)
 		},
 	}
 
@@ -464,6 +480,8 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
 func GetCmdQueryUnbondingDelegations() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -471,9 +489,9 @@ func GetCmdQueryUnbondingDelegations() *cobra.Command {
 			fmt.Sprintf(`Query unbonding delegations for an individual delegator.
 
 Example:
-$ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query staking unbonding-delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -506,7 +524,7 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.UnbondingResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -519,6 +537,9 @@ $ %s query staking unbonding-delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
 func GetCmdQueryRedelegation() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "redelegation [delegator-addr] [src-validator-addr] [dst-validator-addr]",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -526,9 +547,9 @@ func GetCmdQueryRedelegation() *cobra.Command {
 			fmt.Sprintf(`Query a redelegation record for an individual delegator between a source and destination validator.
 
 Example:
-$ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr, bech32PrefixValAddr, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(3),
@@ -567,7 +588,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -579,6 +600,8 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
 func GetCmdQueryRedelegations() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Args:  cobra.ExactArgs(1),
@@ -587,9 +610,9 @@ func GetCmdQueryRedelegations() *cobra.Command {
 			fmt.Sprintf(`Query all redelegation records for an individual delegator.
 
 Example:
-$ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -621,7 +644,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.RedelegationResponses)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -705,7 +728,7 @@ $ %s query staking pool
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Pool)
+			return clientCtx.PrintOutput(&res.Pool)
 		},
 	}
 
@@ -743,7 +766,7 @@ $ %s query staking params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

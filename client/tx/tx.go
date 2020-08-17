@@ -161,7 +161,8 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig)
+		WithTxConfig(ctx.TxConfig).
+		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
 		if gasAdj < 0 {
@@ -177,7 +178,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.Codec, txf.Gas())
+			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -187,12 +188,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.Codec, tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 
-	output, err := ctx.Codec.MarshalJSON(stdTx)
+	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -238,6 +239,7 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetMemo(txf.memo)
 	tx.SetFeeAmount(fees)
 	tx.SetGasLimit(txf.gas)
+	tx.SetTimeoutHeight(txf.TimeoutHeight())
 
 	return tx, nil
 }

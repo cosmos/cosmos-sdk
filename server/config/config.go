@@ -13,6 +13,9 @@ import (
 
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultGRPCAddress is the default address the gRPC server binds to.
+	DefaultGRPCAddress = "0.0.0.0:9090"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -145,8 +148,8 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:  false,
-			Address: "0.0.0.0:9090",
+			Enable:  true,
+			Address: DefaultGRPCAddress,
 		},
 	}
 }

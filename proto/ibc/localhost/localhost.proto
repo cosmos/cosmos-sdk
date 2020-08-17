@@ -18,10 +18,9 @@ message MsgCreateClient {
 message ClientState {
   option (gogoproto.goproto_getters) = false;
   // client id
-  string id = 1 [(gogoproto.customname) = "ID"];
+  string id = 1;
   // self chain ID
   string chain_id = 2 [
-    (gogoproto.customname) = "ChainID",
     (gogoproto.moretags) = "yaml:\"chain_id\""
   ];
   // self latest block height

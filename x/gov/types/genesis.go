@@ -8,9 +8,9 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) GenesisState {
-	return GenesisState{
-		StartingProposalID: startingProposalID,
+func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParams, tp TallyParams) *GenesisState {
+	return &GenesisState{
+		StartingProposalId: startingProposalID,
 		DepositParams:      dp,
 		VotingParams:       vp,
 		TallyParams:        tp,
@@ -18,7 +18,7 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 }
 
 // DefaultGenesisState defines the default governance genesis state
-func DefaultGenesisState() GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultStartingProposalID,
 		DefaultDepositParams(),
@@ -28,7 +28,7 @@ func DefaultGenesisState() GenesisState {
 }
 
 func (data GenesisState) Equal(other GenesisState) bool {
-	return data.StartingProposalID == other.StartingProposalID &&
+	return data.StartingProposalId == other.StartingProposalId &&
 		data.Deposits.Equal(other.Deposits) &&
 		data.Votes.Equal(other.Votes) &&
 		data.Proposals.Equal(other.Proposals) &&
@@ -43,7 +43,7 @@ func (data GenesisState) Empty() bool {
 }
 
 // ValidateGenesis checks if parameters are within valid ranges
-func ValidateGenesis(data GenesisState) error {
+func ValidateGenesis(data *GenesisState) error {
 	threshold := data.TallyParams.Threshold
 	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
 		return fmt.Errorf("governance vote threshold should be positive and less or equal to one, is %s",

@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	flagTimeoutHeight    = "timeout-height"
-	flagTimeoutTimestamp = "timeout-timestamp"
-	flagAbsoluteTimeouts = "absolute-timeouts"
+	flagPacketTimeoutHeight    = "packet-timeout-height"
+	flagPacketTimeoutTimestamp = "packet-timeout-timestamp"
+	flagAbsoluteTimeouts       = "absolute-timeouts"
 )
 
 // NewTransferTxCmd returns the command to create a NewMsgTransfer transaction
@@ -49,12 +49,17 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
-			timeoutHeight, err := cmd.Flags().GetUint64(flagTimeoutHeight)
+			if !strings.HasPrefix(coin.Denom, "ibc/") {
+				denomTrace := types.ParseDenomTrace(coin.Denom)
+				coin.Denom = denomTrace.IBCDenom()
+			}
+
+			timeoutHeight, err := cmd.Flags().GetUint64(flagPacketTimeoutHeight)
 			if err != nil {
 				return err
 			}
 
-			timeoutTimestamp, err := cmd.Flags().GetUint64(flagTimeoutHeight)
+			timeoutTimestamp, err := cmd.Flags().GetUint64(flagPacketTimeoutTimestamp)
 			if err != nil {
 				return err
 			}
@@ -67,7 +72,7 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 			// if the timeouts are not absolute, retrieve latest block height and block timestamp
 			// for the consensus state connected to the destination port/channel
 			if !absoluteTimeouts {
-				consensusState, _, err := channelutils.QueryCounterpartyConsensusState(clientCtx, srcPort, srcChannel)
+				consensusState, _, err := channelutils.QueryCounterpartyConsensusState(clientCtx, srcPort, srcChannel, uint64(clientCtx.Height))
 				if err != nil {
 					return err
 				}
@@ -92,8 +97,8 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 		},
 	}
 
-	cmd.Flags().Uint64(flagTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Timeout block height. The timeout is disabled when set to 0.")
-	cmd.Flags().Uint64(flagTimeoutTimestamp, types.DefaultRelativePacketTimeoutTimestamp, "Timeout timestamp in nanoseconds. Default is 10 minutes. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagPacketTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Packet timeout block height. The timeout is disabled when set to 0.")
+	cmd.Flags().Uint64(flagPacketTimeoutTimestamp, types.DefaultRelativePacketTimeoutTimestamp, "Packet timeout timestamp in nanoseconds. Default is 10 minutes. The timeout is disabled when set to 0.")
 	cmd.Flags().Bool(flagAbsoluteTimeouts, false, "Timeout flags are used as absolute timeouts.")
 	flags.AddTxFlagsToCmd(cmd)
 

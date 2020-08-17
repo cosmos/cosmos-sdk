@@ -10,8 +10,8 @@ import (
 // NewPacketAckCommitment creates a new PacketAckCommitment instance.
 func NewPacketAckCommitment(portID, channelID string, seq uint64, hash []byte) PacketAckCommitment {
 	return PacketAckCommitment{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Sequence:  seq,
 		Hash:      hash,
 	}
@@ -23,22 +23,14 @@ func (pa PacketAckCommitment) Validate() error {
 	if len(pa.Hash) == 0 {
 		return errors.New("hash bytes cannot be empty")
 	}
-	return validateGenFields(pa.PortID, pa.ChannelID, pa.Sequence)
-}
-
-// PacketSequence defines the genesis type necessary to retrieve and store
-// next send and receive sequences.
-type PacketSequence struct {
-	PortID    string `json:"port_id" yaml:"port_id"`
-	ChannelID string `json:"channel_id" yaml:"channel_id"`
-	Sequence  uint64 `json:"sequence" yaml:"sequence"`
+	return validateGenFields(pa.PortId, pa.ChannelId, pa.Sequence)
 }
 
 // NewPacketSequence creates a new PacketSequences instance.
 func NewPacketSequence(portID, channelID string, seq uint64) PacketSequence {
 	return PacketSequence{
-		PortID:    portID,
-		ChannelID: channelID,
+		PortId:    portID,
+		ChannelId: channelID,
 		Sequence:  seq,
 	}
 }
@@ -46,17 +38,7 @@ func NewPacketSequence(portID, channelID string, seq uint64) PacketSequence {
 // Validate performs basic validation of fields returning an error upon any
 // failure.
 func (ps PacketSequence) Validate() error {
-	return validateGenFields(ps.PortID, ps.ChannelID, ps.Sequence)
-}
-
-// GenesisState defines the ibc channel submodule's genesis state.
-type GenesisState struct {
-	Channels         []IdentifiedChannel   `json:"channels" yaml:"channels"`
-	Acknowledgements []PacketAckCommitment `json:"acknowledgements" yaml:"acknowledgements"`
-	Commitments      []PacketAckCommitment `json:"commitments" yaml:"commitments"`
-	SendSequences    []PacketSequence      `json:"send_sequences" yaml:"send_sequences"`
-	RecvSequences    []PacketSequence      `json:"recv_sequences" yaml:"recv_sequences"`
-	AckSequences     []PacketSequence      `json:"ack_sequences" yaml:"ack_sequences"`
+	return validateGenFields(ps.PortId, ps.ChannelId, ps.Sequence)
 }
 
 // NewGenesisState creates a GenesisState instance.
@@ -130,10 +112,10 @@ func (gs GenesisState) Validate() error {
 
 func validateGenFields(portID, channelID string, sequence uint64) error {
 	if err := host.PortIdentifierValidator(portID); err != nil {
-		return fmt.Errorf("invalid port ID: %w", err)
+		return fmt.Errorf("invalid port Id: %w", err)
 	}
 	if err := host.ChannelIdentifierValidator(channelID); err != nil {
-		return fmt.Errorf("invalid channel ID: %w", err)
+		return fmt.Errorf("invalid channel Id: %w", err)
 	}
 	if sequence == 0 {
 		return errors.New("sequence cannot be 0")

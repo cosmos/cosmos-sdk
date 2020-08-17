@@ -59,12 +59,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
-
-	// sanity check that validate basic on fungible token packet passes
-	// NOTE: this should always pass since validation checks should be the
-	// same. Please open an issue if you encounter an error on this line.
-	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver)
-	return packet.ValidateBasic()
+	return ValidateIBCDenom(msg.Token.Denom)
 }
 
 // GetSignBytes implements sdk.Msg

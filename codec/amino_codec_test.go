@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func createTestCodec() *codec.Codec {
+func createTestCodec() *codec.LegacyAmino {
 	cdc := codec.New()
 
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)

@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
@@ -23,20 +20,6 @@ var (
 	_ GenesisAccount = (*ModuleAccount)(nil)
 	_ ModuleAccountI = (*ModuleAccount)(nil)
 )
-
-// BaseAccount defines a base account type. It contains all the necessary fields
-// for basic account functionality. Any custom account type should extend this
-// type for additional functionality (e.g. vesting).
-type BaseAccount struct {
-	Address       sdk.AccAddress   `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	PubKey        *types.PublicKey `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"public_key,omitempty" yaml:"public_key"`
-	AccountNumber uint64           `protobuf:"varint,3,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty" yaml:"account_number"`
-	Sequence      uint64           `protobuf:"varint,4,opt,name=sequence,proto3" json:"sequence,omitempty"`
-
-	// NOTE: this is somewhat of a hack to not have to break the AccountI.Get/SetPubKey interface methods. It should
-	// likely be replaced with something less hacky in the future (this involves re-enabled gogoproto.typedecl).
-	decodedPubKey crypto.PubKey
-}
 
 // NewBaseAccount creates a new BaseAccount object
 func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
@@ -278,6 +261,8 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 //
 // Many complex conditions can be used in the concrete struct which implements AccountI.
 type AccountI interface {
+	proto.Message
+
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 

@@ -85,6 +85,19 @@ func (ev Evidence) GetTime() time.Time {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	if ev.Header1.TrustedHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header1 must have non-zero trusted height")
+	}
+	if ev.Header2.TrustedHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header2 must have non-zero trusted height")
+	}
+	if ev.Header1.TrustedValidators == nil {
+		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")
+	}
+	if ev.Header2.TrustedValidators == nil {
+		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header2 cannot be empty")
+	}
+
 	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
 		return sdkerrors.Wrap(err, "evidence client ID is invalid")
 	}

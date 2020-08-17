@@ -243,9 +243,8 @@ func TestDownloadBinary(t *testing.T) {
 
 			upgrade := "amazonas"
 			info := &UpgradeInfo{
-				Name:   upgrade,
-				Height: 789,
-				Info:   fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, osArch(), url),
+				Name: upgrade,
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, osArch(), url),
 			}
 
 			err = DownloadBinary(cfg, info)

@@ -94,8 +94,8 @@ func connectionOpenTryHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// create the message
 		msg := types.NewMsgConnectionOpenTry(
 			req.ConnectionID, req.ClientID, req.CounterpartyConnectionID,
-			req.CounterpartyClientID, req.CounterpartyPrefix, req.CounterpartyVersions,
-			req.ProofInit, req.ProofConsensus, req.ProofHeight,
+			req.CounterpartyClientID, req.CounterpartyClient, req.CounterpartyPrefix, req.CounterpartyVersions,
+			req.ProofInit, req.ProofClient, req.ProofConsensus, req.ProofHeight,
 			req.ConsensusHeight, fromAddr,
 		)
 
@@ -143,7 +143,8 @@ func connectionOpenAckHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgConnectionOpenAck(
-			connectionID, req.ProofTry, req.ProofConsensus, req.ProofHeight,
+			connectionID, req.CounterpartyClient,
+			req.ProofTry, req.ProofClient, req.ProofConsensus, req.ProofHeight,
 			req.ConsensusHeight, req.Version, fromAddr,
 		)
 

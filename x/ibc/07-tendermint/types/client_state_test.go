@@ -6,7 +6,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -32,52 +31,52 @@ func (suite *TendermintTestSuite) TestValidate() {
 	}{
 		{
 			name:        "valid client",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     true,
 		},
 		{
 			name:        "invalid chainID",
-			clientState: ibctmtypes.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trust level",
-			clientState: ibctmtypes.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trusting period",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid unbonding period",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid max clock drift",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid height",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "trusting period not less than unbonding period",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs is nil",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs contains nil",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
 			expPass:     false,
 		},
 	}
@@ -95,8 +94,8 @@ func (suite *TendermintTestSuite) TestValidate() {
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
-		clientState    *ibctmtypes.ClientState
-		consensusState ibctmtypes.ConsensusState
+		clientState    *types.ClientState
+		consensusState types.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
 		expPass        bool
@@ -104,8 +103,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// FIXME: uncomment
 		// {
 		// 	name:        "successful verification",
-		// 	clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-		// 	consensusState: ibctmtypes.ConsensusState{
+		// 	clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+		// 	consensusState: types.ConsensusState{
 		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 		// 	},
 		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -113,8 +112,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
 			prefix:  commitmenttypes.MerklePrefix{},
@@ -122,8 +121,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -131,8 +130,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
-			consensusState: ibctmtypes.ConsensusState{
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
@@ -140,8 +139,8 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.AppHash),
 				NextValidatorsHash: suite.valsHash,
 			},

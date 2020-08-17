@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -63,17 +65,21 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	counterpartyVersions []string, proofInit, proofConsensus []byte,
+	counterpartyClientID string, counterpartyClient clientexported.ClientState,
+	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
+	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
 		ConnectionId:         connectionID,
 		ClientId:             clientID,
+		ClientState:          csAny,
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
 		ProofInit:            proofInit,
+		ProofClient:          proofClient,
 		ProofConsensus:       proofConsensus,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
@@ -99,6 +105,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
+	if msg.ClientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	}
 	if len(msg.CounterpartyVersions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty counterparty versions")
 	}
@@ -109,6 +118,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
+	}
+	if len(msg.ProofClient) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit empty proof client")
 	}
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
@@ -139,13 +151,17 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry, proofConsensus []byte,
+	connectionID string, counterpartyClient clientexported.ClientState,
+	proofTry, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
+	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenAck{
 		ConnectionId:    connectionID,
+		ClientState:     csAny,
 		ProofTry:        proofTry,
+		ProofClient:     proofClient,
 		ProofConsensus:  proofConsensus,
 		ProofHeight:     proofHeight,
 		ConsensusHeight: consensusHeight,
@@ -172,8 +188,14 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := ValidateVersion(msg.Version); err != nil {
 		return err
 	}
+	if msg.ClientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
+	}
+	if len(msg.ProofClient) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit empty proof client")
 	}
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")

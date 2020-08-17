@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -35,10 +36,12 @@ type ConnectionOpenTryReq struct {
 	ConnectionID             string                       `json:"connection_id" yaml:"connection_id"`
 	ClientID                 string                       `json:"client_id" yaml:"client_id"`
 	CounterpartyClientID     string                       `json:"counterparty_client_id" yaml:"counterparty_client_id"`
+	CounterpartyClient       clientexported.ClientState   `json:"counterparty_client" yaml:"counterparty_client"`
 	CounterpartyConnectionID string                       `json:"counterparty_connection_id" yaml:"counterparty_connection_id"`
 	CounterpartyPrefix       commitmenttypes.MerklePrefix `json:"counterparty_prefix" yaml:"counterparty_prefix"`
 	CounterpartyVersions     []string                     `json:"counterparty_versions" yaml:"counterparty_versions"`
 	ProofInit                []byte                       `json:"proof_init" yaml:"proof_init"`
+	ProofClient              []byte                       `json:"proof_client" yaml:"proof_client"`
 	ProofConsensus           []byte                       `json:"proof_consensus" yaml:"proof_consensus"`
 	ProofHeight              uint64                       `json:"proof_height" yaml:"proof_height"`
 	ConsensusHeight          uint64                       `json:"consensus_height" yaml:"consensus_height"`
@@ -46,12 +49,14 @@ type ConnectionOpenTryReq struct {
 
 // ConnectionOpenAckReq defines the properties of a connection open ack request's body.
 type ConnectionOpenAckReq struct {
-	BaseReq         rest.BaseReq `json:"base_req" yaml:"base_req"`
-	ProofTry        []byte       `json:"proof_try" yaml:"proof_try"`
-	ProofConsensus  []byte       `json:"proof_consensus" yaml:"proof_consensus"`
-	ProofHeight     uint64       `json:"proof_height" yaml:"proof_height"`
-	ConsensusHeight uint64       `json:"consensus_height" yaml:"consensus_height"`
-	Version         string       `json:"version" yaml:"version"`
+	BaseReq            rest.BaseReq               `json:"base_req" yaml:"base_req"`
+	CounterpartyClient clientexported.ClientState `json:"counterparty_client" yaml:"counterparty_client"`
+	ProofTry           []byte                     `json:"proof_try" yaml:"proof_try"`
+	ProofClient        []byte                     `json:"proof_client" yaml:"proof_client"`
+	ProofConsensus     []byte                     `json:"proof_consensus" yaml:"proof_consensus"`
+	ProofHeight        uint64                     `json:"proof_height" yaml:"proof_height"`
+	ConsensusHeight    uint64                     `json:"consensus_height" yaml:"consensus_height"`
+	Version            string                     `json:"version" yaml:"version"`
 }
 
 // ConnectionOpenConfirmReq defines the properties of a connection open confirm request's body.

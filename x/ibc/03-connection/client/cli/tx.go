@@ -67,14 +67,14 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 func NewConnectionOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-[counterparty-versions] [path/to/proof_init.json] [path/to/proof_consensus.json]`),
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]
+[counterparty-versions] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			`%s tx %s %s open-try connection-id] [client-id] \
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
-[counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]`,
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]\
+[counterparty-versions] [path/to/proof_init.json] [path/to/proof_client.json] [path/tp/proof_consensus.json]`,
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(8),
@@ -95,15 +95,25 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO: parse strings?
-			counterpartyVersions := args[5]
-
-			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[6])
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[7])
+			// TODO: parse strings?
+			counterpartyVersions := args[6]
+
+			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[7])
+			if err != nil {
+				return err
+			}
+
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[8])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[9])
 			if err != nil {
 				return err
 			}
@@ -116,7 +126,8 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, proofHeight,
+				counterpartyClient, counterpartyPrefix, []string{counterpartyVersions},
+				proofInit, proofClient, proofConsensus, proofHeight,
 				consensusHeight, clientCtx.GetFromAddress(),
 			)
 
@@ -137,11 +148,11 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 // connection open attempt from chain B to chain A
 func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
+		Use:   "open-ack [connection-id] [path/to/client_state.json] [path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]",
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
+			"%s tx %s %s open-ack [connection-id] [path/to/client_state.json] [path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(4),
@@ -154,12 +165,22 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
+			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
+			if err != nil {
+				return err
+			}
+
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[3])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -170,10 +191,10 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 				return err
 			}
 
-			version := args[3]
+			version := args[5]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofConsensus, proofHeight,
+				connectionID, counterpartyClient, proofTry, proofClient, proofConsensus, proofHeight,
 				consensusHeight, version, clientCtx.GetFromAddress(),
 			)
 

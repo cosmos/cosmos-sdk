@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,14 +13,14 @@ import (
 
 func TestVotes(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalID
+	proposalID := proposal.ProposalId
 
 	var invalidOption types.VoteOption = 0x10
 
@@ -37,7 +37,7 @@ func TestVotes(t *testing.T) {
 	vote, found := app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, addrs[0], vote.Voter)
-	require.Equal(t, proposalID, vote.ProposalID)
+	require.Equal(t, proposalID, vote.ProposalId)
 	require.Equal(t, types.OptionAbstain, vote.Option)
 
 	// Test change of vote
@@ -45,7 +45,7 @@ func TestVotes(t *testing.T) {
 	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, addrs[0], vote.Voter)
-	require.Equal(t, proposalID, vote.ProposalID)
+	require.Equal(t, proposalID, vote.ProposalId)
 	require.Equal(t, types.OptionYes, vote.Option)
 
 	// Test second vote
@@ -53,7 +53,7 @@ func TestVotes(t *testing.T) {
 	vote, found = app.GovKeeper.GetVote(ctx, proposalID, addrs[1])
 	require.True(t, found)
 	require.Equal(t, addrs[1], vote.Voter)
-	require.Equal(t, proposalID, vote.ProposalID)
+	require.Equal(t, proposalID, vote.ProposalId)
 	require.Equal(t, types.OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
@@ -62,9 +62,9 @@ func TestVotes(t *testing.T) {
 	require.Len(t, votes, 2)
 	require.Equal(t, votes, app.GovKeeper.GetVotes(ctx, proposalID))
 	require.Equal(t, addrs[0], votes[0].Voter)
-	require.Equal(t, proposalID, votes[0].ProposalID)
+	require.Equal(t, proposalID, votes[0].ProposalId)
 	require.Equal(t, types.OptionYes, votes[0].Option)
 	require.Equal(t, addrs[1], votes[1].Voter)
-	require.Equal(t, proposalID, votes[1].ProposalID)
+	require.Equal(t, proposalID, votes[1].ProposalId)
 	require.Equal(t, types.OptionNoWithVeto, votes[1].Option)
 }

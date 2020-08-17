@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,9 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
@@ -40,7 +38,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
 	cfg.GenesisState = genesisState
@@ -87,17 +85,10 @@ mint_denom: stake`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -128,17 +119,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryInflation()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -169,17 +153,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryAnnualProvisions()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}

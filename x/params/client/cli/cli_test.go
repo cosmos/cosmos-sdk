@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,8 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 )
@@ -73,17 +71,10 @@ value: "100"`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewQuerySubspaceParamsCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}

@@ -8,7 +8,7 @@ func (suite *KeeperTestSuite) TestParams() {
 	params := suite.chainA.App.TransferKeeper.GetParams(suite.chainA.GetContext())
 	suite.Require().Equal(expParams, params)
 
-	expParams.TransfersEnabled = false
+	expParams.SendEnabled = false
 	suite.chainA.App.TransferKeeper.SetParams(suite.chainA.GetContext(), expParams)
 	params = suite.chainA.App.TransferKeeper.GetParams(suite.chainA.GetContext())
 	suite.Require().Equal(expParams, params)

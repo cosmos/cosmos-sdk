@@ -28,7 +28,6 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			cdc := clientCtx.JSONMarshaler
-			legacyAmino := clientCtx.LegacyAmino
 
 			config.SetRoot(clientCtx.HomeDir)
 

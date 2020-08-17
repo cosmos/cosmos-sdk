@@ -20,12 +20,16 @@ func NewReflectionServiceServer(interfaceRegistry types.InterfaceRegistry) Refle
 
 var _ ReflectionServiceServer = (*reflectionServiceServer)(nil)
 
+// ListAllInterfaces implements the ListAllInterfaces method of the
+// ReflectionServiceServer interface.
 func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
 	ifaces := r.interfaceRegistry.ListAllInterfaces()
 
 	return &ListAllInterfacesResponse{InterfaceNames: ifaces}, nil
 }
 
+// ListImplementations implements the ListImplementations method of the
+// ReflectionServiceServer interface.
 func (r reflectionServiceServer) ListImplementations(_ context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

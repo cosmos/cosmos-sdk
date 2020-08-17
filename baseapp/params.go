@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -49,7 +50,7 @@ func ValidateBlockParams(i interface{}) error {
 // ValidateEvidenceParams defines a stateless validation on EvidenceParams. This
 // function is called whenever the parameters are updated or stored.
 func ValidateEvidenceParams(i interface{}) error {
-	v, ok := i.(abci.EvidenceParams)
+	v, ok := i.(tmproto.EvidenceParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -62,13 +63,21 @@ func ValidateEvidenceParams(i interface{}) error {
 		return fmt.Errorf("evidence maximum age time duration must be positive: %v", v.MaxAgeDuration)
 	}
 
+	if v.MaxNum <= 0 {
+		return fmt.Errorf("evidence maximum number of evidence must be positive: %v", v.MaxAgeDuration)
+	}
+
+	if v.ProofTrialPeriod <= 0 {
+		return fmt.Errorf("proof of trial period must be greater than 0: %v", v.MaxAgeDuration)
+	}
+
 	return nil
 }
 
 // ValidateValidatorParams defines a stateless validation on ValidatorParams. This
 // function is called whenever the parameters are updated or stored.
 func ValidateValidatorParams(i interface{}) error {
-	v, ok := i.(abci.ValidatorParams)
+	v, ok := i.(tmproto.ValidatorParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -40,7 +42,6 @@ import (
 // 4. A -> C : sender chain is sink zone. Denom upon receiving: 'C/B/denom'
 // 5. C -> B : sender chain is sink zone. Denom upon receiving: 'B/denom'
 // 6. B -> A : sender chain is sink zone. Denom upon receiving: 'denom'
-
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -51,6 +52,11 @@ func (k Keeper) SendTransfer(
 	timeoutHeight,
 	timeoutTimestamp uint64,
 ) error {
+
+	if !k.GetTransfersEnabled(ctx) {
+		return types.ErrTransfersDisabled
+	}
+
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
@@ -70,17 +76,30 @@ func (k Keeper) SendTransfer(
 
 	// begin createOutgoingPacket logic
 	// See spec for this logic: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+	}
+
+	// NOTE: denomination and hex hash correctness checked during msg.ValidateBasic
+	fullDenomPath := token.Denom
+
+	var err error
+
+	// deconstruct the token denomination into the denomination trace info
+	// to determine if the sender is the source chain
+	if strings.HasPrefix(token.Denom, "ibc/") {
+		fullDenomPath, err = k.DenomPathFromHash(ctx, token.Denom)
+		if err != nil {
+			return err
+		}
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
 	// chain inside the packet data. The receiving chain will perform denom
 	// prefixing as necessary.
 
-	if types.SenderChainIsSource(sourcePort, sourceChannel, token.Denom) {
+	if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
 		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
@@ -110,7 +129,7 @@ func (k Keeper) SendTransfer(
 	}
 
 	packetData := types.NewFungibleTokenPacketData(
-		token.Denom, token.Amount.Uint64(), sender.String(), receiver,
+		fullDenomPath, token.Amount.Uint64(), sender.String(), receiver,
 	)
 
 	packet := channeltypes.NewPacket(
@@ -133,7 +152,14 @@ func (k Keeper) SendTransfer(
 // back tokens this chain originally transferred to it, the tokens are
 // unescrowed and sent to the receiving address.
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
-	// NOTE: packet data type already checked in handler.go
+	// validate packet data upon receiving
+	if err := data.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if !k.GetTransfersEnabled(ctx) {
+		return types.ErrTransfersDisabled
+	}
 
 	// decode the receiver address
 	receiver, err := sdk.AccAddressFromBech32(data.Receiver)
@@ -168,7 +194,25 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	sourcePrefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
 	// NOTE: sourcePrefix contains the trailing "/"
 	prefixedDenom := sourcePrefix + data.Denom
-	voucher := sdk.NewCoin(prefixedDenom, sdk.NewIntFromUint64(data.Amount))
+
+	// construct the denomination trace from the full raw denomination
+	denomTrace := types.ParseDenomTrace(prefixedDenom)
+
+	traceHash := denomTrace.Hash()
+	if !k.HasDenomTrace(ctx, traceHash) {
+		k.SetDenomTrace(ctx, denomTrace)
+	}
+
+	voucherDenom := denomTrace.IBCDenom()
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeDenomTrace,
+			sdk.NewAttribute(types.AttributeKeyTraceHash, traceHash.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, voucherDenom),
+		),
+	)
+
+	voucher := sdk.NewCoin(voucherDenom, sdk.NewIntFromUint64(data.Amount))
 
 	// mint new tokens if the source of the transfer is the same chain
 	if err := k.bankKeeper.MintCoins(
@@ -229,4 +273,22 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	}
 
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token))
+}
+
+// DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
+// component.
+func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
+	hexHash := denom[4:]
+	hash, err := types.ParseHexHash(hexHash)
+	if err != nil {
+		return "", sdkerrors.Wrap(types.ErrInvalidDenomForTransfer, err.Error())
+	}
+
+	denomTrace, found := k.GetDenomTrace(ctx, hash)
+	if !found {
+		return "", sdkerrors.Wrap(types.ErrTraceNotFound, hexHash)
+	}
+
+	fullDenomPath := denomTrace.GetFullDenomPath()
+	return fullDenomPath, nil
 }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
@@ -10,7 +11,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
@@ -116,7 +116,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := codec.MarshalJSONIndent(cdc, genDoc)
+			bz, err := json.MarshalIndent(genDoc, "", " ")
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}

@@ -54,15 +54,17 @@ func (s secp256k1Algo) Derive() DeriveFn {
 			return masterPriv[:], nil
 		}
 		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
-		return derivedKey[:], err
+
+		return derivedKey, err
 	}
 }
 
 // Generate generates a secp256k1 private key from the given bytes.
 func (s secp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) crypto.PrivKey {
-		var bzArr [32]byte
-		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr)
+		var bzArr = make([]byte, secp256k1.PrivKeySize)
+		copy(bzArr, bz)
+
+		return secp256k1.PrivKey(bzArr)
 	}
 }

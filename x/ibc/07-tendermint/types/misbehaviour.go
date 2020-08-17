@@ -137,8 +137,7 @@ func checkMisbehaviourHeader(
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := header.TrustedValidators.VerifyCommitLightTrusting(
-		clientState.GetChainID(), header.Commit.BlockID, header.Height,
-		header.Commit, clientState.TrustLevel.ToTendermint(),
+		clientState.GetChainID(), header.Commit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header has too much change from trusted validator set: %v", err)
 	}

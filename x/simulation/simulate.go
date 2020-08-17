@@ -11,6 +11,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -83,10 +84,9 @@ func SimulateFromSeed(
 	}
 
 	accs = tmpAccs
-
 	nextValidators := validators
 
-	header := abci.Header{
+	header := tmproto.Header{
 		ChainID:         config.ChainID,
 		Height:          1,
 		Time:            genesisTimestamp,
@@ -187,22 +187,18 @@ func SimulateFromSeed(
 
 		if header.ProposerAddress == nil {
 			fmt.Fprintf(w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
-
 			stopEarly = true
-
 			break
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
-		request = RandomRequestBeginBlock(r, params, validators,
-			pastTimes, pastVoteInfos, eventStats.Tally, header)
+		request = RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, header)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block
 		validators = nextValidators
-		nextValidators = updateValidators(tb, r, params,
-			validators, res.ValidatorUpdates, eventStats.Tally)
+		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 
 		// update the exported params
 		if config.ExportParamsPath != "" && config.ExportParamsHeight == height {
@@ -240,7 +236,7 @@ func SimulateFromSeed(
 //______________________________________________________________________________
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []simulation.Account, header abci.Header) (opCount int)
+	accounts []simulation.Account, header tmproto.Header) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
@@ -254,7 +250,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, w io.Writer, params P
 	selectOp := ops.getSelectOpFn()
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header abci.Header,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header tmproto.Header,
 	) (opCount int) {
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation %d/%d.",

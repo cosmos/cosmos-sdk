@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/tendermint/crypto/merkle"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	sdkproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
@@ -37,13 +37,13 @@ func (ci CommitInfo) Hash() []byte {
 		return nil
 	}
 
-	rootHash, _, _ := sdkmaps.SimpleProofsFromMap(ci.toMap())
+	rootHash, _, _ := sdkmaps.ProofsFromMap(ci.toMap())
 	return rootHash
 }
 
-func (ci CommitInfo) ProofOp(storeName string) merkle.ProofOp {
+func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
 	cmap := ci.toMap()
-	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
+	_, proofs, _ := sdkmaps.ProofsFromMap(cmap)
 
 	proof := proofs[storeName]
 	if proof == nil {

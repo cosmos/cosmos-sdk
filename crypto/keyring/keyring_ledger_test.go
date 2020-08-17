@@ -77,8 +77,8 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 	require.Equal(t, i1.GetPubKey(), pub1)
 	require.Equal(t, i1.GetPubKey(), pub2)
-	require.True(t, pub1.VerifyBytes(d1, s1))
-	require.True(t, i1.GetPubKey().VerifyBytes(d1, s1))
+	require.True(t, pub1.VerifySignature(d1, s1))
+	require.True(t, i1.GetPubKey().VerifySignature(d1, s1))
 	require.True(t, bytes.Equal(s1, s2))
 
 	localInfo, _, err := kb.NewMnemonic("test", English, types.FullFundraiserPath, hd.Secp256k1)

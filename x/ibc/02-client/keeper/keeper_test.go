@@ -14,9 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -115,6 +117,67 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	tmConsState, ok := retrievedConsState.(*ibctmtypes.ConsensusState)
 	suite.Require().True(ok)
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
+}
+
+func (suite *KeeperTestSuite) TestValidateClient() {
+	testCases := []struct {
+		name        string
+		clientState clientexported.ClientState
+		expPass     bool
+	}{
+		{
+			"success",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			true,
+		},
+		{
+			"invalid client type",
+			localhosttypes.NewClientState(testChainID, testClientHeight),
+			false,
+		},
+		{
+			"incorrect chainID",
+			ibctmtypes.NewClientState("gaiatestnet", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid client height",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight)+10, commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid proof specs",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), nil),
+			false,
+		},
+		{
+			"invalid trust level",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.Fraction{0, 1}, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid unbonding period",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+10, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid trusting period",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, ubdPeriod+10, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+	}
+
+	ctx := suite.ctx.WithChainID(testChainID)
+	ctx = ctx.WithBlockHeight(testClientHeight)
+
+	for _, tc := range testCases {
+		err := suite.keeper.ValidateClient(ctx, tc.clientState)
+		if tc.expPass {
+			suite.Require().NoError(err, "expected valid client for case: %s, got error: %v", tc.name, err)
+		} else {
+			suite.Require().Error(err, "expected invalid client for case: %s, ValidatClient passed", tc.name)
+		}
+	}
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {

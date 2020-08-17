@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
-	schnorrkel "github.com/ChainSafe/go-schnorrkel"
+	"github.com/ChainSafe/go-schnorrkel"
 )
 
 var _ crypto.PubKey = PubKeySr25519{}

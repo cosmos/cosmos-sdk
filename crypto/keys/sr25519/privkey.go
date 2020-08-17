@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	schnorrkel "github.com/ChainSafe/go-schnorrkel"
+	"github.com/ChainSafe/go-schnorrkel"
 )
 
 // PrivKeySr25519Size is the number of bytes in an Sr25519 private key.

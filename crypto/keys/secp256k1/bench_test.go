@@ -1,4 +1,4 @@
-package sr25519
+package secp256k1
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/benchmarking"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/benchmarking"
 )
 
 func BenchmarkKeyGeneration(b *testing.B) {

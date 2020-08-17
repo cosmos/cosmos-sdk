@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/benchmarking"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/benchmarking"
 )
 
 func BenchmarkKeyGeneration(b *testing.B) {

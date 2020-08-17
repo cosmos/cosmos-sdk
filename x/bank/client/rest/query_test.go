@@ -112,11 +112,28 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			),
 		},
+		// just for testing GRPC. can be removed
+		{
+			"GRPC total supply of a specific denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
+			&sdk.Coins{},
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			),
+		},
 		{
 			"total supply of a specific denom",
 			fmt.Sprintf("%s/bank/total/%s?height=1", baseURL, s.cfg.BondDenom),
 			&sdk.Coin{},
 			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+		},
+		// just for testing GRPC. can be removed
+		{
+			"GRPC total supply of a bogus denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
+			&sdk.Coin{},
+			sdk.NewCoin("foobar", sdk.ZeroInt()),
 		},
 		{
 			"total supply of a bogus denom",
@@ -131,6 +148,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
 			// can be removed just to have debug log of resp
+			fmt.Println("url", tc.url)
 			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)
 

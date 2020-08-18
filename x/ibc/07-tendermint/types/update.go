@@ -49,7 +49,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
-			err, "could not get consensus state from store at height: %d", tmHeader.TrustedHeight,
+			err, "could not get consensus state from clientstore at TrustedHeight: %d", tmHeader.TrustedHeight,
 		)
 	}
 

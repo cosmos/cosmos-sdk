@@ -6,24 +6,28 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// SimulateFn is the signature of the Baseapp#Simulate function.
+type SimulateFn func(txBytes []byte, txtypes types.Tx) (sdk.GasInfo, *sdk.Result, error)
+
 type simulateServer struct {
-	app         baseapp.BaseApp
-	pubkeyCodec cryptotypes.PublicKeyCodec
-	txConfig    client.TxConfig
+	simulate          SimulateFn
+	interfaceRegistry codectypes.InterfaceRegistry
+	pubkeyCodec       cryptotypes.PublicKeyCodec
 }
 
 // NewSimulateServer creates a new SimulateServer.
-func NewSimulateServer(app baseapp.BaseApp, pubkeyCodec cryptotypes.PublicKeyCodec, txConfig client.TxConfig) SimulateServiceServer {
+func NewSimulateServer(simulate SimulateFn, interfaceRegistry codectypes.InterfaceRegistry, pubkeyCodec cryptotypes.PublicKeyCodec) SimulateServiceServer {
 	return simulateServer{
-		app:         app,
-		pubkeyCodec: pubkeyCodec,
-		txConfig:    txConfig,
+		simulate:          simulate,
+		interfaceRegistry: interfaceRegistry,
+		pubkeyCodec:       pubkeyCodec,
 	}
 }
 
@@ -35,7 +39,7 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	err := req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().InterfaceRegistry())
+	err := req.Tx.UnpackInterfaces(s.interfaceRegistry)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +50,7 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		return nil, err
 	}
 
-	gasInfo, result, err := s.app.Simulate(txBytes, txBuilder.GetTx())
+	gasInfo, result, err := s.simulate(txBytes, txBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}

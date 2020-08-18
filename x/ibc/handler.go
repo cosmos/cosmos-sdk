@@ -229,8 +229,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
-		// NOTE: MsgTimeout and MsgTimeoutOnClose use the same "OnTimeoutPacket"
-		// application logic callback.
 		case *channeltypes.MsgTimeout:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
@@ -277,13 +275,20 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			// Perform TAO verification
 			if err := k.ChannelKeeper.TimeoutOnClose(ctx, cap, msg.Packet, msg.Proof, msg.ProofClose, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
-				return nil, sdkerrors.Wrap(err, "timeout packet verification failed")
+				return nil, sdkerrors.Wrap(err, "timeout on close packet verification failed")
 			}
 
 			// Perform application logic callback
+			// NOTE: MsgTimeout and MsgTimeoutOnClose use the same "OnTimeoutPacket"
+			// application logic callback.
 			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "timeout on close packet callback failed")
+				return nil, sdkerrors.Wrap(err, "timeout packet callback failed")
+			}
+
+			// Delete packet commitment
+			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
+				return nil, err
 			}
 
 			return res, nil

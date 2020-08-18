@@ -194,3 +194,26 @@ jobs:
       - uses: actions/checkout@v2
       - name: test-unit-amino
         run: make test-unit-amino
+  liveness-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - name: build image
+        run: |
+          make build-docker-local-simapp
+      - name: start localnet
+        run: |
+          make clean build-sim-linux localnet-start
+        if: "env.GIT_DIFF != ''"
+      - name: test liveness
+        run: |
+          ./contrib/localnet_liveness.sh 100 5 50 localhost
+        if: "env.GIT_DIFF != ''"

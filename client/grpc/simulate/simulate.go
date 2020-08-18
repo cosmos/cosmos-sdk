@@ -38,7 +38,7 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	err := req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().AnyUnpacker())
+	err := req.Tx.UnpackInterfaces(s.app.GRPCQueryRouter().InterfaceRegistry())
 	if err != nil {
 		return nil, err
 	}

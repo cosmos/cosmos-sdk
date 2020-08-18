@@ -97,6 +97,11 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
+// InterfaceRegistry returns the interface registry for the router.
+func (qrt *GRPCQueryRouter) InterfaceRegistry() types.InterfaceRegistry {
+	return qrt.interfaceRegistry
+}
+
 // SetInterfaceRegistry sets the interface registry for the router.
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry types.InterfaceRegistry) {
 	qrt.interfaceRegistry = interfaceRegistry

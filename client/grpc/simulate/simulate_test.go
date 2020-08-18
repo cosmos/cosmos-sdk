@@ -56,18 +56,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s IntegrationTestSuite) TestSimulateService() {
 	// Create an account with some funds.
-	priv, _, addr := testdata.KeyTestPubAddr()
-	acc := s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addr)
-	err := acc.SetAccountNumber(0)
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	acc1 := s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addr1)
+	err := acc1.SetAccountNumber(0)
 	s.Require().NoError(err)
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, acc)
-	s.app.BankKeeper.SetBalances(s.sdkCtx, addr, sdk.Coins{
+	s.app.AccountKeeper.SetAccount(s.sdkCtx, acc1)
+	s.app.BankKeeper.SetBalances(s.sdkCtx, addr1, sdk.Coins{
 		sdk.NewInt64Coin("atom", 10000000),
 	})
 
 	// Create a test x/bank MsgSend.
-	addr1 := sdk.AccAddress([]byte("from"))
-	addr2 := sdk.AccAddress([]byte("to"))
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
 	msg := banktypes.NewMsgSend(addr1, addr2, coins)
 	feeAmount := testdata.NewTestFeeAmount()
@@ -82,7 +81,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	txBuilder.SetGasLimit(gasLimit)
 	// 1st round: set empty signature
 	sigV2 := signing.SignatureV2{
-		PubKey: priv.PubKey(),
+		PubKey: priv1.PubKey(),
 		Data: &signing.SingleSignatureData{
 			SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 			Signature: nil,
@@ -93,7 +92,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	sigV2, err = tx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: 0, AccountSequence: 0},
-		txBuilder, priv, s.clientCtx.TxConfig,
+		txBuilder, priv1, s.clientCtx.TxConfig,
 	)
 	txBuilder.SetSignatures(sigV2)
 

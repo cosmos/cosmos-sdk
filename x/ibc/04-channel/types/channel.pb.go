@@ -38,7 +38,8 @@ const (
 	// A channel has completed the handshake. Open channels are
 	// ready to send and receive packets.
 	OPEN State = 3
-	// A channel has been closed and can no longer be used to send or receive packets.
+	// A channel has been closed and can no longer be used to send or receive
+	// packets.
 	CLOSED State = 4
 )
 
@@ -72,7 +73,8 @@ type Order int32
 const (
 	// zero-value for channel ordering
 	NONE Order = 0
-	// packets can be delivered in any order, which may differ from the order in which they were sent.
+	// packets can be delivered in any order, which may differ from the order in
+	// which they were sent.
 	UNORDERED Order = 1
 	// packets are delivered exactly in the order which they were sent
 	ORDERED Order = 2
@@ -98,8 +100,8 @@ func (Order) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_9277922ccfb7f043, []int{1}
 }
 
-// MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It is
-// called by a relayer on Chain A.
+// MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It
+// is called by a relayer on Chain A.
 type MsgChannelOpenInit struct {
 	PortId    string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelId string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -348,8 +350,8 @@ func (m *MsgChannelOpenAck) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAd
 	return nil
 }
 
-// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
-// the change of channel state to OPEN on Chain A.
+// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to
+// acknowledge the change of channel state to OPEN on Chain A.
 type MsgChannelOpenConfirm struct {
 	PortId      string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
 	ChannelId   string                                        `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
@@ -712,7 +714,7 @@ func (m *MsgTimeout) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-// MsgTimeoutOnClose timed-out packet upon channel closure.
+// MsgTimeoutOnClose timed-out packet upon counterparty channel closure.
 type MsgTimeoutOnClose struct {
 	Packet           Packet                                        `protobuf:"bytes,1,opt,name=packet,proto3" json:"packet"`
 	Proof            []byte                                        `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof,omitempty"`
@@ -875,8 +877,8 @@ func (m *MsgAcknowledgement) GetSigner() github_com_cosmos_cosmos_sdk_types.AccA
 }
 
 // Channel defines pipeline for exactly-once packet delivery between specific
-// modules on separate blockchains, which has at least one end capable of sending
-// packets and one end capable of receiving packets.
+// modules on separate blockchains, which has at least one end capable of
+// sending packets and one end capable of receiving packets.
 type Channel struct {
 	// current state of the channel end
 	State State `protobuf:"varint,1,opt,name=state,proto3,enum=ibc.channel.State" json:"state,omitempty"`
@@ -924,8 +926,8 @@ func (m *Channel) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Channel proto.InternalMessageInfo
 
-// IdentifiedChannel defines a channel with additional port and channel identifier
-// fields.
+// IdentifiedChannel defines a channel with additional port and channel
+// identifier fields.
 type IdentifiedChannel struct {
 	// current state of the channel end
 	State State `protobuf:"varint,1,opt,name=state,proto3,enum=ibc.channel.State" json:"state,omitempty"`

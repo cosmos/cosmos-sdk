@@ -1,10 +1,9 @@
 package cli
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -32,23 +31,27 @@ func GetCmdQueryClientStates() *cobra.Command {
 				return err
 			}
 
-			page, _ := cmd.Flags().GetInt(flags.FlagPage)
-			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+			queryClient := types.NewQueryClient(clientCtx)
 
-			clientStates, height, err := utils.QueryAllClientStates(clientCtx, page, limit)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
+			req := &types.QueryClientStatesRequest{
+				Pagination: pageReq,
+			}
 
-			return clientCtx.PrintOutputLegacy(clientStates)
+			res, err := queryClient.ClientStates(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
 		},
 	}
-
-	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to query for")
-	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "client states")
 
 	return cmd
 }
@@ -70,10 +73,6 @@ func GetCmdQueryClientState() *cobra.Command {
 			}
 
 			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
 			clientStateRes, err := utils.QueryClientState(clientCtx, clientID, prove)
@@ -81,13 +80,56 @@ func GetCmdQueryClientState() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(clientStateRes.ProofHeight))
-			return clientCtx.PrintOutputLegacy(clientStateRes)
+			return clientCtx.PrintOutput(clientStateRes)
 		},
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryConsensusStates defines the command to query all the consensus states from a given
+// client state.
+func GetCmdQueryConsensusStates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "consensus-states [client-id]",
+		Short:   "Query all the consensus states from a given client state.",
+		Long:    "Query all the consensus states from a given client state.",
+		Example: fmt.Sprintf("%s query %s %s consensus-states [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			clientID := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryConsensusStatesRequest{
+				ClientId:   clientID,
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.ConsensusStates(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "consensus states")
 
 	return cmd
 }
@@ -109,10 +151,6 @@ func GetCmdQueryConsensusState() *cobra.Command {
 			}
 
 			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
 			height, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return fmt.Errorf("expected integer height, got: %s", args[1])
@@ -125,8 +163,7 @@ func GetCmdQueryConsensusState() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(csRes.ProofHeight))
-			return clientCtx.PrintOutputLegacy(csRes)
+			return clientCtx.PrintOutput(csRes)
 		},
 	}
 
@@ -143,6 +180,7 @@ func GetCmdQueryHeader() *cobra.Command {
 		Short:   "Query the latest header of the running chain",
 		Long:    "Query the latest Tendermint header of the running chain",
 		Example: fmt.Sprintf("%s query %s %s  header", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -173,7 +211,7 @@ func GetCmdNodeConsensusState() *cobra.Command {
 		Short:   "Query a node consensus state",
 		Long:    "Query a node consensus state. This result is feed to the client creation transaction.",
 		Example: fmt.Sprintf("%s query %s %s node-state", version.AppName, host.ModuleName, types.SubModuleName),
-		Args:    cobra.ExactArgs(0),
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())

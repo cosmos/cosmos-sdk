@@ -70,6 +70,17 @@ func PackClientState(clientState exported.ClientState) (*codectypes.Any, error) 
 	return anyClientState, nil
 }
 
+// UnpackClientState unpacks an Any into a ClientState. It returns an error if the
+// client state can't be unpacked into a ClientState.
+func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
+	clientState, ok := any.GetCachedValue().(exported.ClientState)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into ClientState %T", any)
+	}
+
+	return clientState, nil
+}
+
 // PackConsensusState constructs a new Any packed with the given consensus state value. It returns
 // an error if the consensus state can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.

@@ -122,14 +122,18 @@ func QueryConnectionClientState(
 	}
 
 	if prove {
-		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ClientId)
+		clientStateRes, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ClientId)
 		if err != nil {
 			return nil, err
 		}
 
 		// use client state returned from ABCI query in case query height differs
-		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.ClientId, clientState)
-		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, proof, int64(proofHeight))
+		identifiedClientState := clienttypes.IdentifiedClientState{
+			ClientId:    res.IdentifiedClientState.ClientId,
+			ClientState: clientStateRes.ClientState,
+		}
+
+		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, clientStateRes.Proof, int64(clientStateRes.ProofHeight))
 	}
 
 	return res, nil
@@ -159,18 +163,12 @@ func QueryConnectionConsensusState(
 	}
 
 	if prove {
-		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
 		if err != nil {
 			return nil, err
 		}
 
-		// use consensus state returned from ABCI query in case query height differs
-		anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
-		if err != nil {
-			return nil, err
-		}
-
-		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
+		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consensusState.GetHeight(), consensusStateRes.Proof, int64(consensusStateRes.ProofHeight))
 	}
 
 	return res, nil

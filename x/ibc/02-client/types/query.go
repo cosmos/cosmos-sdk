@@ -25,7 +25,7 @@ func NewQueryClientStateResponse(
 func NewQueryConsensusStateResponse(
 	clientID string, consensusStateAny *codectypes.Any, proof []byte, height int64,
 ) *QueryConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(height)), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(height))), "/"))
 	return &QueryConsensusStateResponse{
 		ConsensusState: consensusStateAny,
 		Proof:          proof,

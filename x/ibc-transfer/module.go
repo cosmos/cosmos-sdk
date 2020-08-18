@@ -21,7 +21,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -65,7 +64,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes implements AppModuleBasic interface
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetTxCmd implements AppModuleBasic interface

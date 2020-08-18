@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -100,12 +101,23 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if req.Height == 0 {
-		return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var (
+		consensusState exported.ConsensusState
+		found          bool
+	)
+
+	if req.LatestHeight {
+		consensusState, found = q.GetLatestClientConsensusState(ctx, req.ClientId)
+	} else {
+		if req.Height == 0 {
+			return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
+		}
+
+		consensusState, found = q.GetClientConsensusState(ctx, req.ClientId, req.Height)
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	consensusState, found := q.GetClientConsensusState(ctx, req.ClientId, req.Height)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,

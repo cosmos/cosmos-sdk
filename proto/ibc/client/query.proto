@@ -75,6 +75,8 @@ message QueryConsensusStateRequest {
   string client_id = 1;
   // consensus state height
   uint64 height = 2;
+  // latest_height overrrides the height field and queries the latest stored ConsensusState
+  bool latest_height = 3;
 }
 
 // QueryConsensusStateResponse is the response type for the Query/ConsensusState RPC method

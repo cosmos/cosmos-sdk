@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
+
+const flagLatestHeight = "latest-height"
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
@@ -138,11 +141,12 @@ func GetCmdQueryConsensusStates() *cobra.Command {
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryConsensusState() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "consensus-state [client-id] [height]",
-		Short:   "Query the consensus state of a client at a given height",
-		Long:    "Query the consensus state for a particular light client at a given height",
+		Use:   "consensus-state [client-id] [height]",
+		Short: "Query the consensus state of a client at a given height",
+		Long: `Query the consensus state for a particular light client at a given height.
+If the '--latest' flag is included, the query returns the latest consensus state, overriding the height argument.`,
 		Example: fmt.Sprintf("%s query %s %s  consensus-state [client-id] [height]", version.AppName, host.ModuleName, types.SubModuleName),
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
@@ -151,14 +155,25 @@ func GetCmdQueryConsensusState() *cobra.Command {
 			}
 
 			clientID := args[0]
-			height, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("expected integer height, got: %s", args[1])
+
+			queryLatestHeight, _ := cmd.Flags().GetBool(flagLatestHeight)
+
+			var height uint64
+
+			if !queryLatestHeight {
+				if len(args) != 2 {
+					return errors.New("must include a second 'height' argument when '--latest-height' flag is not provided")
+				}
+
+				height, err = strconv.ParseUint(args[1], 10, 64)
+				if err != nil {
+					return fmt.Errorf("expected integer height, got: %s", args[1])
+				}
 			}
 
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove)
+			csRes, err := utils.QueryConsensusState(clientCtx, clientID, height, prove, queryLatestHeight)
 			if err != nil {
 				return err
 			}
@@ -168,6 +183,7 @@ func GetCmdQueryConsensusState() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	cmd.Flags().Bool(flagLatestHeight, false, "return latest stored consensus state")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

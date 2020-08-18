@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -84,7 +85,7 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 
 // Validate attempts to validate a parameter value by its key. If the key is not
 // registered or if the validation of the value fails, an error is returned.
-func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
+func (s Subspace) Validate(ctx sdk.Context, key []byte, value proto.Message) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		return fmt.Errorf("parameter %s not registered", string(key))
@@ -231,7 +232,7 @@ func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 		// go-amino automatically handles it but just for sure,
 		// since SetStruct is meant to be used in InitGenesis
 		// so this method will not be called frequently
-		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
+		v := pair.Value
 
 		if err := pair.ValidatorFn(v); err != nil {
 			panic(fmt.Sprintf("value from ParamSetPair is invalid: %s", err))

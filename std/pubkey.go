@@ -21,6 +21,8 @@ var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 // Decode implements the PublicKeyCodec.Decode method
 func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
 	switch key := key.Sum.(type) {
+	case nil:
+		return crypto.PubKey(nil), nil
 	case *types.PublicKey_Secp256K1:
 		n := len(key.Secp256K1)
 		if n != secp256k1.PubKeySize {
@@ -69,6 +71,8 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 // Encode implements the PublicKeyCodec.Encode method
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	switch key := key.(type) {
+	case nil:
+		return &types.PublicKey{}, nil
 	case secp256k1.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
 	case ed255192.PubKey:

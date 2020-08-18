@@ -212,7 +212,7 @@ func (d Dec) BigInt() *big.Int {
 	}
 
 	copy := new(big.Int)
-	return copy.Set(d)
+	return copy.Set(d.Int)
 }
 
 // addition

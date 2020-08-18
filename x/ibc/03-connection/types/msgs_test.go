@@ -111,7 +111,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		types.NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, emptyProof, suite.proof, suite.proof, 10, 10, signer),
@@ -162,7 +162,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	testMsgs := []*types.MsgConnectionOpenAck{
 		types.NewMsgConnectionOpenAck("test/conn1", clientState, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("test/conn1", nil, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", nil, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, emptyProof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, emptyProof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, emptyProof, 10, 10, ibctesting.ConnectionVersion, signer),

@@ -122,13 +122,13 @@ func QueryConnectionClientState(
 	}
 
 	if prove {
-		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.Id)
+		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ClientId)
 		if err != nil {
 			return nil, err
 		}
 
 		// use client state returned from ABCI query in case query height differs
-		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.Id, clientState)
+		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.ClientId, clientState)
 		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, proof, int64(proofHeight))
 	}
 

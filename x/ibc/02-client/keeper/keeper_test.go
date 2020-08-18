@@ -152,18 +152,18 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 	}
 
-	expGenClients := make([]types.GenesisClientState, len(expClients))
+	expGenClients := make([]types.IdentifiedClientState, len(expClients))
 
 	for i := range expClients {
 		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
-		expGenClients[i] = types.NewGenesisClientState(clientIDs[i], expClients[i])
+		expGenClients[i] = types.NewIdentifiedClientState(clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
 	// TODO: uncomment after simapp is migrated to proto
 	// localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 	// suite.Require().True(found)
-	// expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
+	// expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
 
 	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
 

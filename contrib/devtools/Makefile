@@ -99,7 +99,7 @@ proto-tools-stamp:
 	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
 	@echo "Installing protoc-gen-grpc-gateway..."
-	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	@go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 	touch $@
 

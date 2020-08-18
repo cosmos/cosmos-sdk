@@ -45,6 +45,7 @@ var (
 	_ ExtensionOptionsTxBuilder  = &builder{}
 )
 
+// ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
 type ExtensionOptionsTxBuilder interface {
 	client.TxBuilder
 

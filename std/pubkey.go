@@ -3,13 +3,13 @@ package std
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
 	"github.com/tendermint/tendermint/crypto"
 	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
+
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
 // DefaultPublicKeyCodec implements the standard PublicKeyCodec for the SDK which

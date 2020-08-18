@@ -54,8 +54,8 @@ func (msg *MsgCreateClient) ProtoMessage()  {}
 func NewMsgCreateClient(
 	id string, header Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
-	specs []*ics23.ProofSpec, signer sdk.AccAddress, allowGovernanceOverrideAfterExpiry bool,
-	allowGovernanceOverrideAfterMisbehaviour bool,
+	specs []*ics23.ProofSpec, allowGovernanceOverrideAfterExpiry bool,
+	allowGovernanceOverrideAfterMisbehaviour bool, signer sdk.AccAddress,
 ) *MsgCreateClient {
 
 	return &MsgCreateClient{

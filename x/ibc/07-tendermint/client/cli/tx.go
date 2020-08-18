@@ -109,8 +109,8 @@ func NewCreateClientCmd() *cobra.Command {
 			agoam, _ := cmd.Flags().GetBool(fladAllowGovOverrideAfterMisbehaviour)
 
 			msg := ibctmtypes.NewMsgCreateClient(
-				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
-				agoae, agoam,
+				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs,
+				agoae, agoam, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {

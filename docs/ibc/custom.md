@@ -371,7 +371,7 @@ OnAcknowledgementPacket(
 
 #### Timeout Packets
 
-If the timout for a packet is reached before the packet is successfully received or the 
+If the timeout for a packet is reached before the packet is successfully received or the 
 counterparty channel end is closed before the packet is successfully received, then the receiving
 chain can no longer process it. Thus, the sending chain must process the timeout using
 `OnTimeoutPacket` to handle this situation. Again the IBC module will verify that the timeout is

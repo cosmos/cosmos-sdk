@@ -213,8 +213,7 @@ func QueryTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

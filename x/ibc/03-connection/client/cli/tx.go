@@ -77,7 +77,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 [counterparty-versions] [path/to/proof_init.json] [path/to/proof_client.json] [path/tp/proof_consensus.json]`,
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(8),
+		Args: cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -155,7 +155,7 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 			"%s tx %s %s open-ack [connection-id] [path/to/client_state.json] [path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())

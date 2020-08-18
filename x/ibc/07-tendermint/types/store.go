@@ -22,7 +22,7 @@ func GetConsensusState(store sdk.KVStore, cdc codec.BinaryMarshaler, height uint
 
 	var consensusStateI clientexported.ConsensusState
 	if err := codec.UnmarshalAny(cdc, &consensusStateI, bz); err != nil {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "unmarshal error: %w", err)
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "unmarshal error: %v", err)
 	}
 
 	consensusState, ok := consensusStateI.(*ConsensusState)

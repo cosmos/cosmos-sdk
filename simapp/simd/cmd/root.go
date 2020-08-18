@@ -192,7 +192,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
-) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error) {
+) (json.RawMessage, []tmtypes.GenesisValidator, int64, *abci.ConsensusParams, error) {
 
 	encCfg := simapp.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
@@ -201,7 +201,7 @@ func exportAppStateAndTMValidators(
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg)
 
 		if err := simApp.LoadHeight(height); err != nil {
-			return nil, nil, nil, err
+			return nil, nil, 0, nil, err
 		}
 	} else {
 		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg)

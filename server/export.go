@@ -64,7 +64,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
 			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
 
-			appState, validators, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
+			appState, validators, appHeight, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
@@ -76,6 +76,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			doc.AppState = appState
 			doc.Validators = validators
+			doc.InitialHeight = appHeight
 			doc.ConsensusParams = &tmproto.ConsensusParams{
 				Block: tmproto.BlockParams{
 					MaxBytes:   cp.Block.MaxBytes,

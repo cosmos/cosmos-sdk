@@ -18,7 +18,9 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-type builder struct {
+// wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
+// body and auth_info bytes.
+type wrapper struct {
 	tx *tx.Tx
 
 	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
@@ -39,10 +41,10 @@ type builder struct {
 }
 
 var (
-	_ authsigning.Tx             = &builder{}
-	_ client.TxBuilder           = &builder{}
-	_ ante.HasExtensionOptionsTx = &builder{}
-	_ ExtensionOptionsTxBuilder  = &builder{}
+	_ authsigning.Tx             = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
+	_ ante.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder  = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -53,8 +55,8 @@ type ExtensionOptionsTxBuilder interface {
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
 }
 
-func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
-	return &builder{
+func newBuilder(pubkeyCodec types.PublicKeyCodec) *wrapper {
+	return &wrapper{
 		tx: &tx.Tx{
 			Body: &tx.TxBody{},
 			AuthInfo: &tx.AuthInfo{
@@ -65,7 +67,7 @@ func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 	}
 }
 
-func (t *builder) GetMsgs() []sdk.Msg {
+func (t *wrapper) GetMsgs() []sdk.Msg {
 	if t.tx == nil || t.tx.Body == nil {
 		return nil
 	}
@@ -82,7 +84,7 @@ func (t *builder) GetMsgs() []sdk.Msg {
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-func (t *builder) ValidateBasic() error {
+func (t *wrapper) ValidateBasic() error {
 	theTx := t.tx
 	if theTx == nil {
 		return fmt.Errorf("bad Tx")
@@ -133,7 +135,7 @@ func (t *builder) ValidateBasic() error {
 	return nil
 }
 
-func (t *builder) getBodyBytes() []byte {
+func (t *wrapper) getBodyBytes() []byte {
 	if len(t.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
@@ -149,7 +151,7 @@ func (t *builder) getBodyBytes() []byte {
 	return t.bodyBz
 }
 
-func (t *builder) getAuthInfoBytes() []byte {
+func (t *wrapper) getAuthInfoBytes() []byte {
 	if len(t.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
@@ -165,7 +167,7 @@ func (t *builder) getAuthInfoBytes() []byte {
 	return t.authInfoBz
 }
 
-func (t *builder) GetSigners() []sdk.AccAddress {
+func (t *wrapper) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
 
@@ -181,7 +183,7 @@ func (t *builder) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (t *builder) GetPubKeys() []crypto.PubKey {
+func (t *wrapper) GetPubKeys() []crypto.PubKey {
 	if t.pubKeys == nil {
 		signerInfos := t.tx.AuthInfo.SignerInfos
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
@@ -203,32 +205,32 @@ func (t *builder) GetPubKeys() []crypto.PubKey {
 	return t.pubKeys
 }
 
-func (t *builder) GetGas() uint64 {
+func (t *wrapper) GetGas() uint64 {
 	return t.tx.AuthInfo.Fee.GasLimit
 }
 
-func (t *builder) GetFee() sdk.Coins {
+func (t *wrapper) GetFee() sdk.Coins {
 	return t.tx.AuthInfo.Fee.Amount
 }
 
-func (t *builder) FeePayer() sdk.AccAddress {
+func (t *wrapper) FeePayer() sdk.AccAddress {
 	return t.GetSigners()[0]
 }
 
-func (t *builder) GetMemo() string {
+func (t *wrapper) GetMemo() string {
 	return t.tx.Body.Memo
 }
 
-func (t *builder) GetSignatures() [][]byte {
+func (t *wrapper) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
-func (t *builder) GetTimeoutHeight() uint64 {
+func (t *wrapper) GetTimeoutHeight() uint64 {
 	return t.tx.Body.TimeoutHeight
 }
 
-func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
+func (t *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := t.tx.AuthInfo.SignerInfos
 	sigs := t.tx.Signatures
 	pubKeys := t.GetPubKeys()
@@ -250,7 +252,7 @@ func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
+func (t *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -270,21 +272,21 @@ func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 }
 
 // SetTimeoutHeight sets the transaction's height timeout.
-func (t *builder) SetTimeoutHeight(height uint64) {
+func (t *wrapper) SetTimeoutHeight(height uint64) {
 	t.tx.Body.TimeoutHeight = height
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil
 }
 
-func (t *builder) SetMemo(memo string) {
+func (t *wrapper) SetMemo(memo string) {
 	t.tx.Body.Memo = memo
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	t.bodyBz = nil
 }
 
-func (t *builder) SetGasLimit(limit uint64) {
+func (t *wrapper) SetGasLimit(limit uint64) {
 	if t.tx.AuthInfo.Fee == nil {
 		t.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -295,7 +297,7 @@ func (t *builder) SetGasLimit(limit uint64) {
 	t.authInfoBz = nil
 }
 
-func (t *builder) SetFeeAmount(coins sdk.Coins) {
+func (t *wrapper) SetFeeAmount(coins sdk.Coins) {
 	if t.tx.AuthInfo.Fee == nil {
 		t.tx.AuthInfo.Fee = &tx.Fee{}
 	}
@@ -306,7 +308,7 @@ func (t *builder) SetFeeAmount(coins sdk.Coins) {
 	t.authInfoBz = nil
 }
 
-func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
+func (t *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -330,7 +332,7 @@ func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 	return nil
 }
 
-func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
+func (t *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	t.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	t.authInfoBz = nil
@@ -340,7 +342,7 @@ func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
 
 // getSignerIndex returns the index of a public key in the GetSigners array. It
 // returns an error if the publicKey is not in GetSigners.
-func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
+func (t *wrapper) getSignerIndex(pubKey crypto.PubKey) (int, error) {
 	if pubKey == nil {
 		return -1, sdkerrors.Wrap(
 			sdkerrors.ErrInvalidPubKey,
@@ -361,7 +363,7 @@ func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
 }
 
 // SetSignerInfo implements TxBuilder.SetSignerInfo.
-func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) error {
+func (t *wrapper) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) error {
 	signerIndex, err := t.getSignerIndex(pubKey)
 	if err != nil {
 		return err
@@ -395,41 +397,41 @@ func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) err
 	return nil
 }
 
-func (t *builder) setSignatures(sigs [][]byte) {
+func (t *wrapper) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.Tx {
+func (t *wrapper) GetTx() authsigning.Tx {
 	return t
 }
 
 // GetProtoTx returns the tx as a proto.Message.
-func (t *builder) GetProtoTx() *tx.Tx {
+func (t *wrapper) GetProtoTx() *tx.Tx {
 	return t.tx
 }
 
-// WrapTxBuilder creates a TxBuilder wrapper around a tx.Tx proto message.
-func WrapTxBuilder(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) client.TxBuilder {
-	return &builder{
+// WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.
+func WrapTx(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) client.TxBuilder {
+	return &wrapper{
 		tx:          protoTx,
 		pubkeyCodec: pubkeyCodec,
 	}
 }
 
-func (t *builder) GetExtensionOptions() []*codectypes.Any {
+func (t *wrapper) GetExtensionOptions() []*codectypes.Any {
 	return t.tx.Body.ExtensionOptions
 }
 
-func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
+func (t *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	return t.tx.Body.NonCriticalExtensionOptions
 }
 
-func (t *builder) SetExtensionOptions(extOpts ...*codectypes.Any) {
+func (t *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	t.tx.Body.ExtensionOptions = extOpts
 	t.bodyBz = nil
 }
 
-func (t *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+func (t *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	t.tx.Body.NonCriticalExtensionOptions = extOpts
 	t.bodyBz = nil
 }

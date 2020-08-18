@@ -25,7 +25,7 @@ var (
 	timeout = uint64(10)
 )
 
-func buildTx(t *testing.T, bldr *builder) {
+func buildTx(t *testing.T, bldr *wrapper) {
 	bldr.SetFeeAmount(coins)
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)

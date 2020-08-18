@@ -396,28 +396,3 @@ func (am AppModule) OnTimeoutPacket(
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil
 }
-
-// OnTimeoutOnClosePacket implements the IBCModule interface
-func (am AppModule) OnTimeoutOnClosePacket(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-) (*sdk.Result, error) {
-	var data types.FungibleTokenPacketData
-	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTimeoutOnClose,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyRefundDenom, data.Denom),
-			sdk.NewAttribute(types.AttributeKeyRefundAmount, fmt.Sprintf("%d", data.Amount)),
-		),
-	)
-
-	return &sdk.Result{
-		Events: ctx.EventManager().Events().ToABCIEvents(),
-	}, nil
-}

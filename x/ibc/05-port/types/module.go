@@ -74,9 +74,4 @@ type IBCModule interface {
 		ctx sdk.Context,
 		packet channeltypes.Packet,
 	) (*sdk.Result, error)
-
-	OnTimeoutOnClosePacket(
-		ctx sdk.Context,
-		packet channeltypes.Packet,
-	) (*sdk.Result, error)
 }

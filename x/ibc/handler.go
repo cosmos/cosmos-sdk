@@ -229,6 +229,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			return res, nil
 
+		// NOTE: MsgTimeout and MsgTimeoutOnClose use the same "OnTimeoutPacket"
+		// application logic callback.
 		case *channeltypes.MsgTimeout:
 			// Lookup module by channel capability
 			module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
@@ -279,7 +281,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			// Perform application logic callback
-			res, err := cbs.OnTimeoutOnClosePacket(ctx, msg.Packet)
+			res, err := cbs.OnTimeoutPacket(ctx, msg.Packet)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "timeout on close packet callback failed")
 			}

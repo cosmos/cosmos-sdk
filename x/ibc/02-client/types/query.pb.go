@@ -78,7 +78,7 @@ func (m *QueryClientStateRequest) GetClientId() string {
 }
 
 // QueryClientStateResponse is the response type for the Query/ClientState RPC
-// method. Besides the connection end, it includes a proof and the height from
+// method. Besides the client state, it includes a proof and the height from
 // which the proof was retrieved.
 type QueryClientStateResponse struct {
 	// client state associated with the request identifier
@@ -155,6 +155,7 @@ func (m *QueryClientStateResponse) GetProofHeight() uint64 {
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
 // method
 type QueryClientStatesRequest struct {
+	// pagination request
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -205,8 +206,6 @@ type QueryClientStatesResponse struct {
 	ClientStates []*IdentifiedClientState `protobuf:"bytes,1,rep,name=client_states,json=clientStates,proto3" json:"client_states,omitempty"`
 	// pagination response
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	// query block height
-	Height int64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 }
 
 func (m *QueryClientStatesResponse) Reset()         { *m = QueryClientStatesResponse{} }
@@ -256,14 +255,8 @@ func (m *QueryClientStatesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-func (m *QueryClientStatesResponse) GetHeight() int64 {
-	if m != nil {
-		return m.Height
-	}
-	return 0
-}
-
-// QueryConsensusStateRequest is the request type for the Query/ConsensusState RPC method
+// QueryConsensusStateRequest is the request type for the Query/ConsensusState RPC method. Besides
+// the consensus state, it includes a proof and the height from which the proof was retrieved.
 type QueryConsensusStateRequest struct {
 	// client identifier
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -320,7 +313,7 @@ func (m *QueryConsensusStateRequest) GetHeight() uint64 {
 
 // QueryConsensusStateResponse is the response type for the Query/ConsensusState RPC method
 type QueryConsensusStateResponse struct {
-	// consensus state associated with the identifier
+	// consensus state associated with the client identifier at the given height
 	ConsensusState *types.Any `protobuf:"bytes,1,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty"`
 	// merkle proof of existence
 	Proof []byte `protobuf:"bytes,2,opt,name=proof,proto3" json:"proof,omitempty"`
@@ -391,6 +384,116 @@ func (m *QueryConsensusStateResponse) GetProofHeight() uint64 {
 	return 0
 }
 
+// QueryConsensusStatesRequest is the request type for the Query/ConsensusStates RPC method.
+type QueryConsensusStatesRequest struct {
+	// client identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	// pagination request
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryConsensusStatesRequest) Reset()         { *m = QueryConsensusStatesRequest{} }
+func (m *QueryConsensusStatesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryConsensusStatesRequest) ProtoMessage()    {}
+func (*QueryConsensusStatesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_320a7d3a97b17345, []int{6}
+}
+func (m *QueryConsensusStatesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConsensusStatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConsensusStatesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConsensusStatesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConsensusStatesRequest.Merge(m, src)
+}
+func (m *QueryConsensusStatesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConsensusStatesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConsensusStatesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConsensusStatesRequest proto.InternalMessageInfo
+
+func (m *QueryConsensusStatesRequest) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *QueryConsensusStatesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryConsensusStatesResponse is the response type for the Query/ConsensusStates RPC method
+type QueryConsensusStatesResponse struct {
+	// consensus states associated with the identifier
+	ConsensusStates []*types.Any `protobuf:"bytes,1,rep,name=consensus_states,json=consensusStates,proto3" json:"consensus_states,omitempty"`
+	// pagination response
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryConsensusStatesResponse) Reset()         { *m = QueryConsensusStatesResponse{} }
+func (m *QueryConsensusStatesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryConsensusStatesResponse) ProtoMessage()    {}
+func (*QueryConsensusStatesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_320a7d3a97b17345, []int{7}
+}
+func (m *QueryConsensusStatesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryConsensusStatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryConsensusStatesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryConsensusStatesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryConsensusStatesResponse.Merge(m, src)
+}
+func (m *QueryConsensusStatesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryConsensusStatesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryConsensusStatesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryConsensusStatesResponse proto.InternalMessageInfo
+
+func (m *QueryConsensusStatesResponse) GetConsensusStates() []*types.Any {
+	if m != nil {
+		return m.ConsensusStates
+	}
+	return nil
+}
+
+func (m *QueryConsensusStatesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryClientStateRequest)(nil), "ibc.client.QueryClientStateRequest")
 	proto.RegisterType((*QueryClientStateResponse)(nil), "ibc.client.QueryClientStateResponse")
@@ -398,51 +501,56 @@ func init() {
 	proto.RegisterType((*QueryClientStatesResponse)(nil), "ibc.client.QueryClientStatesResponse")
 	proto.RegisterType((*QueryConsensusStateRequest)(nil), "ibc.client.QueryConsensusStateRequest")
 	proto.RegisterType((*QueryConsensusStateResponse)(nil), "ibc.client.QueryConsensusStateResponse")
+	proto.RegisterType((*QueryConsensusStatesRequest)(nil), "ibc.client.QueryConsensusStatesRequest")
+	proto.RegisterType((*QueryConsensusStatesResponse)(nil), "ibc.client.QueryConsensusStatesResponse")
 }
 
 func init() { proto.RegisterFile("ibc/client/query.proto", fileDescriptor_320a7d3a97b17345) }
 
 var fileDescriptor_320a7d3a97b17345 = []byte{
-	// 611 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0x4f, 0x6b, 0x13, 0x41,
-	0x1c, 0xcd, 0x24, 0x6d, 0x31, 0x93, 0x58, 0x61, 0x28, 0xed, 0x76, 0xab, 0x4b, 0xb2, 0xd5, 0x36,
-	0x0a, 0x99, 0xb1, 0x11, 0xff, 0x20, 0x08, 0xfe, 0x81, 0x6a, 0xc1, 0x43, 0xbb, 0xde, 0xbc, 0x94,
-	0xdd, 0xcd, 0x64, 0xb3, 0xd8, 0xee, 0x6c, 0x33, 0x13, 0x31, 0x94, 0x5e, 0x3c, 0x78, 0x55, 0xf0,
-	0x23, 0x78, 0xf4, 0xea, 0x47, 0xf0, 0xd0, 0x63, 0xc1, 0x8b, 0x47, 0x49, 0xfc, 0x20, 0x92, 0x99,
-	0x59, 0x33, 0x21, 0xb1, 0xe9, 0xc5, 0xd3, 0x66, 0x7e, 0x7f, 0xdf, 0xbc, 0xf7, 0x26, 0x70, 0x39,
-	0x0e, 0x42, 0x12, 0x1e, 0xc4, 0x34, 0x11, 0xe4, 0xa8, 0x4b, 0x3b, 0x3d, 0x9c, 0x76, 0x98, 0x60,
-	0x08, 0xc6, 0x41, 0x88, 0x55, 0xdc, 0xbe, 0x15, 0x32, 0x7e, 0xc8, 0x38, 0x09, 0x7c, 0x4e, 0x55,
-	0x11, 0x79, 0xbb, 0x15, 0x50, 0xe1, 0x6f, 0x91, 0xd4, 0x8f, 0xe2, 0xc4, 0x17, 0x31, 0x4b, 0x54,
-	0x9f, 0xbd, 0x62, 0xcc, 0x53, 0x1f, 0x9d, 0x58, 0x8d, 0x18, 0x8b, 0x0e, 0x28, 0x91, 0xa7, 0xa0,
-	0xdb, 0x22, 0x7e, 0xa2, 0x77, 0xd9, 0x57, 0x75, 0xca, 0x4f, 0x63, 0xe2, 0x27, 0x09, 0x13, 0x72,
-	0x20, 0x57, 0x59, 0xf7, 0x1e, 0x5c, 0xd9, 0x1b, 0xee, 0x7c, 0x26, 0xa7, 0xbd, 0x12, 0xbe, 0xa0,
-	0x1e, 0x3d, 0xea, 0x52, 0x2e, 0xd0, 0x1a, 0x2c, 0xaa, 0x1d, 0xfb, 0x71, 0xd3, 0x02, 0x15, 0x50,
-	0x2b, 0x7a, 0x97, 0x54, 0x60, 0xa7, 0xe9, 0x7e, 0x05, 0xd0, 0x9a, 0x6c, 0xe4, 0x29, 0x4b, 0x38,
-	0x45, 0xf7, 0x61, 0x59, 0x77, 0xf2, 0x61, 0x5c, 0x36, 0x97, 0x1a, 0x4b, 0x58, 0x21, 0xc1, 0x19,
-	0x48, 0xfc, 0x24, 0xe9, 0x79, 0xa5, 0x70, 0x34, 0x00, 0x2d, 0xc1, 0xf9, 0xb4, 0xc3, 0x58, 0xcb,
-	0xca, 0x57, 0x40, 0xad, 0xec, 0xa9, 0x03, 0xba, 0x06, 0xa1, 0xfc, 0xb1, 0x9f, 0xfa, 0xa2, 0x6d,
-	0x15, 0x24, 0x92, 0xa2, 0x8c, 0xec, 0xfa, 0xa2, 0x8d, 0xaa, 0xb0, 0xac, 0xd2, 0x6d, 0x1a, 0x47,
-	0x6d, 0x61, 0xcd, 0x55, 0x40, 0x6d, 0xce, 0x2b, 0xc9, 0xd8, 0x0b, 0x19, 0x72, 0x83, 0x49, 0xb0,
-	0x3c, 0xbb, 0xe6, 0x36, 0x84, 0x23, 0x9e, 0x35, 0xd4, 0x0d, 0xac, 0x44, 0xc1, 0x43, 0x51, 0xb0,
-	0x52, 0x4e, 0x8b, 0x82, 0x77, 0xfd, 0x28, 0xa3, 0xc8, 0x33, 0x3a, 0xdd, 0xef, 0x00, 0xae, 0x4e,
-	0x59, 0xa2, 0x29, 0xd9, 0x86, 0x97, 0x4d, 0x4a, 0xb8, 0x05, 0x2a, 0x85, 0x5a, 0xa9, 0x51, 0xc5,
-	0x23, 0x27, 0xe0, 0x9d, 0x26, 0x4d, 0x44, 0xdc, 0x8a, 0x69, 0xd3, 0x24, 0xb5, 0x6c, 0x10, 0xc4,
-	0xd1, 0xf3, 0x31, 0xb4, 0x79, 0x89, 0x76, 0x73, 0x26, 0x5a, 0x05, 0xc2, 0x84, 0x8b, 0x96, 0xe1,
-	0x82, 0xe6, 0x6b, 0x48, 0x68, 0xc1, 0xd3, 0x27, 0x77, 0x0f, 0xda, 0xea, 0x16, 0xc3, 0x8e, 0x84,
-	0x77, 0xf9, 0x85, 0x3d, 0x61, 0x8c, 0xcc, 0x4b, 0x09, 0xb2, 0x91, 0xdf, 0x00, 0x5c, 0x9b, 0x3a,
-	0x53, 0x73, 0xf3, 0x08, 0x5e, 0x09, 0xb3, 0xcc, 0x05, 0x1c, 0xb3, 0x18, 0x8e, 0x8d, 0xf9, 0x5f,
-	0xa6, 0x69, 0x9c, 0x16, 0xe0, 0xbc, 0x84, 0x8d, 0x3e, 0x02, 0x58, 0x32, 0x24, 0x41, 0xeb, 0xa6,
-	0x6a, 0xff, 0x78, 0x3e, 0xf6, 0xf5, 0xf3, 0x8b, 0xd4, 0xdd, 0xdd, 0xbb, 0xef, 0x7f, 0xfc, 0xfe,
-	0x9c, 0x27, 0xa8, 0x4e, 0x8c, 0xa7, 0x9d, 0xbd, 0xff, 0x31, 0xc7, 0x90, 0xe3, 0xbf, 0xcc, 0x9f,
-	0xa0, 0x0f, 0x00, 0x96, 0x4d, 0x9f, 0xa1, 0x73, 0xb7, 0x65, 0x5e, 0xb7, 0x6f, 0xcc, 0xa8, 0xd2,
-	0xa0, 0x6e, 0x4a, 0x50, 0xeb, 0xa8, 0x3a, 0x13, 0x14, 0xfa, 0x02, 0xe0, 0xe2, 0xb8, 0xac, 0x68,
-	0x63, 0x72, 0xc9, 0x34, 0x2f, 0xd9, 0x9b, 0x33, 0xeb, 0x34, 0x9c, 0xc7, 0x12, 0xce, 0x43, 0xf4,
-	0x60, 0x2a, 0x9c, 0x71, 0xe7, 0x98, 0x2c, 0x91, 0x63, 0x25, 0xee, 0xc9, 0xd3, 0x97, 0xa7, 0x7d,
-	0x07, 0x9c, 0xf5, 0x1d, 0xf0, 0xab, 0xef, 0x80, 0x4f, 0x03, 0x27, 0x77, 0x36, 0x70, 0x72, 0x3f,
-	0x07, 0x4e, 0xee, 0x75, 0x23, 0x8a, 0x45, 0xbb, 0x1b, 0xe0, 0x90, 0x1d, 0x12, 0xfd, 0x47, 0xac,
-	0x3e, 0x75, 0xde, 0x7c, 0x43, 0xde, 0xc9, 0x8d, 0xb7, 0x1b, 0x75, 0xbd, 0x54, 0xf4, 0x52, 0xca,
-	0x83, 0x05, 0x69, 0xc7, 0x3b, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xfc, 0x4f, 0xb0, 0x3a, 0xde,
-	0x05, 0x00, 0x00,
+	// 670 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x95, 0xcf, 0x4f, 0x14, 0x31,
+	0x14, 0xc7, 0xe9, 0xf2, 0x23, 0xf2, 0x76, 0x05, 0xd3, 0x10, 0x58, 0x06, 0xdc, 0x2c, 0x8b, 0xc2,
+	0x6a, 0x42, 0x2b, 0x6b, 0x14, 0x63, 0x62, 0xfc, 0x95, 0xa0, 0x24, 0x1e, 0x60, 0xbc, 0x79, 0x21,
+	0x33, 0xb3, 0x65, 0x76, 0x22, 0x4c, 0x07, 0xda, 0x35, 0x12, 0xc2, 0x85, 0x83, 0x57, 0x4d, 0x3c,
+	0x7b, 0xf2, 0x62, 0xa2, 0x47, 0xff, 0x08, 0x8f, 0x24, 0x5e, 0x3c, 0x1a, 0xf0, 0xe0, 0x9f, 0x61,
+	0xb6, 0xed, 0xc0, 0x0c, 0x8c, 0xcc, 0x6a, 0xf4, 0x34, 0xf4, 0xbd, 0xf6, 0xbd, 0x0f, 0xdf, 0xf7,
+	0x6d, 0x17, 0x46, 0x03, 0xd7, 0xa3, 0xde, 0x7a, 0xc0, 0x42, 0x49, 0x37, 0xdb, 0x6c, 0x6b, 0x9b,
+	0x44, 0x5b, 0x5c, 0x72, 0x0c, 0x81, 0xeb, 0x11, 0x1d, 0xb7, 0xae, 0x7a, 0x5c, 0x6c, 0x70, 0x41,
+	0x5d, 0x47, 0x30, 0xbd, 0x89, 0xbe, 0x98, 0x77, 0x99, 0x74, 0xe6, 0x69, 0xe4, 0xf8, 0x41, 0xe8,
+	0xc8, 0x80, 0x87, 0xfa, 0x9c, 0x35, 0x96, 0xa8, 0xa7, 0x3f, 0x26, 0x31, 0xee, 0x73, 0xee, 0xaf,
+	0x33, 0xaa, 0x56, 0x6e, 0x7b, 0x8d, 0x3a, 0xa1, 0xe9, 0x65, 0x4d, 0x9a, 0x94, 0x13, 0x05, 0xd4,
+	0x09, 0x43, 0x2e, 0x55, 0x41, 0xa1, 0xb3, 0xb5, 0x9b, 0x30, 0xb6, 0xd2, 0xe9, 0xf9, 0x50, 0x55,
+	0x7b, 0x2a, 0x1d, 0xc9, 0x6c, 0xb6, 0xd9, 0x66, 0x42, 0xe2, 0x09, 0x18, 0xd4, 0x3d, 0x56, 0x83,
+	0x66, 0x19, 0x55, 0x51, 0x7d, 0xd0, 0x3e, 0xa7, 0x03, 0x4b, 0xcd, 0xda, 0x47, 0x04, 0xe5, 0xd3,
+	0x07, 0x45, 0xc4, 0x43, 0xc1, 0xf0, 0x02, 0x94, 0xcc, 0x49, 0xd1, 0x89, 0xab, 0xc3, 0xc5, 0xc6,
+	0x08, 0xd1, 0x24, 0x24, 0x86, 0x24, 0xf7, 0xc3, 0x6d, 0xbb, 0xe8, 0x1d, 0x17, 0xc0, 0x23, 0xd0,
+	0x1f, 0x6d, 0x71, 0xbe, 0x56, 0x2e, 0x54, 0x51, 0xbd, 0x64, 0xeb, 0x05, 0xbe, 0x08, 0xa0, 0xfe,
+	0x58, 0x8d, 0x1c, 0xd9, 0x2a, 0xf7, 0x2a, 0x92, 0x41, 0x15, 0x59, 0x76, 0x64, 0x0b, 0x4f, 0x41,
+	0x49, 0xa7, 0x5b, 0x2c, 0xf0, 0x5b, 0xb2, 0xdc, 0x57, 0x45, 0xf5, 0x3e, 0xbb, 0xa8, 0x62, 0x8f,
+	0x55, 0xa8, 0xe6, 0x9e, 0x86, 0x15, 0xf1, 0xbf, 0xb9, 0x08, 0x70, 0xac, 0xb3, 0x41, 0x9d, 0x21,
+	0x7a, 0x28, 0xa4, 0x33, 0x14, 0xa2, 0x27, 0x67, 0x86, 0x42, 0x96, 0x1d, 0x3f, 0x96, 0xc8, 0x4e,
+	0x9c, 0xac, 0x7d, 0x42, 0x30, 0x9e, 0xd1, 0xc4, 0x48, 0xb2, 0x08, 0xe7, 0x93, 0x92, 0x88, 0x32,
+	0xaa, 0xf6, 0xd6, 0x8b, 0x8d, 0x29, 0x72, 0xec, 0x04, 0xb2, 0xd4, 0x64, 0xa1, 0x0c, 0xd6, 0x02,
+	0xd6, 0x4c, 0x8a, 0x5a, 0x4a, 0x08, 0x24, 0xf0, 0xa3, 0x14, 0x6d, 0x41, 0xd1, 0xce, 0xe6, 0xd2,
+	0x6a, 0x88, 0x14, 0xee, 0x0a, 0x58, 0x9a, 0xb6, 0x93, 0x09, 0x45, 0x5b, 0x74, 0x3d, 0x7b, 0x3c,
+	0x0a, 0x03, 0x46, 0xea, 0x82, 0x92, 0xda, 0xac, 0x6a, 0x9f, 0x11, 0x4c, 0x64, 0xd6, 0x34, 0x1a,
+	0xdc, 0x81, 0x61, 0x2f, 0xce, 0x74, 0xe1, 0x8c, 0x21, 0x2f, 0x55, 0xe6, 0xbf, 0x99, 0x63, 0x2f,
+	0x1b, 0x5b, 0x74, 0xa5, 0xc5, 0x62, 0xc6, 0x3c, 0xfe, 0xc6, 0x3d, 0x1f, 0x10, 0x4c, 0x66, 0x43,
+	0x18, 0xf1, 0xee, 0xc2, 0x85, 0x13, 0xe2, 0xc5, 0x1e, 0xca, 0x56, 0x6f, 0x38, 0xad, 0xde, 0xbf,
+	0x73, 0x4e, 0xe3, 0x67, 0x1f, 0xf4, 0x2b, 0x54, 0xfc, 0x1a, 0x41, 0x31, 0x61, 0x55, 0x3c, 0x9d,
+	0x74, 0xf3, 0x6f, 0x9e, 0x15, 0xeb, 0xd2, 0xd9, 0x9b, 0x74, 0xc3, 0xda, 0x8d, 0xbd, 0xaf, 0x3f,
+	0xde, 0x16, 0x28, 0x9e, 0xa3, 0x89, 0x27, 0x2f, 0x7e, 0x17, 0x53, 0x37, 0x89, 0xee, 0x1c, 0x4d,
+	0x67, 0x17, 0xbf, 0x42, 0x50, 0x4a, 0xde, 0x3f, 0x7c, 0x66, 0xb7, 0x78, 0xc4, 0xd6, 0xe5, 0x9c,
+	0x5d, 0x06, 0xea, 0x8a, 0x82, 0x9a, 0xc6, 0x53, 0xb9, 0x50, 0xf8, 0x3d, 0x82, 0xa1, 0xf4, 0x28,
+	0xf1, 0xcc, 0xe9, 0x26, 0x59, 0x77, 0xcf, 0x9a, 0xcd, 0xdd, 0x67, 0x70, 0xee, 0x29, 0x9c, 0xdb,
+	0xf8, 0x56, 0x26, 0x4e, 0xda, 0x2c, 0x49, 0x95, 0xe8, 0x8e, 0xbe, 0x0c, 0xbb, 0xf8, 0x1d, 0x82,
+	0xe1, 0x13, 0x86, 0xc3, 0x79, 0xed, 0x8f, 0x44, 0xab, 0xe7, 0x6f, 0x34, 0xa0, 0x0b, 0x0a, 0x74,
+	0x1e, 0xd3, 0x3f, 0x04, 0x7d, 0xf0, 0xe4, 0xcb, 0x41, 0x05, 0xed, 0x1f, 0x54, 0xd0, 0xf7, 0x83,
+	0x0a, 0x7a, 0x73, 0x58, 0xe9, 0xd9, 0x3f, 0xac, 0xf4, 0x7c, 0x3b, 0xac, 0xf4, 0x3c, 0x6b, 0xf8,
+	0x81, 0x6c, 0xb5, 0x5d, 0xe2, 0xf1, 0x0d, 0x6a, 0x7e, 0x40, 0xf5, 0x67, 0x4e, 0x34, 0x9f, 0xd3,
+	0x97, 0xaa, 0xd1, 0xb5, 0xc6, 0x9c, 0xe9, 0x25, 0xb7, 0x23, 0x26, 0xdc, 0x01, 0x75, 0x41, 0xae,
+	0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x71, 0x58, 0x18, 0xe9, 0x96, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -461,8 +569,10 @@ type QueryClient interface {
 	ClientState(ctx context.Context, in *QueryClientStateRequest, opts ...grpc.CallOption) (*QueryClientStateResponse, error)
 	// ClientStates queries all the IBC light clients of a chain.
 	ClientStates(ctx context.Context, in *QueryClientStatesRequest, opts ...grpc.CallOption) (*QueryClientStatesResponse, error)
-	// ConsensusState queries the consensus state associated with a client state.
+	// ConsensusState queries a consensus state associated with a client state at a given height.
 	ConsensusState(ctx context.Context, in *QueryConsensusStateRequest, opts ...grpc.CallOption) (*QueryConsensusStateResponse, error)
+	// ConsensusStates queries all the consensus state associated with a given client.
+	ConsensusStates(ctx context.Context, in *QueryConsensusStatesRequest, opts ...grpc.CallOption) (*QueryConsensusStatesResponse, error)
 }
 
 type queryClient struct {
@@ -500,14 +610,25 @@ func (c *queryClient) ConsensusState(ctx context.Context, in *QueryConsensusStat
 	return out, nil
 }
 
+func (c *queryClient) ConsensusStates(ctx context.Context, in *QueryConsensusStatesRequest, opts ...grpc.CallOption) (*QueryConsensusStatesResponse, error) {
+	out := new(QueryConsensusStatesResponse)
+	err := c.cc.Invoke(ctx, "/ibc.client.Query/ConsensusStates", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// ClientState queries an IBC light client.
 	ClientState(context.Context, *QueryClientStateRequest) (*QueryClientStateResponse, error)
 	// ClientStates queries all the IBC light clients of a chain.
 	ClientStates(context.Context, *QueryClientStatesRequest) (*QueryClientStatesResponse, error)
-	// ConsensusState queries the consensus state associated with a client state.
+	// ConsensusState queries a consensus state associated with a client state at a given height.
 	ConsensusState(context.Context, *QueryConsensusStateRequest) (*QueryConsensusStateResponse, error)
+	// ConsensusStates queries all the consensus state associated with a given client.
+	ConsensusStates(context.Context, *QueryConsensusStatesRequest) (*QueryConsensusStatesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -522,6 +643,9 @@ func (*UnimplementedQueryServer) ClientStates(ctx context.Context, req *QueryCli
 }
 func (*UnimplementedQueryServer) ConsensusState(ctx context.Context, req *QueryConsensusStateRequest) (*QueryConsensusStateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConsensusState not implemented")
+}
+func (*UnimplementedQueryServer) ConsensusStates(ctx context.Context, req *QueryConsensusStatesRequest) (*QueryConsensusStatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConsensusStates not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -582,6 +706,24 @@ func _Query_ConsensusState_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ConsensusStates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConsensusStatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ConsensusStates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.client.Query/ConsensusStates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ConsensusStates(ctx, req.(*QueryConsensusStatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ibc.client.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -597,6 +739,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConsensusState",
 			Handler:    _Query_ConsensusState_Handler,
+		},
+		{
+			MethodName: "ConsensusStates",
+			Handler:    _Query_ConsensusStates_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -742,11 +888,6 @@ func (m *QueryClientStatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.Height != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.Height))
-		i--
-		dAtA[i] = 0x18
-	}
 	if m.Pagination != nil {
 		{
 			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
@@ -865,6 +1006,97 @@ func (m *QueryConsensusStateResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryConsensusStatesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConsensusStatesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConsensusStatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryConsensusStatesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryConsensusStatesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryConsensusStatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ConsensusStates) > 0 {
+		for iNdEx := len(m.ConsensusStates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ConsensusStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -942,9 +1174,6 @@ func (m *QueryClientStatesResponse) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.Height != 0 {
-		n += 1 + sovQuery(uint64(m.Height))
-	}
 	return n
 }
 
@@ -984,6 +1213,42 @@ func (m *QueryConsensusStateResponse) Size() (n int) {
 	}
 	if m.ProofHeight != 0 {
 		n += 1 + sovQuery(uint64(m.ProofHeight))
+	}
+	return n
+}
+
+func (m *QueryConsensusStatesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryConsensusStatesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ConsensusStates) > 0 {
+		for _, e := range m.ConsensusStates {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1441,25 +1706,6 @@ func (m *QueryClientStatesResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
-			}
-			m.Height = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Height |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -1738,6 +1984,250 @@ func (m *QueryConsensusStateResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConsensusStatesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConsensusStatesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConsensusStatesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryConsensusStatesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryConsensusStatesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryConsensusStatesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusStates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConsensusStates = append(m.ConsensusStates, &types.Any{})
+			if err := m.ConsensusStates[len(m.ConsensusStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

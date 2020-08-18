@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -55,9 +57,13 @@ func (q Keeper) ClientStates(c context.Context, req *types.QueryClientStatesRequ
 	ctx := sdk.UnwrapSDKContext(c)
 
 	clientStates := []*types.IdentifiedClientState{}
-	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyConnectionPrefix)
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.KeyClientStorePrefix)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+		keySplit := strings.Split(string(key), "/")
+		if keySplit[len(keySplit)-1] != "clientState" {
+			return nil
+		}
 
 		clientState, err := q.UnmarshalClientState(value)
 		if err != nil {
@@ -69,8 +75,8 @@ func (q Keeper) ClientStates(c context.Context, req *types.QueryClientStatesRequ
 			return err
 		}
 
-		identifiedConnection := types.NewIdentifiedClientState(clientID, clientState)
-		clientStates = append(clientStates, &identifiedConnection)
+		identifiedClient := types.NewIdentifiedClientState(clientID, clientState)
+		clientStates = append(clientStates, &identifiedClient)
 		return nil
 	})
 
@@ -115,5 +121,41 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 	return &types.QueryConsensusStateResponse{
 		ConsensusState: any,
 		ProofHeight:    uint64(ctx.BlockHeight()),
+	}, nil
+}
+
+// ConsensusStates implements the Query/ConsensusStates gRPC method
+func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStatesRequest) (*types.QueryConsensusStatesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := host.ClientIdentifierValidator(req.ClientId); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	consensusStates := []*codectypes.Any{}
+	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullKeyClientPath(req.ClientId, []byte("consensusState/")))
+
+	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+		consensusState, err := q.UnmarshalConsensusState(value)
+		if err != nil {
+			return err
+		}
+
+		any := types.MustPackConsensusState(consensusState)
+		consensusStates = append(consensusStates, any)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryConsensusStatesResponse{
+		ConsensusStates: consensusStates,
+		Pagination:      pageRes,
 	}, nil
 }

@@ -13,3 +13,9 @@ message IdentifiedClientState {
   string              id           = 1 [(gogoproto.moretags) = "yaml:\"id\""];
   google.protobuf.Any client_state = 2;
 }
+
+// ClientConsensusStates defines all the stored consensus states for a given client.
+message ClientConsensusStates {
+  string   client_id                            = 1;
+  repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
+}

@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -12,15 +11,12 @@ import (
 )
 
 var (
-	chainID                      = "gaiamainnet"
-	connectionID                 = "connectionidone"
-	clientID                     = "clientidone"
-	connectionID2                = "connectionidtwo"
-	clientID2                    = "clientidtwo"
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
-	clientHeight                 = uint64(6)
+	chainID       = "gaiamainnet"
+	connectionID  = "connectionidone"
+	clientID      = "clientidone"
+	connectionID2 = "connectionidtwo"
+	clientID2     = "clientidtwo"
+	clientHeight  = uint64(6)
 )
 
 func TestConnectionValidateBasic(t *testing.T) {

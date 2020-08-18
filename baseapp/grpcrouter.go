@@ -105,16 +105,10 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	qrt.interfaceRegistry = interfaceRegistry
 
 	// Once we have an interface registry, we can register the interface
-	// registry reflection and simulate gRPC services.
-	qrt.registerReflectionService(interfaceRegistry)
-}
-
-// RegisterReflectionService registers the interface reflection service on the
-// gRPC router.
-func (qrt *GRPCQueryRouter) registerReflectionService(interfaceRegistry codectypes.InterfaceRegistry) {
+	// registry reflection gRPC service.
 	reflection.RegisterReflectionServiceServer(
 		qrt,
-		reflection.NewReflectionServiceServer(qrt.interfaceRegistry),
+		reflection.NewReflectionServiceServer(interfaceRegistry),
 	)
 }
 

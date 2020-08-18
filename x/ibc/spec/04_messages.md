@@ -324,3 +324,5 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty set its channel to state CLOSED
 
 The message closes a channel on chain B for the given Port ID and Channel ID.
+
+// TODO: add rest of channel msgs

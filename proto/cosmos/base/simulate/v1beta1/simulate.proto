@@ -1,6 +1,7 @@
 syntax = "proto3";
-package cosmos.tx.simulate.v1beta1;
+package cosmos.base.simulate.v1beta1;
 
+import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 
@@ -10,7 +11,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/simulate";
 // It may also support querying and broadcasting in the future.
 service SimulateService {
     // Simulate simulates executing a transaction for estimating gas usage.
-    rpc Simulate(SimulateRequest) returns (SimulateResponse) {}
+    rpc Simulate(SimulateRequest) returns (SimulateResponse) {
+        option (google.api.http).post = "/cosmos/base/simulate/v1beta1/simulate";
+    }
 }
 
 // SimulateRequest is the request type for the SimulateServiceService.Simulate

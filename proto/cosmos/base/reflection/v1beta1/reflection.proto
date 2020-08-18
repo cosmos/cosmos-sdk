@@ -1,17 +1,23 @@
 syntax = "proto3";
 package cosmos.base.reflection.v1beta1;
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/reflection";
 
 // ReflectionService defines a service for interface reflection.
 service ReflectionService {
     // ListAllInterfaces lists all the interfaces registered in the interface
     // registry.
-    rpc ListAllInterfaces(ListAllInterfacesRequest) returns (ListAllInterfacesResponse) {};
+    rpc ListAllInterfaces(ListAllInterfacesRequest) returns (ListAllInterfacesResponse) {
+        option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces";
+    };
 
     // ListImplementations list all the concrete types that implement a given
     // interface.
-    rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {};
+    rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {
+        option (google.api.http).get = "/cosmos/base/reflection/v1beta1/implementations/{interface_name}";
+    };
 }
 
 // ListAllInterfacesRequest is the request type of the ListAllInterfaces RPC.

@@ -9,21 +9,20 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-// SimulateFn is the signature of the Baseapp#Simulate function.
-type SimulateFn func(txBytes []byte, txtypes types.Tx) (sdk.GasInfo, *sdk.Result, error)
+// BaseAppSimulateFn is the signature of the Baseapp#Simulate function.
+type BaseAppSimulateFn func(txBytes []byte, txtypes sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
 
 type simulateServer struct {
-	simulate          SimulateFn
+	simulate          BaseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
 	pubkeyCodec       cryptotypes.PublicKeyCodec
 }
 
 // NewSimulateServer creates a new SimulateServer.
-func NewSimulateServer(simulate SimulateFn, interfaceRegistry codectypes.InterfaceRegistry, pubkeyCodec cryptotypes.PublicKeyCodec) SimulateServiceServer {
+func NewSimulateServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry, pubkeyCodec cryptotypes.PublicKeyCodec) SimulateServiceServer {
 	return simulateServer{
 		simulate:          simulate,
 		interfaceRegistry: interfaceRegistry,

@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -30,7 +29,7 @@ func (s *StdTxBuilder) GetTx() authsigning.Tx {
 }
 
 // GetProtoTx implements TxBuilder.GetProtoTx
-func (s *StdTxBuilder) GetProtoTx() *tx.Tx {
+func (s *StdTxBuilder) GetProtoTx() *txtypes.Tx {
 	// Stdtx isn't a proto.Message
 	return nil
 }

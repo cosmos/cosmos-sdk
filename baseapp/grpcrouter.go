@@ -114,7 +114,7 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 
 // RegisterSimulateService registers the simulate service on the gRPC router.
 func (qrt *GRPCQueryRouter) RegisterSimulateService(
-	simulateFn simulate.SimulateFn,
+	simulateFn simulate.BaseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	pubkeyCodec cryptotypes.PublicKeyCodec,
 ) {

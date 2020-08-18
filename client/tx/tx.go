@@ -100,7 +100,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		out, err := clientCtx.JSONMarshaler.MarshalJSON(tx)
+		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
 		if err != nil {
 			return err
 		}

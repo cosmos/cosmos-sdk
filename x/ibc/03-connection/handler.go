@@ -3,7 +3,6 @@ package connection
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -38,10 +37,10 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenTry) (*sdk.Result, error) {
-	targetClient, ok := msg.ClientState.GetCachedValue().(clientexported.ClientState)
-	if !ok {
+	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
+	if err != nil {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient,
-			"client in msg is not exported.ClientState. invalid client: %v", targetClient)
+			"client in msg is not exported.ClientState. invalid client: %v. error: %v", targetClient, err)
 	}
 
 	if err := k.ConnOpenTry(
@@ -73,10 +72,10 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenAck) (*sdk.Result, error) {
-	targetClient, ok := msg.ClientState.GetCachedValue().(clientexported.ClientState)
-	if !ok {
+	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
+	if err != nil {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient,
-			"client in msg is not exported.ClientState. invalid client: %v", targetClient)
+			"client in msg is not exported.ClientState. invalid client: %v. error: %v", targetClient, err)
 	}
 
 	if err := k.ConnOpenAck(

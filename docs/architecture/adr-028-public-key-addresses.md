@@ -33,7 +33,7 @@ And explained how this approach should be sufficiently collision resistant:
 
 In discussions in [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694), we agreed to go with an
 approach similar to this where essentially we take the first 20 bytes of the `sha256` hash of
-the key type concatenated by the key bytes, summarized as `Sha256(KeyTypePrefix || Length || Keybytes)[:20]`.
+the key type concatenated with the key bytes, summarized as `Sha256(KeyTypePrefix || Length || Keybytes)[:20]`.
 
 ## Decision
 
@@ -98,7 +98,7 @@ using `Sha256(fmt.Sprintf("cosmos.crypto.multisig.PubKey/%d/%s", pk.Threshold, j
 ## Consequences
 
 ### Positive
-- a simple logical algorithm for generating addresses for new public keys
+- a simple algorithm for generating addresses for new public keys
 
 ### Negative
 - addresses do not communicate key type, a prefixed approach would have done this

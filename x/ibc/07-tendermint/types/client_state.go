@@ -60,9 +60,9 @@ func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.LatestHeight
 }
 
-// GetLatestTimestamp returns latest block time.
-func (cs ClientState) GetLatestTimestamp() time.Time {
-	return cs.LatestTimestamp
+// GetLatestTimestamp returns latest block time (in nanoseconds).
+func (cs ClientState) GetLatestTimestamp() uint64 {
+	return uint64(cs.LatestTimestamp.UnixNano())
 }
 
 // IsFrozen returns true if the frozen height has been set.
@@ -413,8 +413,7 @@ func produceVerificationArgs(
 
 // Expired returns whether or not the client has passed the trusting period since the last update
 // (in which case no headers can be validated)
-func (cs ClientState) Expired() bool {
-	now := time.Now()
+func (cs ClientState) Expired(now time.Time) bool {
 	expirationTime := cs.LatestTimestamp.Add(cs.TrustingPeriod)
 	return !expirationTime.After(now)
 }

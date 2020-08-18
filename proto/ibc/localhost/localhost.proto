@@ -1,6 +1,7 @@
 syntax = "proto3";
 package ibc.localhost;
 
+import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types";
@@ -25,4 +26,11 @@ message ClientState {
   ];
   // self latest block height
   uint64 height = 3;
+
+  // Latest timestamp when the client was update to
+   google.protobuf.Timestamp  latest_timestamp = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"latest_timestamp\""
+  ];
 }

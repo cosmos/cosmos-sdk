@@ -26,7 +26,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	// localhost is a special case that must initialize client state
 	// from context and not from msg
 	case *localhosttypes.MsgCreateClient:
-		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight(), ctx.BlockTime())
 		// Localhost consensus height is chain's blockheight
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:
@@ -120,7 +120,7 @@ func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.Cl
 		tmClientState := clientState.(*ibctmtypes.ClientState)
 
 		updateClientFlag := false
-		if tmClientState.AllowGovernanceOverrideAfterExpiry && tmClientState.Expired() {
+		if tmClientState.AllowGovernanceOverrideAfterExpiry && tmClientState.Expired(ctx.BlockTime()) {
 			updateClientFlag = true
 		}
 

@@ -20,6 +20,15 @@ type ClientState interface {
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
+
+	// GetLatestTimestamp returns latest block time (in nanoseconds).
+	// The following condition should in general be always satisfied:
+	/*******************************************************************/
+	// ClientState.GetLatestTimestamp() = ConsensusState.GetTimestamp()
+	/********************************************************************/
+	// But there may be exception to rule like in case of the localhost clientType
+	GetLatestTimestamp() uint64
+
 	IsFrozen() bool
 	GetFrozenHeight() uint64
 	Validate() error

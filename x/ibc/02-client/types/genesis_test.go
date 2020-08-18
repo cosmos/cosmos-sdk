@@ -54,7 +54,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 					),
 					types.NewGenesisClientState(
-						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10, latestTimestamp),
 					),
 				},
 				[]types.ClientConsensusStates{
@@ -79,7 +79,7 @@ func TestValidateGenesis(t *testing.T) {
 						"/~@$*", ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 					),
 					types.NewGenesisClientState(
-						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chainID", 10, latestTimestamp),
 					),
 				},
 				[]types.ClientConsensusStates{
@@ -103,7 +103,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewGenesisClientState(
 						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 					),
-					types.NewGenesisClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 0)),
+					types.NewGenesisClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 0, latestTimestamp)),
 				},
 				nil,
 				true,
@@ -118,7 +118,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 					),
 					types.NewGenesisClientState(
-						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 					),
 				},
 				[]types.ClientConsensusStates{
@@ -143,7 +143,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 					),
 					types.NewGenesisClientState(
-						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 					),
 				},
 				[]types.ClientConsensusStates{

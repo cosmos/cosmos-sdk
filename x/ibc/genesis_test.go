@@ -3,6 +3,8 @@ package ibc_test
 import (
 	"fmt"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -16,7 +18,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
@@ -39,7 +40,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
@@ -99,7 +100,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0, latestTimestamp),
 						),
 					},
 					nil,
@@ -168,7 +169,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{

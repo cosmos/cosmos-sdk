@@ -31,10 +31,11 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-	app := simapp.Setup(false)
-	sdkCtx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := simapp.Setup(true)
+	sdkCtx := app.BaseApp.NewContext(true, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(sdkCtx, authtypes.DefaultParams())
+	app.BankKeeper.SetParams(sdkCtx, banktypes.DefaultParams())
 
 	// Set up TxConfig.
 	encodingConfig := simapp.MakeEncodingConfig()
@@ -102,8 +103,9 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	)
 	s.Require().NoError(err)
 
-	// TODO Better test
-	s.Require().NotEmpty(res)
+	// Check the result and gas used are correct.
+	s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+	s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 }
 
 func TestSimulateTestSuite(t *testing.T) {

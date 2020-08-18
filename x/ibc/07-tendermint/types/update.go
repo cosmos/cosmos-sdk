@@ -13,7 +13,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
@@ -47,19 +46,10 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	}
 
 	// Get consensus bytes from clientStore
-	consBytes := clientStore.Get(host.KeyConsensusState(tmHeader.TrustedHeight))
-	if consBytes == nil {
+	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
+	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound, "consensus state not found for trusted height %d", tmHeader.TrustedHeight,
-		)
-	}
-	// Unmarshal consensus bytes into clientexported.ConensusState
-	consState := clienttypes.MustUnmarshalConsensusState(cdc, consBytes)
-	// Cast to tendermint-specific type
-	tmConsState, ok := consState.(*ConsensusState)
-	if !ok {
-		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidConsensus, "expected type %T, got %T", ConsensusState{}, consState,
+			err, "could not get consensus state from store at height: %d", tmHeader.TrustedHeight,
 		)
 	}
 

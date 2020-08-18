@@ -396,3 +396,11 @@ func (t *builder) GetTx() authsigning.Tx {
 func (t *builder) GetProtoTx() *tx.Tx {
 	return t.tx
 }
+
+// WrapTxBuilder creates a TxBuilder wrapper around a tx.Tx proto message.
+func WrapTxBuilder(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) client.TxBuilder {
+	return &builder{
+		tx:          protoTx,
+		pubkeyCodec: pubkeyCodec,
+	}
+}

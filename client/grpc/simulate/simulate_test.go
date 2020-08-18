@@ -58,7 +58,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s IntegrationTestSuite) TestSimulateService() {
 	// Create an account with some funds.
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	_, _, addr2 := testdata.KeyTestPubAddr()
 	acc1 := s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addr1)
 	err := acc1.SetAccountNumber(0)
 	s.Require().NoError(err)
@@ -69,6 +68,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 
 	// Create a test x/bank MsgSend.
 	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
+	_, _, addr2 := testdata.KeyTestPubAddr()
 	msg := banktypes.NewMsgSend(addr1, addr2, coins)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()

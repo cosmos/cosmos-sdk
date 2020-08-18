@@ -33,7 +33,7 @@ And explained how this approach should be sufficiently collision resistant:
 
 In discussions in [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694), we agreed to go with an
 approach similar to this where essentially we take the first 20 bytes of the `sha256` hash of
-the key type concatenated with the key bytes, summarized as `Sha256(KeyTypePrefix || Length || Keybytes)[:20]`.
+the key type concatenated with the key bytes, summarized as `Sha256(KeyTypePrefix || Keybytes)[:20]`.
 
 ## Decision
 
@@ -54,20 +54,20 @@ following approach.
 All public key types will have a unique protobuf message type such as:
 
 ```proto
-package cosmos.crypto.secp256k1;
+package cosmos.crypto.sr25519;
 
 message PubKey {
   bytes key = 1;
 }
 ```
  
-All protobuf messages have unique fully qualified names, in this example `cosmos.crypto.secp256k1.PubKey`.
+All protobuf messages have unique fully qualified names, in this example `cosmos.crypto.sr25519.PubKey`.
 These names are derived directly from .proto files in a standardized way and used
 in other places such as the type URL in `Any`s. Since there is an easy and obvious
 way to get this name for every protobuf type, we can use this message name as the
 key type prefix when creating addresses.
 
-We define the canonical address format for a new key as
+We define the canonical address format for new (non-legacy) public keys as
 `Sha256(fmt.Sprintf("%s/%x, proto.MessageName(key), key.Bytes())[:20]`. This takes
 the first 20 bytes of an SHA-256 hash of a string with the proto message name for the key
 type joined by an `/` with the hex encoding of the key bytes.

@@ -23,7 +23,7 @@ message MsgSend {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// MsgMultiSend represents an arbitrary multi-in, multi-out send msg.
+// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (gogoproto.equal) = true;
 

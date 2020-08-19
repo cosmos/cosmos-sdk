@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
-func (suite *KeeperTestSuite) TestValidateClient() {
+func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	testCases := []struct {
 		name        string
 		clientState clientexported.ClientState
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestValidateClient() {
 	ctx = ctx.WithBlockHeight(testClientHeight)
 
 	for _, tc := range testCases {
-		err := suite.keeper.ValidateClient(ctx, tc.clientState)
+		err := suite.keeper.ValidateSelfClient(ctx, tc.clientState)
 		if tc.expPass {
 			suite.Require().NoError(err, "expected valid client for case: %s, got error: %v", tc.name, err)
 		} else {

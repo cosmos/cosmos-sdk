@@ -200,9 +200,9 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	return consensusState, true
 }
 
-// ValidateClient validates the client parameters for a client of the running chain
+// ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
-func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState) error {
+func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client must be a Tendermint client, expected: %T, got: %T",
@@ -214,7 +214,7 @@ func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	if  tmClient.LatestHeight > uint64(ctx.BlockHeight()) {
+	if tmClient.LatestHeight > uint64(ctx.BlockHeight()) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}

@@ -65,7 +65,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// validate client parameters of a chainB client stored on chainA
-	if err := k.clientKeeper.ValidateClient(ctx, clientState); err != nil {
+	if err := k.clientKeeper.ValidateSelfClient(ctx, clientState); err != nil {
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// validate client parameters of a chainA client stored on chainB
-	if err := k.clientKeeper.ValidateClient(ctx, clientState); err != nil {
+	if err := k.clientKeeper.ValidateSelfClient(ctx, clientState); err != nil {
 		return err
 	}
 

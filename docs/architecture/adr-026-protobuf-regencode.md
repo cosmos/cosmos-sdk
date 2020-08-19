@@ -1,0 +1,223 @@
+# ADR 026: Protocol Buffer Regencode
+
+## Changelog
+
+- 2020-08-07: Initial Draft
+
+## Status
+
+Proposed
+
+## Context
+
+[Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
+seralization is not unique (i.e. there exist a practically unlimited number of
+valid binary representations for a protobuf document)<sup>1</sup>. For signature
+verification in Cosmos SDK, signer and verifier need to agree on the same
+serialization of a SignDoc as defined in
+[ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
+serialization. This document describes a deterministic serialization scheme for
+a subset of protobuf documents, that covers this use case but can be reused in
+other cases as well.
+
+## Decision
+
+The following encoding scheme (called Regencode (verb), version 1) is proposed
+to be used by other ADRs.
+
+### Scope
+
+Regencode is a protobuf3 serializer. The output is a valid protobuf
+serialization, such that every protobuf parser can parse it.
+
+No maps are supported in version 1 due to the complexity of defining a
+derterministic serialization. This might change in future. Implementations must
+reject documents containing maps as invalid input.
+
+### Serialization rules
+
+The serialization is based on the
+[protobuf 3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
+with the following additions:
+
+1. Fields must be serialized in ascending order
+2. Extra fields or any extra data must not be added
+3. [Default values](https://developers.google.com/protocol-buffers/docs/proto3#default)
+   must be omitted
+
+While rule number 1. and 2. should be pretty straight forward and describe the
+default behaviour of all protobuf encoders the author is aware of, the 3rd rule
+is more interesting. Protobuf 3 has no notion of optional values and thus cannot
+differentiate between null/unset and empty fields. At serialization level
+however, it is possible to set the fields with an empty value or omitting them
+entirely. This is a significat difference to e.g. JSON where a property can be
+empty (`""`, `0`), `null` or undefined, leading to 3 different documents.
+
+Omitting empty fields is a valid option because the parser must assign the
+default value to fields missing in the serialization<sup>2</sup>. Requiring to
+serialize them would be equally valid. No good reason is known to the author for
+preferring one of those options over the other.
+
+### Implementation
+
+There are three main implementation strategies, orderd from the least to the
+most custom development:
+
+- **Use a protobuf serializer that follows the above rules by default.** E.g.
+  [gogoproto](https://pkg.go.dev/github.com/gogo/protobuf/gogoproto) is known to
+  be compliant by default. It might also be an option to configure an existing
+  serializer accoringly.
+- **Normalize default values before encoding them.** If your serializer follows
+  rule 1. and 2. and allows you to explicitely unset fields for serialization,
+  you can normalize empty values to unset. This can be done when working with
+  [protobuf.js](https://www.npmjs.com/package/protobufjs):
+
+  ```js
+  const bytes = SignDoc.encode({
+    bodyBytes: body.length > 0 ? body : null, // normalize empty bytes to unset
+    authInfoBytes: authInfo.length > 0 ? authInfo : null, // normalize empty bytes to unset
+    chainId: chainId || null, // normalize "" to unset
+    accountNumber: accountNumber || null, // normalize 0 to unset
+    accountSequence: accountSequence || null, // normalize 0 to unset
+  }).finish();
+  ```
+
+- **Use a hand-written serializer for the types you need.** If non of the above
+  ways works for you, you can write a serializer yourself. For SignDoc this
+  would look something like this in Go, building on existing protobuf utilities:
+
+  ```go
+  if !signDoc.body_bytes.empty() {
+      buf.WriteUVarInt64(0xA) // wire type and field number for body_bytes
+      buf.WriteUVarInt64(signDoc.body_bytes.length())
+      buf.WriteBytes(signDoc.body_bytes)
+  }
+
+  if !signDoc.auth_info.empty() {
+      buf.WriteUVarInt64(0x12) // wire type and field number for auth_info
+      buf.WriteUVarInt64(signDoc.auth_info.length())
+      buf.WriteBytes(signDoc.auth_info)
+  }
+
+  if !signDoc.chain_id.empty() {
+      buf.WriteUVarInt64(0x1a) // wire type and field number for chain_id
+      buf.WriteUVarInt64(signDoc.chain_id.length())
+      buf.WriteBytes(signDoc.chain_id)
+  }
+
+  if signDoc.account_number != 0 {
+      buf.WriteUVarInt64(0x20) // wire type and field number for account_number
+      buf.WriteUVarInt(signDoc.account_number)
+  }
+
+  if signDoc.account_sequence != 0 {
+      buf.WriteUVarInt64(0x28) // wire type and field number for account_sequence
+      buf.WriteUVarInt(signDoc.account_sequence)
+  }
+  ```
+
+### Test vectors
+
+Given the protobuf definition `Article.proto`
+
+```protobuf
+package blog;
+syntax = "proto3";
+
+enum Type {
+  UNSPECIFIED = 0;
+  IMAGES = 1;
+  NEWS = 2;
+};
+
+enum Review {
+  UNSPECIFIED = 0;
+  ACCEPTED = 1;
+  REJECTED = 2;
+};
+
+message Article {
+  string title = 1;
+  string description = 2;
+  uint64 created = 3;
+  uint64 updated = 4;
+  bool public = 5;
+  bool promoted = 6;
+  Type type = 7;
+  Review review = 8;
+  repeated string comments = 9;
+  repeated string backlinks = 10;
+};
+```
+
+serializing the values
+
+```yaml
+title: "The world needs change"
+description: ""
+created: 1596806111080
+updated: 0
+public: true
+promoted: false
+type: Type.NEWS
+review: Review.UNSPECIFIED
+comments: ["Nice one", "Thank you"]
+backlinks: []
+```
+
+must result in the serialization
+
+```
+0a1654686520776f726c64206e65656473206368616e676518e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75
+```
+
+When inspecting the serialized document, you see that every second field is
+omitted:
+
+```
+$ echo 0a1654686520776f726c64206e65656473206368616e676518e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75 | xxd -r -p | protoc --decode_raw
+1: "The world needs change"
+3: 1596806111080
+5: 1
+7: 2
+9: "Nice one"
+9: "Thank you"
+```
+
+## Consequences
+
+Having such an encoding available allows us to get deterministic serialization
+for all protobuf documents we need in the context of Cosmos SDK signing.
+
+### Positive
+
+- Well defined rules that can be verified independent of a reference
+  implementation
+- Simple enough to keep the barrier to implement transaction signing low
+- It allows us to continue to use 0 and other empty values in SignDoc, avoiding
+  the need to work around 0 sequences. This does not imply the change from
+  https://github.com/cosmos/cosmos-sdk/pull/6949 should not be merged, but not
+  too important anymore.
+
+### Negative
+
+- When implementing transaction signing, the encoding rules above must be
+  understood and implemented.
+- The need for rule number 3. adds some complexity to implementations.
+
+### Neutral
+
+## References
+
+- <sup>1</sup> _When a message is serialized, there is no guaranteed order for
+  how its known or unknown fields should be written. Serialization order is an
+  implementation detail and the details of any particular implementation may
+  change in the future. Therefore, protocol buffer parsers must be able to parse
+  fields in any order._ from
+  https://developers.google.com/protocol-buffers/docs/encoding#order
+- <sup>2</sup> _When a message is parsed, if the encoded message does not
+  contain a particular singular element, the corresponding field in the parsed
+  object is set to the default value for that field._ from
+  https://developers.google.com/protocol-buffers/docs/proto3#default
+- Encoding rules and parts of the reasoning taken from
+  [canonical-proto3 Aaron Craelius](https://github.com/regen-network/canonical-proto3)

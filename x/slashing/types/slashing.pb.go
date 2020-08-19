@@ -30,7 +30,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ValidatorSigningInfo defines the signing info for a validator
+// ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity.
 type ValidatorSigningInfo struct {
 	Address github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"address,omitempty"`
 	// height at which validator was first a candidate OR was unjailed
@@ -119,7 +119,7 @@ func (m *ValidatorSigningInfo) GetMissedBlocksCounter() int64 {
 	return 0
 }
 
-// Params - used for initializing default parameter for slashing at genesis
+// Params represents the parameters used for by the slashing module.
 type Params struct {
 	SignedBlocksWindow      int64                                  `protobuf:"varint,1,opt,name=signed_blocks_window,json=signedBlocksWindow,proto3" json:"signed_blocks_window,omitempty" yaml:"signed_blocks_window"`
 	MinSignedPerWindow      github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=min_signed_per_window,json=minSignedPerWindow,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_signed_per_window" yaml:"min_signed_per_window"`

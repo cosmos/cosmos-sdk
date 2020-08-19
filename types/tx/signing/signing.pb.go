@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// SignMode represents a signing mode with its own security guarantees
+// SignMode represents a signing mode with its own security guarantees.
 type SignMode int32
 
 const (

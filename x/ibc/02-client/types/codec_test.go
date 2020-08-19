@@ -23,7 +23,7 @@ func TestPackClientState(t *testing.T) {
 	require.Equal(t, clientState, cs, "client states are not equal after packing and unpacking")
 
 	_, err = types.PackClientState(nil)
-	require.Error(t, err, "Didd not error after packing nil")
+	require.Error(t, err, "did not error after packing nil")
 }
 
 func TestPackConsensusState(t *testing.T) {
@@ -38,5 +38,5 @@ func TestPackConsensusState(t *testing.T) {
 	require.Equal(t, consensusState, cs, "consensus states are not equal after packing and unpacking")
 
 	_, err = types.PackConsensusState(nil)
-	require.Error(t, err, "Didd not error after packing nil")
+	require.Error(t, err, "did not error after packing nil")
 }

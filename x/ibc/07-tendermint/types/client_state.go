@@ -149,11 +149,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	if err := merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz); err != nil {
-		return err
-	}
-
-	return nil
+	return merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz)
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the

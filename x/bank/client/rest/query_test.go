@@ -176,10 +176,12 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)
 
-			bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, tc.respType))
-			s.Require().Equal(tc.expected.String(), tc.respType.String())
+			//bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
+			//
+			//fmt.Println("bz", bz)
+			//s.Require().NoError(err)
+			//s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))
+			s.Require().Equal(tc.expected.String(), string(resp))
 		})
 	}
 }

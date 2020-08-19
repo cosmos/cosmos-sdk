@@ -26,7 +26,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of distribution parameters.
+// Params defines the set of params for the distribution module.
 type Params struct {
 	CommunityTax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_tax" yaml:"community_tax"`
 	BaseProposerReward  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_proposer_reward" yaml:"base_proposer_reward"`
@@ -73,13 +73,12 @@ func (m *Params) GetWithdrawAddrEnabled() bool {
 	return false
 }
 
-// historical rewards for a validator
-// height is implicit within the store key
-// cumulative reward ratio is the sum from the zeroeth period
-// until this period of rewards / tokens, per the spec
+// ValidatorHistoricalRewards represents historical rewards for a validator.
+// Height is implicit within the store key.
+// Cumulative reward ratio is the sum from the zeroeth period
+// until this period of rewards / tokens, per the spec.
 // The reference count indicates the number of objects
-// which might need to reference this historical entry
-// at any point.
+// which might need to reference this historical entry at any point.
 // ReferenceCount =
 //    number of outstanding delegations which ended the associated period (and might need to read
 //    that record)
@@ -137,9 +136,9 @@ func (m *ValidatorHistoricalRewards) GetReferenceCount() uint32 {
 	return 0
 }
 
-// current rewards and current period for a validator
-// kept as a running counter and incremented each block
-// as long as the validator's tokens remain constant
+// ValidatorCurrentRewards represents current rewards and current
+// period for a validator kept as a running counter and incremented
+// each block as long as the validator's tokens remain constant.
 type ValidatorCurrentRewards struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 	Period  uint64                                      `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
@@ -192,8 +191,8 @@ func (m *ValidatorCurrentRewards) GetPeriod() uint64 {
 	return 0
 }
 
-// accumulated commission for a validator
-// kept as a running counter, can be withdrawn at any time
+// ValidatorAccumulatedCommission represents accumulated commission
+// for a validator kept as a running counter, can be withdrawn at any time.
 type ValidatorAccumulatedCommission struct {
 	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
 }
@@ -238,8 +237,8 @@ func (m *ValidatorAccumulatedCommission) GetCommission() github_com_cosmos_cosmo
 	return nil
 }
 
-// outstanding (un-withdrawn) rewards for a validator
-// inexpensive to track, allows simple sanity checks
+// ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
+// for a validator inexpensive to track, allows simple sanity checks.
 type ValidatorOutstandingRewards struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards" yaml:"rewards"`
 }
@@ -284,10 +283,10 @@ func (m *ValidatorOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_
 	return nil
 }
 
-// validator slash event
-// height is implicit within the store key
-// needed to calculate appropriate amounts of staking token
-// for delegations which withdraw after a slash has occurred
+// ValidatorSlashEvent represents a validator slash event.
+// Height is implicit within the store key.
+// This is needed to calculate appropriate amount of staking tokens
+// for delegations which are withdrawn after a slash has occurred.
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64                                 `protobuf:"varint,1,opt,name=validator_period,json=validatorPeriod,proto3" json:"validator_period,omitempty" yaml:"validator_period"`
 	Fraction        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fraction"`
@@ -333,7 +332,7 @@ func (m *ValidatorSlashEvent) GetValidatorPeriod() uint64 {
 	return 0
 }
 
-// ValidatorSlashEvents is a collection of ValidatorSlashEvent
+// ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 type ValidatorSlashEvents struct {
 	ValidatorSlashEvents []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events" yaml:"validator_slash_events"`
 }
@@ -377,7 +376,7 @@ func (m *ValidatorSlashEvents) GetValidatorSlashEvents() []ValidatorSlashEvent {
 	return nil
 }
 
-// global fee pool for distribution
+// FeePool is the global fee pool for distribution.
 type FeePool struct {
 	CommunityPool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=community_pool,json=communityPool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"community_pool" yaml:"community_pool"`
 }
@@ -422,7 +421,9 @@ func (m *FeePool) GetCommunityPool() github_com_cosmos_cosmos_sdk_types.DecCoins
 	return nil
 }
 
-// CommunityPoolSpendProposal spends from the community pool
+// CommunityPoolSpendProposal details a proposal for use of community funds,
+// together with how many coins are proposed to be spent, and to which
+// recipient account.
 type CommunityPoolSpendProposal struct {
 	Title       string                                        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string                                        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -462,13 +463,13 @@ func (m *CommunityPoolSpendProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CommunityPoolSpendProposal proto.InternalMessageInfo
 
-// starting info for a delegator reward period
-// tracks the previous validator period, the delegation's amount
+// DelegatorStartingInfo represents the starting info for a delegator reward period.
+// It tracks the previous validator period, the delegation's amount
 // of staking token, and the creation height (to check later on
-// if any slashes have occurred)
-// NOTE that even though validators are slashed to whole staking tokens, the
+// if any slashes have occurred).
+// NOTE: Even though validators are slashed to whole staking tokens, the
 // delegators within the validator may be left with less than a full token,
-// thus sdk.Dec is used
+// thus sdk.Dec is used.
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64                                 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty" yaml:"previous_period"`
 	Stake          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"stake" yaml:"stake"`
@@ -522,7 +523,7 @@ func (m *DelegatorStartingInfo) GetHeight() uint64 {
 	return 0
 }
 
-// DelegationDelegatorReward defines the properties
+// DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 type DelegationDelegatorReward struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`

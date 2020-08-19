@@ -213,7 +213,7 @@ func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	if uint64(ctx.BlockHeight()) < tmClient.LatestHeight {
+	if  tmClient.LatestHeight > uint64(ctx.BlockHeight()) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}
@@ -235,7 +235,7 @@ func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState
 	}
 
 	if tmClient.UnbondingPeriod < tmClient.TrustingPeriod {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "Unbonding period must be greater than trusting period. unbonding period %d < trusting period %d",
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "unbonding period must be greater than trusting period. unbonding period (%d) < trusting period (%d)",
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
 	}
 	return nil

@@ -7,7 +7,8 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
+// MsgSetWithdrawAddress sets the withdraw address for
+// a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
@@ -19,7 +20,8 @@ message MsgSetWithdrawAddress {
   ];
 }
 
-// msg struct for delegation withdraw from a single validator
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a single validator.
 message MsgWithdrawDelegatorReward {
   bytes delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
@@ -31,7 +33,7 @@ message MsgWithdrawDelegatorReward {
   ];
 }
 
-// msg struct for validator withdraw
+// MsgWithdrawValidatorCommission withdraws the full commission to the validator address.
 message MsgWithdrawValidatorCommission {
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -39,7 +41,7 @@ message MsgWithdrawValidatorCommission {
   ];
 }
 
-// MsgFundCommunityPool defines a Msg type that allows an account to directly
+// MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
   repeated cosmos.base.v1beta1.Coin amount = 1 [

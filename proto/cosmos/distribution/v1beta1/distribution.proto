@@ -7,7 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-// Params defines the set of distribution parameters.
+// Params defines the set of params for the distribution module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
   string community_tax                = 1 [
@@ -28,13 +28,12 @@ message Params {
   bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
 }
 
-// historical rewards for a validator
-// height is implicit within the store key
-// cumulative reward ratio is the sum from the zeroeth period
-// until this period of rewards / tokens, per the spec
+// ValidatorHistoricalRewards represents historical rewards for a validator.
+// Height is implicit within the store key.
+// Cumulative reward ratio is the sum from the zeroeth period
+// until this period of rewards / tokens, per the spec.
 // The reference count indicates the number of objects
-// which might need to reference this historical entry
-// at any point.
+// which might need to reference this historical entry at any point.
 // ReferenceCount =
 //    number of outstanding delegations which ended the associated period (and might need to read
 //    that record)
@@ -49,9 +48,9 @@ message ValidatorHistoricalRewards {
   uint32 reference_count = 2 [(gogoproto.moretags) = "yaml:\"reference_count\""];
 }
 
-// current rewards and current period for a validator
-// kept as a running counter and incremented each block
-// as long as the validator's tokens remain constant
+// ValidatorCurrentRewards represents current rewards and current
+// period for a validator kept as a running counter and incremented
+// each block as long as the validator's tokens remain constant.
 message ValidatorCurrentRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
@@ -60,8 +59,8 @@ message ValidatorCurrentRewards {
   uint64 period = 2;
 }
 
-// accumulated commission for a validator
-// kept as a running counter, can be withdrawn at any time
+// ValidatorAccumulatedCommission represents accumulated commission
+// for a validator kept as a running counter, can be withdrawn at any time.
 message ValidatorAccumulatedCommission {
   repeated cosmos.base.v1beta1.DecCoin commission = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
@@ -69,8 +68,8 @@ message ValidatorAccumulatedCommission {
   ];
 }
 
-// outstanding (un-withdrawn) rewards for a validator
-// inexpensive to track, allows simple sanity checks
+// ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
+// for a validator inexpensive to track, allows simple sanity checks.
 message ValidatorOutstandingRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.moretags)     = "yaml:\"rewards\"",
@@ -79,10 +78,10 @@ message ValidatorOutstandingRewards {
   ];
 }
 
-// validator slash event
-// height is implicit within the store key
-// needed to calculate appropriate amounts of staking token
-// for delegations which withdraw after a slash has occurred
+// ValidatorSlashEvent represents a validator slash event.
+// Height is implicit within the store key.
+// This is needed to calculate appropriate amount of staking tokens
+// for delegations which are withdrawn after a slash has occurred.
 message ValidatorSlashEvent {
   uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
   string fraction         = 2 [
@@ -91,14 +90,14 @@ message ValidatorSlashEvent {
   ];
 }
 
-// ValidatorSlashEvents is a collection of ValidatorSlashEvent
+// ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 message ValidatorSlashEvents {
   option (gogoproto.goproto_stringer)                 = false;
   repeated ValidatorSlashEvent validator_slash_events = 1
       [(gogoproto.moretags) = "yaml:\"validator_slash_events\"", (gogoproto.nullable) = false];
 }
 
-// global fee pool for distribution
+// FeePool is the global fee pool for distribution.
 message FeePool {
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
@@ -107,7 +106,9 @@ message FeePool {
   ];
 }
 
-// CommunityPoolSpendProposal spends from the community pool
+// CommunityPoolSpendProposal details a proposal for use of community funds,
+// together with how many coins are proposed to be spent, and to which
+// recipient account.
 message CommunityPoolSpendProposal {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
@@ -120,13 +121,13 @@ message CommunityPoolSpendProposal {
   ];
 }
 
-// starting info for a delegator reward period
-// tracks the previous validator period, the delegation's amount
+// DelegatorStartingInfo represents the starting info for a delegator reward period.
+// It tracks the previous validator period, the delegation's amount
 // of staking token, and the creation height (to check later on
-// if any slashes have occurred)
-// NOTE that even though validators are slashed to whole staking tokens, the
+// if any slashes have occurred).
+// NOTE: Even though validators are slashed to whole staking tokens, the
 // delegators within the validator may be left with less than a full token,
-// thus sdk.Dec is used
+// thus sdk.Dec is used.
 message DelegatorStartingInfo {
   uint64 previous_period = 1 [(gogoproto.moretags) = "yaml:\"previous_period\""];
   string stake           = 2 [
@@ -138,7 +139,7 @@ message DelegatorStartingInfo {
       [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
 }
 
-// DelegationDelegatorReward defines the properties
+// DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 message DelegationDelegatorReward {
   bytes validator_address = 1 [

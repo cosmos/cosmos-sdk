@@ -116,8 +116,8 @@ against which this app has been compiled.
 			}{
 				Tendermint:    tversion.Version,
 				ABCI:          tversion.ABCIVersion,
-				BlockProtocol: tversion.BlockProtocol.Uint64(),
-				P2PProtocol:   tversion.P2PProtocol.Uint64(),
+				BlockProtocol: tversion.BlockProtocol,
+				P2PProtocol:   tversion.P2PProtocol,
 			})
 			if err != nil {
 				return err

@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -62,8 +63,10 @@ func NewSimApp(val Validator) servertypes.Application {
 // Config defines the necessary configuration used to bootstrap and start an
 // in-process local testing network.
 type Config struct {
-	Codec            codec.Marshaler
-	LegacyAmino      *codec.LegacyAmino
+	Codec             codec.Marshaler
+	LegacyAmino       *codec.LegacyAmino // TODO: Remove!
+	InterfaceRegistry codectypes.InterfaceRegistry
+
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
@@ -89,24 +92,25 @@ func DefaultConfig() Config {
 	encCfg := simapp.MakeEncodingConfig()
 
 	return Config{
-		Codec:            encCfg.Marshaler,
-		TxConfig:         encCfg.TxConfig,
-		LegacyAmino:      encCfg.Amino,
-		AccountRetriever: authtypes.NewAccountRetriever(encCfg.Marshaler),
-		AppConstructor:   NewSimApp,
-		GenesisState:     simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:    2 * time.Second,
-		ChainID:          "chain-" + tmrand.NewRand().Str(6),
-		NumValidators:    4,
-		BondDenom:        sdk.DefaultBondDenom,
-		MinGasPrices:     fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:    sdk.TokensFromConsensusPower(1000),
-		StakingTokens:    sdk.TokensFromConsensusPower(500),
-		BondedTokens:     sdk.TokensFromConsensusPower(100),
-		PruningStrategy:  storetypes.PruningOptionNothing,
-		CleanupDir:       true,
-		SigningAlgo:      string(hd.Secp256k1Type),
-		KeyringOptions:   []keyring.Option{},
+		Codec:             encCfg.Marshaler,
+		TxConfig:          encCfg.TxConfig,
+		LegacyAmino:       encCfg.Amino,
+		InterfaceRegistry: encCfg.InterfaceRegistry,
+		AccountRetriever:  authtypes.AccountRetriever{},
+		AppConstructor:    NewSimApp,
+		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		TimeoutCommit:     2 * time.Second,
+		ChainID:           "chain-" + tmrand.NewRand().Str(6),
+		NumValidators:     4,
+		BondDenom:         sdk.DefaultBondDenom,
+		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000),
+		StakingTokens:     sdk.TokensFromConsensusPower(500),
+		BondedTokens:      sdk.TokensFromConsensusPower(100),
+		PruningStrategy:   storetypes.PruningOptionNothing,
+		CleanupDir:        true,
+		SigningAlgo:       string(hd.Secp256k1Type),
+		KeyringOptions:    []keyring.Option{},
 	}
 }
 
@@ -321,6 +325,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithKeyring(kb).
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
+			WithInterfaceRegistry(cfg.InterfaceRegistry).
 			WithJSONMarshaler(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).

@@ -19,7 +19,7 @@ func VerifySignature(pubKey crypto.PubKey, signerData SignerData, sigData signin
 		if err != nil {
 			return err
 		}
-		if !pubKey.VerifyBytes(signBytes, data.Signature) {
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
 			return fmt.Errorf("unable to verify single signer signature")
 		}
 		return nil

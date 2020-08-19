@@ -98,6 +98,9 @@ proto-tools-stamp:
 	@echo "Installing protoc-gen-gocosmos..."
 	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
+	@echo "Installing protoc-gen-grpc-gateway..."
+	@go install https://github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
 	touch $@
 
 buf: buf-stamp

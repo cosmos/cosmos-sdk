@@ -6,9 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,11 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -46,8 +45,8 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 
-	var pubkey ed25519.PubKeyEd25519
-	copy(pubkey[:], pkBytes)
+	pubkey := make(ed25519.PubKey, ed25519.PubKeySize)
+	copy(pubkey, pkBytes)
 
 	return pubkey
 }
@@ -95,7 +94,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	app.EvidenceKeeper = *evidenceKeeper
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.querier = keeper.NewQuerier(*evidenceKeeper, legacyQuerierCdc)
 	suite.app = app
 

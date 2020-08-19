@@ -32,7 +32,7 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 			return
 		}
 
-		accGetter := types.NewAccountRetriever(authclient.Codec)
+		accGetter := types.AccountRetriever{}
 
 		account, height, err := accGetter.GetAccountWithHeight(clientCtx, addr)
 		if err != nil {

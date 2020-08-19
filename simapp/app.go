@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -180,7 +181,7 @@ func NewSimApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetAppVersion(version.Version)
-	bApp.GRPCQueryRouter().SetAnyUnpacker(interfaceRegistry)
+	bApp.GRPCQueryRouter().SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
@@ -202,7 +203,7 @@ func NewSimApp(
 		memKeys:           memKeys,
 	}
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(std.ConsensusParamsKeyTable()))
@@ -262,7 +263,7 @@ func NewSimApp(
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec, keys[ibctransfertypes.StoreKey],
+		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
@@ -382,7 +383,7 @@ func NewSimApp(
 	// sub-keepers.
 	// This must be done during creation of baseapp rather than in InitChain so
 	// that in-memory capabilities get regenerated on app restart
-	ctx := app.BaseApp.NewUncachedContext(true, abci.Header{})
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	app.CapabilityKeeper.InitializeAndSeal(ctx)
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
@@ -503,9 +504,12 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server) {
-	rpc.RegisterRoutes(apiSvr.ClientCtx, apiSvr.Router)
-	authrest.RegisterTxRoutes(apiSvr.ClientCtx, apiSvr.Router)
-	ModuleBasics.RegisterRESTRoutes(apiSvr.ClientCtx, apiSvr.Router)
+	clientCtx := apiSvr.ClientCtx
+	// amino is needed here for backwards compatibility of REST routes
+	clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
+	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
+	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
+	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 }
 
 // GetMaccPerms returns a copy of the module account permissions
@@ -518,8 +522,8 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.Marshaler, key, tkey sdk.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, key, tkey)
+func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
@@ -529,6 +533,7 @@ func initParamsKeeper(appCodec codec.Marshaler, key, tkey sdk.StoreKey) paramske
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -28,7 +28,7 @@ func TestDecodeStore(t *testing.T) {
 		FrozenHeight: 10,
 	}
 	connection := connectiontypes.ConnectionEnd{
-		ClientID: "clientidone",
+		ClientId: "clientidone",
 		Versions: []string{"1.0"},
 	}
 	channel := channeltypes.Channel{

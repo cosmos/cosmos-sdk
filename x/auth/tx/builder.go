@@ -13,6 +13,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -37,9 +38,18 @@ type builder struct {
 }
 
 var (
-	_ authsigning.Tx   = &builder{}
-	_ client.TxBuilder = &builder{}
+	_ authsigning.Tx             = &builder{}
+	_ client.TxBuilder           = &builder{}
+	_ ante.HasExtensionOptionsTx = &builder{}
+	_ ExtensionOptionsTxBuilder  = &builder{}
 )
+
+type ExtensionOptionsTxBuilder interface {
+	client.TxBuilder
+
+	SetExtensionOptions(...*codectypes.Any)
+	SetNonCriticalExtensionOptions(...*codectypes.Any)
+}
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 	return &builder{
@@ -335,4 +345,22 @@ func (t *builder) setSignatures(sigs [][]byte) {
 
 func (t *builder) GetTx() authsigning.Tx {
 	return t
+}
+
+func (t *builder) GetExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.ExtensionOptions
+}
+
+func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.NonCriticalExtensionOptions
+}
+
+func (t *builder) SetExtensionOptions(extOpts ...*codectypes.Any) {
+	t.tx.Body.ExtensionOptions = extOpts
+	t.bodyBz = nil
+}
+
+func (t *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+	t.tx.Body.NonCriticalExtensionOptions = extOpts
+	t.bodyBz = nil
 }

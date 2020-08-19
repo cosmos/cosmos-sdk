@@ -5,7 +5,7 @@ import "cosmos/base/crypto/v1beta1/crypto.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
-// SignMode represents a signing mode with its own security guarantees
+// SignMode represents a signing mode with its own security guarantees.
 enum SignMode {
     // SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected
     SIGN_MODE_UNSPECIFIED = 0;

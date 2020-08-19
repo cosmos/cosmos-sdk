@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Tx is the standard type used for broadcasting transactions
+// Tx is the standard type used for broadcasting transactions.
 type Tx struct {
 	// body is the processable content of the transaction
 	Body *TxBody `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
@@ -162,7 +162,7 @@ func (m *TxRaw) GetSignatures() [][]byte {
 	return nil
 }
 
-// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
+// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 type SignDoc struct {
 	// body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
 	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
@@ -238,6 +238,14 @@ func (m *SignDoc) GetAccountNumber() uint64 {
 }
 
 // TxBody is the body of a transaction that all signers sign over
+func (m *SignDoc) GetAccountSequence() uint64 {
+	if m != nil {
+		return m.AccountSequence
+	}
+	return 0
+}
+
+// TxBody is the body of a transaction that all signers sign over.
 type TxBody struct {
 	// messages is a list of messages to be executed. The required signers of those messages define
 	// the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
@@ -329,7 +337,7 @@ func (m *TxBody) GetNonCriticalExtensionOptions() []*types.Any {
 	return nil
 }
 
-// AuthInfo describes the fee and signer modes that are used to sign a transaction
+// AuthInfo describes the fee and signer modes that are used to sign a transaction.
 type AuthInfo struct {
 	// signer_infos defines the signing modes for the required signers. The number
 	// and order of elements must match the required signers from TxBody's messages.
@@ -389,7 +397,7 @@ func (m *AuthInfo) GetFee() *Fee {
 	return nil
 }
 
-// SignerInfo describes the public key and signing mode of a single top-level signer
+// SignerInfo describes the public key and signing mode of a single top-level signer.
 type SignerInfo struct {
 	// public_key is the public key of the signer. It is optional for accounts
 	// that already exist in state. If unset, the verifier can use the required \
@@ -451,14 +459,7 @@ func (m *SignerInfo) GetModeInfo() *ModeInfo {
 	return nil
 }
 
-func (m *SignerInfo) GetSequence() uint64 {
-	if m != nil {
-		return m.Sequence
-	}
-	return 0
-}
-
-// ModeInfo describes the signing mode of a single or nested multisig signer
+// ModeInfo describes the signing mode of a single or nested multisig signer.
 type ModeInfo struct {
 	// sum is the oneof that specifies whether this represents a single or nested
 	// multisig signer

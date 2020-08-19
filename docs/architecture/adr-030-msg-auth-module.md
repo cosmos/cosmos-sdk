@@ -19,9 +19,7 @@ this work along with the fee grants and key groups modules.
 
 ## Decision
 
-We will create a module named `msg_authorization`
-
-The `msg_authorization` module provides support for granting arbitrary capabilities
+We will create a module named `msg_authorization`. The `msg_authorization` module provides support for granting arbitrary capabilities
 from one account (the granter) to another account (the grantee). Capabilities
 must be granted for a particular type of `sdk.Msg` one by one using an implementation
 of `Capability`.

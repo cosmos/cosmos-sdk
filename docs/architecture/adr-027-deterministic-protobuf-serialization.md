@@ -1,4 +1,4 @@
-# ADR 026: Deterministic Protobuf Serialization
+# ADR 027: Deterministic Protobuf Serialization
 
 ## Changelog
 

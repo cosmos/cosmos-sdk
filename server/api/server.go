@@ -36,7 +36,9 @@ type Server struct {
 }
 
 func New(clientCtx client.Context, logger log.Logger) *Server {
-	jsonpb := &gateway.JSONPb{
+	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
+	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
+	marshalerOption := &gateway.JSONPb{
 		EmitDefaults: true,
 		Indent:       "  ",
 		OrigName:     true,
@@ -47,7 +49,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 		ClientCtx:  clientCtx,
 		logger:     logger,
 		GRPCRouter: runtime.NewServeMux(
-			runtime.WithMarshalerOption(runtime.MIMEWildcard, jsonpb),
+			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 			// This is necessary to get error details properly
 			// marshalled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),

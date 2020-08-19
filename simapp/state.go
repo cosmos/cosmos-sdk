@@ -21,7 +21,7 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino, simManager *module.SimulationManager) simtypes.AppStateFn {
+func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 
@@ -38,7 +38,7 @@ func AppStateFn(cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino, simMana
 
 		case config.GenesisFile != "":
 			// override the default chain-id from simapp to set it later to the config
-			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, legacyAmino, config.GenesisFile)
+			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 			if FlagGenesisTimeValue == 0 {
 				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
@@ -56,12 +56,15 @@ func AppStateFn(cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino, simMana
 				panic(err)
 			}
 
-			legacyAmino.MustUnmarshalJSON(bz, &appParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, legacyAmino, accs, genesisTimestamp, appParams)
+			err = json.Unmarshal(bz, &appParams)
+			if err != nil {
+				panic(err)
+			}
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, legacyAmino, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
 		return appState, simAccs, chainID, genesisTimestamp
@@ -71,7 +74,7 @@ func AppStateFn(cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino, simMana
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params
 func AppStateRandomizedFn(
-	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino,
+	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONMarshaler,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
@@ -105,7 +108,6 @@ func AppStateRandomizedFn(
 	simState := &module.SimulationState{
 		AppParams:    appParams,
 		Cdc:          cdc,
-		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,
@@ -126,17 +128,23 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, legacyAmino *codec.LegacyAmino, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
 	var genesis tmtypes.GenesisDoc
-	legacyAmino.MustUnmarshalJSON(bytes, &genesis)
+	err = json.Unmarshal(bytes, &genesis)
+	if err != nil {
+		panic(err)
+	}
 
 	var appState GenesisState
-	legacyAmino.MustUnmarshalJSON(genesis.AppState, &appState)
+	err = json.Unmarshal(genesis.AppState, &appState)
+	if err != nil {
+		panic(err)
+	}
 
 	var authGenesis authtypes.GenesisState
 	if appState[authtypes.ModuleName] != nil {

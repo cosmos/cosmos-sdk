@@ -9,7 +9,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -156,13 +155,14 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
-	encodingConfig := params.MakeEncodingConfig()
-	cdc := encodingConfig.Marshaler
-	amino := encodingConfig.Amino
+	cdc := params.MakeEncodingConfig().Marshaler
 
 	var genesisState map[string]json.RawMessage
 
-	amino.UnmarshalJSON(appState, &genesisState)
+	err := json.Unmarshal(appState, &genesisState)
+	if err != nil {
+		panic(err)
+	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
 
@@ -179,7 +179,12 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
 	}
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(amino, consensusParams))
+
+	bz, err := json.MarshalIndent(&consensusParams, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", bz)
 
 	return consensusParams
 }

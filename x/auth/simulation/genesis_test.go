@@ -21,7 +21,6 @@ func TestRandomizedGenState(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	legacyAmino := codec.New()
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -29,7 +28,6 @@ func TestRandomizedGenState(t *testing.T) {
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,
-		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),

@@ -20,7 +20,6 @@ import (
 func TestRandomizedGenState(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	legacyAmino := codec.New()
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -28,7 +27,6 @@ func TestRandomizedGenState(t *testing.T) {
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,
-		LegacyAmino:  legacyAmino,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
@@ -70,7 +68,6 @@ func TestRandomizedGenState(t *testing.T) {
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	legacyAmino := codec.New()
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -83,17 +80,15 @@ func TestRandomizedGenState1(t *testing.T) {
 			module.SimulationState{}, "invalid memory address or nil pointer dereference"},
 		{ // panic => reason: incomplete initialization of the simState
 			module.SimulationState{
-				AppParams:   make(simtypes.AppParams),
-				Cdc:         cdc,
-				LegacyAmino: legacyAmino,
-				Rand:        r,
+				AppParams: make(simtypes.AppParams),
+				Cdc:       cdc,
+				Rand:      r,
 			}, "invalid memory address or nil pointer dereference"},
 		{
 			// panic => reason: numBonded != len(Accnounts)
 			module.SimulationState{
 				AppParams:    make(simtypes.AppParams),
 				Cdc:          cdc,
-				LegacyAmino:  legacyAmino,
 				Rand:         r,
 				NumBonded:    4,
 				Accounts:     simtypes.RandomAccounts(r, 3),

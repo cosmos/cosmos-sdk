@@ -2,7 +2,7 @@ package types_test
 
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestConsensusState() {

@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 type SoloMachineTestSuite struct {
@@ -58,7 +58,7 @@ func TestSoloMachineTestSuite(t *testing.T) {
 	suite.Run(t, new(SoloMachineTestSuite))
 }
 
-func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
+func (suite *SoloMachineTestSuite) CreateHeader() types.Header {
 	// generate new private key and signature for header
 	newPrivKey := ed25519.GenPrivKey()
 	data := append(sdk.Uint64ToBigEndian(suite.sequence), newPrivKey.PubKey().Bytes()...)
@@ -68,7 +68,7 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 	pubKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
 	suite.Require().NoError(err)
 
-	header := solomachinetypes.Header{
+	header := types.Header{
 		Sequence:  suite.sequence,
 		Signature: signature,
 		NewPubKey: pubKey,
@@ -82,26 +82,26 @@ func (suite *SoloMachineTestSuite) CreateHeader() solomachinetypes.Header {
 	return header
 }
 
-func (suite *SoloMachineTestSuite) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(suite.clientID, "", suite.ConsensusState())
+func (suite *SoloMachineTestSuite) ClientState() *types.ClientState {
+	return types.NewClientState(suite.clientID, "", suite.ConsensusState())
 }
 
-func (suite *SoloMachineTestSuite) ConsensusState() *solomachinetypes.ConsensusState {
-	return &solomachinetypes.ConsensusState{
+func (suite *SoloMachineTestSuite) ConsensusState() *types.ConsensusState {
+	return &types.ConsensusState{
 		Sequence:  suite.sequence,
 		PubKey:    suite.pubKey,
 		Timestamp: suite.timestamp,
 	}
 }
 
-func (suite *SoloMachineTestSuite) Evidence() solomachinetypes.Evidence {
+func (suite *SoloMachineTestSuite) Evidence() types.Evidence {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
 	sig, err := suite.privKey.Sign(append(sdk.Uint64ToBigEndian(suite.sequence), dataOne...))
 	suite.Require().NoError(err)
 
-	signatureOne := solomachinetypes.SignatureAndData{
+	signatureOne := types.SignatureAndData{
 		Signature: sig,
 		Data:      dataOne,
 	}
@@ -109,12 +109,12 @@ func (suite *SoloMachineTestSuite) Evidence() solomachinetypes.Evidence {
 	sig, err = suite.privKey.Sign(append(sdk.Uint64ToBigEndian(suite.sequence), dataTwo...))
 	suite.Require().NoError(err)
 
-	signatureTwo := solomachinetypes.SignatureAndData{
+	signatureTwo := types.SignatureAndData{
 		Signature: sig,
 		Data:      dataTwo,
 	}
 
-	return solomachinetypes.Evidence{
+	return types.Evidence{
 		ClientID:     suite.clientID,
 		Sequence:     suite.sequence,
 		SignatureOne: &signatureOne,

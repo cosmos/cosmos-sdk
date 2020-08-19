@@ -2,7 +2,7 @@ package types_test
 
 import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
@@ -10,7 +10,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 
 	cases := []struct {
 		name    string
-		header  solomachinetypes.Header
+		header  types.Header
 		expPass bool
 	}{
 		{
@@ -20,7 +20,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			solomachinetypes.Header{
+			types.Header{
 				Sequence:  0,
 				Signature: header.Signature,
 				NewPubKey: header.NewPubKey,
@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"signature is empty",
-			solomachinetypes.Header{
+			types.Header{
 				Sequence:  header.Sequence,
 				Signature: []byte{},
 				NewPubKey: header.NewPubKey,
@@ -38,7 +38,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"public key is nil",
-			solomachinetypes.Header{
+			types.Header{
 				Sequence:  header.Sequence,
 				Signature: header.Signature,
 				NewPubKey: nil,

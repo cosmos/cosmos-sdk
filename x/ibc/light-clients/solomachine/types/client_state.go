@@ -72,7 +72,7 @@ func (cs ClientState) Validate() error {
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Solo Machine client stored on the target machine.
-func (cs *ClientState) VerifyClientConsensusState(
+func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	root commitmentexported.Root,
@@ -111,7 +111,7 @@ func (cs *ClientState) VerifyClientConsensusState(
 
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
-func (cs *ClientState) VerifyConnectionState(
+func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -147,7 +147,7 @@ func (cs *ClientState) VerifyConnectionState(
 
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
-func (cs *ClientState) VerifyChannelState(
+func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -184,7 +184,7 @@ func (cs *ClientState) VerifyChannelState(
 
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
-func (cs *ClientState) VerifyPacketCommitment(
+func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -219,7 +219,7 @@ func (cs *ClientState) VerifyPacketCommitment(
 
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
-func (cs *ClientState) VerifyPacketAcknowledgement(
+func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -255,7 +255,7 @@ func (cs *ClientState) VerifyPacketAcknowledgement(
 // VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
-func (cs *ClientState) VerifyPacketAcknowledgementAbsence(
+func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -289,7 +289,7 @@ func (cs *ClientState) VerifyPacketAcknowledgementAbsence(
 
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
-func (cs *ClientState) VerifyNextSequenceRecv(
+func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
@@ -326,7 +326,7 @@ func (cs *ClientState) VerifyNextSequenceRecv(
 // proof representing the signature and timestamp.
 func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
-	cs *ClientState,
+	cs ClientState,
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,

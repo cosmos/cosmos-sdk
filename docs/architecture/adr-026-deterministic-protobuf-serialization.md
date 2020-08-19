@@ -1,4 +1,4 @@
-# ADR 026: Protocol Buffer Regencode
+# ADR 026: Deterministic Protobuf Serialization
 
 ## Changelog
 
@@ -22,12 +22,11 @@ other cases as well.
 
 ## Decision
 
-The following encoding scheme (called Regencode (verb), version 1) is proposed
-to be used by other ADRs.
+The following encoding scheme is proposed to be used by other ADRs.
 
 ### Scope
 
-Regencode is a protobuf3 serializer. The output is a valid protobuf
+This ADR defines a protobuf3 serializer. The output is a valid protobuf
 serialization, such that every protobuf parser can parse it.
 
 No maps are supported in version 1 due to the complexity of defining a

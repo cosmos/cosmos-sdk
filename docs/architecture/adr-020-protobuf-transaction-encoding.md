@@ -8,6 +8,7 @@
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
+- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`.
 
 ## Status
 

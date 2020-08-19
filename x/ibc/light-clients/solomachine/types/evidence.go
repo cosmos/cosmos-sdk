@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	_ evidenceexported.Evidence   = &Evidence{}
-	_ clientexported.Misbehaviour = &Evidence{}
+	_ evidenceexported.Evidence   = (*Evidence)(nil)
+	_ clientexported.Misbehaviour = (*Evidence)(nil)
 )
 
 // ClientType is a Solo Machine light client.
@@ -25,7 +25,7 @@ func (ev Evidence) ClientType() clientexported.ClientType {
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
 func (ev Evidence) GetClientID() string {
-	return ev.ClientID
+	return ev.ClientId
 }
 
 // Route implements Evidence interface.
@@ -51,7 +51,7 @@ func (ev Evidence) GetHeight() int64 {
 
 // ValidateBasic implements Evidence interface.
 func (ev Evidence) ValidateBasic() error {
-	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(ev.ClientId); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 

@@ -23,16 +23,16 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkHeader(cs, smHeader); err != nil {
+	if err := checkHeader(&cs, smHeader); err != nil {
 		return nil, nil, err
 	}
 
-	clientState, consensusState := update(cs, smHeader)
+	clientState, consensusState := update(&cs, smHeader)
 	return clientState, consensusState, nil
 }
 
 // checkHeader checks if the Solo Machine update signature is valid.
-func checkHeader(clientState ClientState, header Header) error {
+func checkHeader(clientState *ClientState, header Header) error {
 	// assert update sequence is current sequence
 	if header.Sequence != clientState.ConsensusState.Sequence {
 		return sdkerrors.Wrapf(
@@ -43,7 +43,7 @@ func checkHeader(clientState ClientState, header Header) error {
 
 	// assert currently registered public key signed over the new public key with correct sequence
 	data := HeaderSignBytes(header)
-	if err := CheckSignature(clientState.ConsensusState.PubKey, data, header.Signature); err != nil {
+	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, header.Signature); err != nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, err.Error())
 	}
 
@@ -51,11 +51,11 @@ func checkHeader(clientState ClientState, header Header) error {
 }
 
 // update the consensus state to the new public key and an incremented sequence
-func update(clientState ClientState, header Header) (ClientState, ConsensusState) {
-	consensusState := ConsensusState{
+func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
+	consensusState := &ConsensusState{
 		// increment sequence number
-		Sequence: clientState.ConsensusState.Sequence + 1,
-		PubKey:   header.NewPubKey,
+		Sequence:  clientState.ConsensusState.Sequence + 1,
+		PublicKey: header.NewPublicKey,
 	}
 
 	clientState.ConsensusState = consensusState

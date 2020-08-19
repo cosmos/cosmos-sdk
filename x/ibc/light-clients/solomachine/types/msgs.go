@@ -17,7 +17,7 @@ var (
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(id string, consensusState *ConsensusState) *MsgCreateClient {
 	return &MsgCreateClient{
-		ClientID:       id,
+		ClientId:       id,
 		ConsensusState: consensusState,
 	}
 }
@@ -38,7 +38,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return err
 	}
 
-	return host.ClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -53,7 +53,7 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 
 // GetClientID implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetClientID() string {
-	return msg.ClientID
+	return msg.ClientId
 }
 
 // GetClientType implements clientexported.MsgCreateClient
@@ -68,13 +68,13 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 
 // InitializeFromMsg creates a solo machine client state from a MsgCreateClient
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
-	return NewClientState(msg.ClientID, "", msg.ConsensusState)
+	return NewClientState(msg.ClientId, "", msg.ConsensusState)
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header Header) *MsgUpdateClient {
 	return &MsgUpdateClient{
-		ClientID: id,
+		ClientId: id,
 		Header:   header,
 	}
 }
@@ -94,7 +94,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if err := msg.Header.ValidateBasic(); err != nil {
 		return err
 	}
-	return host.ClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
 // GetSignBytes implements sdk.Msg
@@ -109,7 +109,7 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 
 // GetClientID implements clientexported.MsgUpdateClient
 func (msg MsgUpdateClient) GetClientID() string {
-	return msg.ClientID
+	return msg.ClientId
 }
 
 // GetHeader implements clientexported.MsgUpdateClient

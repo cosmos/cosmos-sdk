@@ -14,10 +14,10 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-// CheckSignature verifies if the the provided public key generated the signature
+// VerifySignature verifies if the the provided public key generated the signature
 // over the given data.
-func CheckSignature(pubKey crypto.PubKey, data, signature []byte) error {
-	if !pubKey.VerifyBytes(data, signature) {
+func VerifySignature(pubKey crypto.PubKey, data, signature []byte) error {
+	if !pubKey.VerifySignature(data, signature) {
 		return ErrSignatureVerificationFailed
 	}
 

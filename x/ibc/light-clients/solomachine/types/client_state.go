@@ -20,8 +20,8 @@ var _ clientexported.ClientState = &ClientState{}
 // NewClientState creates a new ClientState instance.
 func NewClientState(id, chainID string, consensusState *ConsensusState) *ClientState {
 	return &ClientState{
-		ID:             id,
-		ChainID:        chainID,
+		Id:             id,
+		ChainId:        chainID,
 		FrozenHeight:   0,
 		ConsensusState: consensusState,
 	}
@@ -29,12 +29,12 @@ func NewClientState(id, chainID string, consensusState *ConsensusState) *ClientS
 
 // GetID returns the solo machine client state identifier.
 func (cs ClientState) GetID() string {
-	return cs.ID
+	return cs.Id
 }
 
 // GetChainID returns an empty string.
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is Solo Machine.
@@ -64,7 +64,7 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 
 // Validate performs basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.ClientIdentifierValidator(cs.ID); err != nil {
+	if err := host.ClientIdentifierValidator(cs.Id); err != nil {
 		return err
 	}
 	return cs.ConsensusState.ValidateBasic()
@@ -99,7 +99,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
 	}
 
@@ -135,7 +135,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
 	}
 
@@ -172,7 +172,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
 	}
 
@@ -207,7 +207,7 @@ func (cs ClientState) VerifyPacketCommitment(
 
 	data := PacketCommitmentSignBytes(sequence, signature.Timestamp, path, commitmentBytes)
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
 	}
 
@@ -242,7 +242,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 	data := PacketAcknowledgementSignBytes(sequence, signature.Timestamp, path, acknowledgement)
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
 	}
 
@@ -277,7 +277,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 	data := PacketAcknowledgementAbsenceSignBytes(sequence, signature.Timestamp, path)
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
 	}
 
@@ -311,7 +311,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	data := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
 
-	if err := CheckSignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
 	}
 
@@ -335,7 +335,7 @@ func produceVerificationArgs(
 	if cs.GetLatestHeight() < sequence {
 		return Signature{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state (%s) sequence < proof sequence (%d < %d)", cs.ID, cs.GetLatestHeight(), sequence,
+			"client state (%s) sequence < proof sequence (%d < %d)", cs.Id, cs.GetLatestHeight(), sequence,
 		)
 	}
 

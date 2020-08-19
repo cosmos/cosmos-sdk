@@ -20,11 +20,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 
-	consensusState, err := GetConsensusStateLTE(clientStore, cdc, misbehaviour.GetHeight())
-	if err != nil {
-		return nil, err
-	}
-
 	evidence, ok := misbehaviour.(Evidence)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
@@ -37,7 +32,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "client is already frozen")
 	}
 
-	if err := checkMisbehaviour(cs, consensusState, evidence); err != nil {
+	if err := checkMisbehaviour(cs, evidence); err != nil {
 		return nil, err
 	}
 
@@ -47,8 +42,8 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
-func checkMisbehaviour(clientState ClientState, consensusState ConsensusState, evidence Evidence) error {
-	pubKey := consensusState.PubKey
+func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
+	pubKey := clientState.ConsensusState.GetPubKey()
 
 	// assert that provided signature data are different
 	if bytes.Equal(evidence.SignatureOne.Data, evidence.SignatureTwo.Data) {
@@ -58,14 +53,14 @@ func checkMisbehaviour(clientState ClientState, consensusState ConsensusState, e
 	data := EvidenceSignBytes(evidence.Sequence, evidence.SignatureOne.Data)
 
 	// check first signature
-	if err := CheckSignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
+	if err := VerifySignature(pubKey, data, evidence.SignatureOne.Signature); err != nil {
 		return sdkerrors.Wrap(err, "evidence signature one failed to be verified")
 	}
 
 	data = EvidenceSignBytes(evidence.Sequence, evidence.SignatureTwo.Data)
 
 	// check second signature
-	if err := CheckSignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {
+	if err := VerifySignature(pubKey, data, evidence.SignatureTwo.Signature); err != nil {
 		return sdkerrors.Wrap(err, "evidence signature two failed to be verified")
 	}
 

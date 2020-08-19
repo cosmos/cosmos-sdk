@@ -4,7 +4,7 @@ package ibc.lightclients.v1.solomachine;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "google/protobuf/any.proto";
 
 // ClientState defines a solo machine client that tracks the current consensus
 // state and if the client is frozen.
@@ -13,31 +13,32 @@ message ClientState {
   // client ID
   string id = 1;
   // chainID for the connected solo machine
-  string chain_id = 2;
+  string chain_id = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // frozen height of the solo machine
-  uint64         frozen_height   = 3;
-  ConsensusState consensus_state = 4;
+  uint64 frozen_height = 3 [(gogoproto.moretags) = "yaml:\"frozen_height\""];
+  ConsensusState consensus_state = 4
+      [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
 // ConsensusState defines a solo machine consensus state
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
   // current sequence of the consensus state
-  uint64 sequence = 1 [(gogoproto.moretags) = "yaml:\"sequence\""];
+  uint64 sequence = 1;
   // public key of the solo machine
-  cosmos.base.crypto.v1beta1.PublicKey pub_key = 2
-      [(gogoproto.moretags) = "yaml:\"pub_key\""];
-  uint64 timestamp = 3 [(gogoproto.moretags) = "yaml:\"timestamp\""];
+  google.protobuf.Any public_key = 2
+      [(gogoproto.moretags) = "yaml:\"public_key\""];
+  uint64 timestamp = 3;
 }
 
 // Header defines a solo machine consensus header
 message Header {
   option (gogoproto.goproto_getters) = false;
   // sequence to update solo machine public key at
-  uint64 sequence  = 1 [(gogoproto.moretags) = "yaml:\"sequence\""];
-  bytes  signature = 2 [(gogoproto.moretags) = "yaml:\"signature\""];
-  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 3
-      [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  uint64              sequence       = 1;
+  bytes               signature      = 2;
+  google.protobuf.Any new_public_key = 3
+      [(gogoproto.moretags) = "yaml:\"new_public_key\""];
 }
 
 // Evidence defines evidence of misbehaviour for a solo machine which consists
@@ -45,31 +46,34 @@ message Header {
 message Evidence {
   option (gogoproto.goproto_getters) = false;
   string           client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  uint64           sequence  = 2 [(gogoproto.moretags) = "yaml:\"sequence\""];
-  SignatureAndData signature_one = 3 [(gogoproto.customname) = "SignatureOne"];
-  SignatureAndData signature_two = 4 [(gogoproto.customname) = "SignatureTwo"];
+  uint64           sequence  = 2;
+  SignatureAndData signature_one = 3
+      [(gogoproto.moretags) = "yaml:\"signature_one\""];
+  SignatureAndData signature_two = 4
+      [(gogoproto.moretags) = "yaml:\"signature_two\""];
 }
 
 // SignatureAndData contains a signature and the data signed over to create that
 // signature.
 message SignatureAndData {
   option (gogoproto.goproto_getters) = false;
-  bytes signature = 1 [(gogoproto.moretags) = "yaml:\"signature\""];
-  bytes data      = 2 [(gogoproto.moretags) = "yaml:\"data\""];
+  bytes signature                    = 1;
+  bytes data                         = 2;
 }
 
 // Signature contains the signature and the timestamp of the signature.
 message Signature {
   option (gogoproto.goproto_getters) = false;
-  bytes  signature = 1 [(gogoproto.moretags) = "yaml:\"signature\""];
-  uint64 timestamp = 2 [(gogoproto.moretags) = "yaml:\"timestamp\""];
+  bytes  signature                   = 1;
+  uint64 timestamp                   = 2;
 }
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
   option (gogoproto.goproto_getters) = false;
   string         client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string         chain_id  = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  ConsensusState consensus_state = 3;
+  ConsensusState consensus_state = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
 // MsgUpdateClient defines a message to update an IBC client

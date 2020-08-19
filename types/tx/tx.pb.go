@@ -237,14 +237,6 @@ func (m *SignDoc) GetAccountNumber() uint64 {
 	return 0
 }
 
-// TxBody is the body of a transaction that all signers sign over
-func (m *SignDoc) GetAccountSequence() uint64 {
-	if m != nil {
-		return m.AccountSequence
-	}
-	return 0
-}
-
 // TxBody is the body of a transaction that all signers sign over.
 type TxBody struct {
 	// messages is a list of messages to be executed. The required signers of those messages define
@@ -457,6 +449,13 @@ func (m *SignerInfo) GetModeInfo() *ModeInfo {
 		return m.ModeInfo
 	}
 	return nil
+}
+
+func (m *SignerInfo) GetSequence() uint64 {
+	if m != nil {
+		return m.Sequence
+	}
+	return 0
 }
 
 // ModeInfo describes the signing mode of a single or nested multisig signer.

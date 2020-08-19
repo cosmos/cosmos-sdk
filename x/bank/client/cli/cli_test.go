@@ -90,7 +90,11 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		},
 		{
 			"total account balance of a bogus denom",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
 			false,
 			&sdk.Coin{},
 			sdk.NewCoin("foobar", sdk.ZeroInt()),
@@ -108,7 +112,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType.(proto.Message)))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -284,8 +288,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.LegacyAmino.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType.(proto.Message)), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}

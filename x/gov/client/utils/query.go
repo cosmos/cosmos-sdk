@@ -65,8 +65,6 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 		}
 	}
 
-	// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
-	// or wrap lists of proto.Message in some other message)
 	bz, err := clientCtx.LegacyAmino.MarshalJSON(deposits)
 	if err != nil {
 		return nil, err
@@ -119,8 +117,6 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		votes = votes[start:end]
 	}
 
-	// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
-	// or wrap lists of proto.Message in some other message)
 	bz, err := clientCtx.LegacyAmino.MarshalJSON(votes)
 	if err != nil {
 		return nil, err

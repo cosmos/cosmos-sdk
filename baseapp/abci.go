@@ -163,7 +163,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
 
-	return
+	if cp := app.GetConsensusParams(); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	return res
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

@@ -2,10 +2,12 @@ package cli_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -15,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type IntegrationTestSuite struct {
@@ -168,6 +171,112 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with invalid address ",
+			[]string{"somethinginvalidaddress", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"with valid and not existing address",
+			[]string{"cosmosvaloper15jkng8hytwt22lllv6mw4k89qkqehtahd84ptu", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"happy case",
+			[]string{fmt.Sprintf("%s", val.ValAddress), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidator()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("interal", err.Error())
+			} else {
+				var result types.Validator
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"with text output",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`bond_denom: stake
+historical_entries: 100
+max_entries: 7
+max_validators: 100
+unbonding_time: 1814400s`,
+		},
+		{
+			"with json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":100,"bond_denom":"stake"}`,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"with text",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`bonded_tokens: "100000000"
+not_bonded_tokens: "0"`,
+		},
+		{
+			"with json",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"not_bonded_tokens":"0","bonded_tokens":"100000000"}`,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryPool()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
 }

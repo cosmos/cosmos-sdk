@@ -27,7 +27,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Plan specifies information about a planned upgrade and when it should occur
+// Plan specifies information about a planned upgrade and when it should occur.
 type Plan struct {
 	// Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any
 	// special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used
@@ -78,7 +78,7 @@ func (m *Plan) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Plan proto.InternalMessageInfo
 
-// SoftwareUpgradeProposal is a gov Content type for initiating a software upgrade
+// SoftwareUpgradeProposal is a gov Content type for initiating a software upgrade.
 type SoftwareUpgradeProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -117,7 +117,7 @@ func (m *SoftwareUpgradeProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SoftwareUpgradeProposal proto.InternalMessageInfo
 
-// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade
+// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade.
 type CancelSoftwareUpgradeProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

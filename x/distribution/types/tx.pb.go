@@ -26,7 +26,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
+// MsgSetWithdrawAddress sets the withdraw address for
+// a delegator (or validator self-delegation).
 type MsgSetWithdrawAddress struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
@@ -79,7 +80,8 @@ func (m *MsgSetWithdrawAddress) GetWithdrawAddress() github_com_cosmos_cosmos_sd
 	return nil
 }
 
-// msg struct for delegation withdraw from a single validator
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a single validator.
 type MsgWithdrawDelegatorReward struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
@@ -132,7 +134,7 @@ func (m *MsgWithdrawDelegatorReward) GetValidatorAddress() github_com_cosmos_cos
 	return nil
 }
 
-// msg struct for validator withdraw
+// MsgWithdrawValidatorCommission withdraws the full commission to the validator address.
 type MsgWithdrawValidatorCommission struct {
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 }
@@ -177,7 +179,7 @@ func (m *MsgWithdrawValidatorCommission) GetValidatorAddress() github_com_cosmos
 	return nil
 }
 
-// MsgFundCommunityPool defines a Msg type that allows an account to directly
+// MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 type MsgFundCommunityPool struct {
 	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`

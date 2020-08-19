@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
 			suite.Require().True(found)
 
-			tmConsState, ok := consState.(ibctmtypes.ConsensusState)
+			tmConsState, ok := consState.(*ibctmtypes.ConsensusState)
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 
 			connection := suite.chainA.GetConnection(connA)
 			if changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			proof, consensusHeight := suite.chainB.QueryConsensusStateProof(connB.ClientID)
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 			expectedConnection := suite.chainB.GetConnection(connB)
 
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			_, _, connA, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
@@ -219,7 +219,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainB.GetConnection(connB)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100000, 0)
@@ -273,7 +273,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			// send and receive packet
@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			// send, only receive if specified
@@ -392,7 +392,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
-				connection.ClientID = ibctesting.InvalidID
+				connection.ClientId = ibctesting.InvalidID
 			}
 
 			// send and receive packet

@@ -48,7 +48,7 @@ import (
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
-	RegisterCodec(*codec.Codec)
+	RegisterCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
@@ -73,7 +73,7 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 }
 
 // RegisterCodec registers all module codecs
-func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
+func (bm BasicManager) RegisterCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
 		b.RegisterCodec(cdc)
 	}
@@ -195,6 +195,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
+// RegisterQueryService registers all gRPC query services.
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block

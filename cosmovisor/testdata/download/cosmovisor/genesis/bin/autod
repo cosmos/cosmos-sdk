@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo Preparing auto-download $@
+sleep 1
+echo 'ERROR: UPGRADE "chain2" NEEDED at height: 49: {"binaries":{"linux/amd64":"https://github.com/cosmos/cosmos-sdk/raw/51249cb93130810033408934454841c98423ed4b/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:dc48829b4126ae95bc0db316c66d4e9da5f3db95e212665b6080638cca77e998"}} module=main'
+sleep 4
+echo Never should be printed!!!

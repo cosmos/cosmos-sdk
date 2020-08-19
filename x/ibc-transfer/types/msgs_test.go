@@ -28,8 +28,10 @@ var (
 	emptyAddr sdk.AccAddress
 
 	coin             = sdk.NewCoin("atom", sdk.NewInt(100))
-	invalidDenomCoin = sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}
-	negativeCoin     = sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(-100)}
+	ibcCoin          = sdk.NewCoin("ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
+	invalidIBCCoin   = sdk.NewCoin("notibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(100))
+	invalidDenomCoin = sdk.Coin{Denom: "0atom", Amount: sdk.NewInt(100)}
+	zeroCoin         = sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(0)}
 )
 
 // TestMsgTransferRoute tests Route for MsgTransfer
@@ -53,15 +55,17 @@ func TestMsgTransferValidation(t *testing.T) {
 		msg     *MsgTransfer
 		expPass bool
 	}{
-		{"valid msg", NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, 10, 0), true},
+		{"valid msg with base denom", NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, 10, 0), true},
+		{"valid msg with trace hash", NewMsgTransfer(validPort, validChannel, ibcCoin, addr1, addr2, 10, 0), true},
+		{"invalid ibc denom", NewMsgTransfer(validPort, validChannel, invalidIBCCoin, addr1, addr2, 10, 0), false},
 		{"too short port id", NewMsgTransfer(invalidShortPort, validChannel, coin, addr1, addr2, 10, 0), false},
 		{"too long port id", NewMsgTransfer(invalidLongPort, validChannel, coin, addr1, addr2, 10, 0), false},
 		{"port id contains non-alpha", NewMsgTransfer(invalidPort, validChannel, coin, addr1, addr2, 10, 0), false},
 		{"too short channel id", NewMsgTransfer(validPort, invalidShortChannel, coin, addr1, addr2, 10, 0), false},
 		{"too long channel id", NewMsgTransfer(validPort, invalidLongChannel, coin, addr1, addr2, 10, 0), false},
 		{"channel id contains non-alpha", NewMsgTransfer(validPort, invalidChannel, coin, addr1, addr2, 10, 0), false},
-		{"invalid amount", NewMsgTransfer(validPort, validChannel, invalidDenomCoin, addr1, addr2, 10, 0), false},
-		{"negative coin", NewMsgTransfer(validPort, validChannel, negativeCoin, addr1, addr2, 10, 0), false},
+		{"invalid denom", NewMsgTransfer(validPort, validChannel, invalidDenomCoin, addr1, addr2, 10, 0), false},
+		{"zero coin", NewMsgTransfer(validPort, validChannel, zeroCoin, addr1, addr2, 10, 0), false},
 		{"missing sender address", NewMsgTransfer(validPort, validChannel, coin, emptyAddr, addr2, 10, 0), false},
 		{"missing recipient address", NewMsgTransfer(validPort, validChannel, coin, addr1, "", 10, 0), false},
 		{"empty coin", NewMsgTransfer(validPort, validChannel, sdk.Coin{}, addr1, addr2, 10, 0), false},
@@ -70,7 +74,7 @@ func TestMsgTransferValidation(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.NoError(t, err, "valid test case %d failed: %v", i, err)
+			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
 		} else {
 			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
 		}

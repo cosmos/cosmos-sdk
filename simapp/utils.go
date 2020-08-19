@@ -49,7 +49,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc *codec.Codec, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app App, cdc codec.JSONMarshaler, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -61,7 +61,10 @@ func SimulationOperations(app App, cdc *codec.Codec, config simtypes.Config) []s
 			panic(err)
 		}
 
-		app.Codec().MustUnmarshalJSON(bz, &simState.AppParams)
+		err = json.Unmarshal(bz, &simState.AppParams)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)

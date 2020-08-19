@@ -60,7 +60,7 @@ func (ctx Context) QuerySubspace(subspace []byte, storeName string) (res []sdk.K
 		return res, height, err
 	}
 
-	ctx.Codec.MustUnmarshalBinaryBare(resRaw, &res)
+	ctx.LegacyAmino.MustUnmarshalBinaryBare(resRaw, &res)
 	return
 }
 

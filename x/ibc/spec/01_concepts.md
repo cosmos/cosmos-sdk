@@ -7,7 +7,7 @@ order: 1
 > NOTE: if you are not familiar with the IBC terminology and concepts, please read
 this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.md) as prerequisite reading.
 
-### Connection Version Negotation
+## Connection Version Negotation
 
 During the handshake procedure for connections a version string is agreed
 upon between the two parties. This occurs during the first 3 steps of the
@@ -33,7 +33,7 @@ A valid connection version is considered to be in the following format:
 
 - the version tuple must be enclosed in parentheses
 - the feature set must be enclosed in brackets
-- there should be no space between the comma separting the identifier and the
+- there should be no space between the comma separating the identifier and the
   feature set
 - the version identifier must no contain any commas
 - each feature must not contain any commas
@@ -46,7 +46,7 @@ with regards to version selection in `ConnOpenTry`. Each version in a set of
 versions should have a unique version identifier.
 :::
 
-### Channel Version Negotation
+## Channel Version Negotation
 
 During the channel handshake procedure a version must be agreed upon between
 the two parties. The selection process is largely left to the callers and

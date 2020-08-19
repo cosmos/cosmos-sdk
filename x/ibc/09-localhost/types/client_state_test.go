@@ -17,7 +17,7 @@ const (
 func (suite *LocalhostTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
@@ -50,7 +50,7 @@ func (suite *LocalhostTestSuite) TestValidate() {
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	clientState := types.NewClientState("chainID", 10)
 	err := clientState.VerifyClientConsensusState(
-		nil, nil, nil, nil, 0, "", 0, nil, nil, nil,
+		nil, nil, nil, 0, "", 0, nil, nil, nil,
 	)
 	suite.Require().Error(err)
 }
@@ -61,7 +61,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		connection  connectiontypes.ConnectionEnd
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -88,7 +88,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		tc := tc
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, &tc.connection,
 		)
 
 		if tc.expPass {
@@ -105,7 +105,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		channel     channeltypes.Channel
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -139,7 +139,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		tc := tc
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel,
 		)
 
 		if tc.expPass {
@@ -153,7 +153,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		commitment  []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -194,7 +194,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment,
 		)
 
 		if tc.expPass {
@@ -208,7 +208,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		ack         []byte
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
@@ -249,7 +249,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack,
 		)
 
 		if tc.expPass {
@@ -263,7 +263,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -280,7 +280,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		tc := tc
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence,
 		)
 
 		if tc.expPass {
@@ -294,7 +294,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		prefix      commitmenttypes.MerklePrefix
 		proof       []byte
 		expPass     bool
@@ -330,7 +330,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		tc := tc
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, nil,
+			suite.store, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence,
 		)
 
 		if tc.expPass {

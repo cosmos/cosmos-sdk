@@ -11,7 +11,8 @@ import (
 )
 
 // ConvertTxToStdTx converts a transaction to the legacy StdTx format
-func ConvertTxToStdTx(codec *codec.Codec, tx signing.SigFeeMemoTx) (types.StdTx, error) {
+func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (types.StdTx, error) {
+
 	if stdTx, ok := tx.(types.StdTx); ok {
 		return stdTx, nil
 	}
@@ -33,9 +34,9 @@ func ConvertTxToStdTx(codec *codec.Codec, tx signing.SigFeeMemoTx) (types.StdTx,
 	return stdTx, nil
 }
 
-// CopyTx copies a SigFeeMemoTx to a new TxBuilder, allowing conversion between
+// CopyTx copies a Tx to a new TxBuilder, allowing conversion between
 // different transaction formats.
-func CopyTx(tx signing.SigFeeMemoTx, builder client.TxBuilder) error {
+func CopyTx(tx signing.Tx, builder client.TxBuilder) error {
 	err := builder.SetMsgs(tx.GetMsgs()...)
 	if err != nil {
 		return err

@@ -14,6 +14,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -38,9 +39,18 @@ type builder struct {
 }
 
 var (
-	_ authsigning.SigFeeMemoTx = &builder{}
-	_ client.TxBuilder         = &builder{}
+	_ authsigning.Tx             = &builder{}
+	_ client.TxBuilder           = &builder{}
+	_ ante.HasExtensionOptionsTx = &builder{}
+	_ ExtensionOptionsTxBuilder  = &builder{}
 )
+
+type ExtensionOptionsTxBuilder interface {
+	client.TxBuilder
+
+	SetExtensionOptions(...*codectypes.Any)
+	SetNonCriticalExtensionOptions(...*codectypes.Any)
+}
 
 func newBuilder(pubkeyCodec types.PublicKeyCodec) *builder {
 	return &builder{
@@ -212,6 +222,11 @@ func (t *builder) GetSignatures() [][]byte {
 	return t.tx.Signatures
 }
 
+// GetTimeoutHeight returns the transaction's timeout height (if set).
+func (t *builder) GetTimeoutHeight() uint64 {
+	return t.tx.Body.TimeoutHeight
+}
+
 func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := t.tx.AuthInfo.SignerInfos
 	sigs := t.tx.Signatures
@@ -251,6 +266,14 @@ func (t *builder) SetMsgs(msgs ...sdk.Msg) error {
 	t.bodyBz = nil
 
 	return nil
+}
+
+// SetTimeoutHeight sets the transaction's height timeout.
+func (t *builder) SetTimeoutHeight(height uint64) {
+	t.tx.Body.TimeoutHeight = height
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	t.bodyBz = nil
 }
 
 func (t *builder) SetMemo(memo string) {
@@ -375,6 +398,24 @@ func (t *builder) setSignatures(sigs [][]byte) {
 	t.tx.Signatures = sigs
 }
 
-func (t *builder) GetTx() authsigning.SigFeeMemoTx {
+func (t *builder) GetTx() authsigning.Tx {
 	return t
+}
+
+func (t *builder) GetExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.ExtensionOptions
+}
+
+func (t *builder) GetNonCriticalExtensionOptions() []*codectypes.Any {
+	return t.tx.Body.NonCriticalExtensionOptions
+}
+
+func (t *builder) SetExtensionOptions(extOpts ...*codectypes.Any) {
+	t.tx.Body.ExtensionOptions = extOpts
+	t.bodyBz = nil
+}
+
+func (t *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+	t.tx.Body.NonCriticalExtensionOptions = extOpts
+	t.bodyBz = nil
 }

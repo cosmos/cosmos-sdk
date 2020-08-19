@@ -50,6 +50,12 @@ const (
 	FlagPruningInterval   = "pruning-interval"
 )
 
+// GRPC-related flags.
+const (
+	flagGRPCEnable  = "grpc.enable"
+	flagGRPCAddress = "grpc.address"
+)
+
 // StartCmd runs the service passed in, either stand-alone or in-process with
 // Tendermint.
 func StartCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
@@ -100,7 +106,8 @@ which accepts a path for the resulting pprof file.
 
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
-			err := startInProcess(serverCtx, clientCtx.JSONMarshaler, appCreator)
+			// amino is needed here for backwards compatibility of REST routes
+			err := startInProcess(serverCtx, clientCtx.LegacyAmino, appCreator)
 			return err
 		},
 	}
@@ -122,6 +129,9 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
+
+	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
+	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -168,7 +178,8 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 	select {}
 }
 
-func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppCreator) error {
+// legacyAminoCdc is used for the legacy REST API
+func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -221,7 +232,9 @@ func startInProcess(ctx *Context, cdc codec.JSONMarshaler, appCreator types.AppC
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(cdc).
+			WithJSONMarshaler(legacyAminoCdc).
+			// amino is needed here for backwards compatibility of REST routes
+			WithLegacyAmino(legacyAminoCdc).
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))

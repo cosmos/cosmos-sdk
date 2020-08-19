@@ -39,10 +39,13 @@ The serialization is based on the
 [protobuf 3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
 with the following additions:
 
-1. Fields must be serialized in ascending order
+1. Fields must be serialized only once in ascending order
 2. Extra fields or any extra data must not be added
 3. [Default values](https://developers.google.com/protocol-buffers/docs/proto3#default)
    must be omitted
+4. `repeated` fields of scalar numeric types must use
+   [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
+   by default.
 
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behaviour of all protobuf encoders the author is aware of, the 3rd rule

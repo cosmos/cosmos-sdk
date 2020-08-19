@@ -23,8 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ParameterChangeProposal defines a proposal which contains multiple parameter
-// changes.
+// ParameterChangeProposal defines a proposal to change one or more parameters.
 type ParameterChangeProposal struct {
 	Title       string        `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string        `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -63,7 +62,7 @@ func (m *ParameterChangeProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ParameterChangeProposal proto.InternalMessageInfo
 
-// ParamChange defines a parameter change.
+// ParamChange defines an individual parameter change, for use in ParameterChangeProposal.
 type ParamChange struct {
 	Subspace string `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
 	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`

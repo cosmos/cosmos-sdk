@@ -56,8 +56,8 @@ message MsgEditValidator {
   ];
 }
 
-// MsgDelegate defines an SDK message for performing a delegation from a
-// delegate to a validator.
+// MsgDelegate defines an SDK message for performing a delegation of coins 
+// from a delegator to a validator.
 message MsgDelegate {
   option (gogoproto.equal) = true;
 
@@ -72,8 +72,8 @@ message MsgDelegate {
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgBeginRedelegate defines an SDK message for performing a redelegation from
-// a delegate and source validator to a destination validator.
+// MsgBeginRedelegate defines an SDK message for performing a redelegation 
+// of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
   option (gogoproto.equal) = true;
 

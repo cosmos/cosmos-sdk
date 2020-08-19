@@ -41,13 +41,13 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// Get consensus bytes from clientStore
 	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consenus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
 	}
 
 	// Get consensus bytes from clientStore
 	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consenus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
 	}
 
 	// calculate the age of the misbehaviour evidence

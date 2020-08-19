@@ -68,7 +68,7 @@ func (m *MsgSubmitProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitProposal proto.InternalMessageInfo
 
-// MsgVote defines a message to cast a vote
+// MsgVote defines a message to cast a vote.
 type MsgVote struct {
 	ProposalId uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id" yaml:"proposal_id"`
 	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`
@@ -107,7 +107,7 @@ func (m *MsgVote) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgVote proto.InternalMessageInfo
 
-// MsgDeposit defines a message to submit a deposit to an existing proposal
+// MsgDeposit defines a message to submit a deposit to an existing proposal.
 type MsgDeposit struct {
 	ProposalId uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id" yaml:"proposal_id"`
 	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`

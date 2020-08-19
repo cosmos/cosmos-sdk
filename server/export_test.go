@@ -10,10 +10,12 @@ import (
 	"path"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -25,9 +27,68 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-func TestExportCmd_ConsensusParams(t *testing.T) {
+func TestConsensusParams(t *testing.T) {
 	tempDir, clean := testutil.NewTestCaseDir(t)
 	defer clean()
+
+	_, serverCtx, clientCtx, genDoc, cmd := setupApp(t, tempDir)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, ServerContextKey, serverCtx)
+
+	output := &bytes.Buffer{}
+	cmd.SetOut(output)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	var exportedGenDoc tmtypes.GenesisDoc
+	err := json.Unmarshal(output.Bytes(), &exportedGenDoc)
+	if err != nil {
+		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
+	}
+
+	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
+	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
+	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
+
+	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
+	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)
+
+	require.Equal(t, simapp.DefaultConsensusParams.Validator.PubKeyTypes, exportedGenDoc.ConsensusParams.Validator.PubKeyTypes)
+}
+
+func TestHeight(t *testing.T) {
+	tempDir, clean := testutil.NewTestCaseDir(t)
+	defer clean()
+
+	app, serverCtx, clientCtx, _, cmd := setupApp(t, tempDir)
+
+	// Fast forward to block 3.
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
+	app.Commit()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, ServerContextKey, serverCtx)
+
+	output := &bytes.Buffer{}
+	cmd.SetOut(output)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	var exportedGenDoc tmtypes.GenesisDoc
+	err := json.Unmarshal(output.Bytes(), &exportedGenDoc)
+	if err != nil {
+		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
+	}
+
+	require.Equal(t, int64(4), exportedGenDoc.InitialHeight)
+}
+
+func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, *Context, client.Context, *tmtypes.GenesisDoc, *cobra.Command) {
 
 	err := createConfigFolder(tempDir)
 	if err != nil {
@@ -60,29 +121,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 			return app.ExportAppStateAndValidators(true, []string{})
 		}, tempDir)
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, ServerContextKey, serverCtx)
-
-	output := &bytes.Buffer{}
-	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
-	require.NoError(t, cmd.ExecuteContext(ctx))
-
-	var exportedGenDoc tmtypes.GenesisDoc
-	err = json.Unmarshal(output.Bytes(), &exportedGenDoc)
-	if err != nil {
-		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
-	}
-
-	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
-	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
-	require.Equal(t, simapp.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
-
-	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
-	require.Equal(t, simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)
-
-	require.Equal(t, simapp.DefaultConsensusParams.Validator.PubKeyTypes, exportedGenDoc.ConsensusParams.Validator.PubKeyTypes)
+	return app, serverCtx, clientCtx, genDoc, cmd
 }
 
 func createConfigFolder(dir string) error {

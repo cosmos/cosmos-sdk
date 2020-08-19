@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {

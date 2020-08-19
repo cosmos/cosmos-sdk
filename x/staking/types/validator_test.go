@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/encoding"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -63,7 +63,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
-	pk, err := cryptoenc.PubKeyToProto(validator.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
@@ -73,7 +73,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := cryptoenc.PubKeyToProto(validator.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)

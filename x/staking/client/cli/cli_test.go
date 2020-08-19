@@ -210,7 +210,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 			} else {
 				var result types.Validator
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-				s.Require().NotNil(result)
+				s.Require().Equal(val.ValAddress, result.OperatorAddress)
 			}
 		})
 	}

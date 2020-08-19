@@ -1,11 +1,10 @@
-package solomachine
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates

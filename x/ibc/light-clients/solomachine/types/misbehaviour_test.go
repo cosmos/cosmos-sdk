@@ -1,4 +1,4 @@
-package solomachine_test
+package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

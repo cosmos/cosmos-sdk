@@ -1,4 +1,4 @@
-package solomachine
+package types
 
 import (
 	"bytes"
@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not the currently registered

@@ -1,11 +1,11 @@
-package solomachine_test
+package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	solomachine "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckValidity() {

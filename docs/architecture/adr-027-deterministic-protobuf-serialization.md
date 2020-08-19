@@ -165,7 +165,7 @@ message Article {
 serializing the values
 
 ```yaml
-title: "The world needs change"
+title: "The world needs change 🌳"
 description: ""
 created: 1596806111080
 updated: 0
@@ -180,15 +180,15 @@ backlinks: []
 must result in the serialization
 
 ```
-0a1654686520776f726c64206e65656473206368616e676518e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75
+0a1b54686520776f726c64206e65656473206368616e676520f09f8cb318e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75
 ```
 
 When inspecting the serialized document, you see that every second field is
 omitted:
 
 ```
-$ echo 0a1654686520776f726c64206e65656473206368616e676518e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75 | xxd -r -p | protoc --decode_raw
-1: "The world needs change"
+$ echo 0a1b54686520776f726c64206e65656473206368616e676520f09f8cb318e8bebec8bc2e280138024a084e696365206f6e654a095468616e6b20796f75 | xxd -r -p | protoc --decode_raw
+1: "The world needs change \360\237\214\263"
 3: 1596806111080
 5: 1
 7: 2

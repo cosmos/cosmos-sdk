@@ -163,7 +163,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
 
-	if cp := app.GetConsensusParams(); cp != nil {
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
 		res.ConsensusParamUpdates = cp
 	}
 

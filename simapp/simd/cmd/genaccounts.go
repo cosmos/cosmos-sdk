@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -40,7 +41,6 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.JSONMarshaler
-			legacyAmino := clientCtx.LegacyAmino
 			cdc := depCdc.(codec.Marshaler)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
@@ -159,7 +159,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[banktypes.ModuleName] = bankGenStateBz
 
-			appStateJSON, err := legacyAmino.MarshalJSON(appState)
+			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}

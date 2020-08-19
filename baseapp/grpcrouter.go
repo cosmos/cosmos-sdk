@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,9 +18,9 @@ var protoCodec = encoding.GetCodec(proto.Name)
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes      map[string]GRPCQueryHandler
-	anyUnpacker types.AnyUnpacker
-	serviceData []serviceData
+	routes            map[string]GRPCQueryHandler
+	interfaceRegistry types.InterfaceRegistry
+	serviceData       []serviceData
 }
 
 // serviceData represents a gRPC service, along with its handler.
@@ -28,7 +29,7 @@ type serviceData struct {
 	handler     interface{}
 }
 
-var _ gogogrpc.Server
+var _ gogogrpc.Server = &GRPCQueryRouter{}
 
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {
@@ -67,8 +68,8 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				if err != nil {
 					return err
 				}
-				if qrt.anyUnpacker != nil {
-					return types.UnpackInterfaces(i, qrt.anyUnpacker)
+				if qrt.interfaceRegistry != nil {
+					return types.UnpackInterfaces(i, qrt.interfaceRegistry)
 				}
 				return nil
 			}, nil)
@@ -96,12 +97,14 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
-// AnyUnpacker returns the AnyUnpacker for the router
-func (qrt *GRPCQueryRouter) AnyUnpacker() types.AnyUnpacker {
-	return qrt.anyUnpacker
-}
+// SetInterfaceRegistry sets the interface registry for the router.
+func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry types.InterfaceRegistry) {
+	qrt.interfaceRegistry = interfaceRegistry
 
-// SetAnyUnpacker sets the AnyUnpacker for the router
-func (qrt *GRPCQueryRouter) SetAnyUnpacker(anyUnpacker types.AnyUnpacker) {
-	qrt.anyUnpacker = anyUnpacker
+	// Once we have an interface registry, we can register the interface
+	// registry reflection gRPC service.
+	reflection.RegisterReflectionServiceServer(
+		qrt,
+		reflection.NewReflectionServiceServer(qrt.interfaceRegistry),
+	)
 }

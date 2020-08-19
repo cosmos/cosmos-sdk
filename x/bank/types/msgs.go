@@ -13,7 +13,7 @@ const (
 
 var _ sdk.Msg = &MsgSend{}
 
-// NewMsgSend - construct arbitrary multi-in, multi-out send msg.
+// NewMsgSend - construct a msg to send coins from one account to another.
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }

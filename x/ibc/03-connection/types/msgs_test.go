@@ -3,6 +3,7 @@ package types_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -108,12 +110,26 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(),
 	)
 
+	// Pack consensus state into any to test unpacking error
+	consState := ibctmtypes.NewConsensusState(
+		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), clientHeight, []byte("nextValsHash"),
+	)
+	invalidAny := clienttypes.MustPackConsensusState(consState)
+	counterparty := types.NewCounterparty("connectiontotest", "clienttotest", prefix)
+
+	// invalidClientState fails validateBasic
+	invalidClient := ibctmtypes.NewClientState(
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs(),
+	)
+
 	testMsgs := []*types.MsgConnectionOpenTry{
 		types.NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
+		&types.MsgConnectionOpenTry{"ibcconntest", "clienttotesta", invalidAny, counterparty, []string{ibctesting.ConnectionVersion}, 10, suite.proof, suite.proof, suite.proof, 10, signer},
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", invalidClient, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
 		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, emptyProof, suite.proof, suite.proof, 10, 10, signer),
@@ -135,17 +151,19 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		{testMsgs[1], false, "invalid client ID"},
 		{testMsgs[2], false, "invalid counterparty connection ID"},
 		{testMsgs[3], false, "invalid counterparty client ID"},
-		{testMsgs[4], false, "invalid counterparty client"},
-		{testMsgs[5], false, "empty counterparty prefix"},
-		{testMsgs[6], false, "empty counterpartyVersions"},
-		{testMsgs[7], false, "empty proofInit"},
-		{testMsgs[8], false, "empty proofClient"},
-		{testMsgs[9], false, "empty proofConsensus"},
-		{testMsgs[10], false, "invalid proofHeight"},
-		{testMsgs[11], false, "invalid consensusHeight"},
-		{testMsgs[12], false, "empty singer"},
-		{testMsgs[13], true, "success"},
-		{testMsgs[14], false, "invalid version"},
+		{testMsgs[4], false, "invalid nil counterparty client"},
+		{testMsgs[5], false, "invalid client unpacking"},
+		{testMsgs[6], false, "counterparty failed Validate"},
+		{testMsgs[7], false, "empty counterparty prefix"},
+		{testMsgs[8], false, "empty counterpartyVersions"},
+		{testMsgs[9], false, "empty proofInit"},
+		{testMsgs[10], false, "empty proofClient"},
+		{testMsgs[11], false, "empty proofConsensus"},
+		{testMsgs[12], false, "invalid proofHeight"},
+		{testMsgs[13], false, "invalid consensusHeight"},
+		{testMsgs[14], false, "empty singer"},
+		{testMsgs[15], true, "success"},
+		{testMsgs[16], false, "invalid version"},
 	}
 
 	for i, tc := range testCases {
@@ -164,9 +182,22 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(),
 	)
 
+	// Pack consensus state into any to test unpacking error
+	consState := ibctmtypes.NewConsensusState(
+		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), clientHeight, []byte("nextValsHash"),
+	)
+	invalidAny := clienttypes.MustPackConsensusState(consState)
+
+	// invalidClientState fails validateBasic
+	invalidClient := ibctmtypes.NewClientState(
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs(),
+	)
+
 	testMsgs := []*types.MsgConnectionOpenAck{
 		types.NewMsgConnectionOpenAck("test/conn1", clientState, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", nil, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
+		&types.MsgConnectionOpenAck{"ibcconntest", ibctesting.ConnectionVersion, invalidAny, 10, suite.proof, suite.proof, suite.proof, 10, signer},
+		types.NewMsgConnectionOpenAck("ibcconntest", invalidClient, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, emptyProof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, emptyProof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
 		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, emptyProof, 10, 10, ibctesting.ConnectionVersion, signer),
@@ -182,15 +213,17 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 		errMsg  string
 	}{
 		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "invalid counterparty client"},
-		{testMsgs[2], false, "empty proofTry"},
-		{testMsgs[3], false, "empty proofClient"},
-		{testMsgs[4], false, "empty proofConsensus"},
-		{testMsgs[5], false, "invalid proofHeight"},
-		{testMsgs[6], false, "invalid consensusHeight"},
-		{testMsgs[7], false, "invalid version"},
-		{testMsgs[8], false, "empty signer"},
-		{testMsgs[9], true, "success"},
+		{testMsgs[1], false, "invalid nil counterparty client"},
+		{testMsgs[2], false, "invalid unpacking counterparty client"},
+		{testMsgs[3], false, "counterparty client failed Validate"},
+		{testMsgs[4], false, "empty proofTry"},
+		{testMsgs[5], false, "empty proofClient"},
+		{testMsgs[6], false, "empty proofConsensus"},
+		{testMsgs[7], false, "invalid proofHeight"},
+		{testMsgs[8], false, "invalid consensusHeight"},
+		{testMsgs[9], false, "invalid version"},
+		{testMsgs[10], false, "empty signer"},
+		{testMsgs[11], true, "success"},
 	}
 
 	for i, tc := range testCases {

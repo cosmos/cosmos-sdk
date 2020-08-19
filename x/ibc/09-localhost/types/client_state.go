@@ -103,12 +103,12 @@ func (cs ClientState) VerifyClientState(
 			"not found for path: %s", path)
 	}
 
-	prevClient := clienttypes.MustUnmarshalClientState(cdc, bz)
+	selfClient := clienttypes.MustUnmarshalClientState(cdc, bz)
 
-	if !reflect.DeepEqual(prevClient, clientState) {
+	if !reflect.DeepEqual(selfClient, clientState) {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedClientStateVerification,
 			"stored clientState != provided clientState: \n%v\n≠\n%v",
-			prevClient, clientState,
+			selfClient, clientState,
 		)
 	}
 	return nil

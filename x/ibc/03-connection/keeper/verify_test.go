@@ -55,9 +55,9 @@ func (suite *KeeperTestSuite) TestVerifyClientState() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -135,9 +135,9 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -186,9 +186,9 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -236,9 +236,9 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -290,9 +290,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -349,9 +349,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -409,9 +409,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}
@@ -463,9 +463,9 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			)
 
 			if tc.expPass {
-				suite.Require().NoError(err, "valid test case: %s failed, error: %v", tc.msg, err)
+				suite.Require().NoError(err)
 			} else {
-				suite.Require().Error(err, "invalid test case: %s passed", tc.msg)
+				suite.Require().Error(err)
 			}
 		})
 	}

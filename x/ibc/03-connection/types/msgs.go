@@ -107,7 +107,16 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	}
 	if msg.ClientState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	} else {
+		clientState, err := clienttypes.UnpackClientState(msg.ClientState)
+		if err != nil {
+			return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "unpack err: %v", err)
+		}
+		if err := clientState.Validate(); err != nil {
+			return sdkerrors.Wrap(err, "counterparty client is invalid")
+		}
 	}
+
 	if len(msg.CounterpartyVersions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty counterparty versions")
 	}
@@ -190,6 +199,14 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	}
 	if msg.ClientState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	} else {
+		clientState, err := clienttypes.UnpackClientState(msg.ClientState)
+		if err != nil {
+			return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "unpack err: %v", err)
+		}
+		if err := clientState.Validate(); err != nil {
+			return sdkerrors.Wrap(err, "counterparty client is invalid")
+		}
 	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")

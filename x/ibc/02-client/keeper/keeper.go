@@ -201,6 +201,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 }
 
 // ValidateClient validates the client parameters for a client of the running chain
+// This function is only used to validate the client state the counterparty stores for this chain
 func (k Keeper) ValidateClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {

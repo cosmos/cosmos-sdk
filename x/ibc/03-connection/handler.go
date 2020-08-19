@@ -39,8 +39,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenTry) (*sdk.Result, error) {
 	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient,
-			"client in msg is not exported.ClientState. invalid client: %v. error: %v", targetClient, err)
+		return nil, sdkerrors.Wrapf(err, "client in msg is not exported.ClientState. invalid client: %v.", targetClient)
 	}
 
 	if err := k.ConnOpenTry(
@@ -74,8 +73,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenAck) (*sdk.Result, error) {
 	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClient,
-			"client in msg is not exported.ClientState. invalid client: %v. error: %v", targetClient, err)
+		return nil, sdkerrors.Wrapf(err, "client in msg is not exported.ClientState. invalid client: %v", targetClient)
 	}
 
 	if err := k.ConnOpenAck(

@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,6 +51,8 @@ type KeeperTestSuite struct {
 	privVal        tmtypes.PrivValidator
 	now            time.Time
 	past           time.Time
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -85,6 +88,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.IBCKeeper.ClientKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -220,18 +227,18 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 	}
 
-	expGenClients := make([]types.GenesisClientState, len(expClients))
+	expGenClients := make([]types.IdentifiedClientState, len(expClients))
 
 	for i := range expClients {
 		suite.keeper.SetClientState(suite.ctx, clientIDs[i], expClients[i])
-		expGenClients[i] = types.NewGenesisClientState(clientIDs[i], expClients[i])
+		expGenClients[i] = types.NewIdentifiedClientState(clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
 	// TODO: uncomment after simapp is migrated to proto
 	// localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
 	// suite.Require().True(found)
-	// expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
+	// expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
 
 	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
 
@@ -273,11 +280,11 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), testClientHeight+5, suite.valSetHash)
 
-	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, testClientHeight, suite.header.Time.Add(time.Minute),
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeight+5, testClientHeight, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
-	clientState.LatestHeight = uint64(header.Height)
+	clientState.LatestHeight = header.GetHeight()
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+5, nextState)
 	suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 

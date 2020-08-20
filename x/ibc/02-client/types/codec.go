@@ -81,7 +81,7 @@ func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
 }
 
 // UnpackClientState unpacks an Any into a ClientState. It returns an error if the
-// consensus state can't be unpacked into a ClientState.
+// client state can't be unpacked into a ClientState.
 func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
 	clientState, ok := any.GetCachedValue().(exported.ClientState)
 	if !ok {

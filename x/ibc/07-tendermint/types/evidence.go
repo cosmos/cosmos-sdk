@@ -8,6 +8,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -72,14 +73,14 @@ func (ev Evidence) Hash() tmbytes.HexBytes {
 //
 // NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
-	return int64(math.Min(float64(ev.Header1.Height), float64(ev.Header2.Height)))
+	return int64(math.Min(float64(ev.Header1.GetHeight()), float64(ev.Header2.GetHeight())))
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the
 // maximum value from both headers to prevent producing an invalid header outside
 // of the evidence age range.
 func (ev Evidence) GetTime() time.Time {
-	minTime := int64(math.Max(float64(ev.Header1.Time.UnixNano()), float64(ev.Header2.Time.UnixNano())))
+	minTime := int64(math.Max(float64(ev.Header1.GetTime().UnixNano()), float64(ev.Header2.GetTime().UnixNano())))
 	return time.Unix(0, minTime)
 }
 
@@ -103,25 +104,35 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header1.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header2.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
 		)
 	}
 	// Ensure that Heights are the same
-	if ev.Header1.Height != ev.Header2.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
+	if ev.Header1.GetHeight() != ev.Header2.GetHeight() {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.GetHeight(), ev.Header2.GetHeight())
 	}
+
+	blockID1, err := tmtypes.BlockIDFromProto(&ev.Header1.SignedHeader.Commit.BlockID)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid block ID from header 1 in evidence")
+	}
+	blockID2, err := tmtypes.BlockIDFromProto(&ev.Header2.SignedHeader.Commit.BlockID)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid block ID from header 2 in evidence")
+	}
+
 	// Ensure that Commit Hashes are different
-	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
+	if blockID1.Equals(*blockID2) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers blockIDs are not equal")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
@@ -137,21 +148,30 @@ func (ev Evidence) ValidateBasic() error {
 // CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
 // This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
 // thus we should return an error here and reject the evidence rather than panicing.
-func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
+func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)
 		}
 	}()
 
+	tmCommit, err := tmtypes.CommitFromProto(commit)
+	if err != nil {
+		return sdkerrors.Wrap(err, "commit is not tendermint commit type")
+	}
+	tmValset, err := tmtypes.ValidatorSetFromProto(valSet)
+	if err != nil {
+		return sdkerrors.Wrap(err, "validator set is not tendermint validator set type")
+	}
+
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet := tmtypes.CommitToVoteSet(chainID, commit, valSet)
+	voteSet := tmtypes.CommitToVoteSet(chainID, tmCommit, tmValset)
 
 	blockID, ok := voteSet.TwoThirdsMajority()
 
 	// Check that ValidatorSet did indeed commit to blockID in Commit
-	if !ok || !blockID.Equals(commit.BlockID) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header 1")
+	if !ok || !blockID.Equals(tmCommit.BlockID) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header")
 	}
 
 	return nil

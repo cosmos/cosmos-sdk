@@ -10,7 +10,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// Copied unimported test functions from tmtypes to use them here
+// MakeBlockID is a copied unimported test function from tmtypes to use here
 func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
@@ -22,8 +22,8 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, valSet, trustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
-	vsetHash := valSet.Hash()
+func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+	vsetHash := tmValSet.Hash()
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
@@ -38,20 +38,30 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 		AppHash:            tmhash.Sum([]byte("app_hash")),
 		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
-		ProposerAddress:    valSet.Proposer.Address,
+		ProposerAddress:    tmValSet.Proposer.Address,
 	}
 
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, valSet)
+	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, tmValSet)
 	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
 
-	signedHeader := tmtypes.SignedHeader{
-		Header: &tmHeader,
-		Commit: commit,
+	signedHeader := tmproto.SignedHeader{
+		Header: tmHeader.ToProto(),
+		Commit: commit.ToProto(),
+	}
+
+	valSet, err := tmValSet.ToProto()
+	if err != nil {
+		panic(err)
+	}
+
+	trustedVals, err := tmTrustedVals.ToProto()
+	if err != nil {
+		panic(err)
 	}
 
 	return Header{

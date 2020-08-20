@@ -201,6 +201,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			suite.cdc,
 			suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientID), // pass in clientID prefixed clientStore
 			newHeader,
+			false,
 		)
 
 		if tc.expPass {

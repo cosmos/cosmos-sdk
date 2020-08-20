@@ -39,7 +39,7 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 )
 
-var latestTimestamp = time.Date(2020, 01, 01, 20, 34, 58, 651387237, time.UTC)
+var latestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
 type IBCTestSuite struct {
 	suite.Suite

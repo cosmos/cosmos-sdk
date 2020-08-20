@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 
 			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
 
-			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
+			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader, false)
 
 			if tc.expPass {
 				suite.Require().NoError(err, err)

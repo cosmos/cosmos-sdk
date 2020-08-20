@@ -37,7 +37,7 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
+	header clientexported.Header, override bool,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
@@ -63,7 +63,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime()); err != nil {
+	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime(), override); err != nil {
 		return nil, nil, err
 	}
 
@@ -97,7 +97,7 @@ func checkTrustedHeader(header Header, consState *ConsensusState) error {
 // CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
 	clientState *ClientState, consState *ConsensusState,
-	header Header, currentTimestamp time.Time,
+	header Header, currentTimestamp time.Time, override bool,
 ) error {
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -109,6 +109,12 @@ func checkValidity(
 			clienttypes.ErrInvalidHeader,
 			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,
 		)
+	}
+
+	// skip furher header checks. This is usually the case when
+	// one wants to force to update a client with a new header
+	if override {
+		return nil
 	}
 
 	// Construct a trusted header using the fields in consensus state

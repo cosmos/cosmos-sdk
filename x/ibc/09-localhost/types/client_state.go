@@ -80,8 +80,10 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 }
 
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
+// Localhost client does not have the logic override implemented. Even though we don't use the flag
+// override, we still need to add it in order for the clientStatus interface to be respected.
 func (cs ClientState) CheckHeaderAndUpdateState(
-	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header, override bool,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	return NewClientState(
 		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).

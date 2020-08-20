@@ -81,6 +81,13 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			counterparty: invalidClient,
 			expPass:      false,
 		},
+		{
+			name:         "proof verification failed: client not stored",
+			clientState:  clientState,
+			malleate:     func() {},
+			counterparty: clientState,
+			expPass:      false,
+		},
 	}
 
 	for _, tc := range testCases {

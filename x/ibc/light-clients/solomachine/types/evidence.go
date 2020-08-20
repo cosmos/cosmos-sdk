@@ -3,6 +3,8 @@ package types
 import (
 	"bytes"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
@@ -36,6 +38,12 @@ func (ev Evidence) Route() string {
 // Type implements Evidence interface.
 func (ev Evidence) Type() string {
 	return "client_misbehaviour"
+}
+
+// String implements Evidence interface.
+func (ev Evidence) String() string {
+	out, _ := yaml.Marshal(ev)
+	return string(out)
 }
 
 // Hash implements Evidence interface

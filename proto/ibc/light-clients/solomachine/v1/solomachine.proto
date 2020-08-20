@@ -44,7 +44,8 @@ message Header {
 // Evidence defines evidence of misbehaviour for a solo machine which consists
 // of a sequence and two signatures over different messages at that sequence.
 message Evidence {
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
   string           client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   uint64           sequence  = 2;
   SignatureAndData signature_one = 3

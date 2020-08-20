@@ -145,7 +145,7 @@ func (k Keeper) TimeoutExecuted(
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out: %v", packet))
+	k.Logger(ctx).Info("packet timed-out", "packet", packet)
 
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -266,28 +266,6 @@ func (k Keeper) TimeoutOnClose(
 		return err
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	k.Logger(ctx).Info(fmt.Sprintf("packet timed-out on close: %v", packet))
-
-	// emit an event marking that we have processed the timeout
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTimeoutPacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
-			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
-			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
-			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
-			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
-			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-	})
-
+	// NOTE: the remaining code is located in the TimeoutExecuted function
 	return nil
 }

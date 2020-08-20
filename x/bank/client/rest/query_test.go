@@ -148,7 +148,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(40))),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt50))),
 				),
 			},
 		},
@@ -157,7 +157,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s", baseURL, s.cfg.BondDenom),
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(40))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
 			},
 		},
 		{

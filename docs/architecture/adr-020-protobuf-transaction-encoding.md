@@ -8,6 +8,7 @@
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
+- 2020 August 07: Use ADR 027 for serializing `SignDoc`.
 - 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`.
 
 ## Status
@@ -199,8 +200,7 @@ message SignDoc {
 In order to sign in the default mode, clients take the following steps:
 
 1. Serialize `TxBody` and `AuthInfo` using any valid protobuf implementation.
-2. Create a `SignDoc` and encode it. (The only requirement of the underlying
-   protobuf implementation is that fields are serialized in order).
+2. Create a `SignDoc` and serialize it using [ADR 027](./adr-027-deterministic-protobuf-serialization.md).
 3. Sign the encoded `SignDoc` bytes.
 4. Build a `TxRaw` and serialize it for broadcasting.
 
@@ -216,8 +216,7 @@ Signature verifiers do:
 3. For each required signer:
    - Pull account number and sequence from the state.
    - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
-   - Create a `SignDoc` and serialize it. Due to the simplicity of the type it
-     is expected that this matches the serialization used by the signer.
+   - Create a `SignDoc` and serialize it using [ADR 027](./adr-027-deterministic-protobuf-serialization.md).
    - Verify the signature at the the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`

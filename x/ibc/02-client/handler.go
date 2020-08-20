@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -109,45 +108,5 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 
 // HandleClientUpdateProposal is a handler for executing a passed client update proposal
 func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.ClientUpdateProposal) error {
-	clientState, found := k.GetClientState(ctx, p.ClientId)
-	if !found {
-		return types.ErrClientNotFound
-	}
-
-	clientType := clientState.ClientType()
-	switch clientType {
-	case exported.Tendermint:
-		tmClientState := clientState.(*ibctmtypes.ClientState)
-
-		updateClientFlag := false
-		if tmClientState.AllowGovernanceOverrideAfterExpiry && tmClientState.Expired(ctx.BlockTime()) {
-			updateClientFlag = true
-		}
-
-		if tmClientState.AllowGovernanceOverrideAfterMisbehaviour && tmClientState.IsFrozen() {
-			tmClientState.Unfreeze()
-			k.SetClientState(ctx, p.ClientId, tmClientState)
-			updateClientFlag = true
-		}
-
-		if updateClientFlag {
-			tmtHeader, err := ibctmtypes.UnmarshalHeader(p.Header)
-			if err != nil {
-				return types.ErrInvalidHeader
-			}
-			if _, err = k.UpdateClient(ctx, p.ClientId, tmtHeader, true); err != nil {
-				return err
-			}
-
-		} else {
-			return types.ErrFailUpdateClient
-		}
-
-	case exported.Localhost:
-
-	default:
-		return sdkerrors.Wrapf(types.ErrInvalidClientType, "unsupported client type (%s)", clientType)
-	}
-
-	return nil
+	return k.ClientUpdateProposal(ctx, p)
 }

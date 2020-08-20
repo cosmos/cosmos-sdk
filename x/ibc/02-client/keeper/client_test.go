@@ -57,11 +57,11 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createFutureUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height+3, suite.header.Height, suite.header.Time.Add(time.Hour),
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()+3), int64(suite.header.GetHeight()), suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createPastUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height-2, suite.header.Height-4, suite.header.Time,
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()-2), int64(suite.header.GetHeight())-4, suite.header.Header.Time,
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var (
@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
+			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Header.Time.Add(time.Minute))
 
 			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
@@ -198,9 +198,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 
 				expConsensusState := &ibctmtypes.ConsensusState{
 					Height:             updateHeader.GetHeight(),
-					Timestamp:          updateHeader.Time,
-					Root:               commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
-					NextValidatorsHash: updateHeader.NextValidatorsHash,
+					Timestamp:          updateHeader.GetTime(),
+					Root:               commitmenttypes.NewMerkleRoot(updateHeader.Header.AppHash),
+					NextValidatorsHash: updateHeader.Header.NextValidatorsHash,
 				}
 
 				newClientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -212,9 +212,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().Equal(updatedClientState, newClientState, "updatedClient state not persisted correctly")
 
 				// Determine if clientState should be updated or not
-				if uint64(updateHeader.Height) > clientState.GetLatestHeight() {
-					// Header Height is greater than clientState latest Height, clientState should be updated with header.Height
-					suite.Require().Equal(uint64(updateHeader.Height), updatedClientState.GetLatestHeight(), "clientstate height did not update")
+				if uint64(updateHeader.GetHeight()) > clientState.GetLatestHeight() {
+					// Header Height is greater than clientState latest Height, clientState should be updated with header.GetHeight()
+					suite.Require().Equal(uint64(updateHeader.GetHeight()), updatedClientState.GetLatestHeight(), "clientstate height did not update")
 				} else {
 					// Update will add past consensus state, clientState should not be updated at all
 					suite.Require().Equal(clientState.GetLatestHeight(), updatedClientState.GetLatestHeight(), "client state height updated for past header")

@@ -3,7 +3,7 @@
 ## Changelog
 
 - 2019-11-06: Initial Draft
-- 2020/08/18: Updated Draft
+- 2020-08-18: Updated Draft
 
 ## Status
 
@@ -11,16 +11,11 @@ Accepted
 
 ## Context
 
-At Hackatom Berlin in June 2019, the Gaians team worked on a `delegation` module that is described in the spec below.
-Prior to that, the B-Harvest team had worked on a [subkeys spec](https://github.com/cosmos/cosmos-sdk/issues/4480) that
-covered similar use cases. In discussions after the Hackathon, the `delegation` module approach was deemed to
-be more generic and there was community desire for the work to continue. This resulted in an ICF grant to continue
-this work along with the fee grants and key groups modules.
 
 ## Decision
 
-We will create a module named `msg_authorization`. The `msg_authorization` module provides support for granting arbitrary capabilities
-from one account (the granter) to another account (the grantee). Capabilities
+We will create a module named `msg_authorization`. The `msg_authorization` module provides support for
+granting arbitrary capabilities from one account (the granter) to another account (the grantee). Capabilities
 must be granted for a particular type of `sdk.Msg` one by one using an implementation
 of `Capability`.
 
@@ -53,7 +48,7 @@ type SendCapability struct {
 }
 
 func (cap SendCapability) MsgType() sdk.Msg {
-	return bank.MsgSend{}
+	return &bank.MsgSend{}
 }
 
 func (cap SendCapability) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Capability, delete bool) {
@@ -100,9 +95,9 @@ type MsgGrant struct {
 type MsgRevoke struct {
 	Granter sdk.AccAddress `json:"granter"`
 	Grantee sdk.AccAddress `json:"grantee"`
-    // CapabilityMsgType is the type of sdk.Msg that the revoked Capability refers to.
-    // i.e. this is what `Capability.MsgType()` returns
-	CapabilityMsgType sdk.Msg `json:"capability_msg_type"`
+    // CapabilityMsgType is the full protobuf message name for the Msg type
+    // whose capability is being revoked.
+	CapabilityMsgType string `json:"capability_msg_type"`
 }
 ```
 

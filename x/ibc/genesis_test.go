@@ -35,11 +35,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
 						),
 					},
@@ -95,11 +95,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "invalid client genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
 						),
 					},
@@ -164,11 +164,11 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
 						),
 					},

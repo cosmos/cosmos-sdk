@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	prototypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -35,7 +36,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.NoError(ms.LoadLatestVersion())
 
 	encCfg := simapp.MakeEncodingConfig()
-	ss := types.NewSubspace(encCfg.Marshaler, encCfg.Amino, key, tkey, "testsubspace")
+	ss := types.NewSubspace(encCfg.Marshaler, key, tkey, "testsubspace")
 
 	suite.cdc = encCfg.Marshaler
 	suite.amino = encCfg.Amino
@@ -49,14 +50,14 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace2")
+		ss := types.NewSubspace(suite.cdc, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }
 
 func (suite *SubspaceTestSuite) TestGetSet() {
-	var v time.Duration
-	t := time.Hour * 48
+	var v prototypes.Duration
+	t := prototypes.DurationProto(time.Hour * 48)
 
 	suite.Require().Panics(func() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
@@ -72,7 +73,7 @@ func (suite *SubspaceTestSuite) TestGetSet() {
 }
 
 func (suite *SubspaceTestSuite) TestGetIfExists() {
-	var v time.Duration
+	var v prototypes.Duration
 
 	suite.Require().NotPanics(func() {
 		suite.ss.GetIfExists(suite.ctx, keyUnbondingTime, &v)
@@ -81,7 +82,7 @@ func (suite *SubspaceTestSuite) TestGetIfExists() {
 }
 
 func (suite *SubspaceTestSuite) TestGetRaw() {
-	t := time.Hour * 48
+	t := prototypes.DurationProto(time.Hour * 48)
 
 	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
@@ -93,7 +94,7 @@ func (suite *SubspaceTestSuite) TestGetRaw() {
 }
 
 func (suite *SubspaceTestSuite) TestHas() {
-	t := time.Hour * 48
+	t := prototypes.DurationProto(time.Hour * 48)
 
 	suite.Require().False(suite.ss.Has(suite.ctx, keyUnbondingTime))
 	suite.Require().NotPanics(func() {
@@ -103,7 +104,7 @@ func (suite *SubspaceTestSuite) TestHas() {
 }
 
 func (suite *SubspaceTestSuite) TestModified() {
-	t := time.Hour * 48
+	t := prototypes.DurationProto(time.Hour * 48)
 
 	suite.Require().False(suite.ss.Modified(suite.ctx, keyUnbondingTime))
 	suite.Require().NotPanics(func() {
@@ -117,23 +118,23 @@ func (suite *SubspaceTestSuite) TestUpdate() {
 		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) // nolint:errcheck
 	})
 
-	t := time.Hour * 48
+	t := prototypes.DurationProto(time.Hour * 48)
 	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
 
-	bad := time.Minute * 5
+	bad := prototypes.DurationProto(time.Minute * 5)
 
-	bz, err := suite.amino.MarshalJSON(bad)
+	bz, err := suite.cdc.MarshalBinaryBare(bad)
 	suite.Require().NoError(err)
 	suite.Require().Error(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
-	good := time.Hour * 360
+	good := prototypes.DurationProto(time.Hour * 360)
 	bz, err = suite.amino.MarshalJSON(good)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
-	var v time.Duration
+	var v prototypes.Duration
 
 	suite.Require().NotPanics(func() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
@@ -143,14 +144,14 @@ func (suite *SubspaceTestSuite) TestUpdate() {
 
 func (suite *SubspaceTestSuite) TestGetParamSet() {
 	a := params{
-		UnbondingTime: time.Hour * 48,
-		MaxValidators: 100,
-		BondDenom:     "stake",
+		UnbondingTime: *prototypes.DurationProto(time.Hour * 48),
+		MaxValidators: prototypes.UInt64Value{Value: 100},
+		BondDenom:     prototypes.StringValue{Value: "stake"},
 	}
 	suite.Require().NotPanics(func() {
-		suite.ss.Set(suite.ctx, keyUnbondingTime, a.UnbondingTime)
-		suite.ss.Set(suite.ctx, keyMaxValidators, a.MaxValidators)
-		suite.ss.Set(suite.ctx, keyBondDenom, a.BondDenom)
+		suite.ss.Set(suite.ctx, keyUnbondingTime, &a.UnbondingTime)
+		suite.ss.Set(suite.ctx, keyMaxValidators, &a.MaxValidators)
+		suite.ss.Set(suite.ctx, keyBondDenom, &a.BondDenom)
 	})
 
 	b := params{}
@@ -162,15 +163,21 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 	suite.Require().Equal(a.BondDenom, b.BondDenom)
 }
 
+
 func (suite *SubspaceTestSuite) TestSetParamSet() {
-	testCases := []struct {
+	var testCases = []struct {
 		name string
 		ps   types.ParamSet
 	}{
-		{"invalid unbonding time", &params{time.Hour * 1, 100, "stake"}},
-		{"invalid bond denom", &params{time.Hour * 48, 100, ""}},
+		{"invalid unbonding time", &params{
+			*prototypes.DurationProto(time.Hour * 1),
+			prototypes.UInt64Value{Value: 100},
+			prototypes.StringValue{Value: "stake"}}},
+		{"invalid bond denom", &params{
+			*prototypes.DurationProto(time.Hour * 48),
+			prototypes.UInt64Value{Value: 100},
+			prototypes.StringValue{Value: ""}}},
 	}
-
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
@@ -181,9 +188,9 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 	}
 
 	a := params{
-		UnbondingTime: time.Hour * 48,
-		MaxValidators: 100,
-		BondDenom:     "stake",
+		UnbondingTime: *prototypes.DurationProto(time.Hour * 48),
+		MaxValidators: prototypes.UInt64Value{Value: 100},
+		BondDenom:     prototypes.StringValue{Value: "stake"},
 	}
 	suite.Require().NotPanics(func() {
 		suite.ss.SetParamSet(suite.ctx, &a)

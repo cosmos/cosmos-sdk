@@ -1,13 +1,13 @@
 package types
 
 import (
-	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 type attribute struct {
-	ty  reflect.Type
+	ty  codec.ProtoMarshaler
 	vfn ValueValidatorFn
 }
 
@@ -40,21 +40,14 @@ func (t KeyTable) RegisterType(psp ParamSetPair) KeyTable {
 		panic("cannot register ParamSetPair without a value validation function")
 	}
 
-	keystr := string(psp.Key)
-	if _, ok := t.m[keystr]; ok {
+	keyStr := string(psp.Key)
+	if _, ok := t.m[keyStr]; ok {
 		panic("duplicate parameter key")
 	}
 
-	rty := reflect.TypeOf(psp.Value)
-
-	// indirect rty if it is a pointer
-	for rty.Kind() == reflect.Ptr {
-		rty = rty.Elem()
-	}
-
-	t.m[keystr] = attribute{
+	t.m[keyStr] = attribute{
 		vfn: psp.ValidatorFn,
-		ty:  rty,
+		ty:  psp.Value,
 	}
 
 	return t

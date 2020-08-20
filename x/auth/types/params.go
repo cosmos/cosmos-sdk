@@ -2,19 +2,21 @@ package types
 
 import (
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 
 	yaml "gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	pt "github.com/gogo/protobuf/types"
 )
 
 // Default parameter values
-const (
-	DefaultMaxMemoCharacters      uint64 = 256
-	DefaultTxSigLimit             uint64 = 7
-	DefaultTxSizeCostPerByte      uint64 = 10
-	DefaultSigVerifyCostED25519   uint64 = 590
-	DefaultSigVerifyCostSecp256k1 uint64 = 1000
+var (
+	DefaultMaxMemoCharacters      = pt.UInt64Value{Value: 256}
+	DefaultTxSigLimit             = pt.UInt64Value{Value: 7}
+	DefaultTxSizeCostPerByte      = pt.UInt64Value{Value: 10}
+	DefaultSigVerifyCostED25519   = pt.UInt64Value{Value: 590}
+	DefaultSigVerifyCostSecp256k1 = pt.UInt64Value{Value: 1000}
 )
 
 // Parameter keys
@@ -30,14 +32,14 @@ var _ paramtypes.ParamSet = &Params{}
 
 // NewParams creates a new Params object
 func NewParams(
-	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64,
+	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 pt.UInt64Value,
 ) Params {
 	return Params{
-		MaxMemoCharacters:      maxMemoCharacters,
-		TxSigLimit:             txSigLimit,
-		TxSizeCostPerByte:      txSizeCostPerByte,
-		SigVerifyCostED25519:   sigVerifyCostED25519,
-		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+		MaxMemoCharacters:      &maxMemoCharacters,
+		TxSigLimit:             &txSigLimit,
+		TxSizeCostPerByte:      &txSizeCostPerByte,
+		SigVerifyCostED25519:   &sigVerifyCostED25519,
+		SigVerifyCostSecp256k1: &sigVerifyCostSecp256k1,
 	}
 }
 
@@ -50,23 +52,24 @@ func ParamKeyTable() paramtypes.KeyTable {
 // pairs of auth module's parameters.
 // nolint
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyMaxMemoCharacters, &p.MaxMemoCharacters, validateMaxMemoCharacters),
-		paramtypes.NewParamSetPair(KeyTxSigLimit, &p.TxSigLimit, validateTxSigLimit),
-		paramtypes.NewParamSetPair(KeyTxSizeCostPerByte, &p.TxSizeCostPerByte, validateTxSizeCostPerByte),
-		paramtypes.NewParamSetPair(KeySigVerifyCostED25519, &p.SigVerifyCostED25519, validateSigVerifyCostED25519),
-		paramtypes.NewParamSetPair(KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
+		paramtypes.NewParamSetPair(KeyMaxMemoCharacters, p.MaxMemoCharacters, validateMaxMemoCharacters),
+		paramtypes.NewParamSetPair(KeyTxSigLimit, p.TxSigLimit, validateTxSigLimit),
+		paramtypes.NewParamSetPair(KeyTxSizeCostPerByte, p.TxSizeCostPerByte, validateTxSizeCostPerByte),
+		paramtypes.NewParamSetPair(KeySigVerifyCostED25519, p.SigVerifyCostED25519, validateSigVerifyCostED25519),
+		paramtypes.NewParamSetPair(KeySigVerifyCostSecp256k1, p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
 	}
 }
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		MaxMemoCharacters:      DefaultMaxMemoCharacters,
-		TxSigLimit:             DefaultTxSigLimit,
-		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
-		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
-		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
+		MaxMemoCharacters:      &DefaultMaxMemoCharacters,
+		TxSigLimit:             &DefaultTxSigLimit,
+		TxSizeCostPerByte:      &DefaultTxSizeCostPerByte,
+		SigVerifyCostED25519:   &DefaultSigVerifyCostED25519,
+		SigVerifyCostSecp256k1: &DefaultSigVerifyCostSecp256k1,
 	}
 }
 
@@ -76,65 +79,65 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func validateTxSigLimit(i interface{}) error {
-	v, ok := i.(uint64)
+func validateTxSigLimit(m proto.Message) error {
+	v, ok := m.(*pt.UInt64Value)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", m)
 	}
 
-	if v == 0 {
+	if v.Value == 0 {
 		return fmt.Errorf("invalid tx signature limit: %d", v)
 	}
 
 	return nil
 }
 
-func validateSigVerifyCostED25519(i interface{}) error {
-	v, ok := i.(uint64)
+func validateSigVerifyCostED25519(m proto.Message) error {
+	v, ok := m.(*pt.UInt64Value)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", m)
 	}
 
-	if v == 0 {
+	if v.Value == 0 {
 		return fmt.Errorf("invalid ED25519 signature verification cost: %d", v)
 	}
 
 	return nil
 }
 
-func validateSigVerifyCostSecp256k1(i interface{}) error {
-	v, ok := i.(uint64)
+func validateSigVerifyCostSecp256k1(m proto.Message) error {
+	v, ok := m.(*pt.UInt64Value)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", m)
 	}
 
-	if v == 0 {
+	if v.Value == 0 {
 		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", v)
 	}
 
 	return nil
 }
 
-func validateMaxMemoCharacters(i interface{}) error {
-	v, ok := i.(uint64)
+func validateMaxMemoCharacters(m proto.Message) error {
+	v, ok := m.(*pt.UInt64Value)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", m)
 	}
 
-	if v == 0 {
+	if v.Value == 0 {
 		return fmt.Errorf("invalid max memo characters: %d", v)
 	}
 
 	return nil
 }
 
-func validateTxSizeCostPerByte(i interface{}) error {
-	v, ok := i.(uint64)
+func validateTxSizeCostPerByte(m proto.Message) error {
+	v, ok := m.(*pt.UInt64Value)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", m)
 	}
 
-	if v == 0 {
+	if v.Value == 0 {
 		return fmt.Errorf("invalid tx size cost per byte: %d", v)
 	}
 

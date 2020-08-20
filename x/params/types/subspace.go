@@ -2,12 +2,13 @@ package types
 
 import (
 	"fmt"
-	"reflect"
+
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
+
 )
 
 const (
@@ -22,23 +23,21 @@ const (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc         codec.BinaryMarshaler
-	legacyAmino *codec.LegacyAmino
-	key         sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey        sdk.StoreKey // []byte -> bool, stores parameter change
-	name        []byte
-	table       KeyTable
+	cdc   codec.BinaryMarshaler
+	key   sdk.StoreKey // []byte -> []byte, stores parameter
+	tkey  sdk.StoreKey // []byte -> bool, stores parameter change
+	name  []byte
+	table KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+func NewSubspace(cdc codec.BinaryMarshaler, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
 	return Subspace{
-		cdc:         cdc,
-		legacyAmino: legacyAmino,
-		key:         key,
-		tkey:        tkey,
-		name:        []byte(name),
-		table:       NewKeyTable(),
+		cdc:   cdc,
+		key:   key,
+		tkey:  tkey,
+		name:  []byte(name),
+		table: NewKeyTable(),
 	}
 }
 
@@ -100,13 +99,13 @@ func (s Subspace) Validate(ctx sdk.Context, key []byte, value proto.Message) err
 
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
-func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) Get(ctx sdk.Context, key []byte, ptr codec.ProtoMarshaler) {
 	s.checkType(key, ptr)
 
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
-	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
+	if err := s.cdc.UnmarshalBinaryBare(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -114,7 +113,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 // GetIfExists queries for a parameter by key from the Subspace's KVStore and
 // sets the value to the provided pointer. If the value does not exist, it will
 // perform a no-op.
-func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr codec.ProtoMarshaler) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
@@ -123,7 +122,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 	s.checkType(key, ptr)
 
-	if err := s.legacyAmino.UnmarshalJSON(bz, ptr); err != nil {
+	if err := s.cdc.UnmarshalBinaryBare(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -148,19 +147,15 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 }
 
 // checkType verifies that the provided key and value are comptable and registered.
-func (s Subspace) checkType(key []byte, value interface{}) {
+func (s Subspace) checkType(key []byte, value codec.ProtoMarshaler) {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic(fmt.Sprintf("parameter %s not registered", string(key)))
 	}
 
-	ty := attr.ty
-	pty := reflect.TypeOf(value)
-	if pty.Kind() == reflect.Ptr {
-		pty = pty.Elem()
-	}
+	registeredProtoMarshaler := attr.ty
 
-	if pty != ty {
+	if registeredProtoMarshaler != value {
 		panic("type mismatch with registered table")
 	}
 }
@@ -169,11 +164,11 @@ func (s Subspace) checkType(key []byte, value interface{}) {
 // been registered. It will panic if the parameter type has not been registered
 // or if the value cannot be encoded. A change record is also set in the Subspace's
 // transient KVStore to mark the parameter as modified.
-func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
+func (s Subspace) Set(ctx sdk.Context, key []byte, value codec.ProtoMarshaler) {
 	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	bz, err := s.legacyAmino.MarshalJSON(value)
+	bz, err := s.cdc.MarshalBinaryBare(value)
 	if err != nil {
 		panic(err)
 	}
@@ -197,21 +192,17 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	}
 
 	ty := attr.ty
-	dest := reflect.New(ty).Interface()
-	s.GetIfExists(ctx, key, dest)
+	s.GetIfExists(ctx, key, ty)
 
-	if err := s.legacyAmino.UnmarshalJSON(value, dest); err != nil {
+	if err := s.cdc.UnmarshalBinaryBare(value, ty); err != nil {
 		return err
 	}
 
-	// destValue contains the dereferenced value of dest so validation function do
-	// not have to operate on pointers.
-	destValue := reflect.Indirect(reflect.ValueOf(dest)).Interface()
-	if err := s.Validate(ctx, key, destValue); err != nil {
+	if err := s.Validate(ctx, key, ty); err != nil {
 		return err
 	}
 
-	s.Set(ctx, key, dest)
+	s.Set(ctx, key, ty)
 	return nil
 }
 
@@ -253,7 +244,7 @@ type ReadOnlySubspace struct {
 }
 
 // Get delegates a read-only Get call to the Subspace.
-func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr codec.ProtoMarshaler) {
 	ros.s.Get(ctx, key, ptr)
 }
 

@@ -3,6 +3,7 @@ package cosmos.auth.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -36,11 +37,11 @@ message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
-  uint64 tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
-  uint64 tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
-  uint64 sig_verify_cost_ed25519 = 4
+  google.protobuf.UInt64Value max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
+  google.protobuf.UInt64Value tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
+  google.protobuf.UInt64Value tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
+  google.protobuf.UInt64Value sig_verify_cost_ed25519 = 4
       [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
-  uint64 sig_verify_cost_secp256k1 = 5
+  google.protobuf.UInt64Value sig_verify_cost_secp256k1 = 5
       [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
 }

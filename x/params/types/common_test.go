@@ -1,12 +1,15 @@
 package types_test
 
 import (
+
 	"errors"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+	prototypes "github.com/gogo/protobuf/types"
 )
 
 var (
@@ -19,26 +22,30 @@ var (
 )
 
 type params struct {
-	UnbondingTime time.Duration `json:"unbonding_time" yaml:"unbonding_time"`
-	MaxValidators uint16        `json:"max_validators" yaml:"max_validators"`
-	BondDenom     string        `json:"bond_denom" yaml:"bond_denom"`
+	UnbondingTime prototypes.Duration `json:"unbonding_time" yaml:"unbonding_time"`
+	MaxValidators prototypes.UInt64Value `json:"max_validators" yaml:"max_validators"`
+	BondDenom     prototypes.StringValue `json:"bond_denom" yaml:"bond_denom"`
 }
 
-func validateUnbondingTime(i interface{}) error {
-	v, ok := i.(time.Duration)
+func validateUnbondingTime(i proto.Message) error {
+	v, ok := i.(*prototypes.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v < (24 * time.Hour) {
+	dur, err := prototypes.DurationFromProto(v)
+	if err != nil {
+		return err
+	}
+	if dur < (24 * time.Hour) {
 		return fmt.Errorf("unbonding time must be at least one day")
 	}
 
 	return nil
 }
 
-func validateMaxValidators(i interface{}) error {
-	_, ok := i.(uint16)
+func validateMaxValidators(i proto.Message) error {
+	_, ok := i.(*prototypes.UInt64Value)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -46,13 +53,14 @@ func validateMaxValidators(i interface{}) error {
 	return nil
 }
 
-func validateBondDenom(i interface{}) error {
-	v, ok := i.(string)
+func validateBondDenom(i proto.Message) error {
+	v, ok := i.(*prototypes.StringValue)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if len(v) == 0 {
+
+	if len(v.Value) == 0 {
 		return errors.New("denom cannot be empty")
 	}
 

@@ -1,21 +1,24 @@
 package types
 
-import "github.com/gogo/protobuf/proto"
+import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/gogo/protobuf/proto"
+)
 
 type (
 	ValueValidatorFn func(value proto.Message) error
 
-	// ParamSetPair is used for associating paramsubspace key and field of param
+	// ParamSetPair is used for associating paramSubspace key and field of param
 	// structs.
 	ParamSetPair struct {
 		Key         []byte
-		Value       proto.Message
+		Value       codec.ProtoMarshaler
 		ValidatorFn ValueValidatorFn
 	}
 )
 
 // NewParamSetPair creates a new ParamSetPair instance.
-func NewParamSetPair(key []byte, value proto.Message, vfn ValueValidatorFn) ParamSetPair {
+func NewParamSetPair(key []byte, value codec.ProtoMarshaler, vfn ValueValidatorFn) ParamSetPair {
 	return ParamSetPair{key, value, vfn}
 }
 

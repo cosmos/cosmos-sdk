@@ -16,19 +16,24 @@ func RemovePath(paths []string, path string) ([]string, bool) {
 	return paths, false
 }
 
-// ParseClientPath returns the client ID from a full path. It returns
-// an error if the provided path is invalid,
+// ParseClientPath returns the client ID from a full path. It returns an error if the provided path
+// is not in the format "clients/{clientID}..." or if the client identifier is invalid.
 func ParseClientPath(path string) (string, error) {
-	split := strings.SplitN(path, "/", 3)
-	if len(split) < 2 {
+	split := strings.Split(path, "/")
+	if len(split) < 2 || split[0] != "clients" {
 		return "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse client path %s", path)
 	}
 
-	return split[1], nil
+	clientdID := split[1]
+	if err := ClientIdentifierValidator(clientdID); err != nil {
+		return "", err
+	}
+
+	return clientdID, nil
 }
 
 // ParseConnectionPath returns the connection ID from a full path. It returns
-// an error if the provided path is invalid,
+// an error if the provided path is invalid.
 func ParseConnectionPath(path string) (string, error) {
 	split := strings.Split(path, "/")
 	if len(split) != 2 {
@@ -39,7 +44,7 @@ func ParseConnectionPath(path string) (string, error) {
 }
 
 // ParseChannelPath returns the port and channel ID from a full path. It returns
-// an error if the provided path is invalid,
+// an error if the provided path is invalid.
 func ParseChannelPath(path string) (string, string, error) {
 	split := strings.Split(path, "/")
 	if len(split) < 5 {
@@ -54,7 +59,7 @@ func ParseChannelPath(path string) (string, string, error) {
 }
 
 // MustParseConnectionPath returns the connection ID from a full path. Panics
-// if the provided path is invalid
+// if the provided path is invalid.
 func MustParseConnectionPath(path string) string {
 	connectionID, err := ParseConnectionPath(path)
 	if err != nil {
@@ -64,7 +69,7 @@ func MustParseConnectionPath(path string) string {
 }
 
 // MustParseChannelPath returns the port and channel ID from a full path. Panics
-// if the provided path is invalid
+// if the provided path is invalid.
 func MustParseChannelPath(path string) (string, string) {
 	portID, channelID, err := ParseChannelPath(path)
 	if err != nil {

@@ -68,7 +68,7 @@ func (h Header) ValidateBasic(chainID string) error {
 
 	// TrustedHeight is less than Header for updates
 	// and less than or equal to Header for misbehaviour
-	if h.TrustedHeight > uint64(h.GetHeight()) {
+	if h.TrustedHeight > h.GetHeight() {
 		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %d must be less than or equal to header height %d",
 			h.TrustedHeight, h.GetHeight())
 	}

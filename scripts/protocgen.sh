@@ -20,11 +20,6 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   --grpc-gateway_out=logtostderr=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 
-  proto_files=${proto_files}" ${dir:2}/*.proto"
-done
-
-proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
-for dir in $proto_dirs; do
   query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
   if [[ ! -z "$query_file" ]]; then
     protoc  \
@@ -33,6 +28,8 @@ for dir in $proto_dirs; do
     "$query_file" \
     --swagger_out=logtostderr=true:.
   fi
+
+  proto_files=${proto_files}" ${dir:2}/*.proto"
 done
 
 # generate codec/testdata proto code
@@ -46,5 +43,3 @@ cp -r ibc/* ./x/ibc/
 rm -rf github.com
 rm -rf cosmos
 rm -rf ibc
-
-

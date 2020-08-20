@@ -205,6 +205,16 @@ func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less 
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
 func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.Int)} } // absolute value
 
+// BigInt returns a copy of the underlying big.Int.
+func (d Dec) BigInt() *big.Int {
+	if d.IsNil() {
+		return nil
+	}
+
+	copy := new(big.Int)
+	return copy.Set(d.Int)
+}
+
 // addition
 func (d Dec) Add(d2 Dec) Dec {
 	res := new(big.Int).Add(d.Int, d2.Int)

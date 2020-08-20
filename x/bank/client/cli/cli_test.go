@@ -55,8 +55,8 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  fmt.Stringer
-		expected  fmt.Stringer
+		respType  proto.Message
+		expected  proto.Message
 	}{
 		{"no address provided", []string{}, true, nil, nil},
 		{
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+			NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
 		},
 		{
 			"total account balance of a bogus denom",
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			NewCoin("foobar", sdk.ZeroInt()),
 		},
 	}
 
@@ -112,7 +112,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType.(proto.Message)))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -220,7 +220,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -289,7 +289,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 			} else {
 				s.Require().NoError(err)
 
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType.(proto.Message)), bz.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -299,4 +299,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+	coin := sdk.NewCoin(denom, amount)
+	return &coin
 }

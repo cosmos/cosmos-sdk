@@ -70,6 +70,16 @@ func PackClientState(clientState exported.ClientState) (*codectypes.Any, error) 
 	return anyClientState, nil
 }
 
+// MustPackClientState calls PackClientState and panics on error.
+func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
+	anyClientState, err := PackClientState(clientState)
+	if err != nil {
+		panic(err)
+	}
+
+	return anyClientState
+}
+
 // UnpackClientState unpacks an Any into a ClientState. It returns an error if the
 // client state can't be unpacked into a ClientState.
 func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {

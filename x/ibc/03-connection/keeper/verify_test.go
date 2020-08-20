@@ -12,6 +12,57 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
+// TestVerifyClientState verifies a client state of chainA
+// stored on clientB (which is on chainB)
+func (suite *KeeperTestSuite) TestVerifyClientState() {
+	cases := []struct {
+		msg                  string
+		changeClientID       bool
+		heightDiff           uint64
+		malleateCounterparty bool
+		expPass              bool
+	}{
+		{"verification success", false, 0, false, true},
+		{"client state not found", true, 0, false, false},
+		{"consensus state for proof height not found", false, 5, false, false},
+		{"verification failed", false, 0, true, false},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		suite.Run(tc.msg, func() {
+			suite.SetupTest() // reset
+
+			_, clientB, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+
+			counterpartyClient, clientProof := suite.chainB.QueryClientStateProof(clientB)
+			proofHeight := uint64(suite.chainB.GetContext().BlockHeight() - 1)
+
+			if tc.malleateCounterparty {
+				tmClient, _ := counterpartyClient.(*ibctmtypes.ClientState)
+				tmClient.ChainId = "wrongChainID"
+			}
+
+			connection := suite.chainA.GetConnection(connA)
+			if tc.changeClientID {
+				connection.ClientId = ibctesting.InvalidID
+			}
+
+			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyClientState(
+				suite.chainA.GetContext(), connection,
+				proofHeight+tc.heightDiff, clientProof, counterpartyClient,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 // TestVerifyClientConsensusState verifies that the consensus state of
 // chainA stored on clientB (which is on chainB) matches the consensus
 // state for chainA at that height.
@@ -74,7 +125,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			}
 
 			proof, consensusHeight := suite.chainB.QueryConsensusStateProof(connB.ClientID)
-			proofHeight := uint64(suite.chainA.GetContext().BlockHeight() - 1)
+			proofHeight := uint64(suite.chainB.GetContext().BlockHeight() - 1)
 			consensusState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetSelfConsensusState(suite.chainA.GetContext(), consensusHeight)
 			suite.Require().True(found)
 

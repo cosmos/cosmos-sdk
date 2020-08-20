@@ -43,3 +43,5 @@ cp -r ibc/* ./x/ibc/
 rm -rf github.com
 rm -rf cosmos
 rm -rf ibc
+
+swagger mixin ./x/auth/**/query.swagger.json ./x/**/**/*swagger.json

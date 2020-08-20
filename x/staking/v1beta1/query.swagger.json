@@ -1,0 +1,1385 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "cosmos/staking/v1beta1/query.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/cosmos/staking/v1beta1/delegations/{delegator_addr}": {
+      "get": {
+        "summary": "DelegatorDelegations queries all delegations of a given delegator address.",
+        "operationId": "Query_DelegatorDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryDelegatorDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations": {
+      "get": {
+        "summary": "Redelegations queries redelegations of given address.",
+        "operationId": "Query_Redelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryRedelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "src_validator_addr",
+            "description": "src_validator_addr defines the validator address to redelegate from.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "dst_validator_addr",
+            "description": "dst_validator_addr defines the validator address to redelegate to.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations": {
+      "get": {
+        "summary": "DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.",
+        "operationId": "Query_DelegatorUnbondingDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryDelegatorUnbondingDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators": {
+      "get": {
+        "summary": "DelegatorValidators queries all validators info for given delegator address.",
+        "operationId": "Query_DelegatorValidators",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryDelegatorValidatorsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}": {
+      "get": {
+        "summary": "DelegatorValidator queries validator info for given delegator validator pair.",
+        "operationId": "Query_DelegatorValidator",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryDelegatorValidatorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/historical_info/{height}": {
+      "get": {
+        "summary": "HistoricalInfo queries the historical info for given height.",
+        "operationId": "Query_HistoricalInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryHistoricalInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "height",
+            "description": "height defines at which height to query the historical info.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/params": {
+      "get": {
+        "summary": "Parameters queries the staking parameters.",
+        "operationId": "Query_Params",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/pool": {
+      "get": {
+        "summary": "Pool queries the pool info.",
+        "operationId": "Query_Pool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryPoolResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators": {
+      "get": {
+        "summary": "Validators queries all validators that match the given status.",
+        "operationId": "Query_Validators",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryValidatorsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "status",
+            "description": "status enables to query for validators matching a given status.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators/{validator_addr}": {
+      "get": {
+        "summary": "Validator queries validator info for given validator address.",
+        "operationId": "Query_Validator",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryValidatorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations": {
+      "get": {
+        "summary": "ValidatorDelegations queries delegate info for given validator.",
+        "operationId": "Query_ValidatorDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryValidatorDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}": {
+      "get": {
+        "summary": "Delegation queries delegate info for given validator delegator pair.",
+        "operationId": "Query_Delegation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryDelegationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation": {
+      "get": {
+        "summary": "UnbondingDelegation queries unbonding info for given validator delegator pair.",
+        "operationId": "Query_UnbondingDelegation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryUnbondingDelegationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "delegator_addr",
+            "description": "delegator_addr defines the delegator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations": {
+      "get": {
+        "summary": "ValidatorUnbondingDelegations queries unbonding delegations of a validator.",
+        "operationId": "Query_ValidatorUnbondingDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1QueryValidatorUnbondingDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "validator_addr",
+            "description": "validator_addr defines the validator address to query for.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "typesBlockID": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "part_set_header": {
+          "$ref": "#/definitions/typesPartSetHeader"
+        }
+      },
+      "title": "BlockID"
+    },
+    "typesHeader": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "#/definitions/versionConsensus",
+          "title": "basic block info"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_block_id": {
+          "$ref": "#/definitions/typesBlockID",
+          "title": "prev block info"
+        },
+        "last_commit_hash": {
+          "type": "string",
+          "format": "byte",
+          "title": "hashes of block data"
+        },
+        "data_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "validators_hash": {
+          "type": "string",
+          "format": "byte",
+          "title": "hashes from the app output from the prev block"
+        },
+        "next_validators_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "consensus_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "app_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "last_results_hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "evidence_hash": {
+          "type": "string",
+          "format": "byte",
+          "title": "consensus info"
+        },
+        "proposer_address": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "Header defines the structure of a Tendermint block header."
+    },
+    "typesPartSetHeader": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "hash": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "PartsetHeader"
+    },
+    "v1beta1Coin": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        }
+      },
+      "description": "Coin defines a token with a denomination and an amount.\n\nNOTE: The amount field is an Int which implements the custom method\nsignatures required by gogoproto."
+    },
+    "v1beta1Commission": {
+      "type": "object",
+      "properties": {
+        "commission_rates": {
+          "$ref": "#/definitions/v1beta1CommissionRates"
+        },
+        "update_time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Commission defines a commission parameters for a given validator."
+    },
+    "v1beta1CommissionRates": {
+      "type": "object",
+      "properties": {
+        "rate": {
+          "type": "string"
+        },
+        "max_rate": {
+          "type": "string"
+        },
+        "max_change_rate": {
+          "type": "string"
+        }
+      },
+      "description": "CommissionRates defines the initial commission rates to be used for creating\na validator."
+    },
+    "v1beta1Delegation": {
+      "type": "object",
+      "properties": {
+        "delegator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "validator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "shares": {
+          "type": "string"
+        }
+      },
+      "description": "Delegation represents the bond with tokens held by an account. It is\nowned by one delegator, and is associated with the voting power of one\nvalidator."
+    },
+    "v1beta1DelegationResponse": {
+      "type": "object",
+      "properties": {
+        "delegation": {
+          "$ref": "#/definitions/v1beta1Delegation"
+        },
+        "balance": {
+          "$ref": "#/definitions/v1beta1Coin"
+        }
+      },
+      "description": "DelegationResponse is equivalent to Delegation except that it contains a balance\nin addition to shares which is more suitable for client responses."
+    },
+    "v1beta1Description": {
+      "type": "object",
+      "properties": {
+        "moniker": {
+          "type": "string"
+        },
+        "identity": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        },
+        "security_contact": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        }
+      },
+      "description": "Description defines a validator description."
+    },
+    "v1beta1HistoricalInfo": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "$ref": "#/definitions/typesHeader"
+        },
+        "valset": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1Validator"
+          }
+        }
+      },
+      "description": "HistoricalInfo contains the historical information that gets stored at\neach height."
+    },
+    "v1beta1PageRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "format": "byte",
+          "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set."
+        },
+        "offset": {
+          "type": "string",
+          "format": "uint64",
+          "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set."
+        },
+        "limit": {
+          "type": "string",
+          "format": "uint64",
+          "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app."
+        },
+        "count_total": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set."
+        }
+      },
+      "description": "message SomeRequest {\n         Foo some_parameter = 1;\n         PageRequest pagination = 2;\n }",
+      "title": "PageRequest is to be embedded in gRPC request messages for efficient\npagination. Ex:"
+    },
+    "v1beta1PageResponse": {
+      "type": "object",
+      "properties": {
+        "next_key": {
+          "type": "string",
+          "format": "byte",
+          "title": "next_key is the key to be passed to PageRequest.key to\nquery the next page most efficiently"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
+        }
+      },
+      "description": "message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }",
+      "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+    },
+    "v1beta1Params": {
+      "type": "object",
+      "properties": {
+        "unbonding_time": {
+          "type": "string"
+        },
+        "max_validators": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "max_entries": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "historical_entries": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "bond_denom": {
+          "type": "string"
+        }
+      },
+      "description": "Params defines the parameters for the staking module."
+    },
+    "v1beta1Pool": {
+      "type": "object",
+      "properties": {
+        "not_bonded_tokens": {
+          "type": "string"
+        },
+        "bonded_tokens": {
+          "type": "string"
+        }
+      },
+      "title": "Pool - tracking bonded and not-bonded token supply of the bond denomination"
+    },
+    "v1beta1QueryDelegationResponse": {
+      "type": "object",
+      "properties": {
+        "delegation_response": {
+          "$ref": "#/definitions/v1beta1DelegationResponse",
+          "description": "delegation_responses defines the delegation info of a delegation."
+        }
+      },
+      "description": "QueryDelegationResponse is response type for the Query/Delegation RPC method."
+    },
+    "v1beta1QueryDelegatorDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "delegation_responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1DelegationResponse"
+          },
+          "description": "delegation_responses defines all the delegations' info of a delegator."
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "description": "QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method."
+    },
+    "v1beta1QueryDelegatorUnbondingDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "unbonding_responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1UnbondingDelegation"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "description": "QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method."
+    },
+    "v1beta1QueryDelegatorValidatorResponse": {
+      "type": "object",
+      "properties": {
+        "validator": {
+          "$ref": "#/definitions/v1beta1Validator",
+          "description": "validator defines the the validator info."
+        }
+      },
+      "description": "QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method."
+    },
+    "v1beta1QueryDelegatorValidatorsResponse": {
+      "type": "object",
+      "properties": {
+        "validators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1Validator"
+          },
+          "description": "validators defines the the validators' info of a delegator."
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "description": "QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method."
+    },
+    "v1beta1QueryHistoricalInfoResponse": {
+      "type": "object",
+      "properties": {
+        "hist": {
+          "$ref": "#/definitions/v1beta1HistoricalInfo",
+          "description": "hist defines the historical info at the given height."
+        }
+      },
+      "description": "QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method."
+    },
+    "v1beta1QueryParamsResponse": {
+      "type": "object",
+      "properties": {
+        "params": {
+          "$ref": "#/definitions/v1beta1Params",
+          "description": "params holds all the parameters of this module."
+        }
+      },
+      "description": "QueryParamsResponse is response type for the Query/Params RPC method."
+    },
+    "v1beta1QueryPoolResponse": {
+      "type": "object",
+      "properties": {
+        "pool": {
+          "$ref": "#/definitions/v1beta1Pool",
+          "description": "pool defines the pool info."
+        }
+      },
+      "description": "QueryPoolResponse is response type for the Query/Pool RPC method."
+    },
+    "v1beta1QueryRedelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "redelegation_responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1RedelegationResponse"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "description": "QueryRedelegationsResponse is response type for the Query/Redelegations RPC method."
+    },
+    "v1beta1QueryUnbondingDelegationResponse": {
+      "type": "object",
+      "properties": {
+        "unbond": {
+          "$ref": "#/definitions/v1beta1UnbondingDelegation",
+          "description": "unbond defines the unbonding information of a delegation."
+        }
+      },
+      "description": "QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method."
+    },
+    "v1beta1QueryValidatorDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "delegation_responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1DelegationResponse"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "title": "QueryValidatorDelegationsResponse is response type for the Query/ValidatorDelegations RPC method"
+    },
+    "v1beta1QueryValidatorResponse": {
+      "type": "object",
+      "properties": {
+        "validator": {
+          "$ref": "#/definitions/v1beta1Validator",
+          "description": "validator defines the the validator info."
+        }
+      },
+      "title": "QueryValidatorResponse is response type for the Query/Validator RPC method"
+    },
+    "v1beta1QueryValidatorUnbondingDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "unbonding_responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1UnbondingDelegation"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "description": "QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method."
+    },
+    "v1beta1QueryValidatorsResponse": {
+      "type": "object",
+      "properties": {
+        "validators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1Validator"
+          },
+          "description": "validators contains all the queried validators."
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1beta1PageResponse",
+          "description": "pagination defines the pagination in the response."
+        }
+      },
+      "title": "QueryValidatorsResponse is response type for the Query/Validators RPC method"
+    },
+    "v1beta1Redelegation": {
+      "type": "object",
+      "properties": {
+        "delegator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "validator_src_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "validator_dst_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1RedelegationEntry"
+          }
+        }
+      },
+      "description": "Redelegation contains the list of a particular delegator's redelegating bonds\nfrom a particular source validator to a particular destination validator."
+    },
+    "v1beta1RedelegationEntry": {
+      "type": "object",
+      "properties": {
+        "creation_height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "completion_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "initial_balance": {
+          "type": "string"
+        },
+        "shares_dst": {
+          "type": "string"
+        }
+      },
+      "description": "RedelegationEntry defines a redelegation object with relevant metadata."
+    },
+    "v1beta1RedelegationEntryResponse": {
+      "type": "object",
+      "properties": {
+        "redelegation_entry": {
+          "$ref": "#/definitions/v1beta1RedelegationEntry"
+        },
+        "balance": {
+          "type": "string"
+        }
+      },
+      "description": "RedelegationEntryResponse is equivalent to a RedelegationEntry except that it\ncontains a balance in addition to shares which is more suitable for client\nresponses."
+    },
+    "v1beta1RedelegationResponse": {
+      "type": "object",
+      "properties": {
+        "redelegation": {
+          "$ref": "#/definitions/v1beta1Redelegation"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1RedelegationEntryResponse"
+          }
+        }
+      },
+      "description": "RedelegationResponse is equivalent to a Redelegation except that its entries\ncontain a balance in addition to shares which is more suitable for client\nresponses."
+    },
+    "v1beta1UnbondingDelegation": {
+      "type": "object",
+      "properties": {
+        "delegator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "validator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1UnbondingDelegationEntry"
+          }
+        }
+      },
+      "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+    },
+    "v1beta1UnbondingDelegationEntry": {
+      "type": "object",
+      "properties": {
+        "creation_height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "completion_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "initial_balance": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string"
+        }
+      },
+      "description": "UnbondingDelegationEntry defines an unbonding object with relevant metadata."
+    },
+    "v1beta1Validator": {
+      "type": "object",
+      "properties": {
+        "operator_address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "consensus_pubkey": {
+          "type": "string"
+        },
+        "jailed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tokens": {
+          "type": "string"
+        },
+        "delegator_shares": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "#/definitions/v1beta1Description"
+        },
+        "unbonding_height": {
+          "type": "string",
+          "format": "int64"
+        },
+        "unbonding_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "commission": {
+          "$ref": "#/definitions/v1beta1Commission"
+        },
+        "min_self_delegation": {
+          "type": "string"
+        }
+      },
+      "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+    },
+    "versionConsensus": {
+      "type": "object",
+      "properties": {
+        "block": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "app": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "Consensus captures the consensus rules for processing a block in the blockchain,\nincluding all blockchain data structures and the rules of the application's\nstate transition machine."
+    }
+  }
+}

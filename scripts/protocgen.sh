@@ -23,10 +23,17 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   proto_files=${proto_files}" ${dir:2}/*.proto"
 done
 
-protoc ${proto_files} \
--I "proto" \
--I "third_party/proto" \
---swagger_out=allow_merge=true,logtostderr=true:. 
+proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+for dir in $proto_dirs; do
+  query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
+  if [[ ! -z "$query_file" ]]; then
+    protoc  \
+    -I "proto" \
+    -I "third_party/proto" \
+    "$query_file" \
+    --swagger_out=logtostderr=true:.
+  fi
+done
 
 # generate codec/testdata proto code
 protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\
@@ -34,6 +41,10 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil
 
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
+cp -r cosmos/* ./x/
+cp -r ibc/* ./x/ibc/
 rm -rf github.com
+rm -rf cosmos
+rm -rf ibc
 
 

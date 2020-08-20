@@ -143,18 +143,18 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	}{
 		{
 			"test GRPC total supply",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply", baseURL),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
 			&types.QueryTotalSupplyResponse{},
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt50))),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
 				),
 			},
 		},
 		{
 			"GRPC total supply of a specific denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s", baseURL, s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
 				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		},
 		{
 			"GRPC total supply of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar", baseURL),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
 				Amount: sdk.NewCoin("foobar", sdk.ZeroInt()),

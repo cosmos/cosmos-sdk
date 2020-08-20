@@ -259,7 +259,7 @@ func (coord *Coordinator) RecvPacket(
 	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
 
 	// receive on counterparty and update source client
-	return coord.SendMsgs(counterparty, source, sourceClient, recvMsg)
+	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
 }
 
 // AcknowledgePacket acknowledges on the source chain the packet received on
@@ -277,7 +277,7 @@ func (coord *Coordinator) AcknowledgePacket(
 	proof, proofHeight := counterparty.QueryProof(packetKey)
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
-	return coord.SendMsgs(source, counterparty, counterpartyClient, ackMsg)
+	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
 }
 
 // RelayPacket receives a channel packet on counterparty, queries the ack
@@ -305,9 +305,15 @@ func (coord *Coordinator) IncrementTime() {
 	}
 }
 
+// SendMsg delivers a single provided message to the chain. The counterparty
+// client is update with the new source consensus state.
+func (coord *Coordinator) SendMsg(source, counterparty *TestChain, counterpartyClientID string, msg sdk.Msg) error {
+	return coord.SendMsgs(source, counterparty, counterpartyClientID, []sdk.Msg{msg})
+}
+
 // SendMsgs delivers the provided messages to the chain. The counterparty
 // client is updated with the new source consensus state.
-func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs ...sdk.Msg) error {
+func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs []sdk.Msg) error {
 	if err := source.SendMsgs(msgs...); err != nil {
 		return err
 	}

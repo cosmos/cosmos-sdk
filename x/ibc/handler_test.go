@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -13,8 +14,9 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-var (
+const (
 	timeoutHeight = uint64(10000)
+	totalPackets  = uint64(10)
 )
 
 type HandlerTestSuite struct {
@@ -329,7 +331,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
 			// need to update chainA client to prove missing ack
@@ -343,7 +345,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
 			// need to update chainA client to prove missing ack
@@ -355,15 +357,18 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			// setup uses an UNORDERED channel
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 
-			// attempts to timeout packet with sequence 10 without timing out packet with sequence 1
-			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
-
-				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
-				suite.Require().NoError(err) // message committed
+			msgs := make([]sdk.Msg, totalPackets)
+			// attempts to timeout the last packet sent without timing out the first packet
+			// packet sequences begin at 1
+			for i := uint64(0); i < totalPackets; i++ {
+				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
+				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			}
+
+			// send from chainA to chainB
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
+			suite.Require().NoError(err) // message committed
+
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -373,15 +378,18 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 
-			// attempts to timeout packet with sequence 10 without timing out packet with sequence 1
-			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
-
-				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
-				suite.Require().NoError(err) // message committed
+			msgs := make([]sdk.Msg, totalPackets)
+			// attempts to timeout the last packet sent without timing out the first packet
+			// packet sequences begin at 1
+			for i := uint64(0); i < totalPackets; i++ {
+				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
+				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			}
+
+			// send from chainA to chainB
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
+			suite.Require().NoError(err) // message committed
+
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
@@ -463,7 +471,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
 			// need to update chainA client to prove missing ack
@@ -486,7 +494,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
 			// need to update chainA client to prove missing ack
@@ -507,15 +515,18 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 				CounterpartyClientID: clientA,
 			}
 
-			// attempts to timeout packet with sequence 10 without timing out packet with sequence 1
-			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-
-				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
-				suite.Require().NoError(err) // message committed
+			msgs := make([]sdk.Msg, totalPackets)
+			// attempts to timeout the last packet sent without timing out the first packet
+			// packet sequences begin at 1
+			for i := uint64(0); i < totalPackets; i++ {
+				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			}
+
+			// send from chainA to chainB
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
+			suite.Require().NoError(err) // message committed
+
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -533,15 +544,18 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 				CounterpartyClientID: clientA,
 			}
 
-			// attempts to timeout packet with sequence 10 without timing out packet with sequence 1
-			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-
-				// send from chainA to chainB
-				msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-				err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
-				suite.Require().NoError(err) // message committed
+			msgs := make([]sdk.Msg, totalPackets)
+			// attempts to timeout the last packet sent without timing out the first packet
+			// packet sequences begin at 1
+			for i := uint64(0); i < totalPackets; i++ {
+				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
 			}
+
+			// send from chainA to chainB
+			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
+			suite.Require().NoError(err) // message committed
+
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
@@ -582,7 +596,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 			suite.Require().NoError(err) // message committed
 
 			// need to update chainA client to prove missing ack

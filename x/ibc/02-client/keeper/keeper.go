@@ -209,6 +209,10 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			&ibctmtypes.ClientState{}, tmClient)
 	}
 
+	if clientState.IsFrozen() {
+		return types.ErrClientFrozen
+	}
+
 	if ctx.ChainID() != tmClient.ChainId {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid chain-id. expected: %s, got: %s",
 			ctx.ChainID(), tmClient.ChainId)

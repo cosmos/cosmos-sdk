@@ -136,6 +136,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 			false,
 		},
 		{
+			"frozen client",
+			ibctmtypes.ClientState{testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), uint64(testClientHeight), commitmenttypes.GetSDKSpecs()},
+			false,
+		},
+		{
 			"incorrect chainID",
 			ibctmtypes.NewClientState("gaiatestnet", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
 			false,

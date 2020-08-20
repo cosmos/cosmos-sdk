@@ -49,6 +49,9 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
 # IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 # which informs Tendermint what to index. If empty, all events will be indexed.
+#
+# Example:
+# ["message.sender", "message.recipient"]
 index-events = {{ .BaseConfig.IndexEvents }}
 
 ###############################################################################

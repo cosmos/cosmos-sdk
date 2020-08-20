@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 
 import "gogoproto/gogo.proto";
 
-// MsgVerifyInvariant - message struct to verify a particular invariance
+// MsgVerifyInvariant represents a message to verify a particular invariance.
 message MsgVerifyInvariant {
   option (gogoproto.equal) = true;
 

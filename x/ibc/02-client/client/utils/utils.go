@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	"context"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -14,120 +14,83 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryAllClientStates returns all the light client states. It _does not_ return
-// any merkle proof.
-func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {
-	params := types.NewQueryAllClientsParams(page, limit)
-	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s/%s", "ibc", types.QuerierRoute, types.QueryAllClients)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var clients []exported.ClientState
-	err = clientCtx.LegacyAmino.UnmarshalJSON(res, &clients)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
-	}
-	return clients, height, nil
-}
-
-// QueryClientState queries the store to get the light client state and a merkle
-// proof.
-// TODO: delete
+// QueryClientState returns a client state.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryClientState(
 	clientCtx client.Context, clientID string, prove bool,
-) (types.StateResponse, error) {
+) (*types.QueryClientStateResponse, error) {
+	if prove {
+		return QueryClientStateABCI(clientCtx, clientID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryClientStateRequest{
+		ClientId: clientID,
+	}
+
+	return queryClient.ClientState(context.Background(), req)
+}
+
+// QueryClientStateABCI queries the store to get the light client state and a merkle proof.
+func QueryClientStateABCI(
+	clientCtx client.Context, clientID string,
+) (*types.QueryClientStateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.StateResponse{}, err
+		return nil, err
 	}
 
 	var clientState exported.ClientState
 	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
-		return types.StateResponse{}, err
+		return nil, err
 	}
 
-	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.ProofOps, res.Height)
+	anyClientState, err := types.PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
 
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+
+	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, res.Height)
 	return clientStateRes, nil
 }
 
-// QueryClientState queries the store to get the light client state and a merkle
-// proof.
-func QueryClientStateABCI(
-	clientCtx client.Context, clientID string,
-) (exported.ClientState, []byte, uint64, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
-		Prove: true,
-	}
-
-	res, err := clientCtx.QueryABCI(req)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	var clientState exported.ClientState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
-		return nil, nil, 0, err
-	}
-
-	// FIXME: height + 1 is returned as the proof height
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
-	return clientState, proofBz, uint64(res.Height + 1), nil
-}
-
-// QueryConsensusState queries the store to get the consensus state and a merkle
-// proof.
-// TODO: delete
+// QueryConsensusState returns a consensus state.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, height uint64, prove bool,
-) (types.ConsensusStateResponse, error) {
-	var conStateRes types.ConsensusStateResponse
-
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
-		Prove: prove,
+	clientCtx client.Context, clientID string, height uint64, prove, latestHeight bool,
+) (*types.QueryConsensusStateResponse, error) {
+	if prove {
+		return QueryConsensusStateABCI(clientCtx, clientID, height)
 	}
 
-	res, err := clientCtx.QueryABCI(req)
-	if err != nil {
-		return conStateRes, err
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConsensusStateRequest{
+		ClientId:     clientID,
+		Height:       height,
+		LatestHeight: latestHeight,
 	}
 
-	var cs exported.ConsensusState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
-		return conStateRes, err
-	}
-
-	return types.NewConsensusStateResponse(clientID, cs, res.ProofOps, res.Height), nil
+	return queryClient.ConsensusState(context.Background(), req)
 }
 
-// QueryConsensusState queries the store to get the consensus state of a light
-// client and a merkle proof of its existence or non-existence.
+// QueryConsensusStateABCI queries the store to get the consensus state of a light client and a
+// merkle proof of its existence or non-existence.
 func QueryConsensusStateABCI(
 	clientCtx client.Context, clientID string, height uint64,
-) (exported.ConsensusState, []byte, uint64, error) {
-
+) (*types.QueryConsensusStateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
@@ -136,22 +99,25 @@ func QueryConsensusStateABCI(
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, nil, 0, err
+		return nil, err
 	}
 
 	var cs exported.ConsensusState
 	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
-		return nil, nil, 0, err
+		return nil, err
 	}
 
-	// FIXME: height + 1 is returned as the proof height
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
-	return cs, proofBz, uint64(res.Height + 1), nil
+	anyConsensusState, err := types.PackConsensusState(cs)
+	if err != nil {
+		return nil, err
+	}
+
+	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, res.Height), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate

@@ -15,10 +15,9 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.LegacyAmino
-	ctx     sdk.Context
-	keeper  *keeper.Keeper
-	querier sdk.Querier
+	cdc    *codec.LegacyAmino
+	ctx    sdk.Context
+	keeper *keeper.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -28,7 +27,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = app.LegacyAmino()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	suite.keeper = app.IBCKeeper
-	suite.querier = keeper.NewQuerier(*app.IBCKeeper, app.LegacyAmino())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

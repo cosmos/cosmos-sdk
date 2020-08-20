@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -70,8 +69,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.R
 }
 
 // RegisterGRPCRoutes registers the capability module's REST service handlers.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
-}
+func (AppModuleBasic) RegisterGRPCRoutes(_ sdkclient.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

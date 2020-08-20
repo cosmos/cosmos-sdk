@@ -56,8 +56,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, config client.TxEnc
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCRoutes registers the capability module's REST service handlers.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
-}
+func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns no root tx command for the params module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }

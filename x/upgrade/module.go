@@ -53,8 +53,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 }
 
 // RegisterGRPCRoutes registers the capability module's REST service handlers.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
-}
+func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {

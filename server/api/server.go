@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/gateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/gogo/gateway"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/tendermint/tendermint/libs/log"
@@ -45,9 +45,9 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 	}
 
 	return &Server{
-		Router:     mux.NewRouter(),
-		ClientCtx:  clientCtx,
-		logger:     logger,
+		Router:    mux.NewRouter(),
+		ClientCtx: clientCtx,
+		logger:    logger,
 		GRPCRouter: runtime.NewServeMux(
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 			// This is necessary to get error details properly

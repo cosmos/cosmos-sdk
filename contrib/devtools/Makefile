@@ -99,7 +99,13 @@ proto-tools-stamp:
 	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
 	@echo "Installing protoc-gen-grpc-gateway..."
-	@go install https://github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+	@echo "Installing go-swagger..."
+	@(download_url=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | \
+	  jq -r '.assets[] | select(.name | contains("'"$(uname | tr '[:upper:]' '[:lower:]')"'_amd64")) | .browser_download_url') \
+	curl -o /usr/local/bin/swagger -L'#' "$download_url" \
+	chmod +x /usr/local/bin/swagger)
 
 	touch $@
 

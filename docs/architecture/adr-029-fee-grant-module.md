@@ -10,29 +10,29 @@ Accepted
 
 ## Context
 
-In order to make blockchain transactions, the signing account must possess sufficient fees in the denomination accepted
-by the validator set. There are classes of transactions where needing to maintain a wallet with sufficient fees is a
+In order to make blockchain transactions, the signing account must possess a sufficient balance of the right denomination
+in order to pay fees. There are classes of transactions where needing to maintain a wallet with sufficient fees is a
 barrier to adoption.
 
 For instance, when proper permissions are setup, someone may temporarily delegate the ability to vote on proposals to
 a "burner" account that is stored on a mobile phone with only minimal security.
 
-Other similar use cases include workers tracking items in a supply chain or farmers submitting field data for analytics
+Other use cases include workers tracking items in a supply chain or farmers submitting field data for analytics
 or compliance purposes.
 
-For all of these use cases, UX would be significantly enhanced by obviating the need for every account with a specific
-set of permissions and responsibilities to always maintain the appropriate fee balance. This is especially true if we
-wanted to achieve enterprise adoption for something like supply chain tracking.
+For all of these use cases, UX would be significantly enhanced by obviating the need for these accounts to always
+maintain the appropriate fee balance. This is especially true if we wanted to achieve enterprise adoption for something
+like supply chain tracking.
 
 While one solution would be to have a service that fills up these accounts automatically with the appropriate fees, a better UX
-would be provided by allowing such accounts to deduct fees from a common fee pool account which sets proper spending limits.
-A single pool would reduce the churn of making lots of small "fill up" transactions and also more effectively leverage
+would be provided by allowing these accounts to pull from a common fee pool account with proper spending limits.
+A single pool would reduce the churn of making lots of small "fill up" transactions and also more effectively leverages
 the resources of the organization setting up the pool.
 
 ## Decision
 
 As a solution we propose a module, `x/feegrant` which allows one account, the "granter" to grant another account, the "grantee"
-an allowance to spend the granter's account balance only for fees within certain well-defined limits.
+an allowance to spend the granter's account balance for fees within certain well-defined limits.
 
 Fee allowances are defined by the extensible `FeeAllowanceI` interface:
 
@@ -55,11 +55,15 @@ type FeeAllowanceI {
 Two basic fee allowance types, `BasicFeeAllowance` and `PeriodicFeeAllowance` are defined to support known use cases:
 
 ```proto
+// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicFeeAllowance{
      repeated cosmos_sdk.v1.Coin spend_limit = 1;
      ExpiresAt expiration = 2;
 }
 
+// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// as well as a limit per time period.
 message PeriodicFeeAllowance{
      BasicFeeAllowance basic = 1;
      Duration period = 2;
@@ -100,7 +104,7 @@ message MsgGrantFeeAllowance{
  }
 ```
 
-In order to use allowances in transactions, we add a new field `fee_payer` to the `Fee` type:
+In order to use allowances in transactions, we add a new field `fee_payer` to the transaction `Fee` type:
 ```proto
 package cosmos.tx.v1beta1;
 
@@ -114,7 +118,7 @@ message Fee {
 `fee_payer` must either be left empty, must equal the first signer (the normal case), or must correspond to an
 account which has granted a fee allowance to the first signer.
 
-A new `AnteDecorator` called `DeductGrantedFeeDecorator` will be created in order to process transactions with `fee_payer`
+A new `AnteDecorator` named `DeductGrantedFeeDecorator` will be created in order to process transactions with `fee_payer`
 set and correctly deduct fees based on fee allowances.
 
 ## Consequences
@@ -134,4 +138,4 @@ created to use it
 
 - Blog article describing initial work: https://medium.com/regen-network/hacking-the-cosmos-cosmwasm-and-key-management-a08b9f561d1b
 - Initial public specification: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56
-- Original subkeys proposal from B-harvest which influenced the design: https://github.com/cosmos/cosmos-sdk/issues/4480
+- Original subkeys proposal from B-harvest which influenced this design: https://github.com/cosmos/cosmos-sdk/issues/4480

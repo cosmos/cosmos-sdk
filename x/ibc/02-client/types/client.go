@@ -24,7 +24,7 @@ func NewIdentifiedClientState(clientID string, clientState exported.ClientState)
 	}
 
 	return IdentifiedClientState{
-		Id:          clientID,
+		ClientId:    clientID,
 		ClientState: anyClientState,
 	}
 }

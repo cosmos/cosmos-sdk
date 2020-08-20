@@ -22,12 +22,12 @@ service Query {
 
   // ConsensusState queries a consensus state associated with a client state at a given height.
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_state/{client_id}/{height}";
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/{height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given client.
   rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_state/{client_id}";
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
   }
 }
 

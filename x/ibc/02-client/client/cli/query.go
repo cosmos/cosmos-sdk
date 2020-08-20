@@ -98,7 +98,7 @@ func GetCmdQueryClientState() *cobra.Command {
 func GetCmdQueryConsensusStates() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "consensus-states [client-id]",
-		Short:   "Query all the consensus states from a given client state.",
+		Short:   "Query all the consensus states of a client.",
 		Long:    "Query all the consensus states from a given client state.",
 		Example: fmt.Sprintf("%s query %s %s consensus-states [client-id]", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),

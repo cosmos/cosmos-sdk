@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,6 +49,8 @@ type KeeperTestSuite struct {
 	privVal        tmtypes.PrivValidator
 	now            time.Time
 	past           time.Time
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -83,6 +86,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), stakingtypes.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.IBCKeeper.ClientKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

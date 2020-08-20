@@ -1,76 +1,125 @@
 package keeper_test
 
-// func (suite *KeeperTestSuite) TestQueryClientStates() {
-// 	var (
-// 		req             *types.QueryClientStatesRequest
-// 		expClientStates = []*types.IdentifiedClientState{}
-// 	)
+import (
+	"fmt"
 
-// 	testCases := []struct {
-// 		msg      string
-// 		malleate func()
-// 		expPass  bool
-// 	}{
-// 		{
-// 			"empty request",
-// 			func() {
-// 				req = nil
-// 			},
-// 			false,
-// 		},
-// 		{
-// 			"empty pagination",
-// 			func() {
-// 				req = &types.QueryClientStatesRequest{}
-// 			},
-// 			true,
-// 		},
-// 		{
-// 			"success",
-// 			func() {
-// 				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientClientStates(suite.chainA, suite.chainB, exported.Tendermint)
-// 				connA1, connB1, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
-// 				suite.Require().NoError(err)
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientClientStates(suite.chainA, suite.chainB, exported.Tendermint)
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+)
 
-// 				conn1 := types.NewClientStateEnd(types.OPEN, clientA, counterparty1, types.GetCompatibleEncodedVersions())
-// 				conn2 := types.NewClientStateEnd(types.INIT, clientA, counterparty2, types.GetCompatibleEncodedVersions())
-// 				conn3 := types.NewClientStateEnd(types.OPEN, clientA1, counterparty3, types.GetCompatibleEncodedVersions())
+func (suite *KeeperTestSuite) TestQueryClientStates() {
+	var (
+		req             *types.QueryClientStatesRequest
+		expClientStates = []*types.IdentifiedClientState(nil)
+	)
 
-// 				iconn1 := types.NewIdentifiedClientState(connA0.ID, conn1)
-// 				iconn2 := types.NewIdentifiedClientState(connA1.ID, conn2)
-// 				iconn3 := types.NewIdentifiedClientState(connA2.ID, conn3)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryClientStatesRequest{}
+			},
+			true,
+		},
+		{
+			"success, no results",
+			func() {
+				req = &types.QueryClientStatesRequest{
+					Pagination: &query.PageRequest{
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
 
-// 				expClientStates = []*types.IdentifiedClientState{&iconn1, &iconn2, &iconn3}
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-// 				req = &types.QueryClientStatesRequest{
-// 					Pagination: &query.PageRequest{
-// 						Limit:      3,
-// 						CountTotal: true,
-// 					},
-// 				}
-// 			},
-// 			true,
-// 		},
-// 	}
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
 
-// 	for _, tc := range testCases {
-// 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-// 			suite.SetupTest() // reset
+			res, err := suite.queryClient.ClientStates(ctx, req)
 
-// 			tc.malleate()
-// 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expClientStates, res.ClientStates)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
 
-// 			res, err := suite.chainA.QueryServer.ClientStates(ctx, req)
+func (suite *KeeperTestSuite) TestQueryConsensusStates() {
+	var (
+		req                *types.QueryConsensusStatesRequest
+		expConsensusStates = []*codectypes.Any(nil)
+	)
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err)
-// 				suite.Require().NotNil(res)
-// 				suite.Require().Equal(expClientStates, res.ClientStates)
-// 			} else {
-// 				suite.Require().Error(err)
-// 			}
-// 		})
-// 	}
-// }
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"invalid client identifier",
+			func() {
+				req = &types.QueryConsensusStatesRequest{}
+			},
+			false,
+		},
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryConsensusStatesRequest{
+					ClientId: testClientID,
+				}
+			},
+			true,
+		},
+		{
+			"success, no results",
+			func() {
+				req = &types.QueryConsensusStatesRequest{
+					ClientId: testClientID,
+					Pagination: &query.PageRequest{
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.ConsensusStates(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expConsensusStates, res.ConsensusStates)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}

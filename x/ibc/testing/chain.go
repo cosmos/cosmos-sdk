@@ -362,7 +362,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
 	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
 	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
-	if trustedHeight == uint64(counterparty.LastHeader.GetHeight()) {
+	if trustedHeight == counterparty.LastHeader.GetHeight() {
 		tmTrustedVals = counterparty.Vals
 	} else {
 		// NOTE: We need to get validators from counterparty at height: trustedHeight+1

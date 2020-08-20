@@ -151,11 +151,11 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
-	if uint64(header.GetHeight()) > clientState.LatestHeight {
-		clientState.LatestHeight = uint64(header.GetHeight())
+	if header.GetHeight() > clientState.LatestHeight {
+		clientState.LatestHeight = header.GetHeight()
 	}
 	consensusState := &ConsensusState{
-		Height:             uint64(header.GetHeight()),
+		Height:             header.GetHeight(),
 		Timestamp:          header.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.AppHash),
 		NextValidatorsHash: header.Header.NextValidatorsHash,

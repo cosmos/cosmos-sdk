@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	json "encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -206,12 +207,50 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
-				s.Require().NotEqual("interal", err.Error())
+				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var result types.Validator
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().Equal(val.ValAddress, result.OperatorAddress)
 			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name              string
+		args              []string
+		minValidatorCount int
+	}{
+		{
+			"one validator case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			1,
+		},
+		{
+			"multi validator case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			len(s.network.Validators),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidators()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result []types.Validator
+			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
+			s.Require().Equal(tc.minValidatorCount, len(result))
+			s.Require().GreaterOrEqual(len(result), 1)
 		})
 	}
 }

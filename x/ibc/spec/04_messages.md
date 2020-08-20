@@ -91,10 +91,12 @@ using the `MsgConnectionOpenTry`.
 type MsgConnectionOpenTry struct {
 	ClientId             string       
 	ConnectionId         string      
+	ClientState          *types.Any // proto-packed counterparty client
 	Counterparty         Counterparty 
 	CounterpartyVersions []string     
-	ProofInit            []byte 
 	ProofHeight          uint64 
+	ProofInit            []byte 
+	ProofClient          []byte
 	ProofConsensus       []byte   
 	ConsensusHeight      uint64  
 	Signer               sdk.AccAddress 
@@ -104,16 +106,19 @@ type MsgConnectionOpenTry struct {
 This message is expected to fail if:
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
+- `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty 
-- `ProofInit` is empty
 - `ProofHeight` is zero
+- `ProofInit` is empty
+- `ProofClient` is empty
 - `ProofConsensus` is empty
 - `ConsensusHeight` is zero
 - `Signer` is empty
 - A Client hasn't been created for the given ID
 - A Connection for the given ID already exists
 - `ProofInit` does not prove that the counterparty connection is in state INIT
+- `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
 The message creates a connection for the given ID with an TRYOPEN State.
@@ -127,8 +132,10 @@ using the `MsgConnectionOpenAck`.
 type MsgConnectionOpenAck struct {
 	ConnectionId    string 
 	Version         string 
-	ProofTry        []byte 
+	ClientState     *types.Any // proto-packed counterparty client
 	ProofHeight     uint64 
+	ProofTry        []byte 
+	ProofClient     []byte
 	ProofConsensus  []byte      
 	ConsensusHeight uint64     
 	Signer          sdk.AccAddress 
@@ -138,12 +145,15 @@ type MsgConnectionOpenAck struct {
 This message is expected to fail if:
 - `ConnectionId` is invalid (see naming requirements)
 - `Version` is empty
-- `ProofTry` is empty
+- `ClientState` is not a valid client of the executing chain
 - `ProofHeight` is zero
+- `ProofTry` is empty
+- `ProofClient` is empty
 - `ProofConsensus` is empty
 - `ConsensusHeight` is zero
 - `Signer` is empty
 - `ProofTry` does not prove that the counterparty connection is in state TRYOPEN
+- `ProofClient` does not prove that the counterparty has stored the `ClientState` provided by message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
 The message sets the connection state for the given ID to OPEN.

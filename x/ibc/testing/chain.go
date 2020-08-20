@@ -170,6 +170,19 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	return proof, uint64(res.Height) + 1
 }
 
+// QueryClientStateProof performs and abci query for a client state
+// stored with a given clientID and returns the ClientState along with the proof
+func (chain *TestChain) QueryClientStateProof(clientID string) (clientexported.ClientState, []byte) {
+	// retrieve client state to provide proof for
+	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	clientKey := host.FullKeyClientPath(clientID, host.KeyClientState())
+	proofClient, _ := chain.QueryProof(clientKey)
+
+	return clientState, proofClient
+}
+
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
 func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
@@ -194,6 +207,7 @@ func (chain *TestChain) NextBlock() {
 
 	// increment the current header
 	chain.CurrentHeader = tmproto.Header{
+		ChainID: chain.ChainID,
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
@@ -216,6 +230,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		msgs,
+		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,
@@ -467,6 +482,8 @@ func (chain *TestChain) ConnectionOpenTry(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
+	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
+
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
@@ -475,8 +492,8 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		counterparty.GetPrefix(), []string{ConnectionVersion},
-		proofInit, proofConsensus,
+		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
+		proofInit, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -488,14 +505,16 @@ func (chain *TestChain) ConnectionOpenAck(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
+	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
+
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connection.ID,
-		proofTry, proofConsensus,
+		connection.ID, counterpartyClient,
+		proofTry, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),

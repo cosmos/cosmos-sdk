@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -172,6 +173,23 @@ func QueryConnectionConsensusState(
 	}
 
 	return res, nil
+}
+
+// ParseClientState unmarshals a cmd input argument from a JSON string to a client state
+// If the input is not a JSON, it looks for a path to the JSON file
+func ParseClientState(cdc *codec.LegacyAmino, arg string) (clientexported.ClientState, error) {
+	var clientState clientexported.ClientState
+	if err := cdc.UnmarshalJSON([]byte(arg), &clientState); err != nil {
+		// check for file path if JSON input is not provided
+		contents, err := ioutil.ReadFile(arg)
+		if err != nil {
+			return nil, errors.New("either JSON input nor path to .json file were provided")
+		}
+		if err := cdc.UnmarshalJSON(contents, &clientState); err != nil {
+			return nil, errors.Wrap(err, "error unmarshalling client state")
+		}
+	}
+	return clientState, nil
 }
 
 // ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment

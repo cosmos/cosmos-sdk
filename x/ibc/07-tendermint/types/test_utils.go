@@ -23,6 +23,10 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 
 // CreateTestHeader creates a mock header for testing only.
 func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+	var (
+		valSet      *tmproto.ValidatorSet
+		trustedVals *tmproto.ValidatorSet
+	)
 	vsetHash := tmValSet.Hash()
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
@@ -54,14 +58,18 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 		Commit: commit.ToProto(),
 	}
 
-	valSet, err := tmValSet.ToProto()
-	if err != nil {
-		panic(err)
+	if tmValSet != nil {
+		valSet, err = tmValSet.ToProto()
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	trustedVals, err := tmTrustedVals.ToProto()
-	if err != nil {
-		panic(err)
+	if tmTrustedVals != nil {
+		trustedVals, err = tmTrustedVals.ToProto()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return Header{

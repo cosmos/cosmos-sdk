@@ -46,7 +46,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "successful update with next height and same validator set",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -56,7 +56,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "successful update with future height and different validator set",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -66,7 +66,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "successful update with next height and different validator set",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, bothValSet.Hash())
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, bothValSet.Hash())
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, bothValSet, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -76,7 +76,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "successful update for a previous height",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height-3, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height-3, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height-1, height-3, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -86,7 +86,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update with next height: update header mismatches nextValSetHash",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -96,7 +96,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update with next height: update header mismatches different nextValSetHash",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, bothValSet.Hash())
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, bothValSet.Hash())
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, bothValSet, signers)
 				currentTime = suite.now
 			},
@@ -106,7 +106,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update with future height: too much change in validator set",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, altValSet, suite.valSet, altSigners)
 				currentTime = suite.now
 			},
@@ -116,7 +116,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful updates, passed in incorrect trusted validators for given consensus state",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+5, height, suite.headerTime, bothValSet, bothValSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -126,7 +126,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update: trusting period has passed since last client timestamp",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				// make current time pass trusting period from last timestamp on clientstate
 				currentTime = suite.now.Add(trustingPeriod)
@@ -137,7 +137,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update: header timestamp is past current timestamp",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -147,7 +147,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "unsuccessful update: header timestamp is not past last client timestamp",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.clientTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
@@ -157,7 +157,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "header basic validation failed",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				// cause new header to fail validatebasic by changing commit height to mismatch header height
 				newHeader.SignedHeader.Commit.Height = height - 1
@@ -169,7 +169,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "header height < consensus height",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height+5, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.AppHash), height, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), height, suite.valsHash)
 				// Make new header at height less than latest client state
 				newHeader = types.CreateTestHeader(chainID, height-1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
@@ -187,13 +187,13 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 		ctx := suite.chainA.GetContext().WithBlockTime(currentTime)
 
 		// Set trusted consensus state in client store
-		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, consensusState.Height, consensusState)
+		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 
 		expectedConsensus := &types.ConsensusState{
-			Height:             uint64(newHeader.Height),
-			Timestamp:          newHeader.Time,
-			Root:               commitmenttypes.NewMerkleRoot(newHeader.AppHash),
-			NextValidatorsHash: newHeader.NextValidatorsHash,
+			Height:             uint64(newHeader.GetHeight()),
+			Timestamp:          newHeader.GetTime(),
+			Root:               commitmenttypes.NewMerkleRoot(newHeader.Header.AppHash),
+			NextValidatorsHash: newHeader.Header.NextValidatorsHash,
 		}
 
 		newClientState, consensusState, err := clientState.CheckHeaderAndUpdateState(
@@ -207,9 +207,9 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 
 			// Determine if clientState should be updated or not
-			if uint64(newHeader.Height) > clientState.LatestHeight {
-				// Header Height is greater than clientState latest Height, clientState should be updated with header.Height
-				suite.Require().Equal(uint64(newHeader.Height), newClientState.GetLatestHeight(), "clientstate height did not update")
+			if uint64(newHeader.GetHeight()) > clientState.LatestHeight {
+				// Header Height is greater than clientState latest Height, clientState should be updated with header.GetHeight()
+				suite.Require().Equal(uint64(newHeader.GetHeight()), newClientState.GetLatestHeight(), "clientstate height did not update")
 			} else {
 				// Update will add past consensus state, clientState should not be updated at all
 				suite.Require().Equal(clientState.LatestHeight, newClientState.GetLatestHeight(), "client state height updated for past header")

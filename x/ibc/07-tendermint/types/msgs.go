@@ -95,7 +95,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if err := msg.Header.ValidateBasic(); err != nil {
+	if err := msg.Header.ValidateBasic(msg.Header.Header.ChainID); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	if msg.TrustingPeriod >= msg.UnbondingPeriod {

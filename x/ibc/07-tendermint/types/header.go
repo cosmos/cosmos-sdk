@@ -38,7 +38,7 @@ func (h Header) GetHeight() uint64 {
 		return 0
 	}
 
-	return uint64(h.GetHeight())
+	return uint64(h.Header.Height)
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if
@@ -54,15 +54,15 @@ func (h Header) GetTime() time.Time {
 // that validatorsets are not nil.
 // NOTE: TrustedHeight and TrustedValidators may be empty when creating client
 // with MsgCreateClient
-func (h Header) ValidateBasic() error {
+func (h Header) ValidateBasic(chainID string) error {
 	if h.Header == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint header cannot be nil")
 	}
-	tmHeader, err := tmtypes.HeaderFromProto(h.Header)
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(&h.SignedHeader)
 	if err != nil {
 		return sdkerrors.Wrap(err, "header is not a tendermint header")
 	}
-	if err := tmHeader.ValidateBasic(); err != nil {
+	if err := tmSignedHeader.ValidateBasic(chainID); err != nil {
 		return sdkerrors.Wrap(err, "header failed basic validation")
 	}
 

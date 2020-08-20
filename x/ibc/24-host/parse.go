@@ -16,22 +16,6 @@ func RemovePath(paths []string, path string) ([]string, bool) {
 	return paths, false
 }
 
-// ParseClientPath returns the client ID from a full path. It returns an error if the provided path
-// is not in the format "clients/{clientID}..." or if the client identifier is invalid.
-func ParseClientPath(path string) (string, error) {
-	split := strings.Split(path, "/")
-	if len(split) < 2 || split[0] != "clients" {
-		return "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse client path %s", path)
-	}
-
-	clientdID := split[1]
-	if err := ClientIdentifierValidator(clientdID); err != nil {
-		return "", err
-	}
-
-	return clientdID, nil
-}
-
 // ParseConnectionPath returns the connection ID from a full path. It returns
 // an error if the provided path is invalid.
 func ParseConnectionPath(path string) (string, error) {

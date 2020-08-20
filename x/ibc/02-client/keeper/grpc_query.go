@@ -71,8 +71,8 @@ func (q Keeper) ClientStates(c context.Context, req *types.QueryClientStatesRequ
 			return err
 		}
 
-		clientID, err := host.ParseClientPath(string(key))
-		if err != nil {
+		clientID := keySplit[1]
+		if err := host.ClientIdentifierValidator(clientID); err != nil {
 			return err
 		}
 
@@ -157,7 +157,11 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 			return err
 		}
 
-		any := types.MustPackConsensusState(consensusState)
+		any, err := types.PackConsensusState(consensusState)
+		if err != nil {
+			return err
+		}
+
 		consensusStates = append(consensusStates, any)
 		return nil
 	})

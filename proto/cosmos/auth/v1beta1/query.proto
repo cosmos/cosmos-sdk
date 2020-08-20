@@ -4,7 +4,7 @@ package cosmos.auth.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
-import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/auth/v1beta1/params.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";

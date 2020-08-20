@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	pt "github.com/gogo/protobuf/types"
 	"testing"
 	"time"
 
@@ -18,16 +19,16 @@ func TestKeyTable(t *testing.T) {
 	require.Panics(t, func() { table.RegisterType(types.ParamSetPair{[]byte("hello"), nil, nil}) })
 
 	require.NotPanics(t, func() {
-		table.RegisterType(types.ParamSetPair{keyBondDenom, string("stake"), validateBondDenom})
+		table.RegisterType(types.ParamSetPair{keyBondDenom, &pt.StringValue{Value: "stake"}, validateBondDenom})
 	})
 	require.NotPanics(t, func() {
-		table.RegisterType(types.ParamSetPair{keyMaxValidators, uint16(100), validateMaxValidators})
+		table.RegisterType(types.ParamSetPair{keyMaxValidators, &pt.UInt64Value{Value: 100}, validateMaxValidators})
 	})
 	require.Panics(t, func() {
-		table.RegisterType(types.ParamSetPair{keyUnbondingTime, time.Duration(1), nil})
+		table.RegisterType(types.ParamSetPair{keyUnbondingTime, pt.DurationProto(time.Hour * 1), nil})
 	})
 	require.NotPanics(t, func() {
-		table.RegisterType(types.ParamSetPair{keyUnbondingTime, time.Duration(1), validateMaxValidators})
+		table.RegisterType(types.ParamSetPair{keyUnbondingTime, pt.DurationProto(time.Hour * 1), validateMaxValidators})
 	})
 	require.NotPanics(t, func() {
 		newTable := types.NewKeyTable()
@@ -39,8 +40,8 @@ func TestKeyTable(t *testing.T) {
 
 	require.NotPanics(t, func() {
 		types.NewKeyTable(
-			types.ParamSetPair{[]byte("test"), string("stake"), validateBondDenom},
-			types.ParamSetPair{[]byte("test2"), uint16(100), validateMaxValidators},
+			types.ParamSetPair{[]byte("test"), &pt.StringValue{Value: "stake"}, validateBondDenom},
+			types.ParamSetPair{[]byte("test2"), &pt.UInt64Value{Value: 100}, validateMaxValidators},
 		)
 	})
 }

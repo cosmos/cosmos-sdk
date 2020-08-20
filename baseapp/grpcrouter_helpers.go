@@ -24,9 +24,9 @@ type QueryServiceTestHelper struct {
 
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context
-func NewQueryServerTestHelper(ctx sdk.Context, anyUnpacker types.AnyUnpacker) *QueryServiceTestHelper {
+func NewQueryServerTestHelper(ctx sdk.Context, interfaceRegistry types.InterfaceRegistry) *QueryServiceTestHelper {
 	qrt := NewGRPCQueryRouter()
-	qrt.SetAnyUnpacker(anyUnpacker)
+	qrt.SetInterfaceRegistry(interfaceRegistry)
 	return &QueryServiceTestHelper{GRPCQueryRouter: qrt, ctx: ctx}
 }
 
@@ -51,8 +51,8 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 		return err
 	}
 
-	if q.anyUnpacker != nil {
-		return types.UnpackInterfaces(reply, q.anyUnpacker)
+	if q.interfaceRegistry != nil {
+		return types.UnpackInterfaces(reply, q.interfaceRegistry)
 	}
 
 	return nil

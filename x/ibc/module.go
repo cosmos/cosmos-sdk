@@ -21,7 +21,6 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -66,7 +65,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr, host.StoreKey)
 }
 
 // RegisterGRPCRoutes registers the capability module's REST service handlers.

@@ -356,26 +356,31 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	// Relayer must query for LatestHeight on client to get TrustedHeight
 	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
 	var (
-		trustedVals *tmtypes.ValidatorSet
-		ok          bool
+		tmTrustedVals *tmtypes.ValidatorSet
+		ok            bool
 	)
 	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
 	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
 	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
-	if trustedHeight == uint64(counterparty.LastHeader.Height) {
-		trustedVals = counterparty.Vals
+	if trustedHeight == counterparty.LastHeader.GetHeight() {
+		tmTrustedVals = counterparty.Vals
 	} else {
 		// NOTE: We need to get validators from counterparty at height: trustedHeight+1
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		trustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
 		if !ok {
 			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
 	header.TrustedHeight = trustedHeight
+
+	trustedVals, err := tmTrustedVals.ToProto()
+	if err != nil {
+		return err
+	}
 	header.TrustedValidators = trustedVals
 
 	msg := ibctmtypes.NewMsgUpdateClient(
@@ -414,16 +419,21 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
 	require.NoError(chain.t, err)
 
-	signedHeader := tmtypes.SignedHeader{
-		Header: &tmHeader,
-		Commit: commit,
+	signedHeader := tmproto.SignedHeader{
+		Header: tmHeader.ToProto(),
+		Commit: commit.ToProto(),
+	}
+
+	valSet, err := chain.Vals.ToProto()
+	if err != nil {
+		panic(err)
 	}
 
 	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
 	// The relayer is responsible for querying client and injecting appropriate trusted fields.
 	return ibctmtypes.Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: chain.Vals,
+		ValidatorSet: valSet,
 	}
 }
 

@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		if tc.expPass {
 			suite.Require().NoError(err, "expected valid client for case: %s", tc.name)
 		} else {
-			suite.Require().Error(err, "expected invalid client for case: %s, ValidatClient passed", tc.name)
+			suite.Require().Error(err, "expected invalid client for case: %s", tc.name)
 		}
 	}
 }

@@ -95,7 +95,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if err := msg.Header.ValidateBasic(msg.Header.Header.ChainID); err != nil {
+	if err := msg.Header.ValidateBasic(msg.Header.Header.GetChainID()); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	if msg.TrustingPeriod >= msg.UnbondingPeriod {
@@ -139,7 +139,7 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitmenttypes.NewMerkleRoot(msg.Header.Header.AppHash)
+	root := commitmenttypes.NewMerkleRoot(msg.Header.Header.GetAppHash())
 	return &ConsensusState{
 		Timestamp:          msg.Header.GetTime(),
 		Root:               root,
@@ -150,7 +150,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
-	return NewClientState(msg.Header.Header.ChainID, msg.TrustLevel,
+	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
 		msg.Header.GetHeight(), msg.ProofSpecs,
 	)

@@ -24,7 +24,7 @@ func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
 		Height:             uint64(h.GetHeight()),
 		Timestamp:          h.GetTime(),
-		Root:               commitmenttypes.NewMerkleRoot(h.Header.AppHash),
+		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
 	}
 }
@@ -44,10 +44,10 @@ func (h Header) GetHeight() uint64 {
 // GetTime returns the current block timestamp. It returns a zero time if
 // the tendermint header is nil.
 func (h Header) GetTime() time.Time {
-	if h.SignedHeader.Header == nil {
+	if h.Header == nil {
 		return time.Time{}
 	}
-	return h.SignedHeader.Header.Time
+	return h.Header.Time
 }
 
 // ValidateBasic calls the SignedHeader ValidateBasic function and checks

@@ -227,7 +227,7 @@ func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusSta
 
 	state := &ibctmtypes.ConsensusState{
 		Timestamp:          commit.Time,
-		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
+		Root:               commitmenttypes.NewMerkleRoot(commit.GetAppHash()),
 		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 

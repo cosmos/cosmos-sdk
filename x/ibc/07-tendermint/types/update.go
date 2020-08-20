@@ -157,7 +157,7 @@ func update(clientState *ClientState, header Header) (*ClientState, *ConsensusSt
 	consensusState := &ConsensusState{
 		Height:             header.GetHeight(),
 		Timestamp:          header.GetTime(),
-		Root:               commitmenttypes.NewMerkleRoot(header.Header.AppHash),
+		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,
 	}
 

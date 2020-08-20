@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				expConsensusState := &ibctmtypes.ConsensusState{
 					Height:             updateHeader.GetHeight(),
 					Timestamp:          updateHeader.GetTime(),
-					Root:               commitmenttypes.NewMerkleRoot(updateHeader.Header.AppHash),
+					Root:               commitmenttypes.NewMerkleRoot(updateHeader.Header.GetAppHash()),
 					NextValidatorsHash: updateHeader.Header.NextValidatorsHash,
 				}
 

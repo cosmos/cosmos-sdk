@@ -106,7 +106,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// 	name:        "successful verification",
 		// 	clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash),
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 		// 	},
 		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
@@ -115,7 +115,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			name:        "ApplyPrefix failed",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
@@ -124,7 +124,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			name:        "latest client height < height",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
@@ -133,7 +133,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			name:        "client is frozen",
 			clientState: &ibctmtypes.ClientState{LatestHeight: height, FrozenHeight: height - 1},
 			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash),
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
@@ -142,7 +142,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 			name:        "proof verification failed",
 			clientState: ibctmtypes.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			consensusState: ibctmtypes.ConsensusState{
-				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash),
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),

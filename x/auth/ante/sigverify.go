@@ -306,7 +306,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += types.CountSubKeys(pk)
-		if uint64(sigCount) > params.TxSigLimit {
+		if uint64(sigCount) > params.TxSigLimit.Value {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
 				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
@@ -325,11 +325,11 @@ func DefaultSigVerificationGasConsumer(
 
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+		meter.ConsumeGas(params.SigVerifyCostED25519.Value, "ante verify: ed25519")
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 
 	case secp256k1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+		meter.ConsumeGas(params.SigVerifyCostSecp256k1.Value, "ante verify: secp256k1")
 		return nil
 
 	case multisig.PubKey:

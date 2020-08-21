@@ -232,7 +232,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		{
 			desc:       "wrong accNum should pass Simulate, but not Deliver",
 			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
-			accNums:    []uint64{1}, // Wrong accNum.
+			accNums:    []uint64{1}, // wrong account number
 			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
 			expPass:    false,
@@ -242,7 +242,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			desc:       "wrong accSeq should not pass Simulate",
 			msgs:       []sdk.Msg{multiSendMsg5},
 			accNums:    []uint64{0},
-			accSeqs:    []uint64{0}, // Wrong accSeq
+			accSeqs:    []uint64{0}, // wrong account sequence
 			expSimPass: false,
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},

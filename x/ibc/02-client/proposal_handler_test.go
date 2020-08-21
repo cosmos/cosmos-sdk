@@ -18,21 +18,8 @@ import (
 )
 
 const (
-	chainID = "chainID"
-
-	//connectionID  = "connectionidone"
+	chainID  = "chainID"
 	clientID = "clientidone"
-	// connectionID2 = "connectionidtwo"
-	// clientID2     = "clientidtwo"
-
-	// port1 = "firstport"
-	// port2 = "secondport"
-
-	// channel1 = "firstchannel"
-	// channel2 = "secondchannel"
-
-	// channelOrder   = channeltypes.ORDERED
-	// channelVersion = "1.0"
 
 	height = 10
 
@@ -118,75 +105,75 @@ func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 		// abbreviation:
 		// OAE := allowGovernanceOverrideAfterExpire
 		// OAM := allowGovernanceOverrideAfterMisbehaviour
-		// {
-		// 	"Test1 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=false",
-		// 	suite.ctx, false, false, suite.testClientState(false, latestTimestamp, false, 0), false,
-		// },
-		// {
-		// 	"Test2 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=True",
-		// 	suite.ctx, false, true, suite.testClientState(false, latestTimestamp, false, 2), false,
-		// },
-		// {
-		// 	"Test3 should fail for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=false",
-		// 	suite.ctx, false, false, suite.testClientState(false, latestTimestamp, true, 0), false,
-		// },
-		// {
-		// 	"Test4 should pass for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=true",
-		// 	suite.ctx, false, true, suite.testClientState(false, latestTimestamp, true, 2), true,
-		// },
-		// {
-		// 	"Test5 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=false",
-		// 	expiredCtx, true, false, suite.testClientState(false, latestTimestamp, false, 0), false,
-		// },
-		// {
-		// 	"Test6 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=true",
-		// 	expiredCtx, true, true, suite.testClientState(false, latestTimestamp, false, 2), false,
-		// },
-		// {
-		// 	"Test7 should fail for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
-		// 	expiredCtx, true, false, suite.testClientState(false, latestTimestamp, true, 0), false,
-		// },
+		{
+			"Test1 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=false",
+			suite.ctx, false, false, suite.testClientState(false, latestTimestamp, false, 0), false,
+		},
+		{
+			"Test2 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=True",
+			suite.ctx, false, true, suite.testClientState(false, latestTimestamp, false, 2), false,
+		},
+		{
+			"Test3 should fail for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=false",
+			suite.ctx, false, false, suite.testClientState(false, latestTimestamp, true, 0), false,
+		},
+		{
+			"Test4 should pass for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=true",
+			suite.ctx, false, true, suite.testClientState(false, latestTimestamp, true, 2), true,
+		},
+		{
+			"Test5 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=false",
+			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, false, 0), false,
+		},
+		{
+			"Test6 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=true",
+			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, false, 2), false,
+		},
+		{
+			"Test7 should fail for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
+			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, true, 0), false,
+		},
 		{ // For this test, the client update proposal will pass and we expect the client
 			// to be updated with the new header, (suite.header), even tough the client is expired
 			// and the new header as well
 			"Test8 should pass for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
 			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, true, 2), true,
 		},
-		// {
-		// 	"Test10 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=false",
-		// 	suite.ctx, false, false, suite.testClientState(true, latestTimestamp, false, 0), false,
-		// },
-		// {
-		// 	"Test11 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
-		// 	suite.ctx, false, true, suite.testClientState(true, latestTimestamp, false, 2), false,
-		// },
-		// {
-		// 	"Test12 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
-		// 	suite.ctx, false, false, suite.testClientState(true, latestTimestamp, true, 0), false,
-		// },
-		// {
-		// 	"Test13 should pass for clientStatus with OAE=true, Expired=false, OAM=true, Frozen=true",
-		// 	suite.ctx, false, true, suite.testClientState(true, latestTimestamp, true, 2), true,
-		// },
-		// {
-		// 	"Test14 should pass for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=false",
-		// 	expiredCtx, true, false, suite.testClientState(true, latestTimestamp, false, 0), true,
-		// },
-		// {
-		// 	// For this test, the client update proposal will not pass even though we wil try to update
-		// 	// the client with the new header (because OAE=true and Expired=True).
-		// 	// Still the update will fail because the client is frozen and OAM = false
-		// 	"Test15 should fail for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=true",
-		// 	expiredCtx, true, true, suite.testClientState(true, latestTimestamp, false, 2), false,
-		// },
-		// {
-		// 	"Test16 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=false",
-		// 	expiredCtx, true, false, suite.testClientState(true, latestTimestamp, true, 0), true,
-		// },
-		// {
-		// 	"Test17 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=true",
-		// 	expiredCtx, true, true, suite.testClientState(true, latestTimestamp, true, 2), true,
-		// },
+		{
+			"Test10 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=false",
+			suite.ctx, false, false, suite.testClientState(true, latestTimestamp, false, 0), false,
+		},
+		{
+			"Test11 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
+			suite.ctx, false, true, suite.testClientState(true, latestTimestamp, false, 2), false,
+		},
+		{
+			"Test12 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
+			suite.ctx, false, false, suite.testClientState(true, latestTimestamp, true, 0), false,
+		},
+		{
+			"Test13 should pass for clientStatus with OAE=true, Expired=false, OAM=true, Frozen=true",
+			suite.ctx, false, true, suite.testClientState(true, latestTimestamp, true, 2), true,
+		},
+		{
+			"Test14 should pass for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=false",
+			expiredCtx, true, false, suite.testClientState(true, latestTimestamp, false, 0), true,
+		},
+		{
+			// For this test, the client update proposal will not pass even though we wil try to update
+			// the client with the new header (because OAE=true and Expired=True).
+			// Still the update will fail because the client is frozen and OAM = false
+			"Test15 should fail for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=true",
+			expiredCtx, true, true, suite.testClientState(true, latestTimestamp, false, 2), false,
+		},
+		{
+			"Test16 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=false",
+			expiredCtx, true, false, suite.testClientState(true, latestTimestamp, true, 0), true,
+		},
+		{
+			"Test17 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=true",
+			expiredCtx, true, true, suite.testClientState(true, latestTimestamp, true, 2), true,
+		},
 	}
 
 	for _, tc := range testCases {

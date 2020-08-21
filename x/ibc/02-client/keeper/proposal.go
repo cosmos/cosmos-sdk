@@ -25,8 +25,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	clientType := clientState.ClientType()
 	switch clientType {
 	case exported.Tendermint:
-		{
-		}
+
 		tmClientState := clientState.(*ibctmtypes.ClientState)
 
 		updateClientFlag := false
@@ -41,6 +40,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		}
 
 		if updateClientFlag {
+
 			var tmtHeader ibctmtypes.Header
 			h, err := tmtHeader.UnmarshalBinaryBare(p.Header)
 			if err != nil {

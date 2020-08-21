@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	fmt "fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/light"
@@ -114,6 +115,9 @@ func checkValidity(
 	// skip furher header checks. This is usually the case when
 	// one wants to force to update a client with a new header
 	if override {
+		if err := header.ValidateBasic(clientState.GetChainID()); err != nil {
+			return fmt.Errorf("untrustedHeader.ValidateBasic failed: %w", err)
+		}
 		return nil
 	}
 

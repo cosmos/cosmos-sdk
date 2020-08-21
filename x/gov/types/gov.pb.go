@@ -32,7 +32,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// VoteOption defines a vote option
+// VoteOption enumerates the valid vote options for a given governance proposal.
 type VoteOption int32
 
 const (
@@ -72,7 +72,7 @@ func (VoteOption) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_6e82113c1a9a4b7c, []int{0}
 }
 
-// ProposalStatus is a type alias that represents a proposal status as a byte
+// ProposalStatus enumerates the valid statuses of a proposal.
 type ProposalStatus int32
 
 const (
@@ -117,7 +117,7 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // TextProposal defines a standard text proposal whose changes need to be
-// manually updated in case of approval
+// manually updated in case of approval.
 type TextProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -155,7 +155,7 @@ func (m *TextProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TextProposal proto.InternalMessageInfo
 
-// Deposit defines an amount deposited by an account address to an active proposal
+// Deposit defines an amount deposited by an account address to an active proposal.
 type Deposit struct {
 	ProposalId uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
 	Depositor  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
@@ -194,7 +194,7 @@ func (m *Deposit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Deposit proto.InternalMessageInfo
 
-// Proposal defines the core field members of a governance proposal
+// Proposal defines the core field members of a governance proposal.
 type Proposal struct {
 	ProposalId       uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"id" yaml:"id"`
 	Content          *types1.Any                              `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
@@ -239,7 +239,7 @@ func (m *Proposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Proposal proto.InternalMessageInfo
 
-// TallyResult defines a standard tally for a proposal
+// TallyResult defines a standard tally for a governance proposal.
 type TallyResult struct {
 	Yes        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"yes"`
 	Abstain    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"abstain"`
@@ -279,8 +279,8 @@ func (m *TallyResult) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TallyResult proto.InternalMessageInfo
 
-// Vote defines a vote on a governance proposal. A vote corresponds to a proposal
-// ID, the voter, and the vote option.
+// Vote defines a vote on a governance proposal.
+// A Vote consists of a proposal ID, the voter, and the vote option.
 type Vote struct {
 	ProposalId uint64                                        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
 	Voter      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=voter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"voter,omitempty"`

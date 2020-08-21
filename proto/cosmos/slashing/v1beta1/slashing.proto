@@ -7,7 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-// ValidatorSigningInfo defines the signing info for a validator
+// ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity.
 message ValidatorSigningInfo {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
@@ -27,4 +27,3 @@ message ValidatorSigningInfo {
   // missed blocks counter (to avoid scanning the array every time)
   int64 missed_blocks_counter = 6 [(gogoproto.moretags) = "yaml:\"missed_blocks_counter\""];
 }
-

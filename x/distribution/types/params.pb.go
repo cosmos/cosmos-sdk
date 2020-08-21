@@ -24,7 +24,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of distribution parameters.
+// Params defines the set of params for the distribution module.
 type Params struct {
 	CommunityTax        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_tax" yaml:"community_tax"`
 	BaseProposerReward  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_proposer_reward" yaml:"base_proposer_reward"`

@@ -25,6 +25,10 @@ func roundTripTest(t *testing.T, pubKey crypto.PubKey) {
 }
 
 func TestDefaultPublicKeyCodec(t *testing.T) {
+	roundTripTest(t, nil)
+
+	roundTripTest(t, crypto.PubKey(nil))
+
 	pubKeySecp256k1 := secp256k1.GenPrivKey().PubKey()
 	roundTripTest(t, pubKeySecp256k1)
 

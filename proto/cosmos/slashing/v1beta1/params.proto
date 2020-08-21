@@ -7,7 +7,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
 
-// Params - used for initializing default parameter for slashing at genesis
+// Params represents the parameters used for by the slashing module.
 message Params {
   int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
   bytes min_signed_per_window = 2 [

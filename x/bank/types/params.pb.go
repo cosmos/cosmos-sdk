@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the set of bank parameters.
+// Params defines the parameters for the bank module.
 type Params struct {
 	SendEnabled        []*SendEnabled `protobuf:"bytes,1,rep,name=send_enabled,json=sendEnabled,proto3" json:"send_enabled,omitempty" yaml:"send_enabled,omitempty"`
 	DefaultSendEnabled bool           `protobuf:"varint,2,opt,name=default_send_enabled,json=defaultSendEnabled,proto3" json:"default_send_enabled,omitempty" yaml:"default_send_enabled,omitempty"`
@@ -75,7 +75,7 @@ func (m *Params) GetDefaultSendEnabled() bool {
 	return false
 }
 
-// Send enabled configuration properties for each denomination
+// SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable).
 type SendEnabled struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	Enabled bool   `protobuf:"varint,2,opt,name=enabled,proto3" json:"enabled,omitempty"`

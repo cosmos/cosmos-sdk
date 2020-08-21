@@ -8,8 +8,16 @@ import "google/protobuf/any.proto";
 
 // IdentifiedClientState defines a client state with additional client identifier field.
 message IdentifiedClientState {
-  option (gogoproto.goproto_getters) = false;
   // client identifier
-  string              id           = 1 [(gogoproto.moretags) = "yaml:\"id\""];
-  google.protobuf.Any client_state = 2;
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+}
+
+// ClientConsensusStates defines all the stored consensus states for a given client.
+message ClientConsensusStates {
+  // client identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // consensus states associated with the client
+  repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
 }

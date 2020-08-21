@@ -12,7 +12,7 @@ option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 option (gogoproto.goproto_getters_all)  = false;
 
-// VoteOption defines a vote option
+// VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {
   option (gogoproto.goproto_enum_prefix)   = false;
 
@@ -29,7 +29,7 @@ enum VoteOption {
 }
 
 // TextProposal defines a standard text proposal whose changes need to be
-// manually updated in case of approval
+// manually updated in case of approval.
 message TextProposal {
   option (cosmos_proto.implements_interface) = "Content";
 
@@ -39,7 +39,7 @@ message TextProposal {
   string description = 2;
 }
 
-// Deposit defines an amount deposited by an account address to an active proposal
+// Deposit defines an amount deposited by an account address to an active proposal.
 message Deposit {
   option (gogoproto.equal) = true;
 
@@ -49,7 +49,7 @@ message Deposit {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// Proposal defines the core field members of a governance proposal
+// Proposal defines the core field members of a governance proposal.
 message Proposal {
   option (gogoproto.equal) = true;
 
@@ -76,7 +76,7 @@ message Proposal {
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_end_time\""];
 }
 
-// ProposalStatus is a type alias that represents a proposal status as a byte
+// ProposalStatus enumerates the valid statuses of a proposal.
 enum ProposalStatus {
   option (gogoproto.goproto_enum_prefix)   = false;
 
@@ -94,7 +94,7 @@ enum ProposalStatus {
   PROPOSAL_STATUS_FAILED = 5 [(gogoproto.enumvalue_customname) = "StatusFailed"];
 }
 
-// TallyResult defines a standard tally for a proposal
+// TallyResult defines a standard tally for a governance proposal.
 message TallyResult {
   option (gogoproto.equal) = true;
 
@@ -108,8 +108,8 @@ message TallyResult {
   ];
 }
 
-// Vote defines a vote on a governance proposal. A vote corresponds to a proposal
-// ID, the voter, and the vote option.
+// Vote defines a vote on a governance proposal.
+// A Vote consists of a proposal ID, the voter, and the vote option.
 message Vote {
   option (gogoproto.equal) = true;
 

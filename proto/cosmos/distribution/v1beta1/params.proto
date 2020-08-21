@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
-// Params defines the set of distribution parameters.
+// Params defines the set of params for the distribution module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
   string community_tax                = 1 [

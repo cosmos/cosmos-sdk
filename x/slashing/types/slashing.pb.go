@@ -29,7 +29,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ValidatorSigningInfo defines the signing info for a validator
+// ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity.
 type ValidatorSigningInfo struct {
 	Address github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"address,omitempty"`
 	// height at which validator was first a candidate OR was unjailed

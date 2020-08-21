@@ -17,4 +17,3 @@ message Minter {
     (gogoproto.nullable)   = false
   ];
 }
-

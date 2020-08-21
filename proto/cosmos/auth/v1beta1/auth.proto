@@ -20,7 +20,7 @@ message BaseAccount {
   uint64 sequence       = 4;
 }
 
-// ModuleAccount defines an account for modules that holds coins on a pool
+// ModuleAccount defines an account for modules that holds coins on a pool.
 message ModuleAccount {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;

@@ -3,8 +3,8 @@ package ibc.lightclients.v1.solomachine;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 
+import "cosmos/base/crypto/v1beta1/crypto.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 
 // ClientState defines a solo machine client that tracks the current consensus
 // state and if the client is frozen.
@@ -26,7 +26,7 @@ message ConsensusState {
   // current sequence of the consensus state
   uint64 sequence = 1;
   // public key of the solo machine
-  google.protobuf.Any public_key = 2
+  cosmos.base.crypto.v1beta1.PublicKey public_key = 2
       [(gogoproto.moretags) = "yaml:\"public_key\""];
   uint64 timestamp = 3;
 }
@@ -35,9 +35,9 @@ message ConsensusState {
 message Header {
   option (gogoproto.goproto_getters) = false;
   // sequence to update solo machine public key at
-  uint64              sequence       = 1;
-  bytes               signature      = 2;
-  google.protobuf.Any new_public_key = 3
+  uint64                               sequence       = 1;
+  bytes                                signature      = 2;
+  cosmos.base.crypto.v1beta1.PublicKey new_public_key = 3
       [(gogoproto.moretags) = "yaml:\"new_public_key\""];
 }
 

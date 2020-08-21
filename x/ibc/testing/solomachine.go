@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
@@ -43,12 +44,12 @@ func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 }
 
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
-	anyPublicKey, err := solomachinetypes.PackPublicKey(solo.PublicKey)
+	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
 		Sequence:  solo.Sequence,
-		PublicKey: anyPublicKey,
+		PublicKey: publicKey,
 		Timestamp: solo.Time,
 	}
 }
@@ -62,13 +63,13 @@ func (solo *Solomachine) CreateHeader() solomachinetypes.Header {
 	signature, err := solo.PrivateKey.Sign(data)
 	require.NoError(solo.t, err)
 
-	anyPublicKey, err := solomachinetypes.PackPublicKey(newPrivKey.PubKey())
+	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
 	require.NoError(solo.t, err)
 
 	header := solomachinetypes.Header{
 		Sequence:     solo.Sequence,
 		Signature:    signature,
-		NewPublicKey: anyPublicKey,
+		NewPublicKey: publicKey,
 	}
 
 	// assumes successful header update

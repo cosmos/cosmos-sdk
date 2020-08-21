@@ -70,6 +70,14 @@ func (cs ClientState) Validate() error {
 	return cs.ConsensusState.ValidateBasic()
 }
 
+// VerifyClientState TODO
+func (cs ClientState) VerifyClientState(
+	store sdk.KVStore, cdc codec.BinaryMarshaler, _ commitmentexported.Root,
+	_ uint64, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
+) error {
+	return nil
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Solo Machine client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
@@ -105,7 +113,7 @@ func (cs ClientState) VerifyClientConsensusState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -141,7 +149,7 @@ func (cs ClientState) VerifyConnectionState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -178,7 +186,7 @@ func (cs ClientState) VerifyChannelState(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -213,7 +221,7 @@ func (cs ClientState) VerifyPacketCommitment(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -248,7 +256,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -283,7 +291,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 
@@ -317,7 +325,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 	cs.ConsensusState.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
-	setClientState(store, cdc, cs)
+	setClientState(store, cdc, &cs)
 	return nil
 }
 

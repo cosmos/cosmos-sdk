@@ -25,7 +25,7 @@ type SoloMachineTestSuite struct {
 }
 
 func (suite *SoloMachineTestSuite) SetupTest() {
-	suite.solomachine = ibctesting.NewSolomachine(suite.T(), "test")
+	suite.solomachine = ibctesting.NewSolomachine(suite.T(), "testingsolomachine")
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 

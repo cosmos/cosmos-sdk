@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
-func (suite *SoloMachineTestSuite) TestCheckValidity() {
+func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
 		clientState clientexported.ClientState
 		header      clientexported.Header
@@ -90,7 +90,7 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 				h := suite.solomachine.CreateHeader()
 
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), suite.solomachine.PublicKey.Bytes()...)
+				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), oldPrivKey.PubKey().Bytes()...)
 				sig, err := oldPrivKey.Sign(data)
 				suite.Require().NoError(err)
 				h.Signature = sig
@@ -113,10 +113,10 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(header.(types.Header).NewPublicKey, clientState.(types.ClientState).ConsensusState.PublicKey)
-				suite.Require().Equal(0, clientState.(types.ClientState).FrozenHeight)
-				suite.Require().Equal(header.(types.Header).Sequence+1, clientState.(types.ClientState).ConsensusState.Sequence)
-				suite.Require().Equal(consensusState, clientState.(types.ClientState).ConsensusState)
+				suite.Require().Equal(header.(types.Header).NewPublicKey, clientState.(*types.ClientState).ConsensusState.PublicKey)
+				suite.Require().Equal(uint64(0), clientState.(*types.ClientState).FrozenHeight)
+				suite.Require().Equal(header.(types.Header).Sequence+1, clientState.(*types.ClientState).ConsensusState.Sequence)
+				suite.Require().Equal(consensusState, clientState.(*types.ClientState).ConsensusState)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(clientState)

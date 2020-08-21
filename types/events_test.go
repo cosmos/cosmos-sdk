@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestAppendEvents(t *testing.T) {
@@ -68,4 +69,90 @@ func TestStringifyEvents(t *testing.T) {
 
 	expectedJSONStr := "[{\"type\":\"message\",\"attributes\":[{\"key\":\"sender\",\"value\":\"foo\"},{\"key\":\"module\",\"value\":\"bank\"}]}]"
 	require.Equal(t, expectedJSONStr, string(bz))
+}
+
+func TestMarkEventsToIndex(t *testing.T) {
+	events := []abci.Event{
+		{
+			Type: "message",
+			Attributes: []abci.EventAttribute{
+				{Key: []byte("sender"), Value: []byte("foo")},
+				{Key: []byte("recipient"), Value: []byte("bar")},
+			},
+		},
+		{
+			Type: "staking",
+			Attributes: []abci.EventAttribute{
+				{Key: []byte("deposit"), Value: []byte("5")},
+				{Key: []byte("unbond"), Value: []byte("10")},
+			},
+		},
+	}
+
+	testCases := map[string]struct {
+		events   []abci.Event
+		indexSet map[string]struct{}
+		expected []abci.Event
+	}{
+		"empty index set": {
+			events:   events,
+			expected: events,
+			indexSet: map[string]struct{}{},
+		},
+		"index some events": {
+			events: events,
+			expected: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar")},
+					},
+				},
+				{
+					Type: "staking",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10")},
+					},
+				},
+			},
+			indexSet: map[string]struct{}{
+				"message.sender":  {},
+				"staking.deposit": {},
+			},
+		},
+		"index all events": {
+			events: events,
+			expected: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar"), Index: true},
+					},
+				},
+				{
+					Type: "staking",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10"), Index: true},
+					},
+				},
+			},
+			indexSet: map[string]struct{}{
+				"message.sender":    {},
+				"message.recipient": {},
+				"staking.deposit":   {},
+				"staking.unbond":    {},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, MarkEventsToIndex(tc.events, tc.indexSet))
+		})
+	}
 }

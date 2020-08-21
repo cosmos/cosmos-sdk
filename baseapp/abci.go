@@ -145,6 +145,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
@@ -161,9 +162,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	return
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	return res
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -203,7 +209,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 
@@ -241,7 +247,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 

@@ -149,14 +149,89 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestCmdGetProposal() {
+	val := s.network.Validators[0]
+
+	title := "Text Proposal1"
+
+	testCases := []struct {
+		name      string
+		args      []string
+		malleate  func()
+		expectErr bool
+	}{
+		{
+			"get proposal with json response",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			func() {},
+			true,
+		},
+		{
+			"get proposal without proposal id",
+			[]string{},
+			func() {
+				args := []string{
+					fmt.Sprintf("--%s=%s", cli.FlagTitle, title),
+					fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+					fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
+					fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				}
+
+				_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewCmdSubmitProposal(), args)
+				s.Require().NoError(err)
+				_, err = s.network.WaitForHeight(1)
+				s.Require().NoError(err)
+			},
+			true,
+		},
+		{
+			"get proposal with json response",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			func() {},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposal()
+			clientCtx := val.ClientCtx
+
+			tc.malleate()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var proposal types.Proposal
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposal), out.String())
+				s.Require().Equal(title, proposal.GetTitle())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCmdGetProposals() {
 	val := s.network.Validators[0]
 
 	args := []string{
-		fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
+		fmt.Sprintf("--%s='Text Proposal 2'", cli.FlagTitle),
 		fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
 		fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000001)).String()),
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -178,11 +253,6 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
-		},
-		{
-			"get proposals as text repsonse",
-			[]string{},
 			false,
 		},
 	}
@@ -211,10 +281,10 @@ func (s *IntegrationTestSuite) TestNewCmdVoteProposal() {
 	val := s.network.Validators[0]
 
 	args := []string{
-		fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
+		fmt.Sprintf("--%s='Text Proposal 3'", cli.FlagTitle),
 		fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
 		fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000001)).String()),
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -241,7 +311,7 @@ func (s *IntegrationTestSuite) TestNewCmdVoteProposal() {
 		{
 			"vote for invalid proposal",
 			[]string{
-				fmt.Sprintf("%v", 2),
+				"10",
 				fmt.Sprintf("%s", "yes"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -253,7 +323,7 @@ func (s *IntegrationTestSuite) TestNewCmdVoteProposal() {
 		{
 			"valid vote",
 			[]string{
-				fmt.Sprintf("%v", 1),
+				"1",
 				fmt.Sprintf("%s", "yes"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

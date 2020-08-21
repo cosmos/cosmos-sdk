@@ -40,7 +40,7 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 }
 
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ClientID, "", solo.ConsensusState())
+	return solomachinetypes.NewClientState("", solo.ConsensusState())
 }
 
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {

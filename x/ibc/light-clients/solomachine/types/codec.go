@@ -1,11 +1,6 @@
 package types
 
 import (
-	"fmt"
-
-	proto "github.com/gogo/protobuf/proto"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,20 +34,3 @@ var (
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
-
-// PackPublicKey constructs a new Any packed with the given public key value. It returns
-// an error if the public key can't be casted to a protobuf message or if the concrete
-// implemention is not registered to the protobuf codec.
-func PackPublicKey(publicKey tmcrypto.PubKey) (*codectypes.Any, error) {
-	msg, ok := publicKey.(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", publicKey)
-	}
-
-	anyPublicKey, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return anyPublicKey, nil
-}

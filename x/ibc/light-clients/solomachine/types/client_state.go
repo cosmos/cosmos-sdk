@@ -18,18 +18,12 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(id, chainID string, consensusState *ConsensusState) *ClientState {
+func NewClientState(chainID string, consensusState *ConsensusState) *ClientState {
 	return &ClientState{
-		Id:             id,
 		ChainId:        chainID,
 		FrozenHeight:   0,
 		ConsensusState: consensusState,
 	}
-}
-
-// GetID returns the solo machine client state identifier.
-func (cs ClientState) GetID() string {
-	return cs.Id
 }
 
 // GetChainID returns an empty string.
@@ -64,9 +58,6 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 
 // Validate performs basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if err := host.ClientIdentifierValidator(cs.Id); err != nil {
-		return err
-	}
 	return cs.ConsensusState.ValidateBasic()
 }
 
@@ -397,7 +388,7 @@ func produceVerificationArgs(
 	if cs.GetLatestHeight() < sequence {
 		return Signature{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state (%s) sequence < proof sequence (%d < %d)", cs.Id, cs.GetLatestHeight(), sequence,
+			"client state sequence < proof sequence (%d < %d)", cs.GetLatestHeight(), sequence,
 		)
 	}
 

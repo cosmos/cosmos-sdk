@@ -43,7 +43,7 @@ var (
 	unknownPacketData = []byte("unknown")
 
 	packet        = types.NewPacket(validPacketData, 1, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
-	unknownPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
+	invalidPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 
 	emptyProof     = []byte{}
 	invalidProofs1 = commitmentexported.Proof(nil)
@@ -383,7 +383,7 @@ func (suite *MsgTestSuite) TestMsgRecvPacketValidation() {
 		types.NewMsgRecvPacket(packet, suite.proof, 0, addr1),        // proof height is zero
 		types.NewMsgRecvPacket(packet, emptyProof, 1, addr1),         // empty proof
 		types.NewMsgRecvPacket(packet, suite.proof, 1, emptyAddr),    // missing signer address
-		types.NewMsgRecvPacket(unknownPacket, suite.proof, 1, addr1), // unknown packet
+		types.NewMsgRecvPacket(invalidPacket, suite.proof, 1, addr1), // unknown packet
 	}
 
 	testCases := []struct {
@@ -436,7 +436,7 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 		types.NewMsgTimeout(packet, 1, suite.proof, 0, addr),
 		types.NewMsgTimeout(packet, 1, suite.proof, 1, emptyAddr),
 		types.NewMsgTimeout(packet, 1, emptyProof, 1, addr),
-		types.NewMsgTimeout(unknownPacket, 1, suite.proof, 1, addr),
+		types.NewMsgTimeout(invalidPacket, 1, suite.proof, 1, addr),
 	}
 
 	testCases := []struct {
@@ -461,6 +461,36 @@ func (suite *MsgTestSuite) TestMsgTimeout() {
 	}
 }
 
+// TestMsgTimeoutOnClose tests ValidateBasic for MsgTimeoutOnClose
+func (suite *MsgTestSuite) TestMsgTimeoutOnClose() {
+	testCases := []struct {
+		name    string
+		msg     sdk.Msg
+		expPass bool
+	}{
+		{"success", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, 1, addr), true},
+		{"empty proof", types.NewMsgTimeoutOnClose(packet, 1, emptyProof, suite.proof, 1, addr), false},
+		{"empty proof close", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, emptyProof, 1, addr), false},
+		{"proof height is zero", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, 0, addr), false},
+		{"signer address is empty", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, 1, emptyAddr), false},
+		{"invalid packet", types.NewMsgTimeoutOnClose(invalidPacket, 1, suite.proof, suite.proof, 1, addr), false},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 // TestMsgAcknowledgement tests ValidateBasic for MsgAcknowledgement
 func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 	testMsgs := []*types.MsgAcknowledgement{
@@ -468,7 +498,7 @@ func (suite *MsgTestSuite) TestMsgAcknowledgement() {
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, 0, addr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, 1, emptyAddr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, 1, addr),
-		types.NewMsgAcknowledgement(unknownPacket, packet.GetData(), suite.proof, 1, addr),
+		types.NewMsgAcknowledgement(invalidPacket, packet.GetData(), suite.proof, 1, addr),
 	}
 
 	testCases := []struct {

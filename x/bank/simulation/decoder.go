@@ -9,13 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type SupplyUnmarshaller interface {
+// SupplyUnmarshaler defines the expected encoding store functions.
+type SupplyUnmarshaler interface {
 	UnmarshalSupply([]byte) (exported.SupplyI, error)
 }
 
 // NewDecodeStore returns a function closure that unmarshals the KVPair's values
 // to the corresponding types.
-func NewDecodeStore(cdc SupplyUnmarshaller) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc SupplyUnmarshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.SupplyKey):

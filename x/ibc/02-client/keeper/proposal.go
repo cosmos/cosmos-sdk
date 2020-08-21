@@ -22,6 +22,15 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		return types.ErrClientNotFound
 	}
 
+	// TODO: it will be nice to refactor the following piece of code
+	// and add a function to the clientStatus interface in order to
+	// avoid to use the switch statement. A naive idea is to add
+	// a function with following signature:
+	//
+	// TryClientUpdateProposal(sdk.Context, k keeper.Keeper, *types.ClientUpdateProposal) error
+	//
+	// Unfortunately, we can't pursuit this route as of now, because we face the challenge of an import cycle
+	// with the keeper package which is not easy to resolve.
 	clientType := clientState.ClientType()
 	switch clientType {
 	case exported.Tendermint:

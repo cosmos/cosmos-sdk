@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+
+// Params defines the parameters for the staking module.
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  google.protobuf.Duration unbonding_time = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"unbonding_time\""
+  ];
+  uint32 max_validators     = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
+  uint32 max_entries        = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
+  uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
+  string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+}

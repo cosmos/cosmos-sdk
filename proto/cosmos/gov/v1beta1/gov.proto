@@ -6,7 +6,6 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
-import "google/protobuf/duration.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -119,56 +118,3 @@ message Vote {
   VoteOption option      = 3;
 }
 
-// DepositParams defines the params around deposits for governance
-message DepositParams {
-  //  Minimum deposit for a proposal to enter voting period.
-  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"min_deposit\"",
-    (gogoproto.jsontag)      = "min_deposit,omitempty"
-  ];
-
-  //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months.
-  google.protobuf.Duration max_deposit_period = 2 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "max_deposit_period,omitempty",
-    (gogoproto.moretags)    = "yaml:\"max_deposit_period\""
-  ];
-}
-
-// VotingParams defines the params around Voting in governance
-message VotingParams {
-  //  Length of the voting period.
-  google.protobuf.Duration voting_period = 1 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "voting_period,omitempty",
-    (gogoproto.moretags)    = "yaml:\"voting_period\""
-  ];
-}
-
-// TallyParams defines the params around Tallying votes in governance
-message TallyParams {
-  //  Minimum percentage of total stake needed to vote for a result to be considered valid.
-  bytes quorum = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag) = "quorum,omitempty"
-  ];
-
-  //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5.
-  bytes threshold = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag) = "threshold,omitempty"
-  ];
-  
-  //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3.
-  bytes veto = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag) = "veto,omitempty"
-  ];
-}

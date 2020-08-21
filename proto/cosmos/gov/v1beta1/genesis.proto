@@ -4,6 +4,7 @@ package cosmos.gov.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/gov/v1beta1/gov.proto";
+import "cosmos/gov/v1beta1/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 

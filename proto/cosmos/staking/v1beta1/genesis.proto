@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
+import "cosmos/staking/v1beta1/params.proto";
 
 // GenesisState defines the staking module's genesis state.
 message GenesisState {

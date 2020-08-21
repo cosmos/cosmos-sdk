@@ -7,6 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
+import "cosmos/distribution/v1beta1/params.proto";
 
 // DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses.

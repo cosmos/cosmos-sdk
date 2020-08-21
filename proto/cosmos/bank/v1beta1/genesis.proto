@@ -4,6 +4,7 @@ package cosmos.bank.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
+import "cosmos/bank/v1beta1/params.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 

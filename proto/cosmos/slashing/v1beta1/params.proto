@@ -1,0 +1,33 @@
+syntax = "proto3";
+package cosmos.slashing.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+
+// Params - used for initializing default parameter for slashing at genesis
+message Params {
+  int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
+  bytes min_signed_per_window = 2 [
+    (gogoproto.moretags)   = "yaml:\"min_signed_per_window\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  google.protobuf.Duration downtime_jail_duration = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\""
+  ];
+  bytes slash_fraction_double_sign = 4 [
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_double_sign\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  bytes slash_fraction_downtime = 5 [
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_downtime\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}

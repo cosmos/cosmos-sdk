@@ -7,26 +7,7 @@ option (gogoproto.equal_all) = true;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-// Params defines the set of distribution parameters.
-message Params {
-  option (gogoproto.goproto_stringer) = false;
-  string community_tax                = 1 [
-    (gogoproto.moretags)   = "yaml:\"community_tax\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  string base_proposer_reward = 2 [
-    (gogoproto.moretags)   = "yaml:\"base_proposer_reward\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  string bonus_proposer_reward = 3 [
-    (gogoproto.moretags)   = "yaml:\"bonus_proposer_reward\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
-}
+
 
 // historical rewards for a validator
 // height is implicit within the store key

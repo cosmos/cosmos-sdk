@@ -204,6 +204,7 @@ jobs:
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
+
   liveness-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10

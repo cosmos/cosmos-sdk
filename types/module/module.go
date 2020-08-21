@@ -204,6 +204,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
+// RegisterQueryService registers all gRPC query services.
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block

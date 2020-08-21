@@ -433,6 +433,60 @@ func (msg MsgTimeout) Type() string {
 	return "timeout_packet"
 }
 
+// NewMsgTimeoutOnClose constructs new MsgTimeoutOnClose
+func NewMsgTimeoutOnClose(
+	packet Packet, nextSequenceRecv uint64,
+	proof, proofClose []byte,
+	proofHeight uint64, signer sdk.AccAddress,
+) *MsgTimeoutOnClose {
+	return &MsgTimeoutOnClose{
+		Packet:           packet,
+		NextSequenceRecv: nextSequenceRecv,
+		Proof:            proof,
+		ProofClose:       proofClose,
+		ProofHeight:      proofHeight,
+		Signer:           signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (msg MsgTimeoutOnClose) Route() string {
+	return host.RouterKey
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgTimeoutOnClose) ValidateBasic() error {
+	if len(msg.Proof) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if len(msg.ProofClose) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of closed counterparty channel end")
+	}
+	if msg.ProofHeight == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	}
+	if msg.Signer.Empty() {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	return msg.Packet.ValidateBasic()
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgTimeoutOnClose) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgTimeoutOnClose) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// Type implements sdk.Msg
+func (msg MsgTimeoutOnClose) Type() string {
+	return "timeout_on_close_packet"
+}
+
 var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement

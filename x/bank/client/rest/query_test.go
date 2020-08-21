@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -150,11 +151,13 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
+			&types.QueryTotalSupplyResponse{},
+			&types.QueryTotalSupplyResponse{
+				Supply: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
+				),
+			},
 		},
 		{
 			"GRPC total supply of a specific denom",
@@ -162,11 +165,10 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			&sdk.Coins{},
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-				sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-			),
+			&types.QuerySupplyOfResponse{},
+			&types.QuerySupplyOfResponse{
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
+			},
 		},
 		{
 			"GRPC total supply of a bogus denom",
@@ -174,8 +176,10 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			&types.QuerySupplyOfResponse{},
+			&types.QuerySupplyOfResponse{
+				Amount: sdk.NewCoin("foobar", sdk.ZeroInt()),
+			},
 		},
 	}
 
@@ -188,12 +192,8 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)
 
-			//bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
-			//
-			//fmt.Println("bz", bz)
-			//s.Require().NoError(err)
-			//s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))
-			s.Require().Equal(tc.expected.String(), string(resp))
+			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
 }

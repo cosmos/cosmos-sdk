@@ -11,6 +11,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -161,7 +163,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
 
-	return
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	return res
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -358,12 +364,32 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		res = sdkerrors.QueryResult(err)
+		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err))
 		res.Height = req.Height
 		return res
 	}
 
 	return res
+}
+
+func gRPCErrorToSDKError(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return err
+	}
+
+	switch status.Code() {
+	case codes.NotFound:
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+	case codes.InvalidArgument:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.FailedPrecondition:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.Unauthenticated:
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	default:
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
 }
 
 // createQueryContext creates a new sdk.Context for a query, taking as args

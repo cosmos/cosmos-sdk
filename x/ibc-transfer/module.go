@@ -22,7 +22,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -66,7 +65,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes implements AppModuleBasic interface
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCRoutes registers the capability module's REST service handlers.
@@ -182,7 +180,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 
 //____________________________________________________________________________
 
-// Implement IBCModule callbacks
+// OnChanOpenInit implements the IBCModule interface
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -214,6 +212,7 @@ func (am AppModule) OnChanOpenInit(
 	return nil
 }
 
+// OnChanOpenTry implements the IBCModule interface
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -250,6 +249,7 @@ func (am AppModule) OnChanOpenTry(
 	return nil
 }
 
+// OnChanOpenAck implements the IBCModule interface
 func (am AppModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -262,6 +262,7 @@ func (am AppModule) OnChanOpenAck(
 	return nil
 }
 
+// OnChanOpenConfirm implements the IBCModule interface
 func (am AppModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -270,6 +271,7 @@ func (am AppModule) OnChanOpenConfirm(
 	return nil
 }
 
+// OnChanCloseInit implements the IBCModule interface
 func (am AppModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -279,6 +281,7 @@ func (am AppModule) OnChanCloseInit(
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
 }
 
+// OnChanCloseConfirm implements the IBCModule interface
 func (am AppModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -287,6 +290,7 @@ func (am AppModule) OnChanCloseConfirm(
 	return nil
 }
 
+// OnRecvPacket implements the IBCModule interface
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -323,6 +327,7 @@ func (am AppModule) OnRecvPacket(
 	}, acknowledgement.GetBytes(), nil
 }
 
+// OnAcknowledgementPacket implements the IBCModule interface
 func (am AppModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -366,6 +371,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	}, nil
 }
 
+// OnTimeoutPacket implements the IBCModule interface
 func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,

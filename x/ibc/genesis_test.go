@@ -3,6 +3,8 @@ package ibc_test
 import (
 	"fmt"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -16,7 +18,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
@@ -34,11 +35,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
 						),
 					},
@@ -94,11 +95,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "invalid client genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
 						),
 					},
@@ -163,11 +164,11 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
 						),
 					},

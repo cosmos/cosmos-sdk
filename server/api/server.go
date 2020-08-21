@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"net"
 	"net/http"
 	"strings"
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	// unnamed import of statik for swagger UI support
@@ -43,10 +43,10 @@ type Server struct {
 // CustomGRPCHeaderMatcher if headers doesn't start with `Grpc-Metadat-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	switch key {
-	case grpctypes.GRPCBlockHeightHeader:
+	case "X-Cosmos-Block-Height":
 		return grpctypes.GRPCBlockHeightHeader, true
 	default:
-		return key, false
+		return runtime.DefaultHeaderMatcher(key)
 	}
 }
 

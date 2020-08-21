@@ -26,6 +26,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			true,
 		},
 		{
+			"client is frozen",
+			func() {
+				cs := suite.solomachine.ClientState()
+				cs.FrozenHeight = 1
+				clientState = cs
+				evidence = suite.solomachine.CreateEvidence()
+			},
+			false,
+		},
+		{
 			"wrong client state type",
 			func() {
 				clientState = ibctmtypes.ClientState{}

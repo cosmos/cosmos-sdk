@@ -240,7 +240,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			return err
 		}
 
-		if !bip39.IsMnemonicValid(mnemonic) {
+		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
 			return errors.New("invalid mnemonic")
 		}
 	}

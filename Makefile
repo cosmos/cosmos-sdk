@@ -90,7 +90,10 @@ build-simd: go.sum
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-.PHONY: build build-simd
+build-simd-linux: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
+
+.PHONY: build build-simd build-simd-linux
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

@@ -2,7 +2,9 @@ package keys
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
 )
 
 var (
@@ -87,5 +89,45 @@ func (m *Secp256K1PrivKey) Equals(key crypto.PrivKey) bool {
 }
 
 func (m *Secp256K1PrivKey) Type() string {
+	return m.Key.Type()
+}
+
+func (m *Sr25519PrivKey) Bytes() []byte {
+	return m.Bytes()
+}
+
+func (m *Sr25519PrivKey) Sign(msg []byte) ([]byte, error) {
+	return m.Sign(msg)
+}
+
+func (m *Sr25519PrivKey) PubKey() crypto.PubKey {
+	return &Sr25519PubKey{Key: m.PubKey().(sr25519.PubKey)}
+}
+
+func (m *Sr25519PrivKey) Equals(key crypto.PrivKey) bool {
+	return m.Key.Equals(key)
+}
+
+func (m *Sr25519PrivKey) Type() string {
+	return m.Key.Type()
+}
+
+func (m *Ed25519PrivKey) Bytes() []byte {
+	return m.Bytes()
+}
+
+func (m *Ed25519PrivKey) Sign(msg []byte) ([]byte, error) {
+	return m.Sign(msg)
+}
+
+func (m *Ed25519PrivKey) PubKey() crypto.PubKey {
+	return &Ed25519PubKey{Key: m.PubKey().(ed25519.PubKey)}
+}
+
+func (m *Ed25519PrivKey) Equals(key crypto.PrivKey) bool {
+	return m.Key.Equals(key)
+}
+
+func (m *Ed25519PrivKey) Type() string {
 	return m.Key.Type()
 }

@@ -90,10 +90,7 @@ build-simd: go.sum
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-build-simd-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
-
-.PHONY: build build-simd build-simd-linux
+.PHONY: build build-simd
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -396,7 +393,7 @@ build-docker-local-simapp:
 	docker build -t cosmos-sdk/simapp .
 
 # Run a 4-node testnet locally
-localnet-start: build-simd-linux localnet-stop
+localnet-start: build-simd localnet-stop
 	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/simd:Z cosmos-sdk/simappnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 

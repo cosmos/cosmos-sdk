@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -42,6 +43,28 @@ func HeaderSignBytes(header Header) []byte {
 		sdk.Uint64ToBigEndian(header.Sequence),
 		header.GetPubKey().Bytes()...,
 	)
+}
+
+// ClientStateSignBytes returns the sign bytes for verification of the
+// client state.
+//
+// Format: {sequence}{timestamp}{path}{client-state}
+func ClientStateSignBytes(
+	cdc codec.BinaryMarshaler,
+	sequence, timestamp uint64,
+	path commitmenttypes.MerklePath,
+	clientState clientexported.ClientState,
+) ([]byte, error) {
+	bz, err := codec.MarshalAny(cdc, clientState)
+	if err != nil {
+		return nil, err
+	}
+
+	// sequence + timestamp + path + client state
+	return append(
+		combineSequenceTimestampPath(sequence, timestamp, path),
+		bz...,
+	), nil
 }
 
 // ConsensusStateSignBytes returns the sign bytes for verification of the

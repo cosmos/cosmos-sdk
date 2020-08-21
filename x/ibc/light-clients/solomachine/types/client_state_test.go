@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -63,6 +64,129 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *SoloMachineTestSuite) TestVerifyClientState() {
+	// create client for tendermint so we can use client state for verification
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientState := suite.chainA.GetClientState(clientA)
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	suite.Require().NoError(err)
+
+	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, clientState)
+	suite.Require().NoError(err)
+
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
+	suite.Require().NoError(err)
+
+	signatureDoc := &types.Signature{
+		Signature: sig,
+		Timestamp: suite.solomachine.Time,
+	}
+
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
+	suite.Require().NoError(err)
+
+	testCases := []struct {
+		name        string
+		clientState *types.ClientState
+		prefix      commitmentexported.Prefix
+		proof       []byte
+		expPass     bool
+	}{
+		{
+			"successful verification",
+			suite.solomachine.ClientState(),
+			prefix,
+			proof,
+			true,
+		},
+		{
+			"ApplyPrefix failed",
+			suite.solomachine.ClientState(),
+			nil,
+			proof,
+			false,
+		},
+		{
+			"client is frozen",
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
+			prefix,
+			proof,
+			false,
+		},
+		{
+			"consensus state in client state is nil",
+			types.NewClientState(suite.solomachine.ClientID, "", nil),
+			prefix,
+			proof,
+			false,
+		},
+		{
+			"client state latest height is less than sequence",
+			types.NewClientState(suite.solomachine.ClientID, "",
+				&types.ConsensusState{
+					Sequence:  suite.solomachine.Sequence - 1,
+					Timestamp: suite.solomachine.Time,
+					PublicKey: suite.solomachine.ConsensusState().PublicKey,
+				}),
+			prefix,
+			proof,
+			false,
+		},
+		{
+			"consensus state timestamp is greater than signature",
+			types.NewClientState(suite.solomachine.ClientID, "",
+				&types.ConsensusState{
+					Sequence:  suite.solomachine.Sequence,
+					Timestamp: suite.solomachine.Time + 1,
+					PublicKey: suite.solomachine.ConsensusState().PublicKey,
+				}),
+			prefix,
+			proof,
+			false,
+		},
+
+		{
+			"proof is nil",
+			suite.solomachine.ClientState(),
+			prefix,
+			nil,
+			false,
+		},
+		{
+			"proof verification failed",
+			suite.solomachine.ClientState(),
+			prefix,
+			suite.GetInvalidProof(),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+
+			var expSeq uint64
+			if tc.clientState.ConsensusState != nil {
+				expSeq = tc.clientState.ConsensusState.Sequence + 1
+			}
+
+			err := tc.clientState.VerifyClientState(
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %s", suite.GetSequenceFromStore(), tc.name)
 			} else {
 				suite.Require().Error(err)
 			}

@@ -21,6 +21,7 @@ type SoloMachineTestSuite struct {
 
 	// testing chain used for convenience and readability
 	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 
 	store sdk.KVStore
 }
@@ -29,6 +30,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.solomachine = ibctesting.NewSolomachine(suite.T(), "testingsolomachine")
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
 	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientexported.ClientTypeSoloMachine)
 

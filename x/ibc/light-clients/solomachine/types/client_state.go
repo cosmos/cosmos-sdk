@@ -70,11 +70,41 @@ func (cs ClientState) Validate() error {
 	return cs.ConsensusState.ValidateBasic()
 }
 
-// VerifyClientState TODO
+// VerifyClientState verifies a proof of the client state of the running chain
+// stored on the solo machine.
 func (cs ClientState) VerifyClientState(
-	store sdk.KVStore, cdc codec.BinaryMarshaler, _ commitmentexported.Root,
-	_ uint64, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
+	store sdk.KVStore,
+	cdc codec.BinaryMarshaler,
+	_ commitmentexported.Root,
+	sequence uint64,
+	prefix commitmentexported.Prefix,
+	counterpartyClientIdentifier string,
+	proof []byte,
+	clientState clientexported.ClientState,
 ) error {
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	if err != nil {
+		return err
+	}
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	if err != nil {
+		return err
+	}
+
+	data, err := ClientStateSignBytes(cdc, sequence, signature.Timestamp, path, clientState)
+	if err != nil {
+		return err
+	}
+
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+		return err
+	}
+
+	cs.ConsensusState.Sequence++
+	cs.ConsensusState.Timestamp = signature.Timestamp
+	setClientState(store, cdc, &cs)
 	return nil
 }
 

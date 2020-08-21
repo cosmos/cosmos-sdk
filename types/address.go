@@ -69,6 +69,8 @@ const (
 	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
 
+var tempVariableToTriggerBuild = 0
+
 // Address is a common interface for different types of addresses used by the SDK
 type Address interface {
 	Equals(Address) bool

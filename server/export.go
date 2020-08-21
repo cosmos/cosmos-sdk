@@ -8,10 +8,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +29,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -95,10 +94,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				},
 			}
 
-			// NOTE: Tendermint uses an Amino JSON decoder for GenesisDoc
+			// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
 			// (except for stuff inside AppState). Inside AppState, we're free
 			// to encode as protobuf or amino.
-			encoded, err := clientCtx.LegacyAmino.MarshalJSON(doc)
+			encoded, err := tmjson.Marshal(doc)
 			if err != nil {
 				return err
 			}

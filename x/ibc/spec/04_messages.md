@@ -91,10 +91,12 @@ using the `MsgConnectionOpenTry`.
 type MsgConnectionOpenTry struct {
 	ClientId             string       
 	ConnectionId         string      
+	ClientState          *types.Any // proto-packed counterparty client
 	Counterparty         Counterparty 
 	CounterpartyVersions []string     
-	ProofInit            []byte 
 	ProofHeight          uint64 
+	ProofInit            []byte 
+	ProofClient          []byte
 	ProofConsensus       []byte   
 	ConsensusHeight      uint64  
 	Signer               sdk.AccAddress 
@@ -104,16 +106,19 @@ type MsgConnectionOpenTry struct {
 This message is expected to fail if:
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
+- `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty 
-- `ProofInit` is empty
 - `ProofHeight` is zero
+- `ProofInit` is empty
+- `ProofClient` is empty
 - `ProofConsensus` is empty
 - `ConsensusHeight` is zero
 - `Signer` is empty
 - A Client hasn't been created for the given ID
 - A Connection for the given ID already exists
 - `ProofInit` does not prove that the counterparty connection is in state INIT
+- `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
 The message creates a connection for the given ID with an TRYOPEN State.
@@ -127,8 +132,10 @@ using the `MsgConnectionOpenAck`.
 type MsgConnectionOpenAck struct {
 	ConnectionId    string 
 	Version         string 
-	ProofTry        []byte 
+	ClientState     *types.Any // proto-packed counterparty client
 	ProofHeight     uint64 
+	ProofTry        []byte 
+	ProofClient     []byte
 	ProofConsensus  []byte      
 	ConsensusHeight uint64     
 	Signer          sdk.AccAddress 
@@ -138,12 +145,15 @@ type MsgConnectionOpenAck struct {
 This message is expected to fail if:
 - `ConnectionId` is invalid (see naming requirements)
 - `Version` is empty
-- `ProofTry` is empty
+- `ClientState` is not a valid client of the executing chain
 - `ProofHeight` is zero
+- `ProofTry` is empty
+- `ProofClient` is empty
 - `ProofConsensus` is empty
 - `ConsensusHeight` is zero
 - `Signer` is empty
 - `ProofTry` does not prove that the counterparty connection is in state TRYOPEN
+- `ProofClient` does not prove that the counterparty has stored the `ClientState` provided by message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
 The message sets the connection state for the given ID to OPEN.
@@ -324,3 +334,102 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty set its channel to state CLOSED
 
 The message closes a channel on chain B for the given Port ID and Channel ID.
+
+### MsgRecvPacket
+
+A packet is received on chain B using the `MsgRecvPacket`.
+
+```go
+type MsgRecvPacket struct {
+    Packet      Packet
+    Proof       []byte
+    ProofHeight uint64
+    Signer      sdk.AccAddress 
+}
+```
+
+This message is expected to fail if:
+- `Proof` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- `Packet` fails basic validation
+- `Proof` does not prove that the counterparty sent the `Packet`.
+
+The message receives a packet on chain B.
+
+### MsgTimeout
+
+A packet is timed out on chain A using the `MsgTimeout`.
+
+```go
+type MsgTimeout struct {
+    Packet           Packet     
+    Proof            []byte
+    ProofHeight      uint64
+    NextSequenceRecv uint64
+    Signer           sdk.AccAddress
+}
+```
+
+This message is expected to fail if:
+- `Proof` is empty
+- `ProofHeight` is zero
+- `NextSequenceRecv` is zero
+- `Signer` is empty
+- `Packet` fails basic validation
+- `Proof` does not prove that the packet has not been received on the counterparty chain.
+
+The message times out a packet on chain B.
+
+### MsgTimeoutOnClose
+
+A packet is timed out on chain A due to the closure of the channel end on chain B using 
+the `MsgTimeoutOnClose`.
+
+```go
+type MsgTimeoutOnClose struct {
+    Packet           Packet     
+    Proof            []byte
+    ProofClose       []byte
+    ProofHeight      uint64
+    NextSequenceRecv uint64
+    Signer           sdk.AccAddress
+}
+```
+
+This message is expected to fail if:
+- `Proof` is empty
+- `ProofClose` is empty
+- `ProofHeight` is zero
+- `NextSequenceRecv` is zero
+- `Signer` is empty
+- `Packet` fails basic validation
+- `Proof` does not prove that the packet has not been received on the counterparty chain.
+- `ProofClose` does not prove that the counterparty channel end has been closed.
+
+The message times out a packet on chain B.
+
+### MsgAcknowledgement
+
+A packet is acknowledged on chain A using the `MsgAcknowledgement`.
+
+```go 
+type MsgAcknowledgement struct {
+    Packet          Packet
+    Acknowledgement []byte
+    Proof           []byte
+    ProofHeight     uint64
+    Signer          sdk.AccAddress
+}
+```
+
+This message is expected to fail if:
+- `Proof` is empty
+- `ProofHeight` is zero
+- `Signer` is empty
+- `Packet` fails basic validation
+- `Acknowledgement` is empty
+- `Proof` does not prove that the counterparty received the `Packet`.
+
+The message receives a packet on chain A.
+

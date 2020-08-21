@@ -32,6 +32,16 @@ type ClientState interface {
 
 	// State verification functions
 
+	VerifyClientState(
+		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
+		root commitmentexported.Root,
+		height uint64,
+		prefix commitmentexported.Prefix,
+		counterpartyClientIdentifier string,
+		proof []byte,
+		clientState ClientState,
+	) error
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,

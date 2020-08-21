@@ -10,7 +10,7 @@ import (
 
 var _ clientexported.Header = Header{}
 
-// ClientType defines that the Header is a Solo Machine verification algorithm.
+// ClientType defines that the Header is a Solo Machine.
 func (Header) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine
 }
@@ -20,7 +20,7 @@ func (h Header) GetHeight() uint64 {
 	return h.Sequence
 }
 
-// GetPubKey unmarshals the new public key into a crypto.PubKey type.
+// GetPubKey unmarshals the new public key into a tmcrypto.PubKey type.
 func (h Header) GetPubKey() tmcrypto.PubKey {
 	publicKey, ok := h.NewPublicKey.GetCachedValue().(tmcrypto.PubKey)
 	if !ok {
@@ -41,7 +41,7 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "signature cannot be empty")
 	}
 
-	if h.NewPublicKey == nil || len(h.GetPubKey().Bytes()) == 0 {
+	if h.NewPublicKey == nil || h.GetPubKey() == nil || len(h.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "new public key cannot be empty")
 	}
 

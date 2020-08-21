@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
@@ -21,8 +20,8 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"valid misbehaviour evidence",
 			func() {
-				clientState = suite.ClientState()
-				evidence = suite.Evidence()
+				clientState = suite.solomachine.ClientState()
+				evidence = suite.solomachine.CreateEvidence()
 			},
 			true,
 		},
@@ -30,14 +29,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"wrong client state type",
 			func() {
 				clientState = ibctmtypes.ClientState{}
-				evidence = suite.Evidence()
+				evidence = suite.solomachine.CreateEvidence()
 			},
 			false,
 		},
 		{
 			"invalid evidence type",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 				evidence = ibctmtypes.Evidence{}
 			},
 			false,
@@ -45,10 +44,10 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"equal data in signatures",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 
 				// store in tmp var before assigning to interface type
-				ev := suite.Evidence()
+				ev := suite.solomachine.CreateEvidence()
 				ev.SignatureOne.Data = ev.SignatureTwo.Data
 				evidence = ev
 			},
@@ -57,14 +56,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"invalid first signature",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.Evidence()
+				ev := suite.solomachine.CreateEvidence()
 
 				msg := []byte("DATA ONE")
-				data := append(sdk.Uint64ToBigEndian(suite.sequence+1), msg...)
-				sig, err := suite.privKey.Sign(data)
+				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
 				ev.SignatureOne.Signature = sig
@@ -76,14 +75,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"invalid second signature",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.Evidence()
+				ev := suite.solomachine.CreateEvidence()
 
 				msg := []byte("DATA TWO")
-				data := append(sdk.Uint64ToBigEndian(suite.sequence+1), msg...)
-				sig, err := suite.privKey.Sign(data)
+				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
 				ev.SignatureTwo.Signature = sig
@@ -95,16 +94,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"signatures sign over different sequence",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.Evidence()
+				ev := suite.solomachine.CreateEvidence()
 
 				// Signature One
 				msg := []byte("DATA ONE")
 				// sequence used is plus 1
-				data := append(sdk.Uint64ToBigEndian(suite.sequence+1), msg...)
-				sig, err := suite.privKey.Sign(data)
+				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
 				ev.SignatureOne.Signature = sig
@@ -113,8 +112,8 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				// Signature Two
 				msg = []byte("DATA TWO")
 				// sequence used is minus 1
-				data = append(sdk.Uint64ToBigEndian(suite.sequence-1), msg...)
-				sig, err = suite.privKey.Sign(data)
+				data = append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence-1), msg...)
+				sig, err = suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
 				ev.SignatureTwo.Signature = sig
@@ -127,19 +126,22 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
-		// setup test
-		tc.setup()
 
-		clientState, err := solomachine.CheckMisbehaviourAndUpdateState(clientState, suite.ConsensusState(), evidence)
+		suite.Run(tc.name, func() {
+			// setup test
+			tc.setup()
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().True(clientState.IsFrozen(), "valid test case %d did not freeze the client: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-			suite.Require().Nil(clientState, "invalid test case %d returned non-nil client state: %s", i, tc.name)
-		}
+			clientState, err := clientState.CheckMisbehaviourAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.store, evidence)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().True(clientState.IsFrozen(), "client not frozen")
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(clientState)
+			}
+		})
 	}
 }

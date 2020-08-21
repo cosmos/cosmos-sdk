@@ -47,12 +47,12 @@ func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.ConsensusState.Sequence
 }
 
-// IsFrozen returns true if the client is frozen
+// IsFrozen returns true if the client is frozen.
 func (cs ClientState) IsFrozen() bool {
 	return cs.FrozenHeight != 0
 }
 
-// GetFrozenHeight returns the frozen height of the client
+// GetFrozenHeight returns the frozen height of the client.
 func (cs ClientState) GetFrozenHeight() uint64 {
 	return cs.FrozenHeight
 }

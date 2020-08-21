@@ -6,10 +6,10 @@ import (
 )
 
 func (suite *SoloMachineTestSuite) TestConsensusState() {
-	consensusState := suite.ConsensusState()
+	consensusState := suite.solomachine.ConsensusState()
 
 	suite.Require().Equal(clientexported.SoloMachine, consensusState.ClientType())
-	suite.Require().Equal(suite.sequence, consensusState.GetHeight())
+	suite.Require().Equal(suite.solomachine.Sequence, consensusState.GetHeight())
 	suite.Require().Equal(timestamp, consensusState.GetTimestamp())
 	suite.Require().Nil(consensusState.GetRoot())
 }
@@ -22,34 +22,39 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 	}{
 		{
 			"valid consensus state",
-			suite.ConsensusState(),
+			suite.solomachine.ConsensusState(),
 			true,
 		},
 		{
 			"sequence is zero",
 			&types.ConsensusState{
-				Sequence: 0,
-				PubKey:   suite.pubKey,
+				Sequence:  0,
+				PublicKey: suite.solomachine.ConsensusState().PublicKey,
 			},
 			false,
 		},
 		{
 			"pubkey is nil",
 			&types.ConsensusState{
-				Sequence: suite.sequence,
-				PubKey:   nil,
+				Sequence:  suite.solomachine.Sequence,
+				PublicKey: nil,
 			},
 			false,
 		},
 	}
 
-	for i, tc := range testCases {
-		err := tc.consensusState.ValidateBasic()
+	for _, tc := range testCases {
+		tc := tc
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+		suite.Run(tc.name, func() {
+
+			err := tc.consensusState.ValidateBasic()
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }

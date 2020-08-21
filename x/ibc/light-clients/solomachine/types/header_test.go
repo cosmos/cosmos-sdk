@@ -6,7 +6,7 @@ import (
 )
 
 func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
-	header := suite.CreateHeader()
+	header := suite.solomachine.CreateHeader()
 
 	cases := []struct {
 		name    string
@@ -21,27 +21,27 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		{
 			"sequence is zero",
 			types.Header{
-				Sequence:  0,
-				Signature: header.Signature,
-				NewPubKey: header.NewPubKey,
+				Sequence:     0,
+				Signature:    header.Signature,
+				NewPublicKey: header.NewPublicKey,
 			},
 			false,
 		},
 		{
 			"signature is empty",
 			types.Header{
-				Sequence:  header.Sequence,
-				Signature: []byte{},
-				NewPubKey: header.NewPubKey,
+				Sequence:     header.Sequence,
+				Signature:    []byte{},
+				NewPublicKey: header.NewPublicKey,
 			},
 			false,
 		},
 		{
 			"public key is nil",
 			types.Header{
-				Sequence:  header.Sequence,
-				Signature: header.Signature,
-				NewPubKey: nil,
+				Sequence:     header.Sequence,
+				Signature:    header.Signature,
+				NewPublicKey: nil,
 			},
 			false,
 		},
@@ -49,11 +49,17 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 
 	suite.Require().Equal(clientexported.SoloMachine, header.ClientType())
 
-	for i, tc := range cases {
-		if tc.expPass {
-			suite.Require().NoError(tc.header.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(tc.header.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
-		}
+	for _, tc := range cases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			err := tc.header.ValidateBasic()
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }

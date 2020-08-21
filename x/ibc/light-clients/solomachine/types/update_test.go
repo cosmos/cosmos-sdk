@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -22,8 +21,8 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 		{
 			"successful update",
 			func() {
-				clientState = suite.ClientState()
-				header = suite.CreateHeader()
+				clientState = suite.solomachine.ClientState()
+				header = suite.solomachine.CreateHeader()
 			},
 			true,
 		},
@@ -31,14 +30,14 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 			"wrong client state type",
 			func() {
 				clientState = ibctmtypes.ClientState{}
-				header = suite.CreateHeader()
+				header = suite.solomachine.CreateHeader()
 			},
 			false,
 		},
 		{
 			"invalid header type",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 				header = ibctmtypes.Header{}
 			},
 			false,
@@ -46,9 +45,9 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 		{
 			"wrong sequence in header",
 			func() {
-				clientState = suite.ClientState()
+				clientState = suite.solomachine.ClientState()
 				// store in temp before assigning to interface type
-				h := suite.CreateHeader()
+				h := suite.solomachine.CreateHeader()
 				h.Sequence++
 				header = h
 			},
@@ -57,9 +56,9 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 		{
 			"signature uses wrong sequence",
 			func() {
-				clientState = suite.ClientState()
-				suite.sequence++
-				header = suite.CreateHeader()
+				clientState = suite.solomachine.ClientState()
+				suite.solomachine.Sequence++
+				header = suite.solomachine.CreateHeader()
 			},
 			false,
 		},
@@ -67,12 +66,12 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 			"signature uses new pubkey to sign",
 			func() {
 				// store in temp before assinging to interface type
-				cs := suite.ClientState()
-				h := suite.CreateHeader()
+				cs := suite.solomachine.ClientState()
+				h := suite.solomachine.CreateHeader()
 
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), h.NewPubKey.Bytes()...)
-				sig, err := suite.privKey.Sign(data)
+				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), suite.solomachine.PublicKey.Bytes()...)
+				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 				h.Signature = sig
 
@@ -86,12 +85,12 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 			"signature signs over old pubkey",
 			func() {
 				// store in temp before assinging to interface type
-				cs := suite.ClientState()
-				oldPrivKey := suite.privKey
-				h := suite.CreateHeader()
+				cs := suite.solomachine.ClientState()
+				oldPrivKey := suite.solomachine.PrivateKey
+				h := suite.solomachine.CreateHeader()
 
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), cs.ConsensusState.PubKey.Bytes()...)
+				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), suite.solomachine.PublicKey.Bytes()...)
 				sig, err := oldPrivKey.Sign(data)
 				suite.Require().NoError(err)
 				h.Signature = sig
@@ -103,23 +102,26 @@ func (suite *SoloMachineTestSuite) TestCheckValidity() {
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
-		// setup test
-		tc.setup()
 
-		clientState, consensusState, err := solomachine.CheckValidityAndUpdateState(clientState, header)
+		suite.Run(tc.name, func() {
+			// setup test
+			tc.setup()
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().Equal(header.(solomachinetypes.Header).NewPubKey, clientState.(solomachinetypes.ClientState).ConsensusState.PubKey, "valid test case %d failed with wrong updated pubkey: %s", i, tc.name)
-			suite.Require().False(clientState.(solomachinetypes.ClientState).Frozen, "valid test case %d failed with frozen client: %s", i, tc.name)
-			suite.Require().Equal(header.(solomachinetypes.Header).Sequence+1, clientState.(solomachinetypes.ClientState).ConsensusState.Sequence, "valid test case %d failed with wrong updated sequence: %s", i, tc.name)
-			suite.Require().Equal(consensusState, clientState.(solomachinetypes.ClientState).ConsensusState, "valid test case %d failed with non-matching consensus state relative to client state: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-			suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
-			suite.Require().Nil(consensusState, "invalid test case %d passed: %s", i, tc.name)
-		}
+			clientState, consensusState, err := clientState.CheckHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.Codec, suite.store, header)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(header.(types.Header).NewPublicKey, clientState.(types.ClientState).ConsensusState.PublicKey)
+				suite.Require().Equal(0, clientState.(types.ClientState).FrozenHeight)
+				suite.Require().Equal(header.(types.Header).Sequence+1, clientState.(types.ClientState).ConsensusState.Sequence)
+				suite.Require().Equal(consensusState, clientState.(types.ClientState).ConsensusState)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(clientState)
+				suite.Require().Nil(consensusState)
+			}
+		})
 	}
 }

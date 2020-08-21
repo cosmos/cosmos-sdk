@@ -11,12 +11,12 @@ import (
 
 var _ clientexported.ConsensusState = ConsensusState{}
 
-// ClientType returns Solo Machine type
+// ClientType returns Solo Machine type.
 func (ConsensusState) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine
 }
 
-// GetHeight returns the sequence number
+// GetHeight returns the sequence number.
 func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Sequence
 }
@@ -26,7 +26,7 @@ func (cs ConsensusState) GetTimestamp() uint64 {
 	return cs.Timestamp
 }
 
-// GetRoot returns nil as solo machines do not have roots
+// GetRoot returns nil since solo machines do not have roots.
 func (cs ConsensusState) GetRoot() commitmentexported.Root {
 	return nil
 }
@@ -49,7 +49,7 @@ func (cs ConsensusState) ValidateBasic() error {
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
 	}
-	if cs.PublicKey == nil || len(cs.GetPubKey().Bytes()) == 0 {
+	if cs.PublicKey == nil || cs.GetPubKey() == nil || len(cs.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")
 	}
 

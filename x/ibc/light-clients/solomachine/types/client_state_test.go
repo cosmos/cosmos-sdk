@@ -31,41 +31,44 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 	}{
 		{
 			"valid client state",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			true,
 		},
 		{
 			"invalid client id",
-			types.NewClientState("(testClientID)", "", suite.ConsensusState()),
+			types.NewClientState("(testClientID)", "", suite.solomachine.ConsensusState()),
 			false,
 		},
 		{
 			"sequence is zero",
-			types.NewClientState(suite.clientID, "", &types.ConsensusState{0, suite.pubKey, timestamp}),
+			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, timestamp}),
 			false,
 		},
 		{
 			"timstamp is zero",
-			types.NewClientState(suite.clientID, "", &types.ConsensusState{1, suite.pubKey, 0}),
+			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, 0}),
 			false,
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState(suite.clientID, "", &types.ConsensusState{suite.sequence, nil, timestamp}),
+			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{suite.solomachine.Sequence, nil, timestamp}),
 			false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.Validate()
+		suite.Run(tc.name, func() {
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			err := tc.clientState.Validate()
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
@@ -74,18 +77,18 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ConsensusStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, suite.ClientState().ConsensusState)
+	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, suite.solomachine.ConsensusState())
 	suite.Require().NoError(err)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -97,56 +100,59 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.MerklePrefix{},
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		suite.Run(tc.name, func() {
 
-		err := tc.clientState.VerifyClientConsensusState(
-			suite.store, suite.cdc, nil, suite.sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
-		)
+			expSeq := tc.clientState.ConsensusState.Sequence + 1
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-			suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %d: %s", suite.GetSequenceFromStore(), i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			err := tc.clientState.VerifyClientConsensusState(
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expSeq, suite.GetSequenceFromStore(), "sequence not updated in the store (%d) on valid test case %s", suite.GetSequenceFromStore(), tc.name)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
@@ -157,18 +163,18 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
 	suite.Require().NoError(err)
 
-	value, err := types.ConnectionStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, conn)
+	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, conn)
 	suite.Require().NoError(err)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -180,35 +186,35 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -221,7 +227,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testConnectionID, conn,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
@@ -240,18 +246,18 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value, err := types.ChannelStateSignBytes(suite.cdc, suite.sequence, suite.timestamp, path, ch)
+	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, ch)
 	suite.Require().NoError(err)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -263,35 +269,35 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -304,7 +310,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
@@ -318,20 +324,20 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	commitmentBytes := []byte("COMMITMENT BYTES")
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketCommitmentSignBytes(suite.sequence, suite.timestamp, path, commitmentBytes)
+	value := types.PacketCommitmentSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, commitmentBytes)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -343,35 +349,35 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -384,7 +390,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, commitmentBytes,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
 		)
 
 		if tc.expPass {
@@ -398,20 +404,20 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 
 func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	ack := []byte("ACK")
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementSignBytes(suite.sequence, suite.timestamp, path, ack)
+	value := types.PacketAcknowledgementSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, ack)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -423,35 +429,35 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -464,7 +470,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence, ack,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
 		)
 
 		if tc.expPass {
@@ -477,20 +483,20 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementAbsenceSignBytes(suite.sequence, suite.timestamp, path)
+	value := types.PacketAcknowledgementAbsenceSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -502,35 +508,35 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -543,7 +549,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.sequence,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
 		)
 
 		if tc.expPass {
@@ -556,21 +562,21 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
-	nextSeqRecv := suite.sequence + 1
+	nextSeqRecv := suite.solomachine.Sequence + 1
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := types.NextSequenceRecvSignBytes(suite.sequence, suite.timestamp, path, nextSeqRecv)
+	value := types.NextSequenceRecvSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, nextSeqRecv)
 
-	sig, err := suite.privKey.Sign(value)
+	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
 	signatureDoc := &types.Signature{
 		Signature: sig,
-		Timestamp: suite.timestamp,
+		Timestamp: suite.solomachine.Time,
 	}
 
-	proof, err := suite.cdc.MarshalBinaryBare(signatureDoc)
+	proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -582,35 +588,35 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	}{
 		{
 			"successful verification",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			proof,
 			true,
 		},
 		{
 			"ApplyPrefix failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			commitmenttypes.NewMerklePrefix([]byte{}),
 			proof,
 			false,
 		},
 		{
 			"client is frozen",
-			&types.ClientState{suite.clientID, "", 1, suite.ConsensusState()},
+			&types.ClientState{suite.solomachine.ClientID, "", 1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"proof is nil",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			nil,
 			false,
 		},
 		{
 			"proof verification failed",
-			suite.ClientState(),
+			suite.solomachine.ClientState(),
 			prefix,
 			invalidProof,
 			false,
@@ -623,7 +629,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.cdc, suite.sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {

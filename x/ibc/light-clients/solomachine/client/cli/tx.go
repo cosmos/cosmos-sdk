@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -22,7 +21,7 @@ func NewCreateClientCmd() *cobra.Command {
 		Use:     "create [client-id] [path/to/consensus_state.json]",
 		Short:   "create new solo machine client",
 		Long:    "create a new solo machine client with the specified identifier and consensus state",
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -35,7 +34,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var consensusState types.ConsensusState
+			var consensusState *types.ConsensusState
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &consensusState); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -64,7 +63,7 @@ func NewUpdateClientCmd() *cobra.Command {
 		Use:     "update [client-id] [path/to/header.json]",
 		Short:   "update existing client with a header",
 		Long:    "update existing client with a solo machine header",
-		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -106,7 +105,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		Use:     "misbehaviour [path/to/evidence.json]",
 		Short:   "submit a client misbehaviour",
 		Long:    "submit a client misbehaviour to prevent future updates",
-		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.ClientName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -117,7 +116,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var ev evidenceexported.Evidence
+			var ev types.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])

@@ -348,6 +348,13 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 	return chain.SendMsgs(msg)
 }
 
+// CreateSoloMachineClient will construct and execute a solomachine
+// MsgCreateClient. A client will be created on the (target) chain.
+func (chain *TestChain) CreateSoloMachineClient(counterparty *TestChain, clientID string) error {
+	// TODO
+	return nil
+}
+
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
 // client will be updated on the (target) chain.
 // UpdateTMClient mocks the relayer flow necessary for updating a Tendermint client

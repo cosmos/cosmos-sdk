@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -241,8 +240,9 @@ func (t *builder) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			return nil, err
 		}
 		res[i] = signing.SignatureV2{
-			PubKey: pubKeys[i],
-			Data:   sigData,
+			PubKey:   pubKeys[i],
+			Data:     sigData,
+			Sequence: si.GetSequence(),
 		}
 	}
 
@@ -320,6 +320,7 @@ func (t *builder) SetSignatures(signatures ...signing.SignatureV2) error {
 		signerInfos[i] = &tx.SignerInfo{
 			PublicKey: pk,
 			ModeInfo:  modeInfo,
+			Sequence:  sig.Sequence,
 		}
 	}
 
@@ -335,63 +336,7 @@ func (t *builder) setSignerInfos(infos []*tx.SignerInfo) {
 	t.authInfoBz = nil
 	// set cached pubKeys to nil because they no longer match tx.AuthInfo
 	t.pubKeys = nil
-}
 
-// getSignerIndex returns the index of a public key in the GetSigners array. It
-// returns an error if the publicKey is not in GetSigners.
-func (t *builder) getSignerIndex(pubKey crypto.PubKey) (int, error) {
-	if pubKey == nil {
-		return -1, sdkerrors.Wrap(
-			sdkerrors.ErrInvalidPubKey,
-			"public key is empty",
-		)
-	}
-
-	for i, signer := range t.GetSigners() {
-		if bytes.Equal(signer.Bytes(), pubKey.Address().Bytes()) {
-			return i, nil
-		}
-	}
-
-	return -1, sdkerrors.Wrapf(
-		sdkerrors.ErrInvalidPubKey,
-		"public key %s is not a signer of this tx, call SetMsgs first", pubKey,
-	)
-}
-
-// SetSignerInfo implements TxBuilder.SetSignerInfo.
-func (t *builder) SetSignerInfo(pubKey crypto.PubKey, modeInfo *tx.ModeInfo) error {
-	signerIndex, err := t.getSignerIndex(pubKey)
-	if err != nil {
-		return err
-	}
-
-	pk, err := t.pubkeyCodec.Encode(pubKey)
-	if err != nil {
-		return err
-	}
-
-	n := len(t.GetSigners())
-	// If t.tx.AuthInfo.SignerInfos is empty, we just initialize with some
-	// empty data.
-	if len(t.tx.AuthInfo.SignerInfos) == 0 {
-		t.tx.AuthInfo.SignerInfos = make([]*tx.SignerInfo, n)
-		for i := 1; i < n; i++ {
-			t.tx.AuthInfo.SignerInfos[i] = &tx.SignerInfo{}
-		}
-	}
-
-	t.tx.AuthInfo.SignerInfos[signerIndex] = &tx.SignerInfo{
-		PublicKey: pk,
-		ModeInfo:  modeInfo,
-	}
-
-	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
-	t.authInfoBz = nil
-	// set cached pubKeys to nil because they no longer match tx.AuthInfo
-	t.pubKeys = nil
-
-	return nil
 }
 
 func (t *builder) setSignatures(sigs [][]byte) {

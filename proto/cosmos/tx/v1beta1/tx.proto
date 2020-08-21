@@ -54,10 +54,6 @@ message SignDoc {
 
   // account_number is the account number of the account in state
   uint64 account_number = 4;
-
-  // account_sequence starts at 1 rather than 0 to avoid the case where
-  // the default 0 value must be omitted in protobuf serialization
-  uint64 account_sequence = 5;
 }
 
 // TxBody is the body of a transaction that all signers sign over.
@@ -112,6 +108,11 @@ message SignerInfo {
   // mode_info describes the signing mode of the signer and is a nested
   // structure to support nested multisig pubkey's
   ModeInfo mode_info = 2;
+
+  // sequence is the sequence of the account, which describes the
+  // number of committed transactions signed by a given address. It is used to prevent
+  // replay attacks.
+  uint64 sequence = 3;
 }
 
 // ModeInfo describes the signing mode of a single or nested multisig signer.

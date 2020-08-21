@@ -7,11 +7,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -106,7 +106,15 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 	}
 }
 
-// HandleClientUpdateProposal is a handler for executing a passed client update proposal
-func HandleClientUpdateProposal(ctx sdk.Context, k keeper.Keeper, p *ibctypes.ClientUpdateProposal) error {
-	return k.ClientUpdateProposal(ctx, p)
+// NewClientUpdateProposalHandler defines the client update proposal handler
+func NewClientUpdateProposalHandler(k keeper.Keeper) govtypes.Handler {
+	return func(ctx sdk.Context, content govtypes.Content) error {
+		switch c := content.(type) {
+		case *types.ClientUpdateProposal:
+			return k.ClientUpdateProposal(ctx, c)
+
+		default:
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ibc proposal content type: %T", c)
+		}
+	}
 }

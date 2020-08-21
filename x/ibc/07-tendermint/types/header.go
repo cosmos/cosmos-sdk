@@ -75,12 +75,14 @@ func (h Header) ValidateBasic(chainID string) error {
 }
 
 // MarshalHeader returns the Header bytes.
-func MarshalHeader(header Header) ([]byte, error) {
-	return amino.MarshalBinaryBare(header)
+func (h Header) MarshalBinaryBare() ([]byte, error) {
+	return amino.MarshalBinaryBare(h)
 }
 
 // UnmarshalHeader returns the header
-func UnmarshalHeader(value []byte) (header Header, err error) {
-	err = amino.UnmarshalBinaryBare(value, &header)
-	return header, err
+func (h Header) UnmarshalBinaryBare(value []byte) (clientexported.Header, error) {
+	var tmHeader Header
+	err := amino.UnmarshalBinaryBare(value, &tmHeader)
+
+	return tmHeader, err
 }

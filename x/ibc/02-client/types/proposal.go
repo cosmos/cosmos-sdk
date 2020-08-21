@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 const (
@@ -22,8 +22,8 @@ func init() {
 }
 
 // NewClientUpdateProposal creates a new client update proposal.
-func NewClientUpdateProposal(title, description, clientID string, header types.Header) (*ClientUpdateProposal, error) {
-	headerBytes, err := types.MarshalHeader(header)
+func NewClientUpdateProposal(title, description, clientID string, header exported.Header) (*ClientUpdateProposal, error) {
+	headerBytes, err := header.MarshalBinaryBare()
 	if err != nil {
 		return &ClientUpdateProposal{}, err
 	}

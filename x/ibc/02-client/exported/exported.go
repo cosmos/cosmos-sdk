@@ -144,6 +144,8 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+	MarshalBinaryBare() ([]byte, error)
+	UnmarshalBinaryBare([]byte) (Header, error)
 }
 
 // MsgCreateClient defines the msg interface that the

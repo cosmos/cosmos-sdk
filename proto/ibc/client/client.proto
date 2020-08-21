@@ -13,3 +13,16 @@ message IdentifiedClientState {
   string              id           = 1 [(gogoproto.moretags) = "yaml:\"id\""];
   google.protobuf.Any client_state = 2;
 }
+
+
+// ClientUpdateProposal is a governance proposal. 
+// If it passes, the client is updated with the provided header
+message ClientUpdateProposal {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)  = false;
+  string title                        = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description                  = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string client_id                    = 3 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  bytes  header                       = 4 [(gogoproto.moretags) = "yaml:\"header\""];
+}
+

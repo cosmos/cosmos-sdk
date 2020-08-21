@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -138,12 +140,16 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	testCases := []struct {
 		name     string
 		url      string
+		headers  map[string]string
 		respType fmt.Stringer
 		expected fmt.Stringer
 	}{
 		{
 			"test GRPC total supply",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
 			&sdk.Coins{},
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
@@ -153,6 +159,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		{
 			"GRPC total supply of a specific denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
 			&sdk.Coins{},
 			sdk.NewCoins(
 				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
@@ -162,6 +171,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		{
 			"GRPC total supply of a bogus denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
 			&sdk.Coin{},
 			sdk.NewCoin("foobar", sdk.ZeroInt()),
 		},
@@ -170,7 +182,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
+			resp, err := rest.GetRequestWithHeaders(tc.url, tc.headers)
 			// debug
 			fmt.Println("url", tc.url)
 			fmt.Println("resp", string(resp))

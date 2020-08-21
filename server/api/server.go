@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/gateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/gogo/gateway"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	// unnamed import of statik for swagger UI support
@@ -35,6 +36,20 @@ type Server struct {
 	listener net.Listener
 }
 
+// CustomGRPCHeaderMatcher for mapping request headers to
+// GRPC metadata.
+// HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
+// gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
+// CustomGRPCHeaderMatcher if headers doesn't start with `Grpc-Metadat-`
+func CustomGRPCHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case grpctypes.GRPCBlockHeightHeader:
+		return grpctypes.GRPCBlockHeightHeader, true
+	default:
+		return key, false
+	}
+}
+
 func New(clientCtx client.Context, logger log.Logger) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
@@ -45,14 +60,20 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 	}
 
 	return &Server{
-		Router:     mux.NewRouter(),
-		ClientCtx:  clientCtx,
-		logger:     logger,
+		Router:    mux.NewRouter(),
+		ClientCtx: clientCtx,
+		logger:    logger,
 		GRPCRouter: runtime.NewServeMux(
+			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
+
 			// This is necessary to get error details properly
 			// marshalled in unary requests.
 			runtime.WithProtoErrorHandler(runtime.DefaultHTTPProtoErrorHandler),
+
+			// Custom header matcher for mapping request headers to
+			// GRPC metadata
+			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
 	}
 }

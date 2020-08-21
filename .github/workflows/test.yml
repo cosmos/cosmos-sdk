@@ -221,9 +221,7 @@ jobs:
           make build-docker-local-simapp
       - name: start localnet
         run: |
-          make clean
-          make build-simd LEDGER_ENABLED=false
-          make localnet-start
+          make clean build-simd-linux localnet-start
         if: "env.GIT_DIFF != ''"
       - name: test liveness
         run: |

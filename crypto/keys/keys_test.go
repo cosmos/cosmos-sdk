@@ -20,6 +20,27 @@ func TestSr25519Equals(t *testing.T) {
 		expectEq bool
 	}{
 		{
+			"pb different types",
+			&keys.Ed25519PubKey{
+				Key: ed25519.GenPrivKey().PubKey().(ed25519.PubKey),
+			},
+			false,
+		},
+		{
+			"pb different bytes",
+			&keys.Sr25519PubKey{
+				Key: sr25519.GenPrivKey().PubKey().(sr25519.PubKey),
+			},
+			false,
+		},
+		{
+			"pb equals",
+			&keys.Sr25519PubKey{
+				Key: pubKey,
+			},
+			true,
+		},
+		{
 			"different types",
 			ed25519.GenPrivKey().PubKey(),
 			false,

@@ -48,7 +48,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 	require.EqualValues(t, addr2, acc2.GetAddress())
 }
 
-func TestBaseAccountSequence(t *testing.T) {
+func TestBaseSequence(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)

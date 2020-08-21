@@ -38,7 +38,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// send from chainA to chainB
 	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0)
 
-	err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+	err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
@@ -58,7 +58,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// send from chainB back to chainA
 	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
 
-	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
+	err = suite.coordinator.SendMsg(suite.chainB, suite.chainA, clientA, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send

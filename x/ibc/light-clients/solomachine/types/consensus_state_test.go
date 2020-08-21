@@ -10,7 +10,7 @@ func (suite *SoloMachineTestSuite) TestConsensusState() {
 
 	suite.Require().Equal(clientexported.SoloMachine, consensusState.ClientType())
 	suite.Require().Equal(suite.solomachine.Sequence, consensusState.GetHeight())
-	suite.Require().Equal(timestamp, consensusState.GetTimestamp())
+	suite.Require().Equal(suite.solomachine.Time, consensusState.GetTimestamp())
 	suite.Require().Nil(consensusState.GetRoot())
 }
 

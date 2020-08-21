@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -48,4 +49,11 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
 	return clientState.GetLatestHeight()
+}
+
+func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {
+	invalidProof, err := suite.chainA.Codec.MarshalBinaryBare(&types.Signature{Timestamp: suite.solomachine.Time})
+	suite.Require().NoError(err)
+
+	return invalidProof
 }

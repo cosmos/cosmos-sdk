@@ -15,12 +15,10 @@ const (
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
-	timestamp                    = uint64(10)
 )
 
 var (
-	invalidProof = []byte("invalid proof bytes")
-	prefix       = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	prefix = commitmenttypes.NewMerklePrefix([]byte("ibc"))
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -41,7 +39,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, timestamp}),
+			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}),
 			false,
 		},
 		{
@@ -51,7 +49,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{suite.solomachine.Sequence, nil, timestamp}),
+			types.NewClientState(suite.solomachine.ClientID, "", &types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Time}),
 			false,
 		},
 	}
@@ -108,7 +106,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		{
 			"ApplyPrefix failed",
 			suite.solomachine.ClientState(),
-			commitmenttypes.MerklePrefix{},
+			nil,
 			proof,
 			false,
 		},
@@ -120,6 +118,38 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			false,
 		},
 		{
+			"consensus state in client state is nil",
+			types.NewClientState(suite.solomachine.ClientID, "", nil),
+			prefix,
+			proof,
+			false,
+		},
+		{
+			"client state latest height is less than sequence",
+			types.NewClientState(suite.solomachine.ClientID, "",
+				&types.ConsensusState{
+					Sequence:  suite.solomachine.Sequence - 1,
+					Timestamp: suite.solomachine.Time,
+					PublicKey: suite.solomachine.ConsensusState().PublicKey,
+				}),
+			prefix,
+			proof,
+			false,
+		},
+		{
+			"consensus state timestamp is greater than signature",
+			types.NewClientState(suite.solomachine.ClientID, "",
+				&types.ConsensusState{
+					Sequence:  suite.solomachine.Sequence,
+					Timestamp: suite.solomachine.Time + 1,
+					PublicKey: suite.solomachine.ConsensusState().PublicKey,
+				}),
+			prefix,
+			proof,
+			false,
+		},
+
+		{
 			"proof is nil",
 			suite.solomachine.ClientState(),
 			prefix,
@@ -130,7 +160,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -140,7 +170,10 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 		suite.Run(tc.name, func() {
 
-			expSeq := tc.clientState.ConsensusState.Sequence + 1
+			var expSeq uint64
+			if tc.clientState.ConsensusState != nil {
+				expSeq = tc.clientState.ConsensusState.Sequence + 1
+			}
 
 			err := tc.clientState.VerifyClientConsensusState(
 				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
@@ -216,7 +249,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -277,7 +310,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		{
 			"ApplyPrefix failed",
 			suite.solomachine.ClientState(),
-			commitmenttypes.NewMerklePrefix([]byte{}),
+			nil,
 			proof,
 			false,
 		},
@@ -299,7 +332,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -379,7 +412,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -459,7 +492,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -538,7 +571,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}
@@ -618,7 +651,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 			"proof verification failed",
 			suite.solomachine.ClientState(),
 			prefix,
-			invalidProof,
+			suite.GetInvalidProof(),
 			false,
 		},
 	}

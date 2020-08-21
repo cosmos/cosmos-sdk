@@ -15,7 +15,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ clientexported.ClientState = &ClientState{}
+var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
 func NewClientState(id, chainID string, consensusState *ConsensusState) *ClientState {
@@ -89,9 +89,9 @@ func (cs ClientState) VerifyClientConsensusState(
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	_ clientexported.ConsensusState,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedClientConsensusStateVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -128,7 +128,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedConnectionStateVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -165,7 +165,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (cs ClientState) VerifyChannelState(
 	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedChannelStateVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -203,7 +203,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	packetSequence uint64,
 	commitmentBytes []byte,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	data := PacketCommitmentSignBytes(sequence, signature.Timestamp, path, commitmentBytes)
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketCommitmentVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -238,7 +238,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	packetSequence uint64,
 	acknowledgement []byte,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	data := PacketAcknowledgementSignBytes(sequence, signature.Timestamp, path, acknowledgement)
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -273,7 +273,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	channelID string,
 	packetSequence uint64,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -286,7 +286,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	data := PacketAcknowledgementAbsenceSignBytes(sequence, signature.Timestamp, path)
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -307,7 +307,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof, cs.ConsensusState)
+	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	data := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, err.Error())
+		return err
 	}
 
 	cs.ConsensusState.Sequence++
@@ -338,15 +338,7 @@ func produceVerificationArgs(
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
 ) (signature Signature, err error) {
-	if cs.GetLatestHeight() < sequence {
-		return Signature{}, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidHeight,
-			"client state (%s) sequence < proof sequence (%d < %d)", cs.Id, cs.GetLatestHeight(), sequence,
-		)
-	}
-
 	if cs.IsFrozen() {
 		return Signature{}, clienttypes.ErrClientFrozen
 	}
@@ -368,17 +360,19 @@ func produceVerificationArgs(
 		return Signature{}, sdkerrors.Wrapf(ErrInvalidProof, "failed to unmarshal proof into type %T", Signature{})
 	}
 
-	if consensusState == nil {
+	if cs.ConsensusState == nil {
 		return Signature{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	_, ok = consensusState.(*ConsensusState)
-	if !ok {
-		return Signature{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, ConsensusState{})
+	if cs.GetLatestHeight() < sequence {
+		return Signature{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidHeight,
+			"client state (%s) sequence < proof sequence (%d < %d)", cs.Id, cs.GetLatestHeight(), sequence,
+		)
 	}
 
-	if consensusState.GetTimestamp() > signature.Timestamp {
-		return Signature{}, sdkerrors.Wrapf(ErrInvalidProof, "the timestamp of the signature must be greater than or equal to the timestamp of the consensus state (%d >= %d)", signature.Timestamp, consensusState.GetTimestamp())
+	if cs.ConsensusState.GetTimestamp() > signature.Timestamp {
+		return Signature{}, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), signature.Timestamp)
 	}
 
 	return signature, nil

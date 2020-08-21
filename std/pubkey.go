@@ -20,7 +20,11 @@ var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 
 // Decode implements the PublicKeyCodec.Decode method
 func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
+	// key being nil is allowed as all fields in proto are optional
 	if key == nil {
+		return nil, nil
+	}
+	if key.Sum == nil {
 		return nil, nil
 	}
 	switch key := key.Sum.(type) {

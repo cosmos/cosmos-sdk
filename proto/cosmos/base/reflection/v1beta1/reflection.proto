@@ -16,7 +16,7 @@ service ReflectionService {
     // ListImplementations list all the concrete types that implement a given
     // interface.
     rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {
-        option (google.api.http).get = "/cosmos/base/reflection/v1beta1/implementations/{interface_name}";
+        option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations";
     };
 }
 

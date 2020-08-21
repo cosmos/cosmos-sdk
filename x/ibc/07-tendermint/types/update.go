@@ -116,7 +116,7 @@ func checkValidity(
 	// one wants to force to update a client with a new header
 	if override {
 		if err := header.ValidateBasic(clientState.GetChainID()); err != nil {
-			return fmt.Errorf("untrustedHeader.ValidateBasic failed: %w", err)
+			return fmt.Errorf("header.ValidateBasic failed: %w", err)
 		}
 		return nil
 	}

@@ -76,6 +76,19 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 	return cs.FrozenHeight
 }
 
+//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
+func (cs *ClientState) Unfreeze() error {
+	cs.FrozenHeight = 0
+	return nil
+}
+
+// Expired returns whether or not the client has passed the trusting period since the last update
+// (in which case no headers can be validated)
+func (cs ClientState) Expired(now time.Time) bool {
+	expirationTime := cs.LatestTimestamp.Add(cs.TrustingPeriod)
+	return !expirationTime.After(now)
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
@@ -409,17 +422,4 @@ func produceVerificationArgs(
 	}
 
 	return merkleProof, consensusState, nil
-}
-
-// Expired returns whether or not the client has passed the trusting period since the last update
-// (in which case no headers can be validated)
-func (cs ClientState) Expired(now time.Time) bool {
-	expirationTime := cs.LatestTimestamp.Add(cs.TrustingPeriod)
-	return !expirationTime.After(now)
-}
-
-//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
-func (cs *ClientState) Unfreeze() error {
-	cs.FrozenHeight = 0
-	return nil
 }

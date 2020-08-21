@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -152,9 +153,7 @@ func (s Subspace) checkType(key []byte, value codec.ProtoMarshaler) {
 		panic(fmt.Sprintf("parameter %s not registered", string(key)))
 	}
 
-	registeredProtoMarshaler := attr.ty
-
-	if registeredProtoMarshaler != value {
+	if reflect.TypeOf(attr.ty) != reflect.TypeOf(value) {
 		panic("type mismatch with registered table")
 	}
 }

@@ -177,8 +177,8 @@ func PacketAcknowledgementSignBytes(
 	)
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verificaiton
-// of the absense of an acknowledgement.
+// PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verification
+// of the absence of an acknowledgement.
 //
 // Format: {sequence}{timestamp}{path}
 func PacketAcknowledgementAbsenceSignBytes(

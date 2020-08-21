@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ibc.lightclients.v1.solomachine;
+package ibc.lightclients.solomachine.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 

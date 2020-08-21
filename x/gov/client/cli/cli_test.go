@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -171,13 +172,18 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 		name      string
 		args      []string
 		expectErr bool
-		resp      fmt.Stringer
 	}{
 		{
-			"get proposals",
+			"get proposals as json repsonse",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+		{
+			"get proposals as text repsonse",
 			[]string{},
 			false,
-			&types.Proposals{},
 		},
 	}
 
@@ -193,8 +199,9 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
-				s.Require().Len(tc.resp, 1)
+				var proposals types.Proposals
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposals), out.String())
+				s.Require().Len(proposals, 1)
 			}
 		})
 	}

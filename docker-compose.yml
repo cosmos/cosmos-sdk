@@ -19,7 +19,7 @@ services:
 
   simdnode1:
     container_name: simdnode1
-    image: "cosmos-sdk/simappnode"
+    image: "cosmos-sdk/simapp"
     ports:
       - "26659-26660:26656-26657"
       - "1318:1317"

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	pt "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
@@ -46,13 +47,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 			"success",
 			func() {
 				space = suite.app.ParamsKeeper.Subspace("test").
-					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
+					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, &pt.StringValue{}, validateNoOp)))
 				req = &proposal.QueryParamsRequest{Subspace: "test", Key: "key"}
 				expValue = ""
 			},
 			true,
 		},
 		{
+			// TODO: Once we have a path for protobuf compatible Update... fix this test
 			"update value success",
 			func() {
 				err := space.Update(suite.ctx, key, []byte(`{"param1":"10241024"}`))

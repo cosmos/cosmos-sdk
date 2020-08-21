@@ -26,7 +26,7 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
     -I "proto" \
     -I "third_party/proto" \
     "$query_file" \
-    --swagger_out=logtostderr=true:.
+    --swagger_out=logtostderr=true,fqn_for_swagger_name=true,allow_merge=true,merge_file_name=apidoc:.
   fi
 
   proto_files=${proto_files}" ${dir:2}/*.proto"

@@ -14,7 +14,7 @@ type TransferUnmarshaler interface {
 }
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
-// Value to the corresponding connection type.
+// Value to the corresponding DenomTrace type.
 func NewDecodeStore(cdc TransferUnmarshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {

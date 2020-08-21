@@ -26,7 +26,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgSend - high level transaction of the coin module
+// MsgSend represents a message to send coins from one account to another.
 type MsgSend struct {
 	FromAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"from_address,omitempty" yaml:"from_address"`
 	ToAddress   github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"to_address,omitempty" yaml:"to_address"`
@@ -87,7 +87,7 @@ func (m *MsgSend) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// MsgMultiSend - high level transaction of the coin module
+// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 type MsgMultiSend struct {
 	Inputs  []Input  `protobuf:"bytes,1,rep,name=inputs,proto3" json:"inputs"`
 	Outputs []Output `protobuf:"bytes,2,rep,name=outputs,proto3" json:"outputs"`

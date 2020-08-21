@@ -185,7 +185,7 @@ func (s *IntegrationTestSuite) TestNewCmdGetProposals() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryProposal()
+			cmd := cli.GetCmdQueryProposals()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

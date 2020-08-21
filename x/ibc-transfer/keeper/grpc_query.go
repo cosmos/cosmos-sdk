@@ -53,8 +53,8 @@ func (q Keeper) DenomTraces(c context.Context, req *types.QueryDenomTracesReques
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), types.DenomTraceKey)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
-		var result types.DenomTrace
-		if err := q.cdc.UnmarshalBinaryBare(value, &result); err != nil {
+		result, err := q.UnmarshalDenomTrace(value)
+		if err != nil {
 			return err
 		}
 

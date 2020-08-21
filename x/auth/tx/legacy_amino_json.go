@@ -49,7 +49,7 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 
 	// nolint: staticcheck
 	return types.StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, protoTx.GetTimeoutHeight(),
+		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
 		types.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil

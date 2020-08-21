@@ -28,6 +28,7 @@ func TestDirectModeHandler(t *testing.T) {
 
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Arbitrary account sequence
 
 	pk, err := pubKeyCdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -42,14 +43,16 @@ func TestDirectModeHandler(t *testing.T) {
 				},
 			},
 		},
+		Sequence: accSeq,
 	})
 
 	sigData := &signingtypes.SingleSignatureData{
 		SignMode: signingtypes.SignMode_SIGN_MODE_DIRECT,
 	}
 	sig := signingtypes.SignatureV2{
-		PubKey: pubkey,
-		Data:   sigData,
+		PubKey:   pubkey,
+		Data:     sigData,
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
@@ -69,9 +72,8 @@ func TestDirectModeHandler(t *testing.T) {
 	require.Len(t, modeHandler.Modes(), 1)
 
 	signingData := signing.SignerData{
-		ChainID:         "test-chain",
-		AccountNumber:   1,
-		AccountSequence: 1,
+		ChainID:       "test-chain",
+		AccountNumber: 1,
 	}
 
 	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
@@ -104,11 +106,10 @@ func TestDirectModeHandler(t *testing.T) {
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling SignDoc")
 	signDoc := txtypes.SignDoc{
-		AccountNumber:   1,
-		AccountSequence: 1,
-		AuthInfoBytes:   authInfoBytes,
-		BodyBytes:       bodyBytes,
-		ChainId:         "test-chain",
+		AccountNumber: 1,
+		AuthInfoBytes: authInfoBytes,
+		BodyBytes:     bodyBytes,
+		ChainId:       "test-chain",
 	}
 
 	expectedSignBytes, err := signDoc.Marshal()

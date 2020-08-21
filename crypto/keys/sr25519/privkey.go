@@ -63,10 +63,10 @@ func (privKey PrivKey) PubKey() crypto.PubKey {
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
 func (privKey PrivKey) Equals(other crypto.PrivKey) bool {
-	if otherEd, ok := other.(PrivKey); ok {
-		return subtle.ConstantTimeCompare(privKey[:], otherEd[:]) == 1
+	if privKey.Type() != other.Type() {
+		return false
 	}
-	return false
+	return subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
 func (privKey PrivKey) Type() string {

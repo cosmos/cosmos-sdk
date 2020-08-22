@@ -114,10 +114,13 @@ ifeq (, $(shell which protoc-gen-grpc-gateway))
 else
 	@echo "protoc-gen-grpc-gateway already installed; skipping..."
 endif
-	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
+ifeq (, $(shell which protoc-gen-swagger))
 	@echo "Installing protoc-gen-swagger..."
 	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+else
+	@echo "protoc-gen-grpc-gateway already installed; skipping..."
+endif
 
 	touch $@
 

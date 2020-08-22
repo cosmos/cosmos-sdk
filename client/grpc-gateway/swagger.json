@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Basic Swagger Combine Example",
+    "title": "Cosmos SDK - GRPC Gateway",
     "version": "1.0.0"
   },
   "paths": {

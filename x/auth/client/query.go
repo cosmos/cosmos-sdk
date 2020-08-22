@@ -142,7 +142,7 @@ func formatTxResult(clientCtx client.Context, resTx *ctypes.ResultTx, resBlock *
 func parseTx(clientCtx client.Context, txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
-	err := clientCtx.JSONMarshaler.UnmarshalJSON(txBytes, tx)
+	err := clientCtx.JSONMarshaler.UnmarshalJSON(txBytes, &tx)
 	if err != nil {
 		return nil, err
 	}

@@ -122,8 +122,6 @@ else
 	@echo "protoc-gen-grpc-gateway already installed; skipping..."
 endif
 
-	touch $@
-
 buf: buf-stamp
 
 buf-stamp:

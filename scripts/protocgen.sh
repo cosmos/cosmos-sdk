@@ -2,8 +2,6 @@
 
 set -eo pipefail
 
-proto_files=''
-
 proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   protoc \
@@ -29,8 +27,6 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
     "$query_file" \
     --swagger_out=logtostderr=true,stderrthreshold=1000,fqn_for_swagger_name=true,simple_operation_ids=true:.
   fi
-
-  proto_files=${proto_files}" ${dir:2}/*.proto"
 done
 
 # generate codec/testdata proto code

@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/iavl v0.15.0-rc1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
-	github.com/go-swagger/go-swagger v0.25.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2
@@ -20,7 +20,9 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12
+	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/otiai10/copy v1.2.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
@@ -28,6 +30,7 @@ require (
 	github.com/prometheus/common v0.12.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.0
+	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect; indirects
@@ -39,10 +42,14 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.34.0-rc3
 	github.com/tendermint/tm-db v0.6.1
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
+	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4

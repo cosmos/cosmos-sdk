@@ -1,0 +1,302 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "cosmos/slashing/v1beta1/query.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/cosmos/slashing/v1beta1/params": {
+      "get": {
+        "summary": "Params queries the parameters of slashing module",
+        "operationId": "Params",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cosmos.slashing.v1beta1.QueryParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/slashing/v1beta1/signing_infos": {
+      "get": {
+        "summary": "SigningInfos queries signing info of all validators",
+        "operationId": "SigningInfos",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cosmos.slashing.v1beta1.QuerySigningInfosResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/cosmos/slashing/v1beta1/signing_infos/{cons_address}": {
+      "get": {
+        "summary": "SigningInfo queries the signing info of given cons address",
+        "operationId": "SigningInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cosmos.slashing.v1beta1.QuerySigningInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cons_address",
+            "description": "cons_address is the address to query signing info of",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "cosmos.base.query.v1beta1.PageRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "format": "byte",
+          "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set."
+        },
+        "offset": {
+          "type": "string",
+          "format": "uint64",
+          "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set."
+        },
+        "limit": {
+          "type": "string",
+          "format": "uint64",
+          "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app."
+        },
+        "count_total": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs. count_total\nis only respected when offset is used. It is ignored when key is set."
+        }
+      },
+      "description": "message SomeRequest {\n         Foo some_parameter = 1;\n         PageRequest pagination = 2;\n }",
+      "title": "PageRequest is to be embedded in gRPC request messages for efficient\npagination. Ex:"
+    },
+    "cosmos.base.query.v1beta1.PageResponse": {
+      "type": "object",
+      "properties": {
+        "next_key": {
+          "type": "string",
+          "format": "byte",
+          "title": "next_key is the key to be passed to PageRequest.key to\nquery the next page most efficiently"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
+        }
+      },
+      "description": "message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }",
+      "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+    },
+    "cosmos.slashing.v1beta1.Params": {
+      "type": "object",
+      "properties": {
+        "signed_blocks_window": {
+          "type": "string",
+          "format": "int64"
+        },
+        "min_signed_per_window": {
+          "type": "string",
+          "format": "byte"
+        },
+        "downtime_jail_duration": {
+          "type": "string"
+        },
+        "slash_fraction_double_sign": {
+          "type": "string",
+          "format": "byte"
+        },
+        "slash_fraction_downtime": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "Params - used for initializing default parameter for slashing at genesis"
+    },
+    "cosmos.slashing.v1beta1.QueryParamsResponse": {
+      "type": "object",
+      "properties": {
+        "params": {
+          "$ref": "#/definitions/cosmos.slashing.v1beta1.Params"
+        }
+      },
+      "title": "QueryParamsResponse is the response type for the Query/Params RPC method"
+    },
+    "cosmos.slashing.v1beta1.QuerySigningInfoResponse": {
+      "type": "object",
+      "properties": {
+        "val_signing_info": {
+          "$ref": "#/definitions/cosmos.slashing.v1beta1.ValidatorSigningInfo",
+          "title": "val_signing_info is the signing info of requested val cons address"
+        }
+      },
+      "title": "QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method"
+    },
+    "cosmos.slashing.v1beta1.QuerySigningInfosResponse": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.slashing.v1beta1.ValidatorSigningInfo"
+          },
+          "title": "info is the signing info of all validators"
+        },
+        "pagination": {
+          "$ref": "#/definitions/cosmos.base.query.v1beta1.PageResponse"
+        }
+      },
+      "title": "QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method"
+    },
+    "cosmos.slashing.v1beta1.ValidatorSigningInfo": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "format": "byte"
+        },
+        "start_height": {
+          "type": "string",
+          "format": "int64",
+          "title": "height at which validator was first a candidate OR was unjailed"
+        },
+        "index_offset": {
+          "type": "string",
+          "format": "int64",
+          "title": "index offset into signed block bit array"
+        },
+        "jailed_until": {
+          "type": "string",
+          "format": "date-time",
+          "title": "timestamp validator cannot be unjailed until"
+        },
+        "tombstoned": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "whether or not a validator has been tombstoned (killed out of validator set)"
+        },
+        "missed_blocks_counter": {
+          "type": "string",
+          "format": "int64",
+          "title": "missed blocks counter (to avoid scanning the array every time)"
+        }
+      },
+      "title": "ValidatorSigningInfo defines the signing info for a validator"
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "grpc.gateway.runtime.Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

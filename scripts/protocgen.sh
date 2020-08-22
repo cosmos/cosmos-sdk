@@ -24,24 +24,15 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
   if [[ ! -z "$query_file" ]]; then
     query_files=${query_files}" ${query_file}"
-#    protoc  \
-#    -I "proto" \
-#    -I "third_party/proto" \
-#    "$query_file" \
-#    --go_out=plugins=grpc:pkg \
-#    --swagger_out=logtostderr=true,fqn_for_swagger_name=true:.
+    protoc  \
+    -I "proto" \
+    -I "third_party/proto" \
+    "$query_file" \
+    --swagger_out=logtostderr=true,stderrthreshold=1000,fqn_for_swagger_name=true,simple_operation_ids=true:.
   fi
-
-
 
   proto_files=${proto_files}" ${dir:2}/*.proto"
 done
-
-protoc  \
-    -I "proto" \
-    -I "third_party/proto" \
-    --swagger_out=logtostderr=true,fqn_for_swagger_name=true:. \
-    --go_out=plugins=grpc:pkg $(find ./ -name 'query.proto')
 
 #echo $query_files
 #protoc  \
@@ -58,4 +49,4 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 
-#swagger mixin ./x/auth/**/query.swagger.json ./x/**/**/*swagger.json
+swagger-combine ./client/grpc-gateway/config.json -o ./client/grpc-gateway/swagger.json --continueOnConflictingPaths true --includeDefinitions true --continueOnError true

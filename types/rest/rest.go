@@ -433,10 +433,14 @@ func GetRequest(url string) ([]byte, error) {
 // An error is returned if the request or reading the body fails.
 func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	client := &http.Client{}
 
 	for key, value := range headers {
-		req.Header.Add(key, value)
+		req.Header.Set(key, value)
 	}
 
 	res, err := client.Do(req) // nolint:gosec

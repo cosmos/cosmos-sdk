@@ -40,10 +40,10 @@ type Server struct {
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
 // gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
-// CustomGRPCHeaderMatcher if headers doesn't start with `Grpc-Metadat-`
+// CustomGRPCHeaderMatcher if headers doesn't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Cosmos-Block-Height":
+	switch strings.ToLower(key) {
+	case grpctypes.GRPCBlockHeightHeader:
 		return grpctypes.GRPCBlockHeightHeader, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)

@@ -37,6 +37,9 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &ibcTransferGenesis)
 
 	require.Equal(t, "euzxpfgkqegqiqwixnku", ibcTransferGenesis.PortId)
+	require.True(t, ibcTransferGenesis.Params.SendEnabled)
+	require.True(t, ibcTransferGenesis.Params.ReceiveEnabled)
+	require.Len(t, ibcTransferGenesis.DenomTraces, 0)
 
 }
 

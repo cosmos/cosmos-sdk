@@ -159,13 +159,14 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 	return nil
 }
 
-// RandomizedParams returns nil.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return nil
+// RandomizedParams creates randomized ibc-transfer param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for transfer module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the transfer module operations with their respective weights.
@@ -175,7 +176,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 
 //____________________________________________________________________________
 
-// Implement IBCModule callbacks
+// OnChanOpenInit implements the IBCModule interface
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -207,6 +208,7 @@ func (am AppModule) OnChanOpenInit(
 	return nil
 }
 
+// OnChanOpenTry implements the IBCModule interface
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -243,6 +245,7 @@ func (am AppModule) OnChanOpenTry(
 	return nil
 }
 
+// OnChanOpenAck implements the IBCModule interface
 func (am AppModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -255,6 +258,7 @@ func (am AppModule) OnChanOpenAck(
 	return nil
 }
 
+// OnChanOpenConfirm implements the IBCModule interface
 func (am AppModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -263,6 +267,7 @@ func (am AppModule) OnChanOpenConfirm(
 	return nil
 }
 
+// OnChanCloseInit implements the IBCModule interface
 func (am AppModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -272,6 +277,7 @@ func (am AppModule) OnChanCloseInit(
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
 }
 
+// OnChanCloseConfirm implements the IBCModule interface
 func (am AppModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -280,6 +286,7 @@ func (am AppModule) OnChanCloseConfirm(
 	return nil
 }
 
+// OnRecvPacket implements the IBCModule interface
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -316,6 +323,7 @@ func (am AppModule) OnRecvPacket(
 	}, acknowledgement.GetBytes(), nil
 }
 
+// OnAcknowledgementPacket implements the IBCModule interface
 func (am AppModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -359,6 +367,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	}, nil
 }
 
+// OnTimeoutPacket implements the IBCModule interface
 func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,

@@ -1,13 +1,5 @@
 # CODEOWNERS: https://help.github.com/articles/about-codeowners/
 
-# Primary repo maintainers
-*       @rigelrozanski @alexanderbez @jackzampolin @alessio @fedekunze
+# Launchpad Stable Release Managers
+*       @alessio @clevinson @ethanfrey
 
-###############################################################################
-# Module Specific Ownership
-# See CONTRIBUTING.md for further details
-###############################################################################
-
-# The following contributors own all files in the x/nft directory at the root
-# of the repository and any of its subdirectories.
-x/nft @okwme @fedekunze

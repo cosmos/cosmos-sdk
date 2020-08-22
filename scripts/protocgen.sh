@@ -29,6 +29,12 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   fi
 done
 
+# combine swagger files
+swagger-combine ./client/grpc-gateway/config.json -o ./client/grpc-gateway/swagger.json --continueOnConflictingPaths true --includeDefinitions true
+
+# clean swagger files
+find ./ -name 'query.swagger.json' -exec rm {} \;
+
 # generate codec/testdata proto code
 protoc -I "proto" -I "third_party/proto" -I "testutil/testdata" --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil/testdata/proto.proto
@@ -36,5 +42,3 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
-
-swagger-combine ./client/grpc-gateway/config.json -o ./client/grpc-gateway/swagger.json --continueOnConflictingPaths true --includeDefinitions true

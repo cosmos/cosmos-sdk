@@ -208,8 +208,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method."
@@ -404,7 +403,7 @@
                             "format": "boolean"
                           }
                         },
-                        "title": "Send enabled configuration properties for each denomination"
+                        "description": "SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable)."
                       }
                     },
                     "default_send_enabled": {
@@ -412,7 +411,7 @@
                       "format": "boolean"
                     }
                   },
-                  "description": "Params defines the set of bank parameters."
+                  "description": "Params defines the parameters for the bank module."
                 }
               },
               "description": "QueryParamsResponse defines the response type for querying x/bank parameters."
@@ -704,7 +703,7 @@
                         }
                       }
                     },
-                    "description": "DelegationDelegatorReward defines the properties\nof a delegator's delegation reward."
+                    "description": "DelegationDelegatorReward represents the properties\nof a delegator's delegation reward."
                   },
                   "description": "rewards defines all the rewards accrued by a delegator."
                 },
@@ -1104,8 +1103,7 @@
                         "description": "DecCoin defines a token with a denomination and a decimal amount.\n\nNOTE: The amount field is an Dec which implements the custom method\nsignatures required by gogoproto."
                       }
                     }
-                  },
-                  "title": "accumulated commission for a validator\nkept as a running counter, can be withdrawn at any time"
+                  }
                 }
               },
               "title": "QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method"
@@ -1189,7 +1187,7 @@
                       }
                     }
                   },
-                  "title": "outstanding (un-withdrawn) rewards for a validator\ninexpensive to track, allows simple sanity checks"
+                  "description": "ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards\nfor a validator inexpensive to track, allows simple sanity checks."
                 }
               },
               "description": "QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method."
@@ -1267,7 +1265,7 @@
                         "type": "string"
                       }
                     },
-                    "title": "validator slash event\nheight is implicit within the store key\nneeded to calculate appropriate amounts of staking token\nfor delegations which withdraw after a slash has occurred"
+                    "description": "ValidatorSlashEvent represents a validator slash event.\nHeight is implicit within the store key.\nThis is needed to calculate appropriate amount of staking tokens\nfor delegations which are withdrawn after a slash has occurred."
                   },
                   "description": "slashes defines the slashes the validator received."
                 },
@@ -1285,8 +1283,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method."
@@ -1432,8 +1429,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method."
@@ -1614,8 +1610,7 @@
                       "type": "string",
                       "description": "Length of the voting period."
                     }
-                  },
-                  "title": "VotingParams defines the params around Voting in governance"
+                  }
                 },
                 "deposit_params": {
                   "description": "deposit_params defines the parameters related to deposit.",
@@ -1641,8 +1636,7 @@
                       "type": "string",
                       "description": "Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months."
                     }
-                  },
-                  "title": "DepositParams defines the params around deposits for governance"
+                  }
                 },
                 "tally_params": {
                   "description": "tally_params defines the parameters related to tally.",
@@ -1656,15 +1650,14 @@
                     "threshold": {
                       "type": "string",
                       "format": "byte",
-                      "description": "Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5."
+                      "description": "Minimum proportion of Yes votes for proposal to pass. Default value: 0.5."
                     },
-                    "veto": {
+                    "veto_threshold": {
                       "type": "string",
                       "format": "byte",
-                      "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3."
+                      "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3."
                     }
-                  },
-                  "title": "TallyParams defines the params around Tallying votes in governance"
+                  }
                 }
               },
               "description": "QueryParamsResponse is the response type for the Query/Params RPC method."
@@ -1766,8 +1759,7 @@
                           "PROPOSAL_STATUS_FAILED"
                         ],
                         "default": "PROPOSAL_STATUS_UNSPECIFIED",
-                        "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-                        "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+                        "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
                       },
                       "final_tally_result": {
                         "type": "object",
@@ -1785,7 +1777,7 @@
                             "type": "string"
                           }
                         },
-                        "title": "TallyResult defines a standard tally for a proposal"
+                        "description": "TallyResult defines a standard tally for a governance proposal."
                       },
                       "submit_time": {
                         "type": "string",
@@ -1819,7 +1811,7 @@
                         "format": "date-time"
                       }
                     },
-                    "title": "Proposal defines the core field members of a governance proposal"
+                    "description": "Proposal defines the core field members of a governance proposal."
                   }
                 },
                 "pagination": {
@@ -1836,8 +1828,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryProposalsResponse is the response type for the Query/Proposals RPC method."
@@ -1994,8 +1985,7 @@
                         "PROPOSAL_STATUS_FAILED"
                       ],
                       "default": "PROPOSAL_STATUS_UNSPECIFIED",
-                      "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-                      "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+                      "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
                     },
                     "final_tally_result": {
                       "type": "object",
@@ -2013,7 +2003,7 @@
                           "type": "string"
                         }
                       },
-                      "title": "TallyResult defines a standard tally for a proposal"
+                      "description": "TallyResult defines a standard tally for a governance proposal."
                     },
                     "submit_time": {
                       "type": "string",
@@ -2047,7 +2037,7 @@
                       "format": "date-time"
                     }
                   },
-                  "title": "Proposal defines the core field members of a governance proposal"
+                  "description": "Proposal defines the core field members of a governance proposal."
                 }
               },
               "description": "QueryProposalResponse is the response type for the Query/Proposal RPC method."
@@ -2144,7 +2134,7 @@
                         }
                       }
                     },
-                    "title": "Deposit defines an amount deposited by an account address to an active proposal"
+                    "description": "Deposit defines an amount deposited by an account address to an active proposal."
                   }
                 },
                 "pagination": {
@@ -2161,8 +2151,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryDepositsResponse is the response type for the Query/Deposits RPC method."
@@ -2289,8 +2278,7 @@
                         "description": "Coin defines a token with a denomination and an amount.\n\nNOTE: The amount field is an Int which implements the custom method\nsignatures required by gogoproto."
                       }
                     }
-                  },
-                  "title": "Deposit defines an amount deposited by an account address to an active proposal"
+                  }
                 }
               },
               "description": "QueryDepositResponse is the response type for the Query/Deposit RPC method."
@@ -2382,8 +2370,7 @@
                     "no_with_veto": {
                       "type": "string"
                     }
-                  },
-                  "title": "TallyResult defines a standard tally for a proposal"
+                  }
                 }
               },
               "description": "QueryTallyResultResponse is the response type for the Query/Tally RPC method."
@@ -2474,11 +2461,10 @@
                           "VOTE_OPTION_NO_WITH_VETO"
                         ],
                         "default": "VOTE_OPTION_UNSPECIFIED",
-                        "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-                        "title": "VoteOption defines a vote option"
+                        "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
                       }
                     },
-                    "description": "Vote defines a vote on a governance proposal. A vote corresponds to a proposal\nID, the voter, and the vote option."
+                    "description": "Vote defines a vote on a governance proposal.\nA Vote consists of a proposal ID, the voter, and the vote option."
                   },
                   "description": "votes defined the queried votes."
                 },
@@ -2496,8 +2482,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryVotesResponse is the response type for the Query/Votes RPC method."
@@ -2619,8 +2604,7 @@
                         "VOTE_OPTION_NO_WITH_VETO"
                       ],
                       "default": "VOTE_OPTION_UNSPECIFIED",
-                      "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-                      "title": "VoteOption defines a vote option"
+                      "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
                     }
                   }
                 }
@@ -2843,8 +2827,7 @@
                       "format": "uint64",
                       "title": "expected blocks per year"
                     }
-                  },
-                  "title": "mint parameters"
+                  }
                 }
               },
               "description": "QueryParamsResponse is the response type for the Query/Params RPC method."
@@ -3006,7 +2989,7 @@
                       "format": "byte"
                     }
                   },
-                  "title": "Params - used for initializing default parameter for slashing at genesis"
+                  "description": "Params represents the parameters used for by the slashing module."
                 }
               },
               "title": "QueryParamsResponse is the response type for the Query/Params RPC method"
@@ -3096,7 +3079,7 @@
                         "title": "missed blocks counter (to avoid scanning the array every time)"
                       }
                     },
-                    "title": "ValidatorSigningInfo defines the signing info for a validator"
+                    "description": "ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity."
                   },
                   "title": "info is the signing info of all validators"
                 },
@@ -3114,8 +3097,7 @@
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
                   },
-                  "description": "message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }",
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  "description": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest.\n\n message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }"
                 }
               },
               "title": "QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method"
@@ -3237,7 +3219,8 @@
                       "format": "int64",
                       "title": "missed blocks counter (to avoid scanning the array every time)"
                     }
-                  }
+                  },
+                  "description": "ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity."
                 }
               },
               "title": "QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method"
@@ -3355,8 +3338,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method."
@@ -3549,8 +3531,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryRedelegationsResponse is response type for the Query/Redelegations RPC method."
@@ -3700,7 +3681,7 @@
                         }
                       }
                     },
-                    "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+                    "description": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list."
                   }
                 },
                 "pagination": {
@@ -3717,8 +3698,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method."
@@ -3893,13 +3873,13 @@
                             "format": "date-time"
                           }
                         },
-                        "description": "Commission defines a commission parameters for a given validator."
+                        "description": "Commission defines commission parameters for a given validator."
                       },
                       "min_self_delegation": {
                         "type": "string"
                       }
                     },
-                    "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+                    "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
                   },
                   "description": "validators defines the the validators' info of a delegator."
                 },
@@ -3917,8 +3897,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method."
@@ -4092,7 +4071,7 @@
                           "format": "date-time"
                         }
                       },
-                      "description": "Commission defines a commission parameters for a given validator."
+                      "description": "Commission defines commission parameters for a given validator."
                     },
                     "min_self_delegation": {
                       "type": "string"
@@ -4347,13 +4326,13 @@
                                 "format": "date-time"
                               }
                             },
-                            "description": "Commission defines a commission parameters for a given validator."
+                            "description": "Commission defines commission parameters for a given validator."
                           },
                           "min_self_delegation": {
                             "type": "string"
                           }
                         },
-                        "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+                        "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
                       }
                     }
                   }
@@ -4508,8 +4487,7 @@
                     "bonded_tokens": {
                       "type": "string"
                     }
-                  },
-                  "title": "Pool - tracking bonded and not-bonded token supply of the bond denomination"
+                  }
                 }
               },
               "description": "QueryPoolResponse is response type for the Query/Pool RPC method."
@@ -4642,13 +4620,13 @@
                             "format": "date-time"
                           }
                         },
-                        "description": "Commission defines a commission parameters for a given validator."
+                        "description": "Commission defines commission parameters for a given validator."
                       },
                       "min_self_delegation": {
                         "type": "string"
                       }
                     },
-                    "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+                    "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
                   },
                   "description": "validators contains all the queried validators."
                 },
@@ -4666,8 +4644,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "title": "QueryValidatorsResponse is response type for the Query/Validators RPC method"
@@ -4840,7 +4817,7 @@
                           "format": "date-time"
                         }
                       },
-                      "description": "Commission defines a commission parameters for a given validator."
+                      "description": "Commission defines commission parameters for a given validator."
                     },
                     "min_self_delegation": {
                       "type": "string"
@@ -4962,8 +4939,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "title": "QueryValidatorDelegationsResponse is response type for the Query/ValidatorDelegations RPC method"
@@ -5201,8 +5177,7 @@
                         "description": "UnbondingDelegationEntry defines an unbonding object with relevant metadata."
                       }
                     }
-                  },
-                  "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+                  }
                 }
               },
               "description": "QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method."
@@ -5312,7 +5287,7 @@
                         }
                       }
                     },
-                    "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+                    "description": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list."
                   }
                 },
                 "pagination": {
@@ -5329,8 +5304,7 @@
                       "format": "uint64",
                       "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
                     }
-                  },
-                  "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+                  }
                 }
               },
               "description": "QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method."
@@ -5516,8 +5490,7 @@
                       "type": "string",
                       "title": "Any application specific upgrade info to be included on-chain\nsuch as a git commit that validators could automatically upgrade to"
                     }
-                  },
-                  "title": "Plan specifies information about a planned upgrade and when it should occur"
+                  }
                 }
               },
               "description": "QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method."
@@ -5707,7 +5680,7 @@
                 "format": "boolean"
               }
             },
-            "title": "Send enabled configuration properties for each denomination"
+            "description": "SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable)."
           }
         },
         "default_send_enabled": {
@@ -5715,7 +5688,7 @@
           "format": "boolean"
         }
       },
-      "description": "Params defines the set of bank parameters."
+      "description": "Params defines the parameters for the bank module."
     },
     "cosmos.bank.v1beta1.QueryAllBalancesResponse": {
       "type": "object",
@@ -5750,8 +5723,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method."
@@ -5793,7 +5765,7 @@
                     "format": "boolean"
                   }
                 },
-                "title": "Send enabled configuration properties for each denomination"
+                "description": "SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable)."
               }
             },
             "default_send_enabled": {
@@ -5801,7 +5773,7 @@
               "format": "boolean"
             }
           },
-          "description": "Params defines the set of bank parameters."
+          "description": "Params defines the parameters for the bank module."
         }
       },
       "description": "QueryParamsResponse defines the response type for querying x/bank parameters."
@@ -5857,7 +5829,7 @@
           "format": "boolean"
         }
       },
-      "title": "Send enabled configuration properties for each denomination"
+      "description": "SendEnabled maps coin denom to a send_enabled status (whether a denom is sendable)."
     },
     "cosmos.base.query.v1beta1.PageRequest": {
       "type": "object",
@@ -5900,8 +5872,7 @@
           "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
         }
       },
-      "description": "message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }",
-      "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+      "description": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest.\n\n message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }"
     },
     "cosmos.base.v1beta1.Coin": {
       "type": "object",
@@ -5950,7 +5921,7 @@
           }
         }
       },
-      "description": "DelegationDelegatorReward defines the properties\nof a delegator's delegation reward."
+      "description": "DelegationDelegatorReward represents the properties\nof a delegator's delegation reward."
     },
     "cosmos.distribution.v1beta1.Params": {
       "type": "object",
@@ -5969,7 +5940,7 @@
           "format": "boolean"
         }
       },
-      "description": "Params defines the set of distribution parameters."
+      "description": "Params defines the set of params for the distribution module."
     },
     "cosmos.distribution.v1beta1.QueryCommunityPoolResponse": {
       "type": "object",
@@ -6043,7 +6014,7 @@
                 }
               }
             },
-            "description": "DelegationDelegatorReward defines the properties\nof a delegator's delegation reward."
+            "description": "DelegationDelegatorReward represents the properties\nof a delegator's delegation reward."
           },
           "description": "rewards defines all the rewards accrued by a delegator."
         },
@@ -6138,8 +6109,7 @@
                 "description": "DecCoin defines a token with a denomination and a decimal amount.\n\nNOTE: The amount field is an Dec which implements the custom method\nsignatures required by gogoproto."
               }
             }
-          },
-          "title": "accumulated commission for a validator\nkept as a running counter, can be withdrawn at any time"
+          }
         }
       },
       "title": "QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method"
@@ -6166,7 +6136,7 @@
               }
             }
           },
-          "title": "outstanding (un-withdrawn) rewards for a validator\ninexpensive to track, allows simple sanity checks"
+          "description": "ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards\nfor a validator inexpensive to track, allows simple sanity checks."
         }
       },
       "description": "QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method."
@@ -6187,7 +6157,7 @@
                 "type": "string"
               }
             },
-            "title": "validator slash event\nheight is implicit within the store key\nneeded to calculate appropriate amounts of staking token\nfor delegations which withdraw after a slash has occurred"
+            "description": "ValidatorSlashEvent represents a validator slash event.\nHeight is implicit within the store key.\nThis is needed to calculate appropriate amount of staking tokens\nfor delegations which are withdrawn after a slash has occurred."
           },
           "description": "slashes defines the slashes the validator received."
         },
@@ -6205,8 +6175,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method."
@@ -6230,7 +6199,7 @@
           }
         }
       },
-      "title": "accumulated commission for a validator\nkept as a running counter, can be withdrawn at any time"
+      "description": "ValidatorAccumulatedCommission represents accumulated commission\nfor a validator kept as a running counter, can be withdrawn at any time."
     },
     "cosmos.distribution.v1beta1.ValidatorOutstandingRewards": {
       "type": "object",
@@ -6251,7 +6220,7 @@
           }
         }
       },
-      "title": "outstanding (un-withdrawn) rewards for a validator\ninexpensive to track, allows simple sanity checks"
+      "description": "ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards\nfor a validator inexpensive to track, allows simple sanity checks."
     },
     "cosmos.distribution.v1beta1.ValidatorSlashEvent": {
       "type": "object",
@@ -6264,7 +6233,7 @@
           "type": "string"
         }
       },
-      "title": "validator slash event\nheight is implicit within the store key\nneeded to calculate appropriate amounts of staking token\nfor delegations which withdraw after a slash has occurred"
+      "description": "ValidatorSlashEvent represents a validator slash event.\nHeight is implicit within the store key.\nThis is needed to calculate appropriate amount of staking tokens\nfor delegations which are withdrawn after a slash has occurred."
     },
     "cosmos.evidence.v1beta1.QueryAllEvidenceResponse": {
       "type": "object",
@@ -6302,8 +6271,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method."
@@ -6356,7 +6324,7 @@
           }
         }
       },
-      "title": "Deposit defines an amount deposited by an account address to an active proposal"
+      "description": "Deposit defines an amount deposited by an account address to an active proposal."
     },
     "cosmos.gov.v1beta1.DepositParams": {
       "type": "object",
@@ -6382,7 +6350,7 @@
           "description": "Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months."
         }
       },
-      "title": "DepositParams defines the params around deposits for governance"
+      "description": "DepositParams defines the params for deposits on governance proposals."
     },
     "cosmos.gov.v1beta1.Proposal": {
       "type": "object",
@@ -6417,8 +6385,7 @@
             "PROPOSAL_STATUS_FAILED"
           ],
           "default": "PROPOSAL_STATUS_UNSPECIFIED",
-          "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-          "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+          "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
         },
         "final_tally_result": {
           "type": "object",
@@ -6436,7 +6403,7 @@
               "type": "string"
             }
           },
-          "title": "TallyResult defines a standard tally for a proposal"
+          "description": "TallyResult defines a standard tally for a governance proposal."
         },
         "submit_time": {
           "type": "string",
@@ -6470,7 +6437,7 @@
           "format": "date-time"
         }
       },
-      "title": "Proposal defines the core field members of a governance proposal"
+      "description": "Proposal defines the core field members of a governance proposal."
     },
     "cosmos.gov.v1beta1.ProposalStatus": {
       "type": "string",
@@ -6483,8 +6450,7 @@
         "PROPOSAL_STATUS_FAILED"
       ],
       "default": "PROPOSAL_STATUS_UNSPECIFIED",
-      "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-      "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+      "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
     },
     "cosmos.gov.v1beta1.QueryDepositResponse": {
       "type": "object",
@@ -6516,8 +6482,7 @@
                 "description": "Coin defines a token with a denomination and an amount.\n\nNOTE: The amount field is an Int which implements the custom method\nsignatures required by gogoproto."
               }
             }
-          },
-          "title": "Deposit defines an amount deposited by an account address to an active proposal"
+          }
         }
       },
       "description": "QueryDepositResponse is the response type for the Query/Deposit RPC method."
@@ -6554,7 +6519,7 @@
                 }
               }
             },
-            "title": "Deposit defines an amount deposited by an account address to an active proposal"
+            "description": "Deposit defines an amount deposited by an account address to an active proposal."
           }
         },
         "pagination": {
@@ -6571,8 +6536,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryDepositsResponse is the response type for the Query/Deposits RPC method."
@@ -6588,8 +6552,7 @@
               "type": "string",
               "description": "Length of the voting period."
             }
-          },
-          "title": "VotingParams defines the params around Voting in governance"
+          }
         },
         "deposit_params": {
           "description": "deposit_params defines the parameters related to deposit.",
@@ -6615,8 +6578,7 @@
               "type": "string",
               "description": "Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months."
             }
-          },
-          "title": "DepositParams defines the params around deposits for governance"
+          }
         },
         "tally_params": {
           "description": "tally_params defines the parameters related to tally.",
@@ -6630,15 +6592,14 @@
             "threshold": {
               "type": "string",
               "format": "byte",
-              "description": "Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5."
+              "description": "Minimum proportion of Yes votes for proposal to pass. Default value: 0.5."
             },
-            "veto": {
+            "veto_threshold": {
               "type": "string",
               "format": "byte",
-              "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3."
+              "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3."
             }
-          },
-          "title": "TallyParams defines the params around Tallying votes in governance"
+          }
         }
       },
       "description": "QueryParamsResponse is the response type for the Query/Params RPC method."
@@ -6679,8 +6640,7 @@
                 "PROPOSAL_STATUS_FAILED"
               ],
               "default": "PROPOSAL_STATUS_UNSPECIFIED",
-              "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-              "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+              "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
             },
             "final_tally_result": {
               "type": "object",
@@ -6698,7 +6658,7 @@
                   "type": "string"
                 }
               },
-              "title": "TallyResult defines a standard tally for a proposal"
+              "description": "TallyResult defines a standard tally for a governance proposal."
             },
             "submit_time": {
               "type": "string",
@@ -6732,7 +6692,7 @@
               "format": "date-time"
             }
           },
-          "title": "Proposal defines the core field members of a governance proposal"
+          "description": "Proposal defines the core field members of a governance proposal."
         }
       },
       "description": "QueryProposalResponse is the response type for the Query/Proposal RPC method."
@@ -6775,8 +6735,7 @@
                   "PROPOSAL_STATUS_FAILED"
                 ],
                 "default": "PROPOSAL_STATUS_UNSPECIFIED",
-                "description": "- PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.",
-                "title": "ProposalStatus is a type alias that represents a proposal status as a byte"
+                "description": "ProposalStatus enumerates the valid statuses of a proposal.\n\n - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.\n - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.\n - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.\n - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.\n - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.\n - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed."
               },
               "final_tally_result": {
                 "type": "object",
@@ -6794,7 +6753,7 @@
                     "type": "string"
                   }
                 },
-                "title": "TallyResult defines a standard tally for a proposal"
+                "description": "TallyResult defines a standard tally for a governance proposal."
               },
               "submit_time": {
                 "type": "string",
@@ -6828,7 +6787,7 @@
                 "format": "date-time"
               }
             },
-            "title": "Proposal defines the core field members of a governance proposal"
+            "description": "Proposal defines the core field members of a governance proposal."
           }
         },
         "pagination": {
@@ -6845,8 +6804,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryProposalsResponse is the response type for the Query/Proposals RPC method."
@@ -6870,8 +6828,7 @@
             "no_with_veto": {
               "type": "string"
             }
-          },
-          "title": "TallyResult defines a standard tally for a proposal"
+          }
         }
       },
       "description": "QueryTallyResultResponse is the response type for the Query/Tally RPC method."
@@ -6901,8 +6858,7 @@
                 "VOTE_OPTION_NO_WITH_VETO"
               ],
               "default": "VOTE_OPTION_UNSPECIFIED",
-              "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-              "title": "VoteOption defines a vote option"
+              "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
             }
           }
         }
@@ -6935,11 +6891,10 @@
                   "VOTE_OPTION_NO_WITH_VETO"
                 ],
                 "default": "VOTE_OPTION_UNSPECIFIED",
-                "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-                "title": "VoteOption defines a vote option"
+                "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
               }
             },
-            "description": "Vote defines a vote on a governance proposal. A vote corresponds to a proposal\nID, the voter, and the vote option."
+            "description": "Vote defines a vote on a governance proposal.\nA Vote consists of a proposal ID, the voter, and the vote option."
           },
           "description": "votes defined the queried votes."
         },
@@ -6957,8 +6912,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryVotesResponse is the response type for the Query/Votes RPC method."
@@ -6974,15 +6928,15 @@
         "threshold": {
           "type": "string",
           "format": "byte",
-          "description": "Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5."
+          "description": "Minimum proportion of Yes votes for proposal to pass. Default value: 0.5."
         },
-        "veto": {
+        "veto_threshold": {
           "type": "string",
           "format": "byte",
-          "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3."
+          "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Default value: 1/3."
         }
       },
-      "title": "TallyParams defines the params around Tallying votes in governance"
+      "description": "TallyParams defines the params for tallying votes on governance proposals."
     },
     "cosmos.gov.v1beta1.TallyResult": {
       "type": "object",
@@ -7000,7 +6954,7 @@
           "type": "string"
         }
       },
-      "title": "TallyResult defines a standard tally for a proposal"
+      "description": "TallyResult defines a standard tally for a governance proposal."
     },
     "cosmos.gov.v1beta1.Vote": {
       "type": "object",
@@ -7023,11 +6977,10 @@
             "VOTE_OPTION_NO_WITH_VETO"
           ],
           "default": "VOTE_OPTION_UNSPECIFIED",
-          "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-          "title": "VoteOption defines a vote option"
+          "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
         }
       },
-      "description": "Vote defines a vote on a governance proposal. A vote corresponds to a proposal\nID, the voter, and the vote option."
+      "description": "Vote defines a vote on a governance proposal.\nA Vote consists of a proposal ID, the voter, and the vote option."
     },
     "cosmos.gov.v1beta1.VoteOption": {
       "type": "string",
@@ -7039,8 +6992,7 @@
         "VOTE_OPTION_NO_WITH_VETO"
       ],
       "default": "VOTE_OPTION_UNSPECIFIED",
-      "description": "- VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.",
-      "title": "VoteOption defines a vote option"
+      "description": "VoteOption enumerates the valid vote options for a given governance proposal.\n\n - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.\n - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.\n - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.\n - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.\n - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."
     },
     "cosmos.gov.v1beta1.VotingParams": {
       "type": "object",
@@ -7050,7 +7002,7 @@
           "description": "Length of the voting period."
         }
       },
-      "title": "VotingParams defines the params around Voting in governance"
+      "description": "VotingParams defines the params for voting on governance proposals."
     },
     "cosmos.mint.v1beta1.Params": {
       "type": "object",
@@ -7081,7 +7033,7 @@
           "title": "expected blocks per year"
         }
       },
-      "title": "mint parameters"
+      "description": "Params holds parameters for the mint module."
     },
     "cosmos.mint.v1beta1.QueryAnnualProvisionsResponse": {
       "type": "object",
@@ -7137,8 +7089,7 @@
               "format": "uint64",
               "title": "expected blocks per year"
             }
-          },
-          "title": "mint parameters"
+          }
         }
       },
       "description": "QueryParamsResponse is the response type for the Query/Params RPC method."
@@ -7156,7 +7107,7 @@
           "type": "string"
         }
       },
-      "description": "ParamChange defines a parameter change."
+      "description": "ParamChange defines an individual parameter change, for use in ParameterChangeProposal."
     },
     "cosmos.params.v1beta1.QueryParamsResponse": {
       "type": "object",
@@ -7202,7 +7153,7 @@
           "format": "byte"
         }
       },
-      "title": "Params - used for initializing default parameter for slashing at genesis"
+      "description": "Params represents the parameters used for by the slashing module."
     },
     "cosmos.slashing.v1beta1.QueryParamsResponse": {
       "type": "object",
@@ -7230,7 +7181,7 @@
               "format": "byte"
             }
           },
-          "title": "Params - used for initializing default parameter for slashing at genesis"
+          "description": "Params represents the parameters used for by the slashing module."
         }
       },
       "title": "QueryParamsResponse is the response type for the Query/Params RPC method"
@@ -7271,7 +7222,8 @@
               "format": "int64",
               "title": "missed blocks counter (to avoid scanning the array every time)"
             }
-          }
+          },
+          "description": "ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity."
         }
       },
       "title": "QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method"
@@ -7314,7 +7266,7 @@
                 "title": "missed blocks counter (to avoid scanning the array every time)"
               }
             },
-            "title": "ValidatorSigningInfo defines the signing info for a validator"
+            "description": "ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity."
           },
           "title": "info is the signing info of all validators"
         },
@@ -7332,8 +7284,7 @@
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
           },
-          "description": "message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }",
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          "description": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest.\n\n message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }"
         }
       },
       "title": "QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method"
@@ -7371,7 +7322,7 @@
           "title": "missed blocks counter (to avoid scanning the array every time)"
         }
       },
-      "title": "ValidatorSigningInfo defines the signing info for a validator"
+      "description": "ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity."
     },
     "cosmos.staking.v1beta1.Commission": {
       "type": "object",
@@ -7396,7 +7347,7 @@
           "format": "date-time"
         }
       },
-      "description": "Commission defines a commission parameters for a given validator."
+      "description": "Commission defines commission parameters for a given validator."
     },
     "cosmos.staking.v1beta1.CommissionRates": {
       "type": "object",
@@ -7662,17 +7613,17 @@
                     "format": "date-time"
                   }
                 },
-                "description": "Commission defines a commission parameters for a given validator."
+                "description": "Commission defines commission parameters for a given validator."
               },
               "min_self_delegation": {
                 "type": "string"
               }
             },
-            "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+            "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
           }
         }
       },
-      "description": "HistoricalInfo contains the historical information that gets stored at\neach height."
+      "description": "HistoricalInfo contains header and validator information for a given block. It is stored\nas part of staking module's state, which persists the `n` most recent HistoricalInfo\n(`n` is set by the staking module's `historical_entries` parameter)."
     },
     "cosmos.staking.v1beta1.Params": {
       "type": "object",
@@ -7708,7 +7659,7 @@
           "type": "string"
         }
       },
-      "title": "Pool - tracking bonded and not-bonded token supply of the bond denomination"
+      "description": "Pool is used for tracking bonded and not-bonded token supply of the bond denomination."
     },
     "cosmos.staking.v1beta1.QueryDelegationResponse": {
       "type": "object",
@@ -7807,8 +7758,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method."
@@ -7853,7 +7803,7 @@
                 }
               }
             },
-            "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+            "description": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list."
           }
         },
         "pagination": {
@@ -7870,8 +7820,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method."
@@ -7956,7 +7905,7 @@
                   "format": "date-time"
                 }
               },
-              "description": "Commission defines a commission parameters for a given validator."
+              "description": "Commission defines commission parameters for a given validator."
             },
             "min_self_delegation": {
               "type": "string"
@@ -8047,13 +7996,13 @@
                     "format": "date-time"
                   }
                 },
-                "description": "Commission defines a commission parameters for a given validator."
+                "description": "Commission defines commission parameters for a given validator."
               },
               "min_self_delegation": {
                 "type": "string"
               }
             },
-            "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+            "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
           },
           "description": "validators defines the the validators' info of a delegator."
         },
@@ -8071,8 +8020,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method."
@@ -8257,13 +8205,13 @@
                         "format": "date-time"
                       }
                     },
-                    "description": "Commission defines a commission parameters for a given validator."
+                    "description": "Commission defines commission parameters for a given validator."
                   },
                   "min_self_delegation": {
                     "type": "string"
                   }
                 },
-                "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+                "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
               }
             }
           }
@@ -8314,8 +8262,7 @@
             "bonded_tokens": {
               "type": "string"
             }
-          },
-          "title": "Pool - tracking bonded and not-bonded token supply of the bond denomination"
+          }
         }
       },
       "description": "QueryPoolResponse is response type for the Query/Pool RPC method."
@@ -8419,8 +8366,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryRedelegationsResponse is response type for the Query/Redelegations RPC method."
@@ -8463,8 +8409,7 @@
                 "description": "UnbondingDelegationEntry defines an unbonding object with relevant metadata."
               }
             }
-          },
-          "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+          }
         }
       },
       "description": "QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method."
@@ -8524,8 +8469,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "title": "QueryValidatorDelegationsResponse is response type for the Query/ValidatorDelegations RPC method"
@@ -8610,7 +8554,7 @@
                   "format": "date-time"
                 }
               },
-              "description": "Commission defines a commission parameters for a given validator."
+              "description": "Commission defines commission parameters for a given validator."
             },
             "min_self_delegation": {
               "type": "string"
@@ -8660,7 +8604,7 @@
                 }
               }
             },
-            "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+            "description": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list."
           }
         },
         "pagination": {
@@ -8677,8 +8621,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "description": "QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method."
@@ -8764,13 +8707,13 @@
                     "format": "date-time"
                   }
                 },
-                "description": "Commission defines a commission parameters for a given validator."
+                "description": "Commission defines commission parameters for a given validator."
               },
               "min_self_delegation": {
                 "type": "string"
               }
             },
-            "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+            "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
           },
           "description": "validators contains all the queried validators."
         },
@@ -8788,8 +8731,7 @@
               "format": "uint64",
               "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
             }
-          },
-          "title": "PageResponse is to be embedded in gRPC response messages where the corresponding\nrequest message has used PageRequest"
+          }
         }
       },
       "title": "QueryValidatorsResponse is response type for the Query/Validators RPC method"
@@ -8998,7 +8940,7 @@
           }
         }
       },
-      "title": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list"
+      "description": "UnbondingDelegation stores all of a single delegator's unbonding bonds\nfor a single validator in an time-ordered list."
     },
     "cosmos.staking.v1beta1.UnbondingDelegationEntry": {
       "type": "object",
@@ -9096,13 +9038,13 @@
               "format": "date-time"
             }
           },
-          "description": "Commission defines a commission parameters for a given validator."
+          "description": "Commission defines commission parameters for a given validator."
         },
         "min_self_delegation": {
           "type": "string"
         }
       },
-      "description": "Validator defines the total amount of bond shares and their exchange rate to\ncoins. Slashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
+      "description": "Validator defines a validator, together with the total amount of the Validator's\nbond shares and their exchange rate to coins.\nSlashing results in a decrease in the exchange rate, allowing correct\ncalculation of future undelegations without iterating over delegators.\nWhen coins are delegated to this validator, the validator is credited with a\ndelegation whose number of bond shares is based on the amount of coins\ndelegated divided by the current exchange rate. Voting power can be\ncalculated as total bonded shares multiplied by exchange rate."
     },
     "tendermint.types.BlockID": {
       "type": "object",
@@ -9273,7 +9215,7 @@
           "title": "Any application specific upgrade info to be included on-chain\nsuch as a git commit that validators could automatically upgrade to"
         }
       },
-      "title": "Plan specifies information about a planned upgrade and when it should occur"
+      "description": "Plan specifies information about a planned upgrade and when it should occur."
     },
     "cosmos.upgrade.v1beta1.QueryAppliedPlanResponse": {
       "type": "object",
@@ -9311,8 +9253,7 @@
               "type": "string",
               "title": "Any application specific upgrade info to be included on-chain\nsuch as a git commit that validators could automatically upgrade to"
             }
-          },
-          "title": "Plan specifies information about a planned upgrade and when it should occur"
+          }
         }
       },
       "description": "QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method."

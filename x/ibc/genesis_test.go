@@ -35,11 +35,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 						),
 					},
@@ -48,7 +48,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]clientexported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.NextValidatorsHash,
+									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight(), suite.header.Header.NextValidatorsHash,
 								),
 							},
 						),
@@ -95,11 +95,11 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 			name: "invalid client genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0, latestTimestamp),
 						),
 					},
@@ -164,11 +164,11 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 			name: "valid genesis",
 			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
 						),
-						clienttypes.NewGenesisClientState(
+						clienttypes.NewIdentifiedClientState(
 							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
 						),
 					},
@@ -177,7 +177,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							clientID,
 							[]clientexported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(),
+									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight(), suite.header.Header.NextValidatorsHash,
 								),
 							},
 						),

@@ -44,7 +44,7 @@ func NewQueryClientConnectionsRequest(clientID string) *QueryClientConnectionsRe
 
 // NewQueryConnectionClientStateResponse creates a newQueryConnectionClientStateResponse instance
 func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryConnectionClientStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.Id, host.ClientStatePath()), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.ClientId, host.ClientStatePath()), "/"))
 	return &QueryConnectionClientStateResponse{
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,

@@ -17,12 +17,14 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper defines the IBC fungible transfer keeper
 type Keeper struct {
-	storeKey sdk.StoreKey
-	cdc      codec.BinaryMarshaler
+	storeKey   sdk.StoreKey
+	cdc        codec.BinaryMarshaler
+	paramSpace paramtypes.Subspace
 
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
@@ -33,7 +35,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
@@ -43,9 +45,15 @@ func NewKeeper(
 		panic("the IBC transfer module account has not been set")
 	}
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
-		storeKey:      key,
 		cdc:           cdc,
+		storeKey:      key,
+		paramSpace:    paramSpace,
 		channelKeeper: channelKeeper,
 		portKeeper:    portKeeper,
 		authKeeper:    authKeeper,
@@ -119,8 +127,7 @@ func (k Keeper) GetDenomTrace(ctx sdk.Context, denomTraceHash tmbytes.HexBytes) 
 		return types.DenomTrace{}, false
 	}
 
-	var denomTrace types.DenomTrace
-	k.cdc.MustUnmarshalBinaryBare(bz, &denomTrace)
+	denomTrace := k.MustUnmarshalDenomTrace(bz)
 	return denomTrace, true
 }
 
@@ -133,7 +140,7 @@ func (k Keeper) HasDenomTrace(ctx sdk.Context, denomTraceHash tmbytes.HexBytes) 
 // SetDenomTrace sets a new {trace hash -> denom trace} pair to the store.
 func (k Keeper) SetDenomTrace(ctx sdk.Context, denomTrace types.DenomTrace) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
-	bz := k.cdc.MustMarshalBinaryBare(&denomTrace)
+	bz := k.MustMarshalDenomTrace(denomTrace)
 	store.Set(denomTrace.Hash(), bz)
 }
 
@@ -157,9 +164,7 @@ func (k Keeper) IterateDenomTraces(ctx sdk.Context, cb func(denomTrace types.Den
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 
-		var denomTrace types.DenomTrace
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &denomTrace)
-
+		denomTrace := k.MustUnmarshalDenomTrace(iterator.Value())
 		if cb(denomTrace) {
 			break
 		}

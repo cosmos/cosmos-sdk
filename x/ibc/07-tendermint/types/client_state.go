@@ -134,6 +134,46 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return cs.ProofSpecs
 }
 
+// VerifyClientState verifies a proof of the client state of the running chain
+// stored on the target machine
+func (cs ClientState) VerifyClientState(
+	store sdk.KVStore,
+	cdc codec.BinaryMarshaler,
+	provingRoot commitmentexported.Root,
+	height uint64,
+	prefix commitmentexported.Prefix,
+	counterpartyClientIdentifier string,
+	proof []byte,
+	clientState clientexported.ClientState,
+) error {
+	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	if err != nil {
+		return err
+	}
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	if err != nil {
+		return err
+	}
+
+	if clientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "client state cannot be empty")
+	}
+
+	_, ok := clientState.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "invalid client type %T, expected %T", clientState, &ClientState{})
+	}
+
+	bz, err := codec.MarshalAny(cdc, clientState)
+	if err != nil {
+		return err
+	}
+
+	return merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz)
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(

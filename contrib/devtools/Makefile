@@ -85,7 +85,7 @@ ifeq ($(UNAME_S),Darwin)
   PROTOC_ZIP ?= protoc-3.11.2-osx-x86_64.zip
 endif
 
-proto-tools: proto-tools-stamp go-swagger buf
+proto-tools: proto-tools-stamp buf
 
 proto-tools-stamp:
 	@echo "Installing protoc compiler..."
@@ -102,10 +102,6 @@ proto-tools-stamp:
 	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 	touch $@
-
-go-swagger:
-	@echo "Installing go-swagger..."
-	@./scripts/go-swagger.sh
 
 buf: buf-stamp
 

@@ -101,6 +101,9 @@ proto-tools-stamp:
 	@echo "Installing protoc-gen-grpc-gateway..."
 	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
+	@echo "Installing protoc-gen-swagger..."
+	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
 	touch $@
 
 buf: buf-stamp

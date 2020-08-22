@@ -73,6 +73,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 	memo := "foo"
+	accSeq, accNum := uint64(0), uint64(0)
 
 	// Create a txBuilder.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
@@ -92,8 +93,8 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	// 2nd round: actually sign
 	sigV2, err = tx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
-		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: 0, AccountSequence: 0},
-		txBuilder, priv1, s.clientCtx.TxConfig,
+		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
+		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
 	)
 	txBuilder.SetSignatures(sigV2)
 

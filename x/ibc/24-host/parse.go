@@ -17,7 +17,7 @@ func RemovePath(paths []string, path string) ([]string, bool) {
 }
 
 // ParseConnectionPath returns the connection ID from a full path. It returns
-// an error if the provided path is invalid,
+// an error if the provided path is invalid.
 func ParseConnectionPath(path string) (string, error) {
 	split := strings.Split(path, "/")
 	if len(split) != 2 {
@@ -28,7 +28,7 @@ func ParseConnectionPath(path string) (string, error) {
 }
 
 // ParseChannelPath returns the port and channel ID from a full path. It returns
-// an error if the provided path is invalid,
+// an error if the provided path is invalid.
 func ParseChannelPath(path string) (string, string, error) {
 	split := strings.Split(path, "/")
 	if len(split) < 5 {
@@ -43,7 +43,7 @@ func ParseChannelPath(path string) (string, string, error) {
 }
 
 // MustParseConnectionPath returns the connection ID from a full path. Panics
-// if the provided path is invalid
+// if the provided path is invalid.
 func MustParseConnectionPath(path string) string {
 	connectionID, err := ParseConnectionPath(path)
 	if err != nil {
@@ -53,7 +53,7 @@ func MustParseConnectionPath(path string) string {
 }
 
 // MustParseChannelPath returns the port and channel ID from a full path. Panics
-// if the provided path is invalid
+// if the provided path is invalid.
 func MustParseChannelPath(path string) (string, string) {
 	portID, channelID, err := ParseChannelPath(path)
 	if err != nil {

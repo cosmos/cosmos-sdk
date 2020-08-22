@@ -38,8 +38,9 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// HistoricalInfo contains the historical information that gets stored at
-// each height.
+// HistoricalInfo contains header and validator information for a given block. It is stored
+// as part of staking module's state, which persists the `n` most recent HistoricalInfo
+// (`n` is set by the staking module's `historical_entries` parameter).
 type HistoricalInfo struct {
 	Header types.Header `protobuf:"bytes,1,opt,name=header,proto3" json:"header"`
 	Valset []Validator  `protobuf:"bytes,2,rep,name=valset,proto3" json:"valset"`
@@ -132,7 +133,7 @@ func (m *CommissionRates) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CommissionRates proto.InternalMessageInfo
 
-// Commission defines a commission parameters for a given validator.
+// Commission defines commission parameters for a given validator.
 type Commission struct {
 	CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
 	UpdateTime      time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time" yaml:"update_time"`
@@ -253,8 +254,9 @@ func (m *Description) GetDetails() string {
 	return ""
 }
 
-// Validator defines the total amount of bond shares and their exchange rate to
-// coins. Slashing results in a decrease in the exchange rate, allowing correct
+// Validator defines a validator, together with the total amount of the Validator's
+// bond shares and their exchange rate to coins.
+// Slashing results in a decrease in the exchange rate, allowing correct
 // calculation of future undelegations without iterating over delegators.
 // When coins are delegated to this validator, the validator is credited with a
 // delegation whose number of bond shares is based on the amount of coins
@@ -613,7 +615,7 @@ func (m *Delegation) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.Va
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
-// for a single validator in an time-ordered list
+// for a single validator in an time-ordered list.
 type UnbondingDelegation struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
@@ -1082,7 +1084,7 @@ func (m *RedelegationResponse) GetEntries() []RedelegationEntryResponse {
 	return nil
 }
 
-// Pool - tracking bonded and not-bonded token supply of the bond denomination
+// Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
 type Pool struct {
 	NotBondedTokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=not_bonded_tokens,json=notBondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"not_bonded_tokens"`
 	BondedTokens    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=bonded_tokens,json=bondedTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"bonded_tokens" yaml:"bonded_tokens"`

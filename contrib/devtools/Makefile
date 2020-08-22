@@ -77,28 +77,43 @@ $(RUNSIM):
 	@echo "Installing runsim..."
 	@(cd /tmp && go get github.com/cosmos/tools/cmd/runsim@v1.0.0)
 
-PROTOC_VERSION ?= 3.11.2
+PROTOC_VERSION ?= 3.13.0
+PROTOC_GRPC_GATEWAY_VERSION = 1.14.7
 ifeq ($(UNAME_S),Linux)
-  PROTOC_ZIP ?= protoc-3.11.2-linux-x86_64.zip
+  PROTOC_ZIP ?= protoc-3.13.0-linux-x86_64.zip
+  PROTOC_GRPC_GATEWAY_BIN ?= protoc-gen-grpc-gateway-v1.14.7-linux-x86_64
 endif
 ifeq ($(UNAME_S),Darwin)
-  PROTOC_ZIP ?= protoc-3.11.2-osx-x86_64.zip
+  PROTOC_ZIP ?= protoc-3.13.0-osx-x86_64.zip
+  PROTOC_GRPC_GATEWAY_BIN ?= protoc-gen-grpc-gateway-v1.14.7-darwin-x86_64
 endif
 
-proto-tools: proto-tools-stamp buf
-
-proto-tools-stamp:
+proto-tools: buf
+ifeq (, $(shell which protoc))
 	@echo "Installing protoc compiler..."
 	@(cd /tmp; \
 	curl -OL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"; \
 	unzip -o ${PROTOC_ZIP} -d $(PREFIX) bin/protoc; \
 	unzip -o ${PROTOC_ZIP} -d $(PREFIX) 'include/*'; \
 	rm -f ${PROTOC_ZIP})
+else
+	@echo "protoc already installed; skipping..."
+endif
 
+ifeq (, $(shell which protoc-gen-gocosmos))
 	@echo "Installing protoc-gen-gocosmos..."
 	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
+else
+	@echo "protoc-gen-gocosmos already installed; skipping..."
+endif
 
+ifeq (, $(shell which protoc-gen-grpc-gateway))
 	@echo "Installing protoc-gen-grpc-gateway..."
+	@curl -o "${BIN}/protoc-gen-grpc-gateway" -L "https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v${PROTOC_GRPC_GATEWAY_VERSION}/${PROTOC_GRPC_GATEWAY_BIN}"
+	@chmod +x "${BIN}/protoc-gen-grpc-gateway"
+else
+	@echo "protoc-gen-grpc-gateway already installed; skipping..."
+endif
 	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 	@echo "Installing protoc-gen-swagger..."

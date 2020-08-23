@@ -339,7 +339,9 @@ func (d Dec) QuoInt64(i int64) Dec {
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
 // approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
+// The maximum number of iterations is required as a backup boundary condition for
+// cases where the answer never converges enough to satisfy the main condition.
+func (d Dec) ApproxRoot(root, maxIters uint64) (guess Dec, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -351,7 +353,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	}()
 
 	if d.IsNegative() {
-		absRoot, err := d.MulInt64(-1).ApproxRoot(root)
+		absRoot, err := d.MulInt64(-1).ApproxRoot(root, maxIters)
 		return absRoot.MulInt64(-1), err
 	}
 
@@ -366,7 +368,8 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	rootInt := NewIntFromUint64(root)
 	guess, delta := OneDec(), OneDec()
 
-	for delta.Abs().GT(SmallestDec()) {
+	iter := uint64(0)
+	for delta.Abs().GT(SmallestDec()) && iter < maxIters {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()
@@ -376,6 +379,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
+		iter++
 	}
 
 	return guess, nil
@@ -403,8 +407,10 @@ func (d Dec) Power(power uint64) Dec {
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
 // of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
-func (d Dec) ApproxSqrt() (Dec, error) {
-	return d.ApproxRoot(2)
+// The maximum number of iterations is required as a backup boundary condition for
+// cases where the answer never converges enough to satisfy the main condition.
+func (d Dec) ApproxSqrt(maxIters uint64) (Dec, error) {
+	return d.ApproxRoot(2, maxIters)
 }
 
 // is integer, e.g. decimals are zero

@@ -186,6 +186,7 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 
 ### Bug Fixes
 
+* (types) [\#7038](https://github.com/cosmos/cosmos-sdk/issues/7038) Fix infinite looping of `ApproxRoot` by adding a max iterations argument to serve as a hard limit.
 * (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
 * (x/bank) [\#6536](https://github.com/cosmos/cosmos-sdk/pull/6536) Fix bug in `WriteGeneratedTxResponse` function used by multiple 
 REST endpoints. Now it writes a Tx in StdTx format.

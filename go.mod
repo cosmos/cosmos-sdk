@@ -18,7 +18,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/handlers v1.4.2
-	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.1

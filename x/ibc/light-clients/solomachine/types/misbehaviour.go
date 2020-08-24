@@ -1,8 +1,6 @@
 package types
 
 import (
-	"bytes"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -42,13 +40,10 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 
 // checkMisbehaviour checks if the currently registered public key has signed
 // over two different messages at the same sequence.
+// NOTE: a check that the evidence message data are not equal is done by
+// evidence.ValidateBasic which is called by the 02-client keeper.
 func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
 	pubKey := clientState.ConsensusState.GetPubKey()
-
-	// assert that provided signature data are different
-	if bytes.Equal(evidence.SignatureOne.Data, evidence.SignatureTwo.Data) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "evidence signatures have identical data messages")
-	}
 
 	data := EvidenceSignBytes(evidence.Sequence, evidence.SignatureOne.Data)
 

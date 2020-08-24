@@ -52,18 +52,6 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			false,
 		},
 		{
-			"equal data in signatures",
-			func() {
-				clientState = suite.solomachine.ClientState()
-
-				// store in tmp var before assigning to interface type
-				ev := suite.solomachine.CreateEvidence()
-				ev.SignatureOne.Data = ev.SignatureTwo.Data
-				evidence = ev
-			},
-			false,
-		},
-		{
 			"invalid first signature",
 			func() {
 				clientState = suite.solomachine.ClientState()

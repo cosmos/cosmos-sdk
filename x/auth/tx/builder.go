@@ -66,12 +66,12 @@ func newBuilder(pubkeyCodec types.PublicKeyCodec) *wrapper {
 	}
 }
 
-func (t *wrapper) GetMsgs() []sdk.Msg {
-	if t.tx == nil || t.tx.Body == nil {
+func (w *wrapper) GetMsgs() []sdk.Msg {
+	if w.tx == nil || w.tx.Body == nil {
 		return nil
 	}
 
-	anys := t.tx.Body.Messages
+	anys := w.tx.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
 		msg := any.GetCachedValue().(sdk.Msg)
@@ -83,18 +83,18 @@ func (t *wrapper) GetMsgs() []sdk.Msg {
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-func (t *wrapper) ValidateBasic() error {
-	theTx := t.tx
+func (w *wrapper) ValidateBasic() error {
+	theTx := w.tx
 	if theTx == nil {
 		return fmt.Errorf("bad Tx")
 	}
 
-	body := t.tx.Body
+	body := w.tx.Body
 	if body == nil {
 		return fmt.Errorf("missing TxBody")
 	}
 
-	authInfo := t.tx.AuthInfo
+	authInfo := w.tx.AuthInfo
 	if authInfo == nil {
 		return fmt.Errorf("missing AuthInfo")
 	}
@@ -124,53 +124,53 @@ func (t *wrapper) ValidateBasic() error {
 		return sdkerrors.ErrNoSignatures
 	}
 
-	if len(sigs) != len(t.GetSigners()) {
+	if len(sigs) != len(w.GetSigners()) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", t.GetSigners(), len(sigs),
+			"wrong number of signers; expected %d, got %d", w.GetSigners(), len(sigs),
 		)
 	}
 
 	return nil
 }
 
-func (t *wrapper) getBodyBytes() []byte {
-	if len(t.bodyBz) == 0 {
+func (w *wrapper) getBodyBytes() []byte {
+	if len(w.bodyBz) == 0 {
 		// if bodyBz is empty, then marshal the body. bodyBz will generally
 		// be set to nil whenever SetBody is called so the result of calling
 		// this method should always return the correct bytes. Note that after
 		// decoding bodyBz is derived from TxRaw so that it matches what was
 		// transmitted over the wire
 		var err error
-		t.bodyBz, err = proto.Marshal(t.tx.Body)
+		w.bodyBz, err = proto.Marshal(w.tx.Body)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return t.bodyBz
+	return w.bodyBz
 }
 
-func (t *wrapper) getAuthInfoBytes() []byte {
-	if len(t.authInfoBz) == 0 {
+func (w *wrapper) getAuthInfoBytes() []byte {
+	if len(w.authInfoBz) == 0 {
 		// if authInfoBz is empty, then marshal the body. authInfoBz will generally
 		// be set to nil whenever SetAuthInfo is called so the result of calling
 		// this method should always return the correct bytes. Note that after
 		// decoding authInfoBz is derived from TxRaw so that it matches what was
 		// transmitted over the wire
 		var err error
-		t.authInfoBz, err = proto.Marshal(t.tx.AuthInfo)
+		w.authInfoBz, err = proto.Marshal(w.tx.AuthInfo)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return t.authInfoBz
+	return w.authInfoBz
 }
 
-func (t *wrapper) GetSigners() []sdk.AccAddress {
+func (w *wrapper) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
 
-	for _, msg := range t.GetMsgs() {
+	for _, msg := range w.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
 			if !seen[addr.String()] {
 				signers = append(signers, addr)
@@ -182,57 +182,57 @@ func (t *wrapper) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (t *wrapper) GetPubKeys() []crypto.PubKey {
-	if t.pubKeys == nil {
-		signerInfos := t.tx.AuthInfo.SignerInfos
+func (w *wrapper) GetPubKeys() []crypto.PubKey {
+	if w.pubKeys == nil {
+		signerInfos := w.tx.AuthInfo.SignerInfos
 		pubKeys := make([]crypto.PubKey, len(signerInfos))
 
 		for i, si := range signerInfos {
 			var err error
 			pk := si.PublicKey
 			if pk != nil {
-				pubKeys[i], err = t.pubkeyCodec.Decode(si.PublicKey)
+				pubKeys[i], err = w.pubkeyCodec.Decode(si.PublicKey)
 				if err != nil {
 					panic(err)
 				}
 			}
 		}
 
-		t.pubKeys = pubKeys
+		w.pubKeys = pubKeys
 	}
 
-	return t.pubKeys
+	return w.pubKeys
 }
 
-func (t *wrapper) GetGas() uint64 {
-	return t.tx.AuthInfo.Fee.GasLimit
+func (w *wrapper) GetGas() uint64 {
+	return w.tx.AuthInfo.Fee.GasLimit
 }
 
-func (t *wrapper) GetFee() sdk.Coins {
-	return t.tx.AuthInfo.Fee.Amount
+func (w *wrapper) GetFee() sdk.Coins {
+	return w.tx.AuthInfo.Fee.Amount
 }
 
-func (t *wrapper) FeePayer() sdk.AccAddress {
-	return t.GetSigners()[0]
+func (w *wrapper) FeePayer() sdk.AccAddress {
+	return w.GetSigners()[0]
 }
 
-func (t *wrapper) GetMemo() string {
-	return t.tx.Body.Memo
+func (w *wrapper) GetMemo() string {
+	return w.tx.Body.Memo
 }
 
-func (t *wrapper) GetSignatures() [][]byte {
-	return t.tx.Signatures
+func (w *wrapper) GetSignatures() [][]byte {
+	return w.tx.Signatures
 }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
-func (t *wrapper) GetTimeoutHeight() uint64 {
-	return t.tx.Body.TimeoutHeight
+func (w *wrapper) GetTimeoutHeight() uint64 {
+	return w.tx.Body.TimeoutHeight
 }
 
-func (t *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
-	signerInfos := t.tx.AuthInfo.SignerInfos
-	sigs := t.tx.Signatures
-	pubKeys := t.GetPubKeys()
+func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
+	signerInfos := w.tx.AuthInfo.SignerInfos
+	sigs := w.tx.Signatures
+	pubKeys := w.GetPubKeys()
 	n := len(signerInfos)
 	res := make([]signing.SignatureV2, n)
 
@@ -252,7 +252,7 @@ func (t *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-func (t *wrapper) SetMsgs(msgs ...sdk.Msg) error {
+func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -263,52 +263,52 @@ func (t *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 		}
 	}
 
-	t.tx.Body.Messages = anys
+	w.tx.Body.Messages = anys
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
-	t.bodyBz = nil
+	w.bodyBz = nil
 
 	return nil
 }
 
 // SetTimeoutHeight sets the transaction's height timeout.
-func (t *wrapper) SetTimeoutHeight(height uint64) {
-	t.tx.Body.TimeoutHeight = height
+func (w *wrapper) SetTimeoutHeight(height uint64) {
+	w.tx.Body.TimeoutHeight = height
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
-	t.bodyBz = nil
+	w.bodyBz = nil
 }
 
-func (t *wrapper) SetMemo(memo string) {
-	t.tx.Body.Memo = memo
+func (w *wrapper) SetMemo(memo string) {
+	w.tx.Body.Memo = memo
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
-	t.bodyBz = nil
+	w.bodyBz = nil
 }
 
-func (t *wrapper) SetGasLimit(limit uint64) {
-	if t.tx.AuthInfo.Fee == nil {
-		t.tx.AuthInfo.Fee = &tx.Fee{}
+func (w *wrapper) SetGasLimit(limit uint64) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
-	t.tx.AuthInfo.Fee.GasLimit = limit
+	w.tx.AuthInfo.Fee.GasLimit = limit
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
-	t.authInfoBz = nil
+	w.authInfoBz = nil
 }
 
-func (t *wrapper) SetFeeAmount(coins sdk.Coins) {
-	if t.tx.AuthInfo.Fee == nil {
-		t.tx.AuthInfo.Fee = &tx.Fee{}
+func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
-	t.tx.AuthInfo.Fee.Amount = coins
+	w.tx.AuthInfo.Fee.Amount = coins
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
-	t.authInfoBz = nil
+	w.authInfoBz = nil
 }
 
-func (t *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
+func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	n := len(signatures)
 	signerInfos := make([]*tx.SignerInfo, n)
 	rawSigs := make([][]byte, n)
@@ -316,7 +316,7 @@ func (t *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 	for i, sig := range signatures {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
-		pk, err := t.pubkeyCodec.Encode(sig.PubKey)
+		pk, err := w.pubkeyCodec.Encode(sig.PubKey)
 		if err != nil {
 			return err
 		}
@@ -327,31 +327,31 @@ func (t *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 		}
 	}
 
-	t.setSignerInfos(signerInfos)
-	t.setSignatures(rawSigs)
+	w.setSignerInfos(signerInfos)
+	w.setSignatures(rawSigs)
 
 	return nil
 }
 
-func (t *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
-	t.tx.AuthInfo.SignerInfos = infos
+func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
+	w.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
-	t.authInfoBz = nil
+	w.authInfoBz = nil
 	// set cached pubKeys to nil because they no longer match tx.AuthInfo
-	t.pubKeys = nil
+	w.pubKeys = nil
 }
 
-func (t *wrapper) setSignatures(sigs [][]byte) {
-	t.tx.Signatures = sigs
+func (w *wrapper) setSignatures(sigs [][]byte) {
+	w.tx.Signatures = sigs
 }
 
-func (t *wrapper) GetTx() authsigning.Tx {
-	return t
+func (w *wrapper) GetTx() authsigning.Tx {
+	return w
 }
 
 // GetProtoTx returns the tx as a proto.Message.
-func (t *wrapper) GetProtoTx() *tx.Tx {
-	return t.tx
+func (w *wrapper) GetProtoTx() *tx.Tx {
+	return w.tx
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.
@@ -362,20 +362,20 @@ func WrapTx(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) client.TxBuilder {
 	}
 }
 
-func (t *wrapper) GetExtensionOptions() []*codectypes.Any {
-	return t.tx.Body.ExtensionOptions
+func (w *wrapper) GetExtensionOptions() []*codectypes.Any {
+	return w.tx.Body.ExtensionOptions
 }
 
-func (t *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
-	return t.tx.Body.NonCriticalExtensionOptions
+func (w *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
+	return w.tx.Body.NonCriticalExtensionOptions
 }
 
-func (t *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
-	t.tx.Body.ExtensionOptions = extOpts
-	t.bodyBz = nil
+func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
+	w.tx.Body.ExtensionOptions = extOpts
+	w.bodyBz = nil
 }
 
-func (t *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
-	t.tx.Body.NonCriticalExtensionOptions = extOpts
-	t.bodyBz = nil
+func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
+	w.tx.Body.NonCriticalExtensionOptions = extOpts
+	w.bodyBz = nil
 }

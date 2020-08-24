@@ -33,7 +33,7 @@ FROM alpine:edge
 
 # Install ca-certificates
 RUN apk add --update ca-certificates
-WORKDIR /simd
+WORKDIR /root
 
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/simd /usr/bin/simd

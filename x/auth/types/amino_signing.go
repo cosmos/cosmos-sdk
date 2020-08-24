@@ -39,6 +39,6 @@ func (stdTxSignModeHandler) GetSignBytes(mode signingtypes.SignMode, data signin
 	}
 
 	return StdSignBytes(
-		data.ChainID, data.AccountNumber, data.AccountSequence, stdTx.GetTimeoutHeight(), StdFee{Amount: stdTx.GetFee(), Gas: stdTx.GetGas()}, tx.GetMsgs(), stdTx.GetMemo(),
+		data.ChainID, data.AccountNumber, data.Sequence, stdTx.GetTimeoutHeight(), StdFee{Amount: stdTx.GetFee(), Gas: stdTx.GetGas()}, tx.GetMsgs(), stdTx.GetMemo(),
 	), nil
 }

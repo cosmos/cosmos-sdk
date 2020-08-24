@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -27,7 +26,8 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(ev.GetClientID(), clientID)
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
-	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.aminoCdc.MustMarshalBinaryBare(ev))))
+	// uncomment when evidence is migrated to proto
+	//	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.aminoCdc.MustMarshalBinaryBare(ev))))
 	suite.Require().Equal(ev.GetHeight(), int64(height))
 }
 
@@ -188,9 +188,14 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header1.Height, 1, tmproto.PrecommitType, altValSet)
-				var err error
-				ev.Header1.Commit, err = tmtypes.MakeCommit(ev.Header1.Commit.BlockID, ev.Header2.Height, ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(ev.Header1.GetHeight()), 1, tmproto.PrecommitType, altValSet)
+				blockID, err := tmtypes.BlockIDFromProto(&ev.Header1.Commit.BlockID)
+				if err != nil {
+					return err
+				}
+
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(ev.Header2.GetHeight()), ev.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header1.Commit = tmCommit.ToProto()
 				return err
 			},
 			false,
@@ -205,9 +210,14 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, ev.Header2.Height, 1, tmproto.PrecommitType, altValSet)
-				var err error
-				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(ev.Header2.GetHeight()), 1, tmproto.PrecommitType, altValSet)
+				blockID, err := tmtypes.BlockIDFromProto(&ev.Header2.Commit.BlockID)
+				if err != nil {
+					return err
+				}
+
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(ev.Header2.GetHeight()), ev.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				ev.Header2.Commit = tmCommit.ToProto()
 				return err
 			},
 			false,
@@ -221,7 +231,8 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 				ClientID: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error {
-				ev.Header2.Commit.BlockID = ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				tmBlockID := ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				ev.Header2.Commit.BlockID = tmBlockID.ToProto()
 				return nil
 			},
 			false,

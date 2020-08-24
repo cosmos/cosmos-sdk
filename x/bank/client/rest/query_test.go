@@ -187,9 +187,6 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequestWithHeaders(tc.url, tc.headers)
-			// debug
-			fmt.Println("url", tc.url)
-			fmt.Println("resp", string(resp))
 			s.Require().NoError(err)
 
 			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))

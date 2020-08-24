@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 				),
 			},
 		},
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(50))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			},
 		},
 		{

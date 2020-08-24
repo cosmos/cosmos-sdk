@@ -27,6 +27,16 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	if err != nil {
 		return err
 	}
+
+	// parse height header
+	md, _ := metadata.FromOutgoingContext(grpcCtx)
+	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
+		height, err := strconv.ParseInt(heights[0], 10, 64)
+		if err == nil {
+			ctx = ctx.WithHeight(height)
+		}
+	}
+
 	req := abci.RequestQuery{
 		Path: method,
 		Data: reqBz,
@@ -47,7 +57,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {

@@ -41,8 +41,8 @@ func createTestCodec() *codec.LegacyAmino {
 func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
+	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db, 0)
+	cms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db, 0)
 	err := cms.LoadLatestVersion()
 	if err != nil {
 		panic(err)

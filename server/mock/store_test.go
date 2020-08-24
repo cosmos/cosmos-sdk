@@ -15,7 +15,7 @@ func TestStore(t *testing.T) {
 	cms := NewCommitMultiStore()
 
 	key := sdk.NewKVStoreKey("test")
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db, 0)
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 

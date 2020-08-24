@@ -46,7 +46,7 @@ func (l MockLogger) With(kvs ...interface{}) log.Logger {
 func defaultContext(t *testing.T, key types.StoreKey) types.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
+	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db, 0)
 	err := cms.LoadLatestVersion()
 	require.NoError(t, err)
 	ctx := types.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())

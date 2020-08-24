@@ -70,8 +70,8 @@ func newTestInput(t *testing.T) testInput {
 	keyParams := sdk.NewKVStoreKey("params")
 	tKeyParams := sdk.NewTransientStoreKey("transient_params")
 
-	cms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tKeyParams, sdk.StoreTypeTransient, db)
+	cms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db, 0)
+	cms.MountStoreWithDB(tKeyParams, sdk.StoreTypeTransient, db, 0)
 
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)

@@ -34,7 +34,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
 	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil, 0)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, int64(0), rs.LastCommitID().Version)
@@ -51,7 +51,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 	rs := rootmulti.NewStore(db)
 	rs.SetPruning(store.PruneNothing)
 	key := sdk.NewKVStoreKey(storeKey)
-	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil, 0)
 	err := rs.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, ver, rs.LastCommitID().Version)
@@ -123,8 +123,8 @@ func TestSetLoader(t *testing.T) {
 
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			capKey := sdk.NewKVStoreKey("main")
-			app.MountStores(capKey)
-			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
+			app.MountStores(0, capKey)
+			app.MountStores(0, sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
 

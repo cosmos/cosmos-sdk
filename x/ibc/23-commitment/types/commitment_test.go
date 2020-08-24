@@ -26,7 +26,7 @@ func (suite *MerkleTestSuite) SetupTest() {
 
 	suite.storeKey = storetypes.NewKVStoreKey("iavlStoreKey")
 
-	suite.store.MountStoreWithDB(suite.storeKey, storetypes.StoreTypeIAVL, nil)
+	suite.store.MountStoreWithDB(suite.storeKey, storetypes.StoreTypeIAVL, nil, 0)
 	suite.store.LoadVersion(0)
 
 	suite.iavlStore = suite.store.GetCommitStore(suite.storeKey).(*iavl.Store)

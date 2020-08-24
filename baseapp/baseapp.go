@@ -155,20 +155,20 @@ func (app *BaseApp) Logger() log.Logger {
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
-func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
+func (app *BaseApp) MountStores(initialVersion int64, keys ...sdk.StoreKey) {
 	for _, key := range keys {
 		switch key.(type) {
 		case *sdk.KVStoreKey:
 			if !app.fauxMerkleMode {
-				app.MountStore(key, sdk.StoreTypeIAVL)
+				app.MountStore(key, sdk.StoreTypeIAVL, initialVersion)
 			} else {
 				// StoreTypeDB doesn't do anything upon commit, and it doesn't
 				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, sdk.StoreTypeDB)
+				app.MountStore(key, sdk.StoreTypeDB, 0)
 			}
 
 		case *sdk.TransientStoreKey:
-			app.MountStore(key, sdk.StoreTypeTransient)
+			app.MountStore(key, sdk.StoreTypeTransient, 0)
 
 		default:
 			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
@@ -178,14 +178,14 @@ func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 
 // MountKVStores mounts all IAVL or DB stores to the provided keys in the
 // BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
+func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey, initialVersion int64) {
 	for _, key := range keys {
 		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL)
+			app.MountStore(key, sdk.StoreTypeIAVL, initialVersion)
 		} else {
 			// StoreTypeDB doesn't do anything upon commit, and it doesn't
 			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB)
+			app.MountStore(key, sdk.StoreTypeDB, 0)
 		}
 	}
 }
@@ -194,7 +194,7 @@ func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
 // the BaseApp multistore.
 func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
+		app.MountStore(key, sdk.StoreTypeTransient, 0)
 	}
 }
 
@@ -202,20 +202,14 @@ func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey)
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
 	for _, memKey := range keys {
-		app.MountStore(memKey, sdk.StoreTypeMemory)
+		app.MountStore(memKey, sdk.StoreTypeMemory, 0)
 	}
-}
-
-// MountStoreWithDB mounts a store to the provided key in the BaseApp
-// multistore, using a specified DB.
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
-	app.cms.MountStoreWithDB(key, typ, db)
 }
 
 // MountStore mounts a store to the provided key in the BaseApp multistore,
 // using the default DB.
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, nil)
+func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType, initialVersion int64) {
+	app.cms.MountStoreWithDB(key, typ, nil, initialVersion)
 }
 
 // LoadLatestVersion loads the latest application version. It will panic if

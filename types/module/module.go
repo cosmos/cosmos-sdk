@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gogo/protobuf/grpc"
 
@@ -296,6 +297,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, genesisD
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
 		if len(moduleValUpdates) > 0 {
+			fmt.Println("InitGenesis moduleName=", moduleName, "moduleValUpdates=", moduleValUpdates)
 			if len(validatorUpdates) > 0 {
 				panic("validator InitGenesis updates already set by a previous module")
 			}

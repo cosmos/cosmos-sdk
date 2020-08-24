@@ -77,7 +77,7 @@ func (suite *MsgTestSuite) SetupTest() {
 	store := rootmulti.NewStore(db)
 	storeKey := storetypes.NewKVStoreKey("iavlStoreKey")
 
-	store.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil, 0)
 	store.LoadVersion(0)
 	iavlStore := store.GetCommitStore(storeKey).(*iavl.Store)
 

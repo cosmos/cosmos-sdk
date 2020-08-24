@@ -17,7 +17,7 @@ import (
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db)
-	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db, 0)
 }
 
 func TestGetCommitKVStore(t *testing.T) {
@@ -45,12 +45,12 @@ func TestStoreMount(t *testing.T) {
 	key2 := types.NewKVStoreKey("store2")
 	dup1 := types.NewKVStoreKey("store1")
 
-	require.NotPanics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
-	require.NotPanics(t, func() { store.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
+	require.NotPanics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db, 0) })
+	require.NotPanics(t, func() { store.MountStoreWithDB(key2, types.StoreTypeIAVL, db, 0) })
 
-	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
-	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db) })
-	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
+	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db, 0) })
+	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db, 0) })
+	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db, 0) })
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
@@ -512,9 +512,9 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
-	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil, 0)
+	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil, 0)
+	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil, 0)
 
 	return store
 }
@@ -523,9 +523,9 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions
 	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
-	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil, 0)
+	store.MountStoreWithDB(types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil, 0)
+	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil, 0)
 
 	upgrades := &types.StoreUpgrades{
 		Renamed: []types.StoreRename{{

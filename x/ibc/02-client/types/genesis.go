@@ -88,7 +88,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
-		CreateLocalhost:  false,
+		CreateLocalhost:  true,
 	}
 }
 

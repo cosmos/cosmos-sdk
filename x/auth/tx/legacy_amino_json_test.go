@@ -25,7 +25,7 @@ var (
 	timeout = uint64(10)
 )
 
-func buildTx(t *testing.T, bldr *builder) {
+func buildTx(t *testing.T, bldr *wrapper) {
 	bldr.SetFeeAmount(coins)
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)
@@ -46,9 +46,9 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	handler := signModeLegacyAminoJSONHandler{}
 	signingData := signing.SignerData{
-		ChainID:         chainId,
-		AccountNumber:   accNum,
-		AccountSequence: seqNum,
+		ChainID:       chainId,
+		AccountNumber: accNum,
+		Sequence:      seqNum,
 	}
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)

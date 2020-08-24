@@ -32,9 +32,9 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmEvidence, ok := misbehaviour.(Evidence)
+	tmEvidence, ok := misbehaviour.(*Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, Evidence{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Evidence{})
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour

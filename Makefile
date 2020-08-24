@@ -312,7 +312,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen
 
 proto-gen:
 	@./scripts/protocgen.sh
@@ -320,6 +320,9 @@ proto-gen:
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@./scripts/protocgen-any.sh
+
+proto-swagger-gen:
+	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
 	@buf check lint --error-format=json

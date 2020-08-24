@@ -118,6 +118,7 @@ endif
 ifeq (, $(shell which protoc-gen-swagger))
 	@echo "Installing protoc-gen-swagger..."
 	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	@npm install -g swagger-combine
 else
 	@echo "protoc-gen-grpc-gateway already installed; skipping..."
 endif

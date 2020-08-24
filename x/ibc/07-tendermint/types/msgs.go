@@ -15,13 +15,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// Message types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-)
-
 var (
 	_ clientexported.MsgCreateClient     = (*MsgCreateClient)(nil)
 	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
@@ -79,7 +72,7 @@ func (msg MsgCreateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgCreateClient) Type() string {
-	return TypeMsgCreateClient
+	return clientexported.TypeMsgCreateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -189,7 +182,7 @@ func (msg MsgUpdateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgUpdateClient) Type() string {
-	return TypeMsgUpdateClient
+	return clientexported.TypeMsgUpdateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -243,7 +236,7 @@ func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string {
-	return TypeMsgSubmitClientMisbehaviour
+	return clientexported.TypeMsgSubmitClientMisbehaviour
 }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.

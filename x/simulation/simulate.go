@@ -44,9 +44,14 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 // TODO: split this monster function up
 func SimulateFromSeed(
-	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn, ops WeightedOperations,
-	blackListedAccs map[string]bool, config simulation.Config,
+	tb testing.TB,
+	w io.Writer,
+	app *baseapp.BaseApp,
+	appStateFn simulation.AppStateFn,
+	randAccFn simulation.RandomAccountFn,
+	ops WeightedOperations,
+	blackListedAccs map[string]bool,
+	config simulation.Config,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)
@@ -57,7 +62,7 @@ func SimulateFromSeed(
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := simulation.RandomAccounts(r, params.NumKeys())
+	accs := randAccFn(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since

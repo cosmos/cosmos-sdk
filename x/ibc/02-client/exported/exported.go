@@ -158,6 +158,13 @@ type Header interface {
 	UnmarshalBinaryBare([]byte) (Header, error)
 }
 
+// message types for the IBC client
+const (
+	TypeMsgCreateClient             string = "create_client"
+	TypeMsgUpdateClient             string = "update_client"
+	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
+)
+
 // MsgCreateClient defines the msg interface that the
 // CreateClient Handler expects
 type MsgCreateClient interface {
@@ -181,14 +188,16 @@ type ClientType byte
 
 // available client types
 const (
-	Tendermint ClientType = iota + 1 // 1
-	Localhost
+	SoloMachine ClientType = 6
+	Tendermint  ClientType = 7
+	Localhost   ClientType = 9
 )
 
 // string representation of the client types
 const (
-	ClientTypeTendermint string = "tendermint"
-	ClientTypeLocalHost  string = "localhost"
+	ClientTypeSoloMachine string = "solomachine"
+	ClientTypeTendermint  string = "tendermint"
+	ClientTypeLocalHost   string = "localhost"
 )
 
 func (ct ClientType) String() string {

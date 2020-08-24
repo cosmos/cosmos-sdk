@@ -3,16 +3,18 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
-// NewTxCmd returns a root CLI command handler for all x/ibc/07-tendermint transaction commands.
+// NewTxCmd returns a root CLI command handler for all solo machine transaction commands.
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.SubModuleName,
-		Short:                      "Tendermint client transaction subcommands",
+		Short:                      "Solo Machine transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(

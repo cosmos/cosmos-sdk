@@ -51,7 +51,7 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	txs, err := formatTxResults(clientCtx, resTxs.Txs, resBlocks)
+	txs, err := formatTxResults(clientCtx.TxConfig, resTxs.Txs, resBlocks)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	out, err := formatTxResult(clientCtx, resTx, resBlocks[resTx.Height])
+	out, err := formatTxResult(clientCtx.TxConfig, resTx, resBlocks[resTx.Height])
 	if err != nil {
 		return out, err
 	}
@@ -95,11 +95,11 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 }
 
 // formatTxResults parses the indexed txs into a slice of TxResponse objects.
-func formatTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]*sdk.TxResponse, error) {
+func formatTxResults(txConfig client.TxConfig, resTxs []*ctypes.ResultTx, resBlocks map[int64]*ctypes.ResultBlock) ([]*sdk.TxResponse, error) {
 	var err error
 	out := make([]*sdk.TxResponse, len(resTxs))
 	for i := range resTxs {
-		out[i], err = formatTxResult(clientCtx, resTxs[i], resBlocks[resTxs[i].Height])
+		out[i], err = formatTxResult(txConfig, resTxs[i], resBlocks[resTxs[i].Height])
 		if err != nil {
 			return nil, err
 		}
@@ -130,8 +130,8 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 	return resBlocks, nil
 }
 
-func formatTxResult(clientCtx client.Context, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
-	tx, err := parseTx(clientCtx, resTx.Tx)
+func formatTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
+	tx, err := parseTx(txConfig, resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,10 +139,10 @@ func formatTxResult(clientCtx client.Context, resTx *ctypes.ResultTx, resBlock *
 	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(clientCtx client.Context, txBytes []byte) (sdk.Tx, error) {
+func parseTx(txConfig client.TxConfig, txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
-	tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+	tx, err := txConfig.TxDecoder()(txBytes)
 	if err != nil {
 		return nil, err
 	}

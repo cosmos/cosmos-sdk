@@ -190,11 +190,17 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 }
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
+	// create client for tendermint so we can use consensus state for verification
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientState := suite.chainA.GetClientState(clientA)
+	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+	suite.Require().True(found)
+
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, suite.solomachine.ConsensusState())
+	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, consensusState)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -295,7 +301,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			}
 
 			err := tc.clientState.VerifyClientConsensusState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, tc.clientState.ConsensusState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 			)
 
 			if tc.expPass {

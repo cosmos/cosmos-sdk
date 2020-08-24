@@ -75,7 +75,7 @@ func ConsensusStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-	consensusState *ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) ([]byte, error) {
 	bz, err := codec.MarshalAny(cdc, consensusState)
 	if err != nil {

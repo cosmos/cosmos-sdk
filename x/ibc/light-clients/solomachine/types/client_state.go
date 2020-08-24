@@ -99,17 +99,17 @@ func (cs ClientState) VerifyClientState(
 }
 
 // VerifyClientConsensusState verifies a proof of the consensus state of the
-// Solo Machine client stored on the target machine.
+// running chain stored on the solo machine.
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	root commitmentexported.Root,
+	_ commitmentexported.Root,
 	sequence uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
-	_ clientexported.ConsensusState,
+	consensusState clientexported.ConsensusState,
 ) error {
 	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
@@ -122,7 +122,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, cs.ConsensusState)
+	data, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, consensusState)
 	if err != nil {
 		return err
 	}
@@ -400,9 +400,6 @@ func produceVerificationArgs(
 
 // sets the client state to the store
 func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState clientexported.ClientState) {
-	bz, err := codec.MarshalAny(cdc, clientState)
-	if err != nil {
-		panic(err)
-	}
+	bz := clienttypes.MustMarshalClientState(cdc, clientState)
 	store.Set(host.KeyClientState(), bz)
 }

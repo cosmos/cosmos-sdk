@@ -35,17 +35,17 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			types.NewClientState("", &types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}),
+			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}),
 			false,
 		},
 		{
 			"timstamp is zero",
-			types.NewClientState("", &types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, 0}),
+			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, 0}),
 			false,
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState("", &types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Time}),
+			types.NewClientState(&types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Time}),
 			false,
 		},
 	}
@@ -112,21 +112,21 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState("", nil),
+			types.NewClientState(nil),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState("",
+			types.NewClientState(
 				&types.ConsensusState{
 					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
@@ -138,7 +138,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState("",
+			types.NewClientState(
 				&types.ConsensusState{
 					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
@@ -231,21 +231,21 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState("", nil),
+			types.NewClientState(nil),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState("",
+			types.NewClientState(
 				&types.ConsensusState{
 					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
@@ -257,7 +257,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState("",
+			types.NewClientState(
 				&types.ConsensusState{
 					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
@@ -352,7 +352,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -435,7 +435,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -515,7 +515,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -595,7 +595,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -674,7 +674,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -754,7 +754,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{"", 1, suite.solomachine.ConsensusState()},
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,

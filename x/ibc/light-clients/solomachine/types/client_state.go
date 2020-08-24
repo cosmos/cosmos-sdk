@@ -18,9 +18,8 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(chainID string, consensusState *ConsensusState) *ClientState {
+func NewClientState(consensusState *ConsensusState) *ClientState {
 	return &ClientState{
-		ChainId:        chainID,
 		FrozenHeight:   0,
 		ConsensusState: consensusState,
 	}
@@ -28,7 +27,7 @@ func NewClientState(chainID string, consensusState *ConsensusState) *ClientState
 
 // GetChainID returns an empty string.
 func (cs ClientState) GetChainID() string {
-	return cs.ChainId
+	return ""
 }
 
 // ClientType is Solo Machine.

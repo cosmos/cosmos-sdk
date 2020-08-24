@@ -68,7 +68,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 
 // InitializeFromMsg creates a solo machine client state from a MsgCreateClient
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
-	return NewClientState("", msg.ConsensusState)
+	return NewClientState(msg.ConsensusState)
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance

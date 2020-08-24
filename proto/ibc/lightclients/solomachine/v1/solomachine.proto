@@ -10,11 +10,9 @@ import "gogoproto/gogo.proto";
 // state and if the client is frozen.
 message ClientState {
   option (gogoproto.goproto_getters) = false;
-  // chainID for the connected solo machine
-  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // frozen height of the solo machine
-  uint64 frozen_height = 2 [(gogoproto.moretags) = "yaml:\"frozen_height\""];
-  ConsensusState consensus_state = 3
+  uint64 frozen_height = 1 [(gogoproto.moretags) = "yaml:\"frozen_height\""];
+  ConsensusState consensus_state = 2
       [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
@@ -71,8 +69,7 @@ message TimestampedSignature {
 message MsgCreateClient {
   option (gogoproto.goproto_getters) = false;
   string         client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string         chain_id  = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  ConsensusState consensus_state = 3
+  ConsensusState consensus_state = 2
       [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 

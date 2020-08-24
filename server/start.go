@@ -48,6 +48,7 @@ const (
 	FlagPruningKeepRecent = "pruning-keep-recent"
 	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
+	FlagIndexEvents       = "index-events"
 )
 
 // GRPC-related flags.

@@ -443,7 +443,7 @@ func GetRequestWithHeaders(url string, headers map[string]string) ([]byte, error
 		req.Header.Set(key, value)
 	}
 
-	res, err := client.Do(req) // nolint:gosec
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -18,8 +18,8 @@ func TestPubKeyEquals(t *testing.T) {
 	ed25519PubKey := ed25519.GenPrivKey().PubKey().(ed25519.PubKey)
 	ed25519PbPubKey := &keys.Ed25519PubKey{Key: ed25519PubKey}
 
-	secp256k1PubKey := secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)
-	secp256k1PbPubKey := &keys.Secp256K1PubKey{Key: secp256k1PubKey}
+	secp256K1PubKey := secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)
+	secp256K1PbPubKey := &keys.Secp256K1PubKey{Key: secp256K1PubKey}
 
 	testCases := []struct {
 		msg      string
@@ -113,7 +113,7 @@ func TestPubKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb different types",
-			secp256k1PbPubKey,
+			secp256K1PbPubKey,
 			&keys.Sr25519PubKey{
 				Key: sr25519.GenPrivKey().PubKey().(sr25519.PubKey),
 			},
@@ -121,7 +121,7 @@ func TestPubKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb different bytes",
-			secp256k1PbPubKey,
+			secp256K1PbPubKey,
 			&keys.Secp256K1PubKey{
 				Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey),
 			},
@@ -129,28 +129,28 @@ func TestPubKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb equals",
-			secp256k1PbPubKey,
+			secp256K1PbPubKey,
 			&keys.Secp256K1PubKey{
-				Key: secp256k1PubKey,
+				Key: secp256K1PubKey,
 			},
 			true,
 		},
 		{
 			"secp256k1 different types",
-			secp256k1PbPubKey,
+			secp256K1PbPubKey,
 			sr25519.GenPrivKey().PubKey(),
 			false,
 		},
 		{
 			"secp256k1 different bytes",
-			secp256k1PbPubKey,
+			secp256K1PbPubKey,
 			secp256k1.GenPrivKey().PubKey(),
 			false,
 		},
 		{
 			"secp256k1 equals",
-			secp256k1PbPubKey,
-			secp256k1PubKey,
+			secp256K1PbPubKey,
+			secp256K1PubKey,
 			true,
 		},
 	}
@@ -170,8 +170,8 @@ func TestPrivKeyEquals(t *testing.T) {
 	ed25519PrivKey := ed25519.GenPrivKey()
 	ed25519PbPrivKey := &keys.Ed25519PrivKey{Key: ed25519PrivKey}
 
-	secp256k1PrivKey := secp256k1.GenPrivKey()
-	secp256k1PbPrivKey := &keys.Secp256K1PrivKey{Key: secp256k1PrivKey}
+	secp256K1PrivKey := secp256k1.GenPrivKey()
+	secp256K1PbPrivKey := &keys.Secp256K1PrivKey{Key: secp256K1PrivKey}
 
 	testCases := []struct {
 		msg      string
@@ -265,7 +265,7 @@ func TestPrivKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb different types",
-			secp256k1PbPrivKey,
+			secp256K1PbPrivKey,
 			&keys.Sr25519PrivKey{
 				Key: sr25519.GenPrivKey(),
 			},
@@ -273,7 +273,7 @@ func TestPrivKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb different bytes",
-			secp256k1PbPrivKey,
+			secp256K1PbPrivKey,
 			&keys.Secp256K1PrivKey{
 				Key: secp256k1.GenPrivKey(),
 			},
@@ -281,28 +281,28 @@ func TestPrivKeyEquals(t *testing.T) {
 		},
 		{
 			"secp256k1 pb equals",
-			secp256k1PbPrivKey,
+			secp256K1PbPrivKey,
 			&keys.Secp256K1PrivKey{
-				Key: secp256k1PrivKey,
+				Key: secp256K1PrivKey,
 			},
 			true,
 		},
 		{
 			"secp256k1 different types",
-			secp256k1PbPrivKey,
+			secp256K1PbPrivKey,
 			sr25519.GenPrivKey(),
 			false,
 		},
 		{
 			"secp256k1 different bytes",
-			secp256k1PbPrivKey,
+			secp256K1PbPrivKey,
 			secp256k1.GenPrivKey(),
 			false,
 		},
 		{
 			"secp256k1 equals",
-			secp256k1PbPrivKey,
-			secp256k1PrivKey,
+			secp256K1PbPrivKey,
+			secp256K1PrivKey,
 			true,
 		},
 	}

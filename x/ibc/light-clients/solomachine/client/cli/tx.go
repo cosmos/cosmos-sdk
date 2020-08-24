@@ -116,19 +116,19 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var ev types.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
+			var m types.Misbehaviour
+			if err := cdc.UnmarshalJSON([]byte(args[0]), &m); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &ev); err != nil {
+				if err := cdc.UnmarshalJSON(contents, &m); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
+			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -80,9 +80,9 @@ func (solo *Solomachine) CreateHeader() solomachinetypes.Header {
 	return header
 }
 
-// CreateEvidence constructs testing evidence for the solo machine client
+// CreateMisbehaviour constructs testing evidence for the solo machine client
 // by signing over two different data bytes at the same sequence.
-func (solo *Solomachine) CreateEvidence() solomachinetypes.Evidence {
+func (solo *Solomachine) CreateMisbehaviour() solomachinetypes.Misbehaviour {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
@@ -102,7 +102,7 @@ func (solo *Solomachine) CreateEvidence() solomachinetypes.Evidence {
 		Data:      dataTwo,
 	}
 
-	return solomachinetypes.Evidence{
+	return solomachinetypes.Misbehaviour{
 		ClientId:     solo.ClientID,
 		Sequence:     solo.Sequence,
 		SignatureOne: &signatureOne,

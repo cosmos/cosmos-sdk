@@ -14,7 +14,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(ClientState{}, "ibc/client/tendermint/ClientState", nil)
 	cdc.RegisterConcrete(ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(Header{}, "ibc/client/tendermint/Header", nil)
-	cdc.RegisterConcrete(Evidence{}, "ibc/client/tendermint/Evidence", nil)
+	cdc.RegisterConcrete(Misbehaviour{}, "ibc/client/tendermint/Misbehaviour", nil)
 	cdc.RegisterConcrete(&MsgCreateClient{}, "ibc/client/tendermint/MsgCreateClient", nil)
 	cdc.RegisterConcrete(&MsgUpdateClient{}, "ibc/client/tendermint/MsgUpdateClient", nil)
 	cdc.RegisterConcrete(&MsgSubmitClientMisbehaviour{}, "ibc/client/tendermint/MsgSubmitClientMisbehaviour", nil)
@@ -33,7 +33,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations(
 		(*evidenceexported.Evidence)(nil),
-		&Evidence{},
+		&Misbehaviour{},
 	)
 }
 

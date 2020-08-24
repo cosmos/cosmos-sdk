@@ -16,7 +16,7 @@ var (
 	ErrInvalidClientType                      = sdkerrors.Register(SubModuleName, 9, "invalid client type")
 	ErrRootNotFound                           = sdkerrors.Register(SubModuleName, 10, "commitment root not found")
 	ErrInvalidHeader                          = sdkerrors.Register(SubModuleName, 11, "invalid client header")
-	ErrInvalidEvidence                        = sdkerrors.Register(SubModuleName, 12, "invalid light client misbehaviour evidence")
+	ErrInvalidMisbehaviour                    = sdkerrors.Register(SubModuleName, 12, "invalid light client misbehaviour evidence")
 	ErrFailedClientStateVerification          = sdkerrors.Register(SubModuleName, 13, "client state verification failed")
 	ErrFailedClientConsensusStateVerification = sdkerrors.Register(SubModuleName, 14, "client consensus state verification failed")
 	ErrFailedConnectionStateVerification      = sdkerrors.Register(SubModuleName, 15, "connection state verification failed")

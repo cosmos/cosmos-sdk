@@ -81,7 +81,7 @@ func (m *Secp256K1PrivKey) Sign(msg []byte) ([]byte, error) {
 }
 
 func (m *Secp256K1PrivKey) PubKey() crypto.PubKey {
-	return &Secp256K1PubKey{Key: m.PubKey().(secp256k1.PubKey)}
+	return &Secp256K1PubKey{Key: m.Key.PubKey().(secp256k1.PubKey)}
 }
 
 func (m *Secp256K1PrivKey) Equals(key crypto.PrivKey) bool {
@@ -101,7 +101,7 @@ func (m *Sr25519PrivKey) Sign(msg []byte) ([]byte, error) {
 }
 
 func (m *Sr25519PrivKey) PubKey() crypto.PubKey {
-	return &Sr25519PubKey{Key: m.PubKey().(sr25519.PubKey)}
+	return &Sr25519PubKey{Key: m.Key.PubKey().(sr25519.PubKey)}
 }
 
 func (m *Sr25519PrivKey) Equals(key crypto.PrivKey) bool {
@@ -121,7 +121,7 @@ func (m *Ed25519PrivKey) Sign(msg []byte) ([]byte, error) {
 }
 
 func (m *Ed25519PrivKey) PubKey() crypto.PubKey {
-	return &Ed25519PubKey{Key: m.PubKey().(ed25519.PubKey)}
+	return &Ed25519PubKey{Key: m.Key.PubKey().(ed25519.PubKey)}
 }
 
 func (m *Ed25519PrivKey) Equals(key crypto.PrivKey) bool {

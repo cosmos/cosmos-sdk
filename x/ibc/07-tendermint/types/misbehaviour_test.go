@@ -87,11 +87,11 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"consensus state's valset hash different from evidence should still pass",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, suite.valsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, suite.valsHash),
+			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, suite.valsHash),
+			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, suite.valsHash),
 			types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
 				ChainID:  chainID,
 				ClientID: chainID,
 			},
@@ -280,11 +280,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case: %s", tc.name), func() {
-
-			if i != 10 {
-				return
-			}
-
 			// reset suite to create fresh application state
 			suite.SetupTest()
 

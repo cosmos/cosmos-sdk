@@ -53,6 +53,44 @@ func init() {
 	amino.Seal()
 }
 
+// PackClientState constructs a new Any packed with the given client state value. It returns
+// an error if the client state can't be casted to a protobuf message or if the concrete
+// implemention is not registered to the protobuf codec.
+func PackClientState(clientState exported.ClientState) (*codectypes.Any, error) {
+	msg, ok := clientState.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", clientState)
+	}
+
+	anyClientState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyClientState, nil
+}
+
+// MustPackClientState calls PackClientState and panics on error.
+func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
+	anyClientState, err := PackClientState(clientState)
+	if err != nil {
+		panic(err)
+	}
+
+	return anyClientState
+}
+
+// UnpackClientState unpacks an Any into a ClientState. It returns an error if the
+// client state can't be unpacked into a ClientState.
+func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
+	clientState, ok := any.GetCachedValue().(exported.ClientState)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into ClientState %T", any)
+	}
+
+	return clientState, nil
+}
+
 // PackConsensusState constructs a new Any packed with the given consensus state value. It returns
 // an error if the consensus state can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.

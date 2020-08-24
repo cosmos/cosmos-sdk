@@ -3,36 +3,19 @@ package ibc.client;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 
+import "ibc/client/client.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-
-// GenesisClientState defines an identified ClientState as protobuf Any format.
-message GenesisClientState {
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
-  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
-}
-
-// ClientConsensusStates defines all the stored consensus states for a given client.
-message ClientConsensusStates {
-  string client_id = 1;
-  repeated google.protobuf.Any consensus_states = 2 [
-    (gogoproto.moretags) = "yaml:\"consensus_states\""
-  ];
-}
 
 // GenesisState defines the ibc client submodule's genesis state.
 message GenesisState {
-  repeated GenesisClientState clients = 1 [
-    (gogoproto.nullable) = false
-  ];
+  // client states with their corresponding identifiers
+  repeated IdentifiedClientState clients = 1 [(gogoproto.nullable) = false];
+  // consensus states from each client
   repeated ClientConsensusStates clients_consensus = 2 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "ClientsConsensusStates",
-    (gogoproto.moretags) = "yaml:\"clients_consensus\""
+    (gogoproto.moretags)     = "yaml:\"clients_consensus\""
   ];
-  bool create_localhost = 3 [
-    (gogoproto.moretags) = "yaml:\"create_localhost\""
-  ];
+  // create localhost on initialization
+  bool create_localhost = 3 [(gogoproto.moretags) = "yaml:\"create_localhost\""];
 }

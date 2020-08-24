@@ -35,7 +35,7 @@ func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
 	return params.SendEnabled
 }
 
-// RandomGenesisAccounts returns a slice of account balances. Each account has
+// RandomGenesisBalances returns a slice of account balances. Each account has
 // a balance of simState.InitialStake for sdk.DefaultBondDenom.
 func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	genesisBalances := []types.Balance{}

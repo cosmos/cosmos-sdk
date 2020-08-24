@@ -35,11 +35,9 @@ message GenesisState {
 // next send and receive sequences.
 message PacketSequence {
   string port_id = 1 [
-    (gogoproto.customname) = "PortID",
     (gogoproto.moretags) = "yaml:\"port_id\""
   ];
   string channel_id = 2 [
-    (gogoproto.customname) = "ChannelID",
     (gogoproto.moretags) = "yaml:\"channel_id\""
   ];
   uint64 sequence = 3;

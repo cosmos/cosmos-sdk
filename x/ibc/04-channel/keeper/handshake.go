@@ -111,8 +111,8 @@ func (k Keeper) ChanOpenTry(
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
 	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
-		previousChannel.Counterparty.PortID == counterparty.PortID &&
-		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
+		previousChannel.Counterparty.PortId == counterparty.PortId &&
+		previousChannel.Counterparty.ChannelId == counterparty.ChannelId &&
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
@@ -170,7 +170,7 @@ func (k Keeper) ChanOpenTry(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		counterparty.PortID, counterparty.ChannelID, expectedChannel,
+		counterparty.PortId, counterparty.ChannelId, expectedChannel,
 	); err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (k Keeper) ChanOpenAck(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -311,7 +311,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -419,7 +419,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err

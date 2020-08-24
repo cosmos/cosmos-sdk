@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -98,6 +98,10 @@ type BaseApp struct { // nolint: maligned
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
+
+	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	indexEvents map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -257,7 +261,7 @@ func (app *BaseApp) init() error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(abci.Header{})
+	app.setCheckState(tmproto.Header{})
 	app.Seal()
 
 	return nil
@@ -281,6 +285,14 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 
 func (app *BaseApp) setTrace(trace bool) {
 	app.trace = trace
+}
+
+func (app *BaseApp) setIndexEvents(ie []string) {
+	app.indexEvents = make(map[string]struct{})
+
+	for _, e := range ie {
+		app.indexEvents[e] = struct{}{}
+	}
 }
 
 // Router returns the router of the BaseApp.
@@ -307,7 +319,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
-func (app *BaseApp) setCheckState(header abci.Header) {
+func (app *BaseApp) setCheckState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
@@ -319,7 +331,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
-func (app *BaseApp) setDeliverState(header abci.Header) {
+func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
@@ -344,14 +356,14 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep abci.EvidenceParams
+		var ep tmproto.EvidenceParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
 		cp.Evidence = &ep
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp abci.ValidatorParams
+		var vp tmproto.ValidatorParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
 		cp.Validator = &vp
@@ -610,7 +622,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
-	txData := &sdk.TxData{
+	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
@@ -644,11 +656,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txData.Data = append(txData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
-	data, err := proto.Marshal(txData)
+	data, err := proto.Marshal(txMsgData)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}

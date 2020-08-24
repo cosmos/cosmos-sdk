@@ -9,10 +9,8 @@ import (
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
-
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -49,13 +47,13 @@ func NewCreateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus header file")
 				}
 			}
@@ -68,7 +66,7 @@ func NewCreateClientCmd() *cobra.Command {
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = ibctmtypes.NewFractionFromTm(lite.DefaultTrustLevel)
+				trustLevel = ibctmtypes.NewFractionFromTm(light.DefaultTrustLevel)
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {
@@ -94,13 +92,13 @@ func NewCreateClientCmd() *cobra.Command {
 			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
-			} else if err := clientCtx.Codec.UnmarshalJSON([]byte(spc), &specs); err != nil {
+			} else if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(spc), &specs); err != nil {
 				// check for file path if JSON input not provided
 				contents, err := ioutil.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &specs); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &specs); err != nil {
 					return errors.Wrap(err, "error unmarshalling proof specs file")
 				}
 			}
@@ -146,13 +144,13 @@ func NewUpdateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			var header ibctmtypes.Header
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &header); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -192,13 +190,13 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			}
 
 			var ev evidenceexported.Evidence
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
+			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := clientCtx.Codec.UnmarshalJSON(contents, &ev); err != nil {
+				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &ev); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}

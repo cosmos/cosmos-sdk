@@ -35,7 +35,7 @@ func RandomGenesisSendParams(r *rand.Rand) types.SendEnabledParams {
 	return params.SendEnabled
 }
 
-// RandomGenesisAccounts returns a slice of account balances. Each account has
+// RandomGenesisBalances returns a slice of account balances. Each account has
 // a balance of simState.InitialStake for sdk.DefaultBondDenom.
 func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	genesisBalances := []types.Balance{}
@@ -77,6 +77,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Supply:   supply,
 	}
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, bankGenesis.Params))
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, &bankGenesis.Params))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&bankGenesis)
 }

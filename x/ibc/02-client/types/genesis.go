@@ -4,47 +4,17 @@ import (
 	"fmt"
 	"sort"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
-	_ codectypes.UnpackInterfacesMessage = GenesisClientState{}
+	_ codectypes.UnpackInterfacesMessage = IdentifiedClientState{}
 	_ codectypes.UnpackInterfacesMessage = ClientsConsensusStates{}
 	_ codectypes.UnpackInterfacesMessage = ClientConsensusStates{}
 	_ codectypes.UnpackInterfacesMessage = GenesisState{}
 )
-
-// NewGenesisClientState creates a new GenesisClientState instance.
-func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
-	msg, ok := clientState.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("cannot proto marshal %T", clientState))
-	}
-
-	anyClientState, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return GenesisClientState{
-		ClientID:    clientID,
-		ClientState: anyClientState,
-	}
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs GenesisClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(gs.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 var _ sort.Interface = ClientsConsensusStates{}
 
@@ -55,7 +25,7 @@ type ClientsConsensusStates []ClientConsensusStates
 func (ccs ClientsConsensusStates) Len() int { return len(ccs) }
 
 // Less implements sort.Interface
-func (ccs ClientsConsensusStates) Less(i, j int) bool { return ccs[i].ClientID < ccs[j].ClientID }
+func (ccs ClientsConsensusStates) Less(i, j int) bool { return ccs[i].ClientId < ccs[j].ClientId }
 
 // Swap implements sort.Interface
 func (ccs ClientsConsensusStates) Swap(i, j int) { ccs[i], ccs[j] = ccs[j], ccs[i] }
@@ -85,7 +55,7 @@ func NewClientConsensusStates(clientID string, consensusStates []exported.Consen
 	}
 
 	return ClientConsensusStates{
-		ClientID:        clientID,
+		ClientId:        clientID,
 		ConsensusStates: anyConsensusStates,
 	}
 }
@@ -104,7 +74,7 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []GenesisClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
@@ -116,7 +86,7 @@ func NewGenesisState(
 // DefaultGenesisState returns the ibc client submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Clients:          []GenesisClientState{},
+		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
 		CreateLocalhost:  false,
 	}
@@ -137,8 +107,8 @@ func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // failure.
 func (gs GenesisState) Validate() error {
 	for i, client := range gs.Clients {
-		if err := host.ClientIdentifierValidator(client.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientID, i, err)
+		if err := host.ClientIdentifierValidator(client.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", client.ClientId, i, err)
 		}
 
 		clientState, ok := client.ClientState.GetCachedValue().(exported.ClientState)
@@ -151,8 +121,8 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for i, cs := range gs.ClientsConsensus {
-		if err := host.ClientIdentifierValidator(cs.ClientID); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientID, i, err)
+		if err := host.ClientIdentifierValidator(cs.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientId, i, err)
 		}
 
 		for _, consensusState := range cs.ConsensusStates {

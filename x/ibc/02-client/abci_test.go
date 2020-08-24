@@ -4,28 +4,24 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 type ClientTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	coordinator *ibctesting.Coordinator
+
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 func (suite *ClientTestSuite) SetupTest() {
-	isCheckTx := false
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
-	suite.app = simapp.Setup(isCheckTx)
-	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
-
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
 func TestClientTestSuite(t *testing.T) {

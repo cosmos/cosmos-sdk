@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetSignCommand returns the sign command
@@ -101,7 +100,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
-			accnum, seq, err := types.NewAccountRetriever(clientCtx.JSONMarshaler).GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
 			if err != nil {
 				return err
 			}
@@ -117,15 +116,15 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			signingData := signing.SignerData{
-				ChainID:         txFactory.ChainID(),
-				AccountNumber:   txFactory.AccountNumber(),
-				AccountSequence: txFactory.Sequence(),
+				ChainID:       txFactory.ChainID(),
+				AccountNumber: txFactory.AccountNumber(),
+				Sequence:      txFactory.Sequence(),
 			}
 
 			for _, sig := range sigs {
 				err = signing.VerifySignature(sig.PubKey, signingData, sig.Data, txCfg.SignModeHandler(), txBuilder.GetTx())
 				if err != nil {
-					return fmt.Errorf("couldn't verify signature")
+					return fmt.Errorf("couldn't verify signature: %w", err)
 				}
 
 				if err := multisig.AddSignatureV2(multisigSig, sig, multisigPub.PubKeys); err != nil {
@@ -135,8 +134,9 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		sigV2 := signingtypes.SignatureV2{
-			PubKey: multisigPub,
-			Data:   multisigSig,
+			PubKey:   multisigPub,
+			Data:     multisigSig,
+			Sequence: txFactory.Sequence(),
 		}
 
 		err = txBuilder.SetSignatures(sigV2)

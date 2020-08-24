@@ -6,17 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +31,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -46,14 +45,12 @@ const (
 	InvalidID      = "IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
-
-	maxInt = int(^uint(0) >> 1)
 )
 
 // Default params variables used to create a TM client
 var (
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
-	TestHash                              = []byte("TESTING HASH")
+	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
@@ -70,10 +67,10 @@ type TestChain struct {
 	App           *simapp.SimApp
 	ChainID       string
 	LastHeader    ibctmtypes.Header // header for last block height committed
-	CurrentHeader abci.Header       // header for current block height
-	Querier       sdk.Querier       // TODO: deprecate once clients are migrated to gRPC
+	CurrentHeader tmproto.Header    // header for current block height
 	QueryServer   types.QueryServer
 	TxConfig      client.TxConfig
+	Codec         codec.BinaryMarshaler
 
 	Vals    *tmtypes.ValidatorSet
 	Signers []tmtypes.PrivValidator
@@ -114,10 +111,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	}
 
 	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-	legacyQuerierCdc := codec.NewAminoCodec(app.Codec())
 
 	// create current header and call begin block
-	header := abci.Header{
+	header := tmproto.Header{
 		Height: 1,
 		Time:   globalStartTime,
 	}
@@ -130,9 +126,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
-		Querier:       keeper.NewQuerier(*app.IBCKeeper, legacyQuerierCdc),
 		QueryServer:   app.IBCKeeper,
 		TxConfig:      txConfig,
+		Codec:         app.AppCodec(),
 		Vals:          valSet,
 		Signers:       signers,
 		senderPrivKey: senderPrivKey,
@@ -162,7 +158,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	})
 
 	merkleProof := commitmenttypes.MerkleProof{
-		Proof: res.Proof,
+		Proof: res.ProofOps,
 	}
 
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
@@ -172,6 +168,19 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
 	return proof, uint64(res.Height) + 1
+}
+
+// QueryClientStateProof performs and abci query for a client state
+// stored with a given clientID and returns the ClientState along with the proof
+func (chain *TestChain) QueryClientStateProof(clientID string) (clientexported.ClientState, []byte) {
+	// retrieve client state to provide proof for
+	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
+	require.True(chain.t, found)
+
+	clientKey := host.FullKeyClientPath(clientID, host.KeyClientState())
+	proofClient, _ := chain.QueryProof(clientKey)
+
+	return clientState, proofClient
 }
 
 // QueryConsensusStateProof performs an abci query for a consensus state
@@ -197,7 +206,8 @@ func (chain *TestChain) NextBlock() {
 	chain.LastHeader = chain.CreateTMClientHeader()
 
 	// increment the current header
-	chain.CurrentHeader = abci.Header{
+	chain.CurrentHeader = tmproto.Header{
+		ChainID: chain.ChainID,
 		Height:  chain.App.LastBlockHeight() + 1,
 		AppHash: chain.App.LastCommitID().Hash,
 		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
@@ -220,6 +230,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 		chain.App.BaseApp,
 		chain.GetContext().BlockHeader(),
 		msgs,
+		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
 		true, true, chain.senderPrivKey,
@@ -336,16 +347,19 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
-// CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
-// client will be created on the (target) chain.
-func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
-	// construct MsgCreateClient using counterparty
-	msg := ibctmtypes.NewMsgCreateClient(
+func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string) clientexported.MsgCreateClient {
+	return ibctmtypes.NewMsgCreateClient(
 		clientID, counterparty.LastHeader,
 		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(),
 	)
+}
 
+// CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
+// client will be created on the (target) chain.
+func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
+	// construct MsgCreateClient using counterparty
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID)
 	return chain.SendMsgs(msg)
 }
 
@@ -357,26 +371,31 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	// Relayer must query for LatestHeight on client to get TrustedHeight
 	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
 	var (
-		trustedVals *tmtypes.ValidatorSet
-		ok          bool
+		tmTrustedVals *tmtypes.ValidatorSet
+		ok            bool
 	)
 	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
 	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
 	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
-	if trustedHeight == uint64(counterparty.LastHeader.Height) {
-		trustedVals = counterparty.Vals
+	if trustedHeight == counterparty.LastHeader.GetHeight() {
+		tmTrustedVals = counterparty.Vals
 	} else {
 		// NOTE: We need to get validators from counterparty at height: trustedHeight+1
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		trustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
 		if !ok {
 			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
 	header.TrustedHeight = trustedHeight
+
+	trustedVals, err := tmTrustedVals.ToProto()
+	if err != nil {
+		return err
+	}
 	header.TrustedValidators = trustedVals
 
 	msg := ibctmtypes.NewMsgUpdateClient(
@@ -395,7 +414,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 		ChainID:            chain.ChainID,
 		Height:             chain.CurrentHeader.Height,
 		Time:               chain.CurrentHeader.Time,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), maxInt, make([]byte, tmhash.Size)),
+		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
 		LastCommitHash:     chain.App.LastCommitID().Hash,
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     vsetHash,
@@ -410,29 +429,34 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 
-	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmtypes.PrecommitType, chain.Vals)
+	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmproto.PrecommitType, chain.Vals)
 
 	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
 	require.NoError(chain.t, err)
 
-	signedHeader := tmtypes.SignedHeader{
-		Header: &tmHeader,
-		Commit: commit,
+	signedHeader := tmproto.SignedHeader{
+		Header: tmHeader.ToProto(),
+		Commit: commit.ToProto(),
+	}
+
+	valSet, err := chain.Vals.ToProto()
+	if err != nil {
+		panic(err)
 	}
 
 	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
 	// The relayer is responsible for querying client and injecting appropriate trusted fields.
 	return ibctmtypes.Header{
 		SignedHeader: signedHeader,
-		ValidatorSet: chain.Vals,
+		ValidatorSet: valSet,
 	}
 }
 
 // MakeBlockID copied unimported test functions from tmtypes to use them here
-func MakeBlockID(hash []byte, partSetSize int, partSetHash []byte) tmtypes.BlockID {
+func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.BlockID {
 	return tmtypes.BlockID{
 		Hash: hash,
-		PartsHeader: tmtypes.PartSetHeader{
+		PartSetHeader: tmtypes.PartSetHeader{
 			Total: partSetSize,
 			Hash:  partSetHash,
 		},
@@ -458,6 +482,8 @@ func (chain *TestChain) ConnectionOpenTry(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
+	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
+
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofInit, proofHeight := counterparty.QueryProof(connectionKey)
 
@@ -466,8 +492,8 @@ func (chain *TestChain) ConnectionOpenTry(
 	msg := connectiontypes.NewMsgConnectionOpenTry(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
-		counterparty.GetPrefix(), []string{ConnectionVersion},
-		proofInit, proofConsensus,
+		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
+		proofInit, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
@@ -479,14 +505,16 @@ func (chain *TestChain) ConnectionOpenAck(
 	counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
 ) error {
+	counterpartyClient, proofClient := counterparty.QueryClientStateProof(counterpartyConnection.ClientID)
+
 	connectionKey := host.KeyConnection(counterpartyConnection.ID)
 	proofTry, proofHeight := counterparty.QueryProof(connectionKey)
 
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connection.ID,
-		proofTry, proofConsensus,
+		connection.ID, counterpartyClient,
+		proofTry, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),

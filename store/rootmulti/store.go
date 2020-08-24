@@ -1,24 +1,21 @@
 package rootmulti
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"strings"
 
-	ics23 "github.com/confio/ics23/go"
+	iavltree "github.com/cosmos/iavl"
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	iavltree "github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/mem"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
-	sdkproofs "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/proofs"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -31,14 +28,12 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-var cdc = codec.New()
-
 // Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
-	lastCommitInfo commitInfo
+	lastCommitInfo *types.CommitInfo
 	pruningOpts    types.PruningOptions
 	storesParams   map[types.StoreKey]storeParams
 	stores         map[types.StoreKey]types.CommitKVStore
@@ -152,8 +147,9 @@ func (rs *Store) LoadVersion(ver int64) error {
 }
 
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
-	infos := make(map[string]storeInfo)
-	var cInfo commitInfo
+	infos := make(map[string]types.StoreInfo)
+
+	cInfo := &types.CommitInfo{}
 
 	// load old data if we are not version 0
 	if ver != 0 {
@@ -217,12 +213,13 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	return nil
 }
 
-func (rs *Store) getCommitID(infos map[string]storeInfo, name string) types.CommitID {
+func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) types.CommitID {
 	info, ok := infos[name]
 	if !ok {
 		return types.CommitID{}
 	}
-	return info.Core.CommitID
+
+	return info.CommitId
 }
 
 func deleteKVStore(kv types.KVStore) error {
@@ -290,11 +287,12 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-//----------------------------------------
-// +CommitStore
-
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
+	if rs.lastCommitInfo == nil {
+		return types.CommitID{}
+	}
+
 	return rs.lastCommitInfo.CommitID()
 }
 
@@ -364,9 +362,6 @@ func (rs *Store) CacheWrap() types.CacheWrap {
 func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	return rs.CacheWrap()
 }
-
-//----------------------------------------
-// +MultiStore
 
 // CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
@@ -453,8 +448,6 @@ func (rs *Store) getStoreByName(name string) types.Store {
 	return rs.GetCommitKVStore(key)
 }
 
-//---------------------- Query ------------------
-
 // Query calls substore.Query with the same `req` where `req.Path` is
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
@@ -484,14 +477,14 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	if res.Proof == nil || len(res.Proof.Ops) == 0 {
+	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"))
 	}
 
 	// If the request's height is the latest height we've committed, then utilize
 	// the store's lastCommitInfo as this commit info may not be flushed to disk.
 	// Otherwise, we query for the commit info from disk.
-	var commitInfo commitInfo
+	var commitInfo *types.CommitInfo
 
 	if res.Height == rs.lastCommitInfo.Version {
 		commitInfo = rs.lastCommitInfo
@@ -503,7 +496,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	// Restore origin path and append proof op.
-	res.Proof.Ops = append(res.Proof.Ops, commitInfo.ProofOp(storeName))
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
 
 	return res
 }
@@ -578,125 +571,32 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	}
 }
 
-//----------------------------------------
-// storeParams
-
 type storeParams struct {
 	key types.StoreKey
 	db  dbm.DB
 	typ types.StoreType
 }
 
-//----------------------------------------
-// commitInfo
-
-// NOTE: Keep commitInfo a simple immutable struct.
-type commitInfo struct {
-
-	// Version
-	Version int64
-
-	// Store info for
-	StoreInfos []storeInfo
-}
-
-func (ci commitInfo) toMap() map[string][]byte {
-	m := make(map[string][]byte, len(ci.StoreInfos))
-	for _, storeInfo := range ci.StoreInfos {
-		m[storeInfo.Name] = storeInfo.GetHash()
-	}
-	return m
-}
-
-// Hash returns the simple merkle root hash of the stores sorted by name.
-func (ci commitInfo) Hash() []byte {
-	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
-	if len(ci.StoreInfos) == 0 {
-		return nil
-	}
-	rootHash, _, _ := sdkmaps.SimpleProofsFromMap(ci.toMap())
-	return rootHash
-}
-
-func (ci commitInfo) ProofOp(storeName string) merkle.ProofOp {
-	cmap := ci.toMap()
-	_, proofs, _ := sdkmaps.SimpleProofsFromMap(cmap)
-	proof := proofs[storeName]
-	if proof == nil {
-		panic(fmt.Sprintf("ProofOp for %s but not registered store name", storeName))
-	}
-	// convert merkle.SimpleProof to CommitmentProof
-	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
-	if err != nil {
-		panic(fmt.Errorf("could not convert simple proof to existence proof: %w", err))
-	}
-	commitmentProof := &ics23.CommitmentProof{
-		Proof: &ics23.CommitmentProof_Exist{
-			Exist: existProof,
-		},
-	}
-
-	return types.NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
-}
-
-func (ci commitInfo) CommitID() types.CommitID {
-	return types.CommitID{
-		Version: ci.Version,
-		Hash:    ci.Hash(),
-	}
-}
-
-//----------------------------------------
-// storeInfo
-
-// storeInfo contains the name and core reference for an
-// underlying store.  It is the leaf of the Stores top
-// level simple merkle tree.
-type storeInfo struct {
-	Name string
-	Core storeCore
-}
-
-type storeCore struct {
-	// StoreType StoreType
-	CommitID types.CommitID
-	// ... maybe add more state
-}
-
-// GetHash returns the GetHash from the CommitID.
-// This is used in CommitInfo.Hash()
-//
-// When we commit to this in a merkle proof, we create a map of storeInfo.Name -> storeInfo.GetHash()
-// and build a merkle proof from that.
-// This is then chained with the substore proof, so we prove the root hash from the substore before this
-// and need to pass that (unmodified) as the leaf value of the multistore proof.
-func (si storeInfo) GetHash() []byte {
-	return si.Core.CommitID.Hash
-}
-
-//----------------------------------------
-// Misc.
-
 func getLatestVersion(db dbm.DB) int64 {
-	var latest int64
-	latestBytes, err := db.Get([]byte(latestVersionKey))
+	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)
-	} else if latestBytes == nil {
+	} else if bz == nil {
 		return 0
 	}
 
-	err = cdc.UnmarshalBinaryBare(latestBytes, &latest)
-	if err != nil {
+	var latestVersion int64
+
+	if err := gogotypes.StdInt64Unmarshal(&latestVersion, bz); err != nil {
 		panic(err)
 	}
 
-	return latest
+	return latestVersion
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) commitInfo {
-	storeInfos := make([]storeInfo, 0, len(storeMap))
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) *types.CommitInfo {
+	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
 		commitID := store.Commit()
@@ -705,52 +605,64 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 			continue
 		}
 
-		si := storeInfo{}
+		si := types.StoreInfo{}
 		si.Name = key.Name()
-		si.Core.CommitID = commitID
+		si.CommitId = commitID
 		storeInfos = append(storeInfos, si)
 	}
 
-	return commitInfo{
+	return &types.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
 }
 
 // Gets commitInfo from disk.
-func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
+func getCommitInfo(db dbm.DB, ver int64) (*types.CommitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 
-	cInfoBytes, err := db.Get([]byte(cInfoKey))
+	bz, err := db.Get([]byte(cInfoKey))
 	if err != nil {
-		return commitInfo{}, errors.Wrap(err, "failed to get commit info")
-	} else if cInfoBytes == nil {
-		return commitInfo{}, errors.New("failed to get commit info: no data")
+		return nil, errors.Wrap(err, "failed to get commit info")
+	} else if bz == nil {
+		return nil, errors.New("no commit info found")
 	}
 
-	var cInfo commitInfo
-
-	err = cdc.UnmarshalBinaryBare(cInfoBytes, &cInfo)
-	if err != nil {
-		return commitInfo{}, errors.Wrap(err, "failed to get store")
+	cInfo := &types.CommitInfo{}
+	if err = cInfo.Unmarshal(bz); err != nil {
+		return nil, errors.Wrap(err, "failed unmarshal commit info")
 	}
 
 	return cInfo, nil
 }
 
-func setCommitInfo(batch dbm.Batch, version int64, cInfo commitInfo) {
-	cInfoBytes := cdc.MustMarshalBinaryBare(cInfo)
+func setCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
+	bz, err := cInfo.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, version)
-	batch.Set([]byte(cInfoKey), cInfoBytes)
+	batch.Set([]byte(cInfoKey), bz)
 }
 
 func setLatestVersion(batch dbm.Batch, version int64) {
-	latestBytes := cdc.MustMarshalBinaryBare(version)
-	batch.Set([]byte(latestVersionKey), latestBytes)
+	bz, err := gogotypes.StdInt64Marshal(version)
+	if err != nil {
+		panic(err)
+	}
+
+	batch.Set([]byte(latestVersionKey), bz)
 }
 
 func setPruningHeights(batch dbm.Batch, pruneHeights []int64) {
-	bz := cdc.MustMarshalBinaryBare(pruneHeights)
+	bz := make([]byte, 0)
+	for _, ph := range pruneHeights {
+		buf := make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, uint64(ph))
+		bz = append(bz, buf...)
+	}
+
 	batch.Set([]byte(pruneHeightsKey), bz)
 }
 
@@ -763,15 +675,18 @@ func getPruningHeights(db dbm.DB) ([]int64, error) {
 		return nil, errors.New("no pruned heights found")
 	}
 
-	var prunedHeights []int64
-	if err := cdc.UnmarshalBinaryBare(bz, &prunedHeights); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal pruned heights: %w", err)
+	prunedHeights := make([]int64, len(bz)/8)
+	i, offset := 0, 0
+	for offset < len(bz) {
+		prunedHeights[i] = int64(binary.BigEndian.Uint64(bz[offset : offset+8]))
+		i++
+		offset += 8
 	}
 
 	return prunedHeights, nil
 }
 
-func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []int64) {
+func flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo, pruneHeights []int64) {
 	batch := db.NewBatch()
 	defer batch.Close()
 

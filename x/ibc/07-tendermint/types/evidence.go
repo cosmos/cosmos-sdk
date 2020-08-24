@@ -23,13 +23,15 @@ var (
 	_ clientexported.Misbehaviour = Evidence{}
 )
 
-// Evidence is a wrapper over tendermint's DuplicateVoteEvidence
-// that implements Evidence interface expected by ICS-02
-type Evidence struct {
-	ClientID string `json:"client_id" yaml:"client_id"`
-	Header1  Header `json:"header1" yaml:"header1"`
-	Header2  Header `json:"header2" yaml:"header2"`
-	ChainID  string `json:"chain_id" yaml:"chain_id"`
+// NewEvidence creates a new Evidence instance.
+func NewEvidence(clientID, chainID string, header1, header2 Header) *Evidence {
+	return &Evidence{
+		ClientId: clientID,
+		ChainId:  chainID,
+		Header1:  header1,
+		Header2:  header2,
+	}
+
 }
 
 // ClientType is Tendermint light client
@@ -39,7 +41,7 @@ func (ev Evidence) ClientType() clientexported.ClientType {
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
 func (ev Evidence) GetClientID() string {
-	return ev.ClientID
+	return ev.ClientId
 }
 
 // Route implements Evidence interface
@@ -64,8 +66,7 @@ func (ev Evidence) String() string {
 
 // Hash implements Evidence interface
 func (ev Evidence) Hash() tmbytes.HexBytes {
-	// TODO use submodule cdc
-	bz := amino.MustMarshalBinaryBare(ev)
+	bz := SubModuleCdc.MustMarshalBinaryBare(&ev)
 	return tmhash.Sum(bz)
 }
 
@@ -99,18 +100,18 @@ func (ev Evidence) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header2 cannot be empty")
 	}
 
-	if err := host.ClientIdentifierValidator(ev.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(ev.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "evidence client ID is invalid")
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header1.ValidateBasic(ev.ChainId); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
+	if err := ev.Header2.ValidateBasic(ev.ChainId); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
@@ -134,10 +135,10 @@ func (ev Evidence) ValidateBasic() error {
 	if blockID1.Equals(*blockID2) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers blockIDs are not equal")
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
+	if err := ValidCommit(ev.ChainId, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
 	}
-	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
+	if err := ValidCommit(ev.ChainId, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
 		return err
 	}
 	return nil

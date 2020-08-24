@@ -68,7 +68,7 @@ message ConsensusState {
   ];
 }
 
-// Evidence is a wrapper over tendermint's DuplicateVoteEvidence
+// Evidence is a wrapper over two conflicting Headers
 // that implements Evidence interface expected by ICS-02
 message Evidence {
   option (gogoproto.goproto_getters)  = false;

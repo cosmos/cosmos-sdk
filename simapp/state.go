@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -135,7 +136,8 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, genesisFile
 	}
 
 	var genesis tmtypes.GenesisDoc
-	err = json.Unmarshal(bytes, &genesis)
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err = tmjson.Unmarshal(bytes, &genesis)
 	if err != nil {
 		panic(err)
 	}

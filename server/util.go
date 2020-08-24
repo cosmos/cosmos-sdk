@@ -199,7 +199,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 func InsertKeyJSON(legacyAminoCdc *codec.LegacyAmino, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
 
-	if err := legacyAminoCdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
+	if err := json.Unmarshal(baseJSON, &jsonMap); err != nil {
 		return nil, err
 	}
 

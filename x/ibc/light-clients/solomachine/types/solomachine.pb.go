@@ -230,7 +230,7 @@ func (m *SignatureAndData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignatureAndData proto.InternalMessageInfo
 
-// TimedstampedSignature contains the signature and the timestamp of the
+// TimestampedSignature contains the signature and the timestamp of the
 // signature.
 type TimestampedSignature struct {
 	Signature []byte `protobuf:"bytes,1,opt,name=signature,proto3" json:"signature,omitempty"`

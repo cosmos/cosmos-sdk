@@ -59,7 +59,7 @@ message SignatureAndData {
   bytes data                         = 2;
 }
 
-// TimedstampedSignature contains the signature and the timestamp of the
+// TimestampedSignature contains the signature and the timestamp of the
 // signature.
 message TimestampedSignature {
   option (gogoproto.goproto_getters) = false;

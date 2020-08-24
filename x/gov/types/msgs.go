@@ -17,6 +17,7 @@ const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+	Typetest              = "test"
 )
 
 var (

@@ -10,8 +10,9 @@ import "gogoproto/gogo.proto";
 // state and if the client is frozen.
 message ClientState {
   option (gogoproto.goproto_getters) = false;
-  // frozen height of the solo machine
-  uint64 frozen_height = 1 [(gogoproto.moretags) = "yaml:\"frozen_height\""];
+  // frozen sequence of the solo machine
+  uint64 frozen_sequence = 1
+      [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
   ConsensusState consensus_state = 2
       [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }

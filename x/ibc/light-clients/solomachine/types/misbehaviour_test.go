@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"client is frozen",
 			func() {
 				cs := suite.solomachine.ClientState()
-				cs.FrozenHeight = 1
+				cs.FrozenSequence = 1
 				clientState = cs
 				evidence = suite.solomachine.CreateEvidence()
 			},

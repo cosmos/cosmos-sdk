@@ -20,7 +20,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 // NewClientState creates a new ClientState instance.
 func NewClientState(consensusState *ConsensusState) *ClientState {
 	return &ClientState{
-		FrozenHeight:   0,
+		FrozenSequence: 0,
 		ConsensusState: consensusState,
 	}
 }
@@ -42,12 +42,12 @@ func (cs ClientState) GetLatestHeight() uint64 {
 
 // IsFrozen returns true if the client is frozen.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight != 0
+	return cs.FrozenSequence != 0
 }
 
-// GetFrozenHeight returns the frozen height of the client.
+// GetFrozenHeight returns the frozen sequence of the client.
 func (cs ClientState) GetFrozenHeight() uint64 {
-	return cs.FrozenHeight
+	return cs.FrozenSequence
 }
 
 // GetProofSpecs returns nil proof specs since client state verification uses signatures.

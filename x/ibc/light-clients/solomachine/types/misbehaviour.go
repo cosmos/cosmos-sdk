@@ -36,7 +36,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, err
 	}
 
-	cs.FrozenHeight = uint64(evidence.GetHeight())
+	cs.FrozenSequence = uint64(evidence.GetHeight())
 	return cs, nil
 }
 

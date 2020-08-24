@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -120,16 +121,27 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
 
-			if authGenState.Accounts.Contains(addr) {
+			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+			if err != nil {
+				return fmt.Errorf("failed to get accounts from any: %w", err)
+			}
+
+			if accs.Contains(addr) {
 				return fmt.Errorf("cannot add account at existing address %s", addr)
 			}
 
 			// Add the new account to the set of genesis accounts and sanitize the
 			// accounts afterwards.
-			authGenState.Accounts = append(authGenState.Accounts, genAccount)
-			authGenState.Accounts = authtypes.SanitizeGenesisAccounts(authGenState.Accounts)
+			accs = append(accs, genAccount)
+			accs = authtypes.SanitizeGenesisAccounts(accs)
 
-			authGenStateBz, err := cdc.MarshalJSON(authGenState)
+			genAccs, err := authtypes.PackAccounts(accs)
+			if err != nil {
+				return fmt.Errorf("failed to convert accounts into any's: %w", err)
+			}
+			authGenState.Accounts = genAccs
+
+			authGenStateBz, err := cdc.MarshalJSON(&authGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 			}
@@ -147,7 +159,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			appState[banktypes.ModuleName] = bankGenStateBz
 
-			appStateJSON, err := cdc.MarshalJSON(appState)
+			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}

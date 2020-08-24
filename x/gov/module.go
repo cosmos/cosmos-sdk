@@ -53,7 +53,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the gov module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -64,13 +64,13 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the gov module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
@@ -145,8 +145,8 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the
@@ -160,7 +160,7 @@ func (am AppModule) RegisterQueryService(server grpc.Server) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, genesisState)
+	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

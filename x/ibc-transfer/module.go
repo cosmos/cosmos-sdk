@@ -14,14 +14,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -45,9 +44,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec implements AppModuleBasic interface
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
-}
+func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.
@@ -56,7 +53,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -67,7 +64,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 
 // RegisterRESTRoutes implements AppModuleBasic interface
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // GetTxCmd implements AppModuleBasic interface
@@ -77,11 +73,11 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -120,21 +116,23 @@ func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
-// InitGenesis performs genesis initialization for the ibc transfer module. It returns
+// InitGenesis performs genesis initialization for the ibc-transfer module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-
-	// TODO: check if the IBC transfer module account is set
-	InitGenesis(ctx, am.keeper, genesisState)
+	am.keeper.InitGenesis(ctx, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
+// ExportGenesis returns the exported genesis state as raw bytes for the ibc-transfer
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
@@ -161,13 +159,14 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 	return nil
 }
 
-// RandomizedParams returns nil.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return nil
+// RandomizedParams creates randomized ibc-transfer param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for transfer module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
 // WeightedOperations returns the all the transfer module operations with their respective weights.
@@ -177,7 +176,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 
 //____________________________________________________________________________
 
-// Implement IBCModule callbacks
+// OnChanOpenInit implements the IBCModule interface
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -209,6 +208,7 @@ func (am AppModule) OnChanOpenInit(
 	return nil
 }
 
+// OnChanOpenTry implements the IBCModule interface
 func (am AppModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -245,6 +245,7 @@ func (am AppModule) OnChanOpenTry(
 	return nil
 }
 
+// OnChanOpenAck implements the IBCModule interface
 func (am AppModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -257,6 +258,7 @@ func (am AppModule) OnChanOpenAck(
 	return nil
 }
 
+// OnChanOpenConfirm implements the IBCModule interface
 func (am AppModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -265,6 +267,7 @@ func (am AppModule) OnChanOpenConfirm(
 	return nil
 }
 
+// OnChanCloseInit implements the IBCModule interface
 func (am AppModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -274,6 +277,7 @@ func (am AppModule) OnChanCloseInit(
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
 }
 
+// OnChanCloseConfirm implements the IBCModule interface
 func (am AppModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -282,6 +286,7 @@ func (am AppModule) OnChanCloseConfirm(
 	return nil
 }
 
+// OnRecvPacket implements the IBCModule interface
 func (am AppModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -290,10 +295,12 @@ func (am AppModule) OnRecvPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+
 	acknowledgement := types.FungibleTokenPacketAcknowledgement{
 		Success: true,
 		Error:   "",
 	}
+
 	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
 		acknowledgement = types.FungibleTokenPacketAcknowledgement{
 			Success: false,
@@ -306,7 +313,8 @@ func (am AppModule) OnRecvPacket(
 			types.EventTypePacket,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(types.AttributeKeyValue, data.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
+			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
 		),
 	)
 
@@ -315,6 +323,7 @@ func (am AppModule) OnRecvPacket(
 	}, acknowledgement.GetBytes(), nil
 }
 
+// OnAcknowledgementPacket implements the IBCModule interface
 func (am AppModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -338,7 +347,8 @@ func (am AppModule) OnAcknowledgementPacket(
 			types.EventTypePacket,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(types.AttributeKeyValue, data.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
+			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
 			sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
 		),
 	)
@@ -357,6 +367,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	}, nil
 }
 
+// OnTimeoutPacket implements the IBCModule interface
 func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -375,7 +386,8 @@ func (am AppModule) OnTimeoutPacket(
 			types.EventTypeTimeout,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyRefundValue, data.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyRefundDenom, data.Denom),
+			sdk.NewAttribute(types.AttributeKeyRefundAmount, fmt.Sprintf("%d", data.Amount)),
 		),
 	)
 

@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,9 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
@@ -40,7 +38,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(mintData)
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
 	cfg.GenesisState = genesisState
@@ -66,8 +64,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 		expectedOutput string
 	}{
 		{
-			"default output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
+			"json output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			`{"mint_denom":"stake","inflation_rate_change":"0.130000000000000000","inflation_max":"1.000000000000000000","inflation_min":"1.000000000000000000","goal_bonded":"0.670000000000000000","blocks_per_year":"6311520"}`,
 		},
 		{
@@ -87,17 +85,10 @@ mint_denom: stake`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryParams()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -112,14 +103,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 		expectedOutput string
 	}{
 		{
-			"default output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
-			`"1.000000000000000000"`,
+			"json output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`1.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"1.000000000000000000"`,
+			`1.000000000000000000`,
 		},
 	}
 
@@ -128,17 +119,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryInflation()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}
@@ -153,14 +137,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 		expectedOutput string
 	}{
 		{
-			"default output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight)},
-			`"500000000.000000000000000000"`,
+			"json output",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`500000000.000000000000000000`,
 		},
 		{
 			"text output",
 			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`"500000000.000000000000000000"`,
+			`500000000.000000000000000000`,
 		},
 	}
 
@@ -169,17 +153,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryAnnualProvisions()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}

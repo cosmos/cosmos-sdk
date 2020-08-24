@@ -39,7 +39,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the auth module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -50,7 +50,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the auth module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -85,14 +85,16 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper keeper.AccountKeeper
+	accountKeeper     keeper.AccountKeeper
+	randGenAccountsFn simulation.RandomGenesisAccountsFn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn simulation.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
+		AppModuleBasic:    AppModuleBasic{},
+		accountKeeper:     accountKeeper,
+		randGenAccountsFn: randGenAccountsFn,
 	}
 }
 
@@ -113,8 +115,8 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the auth module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(jsonCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(am.accountKeeper, jsonCdc)
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the
@@ -153,8 +155,8 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

@@ -1,6 +1,5 @@
-// +build test_proto
+// +build !test_amino
 
-// TODO switch to !test_amino build flag once proto Tx's are ready
 package params
 
 import (
@@ -12,15 +11,15 @@ import (
 
 // MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.
 func MakeEncodingConfig() EncodingConfig {
-	cdc := codec.New()
+	amino := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
-	txGen := tx.NewTxConfig(marshaler, std.DefaultPublicKeyCodec{}, tx.DefaultSignModeHandler())
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(marshaler, std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         marshaler,
-		TxConfig:          txGen,
-		Amino:             cdc,
+		TxConfig:          txCfg,
+		Amino:             amino,
 	}
 }

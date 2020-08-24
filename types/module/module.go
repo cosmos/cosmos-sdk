@@ -48,11 +48,11 @@ import (
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
-	RegisterCodec(*codec.Codec)
+	RegisterCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
-	ValidateGenesis(codec.JSONMarshaler, json.RawMessage) error
+	ValidateGenesis(codec.JSONMarshaler, client.TxEncodingConfig, json.RawMessage) error
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
@@ -73,7 +73,7 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 }
 
 // RegisterCodec registers all module codecs
-func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
+func (bm BasicManager) RegisterCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
 		b.RegisterCodec(cdc)
 	}
@@ -97,9 +97,9 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONMarshaler) map[string]json.R
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, genesis map[string]json.RawMessage) error {
+func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(cdc, genesis[b.Name()]); err != nil {
+		if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
 			return err
 		}
 	}
@@ -195,6 +195,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
 
+// RegisterQueryService registers all gRPC query services.
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block

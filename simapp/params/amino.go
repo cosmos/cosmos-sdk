@@ -1,6 +1,5 @@
-// +build !test_proto
+// +build test_amino
 
-// TODO switch to test_amino build flag once proto Tx's are ready
 package params
 
 import (
@@ -13,8 +12,7 @@ import (
 func MakeEncodingConfig() EncodingConfig {
 	cdc := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	// TODO: switch to using AminoCodec here once amino compatibility is fixed
-	marshaler := codec.NewHybridCodec(cdc, interfaceRegistry)
+	marshaler := codec.NewAminoCodec(cdc)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,

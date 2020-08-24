@@ -2,10 +2,14 @@ package rest
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -32,7 +36,8 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		err = clientCtx.JSONMarshaler.UnmarshalJSON(body, &req)
+		// NOTE: amino is used intentionally here, don't migrate it
+		err = clientCtx.LegacyAmino.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -42,13 +47,26 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		var stdTx authtypes.StdTx
-		err = clientCtx.Codec.UnmarshalBinaryBare(txBytes, &stdTx)
+		txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
+		tx, ok := txI.(signing.Tx)
+		if !ok {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
+			return
+		}
+
+		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		response := DecodeResp(stdTx)
+
+		// NOTE: amino is set intentionally here, don't migrate it
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

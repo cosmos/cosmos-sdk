@@ -42,7 +42,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the mint module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
 func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
@@ -54,7 +54,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -112,8 +112,8 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the mint module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a gRPC query service to respond to the
@@ -128,7 +128,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data j
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	InitGenesis(ctx, am.keeper, am.authKeeper, genesisState)
+	InitGenesis(ctx, am.keeper, am.authKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

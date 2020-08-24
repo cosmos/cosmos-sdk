@@ -15,26 +15,26 @@ import (
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	app, ctx := suite.app, suite.ctx
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryBalance),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper, jsonCdc)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryBalanceRequest(addr, fooDenom))
+	req.Data = app.LegacyAmino().MustMarshalJSON(types.NewQueryBalanceRequest(addr, fooDenom))
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	var balance sdk.Coin
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balance))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &balance))
 	suite.True(balance.IsZero())
 
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
@@ -46,32 +46,32 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
 	res, err = querier(ctx, []string{types.QueryBalance}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balance))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &balance))
 	suite.True(balance.IsEqual(newFooCoin(50)))
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	app, ctx := suite.app, suite.ctx
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	_, _, addr := testdata.KeyTestPubAddr()
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/%s", types.ModuleName, types.QueryAllBalances),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper, jsonCdc)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr, nil))
+	req.Data = app.LegacyAmino().MustMarshalJSON(types.NewQueryAllBalancesRequest(addr, nil))
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	var balances sdk.Coins
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balances))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &balances))
 	suite.True(balances.IsZero())
 
 	origCoins := sdk.NewCoins(newFooCoin(50), newBarCoin(30))
@@ -83,13 +83,13 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryAllBalances() {
 	res, err = querier(ctx, []string{types.QueryAllBalances}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &balances))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &balances))
 	suite.True(balances.IsEqual(origCoins))
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	app, ctx := suite.app, suite.ctx
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
 	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
 
@@ -98,25 +98,25 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper, jsonCdc)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQueryTotalSupplyParams(1, 100))
+	req.Data = app.LegacyAmino().MustMarshalJSON(types.NewQueryTotalSupplyParams(1, 100))
 	res, err = querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	var resp sdk.Coins
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &resp))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &resp))
 	suite.Require().Equal(expectedTotalSupply.Total, resp)
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 	app, ctx := suite.app, suite.ctx
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
@@ -128,31 +128,31 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper, jsonCdc)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 
 	res, err := querier(ctx, []string{types.QuerySupplyOf}, req)
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = app.Codec().MustMarshalJSON(types.NewQuerySupplyOfParams(test1Supply.Denom))
+	req.Data = app.LegacyAmino().MustMarshalJSON(types.NewQuerySupplyOfParams(test1Supply.Denom))
 	res, err = querier(ctx, []string{types.QuerySupplyOf}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	var resp sdk.Coin
-	suite.Require().NoError(app.Codec().UnmarshalJSON(res, &resp))
+	suite.Require().NoError(app.LegacyAmino().UnmarshalJSON(res, &resp))
 	suite.Require().Equal(test1Supply, resp)
 }
 
 func (suite *IntegrationTestSuite) TestQuerierRouteNotFound() {
 	app, ctx := suite.app, suite.ctx
-	jsonCdc := codec.NewAminoCodec(app.Codec())
+	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	req := abci.RequestQuery{
 		Path: fmt.Sprintf("custom/%s/invalid", types.ModuleName),
 		Data: []byte{},
 	}
 
-	querier := keeper.NewQuerier(app.BankKeeper, jsonCdc)
+	querier := keeper.NewQuerier(app.BankKeeper, legacyQuerierCdc)
 	_, err := querier(ctx, []string{"invalid"}, req)
 	suite.Error(err)
 }

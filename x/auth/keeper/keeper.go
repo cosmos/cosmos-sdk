@@ -183,15 +183,15 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 	return acc
 }
 
-// MarshalEvidence marshals an Evidence interface. If the given type implements
+// MarshalAccount marshals an Account interface. If the given type implements
 // the Marshaler interface, it is treated as a Proto-defined message and
 // serialized that way. Otherwise, it falls back on the internal Amino codec.
 func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) {
 	return codec.MarshalAny(ak.cdc, accountI)
 }
 
-// UnmarshalEvidence returns an Evidence interface from raw encoded evidence
-// bytes of a Proto-based Evidence type. An error is returned upon decoding
+// UnmarshalAccount returns an Account interface from raw encoded account
+// bytes of a Proto-based Account type. An error is returned upon decoding
 // failure.
 func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	var acc types.AccountI

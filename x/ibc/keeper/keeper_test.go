@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -16,20 +15,18 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc     *codec.Codec
-	ctx     sdk.Context
-	keeper  *keeper.Keeper
-	querier sdk.Querier
+	cdc    *codec.LegacyAmino
+	ctx    sdk.Context
+	keeper *keeper.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	isCheckTx := false
 	app := simapp.Setup(isCheckTx)
 
-	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.cdc = app.LegacyAmino()
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	suite.keeper = app.IBCKeeper
-	suite.querier = keeper.NewQuerier(*app.IBCKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

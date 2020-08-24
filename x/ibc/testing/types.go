@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// TestConnections is a testing helper struct to keep track of the connectionID, source clientID,
+// TestConnection is a testing helper struct to keep track of the connectionID, source clientID,
 // and counterparty clientID used in creating and interacting with a connection.
 type TestConnection struct {
 	ID                   string
@@ -31,7 +31,7 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 // non-existent channel usually to test for its non-existence.
 func (conn *TestConnection) NextTestChannel() TestChannel {
 	portID := "transfer"
-	channelID := fmt.Sprintf("%s-%d", conn.ID, len(conn.Channels))
+	channelID := fmt.Sprintf("%s%d", conn.ID, len(conn.Channels))
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,

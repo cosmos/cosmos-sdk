@@ -3,6 +3,7 @@ package simapp
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -13,12 +14,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -33,14 +34,13 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &abci.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
-		MaxAgeDuration:  1814400,
+		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 	},
-	Validator: &abci.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
-			tmtypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
 }
@@ -48,11 +48,11 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig())
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
-		stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
 		}
@@ -76,13 +76,13 @@ func Setup(isCheckTx bool) *SimApp {
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig())
 
 	genesisState := NewDefaultGenesisState()
 
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
@@ -110,7 +110,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = app.Codec().MustMarshalJSON(stakingGenesis)
+	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -119,10 +119,10 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	}
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply)
-	genesisState[banktypes.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
@@ -136,7 +136,12 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// commit genesis changes
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		Height:             app.LastBlockHeight() + 1,
+		AppHash:            app.LastCommitID().Hash,
+		ValidatorsHash:     valSet.Hash(),
+		NextValidatorsHash: valSet.Hash(),
+	}})
 
 	return app
 }
@@ -145,23 +150,23 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 // accounts and possible balances.
 func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig())
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
 
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.Codec().MustMarshalJSON(authGenesis)
+	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
 		totalSupply = totalSupply.Add(b.Coins...)
 	}
 
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply)
-	genesisState[banktypes.ModuleName] = app.Codec().MustMarshalJSON(bankGenesis)
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		panic(err)
 	}
@@ -175,7 +180,7 @@ func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...ba
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
 }
@@ -304,7 +309,7 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
 	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
@@ -313,8 +318,8 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.C
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
-	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
+	t *testing.T, txGen client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
 	tx, err := helpers.GenTx(
@@ -322,9 +327,9 @@ func SignCheckDeliver(
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		helpers.DefaultGenTxGas,
-		"",
+		chainID,
 		accNums,
-		seq,
+		accSeqs,
 		priv...,
 	)
 	require.NoError(t, err)
@@ -415,7 +420,7 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes)
+	pkEd := make(ed25519.PubKey, ed25519.PubKeySize)
+	copy(pkEd, pkBytes)
 	return pkEd
 }

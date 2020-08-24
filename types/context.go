@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -23,7 +24,7 @@ and standard additions here would be better just to add to the Context struct
 type Context struct {
 	ctx           context.Context
 	ms            MultiStore
-	header        abci.Header
+	header        tmproto.Header
 	chainID       string
 	txBytes       []byte
 	logger        log.Logger
@@ -57,8 +58,8 @@ func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
 func (c Context) EventManager() *EventManager { return c.eventManager }
 
 // clone the header before returning
-func (c Context) BlockHeader() abci.Header {
-	var msg = proto.Clone(&c.header).(*abci.Header)
+func (c Context) BlockHeader() tmproto.Header {
+	var msg = proto.Clone(&c.header).(*tmproto.Header)
 	return *msg
 }
 
@@ -67,7 +68,7 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -96,7 +97,7 @@ func (c Context) WithMultiStore(ms MultiStore) Context {
 }
 
 // WithBlockHeader returns a Context with an updated tendermint block header in UTC time.
-func (c Context) WithBlockHeader(header abci.Header) Context {
+func (c Context) WithBlockHeader(header tmproto.Header) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	c.header = header
@@ -245,19 +246,20 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string
 
-const sdkContextKey ContextKey = "sdk-context"
+// SdkContextKey is the key in the context.Context which holds the sdk.Context.
+const SdkContextKey ContextKey = "sdk-context"
 
 // WrapSDKContext returns a stdlib context.Context with the provided sdk.Context's internal
 // context as a value. It is useful for passing an sdk.Context  through methods that take a
 // stdlib context.Context parameter such as generated gRPC methods. To get the original
 // sdk.Context back, call UnwrapSDKContext.
 func WrapSDKContext(ctx Context) context.Context {
-	return context.WithValue(ctx.ctx, sdkContextKey, ctx)
+	return context.WithValue(ctx.ctx, SdkContextKey, ctx)
 }
 
 // UnwrapSDKContext retrieves a Context from a context.Context instance
 // attached with WrapSDKContext. It panics if a Context was not properly
 // attached
 func UnwrapSDKContext(ctx context.Context) Context {
-	return ctx.Value(sdkContextKey).(Context)
+	return ctx.Value(SdkContextKey).(Context)
 }

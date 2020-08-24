@@ -31,7 +31,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the genutil module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
 func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
@@ -43,13 +43,13 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the genutil module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(&data, txEncodingConfig.TxJSONDecoder())
 }
 
 // RegisterRESTRoutes registers the REST routes for the genutil module.
@@ -67,20 +67,24 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper types.AccountKeeper
-	stakingKeeper types.StakingKeeper
-	deliverTx     deliverTxfn
+	accountKeeper    types.AccountKeeper
+	stakingKeeper    types.StakingKeeper
+	deliverTx        deliverTxfn
+	txEncodingConfig client.TxEncodingConfig
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper,
-	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
+	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
+	txEncodingConfig client.TxEncodingConfig,
+) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		deliverTx:      deliverTx,
+		AppModuleBasic:   AppModuleBasic{},
+		accountKeeper:    accountKeeper,
+		stakingKeeper:    stakingKeeper,
+		deliverTx:        deliverTx,
+		txEncodingConfig: txEncodingConfig,
 	})
 }
 
@@ -89,7 +93,7 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, types.ModuleCdc, am.stakingKeeper, am.deliverTx, genesisState)
+	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil

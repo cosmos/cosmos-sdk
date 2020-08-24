@@ -9,55 +9,54 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GenesisState defines the raw genesis transaction in JSON
-type GenesisState struct {
-	GenTxs []json.RawMessage `json:"gentxs" yaml:"gentxs"`
-}
-
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(genTxs []json.RawMessage) GenesisState {
+func NewGenesisState(genTxs []json.RawMessage) *GenesisState {
 	// Ensure genTxs is never nil, https://github.com/cosmos/cosmos-sdk/issues/5086
 	if len(genTxs) == 0 {
 		genTxs = make([]json.RawMessage, 0)
 	}
-	return GenesisState{
+	return &GenesisState{
 		GenTxs: genTxs,
 	}
 }
 
 // DefaultGenesisState returns the genutil module's default genesis state.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		GenTxs: []json.RawMessage{},
 	}
 }
 
-// NewGenesisStateFromStdTx creates a new GenesisState object
+// NewGenesisStateFromTx creates a new GenesisState object
 // from auth transactions
-func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {
+func NewGenesisStateFromTx(txJSONEncoder sdk.TxEncoder, genTxs []sdk.Tx) *GenesisState {
 	genTxsBz := make([]json.RawMessage, len(genTxs))
 	for i, genTx := range genTxs {
-		genTxsBz[i] = ModuleCdc.MustMarshalJSON(genTx)
+		var err error
+		genTxsBz[i], err = txJSONEncoder(genTx)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return NewGenesisState(genTxsBz)
 }
 
 // GetGenesisStateFromAppState gets the genutil genesis state from the expected app state
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
-	return genesisState
+	return &genesisState
 }
 
 // SetGenesisStateInAppState sets the genutil genesis state within the expected app state
 func SetGenesisStateInAppState(
-	cdc codec.JSONMarshaler, appState map[string]json.RawMessage, genesisState GenesisState,
+	cdc codec.JSONMarshaler, appState map[string]json.RawMessage, genesisState *GenesisState,
 ) map[string]json.RawMessage {
 
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
@@ -69,10 +68,9 @@ func SetGenesisStateInAppState(
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenDoc(cdc codec.JSONMarshaler, genDoc tmtypes.GenesisDoc,
-) (genesisState map[string]json.RawMessage, err error) {
+func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]json.RawMessage, err error) {
 
-	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
+	if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}
 	return genesisState, nil
@@ -93,22 +91,23 @@ func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisSt
 		return genesisState, genDoc, err
 	}
 
-	genesisState, err = GenesisStateFromGenDoc(cdc, *genDoc)
+	genesisState, err = GenesisStateFromGenDoc(*genDoc)
 	return genesisState, genDoc, err
 }
 
 // ValidateGenesis validates GenTx transactions
-func ValidateGenesis(genesisState GenesisState) error {
+func ValidateGenesis(genesisState *GenesisState, txJSONDecoder sdk.TxDecoder) error {
 	for i, genTx := range genesisState.GenTxs {
-		var tx authtypes.StdTx
-		if err := ModuleCdc.UnmarshalJSON(genTx, &tx); err != nil {
+		var tx sdk.Tx
+		tx, err := txJSONDecoder(genTx)
+		if err != nil {
 			return err
 		}
 
 		msgs := tx.GetMsgs()
 		if len(msgs) != 1 {
 			return errors.New(
-				"must provide genesis StdTx with exactly 1 CreateValidator message")
+				"must provide genesis Tx with exactly 1 CreateValidator message")
 		}
 
 		// TODO: abstract back to staking

@@ -8,7 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -19,7 +23,7 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	initHeader := abci.Header{ChainID: req.ChainId, Time: req.Time}
+	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
@@ -55,8 +59,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
-		for i, val := range res.Validators {
-			if !val.Equal(req.Validators[i]) {
+		for i := range res.Validators {
+			if proto.Equal(&res.Validators[i], &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}
@@ -141,6 +145,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
@@ -157,9 +162,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	return
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	return res
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -199,7 +209,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 
@@ -237,7 +247,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 
@@ -349,14 +359,14 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
-	ctx, err := app.createQueryContext(req)
+	ctx, err := app.createQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		res = sdkerrors.QueryResult(err)
+		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err))
 		res.Height = req.Height
 		return res
 	}
@@ -364,13 +374,35 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 	return res
 }
 
-func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, error) {
-	// when a client did not provide a query height, manually inject the latest
-	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+func gRPCErrorToSDKError(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return err
 	}
 
-	if req.Height <= 1 && req.Prove {
+	switch status.Code() {
+	case codes.NotFound:
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+	case codes.InvalidArgument:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.FailedPrecondition:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.Unauthenticated:
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	default:
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+}
+
+// createQueryContext creates a new sdk.Context for a query, taking as args
+// the block height and whether the query needs a proof or not.
+func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
+	// when a client did not provide a query height, manually inject the latest
+	if height == 0 {
+		height = app.LastBlockHeight()
+	}
+
+	if height <= 1 && prove {
 		return sdk.Context{},
 			sdkerrors.Wrap(
 				sdkerrors.ErrInvalidRequest,
@@ -378,12 +410,12 @@ func (app *BaseApp) createQueryContext(req abci.RequestQuery) (sdk.Context, erro
 			)
 	}
 
-	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", req.Height, err, app.LastBlockHeight(),
+				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
 			)
 	}
 
@@ -517,7 +549,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 		return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]))
 	}
 
-	ctx, err := app.createQueryContext(req)
+	ctx, err := app.createQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err)
 	}
@@ -551,4 +583,20 @@ func splitPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+func (app *BaseApp) ListSnapshots(abci.RequestListSnapshots) abci.ResponseListSnapshots {
+	return abci.ResponseListSnapshots{}
+}
+
+func (app *BaseApp) OfferSnapshot(abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	return abci.ResponseOfferSnapshot{}
+}
+
+func (app *BaseApp) LoadSnapshotChunk(abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
+	return abci.ResponseLoadSnapshotChunk{}
+}
+
+func (app *BaseApp) ApplySnapshotChunk(abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	return abci.ResponseApplySnapshotChunk{}
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 )
 
 // ----------------------------------------------------------------------------
@@ -79,8 +78,8 @@ func (a Attribute) String() string {
 }
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
-func (a Attribute) ToKVPair() tmkv.Pair {
-	return tmkv.Pair{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+func (a Attribute) ToKVPair() abci.EventAttribute {
+	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -199,4 +198,31 @@ func StringifyEvents(events []abci.Event) StringEvents {
 	}
 
 	return res.Flatten()
+}
+
+// MarkEventsToIndex returns the set of ABCI events, where each event's attribute
+// has it's index value marked based on the provided set of events to index.
+func MarkEventsToIndex(events []abci.Event, indexSet map[string]struct{}) []abci.Event {
+	updatedEvents := make([]abci.Event, len(events))
+	for i, e := range events {
+		updatedEvent := abci.Event{
+			Type:       e.Type,
+			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+		}
+
+		for j, attr := range e.Attributes {
+			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
+			updatedAttr := abci.EventAttribute{
+				Key:   attr.Key,
+				Value: attr.Value,
+				Index: index,
+			}
+
+			updatedEvent.Attributes[j] = updatedAttr
+		}
+
+		updatedEvents[i] = updatedEvent
+	}
+
+	return updatedEvents
 }

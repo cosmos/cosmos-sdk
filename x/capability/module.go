@@ -47,7 +47,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the capability module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -60,7 +60,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the capability module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)

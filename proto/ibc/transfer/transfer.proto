@@ -4,28 +4,20 @@ package ibc.transfer;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
 
 import "gogoproto/gogo.proto";
-import "cosmos/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
-// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between ICS20 enabled chains.
-// See ICS Spec here: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
+// ICS20 enabled chains. See ICS Spec here:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message MsgTransfer {
   // the port on which the packet will be sent
-  string source_port = 1 [
-    (gogoproto.moretags) = "yaml:\"source_port\""
-  ];
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
   // the channel by which the packet will be sent
-  string source_channel = 2 [
-    (gogoproto.moretags) = "yaml:\"source_channel\""
-  ];
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
   // the tokens to be transferred
-  repeated cosmos.Coin amount = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
-  bytes sender = 4 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
-  ];
+  bytes sender = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // the recipient address on the destination chain
   string receiver = 5;
   // Timeout height relative to the current block height.
@@ -37,23 +29,48 @@ message MsgTransfer {
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
-// See FungibleTokenPacketData spec: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+// See FungibleTokenPacketData spec:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message FungibleTokenPacketData {
-  // the tokens to be transferred
-  repeated cosmos.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  // the token denomination to be transferred
+  string denom = 1;
+  // the token amount to be transferred
+  uint64 amount = 2;
   // the sender address
-  string sender = 2;
+  string sender = 3;
   // the recipient address on the destination chain
-  string receiver = 3;
+  string receiver = 4;
 }
 
-// FungibleTokenPacketAcknowledgement contains a boolean success flag and an optional error msg
-// error msg is empty string on success
-// See spec for onAcknowledgePacket: https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
+// FungibleTokenPacketAcknowledgement contains a boolean success flag and an
+// optional error msg error msg is empty string on success See spec for
+// onAcknowledgePacket:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 message FungibleTokenPacketAcknowledgement {
-  bool   success = 1;
-  string error   = 2;
+  bool success = 1;
+  string error = 2;
+}
+
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
+// information path.
+message DenomTrace {
+  // path defines the chain of port/channel identifiers used for tracing the source of the fungible
+  // token.
+  string path = 1;
+  // base denomination of the relayed fungible token.
+  string base_denom = 2;
+}
+
+// Params defines the set of IBC transfer parameters.
+// NOTE: To prevent a single token from being transferred, set the TransfersEnabled parameter to
+// true and then set the bank module's SendEnabled parameter for the denomination to false.
+message Params {
+  // send_enabled enables or disables all cross-chain token transfers from this chain.
+  bool send_enabled = 1 [
+    (gogoproto.moretags) = "yaml:\"send_enabled\""
+  ];
+  // receive_enabled enables or disables all cross-chain token transfers to this chain.
+  bool receive_enabled = 2 [
+    (gogoproto.moretags) = "yaml:\"receive_enabled\""
+  ];
 }

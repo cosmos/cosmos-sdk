@@ -12,14 +12,14 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto"
+	cryptoamino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -197,7 +197,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(CryptoCdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -687,7 +687,7 @@ func (ks keystore) writeLocalKey(name string, priv tmcrypto.PrivKey, algo hd.Pub
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 
-	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
+	info := newLocalInfo(name, pub, string(CryptoCdc.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}

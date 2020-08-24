@@ -9,15 +9,9 @@ import (
 // NewConnectionPaths creates a ConnectionPaths instance.
 func NewConnectionPaths(id string, paths []string) ConnectionPaths {
 	return ConnectionPaths{
-		ClientID: id,
+		ClientId: id,
 		Paths:    paths,
 	}
-}
-
-// GenesisState defines the ibc connection submodule's genesis state.
-type GenesisState struct {
-	Connections           []IdentifiedConnection `json:"connections" yaml:"connections"`
-	ClientConnectionPaths []ConnectionPaths      `json:"client_connection_paths" yaml:"client_connection_paths"`
 }
 
 // NewGenesisState creates a GenesisState instance.
@@ -48,7 +42,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for i, conPaths := range gs.ClientConnectionPaths {
-		if err := host.ClientIdentifierValidator(conPaths.ClientID); err != nil {
+		if err := host.ClientIdentifierValidator(conPaths.ClientId); err != nil {
 			return fmt.Errorf("invalid client connection path %d: %w", i, err)
 		}
 		for _, path := range conPaths.Paths {

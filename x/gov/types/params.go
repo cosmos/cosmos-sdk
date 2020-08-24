@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -20,7 +20,7 @@ var (
 	DefaultMinDepositTokens = sdk.TokensFromConsensusPower(10)
 	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
 	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVeto             = sdk.NewDecWithPrec(334, 3)
+	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
 )
 
 // Parameter store key
@@ -83,22 +83,22 @@ func validateDepositParams(i interface{}) error {
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, veto sdk.Dec) TallyParams {
+func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
-		Quorum:    quorum,
-		Threshold: threshold,
-		Veto:      veto,
+		Quorum:        quorum,
+		Threshold:     threshold,
+		VetoThreshold: vetoThreshold,
 	}
 }
 
 // DefaultTallyParams default parameters for tallying
 func DefaultTallyParams() TallyParams {
-	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVeto)
+	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
 
 // Equal checks equality of TallyParams
 func (tp TallyParams) Equal(other TallyParams) bool {
-	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.Veto.Equal(other.Veto)
+	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
 }
 
 // String implements stringer insterface
@@ -125,10 +125,10 @@ func validateTallyParams(i interface{}) error {
 	if v.Threshold.GT(sdk.OneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", v)
 	}
-	if !v.Veto.IsPositive() {
+	if !v.VetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
 	}
-	if v.Veto.GT(sdk.OneDec()) {
+	if v.VetoThreshold.GT(sdk.OneDec()) {
 		return fmt.Errorf("veto threshold too large: %s", v)
 	}
 

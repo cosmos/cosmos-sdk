@@ -68,7 +68,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.R
 	rest.RegisterHandlers(clientCtx, rtr)
 }
 
-// RegisterGRPCRoutes registers the capability module's REST service handlers.
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the distribution module.
 func (AppModuleBasic) RegisterGRPCRoutes(_ sdkclient.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the distribution module.

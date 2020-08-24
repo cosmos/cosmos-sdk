@@ -84,7 +84,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 	rest.RegisterHandlers(clientCtx, rtr, proposalRESTHandlers)
 }
 
-// RegisterGRPCRoutes registers the capability module's REST service handlers.
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the gov module.
 func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 

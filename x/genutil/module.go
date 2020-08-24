@@ -56,7 +56,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, txEncodingConfi
 // RegisterRESTRoutes registers the REST routes for the genutil module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
-// RegisterGRPCRoutes registers the capability module's REST service handlers.
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the genutil module.
 func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 

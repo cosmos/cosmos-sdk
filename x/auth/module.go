@@ -65,7 +65,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 	rest.RegisterRoutes(clientCtx, rtr, types.StoreKey)
 }
 
-// RegisterGRPCRoutes registers the capability module's REST service handlers.
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the auth module.
 func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 

@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 				idcs := types.NewIdentifiedClientState(clientA1, clientStateA1)
 				idcs2 := types.NewIdentifiedClientState(clientA2, clientStateA2)
 
-				// order is orted by client id, localhost is last
+				// order is sorted by client id, localhost is last
 				expClientStates = []*types.IdentifiedClientState{&idcs, &idcs2}
 				req = &types.QueryClientStatesRequest{
 					Pagination: &query.PageRequest{

@@ -85,14 +85,16 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper keeper.AccountKeeper
+	accountKeeper     keeper.AccountKeeper
+	randGenAccountsFn simulation.RandomGenesisAccountsFn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, accountKeeper keeper.AccountKeeper, randGenAccountsFn simulation.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
+		AppModuleBasic:    AppModuleBasic{},
+		accountKeeper:     accountKeeper,
+		randGenAccountsFn: randGenAccountsFn,
 	}
 }
 
@@ -153,8 +155,8 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

@@ -575,9 +575,11 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 type storeParams struct {
-	key            types.StoreKey
-	db             dbm.DB
-	typ            types.StoreType
+	key types.StoreKey
+	db  dbm.DB
+	typ types.StoreType
+	// intialVersion is the initial version of the IAVL store. It is only used
+	// when `typ` is StoreTypeIAVL.
 	initialVersion int64
 }
 

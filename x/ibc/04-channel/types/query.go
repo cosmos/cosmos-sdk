@@ -22,7 +22,7 @@ func NewQueryChannelResponse(portID, channelID string, channel Channel, proof []
 
 // NewQueryChannelClientStateResponse creates a newQueryChannelClientStateResponse instance
 func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.IdentifiedClientState, proof []byte, height int64) *QueryChannelClientStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.Id, host.ClientStatePath()), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(identifiedClientState.ClientId, host.ClientStatePath()), "/"))
 	return &QueryChannelClientStateResponse{
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -13,22 +14,6 @@ import (
 
 var _ clientexported.Header = Header{}
 
-// Header defines the Tendermint client consensus Header.
-// It encapsulates all the information necessary to update from a trusted Tendermint ConsensusState.
-// The inclusion of TrustedHeight and TrustedValidators allows this update to process correctly, so long
-// as the ConsensusState for the TrustedHeight exists, this removes race conditions among relayers
-// The SignedHeader and ValidatorSet are the new untrusted update fields for the client.
-// The TrustedHeight is the height of a stored ConsensusState on the client that will be used to verify the new untrusted header.
-// The Trusted ConsensusState must be within the unbonding period of current time in order to correctly verify,
-// and the TrustedValidators must hash to TrustedConsensusState.NextValidatorsHash since that is the last trusted validator set
-// at the TrustedHeight.
-type Header struct {
-	tmtypes.SignedHeader `json:"signed_header" yaml:"signed_header"` // contains the commitment root
-	ValidatorSet         *tmtypes.ValidatorSet                       `json:"validator_set" yaml:"validator_set"`   // the validator set that signed Header
-	TrustedHeight        uint64                                      `json:"trusted_height" yaml:"trusted_height"` // the height of a trusted header seen by client less than or equal to Header
-	TrustedValidators    *tmtypes.ValidatorSet                       `json:"trusted_vals" yaml:"trusted_vals"`     // the last trusted validator set at trusted height
-}
-
 // ClientType defines that the Header is a Tendermint consensus algorithm
 func (h Header) ClientType() clientexported.ClientType {
 	return clientexported.Tendermint
@@ -37,38 +22,65 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
-		Height:             uint64(h.Height),
-		Timestamp:          h.Time,
-		Root:               commitmenttypes.NewMerkleRoot(h.AppHash),
-		NextValidatorsHash: h.NextValidatorsHash,
+		Height:             h.GetHeight(),
+		Timestamp:          h.GetTime(),
+		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
+		NextValidatorsHash: h.Header.NextValidatorsHash,
 	}
 }
 
-// GetHeight returns the current height
+// GetHeight returns the current height. It returns 0 if the tendermint
+// header is nil.
 //
 // NOTE: also referred as `sequence`
 func (h Header) GetHeight() uint64 {
-	return uint64(h.Height)
+	if h.Header == nil {
+		return 0
+	}
+
+	return uint64(h.Header.Height)
 }
 
-// ValidateBasic calls the SignedHeader ValidateBasic function
-// and checks that validatorsets are not nil
+// GetTime returns the current block timestamp. It returns a zero time if
+// the tendermint header is nil.
+func (h Header) GetTime() time.Time {
+	if h.Header == nil {
+		return time.Time{}
+	}
+	return h.Header.Time
+}
+
+// ValidateBasic calls the SignedHeader ValidateBasic function and checks
+// that validatorsets are not nil.
 // NOTE: TrustedHeight and TrustedValidators may be empty when creating client
 // with MsgCreateClient
 func (h Header) ValidateBasic(chainID string) error {
-	if err := h.SignedHeader.ValidateBasic(chainID); err != nil {
+	if h.Header == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint header cannot be nil")
+	}
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(&h.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrap(err, "header is not a tendermint header")
+	}
+	if err := tmSignedHeader.ValidateBasic(chainID); err != nil {
 		return sdkerrors.Wrap(err, "header failed basic validation")
 	}
+
 	// TrustedHeight is less than Header for updates
 	// and less than or equal to Header for misbehaviour
-	if h.TrustedHeight > uint64(h.Height) {
+	if h.TrustedHeight > h.GetHeight() {
 		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %d must be less than or equal to header height %d",
-			h.TrustedHeight, h.Height)
+			h.TrustedHeight, h.GetHeight())
 	}
+
 	if h.ValidatorSet == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
-	if !bytes.Equal(h.ValidatorsHash, h.ValidatorSet.Hash()) {
+	tmValset, err := tmtypes.ValidatorSetFromProto(h.ValidatorSet)
+	if err != nil {
+		return sdkerrors.Wrap(err, "validator set is not tendermint validator set")
+	}
+	if !bytes.Equal(h.Header.ValidatorsHash, tmValset.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
 	}
 	return nil

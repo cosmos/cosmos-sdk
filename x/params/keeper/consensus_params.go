@@ -1,11 +1,11 @@
-package std
+package keeper
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // ConsensusParamsKeyTable returns an x/params module keyTable to be used in
@@ -13,15 +13,15 @@ import (
 // standard validation functions. Applications can choose to adopt this KeyTable
 // or provider their own when the existing validation functions do not suite their
 // needs.
-func ConsensusParamsKeyTable() paramstypes.KeyTable {
-	return paramstypes.NewKeyTable(
-		paramstypes.NewParamSetPair(
+func ConsensusParamsKeyTable() types.KeyTable {
+	return types.NewKeyTable(
+		types.NewParamSetPair(
 			baseapp.ParamStoreKeyBlockParams, abci.BlockParams{}, baseapp.ValidateBlockParams,
 		),
-		paramstypes.NewParamSetPair(
+		types.NewParamSetPair(
 			baseapp.ParamStoreKeyEvidenceParams, tmproto.EvidenceParams{}, baseapp.ValidateEvidenceParams,
 		),
-		paramstypes.NewParamSetPair(
+		types.NewParamSetPair(
 			baseapp.ParamStoreKeyValidatorParams, tmproto.ValidatorParams{}, baseapp.ValidateValidatorParams,
 		),
 	)

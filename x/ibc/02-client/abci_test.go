@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -28,26 +30,22 @@ func TestClientTestSuite(t *testing.T) {
 	suite.Run(t, new(ClientTestSuite))
 }
 
-/* TODO: uncomment once simapp is switched to proto
 func (suite *ClientTestSuite) TestBeginBlocker() {
-	prevHeight := suite.ctx.BlockHeight()
+	prevHeight := suite.chainA.GetContext().BlockHeight()
 
-	localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-	suite.Require().True(found)
+	localHostClient := suite.chainA.GetClientState(exported.ClientTypeLocalHost)
 	suite.Require().Equal(prevHeight, int64(localHostClient.GetLatestHeight()))
 
 	for i := 0; i < 10; i++ {
 		// increment height
-		suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+		suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 
 		suite.Require().NotPanics(func() {
-			client.BeginBlocker(suite.ctx, suite.app.IBCKeeper.ClientKeeper)
+			client.BeginBlocker(suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper)
 		}, "BeginBlocker shouldn't panic")
 
-		localHostClient, found = suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-		suite.Require().True(found)
+		localHostClient = suite.chainA.GetClientState(exported.ClientTypeLocalHost)
 		suite.Require().Equal(prevHeight+1, int64(localHostClient.GetLatestHeight()))
 		prevHeight = int64(localHostClient.GetLatestHeight())
 	}
 }
-*/

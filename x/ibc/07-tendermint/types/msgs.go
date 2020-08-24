@@ -15,13 +15,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// Message types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-)
-
 var (
 	_ clientexported.MsgCreateClient     = (*MsgCreateClient)(nil)
 	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
@@ -74,7 +67,7 @@ func (msg MsgCreateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgCreateClient) Type() string {
-	return TypeMsgCreateClient
+	return clientexported.TypeMsgCreateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -95,7 +88,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
 	}
 	// ValidateBasic of provided header with self-attested chain-id
-	if err := msg.Header.ValidateBasic(msg.Header.ChainID); err != nil {
+	if err := msg.Header.ValidateBasic(msg.Header.Header.GetChainID()); err != nil {
 		return sdkerrors.Wrapf(ErrInvalidHeader, "header failed validatebasic with its own chain-id: %v", err)
 	}
 	if msg.TrustingPeriod >= msg.UnbondingPeriod {
@@ -139,20 +132,20 @@ func (msg MsgCreateClient) GetClientType() string {
 // GetConsensusState implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
-	root := commitmenttypes.NewMerkleRoot(msg.Header.AppHash)
+	root := commitmenttypes.NewMerkleRoot(msg.Header.Header.GetAppHash())
 	return &ConsensusState{
-		Timestamp:          msg.Header.Time,
+		Timestamp:          msg.Header.GetTime(),
 		Root:               root,
-		Height:             uint64(msg.Header.Height),
-		NextValidatorsHash: msg.Header.NextValidatorsHash,
+		Height:             msg.Header.GetHeight(),
+		NextValidatorsHash: msg.Header.Header.NextValidatorsHash,
 	}
 }
 
 // InitializeFromMsg creates a tendermint client state from a CreateClientMsg
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
-	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
+	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.ProofSpecs,
+		msg.Header.GetHeight(), msg.ProofSpecs,
 	)
 }
 
@@ -184,7 +177,7 @@ func (msg MsgUpdateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgUpdateClient) Type() string {
-	return TypeMsgUpdateClient
+	return clientexported.TypeMsgUpdateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -238,7 +231,7 @@ func (msg MsgSubmitClientMisbehaviour) Route() string { return host.RouterKey }
 
 // Type returns the MsgSubmitClientMisbehaviour's type.
 func (msg MsgSubmitClientMisbehaviour) Type() string {
-	return TypeMsgSubmitClientMisbehaviour
+	return clientexported.TypeMsgSubmitClientMisbehaviour
 }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.

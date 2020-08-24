@@ -60,8 +60,9 @@ message SignatureAndData {
   bytes data                         = 2;
 }
 
-// Signature contains the signature and the timestamp of the signature.
-message Signature {
+// TimedstampedSignature contains the signature and the timestamp of the
+// signature.
+message TimestampedSignature {
   option (gogoproto.goproto_getters) = false;
   bytes  signature                   = 1;
   uint64 timestamp                   = 2;

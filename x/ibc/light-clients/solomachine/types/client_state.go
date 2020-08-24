@@ -359,41 +359,41 @@ func produceVerificationArgs(
 	sequence uint64,
 	prefix commitmentexported.Prefix,
 	proof []byte,
-) (signature Signature, err error) {
+) (signature TimestampedSignature, err error) {
 	if cs.IsFrozen() {
-		return Signature{}, clienttypes.ErrClientFrozen
+		return TimestampedSignature{}, clienttypes.ErrClientFrozen
 	}
 
 	if prefix == nil {
-		return Signature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+		return TimestampedSignature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
 	_, ok := prefix.(commitmenttypes.MerklePrefix)
 	if !ok {
-		return Signature{}, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
+		return TimestampedSignature{}, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}
 
 	if proof == nil {
-		return Signature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+		return TimestampedSignature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
 	if err = cdc.UnmarshalBinaryBare(proof, &signature); err != nil {
-		return Signature{}, sdkerrors.Wrapf(ErrInvalidProof, "failed to unmarshal proof into type %T", Signature{})
+		return TimestampedSignature{}, sdkerrors.Wrapf(ErrInvalidProof, "failed to unmarshal proof into type %T", TimestampedSignature{})
 	}
 
 	if cs.ConsensusState == nil {
-		return Signature{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+		return TimestampedSignature{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
 	if cs.GetLatestHeight() < sequence {
-		return Signature{}, sdkerrors.Wrapf(
+		return TimestampedSignature{}, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"client state sequence < proof sequence (%d < %d)", cs.GetLatestHeight(), sequence,
 		)
 	}
 
 	if cs.ConsensusState.GetTimestamp() > signature.Timestamp {
-		return Signature{}, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), signature.Timestamp)
+		return TimestampedSignature{}, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), signature.Timestamp)
 	}
 
 	return signature, nil

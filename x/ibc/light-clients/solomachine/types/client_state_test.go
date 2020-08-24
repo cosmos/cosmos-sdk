@@ -81,7 +81,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -200,7 +200,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -321,7 +321,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -404,7 +404,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -484,7 +484,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -564,7 +564,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -643,7 +643,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}
@@ -723,7 +723,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
 
-	signatureDoc := &types.Signature{
+	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
 	}

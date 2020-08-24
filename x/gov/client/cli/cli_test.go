@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -99,6 +100,203 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestCmdParams() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"voting_params":{"voting_period":"172800000000000"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}}`,
+		},
+		{
+			"text output",
+			[]string{},
+			`
+deposit_params:
+  max_deposit_period: "172800000000000"
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+tally_params:
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+voting_params:
+  voting_period: "172800000000000"
+	`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCmdParam() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"voting params",
+			[]string{
+				"voting",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"voting_period":"172800000000000"}`,
+		},
+		{
+			"tally params",
+			[]string{
+				"tallying",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}`,
+		},
+		{
+			"deposit params",
+			[]string{
+				"deposit",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			`{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}`,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParam()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+// needs debug
+// func (s *IntegrationTestSuite) TestCmdProposer() {
+// 	val := s.network.Validators[0]
+
+// 	testCases := []struct {
+// 		name           string
+// 		args           []string
+// 		expectErr      bool
+// 		expectedOutput string
+// 	}{
+// 		{
+// 			"without proposal id",
+// 			[]string{
+// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+// 			},
+// 			true,
+// 			``,
+// 		},
+// 		{
+// 			"json output",
+// 			[]string{
+// 				"1",
+// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+// 			},
+// 			false,
+// 			``,
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		tc := tc
+
+// 		s.Run(tc.name, func() {
+// 			cmd := cli.GetCmdQueryProposer()
+// 			clientCtx := val.ClientCtx
+// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+// 			if tc.expectErr {
+// 				s.Require().Error(err)
+// 			} else {
+// 				s.Require().NoError(err)
+// 				s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+// 			}
+// 		})
+// 	}
+// }
+
+func (s *IntegrationTestSuite) TestCmdTally() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput types.TallyResult
+	}{
+		{
+			"without proposal id",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			types.TallyResult{},
+		},
+		{
+			"json output",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			types.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+		},
+		{
+			"json output",
+			[]string{
+				"2",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			types.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryTally()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				var tally types.TallyResult
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tally), out.String())
+				s.Require().Equal(tally, tc.expectedOutput)
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {

@@ -31,7 +31,7 @@ func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signi
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}
 
-	protoTx, ok := tx.(*builder)
+	protoTx, ok := tx.(*wrapper)
 	if !ok {
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}

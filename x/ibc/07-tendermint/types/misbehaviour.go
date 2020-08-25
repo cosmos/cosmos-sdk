@@ -24,7 +24,7 @@ var (
 )
 
 // NewMisbehaviour creates a new Misbehaviour instance.
-func NewMisbehaviour(clientID, chainID string, header1, header2 Header) *Misbehaviour {
+func NewMisbehaviour(clientID, chainID string, header1, header2 *Header) *Misbehaviour {
 	return &Misbehaviour{
 		ClientId: clientID,
 		ChainId:  chainID,
@@ -87,6 +87,12 @@ func (misbehaviour Misbehaviour) GetTime() time.Time {
 
 // ValidateBasic implements Misbehaviour interface
 func (misbehaviour Misbehaviour) ValidateBasic() error {
+	if misbehaviour.Header1 == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "misbehaviour Header1 cannot be nil")
+	}
+	if misbehaviour.Header2 == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "misbehaviour Header2 cannot be nil")
+	}
 	if misbehaviour.Header1.TrustedHeight == 0 {
 		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "misbehaviour Header1 must have non-zero trusted height")
 	}

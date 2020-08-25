@@ -15,7 +15,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
 	suite.Require().Equal("client", misbehaviour.Route())
 	suite.Require().Equal("client_misbehaviour", misbehaviour.Type())
-	suite.Require().Equal(tmbytes.HexBytes(tmhash.Sum(types.SubModuleCdc.MustMarshalBinaryBare(&misbehaviour))), misbehaviour.Hash())
+	suite.Require().Equal(tmbytes.HexBytes(tmhash.Sum(types.SubModuleCdc.MustMarshalBinaryBare(misbehaviour))), misbehaviour.Hash())
 	suite.Require().Equal(int64(suite.solomachine.Sequence), misbehaviour.GetHeight())
 }
 
@@ -94,7 +94,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 		suite.Run(tc.name, func() {
 
 			misbehaviour := suite.solomachine.CreateMisbehaviour()
-			tc.malleateEvidence(&misbehaviour)
+			tc.malleateEvidence(misbehaviour)
 
 			err := misbehaviour.ValidateBasic()
 

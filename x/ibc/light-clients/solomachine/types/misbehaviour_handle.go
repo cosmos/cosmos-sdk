@@ -18,11 +18,11 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 
-	soloMisbehaviour, ok := misbehaviour.(Misbehaviour)
+	soloMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType,
-			"misbehaviour type %T, expected %T", misbehaviour, Misbehaviour{},
+			"misbehaviour type %T, expected %T", misbehaviour, &Misbehaviour{},
 		)
 	}
 
@@ -42,7 +42,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // over two different messages at the same sequence.
 // NOTE: a check that the misbehaviour message data are not equal is done by
 // misbehaviour.ValidateBasic which is called by the 02-client keeper.
-func checkMisbehaviour(clientState ClientState, soloMisbehaviour Misbehaviour) error {
+func checkMisbehaviour(clientState ClientState, soloMisbehaviour *Misbehaviour) error {
 	pubKey := clientState.ConsensusState.GetPubKey()
 
 	data := EvidenceSignBytes(soloMisbehaviour.Sequence, soloMisbehaviour.SignatureOne.Data)

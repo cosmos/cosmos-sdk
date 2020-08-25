@@ -103,7 +103,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // checkMisbehaviourHeader checks that a Header in Misbehaviour is valid misbehaviour given
 // a trusted ConsensusState
 func checkMisbehaviourHeader(
-	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,
+	clientState *ClientState, consState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) error {
 
 	tmTrustedValset, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)

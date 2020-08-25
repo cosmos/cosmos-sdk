@@ -49,12 +49,14 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
 	var connection types.ConnectionEnd
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &connection); err != nil {
+	if err := cdc.UnmarshalBinaryBare(res.Value, &connection); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -92,12 +94,14 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 		return nil, err
 	}
 
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
 	var paths []string
 	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &paths); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

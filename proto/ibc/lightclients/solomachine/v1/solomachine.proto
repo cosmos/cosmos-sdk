@@ -78,7 +78,7 @@ message MsgCreateClient {
 message MsgUpdateClient {
   option (gogoproto.goproto_getters) = false;
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  Header header    = 2 [(gogoproto.nullable) = false];
+  Header header    = 2;
 }
 
 // MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
@@ -87,6 +87,6 @@ message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
   bytes submitter                    = 1
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  Evidence evidence = 2 [(gogoproto.nullable) = false];
+  Evidence evidence = 2;
 }
 

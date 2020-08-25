@@ -35,7 +35,7 @@ func TestRandomizedGenState(t *testing.T) {
 		GenState:     make(map[string]json.RawMessage),
 	}
 
-	simulation.RandomizedGenState(&simState)
+	simulation.RandomizedGenState(&simState, simulation.RandomGenesisAccounts)
 
 	var authGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &authGenesis)

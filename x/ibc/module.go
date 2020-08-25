@@ -117,9 +117,9 @@ func (AppModule) QuerierRoute() string {
 	return host.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the ibc module sdk.Querier.
+// LegacyQuerierHandler returns nil. IBC does not support the legacy querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(*am.keeper, legacyQuerierCdc)
+	return nil
 }
 
 // RegisterQueryService registers the gRPC query service for the ibc module.

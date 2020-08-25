@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -229,16 +230,15 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	}
 }
 
-/*
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
-	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.ChainID, suite.ctx.BlockHeight())
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.Header.GetChainID(), suite.ctx.BlockHeight())
 
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
 	suite.Require().NoError(err, err)
 	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
-}*/
+}
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPrivVal := tmtypes.NewMockPV()
@@ -267,17 +267,17 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	testCases := []struct {
 		name     string
-		evidence ibctmtypes.Evidence
+		evidence *ibctmtypes.Evidence
 		malleate func() error
 		expPass  bool
 	}{
 		{
 			"trusting period misbehavior should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -290,11 +290,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehavior at later height should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, suite.ctx.BlockTime(), bothValSet, valSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -318,11 +318,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehavior at later height with different trusted heights should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -346,11 +346,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehaviour fails validatebasic",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+1, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -363,11 +363,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted ConsensusState1 not found",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, suite.ctx.BlockTime(), bothValSet, valSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -380,11 +380,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted ConsensusState2 not found",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -398,17 +398,17 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 		{
 			"client state not found",
-			ibctmtypes.Evidence{},
+			&ibctmtypes.Evidence{},
 			func() error { return nil },
 			false,
 		},
 		{
 			"client already frozen at earlier height",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -425,11 +425,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 		{
 			"misbehaviour check failed",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), altValSet, bothValSet, altSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())

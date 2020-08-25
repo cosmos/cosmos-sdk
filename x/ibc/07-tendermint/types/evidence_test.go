@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -15,19 +16,18 @@ import (
 func (suite *TendermintTestSuite) TestEvidence() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
 
-	ev := ibctmtypes.Evidence{
+	ev := &ibctmtypes.Evidence{
 		Header1:  suite.header,
 		Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
-		ChainID:  chainID,
-		ClientID: clientID,
+		ChainId:  chainID,
+		ClientId: clientID,
 	}
 
 	suite.Require().Equal(ev.ClientType(), clientexported.Tendermint)
 	suite.Require().Equal(ev.GetClientID(), clientID)
 	suite.Require().Equal(ev.Route(), "client")
 	suite.Require().Equal(ev.Type(), "client_misbehaviour")
-	// uncomment when evidence is migrated to proto
-	//	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.aminoCdc.MustMarshalBinaryBare(ev))))
+	suite.Require().Equal(ev.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.cdc.MustMarshalBinaryBare(ev))))
 	suite.Require().Equal(ev.GetHeight(), int64(height))
 }
 
@@ -53,138 +53,138 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 
 	testCases := []struct {
 		name             string
-		evidence         ibctmtypes.Evidence
+		evidence         *ibctmtypes.Evidence
 		malleateEvidence func(ev *ibctmtypes.Evidence) error
 		expPass          bool
 	}{
 		{
 			"valid evidence",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			true,
 		},
 		{
 			"valid evidence with different trusted headers",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			true,
 		},
 		{
 			"trusted height is 0 in Header1",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"trusted height is 0 in Header2",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"trusted valset is nil in Header1",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				Header2:  suite.header,
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"trusted valset is nil in Header2",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"invalid client ID ",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainID:  chainID,
-				ClientID: "GAIA",
+				ChainId:  chainID,
+				ClientId: "GAIA",
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"wrong chainID on header1",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainID:  "ethermint",
-				ClientID: clientID,
+				ChainId:  "ethermint",
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"wrong chainID on header2",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"mismatched heights",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, 6, 4, suite.now, suite.valSet, suite.valSet, signers),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"same block id",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  suite.header,
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error { return nil },
 			false,
 		},
 		{
 			"header 1 doesn't have 2/3 majority",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.header,
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
@@ -202,11 +202,11 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		},
 		{
 			"header 2 doesn't have 2/3 majority",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
@@ -224,11 +224,11 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		},
 		{
 			"validators sign off on wrong commit",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Evidence{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
-				ChainID:  chainID,
-				ClientID: clientID,
+				ChainId:  chainID,
+				ClientId: clientID,
 			},
 			func(ev *ibctmtypes.Evidence) error {
 				tmBlockID := ibctmtypes.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
@@ -242,7 +242,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.malleateEvidence(&tc.evidence)
+		err := tc.malleateEvidence(tc.evidence)
 		suite.Require().NoError(err)
 
 		if tc.expPass {

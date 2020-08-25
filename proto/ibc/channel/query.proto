@@ -39,7 +39,7 @@ service Query {
   // associated with the provided channel identifiers.
   rpc ChannelConsensusState(QueryChannelConsensusStateRequest)
     returns (QueryChannelConsensusStateResponse) {
-      option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/{height}";
+      option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/epoch/{epoch_number}/height/{epoch_height}";
   }
 
   // PacketCommitment queries a stored packet commitment hash.
@@ -94,7 +94,7 @@ message QueryChannelResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
@@ -152,7 +152,7 @@ message QueryChannelClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryChannelConsensusStateRequest is the request type for the
@@ -162,8 +162,10 @@ message QueryChannelConsensusStateRequest {
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
+  // epoch of the consensus state
+  uint64 epoch_number = 3;
   // height of the consensus state
-  uint64 height = 3;
+  uint64 epoch_height = 4;
 }
 
 // QueryChannelClientStateResponse is the Response type for the
@@ -178,7 +180,7 @@ message QueryChannelConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  uint64 proof_height = 5;
+  ibc.client.Height proof_height = 5;
 }
 
 // QueryPacketCommitmentRequest is the request type for the
@@ -203,7 +205,7 @@ message QueryPacketCommitmentResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryPacketCommitmentsRequest is the request type for the
@@ -249,7 +251,7 @@ message QueryPacketAcknowledgementResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryUnrelayedPacketsRequest is the request type for the
@@ -294,6 +296,6 @@ message QueryNextSequenceReceiveResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 

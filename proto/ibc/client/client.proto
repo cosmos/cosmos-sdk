@@ -21,3 +21,13 @@ message ClientConsensusStates {
   // consensus states associated with the client
   repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
 }
+
+// Height defines the height type that all clients must use to store consensus states
+message Height {
+  // the epoch that the client is currently on
+  // this number may be incremented whenever the height of a chain is reset (e.g. breaking upgrades)
+  // so that the two heights across two versions may be differentiated by the IBC clients
+  uint64 epoch_number = 1 [(gogoproto.moretags) = "yaml:\"epoch_number\""];
+  // the height within the given epoch
+  uint64 epoch_height = 2 [(gogoproto.moretags) = "yaml:\"epoch_height\""];
+}

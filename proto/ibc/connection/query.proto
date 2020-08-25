@@ -62,7 +62,7 @@ message QueryConnectionResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -99,7 +99,7 @@ message QueryClientConnectionsResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was generated
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -121,7 +121,7 @@ message QueryConnectionClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4;
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
@@ -146,5 +146,5 @@ message QueryConnectionConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  uint64 proof_height = 5;
+  ibc.client.Height proof_height = 5;
 }

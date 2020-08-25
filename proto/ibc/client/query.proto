@@ -22,7 +22,7 @@ service Query {
 
   // ConsensusState queries a consensus state associated with a client state at a given height.
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/{height}";
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/height/{epoch_height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given client.
@@ -49,7 +49,7 @@ message QueryClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  Height proof_height = 4;
 }
 
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
@@ -73,10 +73,12 @@ message QueryClientStatesResponse {
 message QueryConsensusStateRequest {
   // client identifier
   string client_id = 1;
-  // consensus state height
-  uint64 height = 2;
+  // consensus state epoch-number
+  uint64 epoch_number = 2;
+  // consensus state epoch-height
+  uint64 epoch_height = 3;
   // latest_height overrrides the height field and queries the latest stored ConsensusState
-  bool latest_height = 3;
+  bool latest_height = 4;
 }
 
 // QueryConsensusStateResponse is the response type for the Query/ConsensusState RPC method
@@ -88,7 +90,7 @@ message QueryConsensusStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  Height proof_height = 4;
 }
 
 // QueryConsensusStatesRequest is the request type for the Query/ConsensusStates RPC method.

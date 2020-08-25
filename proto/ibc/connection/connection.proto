@@ -39,20 +39,11 @@ message MsgConnectionOpenTry {
   uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
-<<<<<<< HEAD
-  bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  uint64 proof_epoch  = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
-  uint64 proof_height = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  // proof of client consensus state
-  bytes proof_consensus = 8 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_epoch = 9 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
-=======
   bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   // proof of client state included in message
   bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
   bytes proof_consensus = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
   uint64 consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 11
@@ -72,20 +63,11 @@ message MsgConnectionOpenAck {
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of the initialization the connection on Chain B: `UNITIALIZED ->
   // TRYOPEN`
-<<<<<<< HEAD
-  bytes proof_try = 3 [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  uint64 proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
-  uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  // proof of client consensus state
-  bytes proof_consensus = 6 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  uint64 consensus_epoch = 7 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
-=======
   bytes proof_try = 5 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   // proof of client state included in message
   bytes proof_client = 6 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
   bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
   uint64 consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 9

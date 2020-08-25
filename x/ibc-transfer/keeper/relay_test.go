@@ -117,12 +117,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			}
 
 			err = suite.chainA.App.TransferKeeper.SendTransfer(
-<<<<<<< HEAD
-				suite.chainA.GetContext(), testPort1, testChannel1, tc.amount, testAddr1, testAddr2.String(), 3, 110, 0,
-=======
 				suite.chainA.GetContext(), channelA.PortID, channelA.ID, amount,
 				suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0,
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 			)
 
 			if tc.expPass {
@@ -176,13 +172,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 		}, false, false},
 	}
 
-<<<<<<< HEAD
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
-
-	for i, tc := range testCases {
-=======
 	for _, tc := range testCases {
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 		tc := tc
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -275,13 +265,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			}, false, false},
 	}
 
-<<<<<<< HEAD
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
-
-	for i, tc := range testCases {
-=======
 	for _, tc := range testCases {
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 		tc := tc
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -360,13 +344,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			}, true, false},
 	}
 
-<<<<<<< HEAD
-	packet := channeltypes.NewPacket(data.GetBytes(), 1, testPort1, testChannel1, testPort2, testChannel2, 3, 100, 0)
-
-	for i, tc := range testCases {
-=======
 	for _, tc := range testCases {
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 		tc := tc
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {

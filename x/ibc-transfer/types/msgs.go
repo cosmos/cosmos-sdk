@@ -14,13 +14,8 @@ const (
 // NewMsgTransfer creates a new MsgTransfer instance
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-<<<<<<< HEAD
-	amount sdk.Coins, sender sdk.AccAddress, receiver string,
-	timeoutEpoch, timeoutHeight, timeoutTimestamp uint64,
-=======
 	token sdk.Coin, sender sdk.AccAddress, receiver string,
 	timeoutHeight, timeoutTimestamp uint64,
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,

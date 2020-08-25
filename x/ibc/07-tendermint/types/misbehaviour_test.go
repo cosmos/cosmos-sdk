@@ -54,7 +54,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	testCases := []struct {
 		name             string
 		misbehaviour     *ibctmtypes.Misbehaviour
-		malleateEvidence func(misbehaviour *ibctmtypes.Misbehaviour) error
+		malleateMisbehaviour func(misbehaviour *ibctmtypes.Misbehaviour) error
 		expPass          bool
 	}{
 		{

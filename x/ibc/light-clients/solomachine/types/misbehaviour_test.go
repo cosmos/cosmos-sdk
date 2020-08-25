@@ -22,7 +22,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 	testCases := []struct {
 		name             string
-		malleateEvidence func(misbehaviour *types.Misbehaviour)
+		malleateMisbehaviour func(misbehaviour *types.Misbehaviour)
 		expPass          bool
 	}{
 		{

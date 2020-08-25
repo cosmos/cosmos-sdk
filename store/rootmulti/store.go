@@ -89,7 +89,9 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
-	if _, ok := rs.storesParams[key]; ok {
+	// If we mount the store again with the same initial version, panic with
+	// duplicate key error.
+	if _, ok := rs.storesParams[key]; ok && initialVersion == rs.storesParams[key].initialVersion {
 		panic(fmt.Sprintf("store duplicate store key %v", key))
 	}
 	if _, ok := rs.keysByName[key.Name()]; ok {

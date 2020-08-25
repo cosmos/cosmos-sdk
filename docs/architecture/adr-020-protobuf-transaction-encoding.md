@@ -8,6 +8,8 @@
 - 2020 April 30: Switch to `Any`
 - 2020 May 14: Describe public key encoding
 - 2020 June 08: Store `TxBody` and `AuthInfo` as bytes in `SignDoc`; Document `TxRaw` as broadcast and storage type.
+- 2020 August 07: Use ADR 027 for serializing `SignDoc`.
+- 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`.
 
 ## Status
 
@@ -28,7 +30,7 @@ querying. However, this ADR solely focuses on transactions. Querying should be
 addressed in a future ADR, but it should build off of these proposals.
 
 Based on detailed discussions ([\#6030](https://github.com/cosmos/cosmos-sdk/issues/6030)
-and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original 
+and [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078)), the original
 design for transactions was changed substantially from an `oneof` /JSON-signing
 approach to the approach described below.
 
@@ -37,15 +39,15 @@ approach to the approach described below.
 ### Transactions
 
 Since interface values are encoded with `google.protobuf.Any` in state (see [ADR 019](adr-019-protobuf-state-encoding.md)),
- `sdk.Msg`s are encoding with `Any` in transactions.
- 
- One of the main goals of using `Any` to encode interface values is to have a
- core set of types which is reused by apps so that
- clients can safely be compatible with as many chains as possible.
- 
- It is one of the goals of this specification to provide a flexible cross-chain transaction
- format that can serve a wide variety of use cases without breaking client 
- compatibility.
+`sdk.Msg`s are encoding with `Any` in transactions.
+
+One of the main goals of using `Any` to encode interface values is to have a
+core set of types which is reused by apps so that
+clients can safely be compatible with as many chains as possible.
+
+It is one of the goals of this specification to provide a flexible cross-chain transaction
+format that can serve a wide variety of use cases without breaking client
+compatibility.
 
 In order to facilitate signing, transactions are separated into `TxBody`,
 which will be re-used by `SignDoc` below, and `signatures`:
@@ -105,20 +107,24 @@ message SignerInfo {
     // ModeInfo describes the signing mode of the signer and is a nested
     // structure to support nested multisig pubkey's
     ModeInfo mode_info = 2;
+    // sequence is the sequence of the account, which describes the
+    // number of committed transactions signed by a given address. It is used to prevent
+    // replay attacks.
+    uint64 sequence = 3;
 }
 
 message ModeInfo {
     oneof sum {
         Single single = 1;
         Multi multi = 2;
-    }   
-   
+    }
+
     // Single is the mode info for a single signer. It is structured as a message
     // to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the future
     message Single {
         SignMode mode = 1;
     }
-   
+
     // Multi is the mode info for a multisig public key
     message Multi {
         // bitarray specifies which keys within the multisig are signing
@@ -127,7 +133,7 @@ message ModeInfo {
         // which could include nested multisig public keys
         repeated ModeInfo mode_infos = 2;
     }
-}    
+}
 
 enum SignMode {
     SIGN_MODE_UNSPECIFIED = 0;
@@ -135,7 +141,7 @@ enum SignMode {
     SIGN_MODE_DIRECT = 1;
 
     SIGN_MODE_TEXTUAL = 2;
-    
+
     SIGN_MODE_LEGACY_AMINO_JSON = 127;
 }
 ```
@@ -157,10 +163,10 @@ attempt to upstream important improvements to `Tx`.
 
 All of the signing modes below aim to provide the following guarantees:
 
-* **No Malleability**: `TxBody` and `AuthInfo` cannot change once the transaction
-is signed
-* **Predictable Gas**: if I am signing a transaction where I am paying a fee,
-the final gas is fully dependent on what I am signing
+- **No Malleability**: `TxBody` and `AuthInfo` cannot change once the transaction
+  is signed
+- **Predictable Gas**: if I am signing a transaction where I am paying a fee,
+  the final gas is fully dependent on what I am signing
 
 These guarantees give the maximum amount confidence to message signers that
 manipulation of `Tx`s by intermediaries can't result in any meaningful changes.
@@ -170,11 +176,11 @@ manipulation of `Tx`s by intermediaries can't result in any meaningful changes.
 The "direct" signing behavior is to sign the raw `TxBody` bytes as broadcast over
 the wire. This has the advantages of:
 
-* requiring the minimum additional client capabilities beyond a standard protocol
-buffers implementation
-* leaving effectively zero holes for transaction malleability (i.e. there are no
-subtle differences between the signing and encoding formats which could 
-potentially be exploited by an attacker)
+- requiring the minimum additional client capabilities beyond a standard protocol
+  buffers implementation
+- leaving effectively zero holes for transaction malleability (i.e. there are no
+  subtle differences between the signing and encoding formats which could
+  potentially be exploited by an attacker)
 
 Signatures are structured using the `SignDoc` below which reuses the serialization of
 `TxBody` and `AuthInfo` and only adds the fields which are needed for signatures:
@@ -188,17 +194,13 @@ message SignDoc {
     bytes auth_info = 2;
     string chain_id = 3;
     uint64 account_number = 4;
-    // account_sequence starts at 1 rather than 0 to avoid the case where
-    // the default 0 value must be omitted in protobuf serialization
-    uint64 account_sequence = 5;
 }
 ```
 
 In order to sign in the default mode, clients take the following steps:
 
 1. Serialize `TxBody` and `AuthInfo` using any valid protobuf implementation.
-2. Create a `SignDoc` and encode it. (The only requirement of the underlying
-   protobuf implementation is that fields are serialized in order).
+2. Create a `SignDoc` and serialize it using [ADR 027](./adr-027-deterministic-protobuf-serialization.md).
 3. Sign the encoded `SignDoc` bytes.
 4. Build a `TxRaw` and serialize it for broadcasting.
 
@@ -214,8 +216,7 @@ Signature verifiers do:
 3. For each required signer:
    - Pull account number and sequence from the state.
    - Obtain the public key either from state or `AuthInfo`'s `signer_infos`.
-   - Create a `SignDoc` and serialize it. Due to the simplicity of the type it
-     is expected that this matches the serialization used by the signer.
+   - Create a `SignDoc` and serialize it using [ADR 027](./adr-027-deterministic-protobuf-serialization.md).
    - Verify the signature at the the same list position against the serialized `SignDoc`.
 
 #### `SIGN_MODE_LEGACY_AMINO`
@@ -236,7 +237,7 @@ endpoint before broadcasting.
 As was discussed extensively in [\#6078](https://github.com/cosmos/cosmos-sdk/issues/6078),
 there is a desire for a human-readable signing encoding, especially for hardware
 wallets like the [Ledger](https://www.ledger.com) which display
-transaction contents to users before signing. JSON was an attempt at this but 
+transaction contents to users before signing. JSON was an attempt at this but
 falls short of the ideal.
 
 `SIGN_MODE_TEXTUAL` is intended as a placeholder for a human-readable
@@ -257,11 +258,11 @@ by `SIGN_MODE_TEXTUAL` when it is implemented.
 Unknown fields in protobuf messages should generally be rejected by transaction
 processors because:
 
-* important data may be present in the unknown fields, that if ignored, will
-cause unexpected behavior for clients
-* they present a malleability vulnerability where attackers can bloat tx size
-by adding random uninterpreted data to unsigned content (i.e. the master `Tx`,
-not `TxBody`)
+- important data may be present in the unknown fields, that if ignored, will
+  cause unexpected behavior for clients
+- they present a malleability vulnerability where attackers can bloat tx size
+  by adding random uninterpreted data to unsigned content (i.e. the master `Tx`,
+  not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
 (https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
@@ -272,10 +273,11 @@ the range of 1024-2047) be considered non-critical fields that can safely be
 ignored if unknown.
 
 To handle this we will need a unknown field filter that:
-* always rejects unknown fields in unsigned content (i.e. top-level `Tx` and
-unsigned parts of `AuthInfo` if present based on the signing mode)
-* rejects unknown fields in all messages (including nested `Any`s) other than
-fields with bit 11 set
+
+- always rejects unknown fields in unsigned content (i.e. top-level `Tx` and
+  unsigned parts of `AuthInfo` if present based on the signing mode)
+- rejects unknown fields in all messages (including nested `Any`s) other than
+  fields with bit 11 set
 
 This will likely need to be a custom protobuf parser pass that takes message bytes
 and `FileDescriptor`s and returns a boolean result.
@@ -287,17 +289,18 @@ so a natural solution might be to use `Any` as we are doing for other interfaces
 There are, however, a limited number of public keys in existence and new ones
 aren't created overnight. The proposed solution is to use a `oneof` that:
 
-* attempts to catalog all known key types even if a given app can't use them all
-* has an `Any` member that can be used when a key type isn't present in the `oneof`
+- attempts to catalog all known key types even if a given app can't use them all
+- has an `Any` member that can be used when a key type isn't present in the `oneof`
 
 Ex:
+
 ```proto
 message PublicKey {
     oneof sum {
         bytes secp256k1 = 1;
         bytes ed25519 = 2;
         ...
-        google.protobuf.Any any_pubkey = 15; 
+        google.protobuf.Any any_pubkey = 15;
     }
 }
 ```
@@ -375,7 +378,7 @@ can gracefully transition away from Amino JSON.
 
 ### `SIGN_MODE_DIRECT_AUX`
 
-(*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
+(\*Documented as option (3) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933)
 
 We could add a mode `SIGN_MODE_DIRECT_AUX`
 to support scenarios where multiple signatures
@@ -402,7 +405,7 @@ fees or gas and thus can just sign `TxBody`.
 To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
 
 1. Encode `SignDocAux` (with the same requirement that fields must be serialized
-in order):
+   in order):
 
 ```proto
 // types/types.proto
@@ -423,20 +426,17 @@ message SignDocAux {
     PublicKey public_key = 2;
     string chain_id = 3;
     uint64 account_number = 4;
-    // account_sequence starts at 1 rather than 0 to avoid the case where
-    // the default 0 value must be omitted in protobuf serialization
-    uint64 account_sequence = 5;
 }
 ```
 
 2. Sign the encoded `SignDocAux` bytes
 3. Send their signature and `SignerInfo` to primary signer who will then
-sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `AuthInfo`
-added) once enough signatures have been collected
+   sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `AuthInfo`
+   added) once enough signatures have been collected
 
 ### `SIGN_MODE_DIRECT_RELAXED`
 
-(*Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933*)
+(_Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933_)
 
 This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
 coordinate public keys and signing modes in advance. It would involve an alternate
@@ -456,7 +456,7 @@ too burdensome.
 ### Negative
 
 - `google.protobuf.Any` type URLs increase transaction size although the effect
-may be negligible or compression may be able to mitigate it.
+  may be negligible or compression may be able to mitigate it.
 
 ### Neutral
 

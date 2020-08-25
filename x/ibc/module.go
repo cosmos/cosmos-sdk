@@ -20,7 +20,6 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -65,7 +64,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes registers the REST routes for the ibc module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr, host.StoreKey)
 }
 
 // GetTxCmd returns the root tx command for the ibc module.
@@ -119,9 +117,9 @@ func (AppModule) QuerierRoute() string {
 	return host.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the ibc module sdk.Querier.
+// LegacyQuerierHandler returns nil. IBC does not support the legacy querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(*am.keeper, legacyQuerierCdc)
+	return nil
 }
 
 // RegisterQueryService registers the gRPC query service for the ibc module.

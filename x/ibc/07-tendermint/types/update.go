@@ -13,7 +13,6 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
@@ -47,19 +46,10 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	}
 
 	// Get consensus bytes from clientStore
-	consBytes := clientStore.Get(host.KeyConsensusState(tmHeader.TrustedHeight))
-	if consBytes == nil {
+	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
+	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrConsensusStateNotFound, "consensus state not found for trusted height %d", tmHeader.TrustedHeight,
-		)
-	}
-	// Unmarshal consensus bytes into clientexported.ConensusState
-	consState := clienttypes.MustUnmarshalConsensusState(cdc, consBytes)
-	// Cast to tendermint-specific type
-	tmConsState, ok := consState.(*ConsensusState)
-	if !ok {
-		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidConsensus, "expected type %T, got %T", ConsensusState{}, consState,
+			err, "could not get consensus state from clientstore at TrustedHeight: %d", tmHeader.TrustedHeight,
 		)
 	}
 
@@ -80,9 +70,15 @@ func checkTrustedHeader(header Header, consState *ConsensusState) error {
 			header.TrustedHeight, consState.Height,
 		)
 	}
+
+	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
+	if err != nil {
+		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+	}
+
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
-	tvalHash := header.TrustedValidators.Hash()
+	tvalHash := tmTrustedValidators.Hash()
 	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
 		return sdkerrors.Wrapf(
 			ErrInvalidValidatorSet,
@@ -101,6 +97,21 @@ func checkValidity(
 ) error {
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
+	}
+
+	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
+	if err != nil {
+		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+	}
+
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(&header.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
+	}
+
+	tmValidatorSet, err := tmtypes.ValidatorSetFromProto(header.ValidatorSet)
+	if err != nil {
+		return sdkerrors.Wrap(err, "validator set in not tendermint validator set type")
 	}
 
 	// assert header height is newer than consensus state
@@ -127,9 +138,9 @@ func checkValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err := light.Verify(
+	err = light.Verify(
 		clientState.GetChainID(), &signedHeader,
-		header.TrustedValidators, &header.SignedHeader, header.ValidatorSet,
+		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
@@ -140,14 +151,14 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
-	if uint64(header.Height) > clientState.LatestHeight {
-		clientState.LatestHeight = uint64(header.Height)
+	if header.GetHeight() > clientState.LatestHeight {
+		clientState.LatestHeight = header.GetHeight()
 	}
 	consensusState := &ConsensusState{
-		Height:             uint64(header.Height),
-		Timestamp:          header.Time,
-		Root:               commitmenttypes.NewMerkleRoot(header.AppHash),
-		NextValidatorsHash: header.NextValidatorsHash,
+		Height:             header.GetHeight(),
+		Timestamp:          header.GetTime(),
+		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
+		NextValidatorsHash: header.Header.NextValidatorsHash,
 	}
 
 	return clientState, consensusState

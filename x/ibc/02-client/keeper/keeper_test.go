@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -57,6 +58,72 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	suite.Require().Equal(suite.consensusState, tmConsState, "ConsensusState not stored correctly")
 }
 
+func (suite *KeeperTestSuite) TestValidateSelfClient() {
+	testCases := []struct {
+		name        string
+		clientState clientexported.ClientState
+		expPass     bool
+	}{
+		{
+			"success",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			true,
+		},
+		{
+			"invalid client type",
+			localhosttypes.NewClientState(testChainID, testClientHeight),
+			false,
+		},
+		{
+			"frozen client",
+			&ibctmtypes.ClientState{testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), uint64(testClientHeight), commitmenttypes.GetSDKSpecs()},
+			false,
+		},
+		{
+			"incorrect chainID",
+			ibctmtypes.NewClientState("gaiatestnet", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid client height",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight)+10, commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid proof specs",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), nil),
+			false,
+		},
+		{
+			"invalid trust level",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.Fraction{0, 1}, trustingPeriod, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid unbonding period",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+10, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+		{
+			"invalid trusting period",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, ubdPeriod+10, ubdPeriod, maxClockDrift, uint64(testClientHeight), commitmenttypes.GetSDKSpecs()),
+			false,
+		},
+	}
+
+	ctx := suite.chainA.GetContext().WithChainID(testChainID)
+	ctx = ctx.WithBlockHeight(testClientHeight)
+
+	for _, tc := range testCases {
+		err := suite.chainA.App.IBCKeeper.ValidateSelfClient(ctx, tc.clientState)
+		if tc.expPass {
+			suite.Require().NoError(err, "expected valid client for case: %s", tc.name)
+		} else {
+			suite.Require().Error(err, "expected invalid client for case: %s", tc.name)
+		}
+	}
+}
+
 func (suite KeeperTestSuite) TestGetAllClients() {
 	clientIDs := []string{
 		suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0],
@@ -72,10 +139,9 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	}
 
 	// add localhost client
-	// TODO: uncomment after simapp is migrated to proto
-	//	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.ClientTypeLocalHost)
-	//	suite.Require().True(found)
-	// expClients = append(expClients, localHostClient)
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expClients = append(expClients, localHostClient)
 
 	clients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllClients(suite.chainA.GetContext())
 	suite.Require().Len(clients, len(expClients))
@@ -92,18 +158,17 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
 	}
 
-	expGenClients := make([]types.GenesisClientState, len(expClients))
+	expGenClients := make([]types.IdentifiedClientState, len(expClients))
 
 	for i := range expClients {
-		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
-		expGenClients[i] = types.NewGenesisClientState(clientIDs[i], expClients[i])
+		suite.chainA.App.IBCKeeper.SetClientState(suite.chainA.GetContext(), clientIDs[i], expClients[i])
+		expGenClients[i] = types.NewIdentifiedClientState(clientIDs[i], expClients[i])
 	}
 
 	// add localhost client
-	// TODO: uncomment after simapp is migrated to proto
-	// localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.ClientTypeLocalHost)
-	// suite.Require().True(found)
-	// expGenClients = append(expGenClients, types.NewGenesisClientState(exported.ClientTypeLocalHost, localHostClient))
+	localHostClient, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
 
 	genClients := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
 
@@ -145,13 +210,13 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), testClientHeight+5, suite.valSetHash)
 
-	header := ibctmtypes.CreateTestHeader(suite.chainA.ClientIDs[0], testClientHeight+5, testClientHeight, suite.header.Time.Add(time.Minute),
+	header := ibctmtypes.CreateTestHeader(suite.chainA.ClientIDs[0], testClientHeight+5, testClientHeight, suite.header.GetTime().Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
-	clientState.LatestHeight = uint64(header.Height)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], testClientHeight+5, nextState)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
+	clientState.LatestHeight = header.GetHeight()
+	suite.chainA.App.IBCKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], testClientHeight+5, nextState)
+	suite.chainA.App.IBCKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
 
 	latest, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0])
 	suite.Require().True(ok)

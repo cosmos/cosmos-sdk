@@ -3,12 +3,13 @@ package types
 import (
 	"time"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -31,40 +32,24 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmEvidence, ok := misbehaviour.(Evidence)
+	tmEvidence, ok := misbehaviour.(*Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, Evidence{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Evidence{})
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	consBytes1 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header1.TrustedHeight))
-	if consBytes1 == nil {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
-			"could not find trusted consensus state at height %d", tmEvidence.Header1.TrustedHeight)
-	}
-	// Unmarshal consensus bytes into clientexported.ConensusState
-	consensusState1 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes1)
-	// Cast to tendermint-specific type
-	tmConsensusState1, ok := consensusState1.(*ConsensusState)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state type for first header: expected type %T, got %T", &ConsensusState{}, consensusState1)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
 	}
 
 	// Get consensus bytes from clientStore
-	consBytes2 := clientStore.Get(host.KeyConsensusState(tmEvidence.Header2.TrustedHeight))
-	if consBytes2 == nil {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound,
-			"could not find trusted consensus state at height %d", tmEvidence.Header2.TrustedHeight)
-	}
-	// Unmarshal consensus bytes into clientexported.ConensusState
-	consensusState2 := clienttypes.MustUnmarshalConsensusState(cdc, consBytes2)
-	// Cast to tendermint-specific type
-	tmConsensusState2, ok := consensusState2.(*ConsensusState)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid consensus state for second header: expected type %T, got %T", &ConsensusState{}, consensusState2)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
 	}
 
 	// calculate the age of the misbehaviour evidence
@@ -120,6 +105,17 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 func checkMisbehaviourHeader(
 	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,
 ) error {
+
+	tmTrustedValset, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
+	if err != nil {
+		return sdkerrors.Wrap(err, "trusted validator set is not tendermint validator set type")
+	}
+
+	tmCommit, err := tmtypes.CommitFromProto(header.Commit)
+	if err != nil {
+		return sdkerrors.Wrap(err, "commit is not tendermint commit type")
+	}
+
 	// check the trusted fields for the header against ConsensusState
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -136,8 +132,8 @@ func checkMisbehaviourHeader(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := header.TrustedValidators.VerifyCommitLightTrusting(
-		clientState.GetChainID(), header.Commit, clientState.TrustLevel.ToTendermint(),
+	if err := tmTrustedValset.VerifyCommitLightTrusting(
+		clientState.GetChainID(), tmCommit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header has too much change from trusted validator set: %v", err)
 	}

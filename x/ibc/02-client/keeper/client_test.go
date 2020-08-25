@@ -57,16 +57,16 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
-	createFutureUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
 		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()+3), int64(suite.header.GetHeight()), suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
-	createPastUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
+	createPastUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
 		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()-2), int64(suite.header.GetHeight())-4, suite.header.Header.Time,
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var (
-		updateHeader ibctmtypes.Header
+		updateHeader *ibctmtypes.Header
 		clientState  *ibctmtypes.ClientState
 	)
 

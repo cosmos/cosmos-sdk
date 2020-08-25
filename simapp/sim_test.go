@@ -255,10 +255,10 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	_, _, err = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
-		app.BaseApp,
+		newApp.BaseApp,
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		SimulationOperations(app, app.AppCodec(), config),
+		SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 	)

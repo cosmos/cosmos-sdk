@@ -192,7 +192,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, int64, *abci.ConsensusParams, error) {
 
 	encCfg := simapp.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
@@ -208,5 +208,5 @@ func exportAppStateAndTMValidators(
 		simApp = simapp.NewSimApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg)
 	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }

@@ -24,7 +24,7 @@ var (
 )
 
 // NewEvidence creates a new Evidence instance.
-func NewEvidence(clientID, chainID string, header1, header2 Header) *Evidence {
+func NewEvidence(clientID, chainID string, header1, header2 *Header) *Evidence {
 	return &Evidence{
 		ClientId: clientID,
 		ChainId:  chainID,
@@ -87,6 +87,12 @@ func (ev Evidence) GetTime() time.Time {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	if ev.Header1 == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "evidence Header1 cannot be nil")
+	}
+	if ev.Header2 == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "evidence Header2 cannot be nil")
+	}
 	if ev.Header1.TrustedHeight == 0 {
 		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header1 must have non-zero trusted height")
 	}

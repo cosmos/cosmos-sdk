@@ -33,6 +33,7 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -57,6 +58,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
+	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -112,6 +114,13 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.
 func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	for _, b := range bm {
 		b.RegisterRESTRoutes(clientCtx, rtr)
+	}
+}
+
+// RegisterGRPCRoutes registers all module rest routes
+func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+	for _, b := range bm {
+		b.RegisterGRPCRoutes(clientCtx, rtr)
 	}
 }
 

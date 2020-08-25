@@ -8,8 +8,8 @@ import (
 
 func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	var (
-		clientState clientexported.ClientState
-		evidence    clientexported.Misbehaviour
+		clientState  clientexported.ClientState
+		misbehaviour clientexported.Misbehaviour
 	)
 
 	testCases := []struct {
@@ -18,10 +18,10 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		expPass bool
 	}{
 		{
-			"valid misbehaviour evidence",
+			"valid misbehaviour",
 			func() {
 				clientState = suite.solomachine.ClientState()
-				evidence = suite.solomachine.CreateMisbehaviour()
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			true,
 		},
@@ -31,7 +31,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				cs := suite.solomachine.ClientState()
 				cs.FrozenSequence = 1
 				clientState = cs
-				evidence = suite.solomachine.CreateMisbehaviour()
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,
 		},
@@ -39,15 +39,15 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"wrong client state type",
 			func() {
 				clientState = ibctmtypes.ClientState{}
-				evidence = suite.solomachine.CreateMisbehaviour()
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,
 		},
 		{
-			"invalid evidence type",
+			"invalid misbehaviour type",
 			func() {
 				clientState = suite.solomachine.ClientState()
-				evidence = ibctmtypes.Misbehaviour{}
+				misbehaviour = ibctmtypes.Misbehaviour{}
 			},
 			false,
 		},
@@ -57,16 +57,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateMisbehaviour()
+				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA ONE")
 				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
-				ev.SignatureOne.Signature = sig
-				ev.SignatureOne.Data = msg
-				evidence = ev
+				m.SignatureOne.Signature = sig
+				m.SignatureOne.Data = msg
+				misbehaviour = m
 			},
 			false,
 		},
@@ -76,16 +76,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateMisbehaviour()
+				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA TWO")
 				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
-				ev.SignatureTwo.Signature = sig
-				ev.SignatureTwo.Data = msg
-				evidence = ev
+				m.SignatureTwo.Signature = sig
+				m.SignatureTwo.Data = msg
+				misbehaviour = m
 			},
 			false,
 		},
@@ -95,7 +95,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateMisbehaviour()
+				m := suite.solomachine.CreateMisbehaviour()
 
 				// Signature One
 				msg := []byte("DATA ONE")
@@ -104,8 +104,8 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
-				ev.SignatureOne.Signature = sig
-				ev.SignatureOne.Data = msg
+				m.SignatureOne.Signature = sig
+				m.SignatureOne.Data = msg
 
 				// Signature Two
 				msg = []byte("DATA TWO")
@@ -114,10 +114,10 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				sig, err = suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
-				ev.SignatureTwo.Signature = sig
-				ev.SignatureTwo.Data = msg
+				m.SignatureTwo.Signature = sig
+				m.SignatureTwo.Data = msg
 
-				evidence = ev
+				misbehaviour = m
 
 			},
 			false,
@@ -131,7 +131,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			// setup test
 			tc.setup()
 
-			clientState, err := clientState.CheckMisbehaviourAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.store, evidence)
+			clientState, err := clientState.CheckMisbehaviourAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.store, misbehaviour)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

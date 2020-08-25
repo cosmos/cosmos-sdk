@@ -53,12 +53,12 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 
 	testCases := []struct {
 		name             string
-		evidence         *ibctmtypes.Misbehaviour
+		misbehaviour     *ibctmtypes.Misbehaviour
 		malleateEvidence func(misbehaviour *ibctmtypes.Misbehaviour) error
 		expPass          bool
 	}{
 		{
-			"valid evidence",
+			"valid misbehaviour",
 			&ibctmtypes.Misbehaviour{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
@@ -69,7 +69,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			true,
 		},
 		{
-			"valid evidence with different trusted headers",
+			"valid misbehaviour with different trusted headers",
 			&ibctmtypes.Misbehaviour{
 				Header1:  suite.header,
 				Header2:  ibctmtypes.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
@@ -242,13 +242,13 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.malleateEvidence(tc.evidence)
+		err := tc.malleateEvidence(tc.misbehaviour)
 		suite.Require().NoError(err)
 
 		if tc.expPass {
-			suite.Require().NoError(tc.evidence.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
+			suite.Require().NoError(tc.misbehaviour.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
 		} else {
-			suite.Require().Error(tc.evidence.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
+			suite.Require().Error(tc.misbehaviour.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
 		}
 	}
 }

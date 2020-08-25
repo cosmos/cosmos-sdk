@@ -26,7 +26,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 		expPass          bool
 	}{
 		{
-			"valid evidence",
+			"valid misbehaviour",
 			func(*types.Misbehaviour) {},
 			true,
 		},

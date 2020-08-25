@@ -149,7 +149,7 @@ func (m *Header) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Header proto.InternalMessageInfo
 
-// Misbehaviour defines evidence of misbehaviour for a solo machine which consists
+// Misbehaviour defines misbehaviour for a solo machine which consists
 // of a sequence and two signatures over different messages at that sequence.
 type Misbehaviour struct {
 	ClientId     string            `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`

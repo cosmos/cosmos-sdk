@@ -85,7 +85,7 @@ func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
 		misbehaviour, ok := evidence.(exported.Misbehaviour)
 		if !ok {
 			return sdkerrors.Wrapf(types.ErrInvalidMisbehaviour,
-				"expected misbehaviour to implement client Misbehaviour interface, got %T", evidence,
+				"expected evidence to implement client Misbehaviour interface, got %T", evidence,
 			)
 		}
 

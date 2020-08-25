@@ -133,7 +133,7 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
-// Misbehaviour defines a specific consensus kind and an evidence
+// Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
 	evidenceexported.Evidence
 	ClientType() ClientType

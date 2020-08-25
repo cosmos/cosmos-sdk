@@ -72,14 +72,14 @@ func (misbehaviour Misbehaviour) Hash() tmbytes.HexBytes {
 
 // GetHeight returns the height at which misbehaviour occurred
 //
-// NOTE: assumes that evidence headers have the same height
+// NOTE: assumes that misbehaviour headers have the same height
 func (misbehaviour Misbehaviour) GetHeight() int64 {
 	return int64(math.Min(float64(misbehaviour.Header1.GetHeight()), float64(misbehaviour.Header2.GetHeight())))
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the
 // maximum value from both headers to prevent producing an invalid header outside
-// of the evidence age range.
+// of the misbehaviour age range.
 func (misbehaviour Misbehaviour) GetTime() time.Time {
 	minTime := int64(math.Max(float64(misbehaviour.Header1.GetTime().UnixNano()), float64(misbehaviour.Header2.GetTime().UnixNano())))
 	return time.Unix(0, minTime)
@@ -88,10 +88,10 @@ func (misbehaviour Misbehaviour) GetTime() time.Time {
 // ValidateBasic implements Misbehaviour interface
 func (misbehaviour Misbehaviour) ValidateBasic() error {
 	if misbehaviour.Header1.TrustedHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header1 must have non-zero trusted height")
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "misbehaviour Header1 must have non-zero trusted height")
 	}
 	if misbehaviour.Header2.TrustedHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header2 must have non-zero trusted height")
+		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "misbehaviour Header2 must have non-zero trusted height")
 	}
 	if misbehaviour.Header1.TrustedValidators == nil {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")
@@ -101,7 +101,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 
 	if err := host.ClientIdentifierValidator(misbehaviour.ClientId); err != nil {
-		return sdkerrors.Wrap(err, "evidence client ID is invalid")
+		return sdkerrors.Wrap(err, "misbehaviour client ID is invalid")
 	}
 
 	// ValidateBasic on both validators
@@ -119,16 +119,16 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 	// Ensure that Heights are the same
 	if misbehaviour.Header1.GetHeight() != misbehaviour.Header2.GetHeight() {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "headers in evidence are on different heights (%d ≠ %d)", misbehaviour.Header1.GetHeight(), misbehaviour.Header2.GetHeight())
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "headers in misbehaviour are on different heights (%d ≠ %d)", misbehaviour.Header1.GetHeight(), misbehaviour.Header2.GetHeight())
 	}
 
 	blockID1, err := tmtypes.BlockIDFromProto(&misbehaviour.Header1.SignedHeader.Commit.BlockID)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid block ID from header 1 in evidence")
+		return sdkerrors.Wrap(err, "invalid block ID from header 1 in misbehaviour")
 	}
 	blockID2, err := tmtypes.BlockIDFromProto(&misbehaviour.Header2.SignedHeader.Commit.BlockID)
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid block ID from header 2 in evidence")
+		return sdkerrors.Wrap(err, "invalid block ID from header 2 in misbehaviour")
 	}
 
 	// Ensure that Commit Hashes are different
@@ -147,8 +147,8 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 // ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
 //
 // CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
-// This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
-// thus we should return an error here and reject the evidence rather than panicing.
+// This implies that someone tried to submit misbehaviour that wasn't actually committed by the validatorset
+// thus we should return an error here and reject the misbehaviour rather than panicing.
 func ValidCommit(chainID string, commit *tmproto.Commit, valSet *tmproto.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

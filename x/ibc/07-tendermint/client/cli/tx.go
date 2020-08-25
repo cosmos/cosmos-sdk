@@ -174,11 +174,11 @@ func NewUpdateClientCmd() *cobra.Command {
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func NewSubmitMisbehaviourCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "misbehaviour [path/to/evidence.json]",
+		Use:   "misbehaviour [path/to/misbehaviour.json]",
 		Short: "submit a client misbehaviour",
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
 		Example: fmt.Sprintf(
-			"$ %s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
+			"$ %s tx ibc %s misbehaviour [path/to/misbehaviour.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
 			version.AppName, ibctmtypes.SubModuleName,
 		),
 		Args: cobra.ExactArgs(1),
@@ -197,7 +197,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
 				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &ev); err != nil {
-					return errors.Wrap(err, "error unmarshalling evidence file")
+					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}
 

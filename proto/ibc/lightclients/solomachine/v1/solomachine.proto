@@ -38,7 +38,7 @@ message Header {
       [(gogoproto.moretags) = "yaml:\"new_public_key\""];
 }
 
-// Misbehaviour defines evidence of misbehaviour for a solo machine which consists
+// Misbehaviour defines misbehaviour for a solo machine which consists
 // of a sequence and two signatures over different messages at that sequence.
 message Misbehaviour {
   option (gogoproto.goproto_getters)  = false;

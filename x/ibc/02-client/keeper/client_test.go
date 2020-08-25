@@ -266,10 +266,10 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altTime := suite.ctx.BlockTime().Add(time.Minute)
 
 	testCases := []struct {
-		name     string
-		evidence *ibctmtypes.Misbehaviour
-		malleate func() error
-		expPass  bool
+		name         string
+		misbehaviour *ibctmtypes.Misbehaviour
+		malleate     func() error
+		expPass      bool
 	}{
 		{
 			"trusting period misbehavior should pass",
@@ -453,7 +453,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.evidence)
+			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.misbehaviour)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
@@ -461,8 +461,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(uint64(tc.evidence.GetHeight()), clientState.GetFrozenHeight(),
-					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.evidence.GetHeight(), clientState.GetFrozenHeight())
+				suite.Require().Equal(uint64(tc.misbehaviour.GetHeight()), clientState.GetFrozenHeight(),
+					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}

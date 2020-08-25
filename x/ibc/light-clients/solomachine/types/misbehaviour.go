@@ -75,14 +75,14 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "signature two failed basic validation")
 	}
 
-	// evidence signatures cannot be identical
+	// misbehaviour signatures cannot be identical
 	if bytes.Equal(misbehaviour.SignatureOne.Signature, misbehaviour.SignatureTwo.Signature) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "evidence signatures cannot be equal")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "misbehaviour signatures cannot be equal")
 	}
 
 	// message data signed cannot be identical
 	if bytes.Equal(misbehaviour.SignatureOne.Data, misbehaviour.SignatureTwo.Data) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "evidence signature data must be signed over different messages")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "misbehaviour signature data must be signed over different messages")
 	}
 
 	return nil

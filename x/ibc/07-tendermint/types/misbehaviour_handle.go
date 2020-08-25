@@ -26,7 +26,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 
-	// If client is already frozen at earlier height than evidence, return with error
+	// If client is already frozen at earlier height than misbehaviour, return with error
 	if cs.IsFrozen() && cs.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
@@ -52,7 +52,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
 	}
 
-	// calculate the age of the misbehaviour evidence
+	// calculate the age of the misbehaviour
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
@@ -83,7 +83,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// Check the validity of the two conflicting headers against their respective
 	// trusted consensus states
 	// NOTE: header height and commitment root assertions are checked in
-	// evidence.ValidateBasic by the client keeper and msg.ValidateBasic
+	// misbehaviour.ValidateBasic by the client keeper and msg.ValidateBasic
 	// by the base application.
 	if err := checkMisbehaviourHeader(
 		&cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
@@ -100,7 +100,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	return &cs, nil
 }
 
-// checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given
+// checkMisbehaviourHeader checks that a Header in Misbehaviour is valid misbehaviour given
 // a trusted ConsensusState
 func checkMisbehaviourHeader(
 	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,

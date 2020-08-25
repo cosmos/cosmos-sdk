@@ -200,7 +200,6 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	// cdc, ctx := codec.New(), sdk.Context{}
 	ctx := sdk.Context{}
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)

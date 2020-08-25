@@ -69,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 	return genState.Validate()
 }
 
-// RegisterRESTRoutes registers the gRPC Gateway routes for the capability module.
+// RegisterRESTRoutes registers the capability module's REST service handlers.
 func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.

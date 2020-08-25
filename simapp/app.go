@@ -358,9 +358,9 @@ func NewSimApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	app.MountKVStores(keys, 0)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	// app.MountKVStores(keys, 0)
+	// app.MountTransientStores(tkeys)
+	// app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -373,11 +373,12 @@ func NewSimApp(
 	)
 	app.SetEndBlocker(app.EndBlocker)
 
-	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
-		}
-	}
+	// TODO When to load store?
+	// if loadLatest {
+	// 	if err := app.LoadLatestVersion(); err != nil {
+	// 		tmos.Exit(err.Error())
+	// 	}
+	// }
 
 	// Initialize and seal the capability keeper so all persistent capabilities
 	// are loaded in-memory and prevent any further modules from creating scoped
@@ -416,6 +417,14 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	app.MountKVStores(app.keys, req.InitialHeight)
+	app.MountTransientStores(app.tkeys)
+	app.MountMemoryStores(app.memKeys)
+	err := app.LoadVersion(req.InitialHeight)
+	if err != nil {
+		tmos.Exit(err.Error())
+	}
+
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

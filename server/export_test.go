@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -39,7 +40,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
-	err := json.Unmarshal(output.Bytes(), &exportedGenDoc)
+	err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
@@ -72,7 +73,7 @@ func TestExportCmd_Height(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	var exportedGenDoc tmtypes.GenesisDoc
-	err := json.Unmarshal(output.Bytes(), &exportedGenDoc)
+	err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
@@ -81,7 +82,6 @@ func TestExportCmd_Height(t *testing.T) {
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
-
 	err := createConfigFolder(tempDir)
 	if err != nil {
 		t.Fatalf("error creating config folder: %s", err)
@@ -97,6 +97,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 	genDoc := newDefaultGenesisDoc()
 	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
+	require.NoError(t, err)
 
 	app.InitChain(
 		abci.RequestInitChain{

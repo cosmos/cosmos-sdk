@@ -95,7 +95,6 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	if _, ok := rs.keysByName[key.Name()]; ok {
 		panic(fmt.Sprintf("store duplicate store key name %v", key))
 	}
-	fmt.Println("MountStoreWithDB key=", key, "type=", typ)
 	rs.storesParams[key] = storeParams{
 		key:            key,
 		typ:            typ,
@@ -149,7 +148,6 @@ func (rs *Store) LoadVersion(ver int64) error {
 }
 
 func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
-	fmt.Println("Store loadVersion ver=", ver)
 	infos := make(map[string]types.StoreInfo)
 
 	cInfo := &types.CommitInfo{}

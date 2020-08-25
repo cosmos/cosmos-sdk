@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
@@ -29,6 +30,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*clientexported.ConsensusState)(nil),
 		&ConsensusState{},
+	)
+	registry.RegisterImplementations(
+		(*evidenceexported.Evidence)(nil),
+		&Evidence{},
 	)
 }
 

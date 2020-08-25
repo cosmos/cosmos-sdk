@@ -196,7 +196,7 @@ jobs:
         run: make test-unit-amino
   liveness-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - uses: technote-space/get-diff-action@v1

@@ -92,7 +92,6 @@ func (ev Evidence) ValidateBasic() error {
 	}
 	if ev.Header2 == nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, "evidence Header2 cannot be nil")
-
 	}
 	if ev.Header1.TrustedHeight == 0 {
 		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "evidence Header1 must have non-zero trusted height")

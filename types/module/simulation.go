@@ -109,5 +109,4 @@ type SimulationState struct {
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
 	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
 	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
-
 }

@@ -74,7 +74,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 	return gs.Validate()
 }
 
-// RegisterRESTRoutes registers the gRPC Gateway routes for the evidence module.
+// RegisterRESTRoutes registers the evidence module's REST service handlers.
 func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	evidenceRESTHandlers := make([]rest.EvidenceRESTHandler, len(a.evidenceHandlers))
 

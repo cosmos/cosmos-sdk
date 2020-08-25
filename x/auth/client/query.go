@@ -56,9 +56,9 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 		return nil, err
 	}
 
-	result := sdk.NewSearchTxsResult(resTxs.TotalCount, len(txs), page, limit, txs)
+	result := sdk.NewSearchTxsResult(uint64(resTxs.TotalCount), uint64(len(txs)), uint64(page), uint64(limit), txs)
 
-	return &result, nil
+	return result, nil
 }
 
 // QueryTx queries for a single transaction by a hash string in hex format. An

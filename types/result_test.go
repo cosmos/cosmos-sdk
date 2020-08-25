@@ -41,7 +41,7 @@ func TestABCIMessageLog(t *testing.T) {
 func TestNewSearchTxsResult(t *testing.T) {
 	t.Parallel()
 	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []*sdk.TxResponse{})
-	require.Equal(t, sdk.SearchTxsResult{
+	require.Equal(t, &sdk.SearchTxsResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,

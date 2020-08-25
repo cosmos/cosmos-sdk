@@ -22,10 +22,6 @@ func TestRandomizedGenState(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	// Make sure to register cdc.
-	// Otherwise RandomizedGenState will panic!
-	types.RegisterCodec(cdc)
-
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,

@@ -7,7 +7,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -47,8 +48,10 @@ func QueryClientStateABCI(
 		return nil, err
 	}
 
-	var clientState exported.ClientState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	clientState, err := types.UnmarshalClientState(cdc, res.Value)
+	if err != nil {
 		return nil, err
 	}
 
@@ -57,7 +60,7 @@ func QueryClientStateABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +105,10 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	var cs exported.ConsensusState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	cs, err := types.UnmarshalConsensusState(cdc, res.Value)
+	if err != nil {
 		return nil, err
 	}
 
@@ -112,7 +117,7 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

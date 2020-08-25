@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -25,7 +26,9 @@ func NewQueryClientStateResponse(
 func NewQueryConsensusStateResponse(
 	clientID string, consensusStateAny *codectypes.Any, proof []byte, height int64,
 ) *QueryConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(height))), "/"))
+	path := commitmenttypes.NewMerklePath(
+		strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(clientexported.NewHeight(0, uint64(height)))), "/"),
+	)
 	return &QueryConsensusStateResponse{
 		ConsensusState: consensusStateAny,
 		Proof:          proof,

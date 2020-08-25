@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	flagHeight        = "height"
-	flagForZeroHeight = "for-zero-height"
-	flagJailWhitelist = "jail-whitelist"
+	flagHeight           = "height"
+	flagForZeroHeight    = "for-zero-height"
+	flagJailAllowedAddrs = "jail-allowed-addrs"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -62,9 +62,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			height, _ := cmd.Flags().GetInt64(flagHeight)
 			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
-			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
+			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 
-			appState, validators, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
+			appState, validators, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
@@ -109,7 +109,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
-	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
+	cmd.Flags().StringSlice(flagJailAllowedAddrs, []string{}, "List of validators to not jail state export")
 
 	return cmd
 }

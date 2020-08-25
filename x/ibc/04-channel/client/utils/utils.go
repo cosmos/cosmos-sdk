@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -49,7 +50,9 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +93,14 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
 	var channel types.Channel
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &channel); err != nil {
+	if err := cdc.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +234,9 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

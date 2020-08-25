@@ -10,7 +10,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 
 	cases := []struct {
 		name    string
-		header  types.Header
+		header  *types.Header
 		expPass bool
 	}{
 		{
@@ -20,7 +20,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			types.Header{
+			&types.Header{
 				Sequence:     0,
 				Signature:    header.Signature,
 				NewPublicKey: header.NewPublicKey,
@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"signature is empty",
-			types.Header{
+			&types.Header{
 				Sequence:     header.Sequence,
 				Signature:    []byte{},
 				NewPublicKey: header.NewPublicKey,
@@ -38,7 +38,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 		{
 			"public key is nil",
-			types.Header{
+			&types.Header{
 				Sequence:     header.Sequence,
 				Signature:    header.Signature,
 				NewPublicKey: nil,

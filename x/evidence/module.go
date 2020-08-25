@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -82,6 +83,10 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 	}
 
 	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
+}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the evidence module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // GetTxCmd returns the evidence module's root tx command.

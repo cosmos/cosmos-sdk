@@ -7,8 +7,8 @@ import (
 var _ crypto.PrivKey = PrivKey{}
 
 const (
-	PrivKeyName = "tendermint/PrivKeySr25519"
-	PubKeyName  = "tendermint/PubKeySr25519"
+	PrivKeyName = "cosmos-sdk/PrivKeySr25519"
+	PubKeyName  = "cosmos-sdk/PubKeySr25519"
 
 	// SignatureSize is the size of an Edwards25519 signature. Namely the size of a compressed
 	// Sr25519 point, and a field element. Both of which are 32 bytes.

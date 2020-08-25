@@ -19,8 +19,8 @@ var _ crypto.PrivKey = PrivKey{}
 const (
 	PrivKeySize = 32
 	keyType     = "secp256k1"
-	PrivKeyName = "tendermint/PrivKeySecp256k1"
-	PubKeyName  = "tendermint/PubKeySecp256k1"
+	PrivKeyName = "cosmos-sdk/PrivKeySecp256k1"
+	PubKeyName  = "cosmos-sdk/PubKeySecp256k1"
 )
 
 // PrivKey implements PrivKey.

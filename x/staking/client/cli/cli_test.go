@@ -364,7 +364,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())

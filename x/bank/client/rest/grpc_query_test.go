@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

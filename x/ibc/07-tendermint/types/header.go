@@ -55,6 +55,9 @@ func (h Header) GetTime() time.Time {
 // NOTE: TrustedHeight and TrustedValidators may be empty when creating client
 // with MsgCreateClient
 func (h Header) ValidateBasic(chainID string) error {
+	if h.SignedHeader == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint signed header cannot be nil")
+	}
 	if h.Header == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint header cannot be nil")
 	}

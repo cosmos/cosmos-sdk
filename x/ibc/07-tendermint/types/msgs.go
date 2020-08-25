@@ -154,6 +154,13 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
+	if msg.Header == nil || msg.Header.SignedHeader == nil || msg.Header.Header == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
+	}
+	// ValidateBasic of provided header with self-attested chain-id
+	if err := msg.Header.ValidateBasic(msg.Header.Header.GetChainID()); err != nil {
+		return err
+	}
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 

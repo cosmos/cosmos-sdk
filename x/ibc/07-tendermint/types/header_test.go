@@ -34,8 +34,11 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		expPass  bool
 	}{
 		{"valid header", func() {}, true},
-		{"signed header is nil", func() {
+		{"header is nil", func() {
 			header.Header = nil
+		}, false},
+		{"signed header is nil", func() {
+			header.SignedHeader = nil
 		}, false},
 		{"signed header failed tendermint ValidateBasic", func() {
 			header = suite.chainA.LastHeader
@@ -59,6 +62,8 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
 			chainID = suite.chainA.ChainID   // must be explicitly changed in malleate
 			header = suite.chainA.LastHeader // must be explicitly changed in malleate
 

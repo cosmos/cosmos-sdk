@@ -522,7 +522,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	// from keeper
 	// TODO: Extract our epoch number from chain-id
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connection.ID, counterpartyClient
+		connection.ID, counterpartyClient,
 		proofTry, proofClient, proofConsensus,
 		proofHeight.EpochNumber, proofHeight.EpochHeight,
 		consensusHeight.EpochNumber, consensusHeight.EpochHeight,

@@ -24,11 +24,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // See createOutgoingPacket in spec:https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer) (*sdk.Result, error) {
 	if err := k.SendTransfer(
-<<<<<<< HEAD
-		ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.TimeoutEpoch, msg.TimeoutHeight, msg.TimeoutTimestamp,
-=======
 		ctx, msg.SourcePort, msg.SourceChannel, msg.Token, msg.Sender, msg.Receiver, msg.TimeoutHeight, msg.TimeoutTimestamp,
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 	); err != nil {
 		return nil, err
 	}

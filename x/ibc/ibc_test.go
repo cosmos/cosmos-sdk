@@ -62,7 +62,7 @@ func (suite *IBCTestSuite) SetupTest() {
 
 	height := clientexported.NewHeight(0, 10)
 	trustedHeight := clientexported.NewHeight(0, 9)
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, trustedHeight now, valSet, []tmtypes.PrivValidator{privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, trustedHeight, now, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }

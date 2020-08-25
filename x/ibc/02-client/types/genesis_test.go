@@ -32,11 +32,7 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-<<<<<<< HEAD
-	header := ibctmtypes.CreateTestHeader("chainID", exported.NewHeight(0, 10), now, valSet, []tmtypes.PrivValidator{privVal})
-=======
-	header := ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
+	header := ibctmtypes.CreateTestHeader("chainID", exported.NewHeight(0, 10), exported.NewHeight(0, 10), now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string
@@ -128,11 +124,7 @@ func TestValidateGenesis(t *testing.T) {
 						"(CLIENTID2)",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-<<<<<<< HEAD
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), exported.NewHeight(0, 0), header.ValidatorSet,
-=======
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), 0, header.Header.NextValidatorsHash,
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
+								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), exported.NewHeight(0, 0), header.Header.NextValidatorsHash,
 							),
 						},
 					),
@@ -157,11 +149,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-<<<<<<< HEAD
-								header.Time, commitmenttypes.NewMerkleRoot(header.AppHash), exported.NewHeight(0, 0), header.ValidatorSet,
-=======
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), 0, header.Header.NextValidatorsHash,
->>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
+								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), exported.NewHeight(0, 0), header.Header.NextValidatorsHash,
 							),
 						},
 					),

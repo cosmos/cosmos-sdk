@@ -51,10 +51,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
 	testCases := []struct {
-		name             string
-		misbehaviour     *types.Misbehaviour
-		malleateEvidence func(misbehaviour *types.Misbehaviour) error
-		expPass          bool
+		name                 string
+		misbehaviour         *types.Misbehaviour
+		malleateMisbehaviour func(misbehaviour *types.Misbehaviour) error
+		expPass              bool
 	}{
 		{
 			"valid misbehaviour",
@@ -253,7 +253,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		err := tc.malleateEvidence(tc.misbehaviour)
+		err := tc.malleateMisbehaviour(tc.misbehaviour)
 		suite.Require().NoError(err)
 
 		if tc.expPass {

@@ -21,9 +21,9 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 	testCases := []struct {
-		name             string
-		malleateEvidence func(misbehaviour *types.Misbehaviour)
-		expPass          bool
+		name                 string
+		malleateMisbehaviour func(misbehaviour *types.Misbehaviour)
+		expPass              bool
 	}{
 		{
 			"valid misbehaviour",
@@ -94,7 +94,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 		suite.Run(tc.name, func() {
 
 			misbehaviour := suite.solomachine.CreateMisbehaviour()
-			tc.malleateEvidence(misbehaviour)
+			tc.malleateMisbehaviour(misbehaviour)
 
 			err := misbehaviour.ValidateBasic()
 

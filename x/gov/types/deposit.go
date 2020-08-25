@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,7 +40,7 @@ func (d Deposits) String() string {
 	if len(d) == 0 {
 		return "[]"
 	}
-	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
+	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalId)
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}

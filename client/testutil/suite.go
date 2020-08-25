@@ -6,11 +6,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/cosmos/cosmos-sdk/client"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -101,13 +100,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Contains(signModeHandler.Modes(), signModeHandler.DefaultMode())
 
 	// set SignatureV2 without actual signature bytes
+	seq1 := uint64(2) // Arbitrary account sequence
 	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
+	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
 
+	mseq := uint64(4) // Arbitrary account sequence
 	msigData := multisig.NewMultisig(2)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
-	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 
 	// fail validation without required signers
 	err = txBuilder.SetSignatures(sig1)
@@ -129,9 +130,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   1,
-		AccountSequence: 2,
+		ChainID:       "test",
+		AccountNumber: 1,
+		Sequence:      seq1,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -139,9 +140,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   3,
-		AccountSequence: 4,
+		ChainID:       "test",
+		AccountNumber: 3,
+		Sequence:      mseq,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -157,8 +158,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set signature
 	sigData1.Signature = sigBz
-	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
-	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
+	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
@@ -260,7 +261,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.T().Log("decode transaction")
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
 	s.Require().NoError(err)
-	tx3, ok := tx2.(signing.SigFeeMemoTx)
+	tx3, ok := tx2.(signing.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -277,7 +278,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.T().Log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
-	tx3, ok = tx2.(signing.SigFeeMemoTx)
+	tx3, ok = tx2.(signing.Tx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -285,4 +286,23 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
+}
+
+func (s *TxConfigTestSuite) TestWrapTxBuilder() {
+	_, _, addr := testdata.KeyTestPubAddr()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
+	gasLimit := uint64(50000)
+	memo := "foomemo"
+	msg := testdata.NewTestMsg(addr)
+
+	txBuilder := s.TxConfig.NewTxBuilder()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo(memo)
+	err := txBuilder.SetMsgs(msg)
+	s.Require().NoError(err)
+
+	newTxBldr, err := s.TxConfig.WrapTxBuilder(txBuilder.GetTx())
+	s.Require().NoError(err)
+	s.Require().Equal(txBuilder, newTxBldr)
 }

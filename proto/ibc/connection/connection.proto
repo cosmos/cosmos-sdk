@@ -4,17 +4,16 @@ package ibc.connection;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "ibc/commitment/commitment.proto";
 
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   string connection_id = 2 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
@@ -26,24 +25,34 @@ message MsgConnectionOpenInit {
 // connection on Chain B.
 message MsgConnectionOpenTry {
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   string connection_id = 2 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  repeated string counterparty_versions = 4
+  google.protobuf.Any client_state = 3 [
+    (gogoproto.moretags) = "yaml:\"client_state\""
+  ];
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
+  repeated string counterparty_versions = 5
       [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
+<<<<<<< HEAD
   bytes proof_init = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_epoch  = 6 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64 proof_height = 7 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
   bytes proof_consensus = 8 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_epoch = 9 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
+=======
+  bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  // proof of client state included in message
+  bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  // proof of client consensus state
+  bytes proof_consensus = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
   uint64 consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 11
@@ -54,18 +63,29 @@ message MsgConnectionOpenTry {
 // acknowledge the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
   string connection_id = 1 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   string version = 2;
+  google.protobuf.Any client_state = 3 [
+    (gogoproto.moretags) = "yaml:\"client_state\""
+  ];
+  uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of the initialization the connection on Chain B: `UNITIALIZED ->
   // TRYOPEN`
+<<<<<<< HEAD
   bytes proof_try = 3 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_epoch = 4 [(gogoproto.moretags) = "yaml:\"proof_epoch\""];
   uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   // proof of client consensus state
   bytes proof_consensus = 6 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_epoch = 7 [(gogoproto.moretags) = "yaml:\"consensus_epoch\""];
+=======
+  bytes proof_try = 5 [(gogoproto.moretags) = "yaml:\"proof_try\""];
+  // proof of client state included in message
+  bytes proof_client = 6 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  // proof of client consensus state
+  bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
   uint64 consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
   bytes signer = 9
@@ -76,7 +96,6 @@ message MsgConnectionOpenAck {
 // acknowledge the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
   string connection_id = 1 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
@@ -97,7 +116,6 @@ message ConnectionEnd {
   option (gogoproto.goproto_getters) = false;
   // client associated with this connection.
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   // IBC version which can be utilised to determine encodings or protocols for
@@ -115,10 +133,9 @@ message IdentifiedConnection {
   option (gogoproto.goproto_getters) = false;
   // connection identifier.
   string id = 1
-      [(gogoproto.customname) = "ID", (gogoproto.moretags) = "yaml:\"id\""];
+      [(gogoproto.moretags) = "yaml:\"id\""];
   // client associated with this connection.
   string client_id = 2 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   // IBC version which can be utilised to determine encodings or protocols for
@@ -154,13 +171,11 @@ message Counterparty {
   // identifies the client on the counterparty chain associated with a given
   // connection.
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   // identifies the connection end on the counterparty chain associated with a
   // given connection.
   string connection_id = 2 [
-    (gogoproto.customname) = "ConnectionID",
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   // commitment merkle prefix of the counterparty chain
@@ -177,7 +192,6 @@ message ClientPaths {
 message ConnectionPaths {
   // client state unique identifier
   string client_id = 1 [
-    (gogoproto.customname) = "ClientID",
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];
   // list of connection paths

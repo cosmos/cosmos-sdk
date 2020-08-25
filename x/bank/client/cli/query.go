@@ -72,7 +72,11 @@ Example:
 				return err
 			}
 
-			pageReq := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			if denom == "" {
 				params := types.NewQueryAllBalancesRequest(addr, pageReq)
 
@@ -80,7 +84,7 @@ Example:
 				if err != nil {
 					return err
 				}
-				return clientCtx.PrintOutput(res.Balances)
+				return clientCtx.PrintOutput(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
@@ -136,7 +140,7 @@ To query for the total supply of a specific coin denomination use:
 					return err
 				}
 
-				return clientCtx.PrintOutput(res.Supply)
+				return clientCtx.PrintOutput(res)
 			}
 
 			res, err := queryClient.SupplyOf(context.Background(), &types.QuerySupplyOfRequest{Denom: denom})
@@ -144,7 +148,7 @@ To query for the total supply of a specific coin denomination use:
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Amount)
+			return clientCtx.PrintOutput(&res.Amount)
 		},
 	}
 

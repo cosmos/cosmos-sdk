@@ -1,20 +1,15 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	lite "github.com/tendermint/tendermint/lite2"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+<<<<<<< HEAD
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -49,42 +44,31 @@ var (
 	testCoins, _ = sdk.ParseCoins("100atom")
 	prefixCoins  = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
 	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
+=======
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	coordinator *ibctesting.Coordinator
 
-	chainA *TestChain
-	chainB *TestChain
+	// testing chains used for convenience and readability
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.chainA = NewTestChain(testClientIDA)
-	suite.chainB = NewTestChain(testClientIDB)
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
-	// reset prefixCoins at each setup
-	prefixCoins = sdk.NewCoins(sdk.NewCoin("bank/firstchannel/atom", sdk.NewInt(100)))
-	prefixCoins2 = sdk.NewCoins(sdk.NewCoin("testportid/secondchannel/atom", sdk.NewInt(100)))
-
-	suite.cdc = suite.chainA.App.Codec()
-}
-
-// nolint: unused
-func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitmenttypes.MerkleProof, height int64) {
-	res := suite.chainA.App.Query(abci.RequestQuery{
-		Path:  fmt.Sprintf("store/%s/key", host.StoreKey),
-		Data:  key,
-		Prove: true,
-	})
-
-	height = res.Height
-	proof = commitmenttypes.MerkleProof{
-		Proof: res.Proof,
-	}
-
-	return
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext(), suite.chainA.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.chainA.App.TransferKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) TestGetTransferAccount() {
@@ -92,14 +76,15 @@ func (suite *KeeperTestSuite) TestGetTransferAccount() {
 
 	macc := suite.chainA.App.TransferKeeper.GetTransferAccount(suite.chainA.GetContext())
 
-	suite.NotNil(macc)
-	suite.Equal(types.ModuleName, macc.GetName())
-	suite.Equal(expectedMaccAddr, macc.GetAddress())
+	suite.Require().NotNil(macc)
+	suite.Require().Equal(types.ModuleName, macc.GetName())
+	suite.Require().Equal(expectedMaccAddr, macc.GetAddress())
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
+<<<<<<< HEAD
 
 type TestChain struct {
 	ClientID string
@@ -286,3 +271,5 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, height,
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
 }
+=======
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74

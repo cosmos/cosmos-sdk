@@ -5,17 +5,19 @@ import (
 )
 
 const (
-	SubModuleName = "tendermint"
+	SubModuleName = "tendermint-client"
 )
 
 // IBC tendermint client sentinel errors
 var (
-	ErrInvalidTrustingPeriod   = sdkerrors.Register(SubModuleName, 2, "invalid trusting period")
-	ErrInvalidUnbondingPeriod  = sdkerrors.Register(SubModuleName, 3, "invalid unbonding period")
-	ErrInvalidHeader           = sdkerrors.Register(SubModuleName, 4, "invalid header")
-	ErrInvalidMaxClockDrift    = sdkerrors.Register(SubModuleName, 5, "invalid max clock drift")
-	ErrTrustingPeriodExpired   = sdkerrors.Register(SubModuleName, 6, "time since latest trusted state has passed the trusting period")
-	ErrUnbondingPeriodExpired  = sdkerrors.Register(SubModuleName, 7, "time since latest trusted state has passed the unbonding period")
-	ErrInvalidProofSpecs       = sdkerrors.Register(SubModuleName, 8, "invalid proof specs")
-	ErrInvalidHeightComparison = sdkerrors.Register(SubModuleName, 9, "invalid height comparison")
+	ErrInvalidChainID         = sdkerrors.Register(SubModuleName, 2, "invalid chain-id")
+	ErrInvalidTrustingPeriod  = sdkerrors.Register(SubModuleName, 3, "invalid trusting period")
+	ErrInvalidUnbondingPeriod = sdkerrors.Register(SubModuleName, 4, "invalid unbonding period")
+	ErrInvalidHeaderHeight    = sdkerrors.Register(SubModuleName, 5, "invalid header height")
+	ErrInvalidHeader          = sdkerrors.Register(SubModuleName, 6, "invalid header")
+	ErrInvalidMaxClockDrift   = sdkerrors.Register(SubModuleName, 7, "invalid max clock drift")
+	ErrTrustingPeriodExpired  = sdkerrors.Register(SubModuleName, 8, "time since latest trusted state has passed the trusting period")
+	ErrUnbondingPeriodExpired = sdkerrors.Register(SubModuleName, 9, "time since latest trusted state has passed the unbonding period")
+	ErrInvalidProofSpecs      = sdkerrors.Register(SubModuleName, 10, "invalid proof specs")
+	ErrInvalidValidatorSet    = sdkerrors.Register(SubModuleName, 11, "invalid validator set")
 )

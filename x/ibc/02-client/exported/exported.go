@@ -18,20 +18,34 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetID() string
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() Height
 	IsFrozen() bool
+	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
+	// Update and Misbehaviour functions
+
+	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
+	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
+
 	// State verification functions
 
+	VerifyClientState(
+		store sdk.KVStore,
+		cdc codec.BinaryMarshaler,
+		root commitmentexported.Root,
+		height uint64,
+		prefix commitmentexported.Prefix,
+		counterpartyClientIdentifier string,
+		proof []byte,
+		clientState ClientState,
+	) error
 	VerifyClientConsensusState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
-		aminoCdc *codec.Codec,
+		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
 		height Height,
 		counterpartyClientIdentifier string,
@@ -42,28 +56,26 @@ type ClientState interface {
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		connectionID string,
 		connectionEnd connectionexported.ConnectionI,
-		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		channel channelexported.ChannelI,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -71,11 +83,10 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
@@ -83,29 +94,26 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		sequence uint64,
-		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
-		cdc codec.Marshaler,
+		cdc codec.BinaryMarshaler,
 		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-		consensusState ConsensusState,
 	) error
 }
 
@@ -140,6 +148,13 @@ type Header interface {
 	GetHeight() Height
 }
 
+// message types for the IBC client
+const (
+	TypeMsgCreateClient             string = "create_client"
+	TypeMsgUpdateClient             string = "update_client"
+	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
+)
+
 // MsgCreateClient defines the msg interface that the
 // CreateClient Handler expects
 type MsgCreateClient interface {
@@ -147,6 +162,7 @@ type MsgCreateClient interface {
 	GetClientID() string
 	GetClientType() string
 	GetConsensusState() ConsensusState
+	InitializeClientState() ClientState
 }
 
 // MsgUpdateClient defines the msg interface that the
@@ -162,14 +178,16 @@ type ClientType byte
 
 // available client types
 const (
-	Tendermint ClientType = iota + 1 // 1
-	Localhost
+	SoloMachine ClientType = 6
+	Tendermint  ClientType = 7
+	Localhost   ClientType = 9
 )
 
 // string representation of the client types
 const (
-	ClientTypeTendermint string = "tendermint"
-	ClientTypeLocalHost  string = "localhost"
+	ClientTypeSoloMachine string = "solomachine"
+	ClientTypeTendermint  string = "tendermint"
+	ClientTypeLocalHost   string = "localhost"
 )
 
 func (ct ClientType) String() string {

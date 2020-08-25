@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,11 +29,12 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		if err := clientCtx.JSONMarshaler.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
+		// NOTE: amino is used intentionally here, don't migrate it!
+		if err := clientCtx.LegacyAmino.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
-		txBytes, err := clientCtx.Codec.MarshalBinaryBare(req.Tx)
+		txBytes, err := tx.ConvertAndEncodeStdTx(clientCtx.TxConfig, req.Tx)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -43,6 +46,8 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		// NOTE: amino is set intentionally here, don't migrate it!
+		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 		rest.PostProcessResponseBare(w, clientCtx, res)
 	}
 }

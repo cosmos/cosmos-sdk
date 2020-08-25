@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 
 			// change connection client ID
 			connection := suite.chainA.GetConnection(connA)
-			connection.ClientID = ibctesting.InvalidID
+			connection.ClientId = ibctesting.InvalidID
 			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
 
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, timeoutHeight, disabledTimeoutTimestamp)

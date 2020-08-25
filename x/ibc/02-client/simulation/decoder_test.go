@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -17,7 +16,6 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	cdc := app.Codec()
 	clientID := "clientidone"
 
 	clientState := ibctmtypes.ClientState{
@@ -33,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 	kvPairs := tmkv.Pairs{
 		tmkv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: cdc.MustMarshalBinaryBare(clientState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
 		},
 		tmkv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyClientType()),
@@ -41,7 +39,7 @@ func TestDecodeStore(t *testing.T) {
 		},
 		tmkv.Pair{
 			Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(exported.NewHeight(0, 10))),
-			Value: cdc.MustMarshalBinaryBare(consState),
+			Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 		},
 		tmkv.Pair{
 			Key:   []byte{0x99},
@@ -61,13 +59,13 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(app.IBCKeeper.ClientKeeper, kvPairs.Pairs[i], kvPairs.Pairs[i])
 			if i == len(tests)-1 {
-				require.False(t, found, string(kvPairs[i].Key))
-				require.Empty(t, res, string(kvPairs[i].Key))
+				require.False(t, found, string(kvPairs.Pairs[i].Key))
+				require.Empty(t, res, string(kvPairs.Pairs[i].Key))
 			} else {
-				require.True(t, found, string(kvPairs[i].Key))
-				require.Equal(t, tt.expectedLog, res, string(kvPairs[i].Key))
+				require.True(t, found, string(kvPairs.Pairs[i].Key))
+				require.Equal(t, tt.expectedLog, res, string(kvPairs.Pairs[i].Key))
 			}
 		})
 	}

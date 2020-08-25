@@ -14,6 +14,11 @@ import (
 // Simulation parameter constants
 const port = "port_id"
 
+// RadomEnabled randomized send or receive enabled param with 75% prob of being true.
+func RadomEnabled(r *rand.Rand) bool {
+	return r.Int63n(101) <= 75
+}
+
 // RandomizedGenState generates a random GenesisState for transfer.
 func RandomizedGenState(simState *module.SimulationState) {
 	var portID string
@@ -22,10 +27,24 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { portID = strings.ToLower(simtypes.RandStringOfLength(r, 20)) },
 	)
 
+	var sendEnabled bool
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeySendEnabled), &sendEnabled, simState.Rand,
+		func(r *rand.Rand) { sendEnabled = RadomEnabled(r) },
+	)
+
+	var receiveEnabled bool
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeyReceiveEnabled), &receiveEnabled, simState.Rand,
+		func(r *rand.Rand) { receiveEnabled = RadomEnabled(r) },
+	)
+
 	transferGenesis := types.GenesisState{
-		PortID: portID,
+		PortId:      portID,
+		DenomTraces: types.Traces{},
+		Params:      types.NewParams(sendEnabled, receiveEnabled),
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, transferGenesis))
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(transferGenesis)
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, &transferGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&transferGenesis)
 }

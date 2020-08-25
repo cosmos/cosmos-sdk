@@ -65,7 +65,7 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.ValSigningInfo)
+			return clientCtx.PrintOutput(&res.ValSigningInfo)
 		},
 	}
 
@@ -93,13 +93,18 @@ $ <appcli> query slashing signing-infos
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QuerySigningInfosRequest{Pagination: client.ReadPageRequest(cmd.Flags())}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			params := &types.QuerySigningInfosRequest{Pagination: pageReq}
 			res, err := queryClient.SigningInfos(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Info)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -134,7 +139,7 @@ $ <appcli> query slashing params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

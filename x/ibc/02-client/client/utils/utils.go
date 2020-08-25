@@ -1,92 +1,128 @@
 package utils
 
 import (
-	"fmt"
+	"context"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// QueryAllClientStates returns all the light client states. It _does not_ return
-// any merkle proof.
-func QueryAllClientStates(clientCtx client.Context, page, limit int) ([]exported.ClientState, int64, error) {
-	params := types.NewQueryAllClientsParams(page, limit)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
-	}
-
-	route := fmt.Sprintf("custom/%s/%s/%s", "ibc", types.QuerierRoute, types.QueryAllClients)
-	res, height, err := clientCtx.QueryWithData(route, bz)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var clients []exported.ClientState
-	err = clientCtx.JSONMarshaler.UnmarshalJSON(res, &clients)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
-	}
-	return clients, height, nil
-}
-
-// QueryClientState queries the store to get the light client state and a merkle
-// proof.
+// QueryClientState returns a client state.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryClientState(
 	clientCtx client.Context, clientID string, prove bool,
-) (types.StateResponse, error) {
+) (*types.QueryClientStateResponse, error) {
+	if prove {
+		return QueryClientStateABCI(clientCtx, clientID)
+	}
+
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryClientStateRequest{
+		ClientId: clientID,
+	}
+
+	return queryClient.ClientState(context.Background(), req)
+}
+
+// QueryClientStateABCI queries the store to get the light client state and a merkle proof.
+func QueryClientStateABCI(
+	clientCtx client.Context, clientID string,
+) (*types.QueryClientStateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return types.StateResponse{}, err
+		return nil, err
 	}
 
-	var clientState exported.ClientState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
-		return types.StateResponse{}, err
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	clientState, err := types.UnmarshalClientState(cdc, res.Value)
+	if err != nil {
+		return nil, err
 	}
 
-	clientStateRes := types.NewClientStateResponse(clientID, clientState, res.Proof, res.Height)
+	anyClientState, err := types.PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
 
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+
+	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, res.Height)
 	return clientStateRes, nil
 }
 
-// QueryConsensusState queries the store to get the consensus state and a merkle
-// proof.
+// QueryConsensusState returns a consensus state.
+// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
+// it uses the gRPC query client.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, height exported.Height, prove bool,
-) (types.ConsensusStateResponse, error) {
-	var conStateRes types.ConsensusStateResponse
+	clientCtx client.Context, clientID string, height exported.Height, prove, latestHeight bool,
+) (*types.QueryConsensusStateResponse, error) {
+	if prove {
+		return QueryConsensusStateABCI(clientCtx, clientID, height)
+	}
 
+	queryClient := types.NewQueryClient(clientCtx)
+	req := &types.QueryConsensusStateRequest{
+		ClientId:     clientID,
+		Height:       height,
+		LatestHeight: latestHeight,
+	}
+
+	return queryClient.ConsensusState(context.Background(), req)
+}
+
+// QueryConsensusStateABCI queries the store to get the consensus state of a light client and a
+// merkle proof of its existence or non-existence.
+func QueryConsensusStateABCI(
+	clientCtx client.Context, clientID string, height uint64,
+) (*types.QueryConsensusStateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
-		Prove: prove,
+		Prove: true,
 	}
 
 	res, err := clientCtx.QueryABCI(req)
 	if err != nil {
-		return conStateRes, err
+		return nil, err
 	}
 
-	var cs exported.ConsensusState
-	if err := clientCtx.Codec.UnmarshalBinaryBare(res.Value, &cs); err != nil {
-		return conStateRes, err
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	cs, err := types.UnmarshalConsensusState(cdc, res.Value)
+	if err != nil {
+		return nil, err
 	}
 
-	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
+	anyConsensusState, err := types.PackConsensusState(cs)
+	if err != nil {
+		return nil, err
+	}
+
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, res.Height), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate
@@ -109,14 +145,23 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 		return ibctmtypes.Header{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := 0
+	count := 10_000
+
+	validators, err := node.Validators(&height, &page, &count)
+	if err != nil {
+		return ibctmtypes.Header{}, 0, err
+	}
+
+	protoCommit := commit.SignedHeader.ToProto()
+	protoValset, err := tmtypes.NewValidatorSet(validators.Validators).ToProto()
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
 
 	header := ibctmtypes.Header{
-		SignedHeader: commit.SignedHeader,
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		SignedHeader: protoCommit,
+		ValidatorSet: protoValset,
 	}
 
 	return header, height, nil
@@ -124,33 +169,37 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 
 // QueryNodeConsensusState takes a client context and returns the appropriate
 // tendermint consensus state
-func QueryNodeConsensusState(clientCtx client.Context) (ibctmtypes.ConsensusState, int64, error) {
+func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusState, int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&height, 0, 10000)
+	page := 0
+	count := 10_000
+
+	nextHeight := height + 1
+	nextVals, err := node.Validators(&nextHeight, &page, &count)
 	if err != nil {
-		return ibctmtypes.ConsensusState{}, 0, err
+		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	state := ibctmtypes.ConsensusState{
-		Timestamp:    commit.Time,
-		Root:         commitmenttypes.NewMerkleRoot(commit.AppHash),
-		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+	state := &ibctmtypes.ConsensusState{
+		Timestamp:          commit.Time,
+		Root:               commitmenttypes.NewMerkleRoot(commit.AppHash),
+		NextValidatorsHash: tmtypes.NewValidatorSet(nextVals.Validators).Hash(),
 	}
 
 	return state, height, nil

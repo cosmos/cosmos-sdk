@@ -135,7 +135,7 @@ type AppParams map[string]json.RawMessage
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value or default value (eg: in the
 // case of operation weights where Rand is not used).
-func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+func (sp AppParams) GetOrGenerate(cdc codec.JSONMarshaler, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)
 		return
@@ -152,6 +152,9 @@ type SelectOpFn func(r *rand.Rand) Operation
 type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
 	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
 )
+
+// RandomAccountFn returns a slice of n random simulation accounts
+type RandomAccountFn func(r *rand.Rand, n int) []Account
 
 type Params interface {
 	PastEvidenceFraction() float64

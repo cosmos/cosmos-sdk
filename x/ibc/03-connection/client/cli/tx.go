@@ -43,7 +43,7 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -71,17 +71,17 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 func NewConnectionOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-[counterparty-versions] [path/to/proof_init.json] [path/to/proof_consensus.json]`),
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]
+[counterparty-versions] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			`%s tx %s %s open-try connection-id] [client-id] \
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
-[counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]`,
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]\
+[counterparty-versions] [path/to/proof_init.json] [path/to/proof_client.json] [path/tp/proof_consensus.json]`,
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(8),
+		Args: cobra.ExactArgs(10),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -94,20 +94,30 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
+			if err != nil {
+				return err
+			}
+
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
 
 			// TODO: parse strings?
-			counterpartyVersions := args[5]
+			counterpartyVersions := args[6]
 
-			proofInit, err := utils.ParseProof(clientCtx.Codec, args[6])
+			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[7])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[7])
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[8])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[9])
 			if err != nil {
 				return err
 			}
@@ -129,7 +139,8 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, uint64(proofEpoch), proofHeight,
+				counterpartyClient, counterpartyPrefix, []string{counterpartyVersions},
+				proofInit, proofClient, proofConsensus, uint64(proofEpoch), proofHeight,
 				uint64(consensusEpoch), consensusHeight, clientCtx.GetFromAddress(),
 			)
 
@@ -152,14 +163,14 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 // connection open attempt from chain B to chain A
 func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
+		Use:   "open-ack [connection-id] [path/to/client_state.json] [path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]",
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
+			"%s tx %s %s open-ack [connection-id] [path/to/client_state.json] [path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -169,12 +180,22 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(clientCtx.Codec, args[1])
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[2])
+			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
+			if err != nil {
+				return err
+			}
+
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[3])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -194,11 +215,12 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 				return err
 			}
 
-			version := args[3]
+			version := args[5]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofConsensus, uint64(proofEpoch), proofHeight,
-				uint64(consensusEpoch), consensusHeight, version, clientCtx.GetFromAddress(),
+				connectionID, counterpartyClient, proofTry, proofClient, proofConsensus,
+				uint64(proofEpoch), proofHeight, uint64(consensusEpoch), consensusHeight,
+				version, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -237,7 +259,7 @@ func NewConnectionOpenConfirmCmd() *cobra.Command {
 
 			connectionID := args[0]
 
-			proofAck, err := utils.ParseProof(clientCtx.Codec, args[1])
+			proofAck, err := utils.ParseProof(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}

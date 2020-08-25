@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
@@ -10,19 +11,17 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
 	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
+	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_40"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const (
-	flagGenesisTime = "genesis-time"
-	flagChainID     = "chain-id"
-)
+const flagGenesisTime = "genesis-time"
 
 // Allow applications to extend and modify the migration process.
 //
@@ -31,6 +30,7 @@ var migrationMap = types.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
 	"v0.39": v039.Migrate,
+	"v0.40": v040.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.
@@ -109,12 +109,12 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainID, _ := cmd.Flags().GetString(flagChainID)
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID != "" {
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := codec.MarshalJSONIndent(cdc, genDoc)
+			bz, err := json.MarshalIndent(genDoc, "", " ")
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}
@@ -130,7 +130,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	}
 
 	cmd.Flags().String(flagGenesisTime, "", "override genesis_time with this flag")
-	cmd.Flags().String(flagChainID, "", "override chain_id with this flag")
+	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd
 }

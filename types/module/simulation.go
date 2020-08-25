@@ -99,7 +99,7 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // GenesisState generator function
 type SimulationState struct {
 	AppParams    simulation.AppParams
-	Cdc          *codec.Codec                         // application codec
+	Cdc          codec.JSONMarshaler                  // application codec
 	Rand         *rand.Rand                           // random number
 	GenState     map[string]json.RawMessage           // genesis state
 	Accounts     []simulation.Account                 // simulation accounts

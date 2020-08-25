@@ -10,43 +10,32 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
-	clientType := exported.ClientTypeFromString(msg.GetClientType())
-
 	var (
+		consensusHeight uint64
 		clientState     exported.ClientState
-		consensusHeight exported.Height
 	)
 
-	switch clientType {
-	case exported.Tendermint:
-		tmMsg, ok := msg.(ibctmtypes.MsgCreateClient)
-		if !ok {
-			return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "got %T, expected %T", msg, ibctmtypes.MsgCreateClient{})
-		}
-		var err error
-
-		clientState, err = ibctmtypes.InitializeFromMsg(tmMsg)
-		if err != nil {
-			return nil, err
-		}
-		consensusHeight = msg.GetConsensusState().GetHeight()
-	case exported.Localhost:
-		// msg client id is always "localhost"
-		// Localhost epoch is always 0 for now
+	switch msg.(type) {
+	// localhost is a special case that must initialize client state
+	// from context and not from msg
+	case *localhosttypes.MsgCreateClient:
 		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
-		consensusHeight = exported.NewHeight(0, uint64(ctx.BlockHeight()))
+		// Localhost consensus height is chain's blockheight
+		consensusHeight = uint64(ctx.BlockHeight())
 	default:
-		return nil, sdkerrors.Wrapf(types.ErrInvalidClientType, "unsupported client type (%s)", msg.GetClientType())
+		clientState = msg.InitializeClientState()
+		if consState := msg.GetConsensusState(); consState != nil {
+			consensusHeight = consState.GetHeight()
+		}
 	}
 
 	_, err := k.CreateClient(
-		ctx, clientState, msg.GetConsensusState(),
+		ctx, msg.GetClientID(), clientState, msg.GetConsensusState(),
 	)
 	if err != nil {
 		return nil, err

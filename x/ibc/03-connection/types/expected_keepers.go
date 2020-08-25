@@ -8,8 +8,9 @@ import (
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
 	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
-	GetClientConsensusState(ctx sdk.Context, clientID string, height clientexported.Height) (clientexported.ConsensusState, bool)
-	GetSelfConsensusState(ctx sdk.Context, height clientexported.Height) (clientexported.ConsensusState, bool)
-	IterateClients(ctx sdk.Context, cb func(clientexported.ClientState) bool)
+	GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (clientexported.ConsensusState, bool)
+	GetSelfConsensusState(ctx sdk.Context, height uint64) (clientexported.ConsensusState, bool)
+	ValidateSelfClient(ctx sdk.Context, clientState clientexported.ClientState) error
+	IterateClients(ctx sdk.Context, cb func(string, clientexported.ClientState) bool)
 	ClientStore(ctx sdk.Context, clientID string) sdk.KVStore
 }

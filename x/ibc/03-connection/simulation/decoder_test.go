@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -20,7 +20,7 @@ func TestDecodeStore(t *testing.T) {
 	connectionID := "connectionidone"
 
 	connection := types.ConnectionEnd{
-		ClientID: "clientidone",
+		ClientId: "clientidone",
 		Versions: []string{"1.0"},
 	}
 
@@ -28,18 +28,20 @@ func TestDecodeStore(t *testing.T) {
 		Paths: []string{connectionID},
 	}
 
-	kvPairs := tmkv.Pairs{
-		tmkv.Pair{
-			Key:   host.KeyClientConnections(connection.ClientID),
-			Value: cdc.MustMarshalBinaryBare(&paths),
-		},
-		tmkv.Pair{
-			Key:   host.KeyConnection(connectionID),
-			Value: cdc.MustMarshalBinaryBare(&connection),
-		},
-		tmkv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+	kvPairs := kv.Pairs{
+		Pairs: []kv.Pair{
+			{
+				Key:   host.KeyClientConnections(connection.ClientId),
+				Value: cdc.MustMarshalBinaryBare(&paths),
+			},
+			{
+				Key:   host.KeyConnection(connectionID),
+				Value: cdc.MustMarshalBinaryBare(&connection),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -54,13 +56,13 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(cdc, kvPairs.Pairs[i], kvPairs.Pairs[i])
 			if i == len(tests)-1 {
-				require.False(t, found, string(kvPairs[i].Key))
-				require.Empty(t, res, string(kvPairs[i].Key))
+				require.False(t, found, string(kvPairs.Pairs[i].Key))
+				require.Empty(t, res, string(kvPairs.Pairs[i].Key))
 			} else {
-				require.True(t, found, string(kvPairs[i].Key))
-				require.Equal(t, tt.expectedLog, res, string(kvPairs[i].Key))
+				require.True(t, found, string(kvPairs.Pairs[i].Key))
+				require.Equal(t, tt.expectedLog, res, string(kvPairs.Pairs[i].Key))
 			}
 		})
 	}

@@ -86,8 +86,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 		slashFractionDoubleSign, slashFractionDowntime,
 	)
 
-	slashingGenesis := types.NewGenesisState(params, nil, nil)
+	slashingGenesis := types.NewGenesisState(params, []types.SigningInfo{}, []types.ValidatorMissedBlocks{})
 
-	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, slashingGenesis.Params))
+	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, &slashingGenesis.Params))
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(slashingGenesis)
 }

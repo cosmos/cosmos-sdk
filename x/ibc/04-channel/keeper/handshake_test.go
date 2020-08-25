@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			counterparty := types.NewCounterparty(connA.FirstOrNextTestChannel().PortID, connA.FirstOrNextTestChannel().ID)
 			channelB := connB.FirstOrNextTestChannel()
 
-			channelKey := host.KeyChannel(counterparty.PortID, counterparty.ChannelID)
+			channelKey := host.KeyChannel(counterparty.PortId, counterparty.ChannelId)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
 			// increment proofHeight by heightDiff

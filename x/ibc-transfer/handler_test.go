@@ -1,75 +1,41 @@
 package transfer_test
 
 import (
-	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	lite "github.com/tendermint/tendermint/lite2"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+<<<<<<< HEAD
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+=======
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-)
-
-// define constants used for testing
-const (
-	testClientIDA = "testclientida"
-	testClientIDB = "testclientidb"
-
-	testConnection = "testconnection"
-	testPort1      = "bank"
-	testPort2      = "testportid"
-	testChannel1   = "firstchannel"
-	testChannel2   = "secondchannel"
-
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
-)
-
-// define variables used for testing
-var (
-	testAddr1 = sdk.AccAddress([]byte("testaddr1"))
-	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
-
-	testCoins, _          = sdk.ParseCoins("100atom")
-	testPrefixedCoins1, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort1, testChannel1)))
-	testPrefixedCoins2, _ = sdk.ParseCoins(fmt.Sprintf("100%satom", types.GetDenomPrefix(testPort2, testChannel2)))
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
+	coordinator *ibctesting.Coordinator
 
-	chainA *TestChain
-	chainB *TestChain
+	// testing chains used for convenience and readability
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
-	suite.chainA = NewTestChain(testClientIDA)
-	suite.chainB = NewTestChain(testClientIDB)
-
-	suite.cdc = suite.chainA.App.Codec()
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
+// constructs a send from chainA to chainB on the established channel/connection
+// and sends the same coin back from chainB to chainA.
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
+<<<<<<< HEAD
 	handler := transfer.NewHandler(suite.chainA.App.TransferKeeper)
 
 	// create channel capability from ibc scoped keeper and claim with transfer scoped keeper
@@ -121,99 +87,68 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res, "%+v", res) // successfully executed
 }
+=======
+	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+	originalBalance := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 
-func TestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
-}
+	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-type TestChain struct {
-	ClientID string
-	App      *simapp.SimApp
-	Header   ibctmtypes.Header
-	Vals     *tmtypes.ValidatorSet
-	Signers  []tmtypes.PrivValidator
-}
+	// send from chainA to chainB
+	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0)
 
-func NewTestChain(clientID string) *TestChain {
-	privVal := tmtypes.NewMockPV()
+	err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
+	suite.Require().NoError(err) // message committed
 
-	pubKey, err := privVal.GetPubKey()
-	if err != nil {
-		panic(err)
-	}
+	// relay send
+	fungibleTokenPacket := types.NewFungibleTokenPacketData(coinToSendToB.Denom, coinToSendToB.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+	packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 110, 0)
+	ack := types.FungibleTokenPacketAcknowledgement{Success: true}
+	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
+	suite.Require().NoError(err) // relay committed
 
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-	signers := []tmtypes.PrivValidator{privVal}
-	now := time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	// check that voucher exists on chain B
+	voucherDenomTrace := types.ParseDenomTrace(types.GetPrefixedDenom(packet.GetDestPort(), packet.GetDestChannel(), sdk.DefaultBondDenom))
+	balance := suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenomTrace.IBCDenom())
 
+<<<<<<< HEAD
 	height := clientexported.NewHeight(0, 1)
 	header := ibctmtypes.CreateTestHeader(clientID, height, now, valSet, signers)
+=======
+	coinToSendBackToA := types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
+	suite.Require().Equal(coinToSendBackToA, balance)
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 
-	return &TestChain{
-		ClientID: clientID,
-		App:      simapp.Setup(false),
-		Header:   header,
-		Vals:     valSet,
-		Signers:  signers,
-	}
+	// send from chainB back to chainA
+	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
+
+	err = suite.coordinator.SendMsg(suite.chainB, suite.chainA, clientA, msg)
+	suite.Require().NoError(err) // message committed
+
+	// relay send
+	// NOTE: fungible token is prefixed with the full trace in order to verify the packet commitment
+	voucherDenom := voucherDenomTrace.GetPrefix() + voucherDenomTrace.BaseDenom
+	fungibleTokenPacket = types.NewFungibleTokenPacketData(voucherDenom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
+	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
+	err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
+	suite.Require().NoError(err) // relay committed
+
+	balance = suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
+
+	// check that the balance on chainA returned back to the original state
+	suite.Require().Equal(originalBalance, balance)
+
+	// check that module account escrow address is empty
+	escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+	balance = suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
+	suite.Require().Equal(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), balance)
+
+	// check that balance on chain B is empty
+	balance = suite.chainB.App.BankKeeper.GetBalance(suite.chainB.GetContext(), suite.chainB.SenderAccount.GetAddress(), voucherDenomTrace.IBCDenom())
+	suite.Require().Zero(balance.Amount.Int64())
 }
 
-// Creates simple context for testing purposes
-func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, abci.Header{ChainID: chain.Header.SignedHeader.Header.ChainID, Height: chain.Header.SignedHeader.Header.Height})
-}
-
-// createClient will create a client for clientChain on targetChain
-func (chain *TestChain) CreateClient(client *TestChain) error {
-	client.Header = nextHeader(client)
-	// Commit and create a new block on appTarget to get a fresh CommitID
-	client.App.Commit()
-	commitID := client.App.LastCommitID()
-	client.App.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: client.Header.SignedHeader.Header.Height, Time: client.Header.Time}})
-
-	// Set HistoricalInfo on client chain after Commit
-	ctxClient := client.GetContext()
-	validator := stakingtypes.NewValidator(
-		sdk.ValAddress(client.Vals.Validators[0].Address), client.Vals.Validators[0].PubKey, stakingtypes.Description{},
-	)
-	validator.Status = sdk.Bonded
-	validator.Tokens = sdk.NewInt(1000000) // get one voting power
-	validators := []stakingtypes.Validator{validator}
-	histInfo := stakingtypes.HistoricalInfo{
-		Header: abci.Header{
-			AppHash: commitID.Hash,
-		},
-		Valset: validators,
-	}
-	client.App.StakingKeeper.SetHistoricalInfo(ctxClient, client.Header.SignedHeader.Header.Height, histInfo)
-
-	// Create target ctx
-	ctxTarget := chain.GetContext()
-
-	// create client
-	clientState, err := ibctmtypes.Initialize(client.ClientID, lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, client.Header, commitmenttypes.GetSDKSpecs())
-	if err != nil {
-		return err
-	}
-	_, err = chain.App.IBCKeeper.ClientKeeper.CreateClient(ctxTarget, clientState, client.Header.ConsensusState())
-	if err != nil {
-		return err
-	}
-	return nil
-
-	// _, _, err := simapp.SignCheckDeliver(
-	// 	suite.T(),
-	// 	suite.cdc,
-	// 	suite.app.BaseApp,
-	// 	ctx.BlockHeader(),
-	// 	[]sdk.Msg{clienttypes.NewMsgCreateClient(clientID, clientexported.ClientTypeTendermint, consState, accountAddress)},
-	// 	[]uint64{baseAccount.GetAccountNumber()},
-	// 	[]uint64{baseAccount.GetSequence()},
-	// 	true, true, accountPrivKey,
-	// )
-}
-
+<<<<<<< HEAD
 // nolint: unused
 func (chain *TestChain) updateClient(client *TestChain) {
 	// Create target ctx
@@ -312,4 +247,8 @@ func nextHeader(chain *TestChain) ibctmtypes.Header {
 	height := clientexported.NewHeight(0, uint64(chain.Header.SignedHeader.Header.Height+1))
 	return ibctmtypes.CreateTestHeader(chain.Header.SignedHeader.Header.ChainID, height,
 		chain.Header.Time.Add(time.Minute), chain.Vals, chain.Signers)
+=======
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
+>>>>>>> d9fd4d2ca9a3f70fbabcd3eb6a1427395fdedf74
 }

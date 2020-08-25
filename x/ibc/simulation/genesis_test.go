@@ -22,10 +22,6 @@ func TestRandomizedGenState(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	// Make sure to register cdc.
-	// Otherwise RandomizedGenState will panic!
-	types.RegisterCodec(cdc)
-
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
 		Cdc:          cdc,
@@ -51,27 +47,5 @@ func TestRandomizedGenState(t *testing.T) {
 	// Note: ibcGenesis.ChannelGenesis is missing because the ChannelGenesis
 	// interface is not register in RegisterCodec. (Not sure if is a feature
 	// or a bug.)
-
-}
-
-// TestRandomizedGenState tests the execution of RandomizedGenState
-// without registering the IBC client interfaces and types.
-// We expect the test to panic.
-func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
-	s := rand.NewSource(1)
-	r := rand.New(s)
-
-	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
-		GenState:     make(map[string]json.RawMessage),
-	}
-
-	require.Panicsf(t, func() { simulation.RandomizedGenState(&simState) }, "failed to marshal JSON: Unregistered interface exported.ClientState")
 
 }

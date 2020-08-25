@@ -19,7 +19,7 @@ type App interface {
 
 	// The application types codec.
 	// NOTE: This shoult be sealed before being returned.
-	Codec() *codec.Codec
+	LegacyAmino() *codec.LegacyAmino
 
 	// Application updates every begin block.
 	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
@@ -35,7 +35,7 @@ type App interface {
 
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(
-		forZeroHeight bool, jailWhiteList []string,
+		forZeroHeight bool, jailAllowedAddrs []string,
 	) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error)
 
 	// All the registered module account addreses.

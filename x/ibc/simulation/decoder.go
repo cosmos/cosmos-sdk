@@ -3,28 +3,27 @@ package simulation
 import (
 	"fmt"
 
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	connectionsim "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	channelsim "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding ibc type.
-func NewDecodeStore(cdc codec.Marshaler, aminoCdc *codec.Codec) func(kvA, kvB tmkv.Pair) string {
-	return func(kvA, kvB tmkv.Pair) string {
-		if res, found := clientsim.NewDecodeStore(aminoCdc, kvA, kvB); found {
+func NewDecodeStore(k keeper.Keeper) func(kvA, kvB kv.Pair) string {
+	return func(kvA, kvB kv.Pair) string {
+		if res, found := clientsim.NewDecodeStore(k.ClientKeeper, kvA, kvB); found {
 			return res
 		}
 
-		if res, found := connectionsim.NewDecodeStore(cdc, kvA, kvB); found {
+		if res, found := connectionsim.NewDecodeStore(k.Codec(), kvA, kvB); found {
 			return res
 		}
 
-		if res, found := channelsim.NewDecodeStore(cdc, kvA, kvB); found {
+		if res, found := channelsim.NewDecodeStore(k.Codec(), kvA, kvB); found {
 			return res
 		}
 

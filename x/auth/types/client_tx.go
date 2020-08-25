@@ -1,10 +1,12 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -14,14 +16,20 @@ import (
 // and will not work for protobuf transactions.
 type StdTxBuilder struct {
 	StdTx
-	cdc *codec.Codec
+	cdc *codec.LegacyAmino
 }
 
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
+}
+
+// GetProtoTx implements TxBuilder.GetProtoTx
+func (s *StdTxBuilder) GetProtoTx() *txtypes.Tx {
+	// Stdtx isn't a proto.Message
+	return nil
 }
 
 // SetMsgs implements TxBuilder.SetMsgs
@@ -30,34 +38,17 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	return nil
 }
 
-// SetSignatures implements TxBuilder.SetSignatures
+// SetSignatures implements TxBuilder.SetSignatures.
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
 
 	for i, sig := range signatures {
-		var pubKeyBz []byte
-
-		pubKey := sig.PubKey
-		if pubKey != nil {
-			pubKeyBz = pubKey.Bytes()
+		stdSig, err := SignatureV2ToStdSignature(s.cdc, sig)
+		if err != nil {
+			return err
 		}
 
-		var (
-			sigBz []byte
-			err   error
-		)
-
-		if sig.Data != nil {
-			sigBz, err = SignatureDataToAminoSignature(legacy.Cdc, sig.Data)
-			if err != nil {
-				return err
-			}
-		}
-
-		sigs[i] = StdSignature{
-			PubKey:    pubKeyBz,
-			Signature: sigBz,
-		}
+		sigs[i] = stdSig
 	}
 
 	s.Signatures = sigs
@@ -77,9 +68,14 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
+// SetTimeoutHeight sets the transaction's height timeout.
+func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
+	s.TimeoutHeight = height
+}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
-	Cdc *codec.Codec
+	Cdc *codec.LegacyAmino
 }
 
 var _ client.TxConfig = StdTxConfig{}
@@ -90,6 +86,15 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
 	}
+}
+
+// WrapTxBuilder returns a StdTxBuilder from provided transaction
+func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+	stdTx, ok := newTx.(StdTx)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)
+	}
+	return &StdTxBuilder{StdTx: stdTx, cdc: s.Cdc}, nil
 }
 
 // MarshalTx implements TxConfig.MarshalTx
@@ -111,6 +116,38 @@ func (s StdTxConfig) TxJSONDecoder() sdk.TxDecoder {
 	return DefaultJSONTxDecoder(s.Cdc)
 }
 
+func (s StdTxConfig) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
+	stdSigs := make([]StdSignature, len(sigs))
+	for i, sig := range sigs {
+		stdSig, err := SignatureV2ToStdSignature(s.Cdc, sig)
+		if err != nil {
+			return nil, err
+		}
+
+		stdSigs[i] = stdSig
+	}
+	return s.Cdc.MarshalJSON(stdSigs)
+}
+
+func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
+	var stdSigs []StdSignature
+	err := s.Cdc.UnmarshalJSON(bz, &stdSigs)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := make([]signing.SignatureV2, len(stdSigs))
+	for i, stdSig := range stdSigs {
+		sig, err := StdSignatureToSignatureV2(s.Cdc, stdSig)
+		if err != nil {
+			return nil, err
+		}
+		sigs[i] = sig
+	}
+
+	return sigs, nil
+}
+
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return stdTxSignModeHandler{}
 }

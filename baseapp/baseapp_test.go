@@ -832,8 +832,8 @@ func TestDeliverTx(t *testing.T) {
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			events := res.GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, counterEvent("ante_handler", counter).ToABCIEvents()[0], events[0], "ante handler event")
-			require.Equal(t, counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents()[0], events[2], "msg handler update counter event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
 		}
 
 		app.EndBlock(abci.RequestEndBlock{})

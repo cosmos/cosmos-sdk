@@ -10,33 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
-func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCreateClient) (*sdk.Result, error) {
-	var (
-		consensusHeight uint64
-		clientState     exported.ClientState
-	)
+func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateClient) (*sdk.Result, error) {
+	clientState := types.MustUnpackClientState(msg.ClientState)
+	consensusState := types.MustUnpackConsensusState(msg.ConsensusState)
 
-	switch msg.(type) {
-	// localhost is a special case that must initialize client state
-	// from context and not from msg
-	case *localhosttypes.MsgCreateClient:
-		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
-		// Localhost consensus height is chain's blockheight
-		consensusHeight = uint64(ctx.BlockHeight())
-	default:
-		clientState = msg.InitializeClientState()
-		if consState := msg.GetConsensusState(); consState != nil {
-			consensusHeight = consState.GetHeight()
-		}
-	}
-
-	_, err := k.CreateClient(
-		ctx, msg.GetClientID(), clientState, msg.GetConsensusState(),
-	)
+	// TODO: how to handle localhost?
+	_, err := k.CreateClient(ctx, msg.ClientId, clientState, consensusState)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +26,9 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.GetClientID()),
-			sdk.NewAttribute(types.AttributeKeyClientType, msg.GetClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType().String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusState.GetHeight())),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -60,8 +42,10 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 }
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
-func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgUpdateClient) (*sdk.Result, error) {
-	_, err := k.UpdateClient(ctx, msg.GetClientID(), msg.GetHeader())
+func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateClient) (*sdk.Result, error) {
+	header := types.MustUnpackHeader(msg.Header)
+
+	_, err := k.UpdateClient(ctx, msg.ClientId, header)
 	if err != nil {
 		return nil, err
 	}

@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -20,13 +20,13 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		// IBC client msg interface types
-		case clientexported.MsgCreateClient:
+		case *clienttypes.MsgCreateClient:
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
-		case clientexported.MsgUpdateClient:
+		case *clienttypes.MsgUpdateClient:
 			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		// Client Misbehaviour is handled by the evidence module
+		// NOTE: Client Misbehaviour is handled by the evidence module
 
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:

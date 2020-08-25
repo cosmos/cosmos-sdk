@@ -144,6 +144,7 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+	ValidateBasic() error
 }
 
 // message types for the IBC client
@@ -190,6 +191,8 @@ const (
 
 func (ct ClientType) String() string {
 	switch ct {
+	case SoloMachine:
+		return ClientTypeSoloMachine
 	case Tendermint:
 		return ClientTypeTendermint
 	case Localhost:
@@ -225,6 +228,8 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 // type. It returns 0 if the type is not found/registered.
 func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
+	case ClientTypeSoloMachine:
+		return SoloMachine
 	case ClientTypeTendermint:
 		return Tendermint
 	case ClientTypeLocalHost:

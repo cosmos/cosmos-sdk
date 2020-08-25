@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -65,12 +66,26 @@ func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
 // UnpackClientState unpacks an Any into a ClientState. It returns an error if the
 // client state can't be unpacked into a ClientState.
 func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
+	if any == nil {
+		return nil, errors.New("protobuf Any message cannot be nil")
+	}
+
 	clientState, ok := any.GetCachedValue().(exported.ClientState)
 	if !ok {
 		return nil, fmt.Errorf("cannot unpack Any into ClientState %T", any)
 	}
 
 	return clientState, nil
+}
+
+// MustUnpackClientState calls UnpackClientState and panics on error.
+func MustUnpackClientState(any *codectypes.Any) exported.ClientState {
+	clientState, err := UnpackClientState(any)
+	if err != nil {
+		panic(err)
+	}
+
+	return clientState
 }
 
 // PackConsensusState constructs a new Any packed with the given consensus state value. It returns
@@ -103,10 +118,92 @@ func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.
 // UnpackConsensusState unpacks an Any into a ConsensusState. It returns an error if the
 // consensus state can't be unpacked into a ConsensusState.
 func UnpackConsensusState(any *codectypes.Any) (exported.ConsensusState, error) {
+	// nil consensus states is supported
+	if any == nil {
+		return nil, nil
+	}
+
 	consensusState, ok := any.GetCachedValue().(exported.ConsensusState)
 	if !ok {
 		return nil, fmt.Errorf("cannot unpack Any into ConsensusState %T", any)
 	}
 
 	return consensusState, nil
+}
+
+// MustUnpackConsensusState calls UnpackConsensusState and panics on error.
+func MustUnpackConsensusState(any *codectypes.Any) exported.ConsensusState {
+	consensusState, err := UnpackConsensusState(any)
+	if err != nil {
+		panic(err)
+	}
+
+	return consensusState
+}
+
+// PackHeader constructs a new Any packed with the given header value. It returns
+// an error if the header can't be casted to a protobuf message or if the concrete
+// implemention is not registered to the protobuf codec.
+func PackHeader(header exported.Header) (*codectypes.Any, error) {
+	msg, ok := header.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", header)
+	}
+
+	anyHeader, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyHeader, nil
+}
+
+// UnpackHeader unpacks an Any into a Header. It returns an error if the
+// consensus state can't be unpacked into a Header.
+func UnpackHeader(any *codectypes.Any) (exported.Header, error) {
+	if any == nil {
+		return nil, errors.New("protobuf Any message cannot be nil")
+	}
+
+	header, ok := any.GetCachedValue().(exported.Header)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into Header %T", any)
+	}
+
+	return header, nil
+}
+
+// MustUnpackHeader calls UnpackHeader and panics on error.
+func MustUnpackHeader(any *codectypes.Any) exported.Header {
+	header, err := UnpackHeader(any)
+	if err != nil {
+		panic(err)
+	}
+
+	return header
+}
+
+// UnpackMisbehaviour unpacks an Any into a Misbehaviour. It returns an error if the
+// consensus state can't be unpacked into a Misbehaviour.
+func UnpackMisbehaviour(any *codectypes.Any) (exported.Misbehaviour, error) {
+	if any == nil {
+		return nil, errors.New("protobuf Any message cannot be nil")
+	}
+
+	misbehaviour, ok := any.GetCachedValue().(exported.Misbehaviour)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into Misbehaviour %T", any)
+	}
+
+	return misbehaviour, nil
+}
+
+// MustUnpackMisbehaviour calls UnpackMisbehaviour and panics on error.
+func MustUnpackMisbehaviour(any *codectypes.Any) exported.Misbehaviour {
+	misbehaviour, err := UnpackMisbehaviour(any)
+	if err != nil {
+		panic(err)
+	}
+
+	return misbehaviour
 }

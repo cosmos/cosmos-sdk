@@ -111,13 +111,13 @@ func (ev Evidence) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := ev.Header1.ValidateBasic(ev.ChainId); err != nil {
+	if err := ev.Header1.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := ev.Header2.ValidateBasic(ev.ChainId); err != nil {
+	if err := ev.Header2.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),

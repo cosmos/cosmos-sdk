@@ -358,9 +358,9 @@ func NewSimApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	// app.MountKVStores(keys, 0)
-	// app.MountTransientStores(tkeys)
-	// app.MountMemoryStores(memKeys)
+	app.MountKVStores(keys, app.LastBlockHeight())
+	app.MountTransientStores(tkeys)
+	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

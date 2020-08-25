@@ -32,9 +32,11 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply 
 	md, _ := metadata.FromOutgoingContext(grpcCtx)
 	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
 		height, err := strconv.ParseInt(heights[0], 10, 64)
-		if err == nil {
-			ctx = ctx.WithHeight(height)
+		if err != nil {
+			return err
 		}
+
+		ctx = ctx.WithHeight(height)
 	}
 
 	req := abci.RequestQuery{

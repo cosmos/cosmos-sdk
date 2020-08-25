@@ -3,9 +3,9 @@ package rest_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -22,7 +22,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	}{
 		{
 			"test GRPC total supply",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply?height=1", baseURL),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -36,7 +36,29 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		},
 		{
 			"GRPC total supply of a specific denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=1", baseURL, s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s", baseURL, s.cfg.BondDenom),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&types.QuerySupplyOfResponse{},
+			&types.QuerySupplyOfResponse{
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
+			},
+		},
+		{
+			"Query for `height` > 1",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s", baseURL, s.cfg.BondDenom),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "2",
+			},
+			&types.QuerySupplyOfResponse{},
+			&types.QuerySupplyOfResponse{
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(20))),
+			},
+		},
+		{
+			"Query params shouldn't be considered as height",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/%s?height=2", baseURL, s.cfg.BondDenom),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -47,7 +69,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		},
 		{
 			"GRPC total supply of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar?height=1", baseURL),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/supply/foobar", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -61,7 +83,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
 			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))

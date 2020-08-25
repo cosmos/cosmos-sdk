@@ -40,9 +40,10 @@ const (
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
+	Height                        = 5
 
 	ChannelVersion = ibctransfertypes.Version
-	InvalidID      = "IDisInvalid"
+	InvalidID      = "&$IDisInvalid"
 
 	ConnectionIDPrefix = "connectionid"
 )

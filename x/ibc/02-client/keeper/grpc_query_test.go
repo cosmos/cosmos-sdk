@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctesting.Height, commitmenttypes.GetSDKSpecs())
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.GetHeight(), nil,
 				)
@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.GetHeight(), nil,
 				)
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, ibctesting.Height, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)
@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 
 				req = &types.QueryConsensusStateRequest{
 					ClientId: testClientID,
-					Height:   testClientHeight,
+					Height:   ibctesting.Height,
 				}
 			},
 			true,
@@ -317,8 +317,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 					suite.consensusState.Timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), suite.consensusState.GetHeight(), nil,
 				)
 
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+1, cs2)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, ibctesting.Height, cs)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, ibctesting.Height+1, cs2)
 
 				any, err := types.PackConsensusState(cs)
 				suite.Require().NoError(err)

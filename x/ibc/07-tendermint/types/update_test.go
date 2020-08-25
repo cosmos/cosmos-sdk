@@ -13,7 +13,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
 		clientState    *types.ClientState
 		consensusState *types.ConsensusState
-		newHeader      types.Header
+		newHeader      *types.Header
 		currentTime    time.Time
 	)
 

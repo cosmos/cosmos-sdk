@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -121,7 +122,8 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		}))
 	}
 
-	snapshotDir := os.TempDir()
+	snapshotDir, err := ioutil.TempDir("", "baseapp")
+	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
 	require.NoError(t, err)
 	teardown := func() {

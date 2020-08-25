@@ -43,10 +43,10 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 	baseURL := val.APIAddress
 
 	testCases := []struct {
-		name     string
-		url      string
-		headers  map[string]string
-		error bool
+		name    string
+		url     string
+		headers map[string]string
+		error   bool
 	}{
 		{
 			"test query validators gRPC route with invalid status",
@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 			var valRes types.QueryValidatorsResponse
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &valRes)
 
-			if (tc.error) {
+			if tc.error {
 				s.Require().Error(err)
 				s.Require().Nil(valRes.Validators)
 				s.Require().Equal(0, len(valRes.Validators))

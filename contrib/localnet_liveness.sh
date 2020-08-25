@@ -29,7 +29,7 @@ fi
 docker_containers=( $(docker ps -q -f name=simd --format='{{.Names}}') )
 
 while [ ${CNT} -lt $ITER ]; do
-  curr_block=$(curl -s $NODEADDR:26657/status | jq -r '.result.sync_info.latest_block_height')
+  curr_block=$(curl -s $NODEADDR:26655/status | jq -r '.result.sync_info.latest_block_height')
 
   if [ ! -z ${curr_block} ] ; then
     echo "Number of Blocks: ${curr_block}"

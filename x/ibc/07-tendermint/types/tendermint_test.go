@@ -41,7 +41,7 @@ type TendermintTestSuite struct {
 	privVal    tmtypes.PrivValidator
 	valSet     *tmtypes.ValidatorSet
 	valsHash   tmbytes.HexBytes
-	header     ibctmtypes.Header
+	header     *ibctmtypes.Header
 	now        time.Time
 	headerTime time.Time
 	clientTime time.Time

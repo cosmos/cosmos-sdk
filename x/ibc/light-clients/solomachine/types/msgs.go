@@ -72,7 +72,7 @@ func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, header *Header) *MsgUpdateClient {
 	return &MsgUpdateClient{
 		ClientId: id,
 		Header:   header,
@@ -119,7 +119,7 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
 	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
 }
 
@@ -155,7 +155,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return &msg.Evidence
+	return msg.Evidence
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

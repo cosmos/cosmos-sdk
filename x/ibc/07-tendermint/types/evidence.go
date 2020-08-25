@@ -24,7 +24,7 @@ var (
 )
 
 // NewEvidence creates a new Evidence instance.
-func NewEvidence(clientID, chainID string, header1, header2 Header) *Evidence {
+func NewEvidence(clientID, chainID string, header1, header2 *Header) *Evidence {
 	return &Evidence{
 		ClientId: clientID,
 		ChainId:  chainID,

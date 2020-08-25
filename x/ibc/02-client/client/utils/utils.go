@@ -155,7 +155,7 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 	}
 
 	header := ibctmtypes.Header{
-		SignedHeader: *protoCommit,
+		SignedHeader: protoCommit,
 		ValidatorSet: protoValset,
 	}
 

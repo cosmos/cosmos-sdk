@@ -28,7 +28,7 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero trusting period passed"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero unbonding period passed"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), nil), false, "Empty address passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, &types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid header"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer), false, "invalid proof specs"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, nil, signer), false, "nil proof specs"},
@@ -54,9 +54,9 @@ func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, signer), true, "success msg should pass"},
-		{types.NewMsgUpdateClient("(badClient)", types.Header{}, signer), false, "invalid client id passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, nil), false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{}, signer), true, "success msg should pass"},
+		{types.NewMsgUpdateClient("(badClient)", &types.Header{}, signer), false, "invalid client id passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{}, nil), false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

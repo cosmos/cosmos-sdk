@@ -25,7 +25,7 @@ func (suite *TendermintTestSuite) TestGetTime() {
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	var (
-		header  types.Header
+		header  *types.Header
 		chainID string
 	)
 	testCases := []struct {

@@ -16,8 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -35,7 +34,7 @@ func NewCreateClientCmd() *cobra.Command {
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, ibctmtypes.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -46,7 +45,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 			clientID := args[0]
 
-			var header ibctmtypes.Header
+			var header *types.Header
 			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -59,14 +58,14 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			var (
-				trustLevel ibctmtypes.Fraction
+				trustLevel types.Fraction
 				specs      []*ics23.ProofSpec
 			)
 
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
 
 			if lvl == "default" {
-				trustLevel = ibctmtypes.NewFractionFromTm(light.DefaultTrustLevel)
+				trustLevel = types.NewFractionFromTm(light.DefaultTrustLevel)
 			} else {
 				trustLevel, err = parseFraction(lvl)
 				if err != nil {
@@ -103,7 +102,7 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgCreateClient(
+			msg := types.NewMsgCreateClient(
 				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
 			)
 
@@ -131,7 +130,7 @@ func NewUpdateClientCmd() *cobra.Command {
 		Long:  "update existing tendermint client with a tendermint header",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.AppName, ibctmtypes.SubModuleName,
+			version.AppName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -143,7 +142,7 @@ func NewUpdateClientCmd() *cobra.Command {
 
 			clientID := args[0]
 
-			var header ibctmtypes.Header
+			var header *types.Header
 			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[1]), &header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
@@ -155,7 +154,7 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			msg := types.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -179,7 +178,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
 		Example: fmt.Sprintf(
 			"$ %s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
-			version.AppName, ibctmtypes.SubModuleName,
+			version.AppName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -189,7 +188,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				return err
 			}
 
-			var ev evidenceexported.Evidence
+			var ev *types.Evidence
 			if err := clientCtx.LegacyAmino.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
@@ -201,7 +200,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				}
 			}
 
-			msg := ibctmtypes.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
+			msg := types.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -215,23 +214,23 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 	return cmd
 }
 
-func parseFraction(fraction string) (ibctmtypes.Fraction, error) {
+func parseFraction(fraction string) (types.Fraction, error) {
 	fr := strings.Split(fraction, "/")
 	if len(fr) != 2 || fr[0] == fraction {
-		return ibctmtypes.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
+		return types.Fraction{}, fmt.Errorf("fraction must have format 'numerator/denominator' got %s", fraction)
 	}
 
 	numerator, err := strconv.ParseInt(fr[0], 10, 64)
 	if err != nil {
-		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
+		return types.Fraction{}, fmt.Errorf("invalid trust-level numerator: %w", err)
 	}
 
 	denominator, err := strconv.ParseInt(fr[1], 10, 64)
 	if err != nil {
-		return ibctmtypes.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
+		return types.Fraction{}, fmt.Errorf("invalid trust-level denominator: %w", err)
 	}
 
-	return ibctmtypes.Fraction{
+	return types.Fraction{
 		Numerator:   numerator,
 		Denominator: denominator,
 	}, nil

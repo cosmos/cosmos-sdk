@@ -37,9 +37,9 @@ func (suite *SoloMachineTestSuite) TestMsgUpdateClientValidateBasic() {
 	}{
 		{"valid msg", types.NewMsgUpdateClient(suite.solomachine.ClientID, header), true},
 		{"invalid client id", types.NewMsgUpdateClient("(BADCLIENTID)", header), false},
-		{"invalid header - sequence is zero", types.NewMsgUpdateClient(suite.solomachine.ClientID, types.Header{0, header.Signature, header.NewPublicKey}), false},
-		{"invalid header - signature is empty", types.NewMsgUpdateClient(suite.solomachine.ClientID, types.Header{header.Sequence, []byte{}, header.NewPublicKey}), false},
-		{"invalid header - pubkey is empty", types.NewMsgUpdateClient(suite.solomachine.ClientID, types.Header{header.Sequence, header.Signature, nil}), false},
+		{"invalid header - sequence is zero", types.NewMsgUpdateClient(suite.solomachine.ClientID, &types.Header{0, header.Signature, header.NewPublicKey}), false},
+		{"invalid header - signature is empty", types.NewMsgUpdateClient(suite.solomachine.ClientID, &types.Header{header.Sequence, []byte{}, header.NewPublicKey}), false},
+		{"invalid header - pubkey is empty", types.NewMsgUpdateClient(suite.solomachine.ClientID, &types.Header{header.Sequence, header.Signature, nil}), false},
 	}
 
 	for i, tc := range cases {

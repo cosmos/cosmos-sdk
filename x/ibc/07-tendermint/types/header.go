@@ -58,7 +58,7 @@ func (h Header) ValidateBasic(chainID string) error {
 	if h.Header == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint header cannot be nil")
 	}
-	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(&h.SignedHeader)
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(h.SignedHeader)
 	if err != nil {
 		return sdkerrors.Wrap(err, "header is not a tendermint header")
 	}

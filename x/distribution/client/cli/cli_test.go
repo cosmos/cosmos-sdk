@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -456,7 +457,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 		valAddr      fmt.Stringer
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -525,7 +526,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -578,7 +579,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -633,7 +634,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -718,7 +719,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{

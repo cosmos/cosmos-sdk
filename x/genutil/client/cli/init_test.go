@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
@@ -61,7 +62,12 @@ func TestInitCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
-			clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
+			interfaceRegistry := types.NewInterfaceRegistry()
+			marshaler := codec.NewProtoCodec(interfaceRegistry)
+			clientCtx := client.Context{}.
+				WithJSONMarshaler(marshaler).
+				WithLegacyAmino(makeCodec()).
+				WithHomeDir(home)
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -99,7 +105,12 @@ func TestEmptyState(t *testing.T) {
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(makeCodec()).WithHomeDir(home)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithJSONMarshaler(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -142,7 +153,9 @@ func TestStartStandAlone(t *testing.T) {
 	t.Cleanup(setupClientHome(t))
 
 	logger := log.NewNopLogger()
-	err := genutiltest.ExecInitCmd(testMbm, home, makeCodec())
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	err := genutiltest.ExecInitCmd(testMbm, home, marshaler)
 	require.NoError(t, err)
 
 	app, err := mock.NewApp(home, logger)

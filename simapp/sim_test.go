@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -72,9 +73,14 @@ func TestFullAppSimulation(t *testing.T) {
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t,
+		os.Stdout,
+		app.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(),
+		config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -104,9 +110,14 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t,
+		os.Stdout,
+		app.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(),
+		config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -195,9 +206,14 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t,
+		os.Stdout,
+		app.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(),
+		config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -237,9 +253,14 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+		t,
+		os.Stdout,
+		newApp.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		SimulationOperations(newApp, newApp.AppCodec(), config),
-		newApp.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(),
+		config,
 	)
 	require.NoError(t, err)
 }
@@ -282,9 +303,14 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.AppCodec(), app.SimulationManager()),
+				t,
+				os.Stdout,
+				app.BaseApp,
+				AppStateFn(app.AppCodec(), app.SimulationManager()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				SimulationOperations(app, app.AppCodec(), config),
-				app.ModuleAccountAddrs(), config,
+				app.ModuleAccountAddrs(),
+				config,
 			)
 			require.NoError(t, err)
 

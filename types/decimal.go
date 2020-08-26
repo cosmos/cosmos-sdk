@@ -18,13 +18,16 @@ type Dec struct {
 	i *big.Int
 }
 
-// number of decimal places
 const (
+	// number of decimal places
 	Precision = 18
 
 	// bytes required to represent the above precision
 	// Ceiling[Log2[999 999 999 999 999 999]]
 	DecimalPrecisionBits = 60
+
+	// max number of iterations in ApproxRoot function
+	maxApproxRootIterations = 10
 )
 
 var (
@@ -368,7 +371,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	rootInt := NewIntFromUint64(root)
 	guess, delta := OneDec(), OneDec()
 
-	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < 100; iter++ {
+	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()

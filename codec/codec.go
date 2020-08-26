@@ -10,7 +10,7 @@ type (
 	// Marshaler defines the interface module codecs must implement in order to support
 	// backwards compatibility with Amino while allowing custom Protobuf-based
 	// serialization. Note, Amino can still be used without any dependency on
-	// Protobuf. There are three typical implementations that fulfill this contract:
+	// Protobuf. There are two typical implementations that fulfill this contract:
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
@@ -36,11 +36,11 @@ type (
 	}
 
 	JSONMarshaler interface {
-		MarshalJSON(o interface{}) ([]byte, error)
-		MustMarshalJSON(o interface{}) []byte
+		MarshalJSON(o proto.Message) ([]byte, error)
+		MustMarshalJSON(o proto.Message) []byte
 
-		UnmarshalJSON(bz []byte, ptr interface{}) error
-		MustUnmarshalJSON(bz []byte, ptr interface{})
+		UnmarshalJSON(bz []byte, ptr proto.Message) error
+		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
 	// ProtoMarshaler defines an interface a type must implement as protocol buffer

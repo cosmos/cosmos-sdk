@@ -1,11 +1,11 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
@@ -45,6 +45,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Params:      types.NewParams(sendEnabled, receiveEnabled),
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, &transferGenesis))
+	bz, err := json.MarshalIndent(&transferGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&transferGenesis)
 }

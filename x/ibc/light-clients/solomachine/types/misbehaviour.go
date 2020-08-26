@@ -37,7 +37,7 @@ func (misbehaviour Misbehaviour) Route() string {
 
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
-	return "client_misbehaviour"
+	return clientexported.TypeEvidenceClientMisbehaviour
 }
 
 // String implements Evidence interface.

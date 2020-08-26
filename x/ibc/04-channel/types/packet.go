@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -31,7 +32,7 @@ func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	timeoutEpoch, timeoutHeight, timeoutTimestamp uint64,
+	timeoutHeight *clienttypes.Height, timeoutTimestamp uint64,
 ) Packet {
 	return Packet{
 		Data:               data,
@@ -40,7 +41,6 @@ func NewPacket(
 		SourceChannel:      sourceChannel,
 		DestinationPort:    destinationPort,
 		DestinationChannel: destinationChannel,
-		TimeoutEpoch:       timeoutEpoch,
 		TimeoutHeight:      timeoutHeight,
 		TimeoutTimestamp:   timeoutTimestamp,
 	}
@@ -64,11 +64,10 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 // GetData implements PacketI interface
 func (p Packet) GetData() []byte { return p.Data }
 
-// GetTimeoutEpoch implements PacketI interface
-func (p Packet) GetTimeoutEpoch() uint64 { return p.TimeoutEpoch }
+func (p Packet) GetTimeoutEpoch() uint64 { return p.TimeoutHeight.EpochNumber }
 
 // GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight }
+func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight.EpochHeight }
 
 // GetTimeoutTimestamp implements PacketI interface
 func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
@@ -90,7 +89,7 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.TimeoutHeight == 0 && p.TimeoutTimestamp == 0 {
+	if p.TimeoutHeight.Valid() && p.TimeoutTimestamp == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout height and packet timeout timestamp cannot both be 0")
 	}
 	if len(p.Data) == 0 {

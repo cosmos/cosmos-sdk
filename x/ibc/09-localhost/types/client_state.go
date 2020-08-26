@@ -44,7 +44,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() clientexported.Height {
 	// Currently only support epoch-0
-	return clientexported.NewHeight(0, uint64(cs.Height))
+	return clienttypes.NewHeight(0, uint64(cs.Height))
 }
 
 // IsFrozen returns false.
@@ -53,8 +53,8 @@ func (cs ClientState) IsFrozen() bool {
 }
 
 // GetFrozenHeight returns 0.
-func (cs ClientState) GetFrozenHeight() uint64 {
-	return 0
+func (cs ClientState) GetFrozenHeight() clientexported.Height {
+	return clienttypes.NewHeight(0, 0)
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -62,7 +62,7 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if cs.Height <= 0 {
+	if cs.Height == 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
 	}
 	return nil
@@ -95,7 +95,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // VerifyClientState verifies that the localhost client state is stored locally
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore, cdc codec.BinaryMarshaler, _ commitmentexported.Root,
-	_ uint64, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
+	_ clientexported.Height, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
 ) error {
 	path := host.KeyClientState()
 	bz := store.Get(path)
@@ -119,7 +119,7 @@ func (cs ClientState) VerifyClientState(
 // states.
 func (cs ClientState) VerifyClientConsensusState(
 	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
-	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
+	clientexported.Height, string, clientexported.Height, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
 	return nil
 }

@@ -134,11 +134,16 @@ func (m *ClientConsensusStates) GetConsensusStates() []*types.Any {
 	return nil
 }
 
-// Height defines the height type that all clients must use to store consensus states
+// Height is a monotonically increasing data type
+// that can be compared against another Height for the purposes of updating and freezing clients
+//
+// Normally the EpochHeight is incremented at each height while keeping epoch number the same
+// However some consensus algorithms may choose to reset the height in certain conditions
+// e.g. hard forks, state-machine breaking changes
+// In these cases, the epoch number is incremented so that height continues to be monitonically increasing
+// even as the EpochHeight gets reset
 type Height struct {
 	// the epoch that the client is currently on
-	// this number may be incremented whenever the height of a chain is reset (e.g. breaking upgrades)
-	// so that the two heights across two versions may be differentiated by the IBC clients
 	EpochNumber uint64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty" yaml:"epoch_number"`
 	// the height within the given epoch
 	EpochHeight uint64 `protobuf:"varint,2,opt,name=epoch_height,json=epochHeight,proto3" json:"epoch_height,omitempty" yaml:"epoch_height"`

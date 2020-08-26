@@ -27,7 +27,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, specs []*ics23.ProofSpec,
+	latestHeight *clienttypes.Height, specs []*ics23.ProofSpec,
 ) *ClientState {
 	return &ClientState{
 		ChainId:         chainID,
@@ -36,7 +36,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LatestHeight:    latestHeight,
-		FrozenHeight:    0,
+		FrozenHeight:    &clienttypes.Height{},
 		ProofSpecs:      specs,
 	}
 }
@@ -52,7 +52,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 }
 
 // GetLatestHeight returns latest block height.
-func (cs ClientState) GetLatestHeight() uint64 {
+func (cs ClientState) GetLatestHeight() clientexported.Height {
 	return cs.LatestHeight
 }
 
@@ -63,7 +63,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // FrozenHeight returns the height at which client is frozen
 // NOTE: FrozenHeight is 0 if client is unfrozen
-func (cs ClientState) GetFrozenHeight() uint64 {
+func (cs ClientState) GetFrozenHeight() clientexported.Height {
 	return cs.FrozenHeight
 }
 
@@ -84,8 +84,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
+	if cs.LatestHeight.Valid() {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint height invalid: %v", cs.LatestHeight)
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -118,7 +118,7 @@ func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	provingRoot commitmentexported.Root,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
@@ -202,7 +202,7 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	connectionID string,
@@ -240,7 +240,7 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
@@ -279,7 +279,7 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
@@ -309,7 +309,7 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
@@ -340,7 +340,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
@@ -369,7 +369,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
+	height clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	portID,
@@ -407,16 +407,16 @@ func produceVerificationArgs(
 	proof []byte,
 ) (merkleProof commitmenttypes.MerkleProof, consensusState *ConsensusState, err error) {
 	if cs.GetLatestHeight().LT(height) {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state (%s) height < proof height (%s < %s)", cs.ID, cs.GetLatestHeight().String(), height.String(),
+			"client state height < proof height (%s < %s)", cs.GetLatestHeight(), height,
 		)
 	}
 
 	if cs.IsFrozen() && !height.LT(cs.FrozenHeight) {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"frozen client %s frozen height <= proof height (%s <= %s)", cs.ID, cs.FrozenHeight, height,
+			"frozen client frozen height <= proof height (%s <= %s)", cs.FrozenHeight, height,
 		)
 	}
 

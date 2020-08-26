@@ -21,7 +21,7 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() Height
 	IsFrozen() bool
-	GetFrozenHeight() uint64
+	GetFrozenHeight() Height
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -36,7 +36,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,

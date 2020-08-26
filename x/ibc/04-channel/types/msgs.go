@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -64,7 +65,7 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
-	proofInit []byte, proofEpoch, proofHeight uint64, signer sdk.AccAddress,
+	proofInit []byte, proofHeight *clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
@@ -73,7 +74,6 @@ func NewMsgChannelOpenTry(
 		ChannelId:           channelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
-		ProofEpoch:          proofEpoch,
 		ProofInit:           proofInit,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
@@ -101,8 +101,8 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
@@ -123,14 +123,13 @@ var _ sdk.Msg = &MsgChannelOpenAck{}
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry []byte,
-	proofEpoch, proofHeight uint64, signer sdk.AccAddress,
+	proofHeight *clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
 		PortId:              portID,
 		ChannelId:           channelID,
 		CounterpartyVersion: cpv,
 		ProofTry:            proofTry,
-		ProofEpoch:          proofEpoch,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
 	}
@@ -157,8 +156,8 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	// Signer can be empty
 	return nil
@@ -178,14 +177,13 @@ var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
 func NewMsgChannelOpenConfirm(
-	portID, channelID string, proofAck []byte, proofEpoch, proofHeight uint64,
+	portID, channelID string, proofAck []byte, proofHeight *clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenConfirm {
 	return &MsgChannelOpenConfirm{
 		PortId:      portID,
 		ChannelId:   channelID,
 		ProofAck:    proofAck,
-		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -212,8 +210,8 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	// Signer can be empty
 	return nil
@@ -278,14 +276,13 @@ var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
 func NewMsgChannelCloseConfirm(
-	portID, channelID string, proofInit []byte, proofEpoch, proofHeight uint64,
+	portID, channelID string, proofInit []byte, proofHeight *clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelCloseConfirm {
 	return &MsgChannelCloseConfirm{
 		PortId:      portID,
 		ChannelId:   channelID,
 		ProofInit:   proofInit,
-		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -312,8 +309,8 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	// Signer can be empty
 	return nil
@@ -333,13 +330,12 @@ var _ sdk.Msg = &MsgRecvPacket{}
 
 // NewMsgPacket constructs new MsgPacket
 func NewMsgRecvPacket(
-	packet Packet, proof []byte, proofEpoch, proofHeight uint64,
+	packet Packet, proof []byte, proofHeight *clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgRecvPacket {
 	return &MsgRecvPacket{
 		Packet:      packet,
 		Proof:       proof,
-		ProofEpoch:  proofEpoch,
 		ProofHeight: proofHeight,
 		Signer:      signer,
 	}
@@ -355,8 +351,8 @@ func (msg MsgRecvPacket) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -392,13 +388,12 @@ var _ sdk.Msg = &MsgTimeout{}
 // NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof []byte,
-	proofEpoch, proofHeight uint64, signer sdk.AccAddress,
+	proofHeight *clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeout {
 	return &MsgTimeout{
 		Packet:           packet,
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            proof,
-		ProofEpoch:       proofEpoch,
 		ProofHeight:      proofHeight,
 		Signer:           signer,
 	}
@@ -414,8 +409,8 @@ func (msg MsgTimeout) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -443,7 +438,7 @@ func (msg MsgTimeout) Type() string {
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
 	proof, proofClose []byte,
-	proofHeight uint64, signer sdk.AccAddress,
+	proofHeight *clienttypes.Height, signer sdk.AccAddress,
 ) *MsgTimeoutOnClose {
 	return &MsgTimeoutOnClose{
 		Packet:           packet,
@@ -468,8 +463,8 @@ func (msg MsgTimeoutOnClose) ValidateBasic() error {
 	if len(msg.ProofClose) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of closed counterparty channel end")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -497,12 +492,11 @@ var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(
-	packet Packet, ack []byte, proof []byte, proofEpoch, proofHeight uint64, signer sdk.AccAddress) *MsgAcknowledgement {
+	packet Packet, ack []byte, proof []byte, proofHeight *clienttypes.Height, signer sdk.AccAddress) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
 		Packet:          packet,
 		Acknowledgement: ack,
 		Proof:           proof,
-		ProofEpoch:      proofEpoch,
 		ProofHeight:     proofHeight,
 		Signer:          signer,
 	}
@@ -518,8 +512,8 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if len(msg.Proof) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

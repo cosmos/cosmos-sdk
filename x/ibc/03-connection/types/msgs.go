@@ -68,7 +68,7 @@ func NewMsgConnectionOpenTry(
 	counterpartyClientID string, counterpartyClient clientexported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
+	proofHeight, consensusHeight *clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -81,9 +81,7 @@ func NewMsgConnectionOpenTry(
 		ProofInit:            proofInit,
 		ProofClient:          proofClient,
 		ProofConsensus:       proofConsensus,
-		ProofEpoch:           proofEpoch,
 		ProofHeight:          proofHeight,
-		ConsensusEpoch:       consensusEpoch,
 		ConsensusHeight:      consensusHeight,
 		Signer:               signer,
 	}
@@ -134,11 +132,11 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "consensus height invalid: %v", msg.ConsensusHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -162,7 +160,7 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 func NewMsgConnectionOpenAck(
 	connectionID string, counterpartyClient clientexported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, version string,
+	proofHeight, consensusHeight *clienttypes.Height, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -172,9 +170,7 @@ func NewMsgConnectionOpenAck(
 		ProofTry:        proofTry,
 		ProofClient:     proofClient,
 		ProofConsensus:  proofConsensus,
-		ProofEpoch:      proofEpoch,
 		ProofHeight:     proofHeight,
-		ConsensusEpoch:  consensusEpoch,
 		ConsensusHeight: consensusHeight,
 		Version:         version,
 		Signer:          signer,
@@ -218,11 +214,11 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "consensus height invalid: %v", msg.ConsensusHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -244,13 +240,12 @@ var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck []byte, proofEpoch, proofHeight uint64,
+	connectionID string, proofAck []byte, proofHeight *clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{
 		ConnectionId: connectionID,
 		ProofAck:     proofAck,
-		ProofEpoch:   proofEpoch,
 		ProofHeight:  proofHeight,
 		Signer:       signer,
 	}
@@ -274,8 +269,8 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.Valid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "proof height invalid: %v", msg.ProofHeight)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

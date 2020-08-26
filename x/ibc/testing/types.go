@@ -2,17 +2,12 @@ package ibctesting
 
 import (
 	"fmt"
-	"math/rand"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // TestConnection is a testing helper struct to keep track of the connectionID, source clientID,
 // counterparty clientID, and the next channel version used in creating and interacting with a
 // connection.
 type TestConnection struct {
-	r *rand.Rand
-
 	ID                   string
 	ClientID             string
 	CounterpartyClientID string
@@ -33,12 +28,11 @@ func (conn *TestConnection) AddTestChannel(portID string) TestChannel {
 // has not created the associated channel in app state, but would still like to refer to the
 // non-existent channel usually to test for its non-existence.
 //
-// channel ID format: <connectionid>-chan<channel-index>-<random-string-length-3>
+// channel ID format: <connectionid>-chan<channel-index>
 //
-// The port is passed in by the caller. Appended to the channel ID is a random string of length
-// 3 to avoid collisions of channel ID naming across different test chains.
+// The port is passed in by the caller.
 func (conn *TestConnection) NextTestChannel(portID string) TestChannel {
-	channelID := fmt.Sprintf("%s-%s%d-%s", conn.ID, ChannelIDPrefix, len(conn.Channels), simtypes.RandStringOfLength(conn.r, 3))
+	channelID := fmt.Sprintf("%s-%s%d", conn.ID, ChannelIDPrefix, len(conn.Channels))
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,

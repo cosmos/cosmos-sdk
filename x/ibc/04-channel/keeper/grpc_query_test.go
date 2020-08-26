@@ -246,7 +246,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				expChannels = []*types.IdentifiedChannel{&idCh0, &idCh1}
 
 				req = &types.QueryConnectionChannelsRequest{
-					Connection: connB0.ID,
+					Connection: connA0.ID,
 					Pagination: &query.PageRequest{
 						Key:        nil,
 						Limit:      2,

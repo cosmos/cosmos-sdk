@@ -87,15 +87,15 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 
 	channel0 := types.NewChannel(
 		types.OPEN, types.UNORDERED,
-		counterparty0, []string{connB0.ID}, testchannel0.Version,
+		counterparty0, []string{connA0.ID}, testchannel0.Version,
 	)
 	channel1 := types.NewChannel(
 		types.OPEN, types.ORDERED,
-		counterparty1, []string{connB0.ID}, testchannel1.Version,
+		counterparty1, []string{connA0.ID}, testchannel1.Version,
 	)
 	channel2 := types.NewChannel(
 		types.INIT, types.UNORDERED,
-		counterparty2, []string{connB1.ID}, testchannel2.Version,
+		counterparty2, []string{connA1.ID}, testchannel2.Version,
 	)
 
 	expChannels := []types.IdentifiedChannel{

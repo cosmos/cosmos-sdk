@@ -2,7 +2,6 @@ package ibctesting
 
 import (
 	"fmt"
-	"math/rand"
 	"strconv"
 	"testing"
 	"time"
@@ -21,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -69,7 +67,6 @@ var (
 // NOTE: the actual application uses an empty chain-id for ease of testing.
 type TestChain struct {
 	t *testing.T
-	r *rand.Rand
 
 	App           *simapp.SimApp
 	ChainID       string
@@ -99,8 +96,6 @@ type TestChain struct {
 // Time management is handled by the Coordinator in order to ensure synchrony between chains.
 // Each update of any chain increments the block header time for all chains by 5 seconds.
 func NewTestChain(t *testing.T, chainID string) *TestChain {
-	r := rand.New(rand.NewSource(globalStartTime.UnixNano()))
-
 	// generate validator private/public key
 	privVal := tmtypes.NewMockPV()
 	pubKey, err := privVal.GetPubKey()
@@ -132,7 +127,6 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// create an account to send transactions from
 	chain := &TestChain{
 		t:             t,
-		r:             r,
 		ChainID:       chainID,
 		App:           app,
 		CurrentHeader: header,
@@ -343,11 +337,10 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 
 // ConstructNextTestConnection constructs the next test connection to be
 // created given a clientID and counterparty clientID. The connection id
-// format: <chainID>-conn<index>-<random-string-length-3>
+// format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := fmt.Sprintf("%s-%s%d-%s", chain.ChainID, ConnectionIDPrefix, len(chain.Connections), simtypes.RandStringOfLength(chain.r, 3))
+	connectionID := fmt.Sprintf("%s-%s%d", chain.ChainID, ConnectionIDPrefix, len(chain.Connections))
 	return &TestConnection{
-		r:                    chain.r,
 		ID:                   connectionID,
 		ClientID:             clientID,
 		NextChannelVersion:   DefaultChannelVersion,

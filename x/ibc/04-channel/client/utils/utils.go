@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -49,7 +50,9 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +93,14 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
 	var channel types.Channel
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &channel); err != nil {
+	if err := cdc.UnmarshalBinaryBare(res.Value, &channel); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}
@@ -122,14 +127,17 @@ func QueryChannelClientState(
 	}
 
 	if prove {
-		clientState, proof, proofHeight, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.Id)
+		clientStateRes, err := clientutils.QueryClientStateABCI(clientCtx, res.IdentifiedClientState.ClientId)
 		if err != nil {
 			return nil, err
 		}
 
 		// use client state returned from ABCI query in case query height differs
-		identifiedClientState := clienttypes.NewIdentifiedClientState(res.IdentifiedClientState.Id, clientState)
-		res = types.NewQueryChannelClientStateResponse(identifiedClientState, proof, int64(proofHeight))
+		identifiedClientState := clienttypes.IdentifiedClientState{
+			ClientId:    res.IdentifiedClientState.ClientId,
+			ClientState: clientStateRes.ClientState,
+		}
+		res = types.NewQueryChannelClientStateResponse(identifiedClientState, clientStateRes.Proof, int64(clientStateRes.ProofHeight))
 	}
 
 	return res, nil
@@ -160,18 +168,12 @@ func QueryChannelConsensusState(
 	}
 
 	if prove {
-		consensusState, proof, proofHeight, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
 		if err != nil {
 			return nil, err
 		}
 
-		// use consensus state returned from ABCI query in case query height differs
-		anyConsensusState, err := clienttypes.PackConsensusState(consensusState)
-		if err != nil {
-			return nil, err
-		}
-
-		res = types.NewQueryChannelConsensusStateResponse(res.ClientId, anyConsensusState, consensusState.GetHeight(), proof, int64(proofHeight))
+		res = types.NewQueryChannelConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consensusState.GetHeight(), consensusStateRes.Proof, int64(consensusStateRes.ProofHeight))
 	}
 
 	return res, nil
@@ -232,7 +234,9 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
 	if err != nil {
 		return nil, err
 	}

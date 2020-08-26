@@ -14,12 +14,6 @@ func (suite *ClientTestSuite) TestHandleCreateClientLocalHost() {
 		expPass  bool
 	}{
 		{
-			"localhost",
-			exported.ClientTypeLocalHost,
-			&localhosttypes.MsgCreateClient{suite.chainA.SenderAccount.GetAddress()},
-			true,
-		},
-		{
 			"tendermint client",
 			"gaiamainnet",
 			suite.chainA.ConstructMsgCreateClient(suite.chainB, "gaiamainnet"),

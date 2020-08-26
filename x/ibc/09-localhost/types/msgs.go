@@ -7,11 +7,6 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// Message types for the IBC client
-const (
-	TypeMsgCreateClient string = "create_client"
-)
-
 var (
 	_ clientexported.MsgCreateClient = (*MsgCreateClient)(nil)
 )
@@ -30,7 +25,7 @@ func (msg MsgCreateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgCreateClient) Type() string {
-	return TypeMsgCreateClient
+	return clientexported.TypeMsgCreateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -43,7 +38,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

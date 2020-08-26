@@ -172,8 +172,8 @@ func (m *MsgEditValidator) GetValidatorAddress() github_com_cosmos_cosmos_sdk_ty
 	return nil
 }
 
-// MsgDelegate defines an SDK message for performing a delegation from a
-// delegate to a validator.
+// MsgDelegate defines an SDK message for performing a delegation of coins
+// from a delegator to a validator.
 type MsgDelegate struct {
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
@@ -234,8 +234,8 @@ func (m *MsgDelegate) GetAmount() types.Coin {
 	return types.Coin{}
 }
 
-// MsgBeginRedelegate defines an SDK message for performing a redelegation from
-// a delegate and source validator to a destination validator.
+// MsgBeginRedelegate defines an SDK message for performing a redelegation
+// of coins from a delegator and source validator to a destination validator.
 type MsgBeginRedelegate struct {
 	DelegatorAddress    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	ValidatorSrcAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_src_address,json=validatorSrcAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_src_address,omitempty" yaml:"validator_src_address"`

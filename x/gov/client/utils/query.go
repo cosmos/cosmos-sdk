@@ -65,7 +65,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 		}
 	}
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposits)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(deposits)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		votes = votes[start:end]
 	}
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(votes)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(votes)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 					Option:     voteMsg.Option,
 				}
 
-				bz, err := clientCtx.JSONMarshaler.MarshalJSON(vote)
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
 				if err != nil {
 					return nil, err
 				}
@@ -192,7 +192,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 					Amount:     depMsg.Amount,
 				}
 
-				bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposit)
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&deposit)
 				if err != nil {
 					return nil, err
 				}
@@ -236,7 +236,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute string) ([]byte, error) {
 	params := types.NewQueryProposalParams(proposalID)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 	if err != nil {
 		return nil, err
 	}

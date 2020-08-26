@@ -68,7 +68,7 @@ func (m *BaseAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BaseAccount proto.InternalMessageInfo
 
-// ModuleAccount defines an account for modules that holds coins on a pool
+// ModuleAccount defines an account for modules that holds coins on a pool.
 type ModuleAccount struct {
 	*BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3,embedded=base_account" json:"base_account,omitempty" yaml:"base_account"`
 	Name         string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`

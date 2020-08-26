@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -107,7 +108,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"total account balance grpc",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s?height=1", baseURL, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s?height=1", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},

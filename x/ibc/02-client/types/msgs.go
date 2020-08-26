@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -17,14 +18,25 @@ const (
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, clientState, consensusState *codectypes.Any, signer sdk.AccAddress,
-) *MsgCreateClient {
+	id string, clientState exported.ClientState, consensusState exported.ConsensusState, signer sdk.AccAddress,
+) (*MsgCreateClient, error) {
+
+	anyClientState, err := PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
+
+	anyConsensusState, err := PackConsensusState(consensusState)
+	if err != nil {
+		return nil, err
+	}
+
 	return &MsgCreateClient{
 		ClientId:       id,
-		ClientState:    clientState,
-		ConsensusState: consensusState,
+		ClientState:    anyClientState,
+		ConsensusState: anyConsensusState,
 		Signer:         signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -48,6 +60,9 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	}
 	if err := clientState.Validate(); err != nil {
 		return err
+	}
+	if clientState.ClientType() == exported.Localhost || msg.ClientId == exported.ClientTypeLocalHost {
+		return sdkerrors.Wrap(ErrInvalidClient, "localhost client can only be created on chain initialization")
 	}
 	consensusState, err := UnpackConsensusState(msg.ConsensusState)
 	if err != nil {
@@ -99,6 +114,9 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	}
 	if err := header.ValidateBasic(); err != nil {
 		return err
+	}
+	if msg.ClientId == exported.ClientTypeLocalHost {
+		return sdkerrors.Wrap(ErrInvalidClient, "localhost client is only updated on ABCI BeginBlock")
 	}
 	return host.ClientIdentifierValidator(msg.ClientId)
 }

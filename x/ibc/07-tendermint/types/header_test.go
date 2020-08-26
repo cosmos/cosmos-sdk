@@ -25,8 +25,7 @@ func (suite *TendermintTestSuite) TestGetTime() {
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	var (
-		header  *types.Header
-		chainID string
+		header *types.Header
 	)
 	testCases := []struct {
 		name     string
@@ -42,7 +41,6 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		}, false},
 		{"signed header failed tendermint ValidateBasic", func() {
 			header = suite.chainA.LastHeader
-			chainID = "chainid"
 		}, false},
 		{"trusted height is greater than header height", func() {
 			header.TrustedHeight = header.GetHeight() + 1
@@ -64,12 +62,11 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			chainID = suite.chainA.ChainID   // must be explicitly changed in malleate
 			header = suite.chainA.LastHeader // must be explicitly changed in malleate
 
 			tc.malleate()
 
-			err := header.ValidateBasic(chainID)
+			err := header.ValidateBasic()
 
 			if tc.expPass {
 				suite.Require().NoError(err)

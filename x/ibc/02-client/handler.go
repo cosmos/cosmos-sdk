@@ -17,7 +17,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 	clientState := types.MustUnpackClientState(msg.ClientState)
 	consensusState := types.MustUnpackConsensusState(msg.ConsensusState)
 
-	// TODO: how to handle localhost?
 	_, err := k.CreateClient(ctx, msg.ClientId, clientState, consensusState)
 	if err != nil {
 		return nil, err

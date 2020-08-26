@@ -25,10 +25,12 @@ var errFoo = errors.New("dummy")
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	cdc := codec.New()
+	legacyAmino := codec.New()
 	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithLegacyAmino(cdc)
+	clientCtx = clientCtx.WithLegacyAmino(legacyAmino)
 	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
@@ -37,7 +39,7 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
-	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(cdc)).Times(1)
+	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
@@ -45,7 +47,7 @@ func TestBasicManager(t *testing.T) {
 	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
-	mm.RegisterCodec(cdc)
+	mm.RegisterCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
 
 	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))
@@ -164,8 +166,7 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
 
 	amino := codec.New()
-	jsonCdc := codec.NewAminoCodec(amino)
-	mm.RegisterRoutes(router, queryRouter, jsonCdc)
+	mm.RegisterRoutes(router, queryRouter, amino)
 }
 
 func TestManager_RegisterQueryServices(t *testing.T) {
@@ -199,7 +200,9 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	cdc, ctx := codec.New(), sdk.Context{}
+	ctx := sdk.Context{}
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
@@ -226,7 +229,9 @@ func TestManager_ExportGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	cdc, ctx := codec.New(), sdk.Context{}
+	ctx := sdk.Context{}
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key1": "value1"}`))
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key2": "value2"}`))
 

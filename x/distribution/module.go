@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -66,6 +67,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
 }
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the distribution module.
+func (AppModuleBasic) RegisterGRPCRoutes(_ sdkclient.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

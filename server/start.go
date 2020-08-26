@@ -239,7 +239,6 @@ func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator 
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
-
 		errCh := make(chan error)
 
 		go func() {

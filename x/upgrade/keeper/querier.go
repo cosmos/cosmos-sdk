@@ -14,7 +14,7 @@ import (
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
-func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 
@@ -30,7 +30,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	}
 }
 
-func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	plan, has := k.GetUpgradePlan(ctx)
 	if !has {
 		return nil, nil
@@ -44,7 +44,7 @@ func queryCurrent(ctx sdk.Context, _ abci.RequestQuery, k Keeper, legacyQuerierC
 	return res, nil
 }
 
-func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryAppliedPlanRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)

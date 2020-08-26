@@ -10,16 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
-// RegisterCodec registers the IBC client interfaces and types
-func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*exported.ClientState)(nil), nil) // remove after genesis migration
-	cdc.RegisterInterface((*exported.MsgCreateClient)(nil), nil)
-	cdc.RegisterInterface((*exported.MsgUpdateClient)(nil), nil)
-	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
-	cdc.RegisterInterface((*exported.Header)(nil), nil)
-	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
-}
-
 // RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
@@ -37,20 +27,50 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	amino = codec.New()
-
 	// SubModuleCdc references the global x/ibc/02-client module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
+	// ONLY be used in certain instances of tests and for JSON encoding.
 	//
 	// The actual codec used for serialization should be provided to x/ibc/02-client and
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )
 
-func init() {
-	RegisterCodec(amino)
-	amino.Seal()
+// PackClientState constructs a new Any packed with the given client state value. It returns
+// an error if the client state can't be casted to a protobuf message or if the concrete
+// implemention is not registered to the protobuf codec.
+func PackClientState(clientState exported.ClientState) (*codectypes.Any, error) {
+	msg, ok := clientState.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", clientState)
+	}
+
+	anyClientState, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyClientState, nil
+}
+
+// MustPackClientState calls PackClientState and panics on error.
+func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
+	anyClientState, err := PackClientState(clientState)
+	if err != nil {
+		panic(err)
+	}
+
+	return anyClientState
+}
+
+// UnpackClientState unpacks an Any into a ClientState. It returns an error if the
+// client state can't be unpacked into a ClientState.
+func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
+	clientState, ok := any.GetCachedValue().(exported.ClientState)
+	if !ok {
+		return nil, fmt.Errorf("cannot unpack Any into ClientState %T", any)
+	}
+
+	return clientState, nil
 }
 
 // PackConsensusState constructs a new Any packed with the given consensus state value. It returns

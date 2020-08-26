@@ -15,6 +15,22 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
 
+  test-cosmovisor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          PREFIX_FILTER: |
+              cosmovisor
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - name: Run cosmovisor tests
+        run: cd cosmovisor; go test .
+        if: "env.GIT_DIFF != ''"
   split-test-files:
     runs-on: ubuntu-latest
     steps:
@@ -73,7 +89,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.12
+      - uses: codecov/codecov-action@v1.0.13
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -110,7 +126,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.12
+      - uses: codecov/codecov-action@v1.0.13
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -147,7 +163,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.12
+      - uses: codecov/codecov-action@v1.0.13
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
@@ -184,13 +200,30 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: "env.GIT_DIFF != ''"
-      - uses: codecov/codecov-action@v1.0.12
+      - uses: codecov/codecov-action@v1.0.13
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
-  test-unit-amino-might-fail:
+  liveness-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - name: test-unit-amino
-        run: make test-unit-amino
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - name: build image
+        run: |
+          make build-docker-local-simapp
+      - name: start localnet
+        run: |
+          make clean localnet-start
+        if: "env.GIT_DIFF != ''"
+      - name: test liveness
+        run: |
+          ./contrib/localnet_liveness.sh 100 5 50 localhost
+        if: "env.GIT_DIFF != ''"

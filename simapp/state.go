@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -56,7 +57,10 @@ func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) s
 				panic(err)
 			}
 
-			cdc.MustUnmarshalJSON(bz, &appParams)
+			err = json.Unmarshal(bz, &appParams)
+			if err != nil {
+				panic(err)
+			}
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
@@ -132,10 +136,17 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, genesisFile
 	}
 
 	var genesis tmtypes.GenesisDoc
-	cdc.MustUnmarshalJSON(bytes, &genesis)
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err = tmjson.Unmarshal(bytes, &genesis)
+	if err != nil {
+		panic(err)
+	}
 
 	var appState GenesisState
-	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	err = json.Unmarshal(genesis.AppState, &appState)
+	if err != nil {
+		panic(err)
+	}
 
 	var authGenesis authtypes.GenesisState
 	if appState[authtypes.ModuleName] != nil {

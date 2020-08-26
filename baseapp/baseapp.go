@@ -98,6 +98,10 @@ type BaseApp struct { // nolint: maligned
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
+
+	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	indexEvents map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -281,6 +285,14 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 
 func (app *BaseApp) setTrace(trace bool) {
 	app.trace = trace
+}
+
+func (app *BaseApp) setIndexEvents(ie []string) {
+	app.indexEvents = make(map[string]struct{})
+
+	for _, e := range ie {
+		app.indexEvents[e] = struct{}{}
+	}
 }
 
 // Router returns the router of the BaseApp.

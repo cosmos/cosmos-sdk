@@ -8,7 +8,7 @@ option go_package                       = "github.com/cosmos/cosmos-sdk/x/upgrad
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.goproto_getters_all)  = false;
 
-// Plan specifies information about a planned upgrade and when it should occur
+// Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
   option (gogoproto.equal) = true;
 
@@ -32,7 +32,7 @@ message Plan {
   string info = 4;
 }
 
-// SoftwareUpgradeProposal is a gov Content type for initiating a software upgrade
+// SoftwareUpgradeProposal is a gov Content type for initiating a software upgrade.
 message SoftwareUpgradeProposal {
   option (gogoproto.equal) = true;
 
@@ -41,7 +41,7 @@ message SoftwareUpgradeProposal {
   Plan   plan        = 3 [(gogoproto.nullable) = false];
 }
 
-// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade
+// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade.
 message CancelSoftwareUpgradeProposal {
   option (gogoproto.equal) = true;
 

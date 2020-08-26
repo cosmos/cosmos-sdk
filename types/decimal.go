@@ -27,7 +27,7 @@ const (
 	DecimalPrecisionBits = 60
 
 	// max number of iterations in ApproxRoot function
-	maxApproxRootIterations = 10
+	maxApproxRootIterations = 100
 )
 
 var (

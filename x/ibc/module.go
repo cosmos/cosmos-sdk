@@ -7,6 +7,7 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -62,6 +63,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes does nothing. IBC does not support legacy REST routes.
 func (AppModuleBasic) RegisterRESTRoutes(client.Context, *mux.Router) {}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+}
 
 // GetTxCmd returns the root tx command for the ibc module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

@@ -535,7 +535,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			tc.malleate()
 
 			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
-			connB := suite.chainA.GetFirstTestConnection(clientB, clientA)
+			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 			connectionKey := host.KeyConnection(connA.ID)
 			proofAck, proofHeight := suite.chainA.QueryProof(connectionKey)

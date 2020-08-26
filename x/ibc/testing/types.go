@@ -1,26 +1,29 @@
-package testing
+package ibctesting
 
 import (
 	"fmt"
+	"math/rand"
+
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // TestConnection is a testing helper struct to keep track of the connectionID, source clientID,
-// and counterparty clientID used in creating and interacting with a connection.
+// counterparty clientID, and the next channel version used in creating and interacting with a
+// connection.
 type TestConnection struct {
+	r *rand.Rand
+
 	ID                   string
 	ClientID             string
 	CounterpartyClientID string
+	NextChannelVersion   string
 	Channels             []TestChannel
 }
 
 // AddTestChannel appends a new TestChannel which contains references to the port and channel ID
-// used for channel creation and interaction.
-//
-// channel ID format: connectionid-<channel-index>
-// the port is set to "transfer" to be compatible with the ICS-transfer module, this should
-// eventually be updated as described in the issue: https://github.com/cosmos/cosmos-sdk/issues/6509
-func (conn *TestConnection) AddTestChannel() TestChannel {
-	channel := conn.NextTestChannel()
+// used for channel creation and interaction. See 'NextTestChannel' for channel ID naming format.
+func (conn *TestConnection) AddTestChannel(portID string) TestChannel {
+	channel := conn.NextTestChannel(portID)
 	conn.Channels = append(conn.Channels, channel)
 	return channel
 }
@@ -29,14 +32,19 @@ func (conn *TestConnection) AddTestChannel() TestChannel {
 // add it to the list of created channels. This function is expected to be used when the caller
 // has not created the associated channel in app state, but would still like to refer to the
 // non-existent channel usually to test for its non-existence.
-func (conn *TestConnection) NextTestChannel() TestChannel {
-	portID := "transfer"
-	channelID := fmt.Sprintf("%s%d", conn.ID, len(conn.Channels))
+//
+// channel ID format: <connectionid>-chan<channel-index>-<random-string-length-3>
+//
+// The port is passed in by the caller. Appended to the channel ID is a random string of length
+// 3 to avoid collisions of channel ID naming across different test chains.
+func (conn *TestConnection) NextTestChannel(portID string) TestChannel {
+	channelID := fmt.Sprintf("%s-%s%d-%s", conn.ID, ChannelIDPrefix, len(conn.Channels), simtypes.RandStringOfLength(conn.r, 3))
 	return TestChannel{
 		PortID:               portID,
 		ID:                   channelID,
 		ClientID:             conn.ClientID,
 		CounterpartyClientID: conn.CounterpartyClientID,
+		Version:              conn.NextChannelVersion,
 	}
 }
 
@@ -44,11 +52,11 @@ func (conn *TestConnection) NextTestChannel() TestChannel {
 // returns the next test channel to be created. This function is expected to be used
 // when the caller does not know if the channel has or has not been created in app
 // state, but would still like to refer to it to test existence or non-existence.
-func (conn *TestConnection) FirstOrNextTestChannel() TestChannel {
+func (conn *TestConnection) FirstOrNextTestChannel(portID string) TestChannel {
 	if len(conn.Channels) > 0 {
 		return conn.Channels[0]
 	}
-	return conn.NextTestChannel()
+	return conn.NextTestChannel(portID)
 }
 
 // TestChannel is a testing helper struct to keep track of the portID and channelID
@@ -59,4 +67,5 @@ type TestChannel struct {
 	ID                   string
 	ClientID             string
 	CounterpartyClientID string
+	Version              string
 }

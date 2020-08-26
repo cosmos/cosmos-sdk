@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 			func() {
 				_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 				// init channel
-				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.TransferPort, ibctesting.TransferPort, types.ORDERED)
 				suite.Require().NoError(err)
 
 				expChannel = suite.chainA.GetChannel(channelA)
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				}
 
 				// channel1 is second channel on first connection on chainA
-				testchannel1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				testchannel1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 				counterparty1 := types.Counterparty{
 					PortId:    connB0.Channels[1].PortID,
 					ChannelId: connB0.Channels[1].ID,
@@ -142,11 +142,11 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 
 				channel0 := types.NewChannel(
 					types.OPEN, types.UNORDERED,
-					counterparty0, []string{connA0.ID}, ibctesting.ChannelVersion,
+					counterparty0, []string{connA0.ID}, testchannel0.Version,
 				)
 				channel1 := types.NewChannel(
 					types.OPEN, types.ORDERED,
-					counterparty1, []string{connA0.ID}, ibctesting.ChannelVersion,
+					counterparty1, []string{connA0.ID}, testchannel1.Version,
 				)
 
 				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				}
 
 				// channel1 is second channel on first connection on chainA
-				testchannel1, _ := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				testchannel1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 				counterparty1 := types.Counterparty{
 					PortId:    connB0.Channels[1].PortID,
 					ChannelId: connB0.Channels[1].ID,
@@ -233,11 +233,11 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 
 				channel0 := types.NewChannel(
 					types.OPEN, types.UNORDERED,
-					counterparty0, []string{connA0.ID}, ibctesting.ChannelVersion,
+					counterparty0, []string{connA0.ID}, testchannel0.Version,
 				)
 				channel1 := types.NewChannel(
 					types.OPEN, types.ORDERED,
-					counterparty1, []string{connA0.ID}, ibctesting.ChannelVersion,
+					counterparty1, []string{connA0.ID}, testchannel1.Version,
 				)
 
 				idCh0 := types.NewIdentifiedChannel(testchannel0.PortID, testchannel0.ID, channel0)
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 			func() {
 				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 				// init channel
-				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.TransferPort, ibctesting.TransferPort, types.ORDERED)
 				suite.Require().NoError(err)
 
 				expClientState := suite.chainA.GetClientState(clientA)
@@ -502,7 +502,7 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			func() {
 				clientA, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
 				// init channel
-				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+				channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.TransferPort, ibctesting.TransferPort, types.ORDERED)
 				suite.Require().NoError(err)
 
 				clientState := suite.chainA.GetClientState(clientA)

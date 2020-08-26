@@ -8,12 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	invalidHeader := types.CreateTestHeader(suite.header.ChainID, height, 0, suite.now, suite.valSet, nil, []tmtypes.PrivValidator{suite.privVal})
+	invalidHeader := types.CreateTestHeader(suite.header.Header.GetChainID(), height, 0, suite.now, suite.valSet, nil, []tmtypes.PrivValidator{suite.privVal})
 	invalidHeader.ValidatorSet = nil
 
 	cases := []struct {
@@ -27,7 +28,10 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero trusting period passed"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "zero unbonding period passed"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), nil), false, "Empty address passed"},
-		{types.NewMsgCreateClient(exported.ClientTypeTendermint, types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, &types.Header{}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "empty header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, nil, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: nil}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
+		{types.NewMsgCreateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: &tmproto.SignedHeader{Header: nil}}, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "nil header"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, invalidHeader, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, commitmenttypes.GetSDKSpecs(), signer), false, "invalid header"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, []*ics23.ProofSpec{nil}, signer), false, "invalid proof specs"},
 		{types.NewMsgCreateClient(exported.ClientTypeTendermint, suite.header, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, nil, signer), false, "nil proof specs"},
@@ -53,9 +57,13 @@ func (suite *TendermintTestSuite) TestMsgUpdateClient() {
 		expPass bool
 		errMsg  string
 	}{
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, signer), true, "success msg should pass"},
-		{types.NewMsgUpdateClient("(badClient)", types.Header{}, signer), false, "invalid client id passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, types.Header{}, nil), false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.header, signer), true, "success msg should pass"},
+		{types.NewMsgUpdateClient("(badClient)", &types.Header{}, signer), false, "invalid client id passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.header, nil), false, "Empty address passed"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{}, nil), false, "empty Header"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, nil), false, "nil header"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: nil}, nil), false, "nil signed header"},
+		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: &tmproto.SignedHeader{Header: nil}}, nil), false, "nil tendermint header"},
 	}
 
 	for i, tc := range cases {

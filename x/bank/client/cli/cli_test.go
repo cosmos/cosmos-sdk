@@ -55,8 +55,8 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  fmt.Stringer
-		expected  fmt.Stringer
+		respType  proto.Message
+		expected  proto.Message
 	}{
 		{"no address provided", []string{}, true, nil, nil},
 		{
@@ -86,14 +86,18 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+			NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
 		},
 		{
 			"total account balance of a bogus denom",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			NewCoin("foobar", sdk.ZeroInt()),
 		},
 	}
 
@@ -216,7 +220,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -284,8 +288,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -295,4 +299,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+	coin := sdk.NewCoin(denom, amount)
+	return &coin
 }

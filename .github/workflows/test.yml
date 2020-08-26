@@ -204,12 +204,6 @@ jobs:
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
-  test-unit-amino-might-fail:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: test-unit-amino
-        run: make test-unit-amino
   liveness-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -227,7 +221,7 @@ jobs:
           make build-docker-local-simapp
       - name: start localnet
         run: |
-          make clean build-sim-linux localnet-start
+          make clean localnet-start
         if: "env.GIT_DIFF != ''"
       - name: test liveness
         run: |

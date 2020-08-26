@@ -3,6 +3,8 @@ package types
 import (
 	"time"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -30,9 +32,9 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmEvidence, ok := misbehaviour.(Evidence)
+	tmEvidence, ok := misbehaviour.(*Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, Evidence{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Evidence{})
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
@@ -101,8 +103,19 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given
 // a trusted ConsensusState
 func checkMisbehaviourHeader(
-	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,
+	clientState *ClientState, consState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) error {
+
+	tmTrustedValset, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
+	if err != nil {
+		return sdkerrors.Wrap(err, "trusted validator set is not tendermint validator set type")
+	}
+
+	tmCommit, err := tmtypes.CommitFromProto(header.Commit)
+	if err != nil {
+		return sdkerrors.Wrap(err, "commit is not tendermint commit type")
+	}
+
 	// check the trusted fields for the header against ConsensusState
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -119,8 +132,8 @@ func checkMisbehaviourHeader(
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
-	if err := header.TrustedValidators.VerifyCommitLightTrusting(
-		clientState.GetChainID(), header.Commit, clientState.TrustLevel.ToTendermint(),
+	if err := tmTrustedValset.VerifyCommitLightTrusting(
+		clientState.GetChainID(), tmCommit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header has too much change from trusted validator set: %v", err)
 	}

@@ -38,6 +38,11 @@ message SignatureDescriptor {
 
     Data data = 2;
 
+    // sequence is the sequence of the account, which describes the
+    // number of committed transactions signed by a given address. It is used to prevent
+    // replay attacks.
+    uint64 sequence = 3;
+
     // Data represents signature data
     message Data {
         // sum is the oneof that specifies whether this represents single or multi-signature data

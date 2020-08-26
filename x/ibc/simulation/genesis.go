@@ -3,10 +3,9 @@ package simulation
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	clientsims "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
@@ -55,6 +54,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		ChannelGenesis:    channelGenesisState,
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", host.ModuleName, codec.MustMarshalJSONIndent(simState.Cdc, &ibcGenesis))
+	bz, err := json.MarshalIndent(&ibcGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", host.ModuleName, bz)
 	simState.GenState[host.ModuleName] = simState.Cdc.MustMarshalJSON(&ibcGenesis)
 }

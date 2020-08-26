@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
-// Tx is the standard type used for broadcasting transactions
+// Tx is the standard type used for broadcasting transactions.
 message Tx {
   // body is the processable content of the transaction
   TxBody body = 1;
@@ -39,7 +39,7 @@ message TxRaw {
   repeated bytes signatures = 3;
 }
 
-// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
+// SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 message SignDoc {
   // body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
   bytes body_bytes = 1;
@@ -54,13 +54,9 @@ message SignDoc {
 
   // account_number is the account number of the account in state
   uint64 account_number = 4;
-
-  // account_sequence starts at 1 rather than 0 to avoid the case where
-  // the default 0 value must be omitted in protobuf serialization
-  uint64 account_sequence = 5;
 }
 
-// TxBody is the body of a transaction that all signers sign over
+// TxBody is the body of a transaction that all signers sign over.
 message TxBody {
   // messages is a list of messages to be executed. The required signers of those messages define
   // the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
@@ -88,7 +84,7 @@ message TxBody {
   repeated google.protobuf.Any non_critical_extension_options = 2047;
 }
 
-// AuthInfo describes the fee and signer modes that are used to sign a transaction
+// AuthInfo describes the fee and signer modes that are used to sign a transaction.
 message AuthInfo {
   // signer_infos defines the signing modes for the required signers. The number
   // and order of elements must match the required signers from TxBody's messages.
@@ -102,7 +98,7 @@ message AuthInfo {
   Fee fee = 2;
 }
 
-// SignerInfo describes the public key and signing mode of a single top-level signer
+// SignerInfo describes the public key and signing mode of a single top-level signer.
 message SignerInfo {
   // public_key is the public key of the signer. It is optional for accounts
   // that already exist in state. If unset, the verifier can use the required \
@@ -112,9 +108,14 @@ message SignerInfo {
   // mode_info describes the signing mode of the signer and is a nested
   // structure to support nested multisig pubkey's
   ModeInfo mode_info = 2;
+
+  // sequence is the sequence of the account, which describes the
+  // number of committed transactions signed by a given address. It is used to prevent
+  // replay attacks.
+  uint64 sequence = 3;
 }
 
-// ModeInfo describes the signing mode of a single or nested multisig signer
+// ModeInfo describes the signing mode of a single or nested multisig signer.
 message ModeInfo {
   // sum is the oneof that specifies whether this represents a single or nested
   // multisig signer

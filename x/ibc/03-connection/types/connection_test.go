@@ -11,10 +11,12 @@ import (
 )
 
 var (
+	chainID       = "gaiamainnet"
 	connectionID  = "connectionidone"
 	clientID      = "clientidone"
 	connectionID2 = "connectionidtwo"
 	clientID2     = "clientidtwo"
+	clientHeight  = uint64(6)
 )
 
 func TestConnectionValidateBasic(t *testing.T) {

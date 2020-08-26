@@ -22,8 +22,8 @@ func TestTxBuilder(t *testing.T) {
 	txBuilder := newBuilder()
 
 	memo := "sometestmemo"
-
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Arbitrary account sequence
 
 	any, err := pubKeyToAny(pubkey)
 	require.NoError(t, err)
@@ -38,6 +38,7 @@ func TestTxBuilder(t *testing.T) {
 				},
 			},
 		},
+		Sequence: accSeq,
 	})
 
 	var sig signing.SignatureV2
@@ -47,6 +48,7 @@ func TestTxBuilder(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		},
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
@@ -106,7 +108,14 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
 	require.Equal(t, legacy.Cdc.MustMarshalBinaryBare(pubkey), legacy.Cdc.MustMarshalBinaryBare(txBuilder.GetPubKeys()[0]))
 
-	txBuilder = &builder{}
+	any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	require.NoError(t, err)
+	txBuilder.SetExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())
+	txBuilder.SetNonCriticalExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
+
+	txBuilder = &wrapper{}
 	require.NotPanics(t, func() {
 		_ = txBuilder.GetMsgs()
 	})
@@ -134,6 +143,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey1),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{
@@ -142,6 +152,7 @@ func TestBuilderValidateBasic(t *testing.T) {
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey2),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	err := txBuilder.SetMsgs(msgs...)

@@ -56,7 +56,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 			Signatures: raw.Signatures,
 		}
 
-		return &builder{
+		return &wrapper{
 			tx:                           theTx,
 			bodyBz:                       raw.BodyBytes,
 			authInfoBz:                   raw.AuthInfoBytes,
@@ -65,7 +65,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 	}
 }
 
-// DefaultTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler and PublicKeyCodec
+// DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler and PublicKeyCodec
 func DefaultJSONTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var theTx tx.Tx
@@ -74,7 +74,7 @@ func DefaultJSONTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		return &builder{
+		return &wrapper{
 			tx: &theTx,
 		}, nil
 	}

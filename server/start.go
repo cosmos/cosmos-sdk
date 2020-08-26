@@ -48,6 +48,7 @@ const (
 	FlagPruningKeepRecent = "pruning-keep-recent"
 	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
+	FlagIndexEvents       = "index-events"
 )
 
 // GRPC-related flags.
@@ -232,14 +233,12 @@ func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator 
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(legacyAminoCdc).
 			// amino is needed here for backwards compatibility of REST routes
 			WithLegacyAmino(legacyAminoCdc).
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv)
-
 		errCh := make(chan error)
 
 		go func() {

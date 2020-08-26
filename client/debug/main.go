@@ -90,7 +90,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				return fmt.Errorf("invalid pubkey type; expected ED25519")
 			}
 
-			pubKeyJSONBytes, err := clientCtx.JSONMarshaler.MarshalJSON(edPK)
+			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(edPK)
 			if err != nil {
 				return err
 			}

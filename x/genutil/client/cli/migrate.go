@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
@@ -20,10 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const (
-	flagGenesisTime = "genesis-time"
-	flagChainID     = "chain-id"
-)
+const flagGenesisTime = "genesis-time"
 
 // Allow applications to extend and modify the migration process.
 //
@@ -68,9 +65,6 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 `, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
-
 			var err error
 
 			target := args[0]
@@ -82,7 +76,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			var initialState types.AppMap
-			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
+			if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
@@ -94,7 +88,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			// TODO: handler error from migrationFunc call
 			newGenState := migrationFunc(initialState)
 
-			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
+			genDoc.AppState, err = json.Marshal(newGenState)
 			if err != nil {
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
@@ -111,7 +105,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainID, _ := cmd.Flags().GetString(flagChainID)
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
 			if chainID != "" {
 				genDoc.ChainID = chainID
 			}
@@ -132,7 +126,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	}
 
 	cmd.Flags().String(flagGenesisTime, "", "override genesis_time with this flag")
-	cmd.Flags().String(flagChainID, "", "override chain_id with this flag")
+	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd
 }

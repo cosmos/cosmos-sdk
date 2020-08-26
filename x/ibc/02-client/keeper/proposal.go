@@ -9,11 +9,11 @@ import (
 )
 
 // ClientUpdateProposal will try to update the client with the new header if and only if
-// the propoal passes and one of the following two conditions is fulfill,
+// the propoal passes and one of the following two conditions is satisfied:
 // 		1) AllowGovernanceOverrideAfterExpiry=true and Expire(ctx.BlockTime) = true
 // 		2) AllowGovernanceOverrideAfterMinbehaviour and IsFrozen() = true
 // In case 2) before trying to update the client, the client will be unfreeze by calling Unfreeze().
-// Note, that even if the update happens, there is no garantie to ensure that it will be successful.
+// Note, that even if the update happens, it may not be successful.
 // The reason is that there are still some validation checks on the header that may fail and
 // throw and error before the update is completed.
 func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdateProposal) error {
@@ -38,8 +38,11 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		tmClientState := clientState.(*ibctmtypes.ClientState)
 
 		updateClientFlag := false
+		overrideFlag := false
+
 		if tmClientState.AllowGovernanceOverrideAfterExpiry && tmClientState.Expired(ctx.BlockTime()) {
 			updateClientFlag = true
+			overrideFlag = true
 		}
 
 		if tmClientState.AllowGovernanceOverrideAfterMisbehaviour && tmClientState.IsFrozen() {
@@ -55,7 +58,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 			if err != nil {
 				return types.ErrInvalidHeader
 			}
-			if _, err = k.UpdateClient(ctx, p.ClientId, h, true); err != nil {
+			if _, err = k.UpdateClient(ctx, p.ClientId, h, overrideFlag); err != nil {
 				return err
 			}
 

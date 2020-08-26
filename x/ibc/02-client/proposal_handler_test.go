@@ -134,11 +134,11 @@ func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, true, 0), false,
 		},
 		{
-			// For this test, the client update proposal will pass and we expect the client
-			// to be updated with the new header, (suite.header), even tough the client is expired
-			// and the new header as well
-			"Test8 should pass for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
-			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, true, 2), true,
+			// For this test, the client update proposal will pass but the client update will
+			// fail because the new header, (suite.header), is expired and the override flag is
+			// set to be false.
+			"Test8 should pass for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=true",
+			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, true, 2), false,
 		},
 		{
 			"Test10 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=false",
@@ -161,9 +161,9 @@ func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 			expiredCtx, true, false, suite.testClientState(true, latestTimestamp, false, 0), true,
 		},
 		{
-			// For this test, the client update proposal will not pass even though we wil try to update
-			// the client with the new header (because OAE=true and Expired=True).
-			// Still the update will fail because the client is frozen and OAM = false
+			// For this test, the client update proposal will pass but but the client update will
+			// fail (even though the override flag is set to be true) because the client is still frozen
+			// and OAM = false
 			"Test15 should fail for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=true",
 			expiredCtx, true, true, suite.testClientState(true, latestTimestamp, false, 2), false,
 		},

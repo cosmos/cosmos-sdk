@@ -3,6 +3,8 @@ package rest_test
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -17,8 +19,8 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		name     string
 		url      string
 		headers  map[string]string
-		respType fmt.Stringer
-		expected fmt.Stringer
+		respType proto.Message
+		expected proto.Message
 	}{
 		{
 			"test GRPC total supply",

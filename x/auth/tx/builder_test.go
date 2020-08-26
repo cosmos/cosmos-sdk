@@ -25,7 +25,7 @@ func TestTxBuilder(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 
-	any, err := pubKeyToAny(pubkey)
+	any, err := PubKeyToAny(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
@@ -108,7 +108,7 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
 	require.Equal(t, legacy.Cdc.MustMarshalBinaryBare(pubkey), legacy.Cdc.MustMarshalBinaryBare(txBuilder.GetPubKeys()[0]))
 
-	any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	any, err = codectypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
 	txBuilder.SetExtensionOptions(any)
 	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())

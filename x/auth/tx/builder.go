@@ -304,7 +304,7 @@ func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
 		var modeInfo *tx.ModeInfo
 		modeInfo, rawSigs[i] = SignatureDataToModeInfoAndSig(sig.Data)
 
-		any, err := pubKeyToAny(sig.PubKey)
+		any, err := PubKeyToAny(sig.PubKey)
 		if err != nil {
 			return err
 		}
@@ -366,7 +366,8 @@ func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.bodyBz = nil
 }
 
-func pubKeyToAny(key crypto.PubKey) (*codectypes.Any, error) {
+// PubKeyToAny converts a crypto.PubKey to a proto Any.
+func PubKeyToAny(key crypto.PubKey) (*codectypes.Any, error) {
 	protoMsg, ok := key.(proto.Message)
 	if !ok {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidPubKey, fmt.Sprintf("can't proto encode %T", protoMsg))

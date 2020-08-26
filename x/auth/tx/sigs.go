@@ -113,7 +113,7 @@ func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error)
 	for i, sig := range sigs {
 		descData := signing.SignatureDataToProto(sig.Data)
 
-		any, err := pubKeyToAny(sig.PubKey)
+		any, err := PubKeyToAny(sig.PubKey)
 		if err != nil {
 			return nil, err
 		}

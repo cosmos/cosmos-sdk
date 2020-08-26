@@ -28,7 +28,7 @@ func TestDirectModeHandler(t *testing.T) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 
-	any, err := pubKeyToAny(pubkey)
+	any, err := PubKeyToAny(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo

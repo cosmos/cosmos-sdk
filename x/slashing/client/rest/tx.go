@@ -30,7 +30,7 @@ func NewUnjailRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		bech32Validator := vars["validatorAddr"]
 
 		var req UnjailReq
-		if !rest.ReadRESTReq(w, r, clientCtx.JSONMarshaler, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

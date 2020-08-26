@@ -297,7 +297,9 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				}
 
 				var votes types.Votes
-				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &votes)
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &votes)
 				return clientCtx.PrintOutputLegacy(votes)
 
 			}
@@ -446,7 +448,9 @@ $ %s query gov deposits 1
 				}
 
 				var dep types.Deposits
-				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &dep)
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
 
 				return clientCtx.PrintOutputLegacy(dep)
 			}

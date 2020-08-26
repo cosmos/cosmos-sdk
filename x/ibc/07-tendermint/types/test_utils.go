@@ -5,6 +5,7 @@ import (
 	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/proto/tendermint/version"
@@ -29,6 +30,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clientexported.Heigh
 		trustedVals *tmproto.ValidatorSet
 	)
 	vsetHash := tmValSet.Hash()
+	epochHeight := int64(height.(*clienttypes.Height).EpochHeight)
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
 		ChainID:            chainID,
@@ -48,8 +50,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clientexported.Heigh
 
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
-	epochHeight := height.EpochHeight
-	voteSet := tmtypes.NewVoteSet(chainID, epochHeight, 1, tmtypes.PrecommitType, valSet)
+	voteSet := tmtypes.NewVoteSet(chainID, epochHeight, 1, tmproto.PrecommitType, tmValSet)
 	commit, err := tmtypes.MakeCommit(blockID, epochHeight, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
@@ -77,7 +78,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clientexported.Heigh
 	return &Header{
 		SignedHeader:      &signedHeader,
 		ValidatorSet:      valSet,
-		TrustedHeight:     trustedHeight,
+		TrustedHeight:     trustedHeight.(*clienttypes.Height),
 		TrustedValidators: trustedVals,
 	}
 }

@@ -11,6 +11,7 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -117,7 +118,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	return &ConsensusState{
 		Timestamp:          msg.Header.GetTime(),
 		Root:               root,
-		Height:             msg.Header.GetHeight(),
+		Height:             msg.Header.GetHeight().(*clienttypes.Height),
 		NextValidatorsHash: msg.Header.Header.NextValidatorsHash,
 	}
 }
@@ -126,7 +127,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header.GetHeight(), msg.ProofSpecs,
+		msg.Header.GetHeight().(*clienttypes.Height), msg.ProofSpecs,
 	)
 }
 
@@ -186,8 +187,8 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
-	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(m *Misbehaviour, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+	return &MsgSubmitClientMisbehaviour{Misbehaviour: m, Submitter: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -200,10 +201,10 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {
+	if msg.Misbehaviour == nil {
 		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
 	}
-	if err := msg.Evidence.ValidateBasic(); err != nil {
+	if err := msg.Misbehaviour.ValidateBasic(); err != nil {
 		return err
 	}
 	if msg.Submitter.Empty() {
@@ -225,7 +226,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return msg.Evidence
+	return msg.Misbehaviour
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

@@ -22,8 +22,10 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/magiconair/properties v1.8.1
+	github.com/magiconair/properties v1.8.2
 	github.com/mattn/go-isatty v0.0.12
+	github.com/onsi/ginkgo v1.8.0 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/otiai10/copy v1.2.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
@@ -45,7 +47,7 @@ require (
 	github.com/tendermint/tm-db v0.6.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-	google.golang.org/grpc v1.31.0
+	google.golang.org/grpc v1.31.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0
 )

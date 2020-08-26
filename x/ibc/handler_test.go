@@ -57,8 +57,8 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	}{
 		{"success: ORDERED", func() {
 			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, timeoutHeight, 0)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
@@ -84,7 +84,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 		}, true},
 		{"failure: ORDERED out of order packet", func() {
 			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 
 			// attempts to receive packet with sequence 10 without receiving packet with sequence 1
 			for i := uint64(1); i < 10; i++ {
@@ -104,8 +104,8 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 		}, false},
 		{"ORDERED: packet already received (replay)", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, timeoutHeight, 0)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
@@ -180,8 +180,8 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 	}{
 		{"success: ORDERED", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, timeoutHeight, 0)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
@@ -217,7 +217,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 		}, true},
 		{"failure: ORDERED acknowledge out of order packet", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 
 			// attempts to acknowledge ack with sequence 10 without acknowledging ack with sequence 1 (removing packet commitment
 			for i := uint64(1); i < 10; i++ {
@@ -243,8 +243,8 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 		}, false},
 		{"ORDERED: packet already acknowledged (replay)", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, timeoutHeight, 0)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
@@ -327,8 +327,8 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 	}{
 		{"success: ORDERED", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutEpoch, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight())), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
 			// send from chainA to chainB
 			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
@@ -377,7 +377,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 
 			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
@@ -462,7 +462,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 	}{
 		{"success: ORDERED", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
@@ -538,7 +538,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
@@ -587,7 +587,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 		}, false},
 		{"ORDERED: channel not closed", func() {
 			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateChannel(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,

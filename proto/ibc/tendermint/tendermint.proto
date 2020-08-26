@@ -69,9 +69,9 @@ message ConsensusState {
   ];
 }
 
-// Evidence is a wrapper over two conflicting Headers
-// that implements Evidence interface expected by ICS-02
-message Evidence {
+// Misbehaviour is a wrapper over two conflicting Headers
+// that implements Misbehaviour interface expected by ICS-02
+message Misbehaviour {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
@@ -165,7 +165,7 @@ message MsgUpdateClient {
 message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
 
-  Evidence evidence  = 1;
-  bytes    submitter = 2
+  Misbehaviour misbehaviour  = 1;
+  bytes        submitter = 2
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

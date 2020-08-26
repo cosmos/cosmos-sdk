@@ -21,8 +21,13 @@ func (h Header) ClientType() clientexported.ClientType {
 
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
+	height := h.GetHeight()
+	var tmHeight *clienttypes.Height
+	if height != nil {
+		tmHeight, _ = height.(*clienttypes.Height)
+	}
 	return &ConsensusState{
-		Height:             h.GetHeight(),
+		Height:             tmHeight,
 		Timestamp:          h.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
@@ -35,9 +40,10 @@ func (h Header) ConsensusState() *ConsensusState {
 // NOTE: also referred as `sequence`
 func (h Header) GetHeight() clientexported.Height {
 	if h.SignedHeader == nil {
-		return 0
+		return nil
 	}
-	return h.Height
+	// TODO: retrieve epoch number from chain-id
+	return clienttypes.NewHeight(0, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if
@@ -70,8 +76,8 @@ func (h Header) ValidateBasic(chainID string) error {
 
 	// TrustedHeight is less than Header for updates
 	// and less than or equal to Header for misbehaviour
-	if h.TrustedHeight > h.GetHeight() {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %d must be less than or equal to header height %d",
+	if h.TrustedHeight.GT(h.GetHeight()) {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %s must be less than or equal to header height %s",
 			h.TrustedHeight, h.GetHeight())
 	}
 
@@ -84,10 +90,6 @@ func (h Header) ValidateBasic(chainID string) error {
 	}
 	if !bytes.Equal(h.Header.ValidatorsHash, tmValset.Hash()) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set does not match hash")
-	}
-	if int64(h.Height.EpochHeight) != h.SignedHeader.Height {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidHeader, "epoch-height %d does not equal header height %d",
-			h.Height.EpochHeight, h.SignedHeader.Height)
 	}
 	return nil
 }

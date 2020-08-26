@@ -167,7 +167,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			output, err := clientCtx.JSONMarshaler.MarshalJSON(txs)
+			output, err := clientCtx.LegacyAmino.MarshalJSON(txs)
 			if err != nil {
 				return err
 			}

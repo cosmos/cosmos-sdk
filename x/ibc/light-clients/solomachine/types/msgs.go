@@ -47,7 +47,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -106,7 +106,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -126,8 +126,8 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
-	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(m *Misbehaviour, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+	return &MsgSubmitClientMisbehaviour{Misbehaviour: m, Submitter: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -140,7 +140,7 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependent) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if err := msg.Evidence.ValidateBasic(); err != nil {
+	if err := msg.Misbehaviour.ValidateBasic(); err != nil {
 		return err
 	}
 	if msg.Submitter.Empty() {
@@ -153,7 +153,7 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitClientMisbehaviour message.
 func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
@@ -162,7 +162,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return msg.Evidence
+	return msg.Misbehaviour
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

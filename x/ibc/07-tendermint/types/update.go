@@ -115,7 +115,7 @@ func checkValidity(
 	}
 
 	// assert header height is newer than consensus state
-	if header.GetHeight() <= consState.Height {
+	if header.GetHeight().GT(consState.Height) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,
@@ -125,7 +125,7 @@ func checkValidity(
 	// Construct a trusted header using the fields in consensus state
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
 	trustedHeader := tmtypes.Header{
-		Height:             int64(consState.Height),
+		Height:             int64(consState.Height.EpochHeight),
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}
@@ -151,11 +151,11 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
-	if header.GetHeight() > clientState.LatestHeight {
-		clientState.LatestHeight = header.GetHeight()
+	if header.GetHeight().GT(clientState.LatestHeight) {
+		clientState.LatestHeight = header.GetHeight().(*clienttypes.Height)
 	}
 	consensusState := &ConsensusState{
-		Height:             header.GetHeight(),
+		Height:             header.GetHeight().(*clienttypes.Height),
 		Timestamp:          header.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,

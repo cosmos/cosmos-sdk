@@ -114,7 +114,6 @@ func TestQueries(t *testing.T) {
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 	banktypes.RegisterCodec(cdc)
-	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -123,7 +122,7 @@ func TestQueries(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
-	querier := keeper.NewQuerier(app.DistrKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(app.DistrKeeper, cdc)
 
 	// test param queries
 	params := types.Params{

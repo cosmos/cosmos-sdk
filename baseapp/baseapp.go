@@ -160,15 +160,15 @@ func (app *BaseApp) MountStores(initialVersion int64, keys ...sdk.StoreKey) {
 		switch key.(type) {
 		case *sdk.KVStoreKey:
 			if !app.fauxMerkleMode {
-				app.MountStore(key, sdk.StoreTypeIAVL, initialVersion)
+				app.MountStore(key, sdk.StoreTypeIAVL)
 			} else {
 				// StoreTypeDB doesn't do anything upon commit, and it doesn't
 				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, sdk.StoreTypeDB, 0)
+				app.MountStore(key, sdk.StoreTypeDB)
 			}
 
 		case *sdk.TransientStoreKey:
-			app.MountStore(key, sdk.StoreTypeTransient, 0)
+			app.MountStore(key, sdk.StoreTypeTransient)
 
 		default:
 			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
@@ -178,14 +178,14 @@ func (app *BaseApp) MountStores(initialVersion int64, keys ...sdk.StoreKey) {
 
 // MountKVStores mounts all IAVL or DB stores to the provided keys in the
 // BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey, initialVersion int64) {
+func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
 	for _, key := range keys {
 		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL, initialVersion)
+			app.MountStore(key, sdk.StoreTypeIAVL)
 		} else {
 			// StoreTypeDB doesn't do anything upon commit, and it doesn't
 			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB, 0)
+			app.MountStore(key, sdk.StoreTypeDB)
 		}
 	}
 }
@@ -194,7 +194,7 @@ func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey, initialVersio
 // the BaseApp multistore.
 func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient, 0)
+		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -202,14 +202,14 @@ func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey)
 // commit multi-store.
 func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
 	for _, memKey := range keys {
-		app.MountStore(memKey, sdk.StoreTypeMemory, 0)
+		app.MountStore(memKey, sdk.StoreTypeMemory)
 	}
 }
 
 // MountStore mounts a store to the provided key in the BaseApp multistore,
 // using the default DB.
-func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType, initialVersion int64) {
-	app.cms.MountStoreWithDB(key, typ, nil, initialVersion)
+func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
+	app.cms.MountStoreWithDB(key, typ, nil)
 }
 
 // LoadLatestVersion loads the latest application version. It will panic if

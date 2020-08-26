@@ -29,6 +29,13 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
 
+	// Store the consensus params in the BaseApp's paramstore. Note, this must be
+	// done after the deliver state and context have been set as it's persisted
+	// to state.
+	if req.ConsensusParams != nil {
+		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
+	}
+
 	if app.initChainer == nil {
 		return
 	}
@@ -37,13 +44,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
-
-	// Store the consensus params in the BaseApp's paramstore. Note, this must be
-	// done after the deliver state and context have been set as it's persisted
-	// to state.
-	if req.ConsensusParams != nil {
-		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
-	}
 
 	// sanity check
 	if len(req.Validators) > 0 {

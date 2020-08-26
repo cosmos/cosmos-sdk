@@ -85,23 +85,22 @@ func (rs *Store) GetStoreType() types.StoreType {
 }
 
 // MountStoreWithDB implements CommitMultiStore.
-func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db dbm.DB, initialVersion int64) {
+func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db dbm.DB) {
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
 	// If we mount the store again with the same initial version, panic with
 	// duplicate key error.
-	if _, ok := rs.storesParams[key]; ok && initialVersion == rs.storesParams[key].initialVersion {
+	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("store duplicate store key %v", key))
 	}
 	if _, ok := rs.keysByName[key.Name()]; ok {
 		panic(fmt.Sprintf("store duplicate store key name %v", key))
 	}
 	rs.storesParams[key] = storeParams{
-		key:            key,
-		typ:            typ,
-		db:             db,
-		initialVersion: initialVersion,
+		key: key,
+		typ: typ,
+		db:  db,
 	}
 	rs.keysByName[key.Name()] = key
 }
@@ -537,7 +536,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStore(db, id, rs.lazyLoading, uint64(params.initialVersion))
+		store, err := iavl.LoadStore(db, id, rs.lazyLoading)
 		if err != nil {
 			return nil, err
 		}
@@ -578,9 +577,6 @@ type storeParams struct {
 	key types.StoreKey
 	db  dbm.DB
 	typ types.StoreType
-	// intialVersion is the initial version of the IAVL store. It is only used
-	// when `typ` is StoreTypeIAVL.
-	initialVersion int64
 }
 
 func getLatestVersion(db dbm.DB) int64 {

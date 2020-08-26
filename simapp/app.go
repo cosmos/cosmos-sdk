@@ -359,7 +359,7 @@ func NewSimApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	app.MountKVStores(keys, 0)
+	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
@@ -374,12 +374,19 @@ func NewSimApp(
 	)
 	app.SetEndBlocker(app.EndBlocker)
 
-	// TODO When to load store?
-	// if loadLatest {
-	// 	if err := app.LoadLatestVersion(); err != nil {
-	// 		tmos.Exit(err.Error())
-	// 	}
-	// }
+	if loadLatest {
+		if err := app.LoadLatestVersion(); err != nil {
+			tmos.Exit(err.Error())
+		}
+	}
+
+	// Initialize and seal the capability keeper so all persistent capabilities
+	// are loaded in-memory and prevent any further modules from creating scoped
+	// sub-keepers.
+	// This must be done during creation of baseapp rather than in InitChain so
+	// that in-memory capabilities get regenerated on app restart
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	app.CapabilityKeeper.InitializeAndSeal(ctx)
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
@@ -413,22 +420,13 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	// If we get a non-null initial height from ABCI InitChain, then we mount
 	// the stores (again) at that height.
 	if req.InitialHeight != 0 {
-		app.MountKVStores(app.keys, req.InitialHeight)
+		app.MountKVStores(app.keys)
 	}
 
 	err := app.LoadLatestVersion()
 	if err != nil {
 		tmos.Exit(err.Error())
 	}
-
-	// TODO... but how?
-	// Initialize and seal the capability keeper so all persistent capabilities
-	// are loaded in-memory and prevent any further modules from creating scoped
-	// sub-keepers.
-	// This must be done during creation of baseapp rather than in InitChain so
-	// that in-memory capabilities get regenerated on app restart
-	ctx = app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-	app.CapabilityKeeper.InitializeAndSeal(ctx)
 
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)

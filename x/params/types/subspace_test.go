@@ -30,8 +30,8 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db, 0)
-	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db, 0)
+	ms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
 	encCfg := simapp.MakeEncodingConfig()

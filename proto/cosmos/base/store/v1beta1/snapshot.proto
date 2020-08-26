@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.base.store.v1betav1;
+package cosmos.base.store.v1beta1;
 
 import "gogoproto/gogo.proto";
 
@@ -7,6 +7,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
 message SnapshotItem {
+  // item is the specific type of snapshot item.
   oneof item {
     SnapshotStoreItem store = 1;
     SnapshotIAVLItem  iavl  = 2 [(gogoproto.customname) = "IAVL"];

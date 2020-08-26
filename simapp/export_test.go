@@ -72,6 +72,7 @@ func TestSimappInitialHeight(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
+	require.Equal(t, int64(4), exportedGenDoc.InitialHeight)
 	err = saveGenesisFile(genDoc, tempDir2)
 
 	// Run a new app, with exported genesis.

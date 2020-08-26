@@ -35,13 +35,13 @@ func NewCreateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var consensusState *types.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &consensusState); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &consensusState); err != nil {
+				if err := cdc.UnmarshalJSON(contents, consensusState); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus state file")
 				}
 			}
@@ -77,13 +77,13 @@ func NewUpdateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var header *types.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := cdc.UnmarshalJSON(contents, header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -116,19 +116,19 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var m types.Misbehaviour
-			if err := cdc.UnmarshalJSON([]byte(args[0]), &m); err != nil {
+			var m *types.Misbehaviour
+			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &m); err != nil {
+				if err := cdc.UnmarshalJSON(contents, m); err != nil {
 					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(&m, clientCtx.GetFromAddress())
+			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

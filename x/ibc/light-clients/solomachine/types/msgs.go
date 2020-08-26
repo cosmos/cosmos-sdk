@@ -47,7 +47,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -106,7 +106,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -153,7 +153,7 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitClientMisbehaviour message.
 func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.

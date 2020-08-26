@@ -404,29 +404,26 @@ func TestApproxRoot(t *testing.T) {
 	testCases := []struct {
 		input    Dec
 		root     uint64
-		maxIters uint64
 		expected Dec
 	}{
-		{OneDec(), 10, 0, OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
-		{NewDecWithPrec(25, 2), 2, 7, NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
-		{NewDecWithPrec(4, 2), 2, 8, NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
-		{NewDecFromInt(NewInt(27)), 3, 10, NewDecFromInt(NewInt(3))},                      // 27 ^ (1/3) => 3
-		{NewDecFromInt(NewInt(-81)), 4, 14, NewDecFromInt(NewInt(-3))},                    // -81 ^ (0.25) => -3
-		{NewDecFromInt(NewInt(2)), 2, 6, NewDecWithPrec(1414213562373095049, 18)},         // 2 ^ (0.5) => 1.414213562373095049
-		{NewDecWithPrec(1005, 3), 31536000, 4, MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
-		{SmallestDec(), 2, 35, NewDecWithPrec(1, 9)},                                      // 1e-18 ^ (0.5) => 1e-9
-		{SmallestDec(), 3, 63, MustNewDecFromStr("0.000000999999999997")},                 // 1e-18 ^ (1/3) => 1e-6
-		{NewDecWithPrec(1, 8), 3, 24, MustNewDecFromStr("0.002154434690031959")},          // Refer to note below
-		{NewDecWithPrec(1, 8), 3, 29, MustNewDecFromStr("0.002154434690031959")},          // Refer to note below
+		{OneDec(), 10, OneDec()},                                                       // 1.0 ^ (0.1) => 1.0
+		{NewDecWithPrec(25, 2), 2, NewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
+		{NewDecWithPrec(4, 2), 2, NewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
+		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},                       // 27 ^ (1/3) => 3
+		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},                     // -81 ^ (0.25) => -3
+		{NewDecFromInt(NewInt(2)), 2, NewDecWithPrec(1414213562373095049, 18)},         // 2 ^ (0.5) => 1.414213562373095049
+		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153904")}, // 1.005 ^ (1/31536000) ≈ 1.00000000016
+		{SmallestDec(), 2, NewDecWithPrec(1, 9)},                                       // 1e-18 ^ (0.5) => 1e-9
+		{SmallestDec(), 3, MustNewDecFromStr("0.000000999999999997")},                  // 1e-18 ^ (1/3) => 1e-6
+		{NewDecWithPrec(1, 8), 3, MustNewDecFromStr("0.002154434690031900")},           // 1e-8 ^ (1/3) ≈ 0.00215443469
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
-	// (i.e. 24, 29, 34, ... give the same result) and never converges enough to satisfy the termination
-	// condition delta.Abs().GT(SmallestDec()). In this case, the `maxIters` is what stops the iteration.
-	// Note that the result even repeats for 25,30,... and 26,31,..., and 27,32,..., and 28,32,...
+	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
+	// iterations (100) causes the result at 100 to be returned, regardless of convergence.
 
 	for i, tc := range testCases {
-		res, err := tc.input.ApproxRoot(tc.root, tc.maxIters)
+		res, err := tc.input.ApproxRoot(tc.root)
 		require.NoError(t, err)
 		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
@@ -435,19 +432,18 @@ func TestApproxRoot(t *testing.T) {
 func TestApproxSqrt(t *testing.T) {
 	testCases := []struct {
 		input    Dec
-		maxIters uint64
 		expected Dec
 	}{
-		{OneDec(), 0, OneDec()},                                                // 1.0 => 1.0
-		{NewDecWithPrec(25, 2), 7, NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
-		{NewDecWithPrec(4, 2), 8, NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
-		{NewDecFromInt(NewInt(9)), 7, NewDecFromInt(NewInt(3))},                // 9 => 3
-		{NewDecFromInt(NewInt(-9)), 7, NewDecFromInt(NewInt(-3))},              // -9 => -3
-		{NewDecFromInt(NewInt(2)), 6, NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{OneDec(), OneDec()},                                                // 1.0 => 1.0
+		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
+		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
+		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                // 9 => 3
+		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))},              // -9 => -3
+		{NewDecFromInt(NewInt(2)), NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
 	}
 
 	for i, tc := range testCases {
-		res, err := tc.input.ApproxSqrt(tc.maxIters)
+		res, err := tc.input.ApproxSqrt()
 		require.NoError(t, err)
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}

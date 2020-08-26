@@ -75,7 +75,7 @@ type ClientState struct {
 	ChainId string `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
 	// self latest block height
 	Height uint64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
-	// Latest timestamp when the client was update to
+	// Latest timestamp which the client has been updated to
 	LatestTimestamp time.Time `protobuf:"bytes,4,opt,name=latest_timestamp,json=latestTimestamp,proto3,stdtime" json:"latest_timestamp" yaml:"latest_timestamp"`
 }
 

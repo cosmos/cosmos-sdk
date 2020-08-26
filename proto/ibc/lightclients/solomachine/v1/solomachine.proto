@@ -16,7 +16,7 @@ message ClientState {
       [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
   ConsensusState consensus_state = 2
       [(gogoproto.moretags) = "yaml:\"consensus_state\""];
-      // Latest timestamp when the client was update to
+  // Latest timestamp which the client has been updated to
   google.protobuf.Timestamp  latest_timestamp = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,

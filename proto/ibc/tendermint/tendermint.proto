@@ -48,18 +48,19 @@ message ClientState {
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
 
-  // Latest timestamp when the client was update to
+  // Latest timestamp which the client has been updated to
    google.protobuf.Timestamp  latest_timestamp = 9 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"latest_timestamp\""
   ];
 
-  // This flag, when set to true, will be used to recover a client which has expired
+  // This flag, when set to true, will allow governance to recover a client which has expired
   bool allow_governance_override_after_expiry = 10[
     (gogoproto.moretags) = "yaml:\"allow_governance_override_after_expiry,omitempty\""
   ];
-  // This flag, when set to true, will be used to unfreeze a client whose chain has experienced a misbehaviour event
+  // This flag, when set to true, will allow governance to unfreeze a client 
+  // whose chain has experienced a misbehaviour event
   bool allow_governance_override_after_misbehaviour = 11[
     (gogoproto.moretags) = "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""
   ];
@@ -164,11 +165,12 @@ message MsgCreateClient {
   bytes signer = 7
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   
-  // This flag, when set to true, will be used to recover a client which has expired
+  // This flag, when set to true, will allow governance to recover a client which has expired
   bool allow_governance_override_after_expiry = 9[
     (gogoproto.moretags) = "yaml:\"allow_governance_override_after_expiry,omitempty\""
   ];
-  // This flag, when set to true, will be used to unfreeze a client whose chain has experienced a misbehaviour event
+  // This flag, when set to true, will allow governance to unfreeze a client 
+  // whose chain has experienced a misbehaviour event
   bool allow_governance_override_after_misbehaviour = 10[
     (gogoproto.moretags) = "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""
   ];

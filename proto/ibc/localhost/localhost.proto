@@ -27,7 +27,7 @@ message ClientState {
   // self latest block height
   uint64 height = 3;
 
-  // Latest timestamp when the client was update to
+  // Latest timestamp which the client has been updated to
    google.protobuf.Timestamp  latest_timestamp = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,

@@ -51,11 +51,12 @@ type ClientState struct {
 	LatestHeight uint64 `protobuf:"varint,7,opt,name=latest_height,json=latestHeight,proto3" json:"latest_height,omitempty" yaml:"latest_height"`
 	// Proof specifications used in verifying counterparty state
 	ProofSpecs []*_go.ProofSpec `protobuf:"bytes,8,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
-	// Latest timestamp when the client was update to
+	// Latest timestamp which the client has been updated to
 	LatestTimestamp time.Time `protobuf:"bytes,9,opt,name=latest_timestamp,json=latestTimestamp,proto3,stdtime" json:"latest_timestamp" yaml:"latest_timestamp"`
-	// This flag, when set to true, will be used to recover a client which has expired
+	// This flag, when set to true, will allow governance to recover a client which has expired
 	AllowGovernanceOverrideAfterExpiry bool `protobuf:"varint,10,opt,name=allow_governance_override_after_expiry,json=allowGovernanceOverrideAfterExpiry,proto3" json:"allow_governance_override_after_expiry,omitempty" yaml:"allow_governance_override_after_expiry,omitempty"`
-	// This flag, when set to true, will be used to unfreeze a client whose chain has experienced a misbehaviour event
+	// This flag, when set to true, will allow governance to unfreeze a client
+	// whose chain has experienced a misbehaviour event
 	AllowGovernanceOverrideAfterMisbehaviour bool `protobuf:"varint,11,opt,name=allow_governance_override_after_misbehaviour,json=allowGovernanceOverrideAfterMisbehaviour,proto3" json:"allow_governance_override_after_misbehaviour,omitempty" yaml:"allow_governance_override_after_misbehaviour,omitempty"`
 }
 
@@ -314,9 +315,10 @@ type MsgCreateClient struct {
 	MaxClockDrift   time.Duration                                 `protobuf:"bytes,6,opt,name=max_clock_drift,json=maxClockDrift,proto3,stdduration" json:"max_clock_drift" yaml:"max_clock_drift"`
 	ProofSpecs      []*_go.ProofSpec                              `protobuf:"bytes,8,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
 	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
-	// This flag, when set to true, will be used to recover a client which has expired
+	// This flag, when set to true, will allow governance to recover a client which has expired
 	AllowGovernanceOverrideAfterExpiry bool `protobuf:"varint,9,opt,name=allow_governance_override_after_expiry,json=allowGovernanceOverrideAfterExpiry,proto3" json:"allow_governance_override_after_expiry,omitempty" yaml:"allow_governance_override_after_expiry,omitempty"`
-	// This flag, when set to true, will be used to unfreeze a client whose chain has experienced a misbehaviour event
+	// This flag, when set to true, will allow governance to unfreeze a client
+	// whose chain has experienced a misbehaviour event
 	AllowGovernanceOverrideAfterMisbehaviour bool `protobuf:"varint,10,opt,name=allow_governance_override_after_misbehaviour,json=allowGovernanceOverrideAfterMisbehaviour,proto3" json:"allow_governance_override_after_misbehaviour,omitempty" yaml:"allow_governance_override_after_misbehaviour,omitempty"`
 }
 

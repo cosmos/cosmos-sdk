@@ -35,7 +35,7 @@ type ClientState struct {
 	// frozen sequence of the solo machine
 	FrozenSequence uint64          `protobuf:"varint,1,opt,name=frozen_sequence,json=frozenSequence,proto3" json:"frozen_sequence,omitempty" yaml:"frozen_sequence"`
 	ConsensusState *ConsensusState `protobuf:"bytes,2,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
-	// Latest timestamp when the client was update to
+	// Latest timestamp which the client has been updated to
 	LatestTimestamp time.Time `protobuf:"bytes,3,opt,name=latest_timestamp,json=latestTimestamp,proto3,stdtime" json:"latest_timestamp" yaml:"latest_timestamp"`
 }
 

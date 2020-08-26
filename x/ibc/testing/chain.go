@@ -24,7 +24,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	transfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -48,7 +47,7 @@ const (
 	ConnectionIDPrefix = "conn"
 	ChannelIDPrefix    = "chan"
 
-	TransferPort = transfertypes.ModuleName
+	TransferPort = ibctransfertypes.ModuleName
 )
 
 // Default params variables used to create a TM client

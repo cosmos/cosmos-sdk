@@ -1,11 +1,11 @@
 syntax = "proto3";
-package cosmos_sdk.snapshots.v1;
+package cosmos.base.snapshots.v1beta1;
 
-import "third_party/proto/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 
-// Snapshot contains snapshot info.
+// Snapshot contains Tendermint state sync snapshot info.
 message Snapshot {
   uint64   height   = 1;
   uint32   format   = 2;

@@ -132,7 +132,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the slashing module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 

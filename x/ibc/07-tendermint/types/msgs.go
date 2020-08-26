@@ -189,8 +189,8 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
-	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(m *Misbehaviour, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+	return &MsgSubmitClientMisbehaviour{Misbehaviour: m, Submitter: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -203,10 +203,10 @@ func (msg MsgSubmitClientMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
-	if msg.Evidence == nil {
+	if msg.Misbehaviour == nil {
 		return sdkerrors.Wrap(evidencetypes.ErrInvalidEvidence, "missing evidence")
 	}
-	if err := msg.Evidence.ValidateBasic(); err != nil {
+	if err := msg.Misbehaviour.ValidateBasic(); err != nil {
 		return err
 	}
 	if msg.Submitter.Empty() {
@@ -228,7 +228,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return msg.Evidence
+	return msg.Misbehaviour
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

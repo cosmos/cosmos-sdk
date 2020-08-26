@@ -1,4 +1,4 @@
-package testing
+package ibctesting
 
 import (
 	"fmt"
@@ -41,10 +41,13 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	ChannelVersion = ibctransfertypes.Version
-	InvalidID      = "IDisInvalid"
+	DefaultChannelVersion = ibctransfertypes.Version
+	InvalidID             = "IDisInvalid"
 
-	ConnectionIDPrefix = "connectionid"
+	ConnectionIDPrefix = "conn"
+	ChannelIDPrefix    = "chan"
+
+	TransferPort = ibctransfertypes.ModuleName
 )
 
 var LatestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -223,10 +226,17 @@ func (chain *TestChain) NextBlock() {
 
 }
 
+// sendMsgs delivers a transaction through the application without returning the result.
+func (chain *TestChain) sendMsgs(msgs ...sdk.Msg) error {
+	_, err := chain.SendMsgs(msgs...)
+	return err
+}
+
 // SendMsgs delivers a transaction through the application. It updates the senders sequence
-// number and updates the TestChain's headers.
-func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
-	_, _, err := simapp.SignCheckDeliver(
+// number and updates the TestChain's headers. It returns the result and error if one
+// occurred.
+func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
+	_, r, err := simapp.SignCheckDeliver(
 		chain.t,
 		chain.TxConfig,
 		chain.App.BaseApp,
@@ -238,7 +248,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 		true, true, chain.senderPrivKey,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// SignCheckDeliver calls app.Commit()
@@ -247,7 +257,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) error {
 	// increment sequence for successful transaction execution
 	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
 
-	return nil
+	return r, nil
 }
 
 // GetClientState retrieves the client state for the provided clientID. The client is
@@ -328,13 +338,13 @@ func (chain *TestChain) AddTestConnection(clientID, counterpartyClientID string)
 
 // ConstructNextTestConnection constructs the next test connection to be
 // created given a clientID and counterparty clientID. The connection id
-// format:
-// connectionid<index>
+// format: <chainID>-conn<index>
 func (chain *TestChain) ConstructNextTestConnection(clientID, counterpartyClientID string) *TestConnection {
-	connectionID := ConnectionIDPrefix + strconv.Itoa(len(chain.Connections))
+	connectionID := fmt.Sprintf("%s-%s%d", chain.ChainID, ConnectionIDPrefix, len(chain.Connections))
 	return &TestConnection{
 		ID:                   connectionID,
 		ClientID:             clientID,
+		NextChannelVersion:   DefaultChannelVersion,
 		CounterpartyClientID: counterpartyClientID,
 	}
 }
@@ -362,7 +372,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
 	msg := chain.ConstructMsgCreateClient(counterparty, clientID)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
@@ -405,7 +415,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		chain.SenderAccount.GetAddress(),
 	)
 
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client.
@@ -476,7 +486,7 @@ func (chain *TestChain) ConnectionOpenInit(
 		counterparty.GetPrefix(),
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ConnectionOpenTry will construct and execute a MsgConnectionOpenTry.
@@ -499,7 +509,7 @@ func (chain *TestChain) ConnectionOpenTry(
 		proofHeight, consensusHeight,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ConnectionOpenAck will construct and execute a MsgConnectionOpenAck.
@@ -521,7 +531,7 @@ func (chain *TestChain) ConnectionOpenAck(
 		ConnectionVersion,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ConnectionOpenConfirm will construct and execute a MsgConnectionOpenConfirm.
@@ -537,7 +547,7 @@ func (chain *TestChain) ConnectionOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // CreatePortCapability binds and claims a capability for the given portID if it does not
@@ -601,11 +611,11 @@ func (chain *TestChain) ChanOpenInit(
 ) error {
 	msg := channeltypes.NewMsgChannelOpenInit(
 		ch.PortID, ch.ID,
-		ChannelVersion, order, []string{connectionID},
+		ch.Version, order, []string{connectionID},
 		counterparty.PortID, counterparty.ID,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ChanOpenTry will construct and execute a MsgChannelOpenTry.
@@ -619,13 +629,13 @@ func (chain *TestChain) ChanOpenTry(
 
 	msg := channeltypes.NewMsgChannelOpenTry(
 		ch.PortID, ch.ID,
-		ChannelVersion, order, []string{connectionID},
+		ch.Version, order, []string{connectionID},
 		counterpartyCh.PortID, counterpartyCh.ID,
-		ChannelVersion,
+		counterpartyCh.Version,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ChanOpenAck will construct and execute a MsgChannelOpenAck.
@@ -637,11 +647,11 @@ func (chain *TestChain) ChanOpenAck(
 
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
-		ChannelVersion,
+		counterpartyCh.Version,
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ChanOpenConfirm will construct and execute a MsgChannelOpenConfirm.
@@ -656,7 +666,7 @@ func (chain *TestChain) ChanOpenConfirm(
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // ChanCloseInit will construct and execute a MsgChannelCloseInit.
@@ -670,7 +680,7 @@ func (chain *TestChain) ChanCloseInit(
 		channel.PortID, channel.ID,
 		chain.SenderAccount.GetAddress(),
 	)
-	return chain.SendMsgs(msg)
+	return chain.sendMsgs(msg)
 }
 
 // GetPacketData returns a ibc-transfer marshalled packet to be used for

@@ -1,318 +1,265 @@
 package types_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
-func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
+func (suite *TendermintTestSuite) TestEvidence() {
+	signers := []tmtypes.PrivValidator{suite.privVal}
+
+	misbehaviour := &types.Misbehaviour{
+		Header1:  suite.header,
+		Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+		ChainId:  chainID,
+		ClientId: clientID,
+	}
+
+	suite.Require().Equal(misbehaviour.ClientType(), clientexported.Tendermint)
+	suite.Require().Equal(misbehaviour.GetClientID(), clientID)
+	suite.Require().Equal(misbehaviour.Route(), "client")
+	suite.Require().Equal(misbehaviour.Type(), "client_misbehaviour")
+	suite.Require().Equal(misbehaviour.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.cdc.MustMarshalBinaryBare(misbehaviour))))
+	suite.Require().Equal(misbehaviour.GetHeight(), int64(height))
+}
+
+func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPrivVal := tmtypes.NewMockPV()
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	altVal := tmtypes.NewValidator(altPubKey, 4)
+	altVal := tmtypes.NewValidator(altPubKey, height)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
-	bothValsHash := bothValSet.Hash()
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	_, suiteVal := suite.valSet.GetByIndex(0)
+	signers := []tmtypes.PrivValidator{suite.privVal}
 
 	// Create signer array and ensure it is in same order as bothValSet
+	_, suiteVal := suite.valSet.GetByIndex(0)
 	bothSigners := types.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
 	testCases := []struct {
-		name            string
-		clientState     clientexported.ClientState
-		consensusState1 clientexported.ConsensusState
-		consensusState2 clientexported.ConsensusState
-		evidence        clientexported.Misbehaviour
-		timestamp       time.Time
-		expPass         bool
+		name                 string
+		misbehaviour         *types.Misbehaviour
+		malleateMisbehaviour func(misbehaviour *types.Misbehaviour) error
+		expPass              bool
 	}{
 		{
-			"valid misbehavior evidence",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"valid misbehaviour",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			true,
 		},
 		{
-			"valid misbehavior at height greater than last consensusState",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"misbehaviour Header1 is nil",
+			types.NewMisbehaviour(clientID, chainID, nil, suite.header),
+			func(m *types.Misbehaviour) error { return nil },
+			false,
+		},
+		{
+			"misbehaviour Header2 is nil",
+			types.NewMisbehaviour(clientID, chainID, suite.header, nil),
+			func(m *types.Misbehaviour) error { return nil },
+			false,
+		},
+		{
+			"valid misbehaviour with different trusted headers",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			true,
 		},
 		{
-			"valid misbehavior evidence with different trusted heights",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-3, suite.valsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
+			"trusted height is 0 in Header1",
+			&types.Misbehaviour{
+				Header1:  types.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  suite.header,
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
-			true,
-		},
-		{
-			"consensus state's valset hash different from evidence should still pass",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, suite.valsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, suite.valsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now,
-			true,
-		},
-		{
-			"invalid misbehavior evidence with trusted height different from trusted consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-3, suite.valsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"invalid misbehavior evidence with trusted validators different from trusted consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-1, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height-3, suite.valsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"trusted height is 0 in Header2",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"already frozen client state",
-			&types.ClientState{FrozenHeight: 1},
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"trusted valset is nil in Header1",
+			&types.Misbehaviour{
+				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header2:  suite.header,
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"trusted consensus state does not exist",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			nil,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"trusted valset is nil in Header2",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"invalid tendermint misbehaviour evidence",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			nil,
-			suite.now,
+			"invalid client ID ",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+				ChainId:  chainID,
+				ClientId: "GAIA",
+			},
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"rejected misbehaviour due to expired age duration",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
+			"wrong chainID on header1",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+				ChainId:  "ethermint",
+				ClientId: clientID,
 			},
-			suite.now.Add(2 * time.Minute).Add(simapp.DefaultConsensusParams.Evidence.MaxAgeDuration),
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"rejected misbehaviour due to expired block duration",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(height+simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks+1), latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"wrong chainID on header2",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now.Add(time.Hour),
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"provided height > header height",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"mismatched heights",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, 6, 4, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"unbonding period expired",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			&types.ConsensusState{Timestamp: time.Time{}, Root: commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), NextValidatorsHash: bothValsHash},
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"same block id",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  suite.header,
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now.Add(ubdPeriod),
+			func(misbehaviour *types.Misbehaviour) error { return nil },
 			false,
 		},
 		{
-			"trusted validators is incorrect for given consensus state",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, suite.valSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, suite.valSet, bothSigners),
+			"header 1 doesn't have 2/3 majority",
+			&types.Misbehaviour{
+				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  suite.header,
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error {
+				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header1.GetHeight()), 1, tmproto.PrecommitType, altValSet)
+				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header1.Commit.BlockID)
+				if err != nil {
+					return err
+				}
+
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight()), misbehaviour.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				misbehaviour.Header1.Commit = tmCommit.ToProto()
+				return err
+			},
 			false,
 		},
 		{
-			"first valset has too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, altValSet, bothValSet, altSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+			"header 2 doesn't have 2/3 majority",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
+			func(misbehaviour *types.Misbehaviour) error {
+				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header2.GetHeight()), 1, tmproto.PrecommitType, altValSet)
+				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header2.Commit.BlockID)
+				if err != nil {
+					return err
+				}
+
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight()), misbehaviour.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				misbehaviour.Header2.Commit = tmCommit.ToProto()
+				return err
+			},
 			false,
 		},
 		{
-			"second valset has too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
+			"validators sign off on wrong commit",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
-				ClientId: chainID,
+				ClientId: clientID,
 			},
-			suite.now,
-			false,
-		},
-		{
-			"both valsets have too much change",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
-			&types.Evidence{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, altValSet, bothValSet, altSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), altValSet, bothValSet, altSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
+			func(misbehaviour *types.Misbehaviour) error {
+				tmBlockID := types.MakeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
+				misbehaviour.Header2.Commit.BlockID = tmBlockID.ToProto()
+				return nil
 			},
-			suite.now,
 			false,
 		},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
-		suite.Run(fmt.Sprintf("Case: %s", tc.name), func() {
-			// reset suite to create fresh application state
-			suite.SetupTest()
 
-			// Set current timestamp in context
-			ctx := suite.chainA.GetContext().WithBlockTime(tc.timestamp)
-			ctx = ctx.WithConsensusParams(simapp.DefaultConsensusParams)
+		err := tc.malleateMisbehaviour(tc.misbehaviour)
+		suite.Require().NoError(err)
 
-			// Set trusted consensus states in client store
-
-			if tc.consensusState1 != nil {
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, tc.consensusState1.GetHeight(), tc.consensusState1)
-			}
-			if tc.consensusState2 != nil {
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, tc.consensusState2.GetHeight(), tc.consensusState2)
-			}
-
-			clientState, err := tc.clientState.CheckMisbehaviourAndUpdateState(
-				ctx,
-				suite.cdc,
-				suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(ctx, clientID), // pass in clientID prefixed clientStore
-				tc.evidence,
-			)
-
-			if tc.expPass {
-				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.name)
-				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(uint64(tc.evidence.GetHeight()), clientState.GetFrozenHeight(),
-					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.evidence.GetHeight(), clientState.GetFrozenHeight())
-			} else {
-				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-				suite.Require().Nil(clientState, "invalid test case %d passed: %s", i, tc.name)
-			}
-		})
+		if tc.expPass {
+			suite.Require().NoError(tc.misbehaviour.ValidateBasic(), "valid test case %d failed: %s", i, tc.name)
+		} else {
+			suite.Require().Error(tc.misbehaviour.ValidateBasic(), "invalid test case %d passed: %s", i, tc.name)
+		}
 	}
 }

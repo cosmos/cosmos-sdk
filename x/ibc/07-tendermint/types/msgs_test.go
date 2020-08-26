@@ -4,6 +4,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"

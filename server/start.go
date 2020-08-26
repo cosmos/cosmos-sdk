@@ -233,7 +233,6 @@ func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator 
 		clientCtx := client.Context{}.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(legacyAminoCdc).
 			// amino is needed here for backwards compatibility of REST routes
 			WithLegacyAmino(legacyAminoCdc).
 			WithClient(local.New(tmNode))

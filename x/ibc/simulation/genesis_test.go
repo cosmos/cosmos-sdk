@@ -8,17 +8,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
@@ -40,12 +43,7 @@ func TestRandomizedGenState(t *testing.T) {
 	var ibcGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[host.ModuleName], &ibcGenesis)
 
-	require.Len(t, ibcGenesis.Clients, 0)
-	require.Len(t, ibcGenesis.ClientsConsensus, 0)
-	require.False(t, ibcGenesis.CreateLocalhost)
-
-	// Note: ibcGenesis.ChannelGenesis is missing because the ChannelGenesis
-	// interface is not register in RegisterCodec. (Not sure if is a feature
-	// or a bug.)
-
+	require.NotNil(t, ibcGenesis.ClientGenesis)
+	require.NotNil(t, ibcGenesis.ConnectionGenesis)
+	require.NotNil(t, ibcGenesis.ChannelGenesis)
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,7 +20,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -189,24 +187,6 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)
-}
-
-// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
-// JSON message. An error is returned if any serialization operation fails.
-//
-// NOTE: The ordering of the keys returned as the resulting JSON message is
-// non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc codec.JSONMarshaler, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
-	var jsonMap map[string]json.RawMessage
-
-	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
-		return nil, err
-	}
-
-	jsonMap[key] = value
-	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
-
-	return json.RawMessage(bz), err
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

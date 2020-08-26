@@ -379,7 +379,6 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
-		iter++
 	}
 
 	return guess, nil

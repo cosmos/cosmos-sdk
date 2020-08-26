@@ -76,7 +76,7 @@ func TestGenesisStateFromGenFile(t *testing.T) {
 	cdc := codec.New()
 
 	genFile := "../../../tests/fixtures/adr-024-coin-metadata_genesis.json"
-	genesisState, _, err := types.GenesisStateFromGenFile(cdc, genFile)
+	genesisState, _, err := types.GenesisStateFromGenFile(genFile)
 	require.NoError(t, err)
 
 	var bankGenesis banktypes.GenesisState

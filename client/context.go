@@ -229,13 +229,10 @@ func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
 }
 
 func (ctx Context) printOutput(out []byte) error {
+	var err error
+
 	if ctx.OutputFormat == "text" {
-		out, err = codec.MarshalYAML(ctx.JSONMarshaler, toPrint)
-		if err != nil {
-			return err
-		}
-	} else {
-		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
+		out, err = codec.MarshalYAML(out)
 		if err != nil {
 			return err
 		}
@@ -246,7 +243,7 @@ func (ctx Context) printOutput(out []byte) error {
 		writer = os.Stdout
 	}
 
-	_, err := writer.Write(out)
+	_, err = writer.Write(out)
 	if err != nil {
 		return err
 	}

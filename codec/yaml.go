@@ -6,18 +6,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// MarshalYAML marshals the provided toPrint content with the provided JSON marshaler
-// by encoding JSON, decoding JSON, and then encoding YAML.
-func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint interface{}) ([]byte, error) {
-	bz, err := jsonMarshaler.MarshalJSON(toPrint)
-	if err != nil {
-		return nil, err
-	}
-
+// MarshalYAML marshals the provided bytes content by decoding the bytes to
+// JSON, and then encoding YAML.
+func MarshalYAML(bz []byte) ([]byte, error) {
 	// generate YAML by decoding and re-encoding JSON as YAML
 	var j interface{}
 
-	err = json.Unmarshal(bz, &j)
+	err := json.Unmarshal(bz, &j)
 	if err != nil {
 		return nil, err
 	}

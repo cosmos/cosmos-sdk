@@ -135,7 +135,8 @@ func (acc BaseAccount) String() string {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), acc)
+	protoCdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	bz, err := codec.MarshalYAML(protoCdc.MustMarshalJSON(&acc))
 	if err != nil {
 		return nil, err
 	}

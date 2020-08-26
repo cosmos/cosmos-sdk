@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
-			true,
+			false,
 		},
 		{
 			"test query validators gRPC route with valid status",

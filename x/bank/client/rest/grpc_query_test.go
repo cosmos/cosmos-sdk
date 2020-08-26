@@ -93,3 +93,42 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		headers  map[string]string
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"total account balance grpc",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s?height=1", baseURL, val.Address.String()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&types.QueryAllBalancesResponse{},
+			&types.QueryAllBalancesResponse{
+				Balances: sdk.NewCoins(
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+				),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			s.Require().NoError(err)
+
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
+		})
+	}
+}

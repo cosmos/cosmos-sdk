@@ -47,15 +47,16 @@ func NewCreateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+			legacyAmino := codec.New()
 
 			var header *types.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := cdc.UnmarshalJSON(contents, header); err != nil {
 					return errors.Wrap(err, "error unmarshalling consensus header file")
 				}
 			}
@@ -94,13 +95,17 @@ func NewCreateClientCmd() *cobra.Command {
 			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
-			} else if err := cdc.UnmarshalJSON([]byte(spc), &specs); err != nil {
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+			} else if err := legacyAmino.UnmarshalJSON([]byte(spc), &specs); err != nil {
 				// check for file path if JSON input not provided
 				contents, err := ioutil.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
-				if err := cdc.UnmarshalJSON(contents, &specs); err != nil {
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+				if err := legacyAmino.UnmarshalJSON(contents, &specs); err != nil {
 					return errors.Wrap(err, "error unmarshalling proof specs file")
 				}
 			}
@@ -148,13 +153,13 @@ func NewUpdateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var header *types.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+				if err := cdc.UnmarshalJSON(contents, header); err != nil {
 					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
@@ -196,13 +201,13 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var ev *types.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[0]), &ev); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[0]), ev); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, &ev); err != nil {
+				if err := cdc.UnmarshalJSON(contents, ev); err != nil {
 					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}

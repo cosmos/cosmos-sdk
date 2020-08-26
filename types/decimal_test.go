@@ -420,7 +420,7 @@ func TestApproxRoot(t *testing.T) {
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
 	// (i.e. 24, 29, 34, ... give the same result) and never converges enough. The maximum number of
-	// iterations (100) causes the result at 100 to be returned, regardless of convergence.
+	// iterations (100) causes the result at iteration 100 to be returned, regardless of convergence.
 
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)

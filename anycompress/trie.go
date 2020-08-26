@@ -3,6 +3,7 @@ package anycompress
 import (
 	"errors"
 	"fmt"
+        "sync"
 )
 
 // This trie is explicitly for use with prefix matching of typeURLs in a
@@ -13,6 +14,7 @@ var errNoMatch = errors.New("no match found")
 // trie is a prefix matcher with O(k) aka constant time searches and insertions, where k
 // is the length of the subject string.
 type trie struct {
+        mu sync.RWMutex
 	leaves [('Z' - 'A') + 1 + ('z' - 'a') + 1 + ('9' - '0') + 1 + len(".") + len("/") + len("_") + len("-")]*trie
 	value  []byte
 }
@@ -50,6 +52,9 @@ func trieIndex(r byte) int {
 }
 
 func (t *trie) set(key, value []byte) (prev []byte, err error) {
+        t.mu.Lock()
+        defer t.mu.Unlock()
+
 	ni := t
 	for i := range key {
 		r := key[i]
@@ -77,6 +82,9 @@ func (t *trie) set(key, value []byte) (prev []byte, err error) {
 }
 
 func (t *trie) longestPrefix(key []byte) (ni *trie, i int) {
+        t.mu.RLock()
+        defer t.mu.RUnlock()
+
 	ni = t
 	for i = 0; i < len(key) && ni != nil; i++ {
 		r := key[i]
@@ -94,6 +102,9 @@ func (t *trie) longestPrefix(key []byte) (ni *trie, i int) {
 }
 
 func (t *trie) get(key []byte) ([]byte, error) {
+        t.mu.RLock()
+        defer t.mu.RUnlock()
+
 	ni, i := t.longestPrefix(key)
 	if i != len(key) {
 		return nil, errNoMatch

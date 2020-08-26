@@ -3,10 +3,14 @@ package anycompress
 import (
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
@@ -185,4 +189,121 @@ func retrieveTypeURLs(msgs ...proto.Message) (typeURLs []string) {
 	}
 	sort.Strings(typeURLs)
 	return
+}
+
+var (
+	anyGarfield, _ = mustAny(&testdata.Cat{
+		Moniker: "Garfield",
+		Lives:   9,
+	})
+	any, anyAsValuePre = mustAny(anyGarfield)
+	anyAsValue         = bytes.Repeat(anyAsValuePre, 100)
+
+	typesRegistry = []string{anyGarfield.TypeUrl, any.TypeUrl}
+)
+
+func BenchmarkAnyCompressGoLevelDB(b *testing.B) {
+	benchmarkIt(b, func() dbm.DB {
+		dir := fmt.Sprintf("bench-any-golevel-%d", time.Now().Unix())
+		os.RemoveAll(dir)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			b.Fatal(err)
+		}
+
+		db, err := New("any", dbm.GoLevelDBBackend, dir, typesRegistry)
+		if err != nil {
+			b.Fatal(err)
+		}
+		fn := func() {
+			os.RemoveAll(dir)
+		}
+		return &closeOnceDB{DB: db, fn: fn}
+
+	})
+}
+
+func BenchmarkGoLevelDB(b *testing.B) {
+	benchmarkIt(b, func() dbm.DB {
+		dir := fmt.Sprintf("bench-plain-golevel-%d", time.Now().Unix())
+		os.RemoveAll(dir)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			b.Fatal(err)
+		}
+
+		db, err := dbm.NewDB("golvl", dbm.GoLevelDBBackend, dir)
+		if err != nil {
+			b.Fatal(err)
+		}
+		fn := func() {
+			os.RemoveAll(dir)
+		}
+		return &closeOnceDB{DB: db, fn: fn}
+	})
+}
+
+type closeOnceDB struct {
+	dbm.DB
+	closeOnce sync.Once
+	fn        func()
+}
+
+func (cod *closeOnceDB) Close() (err error) {
+	cod.closeOnce.Do(func() {
+		err = cod.DB.Close()
+		cod.fn()
+	})
+	return err
+}
+
+func benchmarkIt(b *testing.B, newDB func() dbm.DB) {
+	db := newDB()
+	defer db.Close()
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if i%1000 == 0 {
+			db.Close()
+			db = newDB()
+		}
+		key := []byte{byte(i), byte(i << 8), byte(i << 16), byte(i << 24)}
+		db.Set(key, anyAsValue)
+	}
+}
+
+func BenchmarkFindClosestMatch(b *testing.B) {
+	anyGarfield, _ := mustAny(&testdata.Cat{
+		Moniker: "Garfield",
+		Lives:   9,
+	})
+	any, _ := mustAny(anyGarfield)
+
+	typesRegistry := []string{anyGarfield.TypeUrl, any.TypeUrl}
+
+	db, err := New("inmem", dbm.MemDBBackend, "", typesRegistry)
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer db.Close()
+	cdb := db.(*compressDB)
+
+	subjectURL := []byte(any.TypeUrl)
+	mismatch := []byte("this one that one / those ones")
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		gb, gi, err := cdb.findClosestTypeURL(subjectURL)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if g, w := gi, 1; g != w {
+			b.Fatalf("TypeURLIndex mismatch: got %d want %d", g, w)
+		}
+		if g, w := gb, subjectURL; !bytes.Equal(g, w) {
+			b.Fatalf("TypeURL mismatch\nGot:  %q\nWant: %q", g, w)
+		}
+		gb, gi, err = cdb.findClosestTypeURL(mismatch)
+	}
 }

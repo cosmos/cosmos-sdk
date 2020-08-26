@@ -414,7 +414,7 @@ func (m *Any) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowAny
+                                    return fmt.Errorf("field %d: %w", fieldNum, ErrIntOverflowAny)
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -446,7 +446,7 @@ func (m *Any) Unmarshal(dAtA []byte) error {
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowAny
+                                    return fmt.Errorf("field %d: %w", fieldNum, ErrIntOverflowAny)
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -579,6 +579,6 @@ func skipAny(dAtA []byte) (n int, err error) {
 
 var (
 	ErrInvalidLengthAny        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowAny          = fmt.Errorf("proto: integer overflow")
+	ErrIntOverflowAny          = fmt.Errorf("proto: integer overflow any")
 	ErrUnexpectedEndOfGroupAny = fmt.Errorf("proto: unexpected end of group")
 )

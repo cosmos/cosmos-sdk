@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -205,7 +206,7 @@ func genRandBlocks(n int) (blocks []*tmtypes.Block) {
 	return
 }
 
-const iters = 2
+const iters = 40
 
 var registry = retrieveTypeURLs(
 	new(tmtypes.Block),
@@ -221,14 +222,52 @@ var registry = retrieveTypeURLs(
 	new(tmtypes.SignedHeader), new(tmtypes.BlockMeta),
 )
 
+type kv struct {
+	key   []byte
+	value []byte
+}
+
 func main() {
 	nBlocks := flag.Int("n", 100, "the number of blocks to create")
+	nType := flag.String("type", "rocksdb", "The kind of database to use, options are: -goleveldb, -rocksdb, -boltdb")
 	flag.Parse()
+
+	start := time.Now()
+	blocks := genRandBlocks(*nBlocks)
+
+	var kvps []*kv
+	for iter := 0; iter < iters; iter++ {
+		for i, block := range blocks {
+			values := map[string]proto.Message{
+				"block":       block,
+				"header":      &block.Header,
+				"evidence":    &block.Header,
+				"last_commit": block.LastCommit,
+			}
+
+			for kind, msg := range values {
+				key := []byte(fmt.Sprintf("%s-%d-%d", kind, iter, i))
+				_, anyBlob := mustAny(msg)
+				kvps = append(kvps, &kv{key, anyBlob})
+			}
+		}
+	}
+
+	runtime.GC()
+
+	println("time to generate ", len(kvps), "key-value pairs:", time.Since(start).String())
 
 	shutdownCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	go func() {
 		for {
+			select {
+			case <-shutdownCtx.Done():
+				return
+			case <-time.After(20 * time.Second):
+			}
+
 			filename := fmt.Sprintf("cpu-%d", time.Now().Unix())
 			cpuF, err := os.Create(filename)
 			if err != nil {
@@ -237,87 +276,64 @@ func main() {
 			if err := pprof.StartCPUProfile(cpuF); err != nil {
 				panic(err)
 			}
-                        <-time.After(40 * time.Second)
+			<-time.After(30 * time.Second)
 			pprof.StopCPUProfile()
 			cpuF.Close()
-                        println("Wrote CPUProfile to disk", filename)
-
-			select {
-			case <-shutdownCtx.Done():
-				return
-			case <-time.After(20 * time.Second):
-			}
+			println("Wrote CPUProfile to disk", filename)
 		}
 	}()
 
-        go func() {
+	go func() {
 		for {
-			filename := fmt.Sprintf("mem-%d", time.Now().Unix())
-			memF, err := os.Create(filename)
-			if err != nil {
-				panic(err)
-			}
-                        runtime.GC()
-			if err := pprof.WriteHeapProfile(memF); err != nil {
-				panic(err)
-			}
-			memF.Close()
-                        println("Wrote MemoryProfile to disk", filename)
-
 			select {
 			case <-shutdownCtx.Done():
 				return
 			case <-time.After(45 * time.Second):
 			}
 
+			filename := fmt.Sprintf("mem-%d", time.Now().Unix())
+			memF, err := os.Create(filename)
+			if err != nil {
+				panic(err)
+			}
+			runtime.GC()
+			if err := pprof.WriteHeapProfile(memF); err != nil {
+				panic(err)
+			}
+			memF.Close()
+			println("Wrote MemoryProfile to disk", filename)
 		}
 	}()
 
-
-	var wg sync.WaitGroup
-	wg.Add(3)
-
-	start := time.Now()
-	blocks := genRandBlocks(*nBlocks)
-	println("time to generate ", len(blocks), "blocks:", time.Since(start).String())
-
-	go CompresseDBVsGoLevelDB(&wg, blocks)
-	go CompresseDBVsBoltDB(&wg, blocks)
-	go CompresseDBVsRocksDB(&wg, blocks)
-	wg.Wait()
-
-	memF, err := os.Create("profile.mem")
-	if err != nil {
-		panic(err)
+	switch *nType {
+	case "rocksdb":
+		CompresseDBVsRocksDB(kvps)
+	case "goleveldb":
+		CompresseDBVsGoLevelDB(kvps)
+	case "boltdb":
+		CompresseDBVsBoltDB(kvps)
+	default:
+		log.Fatalf("Unknown database type: %q", *nType)
 	}
-	defer memF.Close()
-
-	if err := pprof.WriteHeapProfile(memF); err != nil {
-		panic(err)
-	}
-
 }
 
-func CompresseDBVsGoLevelDB(wg *sync.WaitGroup, blocks []*tmtypes.Block) {
-	defer wg.Done()
-	_, _ = compresseDBVsNativeDB(dbm.GoLevelDBBackend, blocks)
+func CompresseDBVsGoLevelDB(kvps []*kv) {
+	_, _ = compresseDBVsNativeDB(dbm.GoLevelDBBackend, kvps)
 }
 
-func CompresseDBVsBoltDB(wg *sync.WaitGroup, blocks []*tmtypes.Block) {
-	defer wg.Done()
-	return
-	_, _ = compresseDBVsNativeDB(dbm.BoltDBBackend, blocks)
+func CompresseDBVsBoltDB(kvps []*kv) {
+	_, _ = compresseDBVsNativeDB(dbm.BoltDBBackend, kvps)
 }
 
-func CompresseDBVsRocksDB(wg *sync.WaitGroup, blocks []*tmtypes.Block) {
-	defer wg.Done()
-	_, _ = compresseDBVsNativeDB(dbm.RocksDBBackend, blocks)
+func CompresseDBVsRocksDB(kvps []*kv) {
+	_, _ = compresseDBVsNativeDB(dbm.RocksDBBackend, kvps)
 }
 
-func compresseDBVsNativeDB(backend dbm.BackendType, blocks []*tmtypes.Block) (_, _ dbm.DB) {
+func compresseDBVsNativeDB(backend dbm.BackendType, kvps []*kv) (_, _ dbm.DB) {
 	startTime := time.Now()
 
 	dir := "./dbdir-" + string(backend)
+	os.RemoveAll(dir)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		panic(err)
 	}
@@ -331,26 +347,23 @@ func compresseDBVsNativeDB(backend dbm.BackendType, blocks []*tmtypes.Block) (_,
 		panic(err)
 	}
 
-	type kv struct {
-		key   []byte
-		value []byte
-	}
-	acCh := make(chan *kv, len(blocks)*4*iters)
-	nCh := make(chan *kv, len(blocks)*4*iters)
+        n := 200
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var compressSize int64
+	var compressTime time.Duration
 	go func() {
-		defer wg.Done()
-		i := 0
-		for kvi := range acCh {
-			i++
-			if i%100 == 0 {
-				anyCompDB.SetSync([]byte("a"), []byte("b"))
+		defer func() {
+			wg.Done()
+			compressTime = time.Since(startTime)
+		}()
+		for i := 0; i < n; i++ {
+			for _, kvi := range kvps {
+				anyCompDB.Set(kvi.key, kvi.value)
 			}
-			anyCompDB.Set(kvi.key, kvi.value)
 		}
+		anyCompDB.SetSync([]byte("a"), []byte("b"))
 		var err error
 		anyCompDB.Close()
 		compressSize, err = walkAndAddFileSizes(filepath.Join(dir, "compress-db") + "*")
@@ -358,17 +371,20 @@ func compresseDBVsNativeDB(backend dbm.BackendType, blocks []*tmtypes.Block) (_,
 			panic(err)
 		}
 	}()
+
 	var nativeSize int64
+	var nativeTime time.Duration
 	go func() {
-		defer wg.Done()
-		i := 0
-		for kvi := range nCh {
-			nativeDB.Set(kvi.key, kvi.value)
-			i++
-			if i%100 == 0 {
-				nativeDB.SetSync([]byte("a"), []byte("b"))
+		defer func() {
+			wg.Done()
+			nativeTime = time.Since(startTime)
+		}()
+		for i := 0; i < n; i++ {
+			for _, kvi := range kvps {
+				nativeDB.Set(kvi.key, kvi.value)
 			}
 		}
+		nativeDB.SetSync([]byte("xa"), []byte("xb"))
 		var err error
 		nativeDB.Close()
 		nativeSize, err = walkAndAddFileSizes(filepath.Join(dir, "native-db") + "*")
@@ -377,31 +393,11 @@ func compresseDBVsNativeDB(backend dbm.BackendType, blocks []*tmtypes.Block) (_,
 		}
 	}()
 
-	for iter := 0; iter < iters; iter++ {
-		for i, block := range blocks {
-			values := map[string]proto.Message{
-				"block":       block,
-				"header":      &block.Header,
-				"evidence":    &block.Header,
-				"last_commit": block.LastCommit,
-			}
-
-			for kind, msg := range values {
-				key := []byte(fmt.Sprintf("%s-%d-%d", kind, iter, i))
-				_, anyBlob := mustAny(msg)
-				kvi := &kv{key, anyBlob}
-				acCh <- kvi
-				nCh <- kvi
-			}
-		}
-	}
-	close(acCh)
-	close(nCh)
 	wg.Wait()
 
 	savings := 100 * float64(nativeSize-compressSize) / float64(nativeSize)
-	fmt.Printf("%s savings: %.3f%%\nOriginal:      %s (%dB)\nAnyCompressed: %s (%dB)\nTimeSpent: %s\n\n",
-		backend, savings, mostReadable(nativeSize), nativeSize, mostReadable(compressSize), compressSize,
+	fmt.Printf("%s savings: %.3f%%\nOriginal:      %s (%dB) - %s\nAnyCompressed: %s (%dB) - %s\nTimeSpent: %s\n\n",
+		backend, savings, mostReadable(nativeSize), nativeSize, nativeTime, mostReadable(compressSize), compressSize, compressTime,
 		time.Since(startTime))
 
 	return anyCompDB, nativeDB
@@ -434,16 +430,16 @@ func mostReadable(size int64) string {
 		return fmt.Sprintf("%dB", size)
 	}
 	if size < 1<<20 {
-		return fmt.Sprintf("%dKiB", size>>10)
+		return fmt.Sprintf("%3fKiB", float64(size)/float64(1<<10))
 	}
 	if size < 1<<30 {
-		return fmt.Sprintf("%dMiB", size>>20)
+		return fmt.Sprintf("%.3fMiB", float64(size)/float64(1<<20))
 	}
 	if size < 1<<40 {
-		return fmt.Sprintf("%dGiB", size>>30)
+		return fmt.Sprintf("%.3fGiB", float64(size)/float64(1<<30))
 	}
 	if size < 1<<50 {
-		return fmt.Sprintf("%dTiB", size>>40)
+		return fmt.Sprintf("%3.fTiB", float64(size)/float64(1<<40))
 	}
-	return fmt.Sprintf("%dPiB", size>>50)
+	return fmt.Sprintf("%.3fPiB", float64(size)/float64(1<<50))
 }

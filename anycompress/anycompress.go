@@ -22,7 +22,6 @@ package anycompress
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	dbm "github.com/tendermint/tm-db"
@@ -75,25 +74,42 @@ var _ dbm.DB = (*compressDB)(nil)
 var serializeMagic = []byte("\\\xfe")
 
 func (cdb *compressDB) Set(key, value []byte) error {
-	indices, err := cdb.potentialIndicesForAny(value)
-	if errors.Is(err, errNoMatch) {
+	if bytes.IndexByte(value, '/') == -1 {
 		return cdb.DB.Set(key, value)
 	}
-	if err != nil {
-		return err
-	}
 
-	replaceBuf := make([]byte, binary.MaxVarintLen64)
-	for _, typeURL := range indices {
+	replace := make([]byte, len(serializeMagic)+binary.MaxVarintLen64)
+	ns := copy(replace, serializeMagic)
+
+	for i := 0; i < len(value); {
+		index := bytes.IndexByte(value[i:], '/')
+		if index < 0 {
+			break
+		}
+
+		// Otherwise plausibly could be a match.
+		idx := index
+		typeURL, index, rerr := cdb.findClosestTypeURL(value[index:])
+		if rerr != nil {
+			return cdb.DB.Set(key, value)
+		}
+		if index == -1 || len(typeURL) < minTypeURLLen {
+			i = idx + 1
+			continue
+		}
+
 		registryIndex, ok := cdb.typesRegistry[string(typeURL)]
 		if !ok {
-			return fmt.Errorf("no registry index for typeURL %q", typeURL)
+			// Unfortunately the typeURL was not present in the types registry.
+			i = index + len(typeURL)
+			continue
 		}
-		n := binary.PutVarint(replaceBuf, int64(registryIndex))
-		replace := make([]byte, len(serializeMagic)+n)
-		ni := copy(replace, serializeMagic)
-		copy(replace[ni:], replaceBuf[:n])
-		value = bytes.ReplaceAll(value, typeURL, replace)
+
+		// We've found a match, so find and replace all matches.
+		nj := binary.PutVarint(replace[ns:], int64(registryIndex))
+		value = bytes.ReplaceAll(value, typeURL, replace[:ns+nj])
+		// By this point, we are replacing all matches AT or AFTER index.
+		i = index + ns + nj
 	}
 	return cdb.DB.Set(key, value)
 }
@@ -171,36 +187,6 @@ func (cdb *compressDB) ReverseIterator(start, end []byte) (dbm.Iterator, error) 
 		return ri, err
 	}
 	return &unfurlingIterator{Iterator: ri, cdb: cdb}, nil
-}
-
-func (cdb *compressDB) potentialIndicesForAny(b []byte) (indices [][]byte, err error) {
-	defer func() {
-		if len(indices) > 0 && errors.Is(err, errNoMatch) {
-			err = nil
-		}
-	}()
-        indices = make([][]byte, 0, 100)
-	for i := 0; i < len(b); {
-		index := bytes.IndexByte(b[i:], '/')
-		if index < 0 {
-			return
-		}
-
-		// Otherwise plausibly could be a match.
-		typeURL, index, rerr := cdb.findClosestTypeURL(b[index:])
-		if rerr != nil {
-			err = rerr
-			return
-		}
-		if index == -1 || len(typeURL) < minTypeURLLen {
-			i++
-			continue
-		}
-
-		indices = append(indices, typeURL)
-		i = index + len(typeURL)
-	}
-	return
 }
 
 func (cdb *compressDB) findClosestTypeURL(b []byte) ([]byte, int, error) {

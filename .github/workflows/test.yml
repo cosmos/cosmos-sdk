@@ -23,7 +23,7 @@ jobs:
         id: git_diff
         with:
           PREFIX_FILTER: |
-              cosmovisor
+            cosmovisor
           SUFFIX_FILTER: |
             .go
             .mod
@@ -63,6 +63,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:

@@ -123,8 +123,8 @@ func TestSetLoader(t *testing.T) {
 
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			capKey := sdk.NewKVStoreKey("main")
-			app.MountStores(0, capKey)
-			app.MountStores(0, sdk.NewKVStoreKey(tc.loadStoreKey))
+			app.MountStores(capKey)
+			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
 

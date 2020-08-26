@@ -26,15 +26,16 @@ const (
 )
 
 var (
-	_ types.KVStore       = (*Store)(nil)
-	_ types.CommitStore   = (*Store)(nil)
-	_ types.CommitKVStore = (*Store)(nil)
-	_ types.Queryable     = (*Store)(nil)
+	_ types.KVStore          = (*Store)(nil)
+	_ types.CommitStore      = (*Store)(nil)
+	_ types.CommitKVStore    = (*Store)(nil)
+	_ types.Queryable        = (*Store)(nil)
+	_ types.StoreWithVersion = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree Tree
+	tree ImmutableTree
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
@@ -205,8 +206,21 @@ func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(iTree, start, end, false)
 }
 
+// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+// starting a new chain at an arbitrary height.
+func (st *Store) SetInitialVersion(version uint64) error {
+	mutableTree, ok := st.tree.(MutableTree)
+	if !ok {
+		return fmt.Errorf("cannot set initial version on an immutable tree")
+	}
+
+	mutableTree.SetInitialVersion(version)
+
+	return nil
+}
+
 // Handle gatest the latest height, if height is 0
-func getHeight(tree Tree, req abci.RequestQuery) int64 {
+func getHeight(tree ImmutableTree, req abci.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
 		latest := tree.Version()

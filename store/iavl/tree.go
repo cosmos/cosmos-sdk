@@ -7,16 +7,16 @@ import (
 )
 
 var (
-	_ Tree = (*immutableTree)(nil)
-	_ Tree = (*iavl.MutableTree)(nil)
+	_ ImmutableTree = (*immutableTree)(nil)
+	_ MutableTree   = (*iavl.MutableTree)(nil)
 )
 
 type (
-	// Tree defines an interface that both mutable and immutable IAVL trees
+	// ImmutableTree defines an interface that immutable IAVL trees
 	// must implement. For mutable IAVL trees, the interface is directly
 	// implemented by an iavl.MutableTree. For an immutable IAVL tree, a wrapper
 	// must be made.
-	Tree interface {
+	ImmutableTree interface {
 		Has(key []byte) bool
 		Get(key []byte) (index int64, value []byte)
 		Set(key, value []byte) bool
@@ -30,6 +30,13 @@ type (
 		GetVersioned(key []byte, version int64) (int64, []byte)
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
+	}
+
+	// MutableTree defines an interface that mutable IAVL trees
+	// must implement.
+	MutableTree interface {
+		ImmutableTree
+		SetInitialVersion(version uint64)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree

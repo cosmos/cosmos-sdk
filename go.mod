@@ -11,7 +11,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/confio/ics23/go v0.0.0-20200804135932-65ad804e8539
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
-	github.com/cosmos/iavl v0.15.0-rc2
+	github.com/cosmos/iavl v0.15.0-rc2.0.20200826144708-9ea987bad050
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/gateway v1.1.0

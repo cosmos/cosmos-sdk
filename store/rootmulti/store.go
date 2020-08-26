@@ -503,6 +503,23 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	return res
 }
 
+// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+// starting a new chain at an arbitrary height.
+func (rs *Store) SetInitialVersion(version uint64) error {
+	// Loop through all the stores, if it's a KV store, then set initial
+	// version on it.
+	for _, commitKVStore := range rs.stores {
+		if storeWithVersion, ok := commitKVStore.(types.StoreWithVersion); ok {
+			err := storeWithVersion.SetInitialVersion(version)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /

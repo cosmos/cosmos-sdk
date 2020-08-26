@@ -87,7 +87,7 @@ func TestSimappInitialHeight(t *testing.T) {
 	app.Commit()
 
 	// Check that initial height is taken into account.
-	require.Equal(t, 4, app.LastBlockHeight())
+	require.Equal(t, int64(4), app.LastBlockHeight())
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, client.Context, *server.Context) {

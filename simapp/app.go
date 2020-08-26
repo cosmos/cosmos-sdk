@@ -417,17 +417,6 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	// If we get a non-null initial height from ABCI InitChain, then we mount
-	// the stores (again) at that height.
-	if req.InitialHeight != 0 {
-		app.MountKVStores(app.keys)
-	}
-
-	err := app.LoadLatestVersion()
-	if err != nil {
-		tmos.Exit(err.Error())
-	}
-
 	var genesisState GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

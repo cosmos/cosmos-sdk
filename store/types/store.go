@@ -165,6 +165,10 @@ type CommitMultiStore interface {
 	// Set an inter-block (persistent) cache that maintains a mapping from
 	// StoreKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
+
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version uint64) error
 }
 
 //---------subsp-------------------------------
@@ -393,4 +397,11 @@ type MultiStorePersistentCache interface {
 
 	// Reset the entire set of internal caches.
 	Reset()
+}
+
+// StoreWithVersion is a store that has versions.
+type StoreWithVersion interface {
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version uint64) error
 }

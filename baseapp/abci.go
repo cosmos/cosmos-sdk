@@ -25,6 +25,13 @@ import (
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	initHeader := tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 
+	if req.InitialHeight > 0 {
+		err := app.cms.SetInitialVersion(uint64(req.InitialHeight))
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)

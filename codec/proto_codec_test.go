@@ -122,26 +122,6 @@ func TestProtoCodec(t *testing.T) {
 	}
 }
 
-func TestProtoCodecMarshalAnyNonProtoErrors(t *testing.T) {
-	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	input := "this one that one"
-	_, err := cdc.MarshalJSON(input)
-	require.Error(t, err)
-	require.Equal(t, err, errors.New("cannot protobuf JSON encode unsupported type: string"))
-
-	require.Panics(t, func() { cdc.MustMarshalJSON(input) })
-}
-
-func TestProtoCodecUnmarshalAnyNonProtoErrors(t *testing.T) {
-	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	recv := new(int)
-	err := cdc.UnmarshalJSON([]byte("foo"), recv)
-	require.Error(t, err)
-	require.Equal(t, err, errors.New("cannot protobuf JSON decode unsupported type: *int"))
-}
-
 type lyingProtoMarshaler struct {
 	codec.ProtoMarshaler
 	falseSize int

@@ -38,7 +38,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

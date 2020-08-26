@@ -33,7 +33,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 var (
 	amino = codec.New()
 
-	// ModuleCdc references the global x/staking module codec. Note, the codec should
+	// ModuleCdc references the global x/bank module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
 	// still used for that purpose.
 	//

@@ -25,7 +25,7 @@ func TestQueryAccount(t *testing.T) {
 	}
 
 	path := []string{types.QueryAccount}
-	querier := keep.NewQuerier(app.AccountKeeper, legacyQuerierCdc)
+	querier := keep.NewQuerier(app.AccountKeeper, legacyQuerierCdc.LegacyAmino)
 
 	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)
@@ -39,13 +39,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = legacyQuerierCdc.MustMarshalJSON(types.QueryAccountRequest{Address: []byte("")})
+	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: []byte("")})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := testdata.KeyTestPubAddr()
-	req.Data = legacyQuerierCdc.MustMarshalJSON(types.QueryAccountRequest{Address: addr})
+	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: addr})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
@@ -60,6 +60,6 @@ func TestQueryAccount(t *testing.T) {
 	require.NotNil(t, res)
 
 	var account types.AccountI
-	err2 := legacyQuerierCdc.UnmarshalJSON(res, &account)
+	err2 := legacyQuerierCdc.LegacyAmino.UnmarshalJSON(res, &account)
 	require.Nil(t, err2)
 }

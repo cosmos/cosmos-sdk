@@ -5,6 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -34,6 +35,9 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
+	if msg.ConsensusState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be nil")
+	}
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
 		return err
 	}
@@ -43,7 +47,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -72,7 +76,7 @@ func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, header *Header) *MsgUpdateClient {
 	return &MsgUpdateClient{
 		ClientId: id,
 		Header:   header,
@@ -91,6 +95,9 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
+	if msg.Header == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
+	}
 	if err := msg.Header.ValidateBasic(); err != nil {
 		return err
 	}
@@ -99,7 +106,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -119,7 +126,7 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
 	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
 }
 
@@ -146,7 +153,7 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitClientMisbehaviour message.
 func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
@@ -155,7 +162,7 @@ func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return &msg.Evidence
+	return msg.Evidence
 }
 
 func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {

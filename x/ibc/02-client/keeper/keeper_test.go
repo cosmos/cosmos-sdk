@@ -51,7 +51,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
 	consensusState *ibctmtypes.ConsensusState
-	header         ibctmtypes.Header
+	header         *ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	valSetHash     tmbytes.HexBytes
 	privVal        tmtypes.PrivValidator

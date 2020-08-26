@@ -38,7 +38,7 @@ func EvidenceSignBytes(sequence uint64, data []byte) []byte {
 // HeaderSignBytes returns the sign bytes for verification of misbehaviour.
 //
 // Format: {sequence}{header.newPubKey}
-func HeaderSignBytes(header Header) []byte {
+func HeaderSignBytes(header *Header) []byte {
 	return append(
 		sdk.Uint64ToBigEndian(header.Sequence),
 		header.GetPubKey().Bytes()...,

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -66,6 +67,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 }
 
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc-transfer module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+}
+
 // GetTxCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
@@ -110,7 +115,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler implements the AppModule interface
-func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 

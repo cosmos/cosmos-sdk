@@ -1,6 +1,8 @@
 package types
 
 import (
+	time "time"
+
 	ics23 "github.com/confio/ics23/go"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,9 +21,14 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
 func NewClientState(consensusState *ConsensusState) *ClientState {
+	var latestTimestamp time.Time
+	if consensusState != nil {
+		latestTimestamp = time.Unix(0, int64(consensusState.GetTimestamp()))
+	}
 	return &ClientState{
-		FrozenSequence: 0,
-		ConsensusState: consensusState,
+		FrozenSequence:  0,
+		ConsensusState:  consensusState,
+		LatestTimestamp: latestTimestamp,
 	}
 }
 
@@ -48,6 +55,16 @@ func (cs ClientState) IsFrozen() bool {
 // GetFrozenHeight returns the frozen sequence of the client.
 func (cs ClientState) GetFrozenHeight() uint64 {
 	return cs.FrozenSequence
+}
+
+//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
+func (cs ClientState) Unfreeze() error {
+	return nil
+}
+
+// GetLatestTimestamp returns latest block time (in nanoseconds).
+func (cs ClientState) GetLatestTimestamp() uint64 {
+	return uint64(cs.LatestTimestamp.UnixNano())
 }
 
 // GetProofSpecs returns nil proof specs since client state verification uses signatures.

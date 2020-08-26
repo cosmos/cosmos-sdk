@@ -39,10 +39,10 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header clientexported.Header, override bool,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	tmHeader, ok := header.(Header)
+	tmHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader, "expected type %T, got %T", Header{}, header,
+			clienttypes.ErrInvalidHeader, "expected type %T, got %T", &Header{}, header,
 		)
 	}
 
@@ -63,7 +63,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 }
 
 // checkTrustedHeader checks that consensus state matches trusted fields of Header
-func checkTrustedHeader(header Header, consState *ConsensusState) error {
+func checkTrustedHeader(header *Header, consState *ConsensusState) error {
 	if header.TrustedHeight != consState.Height {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
@@ -94,7 +94,7 @@ func checkTrustedHeader(header Header, consState *ConsensusState) error {
 // CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
 	clientState *ClientState, consState *ConsensusState,
-	header Header, currentTimestamp time.Time, override bool,
+	header *Header, currentTimestamp time.Time, override bool,
 ) error {
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -105,7 +105,7 @@ func checkValidity(
 		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
 	}
 
-	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(&header.SignedHeader)
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
 	if err != nil {
 		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
 	}
@@ -160,7 +160,7 @@ func checkValidity(
 }
 
 // update the consensus state from a new header
-func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
+func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	if header.GetHeight() > clientState.LatestHeight {
 		clientState.LatestHeight = header.GetHeight()
 		clientState.LatestTimestamp = header.GetTime()

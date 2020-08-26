@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	time "time"
+
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -66,6 +68,12 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 	}
 }
 
+func (suite *SoloMachineTestSuite) testClientState(frozenSequence uint64) *types.ClientState {
+	consensusState := suite.solomachine.ConsensusState()
+	latestTimestamp := time.Unix(0, int64(consensusState.GetTimestamp()))
+	return &types.ClientState{1, consensusState, latestTimestamp}
+}
+
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
 	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -112,7 +120,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -237,7 +245,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -358,7 +366,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -441,7 +449,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -521,7 +529,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -601,7 +609,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -680,7 +688,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,
@@ -760,7 +768,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			suite.testClientState(1),
 			prefix,
 			proof,
 			false,

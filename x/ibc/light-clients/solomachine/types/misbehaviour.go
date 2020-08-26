@@ -18,11 +18,11 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 
-	evidence, ok := misbehaviour.(Evidence)
+	evidence, ok := misbehaviour.(*Evidence)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
 			clienttypes.ErrInvalidClientType,
-			"evidence type %T, expected %T", misbehaviour, Evidence{},
+			"evidence type %T, expected %T", misbehaviour, &Evidence{},
 		)
 	}
 
@@ -42,7 +42,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // over two different messages at the same sequence.
 // NOTE: a check that the evidence message data are not equal is done by
 // evidence.ValidateBasic which is called by the 02-client keeper.
-func checkMisbehaviour(clientState ClientState, evidence Evidence) error {
+func checkMisbehaviour(clientState ClientState, evidence *Evidence) error {
 	pubKey := clientState.ConsensusState.GetPubKey()
 
 	data := EvidenceSignBytes(evidence.Sequence, evidence.SignatureOne.Data)

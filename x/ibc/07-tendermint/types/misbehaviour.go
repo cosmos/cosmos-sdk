@@ -32,9 +32,9 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
-	tmEvidence, ok := misbehaviour.(Evidence)
+	tmEvidence, ok := misbehaviour.(*Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, Evidence{})
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Evidence{})
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
@@ -103,7 +103,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // checkMisbehaviourHeader checks that a Header in Misbehaviour is valid evidence given
 // a trusted ConsensusState
 func checkMisbehaviourHeader(
-	clientState *ClientState, consState *ConsensusState, header Header, currentTimestamp time.Time,
+	clientState *ClientState, consState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) error {
 
 	tmTrustedValset, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)

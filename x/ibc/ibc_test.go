@@ -8,7 +8,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -44,10 +43,9 @@ var latestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 type IBCTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.LegacyAmino
 	ctx    sdk.Context
 	app    *simapp.SimApp
-	header ibctmtypes.Header
+	header *ibctmtypes.Header
 }
 
 func (suite *IBCTestSuite) SetupTest() {
@@ -65,7 +63,6 @@ func (suite *IBCTestSuite) SetupTest() {
 
 	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
-	suite.cdc = suite.app.LegacyAmino()
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }
 

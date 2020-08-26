@@ -63,6 +63,11 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 	return 0
 }
 
+//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
+func (cs ClientState) Unfreeze() error {
+	return nil
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
@@ -310,10 +315,5 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		)
 	}
 
-	return nil
-}
-
-//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
-func (cs ClientState) Unfreeze() error {
 	return nil
 }

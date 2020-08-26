@@ -21,38 +21,16 @@ var (
 	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	ClientID                                 string             `json:"client_id" yaml:"client_id"`
-	Header                                   Header             `json:"header" yaml:"header"`
-	TrustLevel                               Fraction           `json:"trust_level" yaml:"trust_level"`
-	TrustingPeriod                           time.Duration      `json:"trusting_period" yaml:"trusting_period"`
-	UnbondingPeriod                          time.Duration      `json:"unbonding_period" yaml:"unbonding_period"`
-	MaxClockDrift                            time.Duration      `json:"max_clock_drift" yaml:"max_clock_drift"`
-	ProofSpecs                               []*ics23.ProofSpec `json:"proof_specs" yaml:"proof_specs"`
-	Signer                                   sdk.AccAddress     `json:"address" yaml:"address"`
-	AllowGovernanceOverrideAfterExpire       bool               `json:"allow_governance_override_after_expiry" yaml:"allow_governance_override_after_expiry"`
-	AllowGovernanceOverrideAfterMisbehaviour bool               `json:"allow_governance_override_after_misbehaviour" yaml:"allow_governance_override_after_misbehaviour"`
-}
-
-// this is a constant to satisfy the linter
-const TODO = "TODO"
-
-// dummy implementation of proto.Message
-func (msg *MsgCreateClient) Reset()         {}
-func (msg *MsgCreateClient) String() string { return TODO }
-func (msg *MsgCreateClient) ProtoMessage()  {}
-
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
-	id string, header Header, trustLevel Fraction,
+	id string, header *Header, trustLevel Fraction,
 	trustingPeriod, unbondingPeriod, maxClockDrift time.Duration,
 	specs []*ics23.ProofSpec, allowGovernanceOverrideAfterExpiry bool,
 	allowGovernanceOverrideAfterMisbehaviour bool, signer sdk.AccAddress,
 ) *MsgCreateClient {
 
 	return &MsgCreateClient{
-		ClientID:                                 id,
+		ClientId:                                 id,
 		Header:                                   header,
 		TrustLevel:                               trustLevel,
 		TrustingPeriod:                           trustingPeriod,
@@ -60,7 +38,7 @@ func NewMsgCreateClient(
 		MaxClockDrift:                            maxClockDrift,
 		ProofSpecs:                               specs,
 		Signer:                                   signer,
-		AllowGovernanceOverrideAfterExpire:       allowGovernanceOverrideAfterExpiry,
+		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpiry,
 		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
 	}
 }
@@ -89,7 +67,8 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	if msg.Header.SignedHeader.Header == nil {
+
+	if msg.Header == nil || msg.Header.SignedHeader == nil || msg.Header.SignedHeader.Header == nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
 	}
 	// ValidateBasic of provided header with self-attested chain-id
@@ -111,12 +90,12 @@ func (msg MsgCreateClient) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
 		}
 	}
-	return host.ClientIdentifierValidator(msg.ClientID)
+	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgCreateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -126,7 +105,7 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 
 // GetClientID implements clientexported.MsgCreateClient
 func (msg MsgCreateClient) GetClientID() string {
-	return msg.ClientID
+	return msg.ClientId
 }
 
 // GetClientType implements clientexported.MsgCreateClient
@@ -150,26 +129,14 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header.GetHeight(), msg.Header.GetTime(), msg.ProofSpecs, msg.AllowGovernanceOverrideAfterExpire, msg.AllowGovernanceOverrideAfterMisbehaviour,
+		msg.Header.GetHeight(), msg.Header.GetTime(), msg.ProofSpecs, msg.AllowGovernanceOverrideAfterExpiry, msg.AllowGovernanceOverrideAfterMisbehaviour,
 	)
 }
 
-// MsgUpdateClient defines a message to update an IBC client
-type MsgUpdateClient struct {
-	ClientID string         `json:"client_id" yaml:"client_id"`
-	Header   Header         `json:"header" yaml:"header"`
-	Signer   sdk.AccAddress `json:"address" yaml:"address"`
-}
-
-// dummy implementation of proto.Message
-func (msg *MsgUpdateClient) Reset()         {}
-func (msg *MsgUpdateClient) String() string { return TODO }
-func (msg *MsgUpdateClient) ProtoMessage()  {}
-
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header Header, signer sdk.AccAddress) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, header *Header, signer sdk.AccAddress) *MsgUpdateClient {
 	return &MsgUpdateClient{
-		ClientID: id,
+		ClientId: id,
 		Header:   header,
 		Signer:   signer,
 	}
@@ -190,12 +157,19 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
-	return host.ClientIdentifierValidator(msg.ClientID)
+	if msg.Header == nil || msg.Header.SignedHeader == nil || msg.Header.Header == nil {
+		return sdkerrors.Wrap(ErrInvalidHeader, "header cannot be nil")
+	}
+	// ValidateBasic of provided header with self-attested chain-id
+	if err := msg.Header.ValidateBasic(msg.Header.Header.GetChainID()); err != nil {
+		return err
+	}
+	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgUpdateClient) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -205,7 +179,7 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 
 // GetClientID implements clientexported.MsgUpdateClient
 func (msg MsgUpdateClient) GetClientID() string {
-	return msg.ClientID
+	return msg.ClientId
 }
 
 // GetHeader implements clientexported.MsgUpdateClient
@@ -213,22 +187,10 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 	return msg.Header
 }
 
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// Evidence for client misbehaviour.
-type MsgSubmitClientMisbehaviour struct {
-	Evidence  evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress            `json:"submitter" yaml:"submitter"`
-}
-
-// dummy implementation of proto.Message
-func (msg MsgSubmitClientMisbehaviour) Reset()         {}
-func (msg MsgSubmitClientMisbehaviour) String() string { return TODO }
-func (msg MsgSubmitClientMisbehaviour) ProtoMessage()  {}
-
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
-func NewMsgSubmitClientMisbehaviour(e evidenceexported.Evidence, s sdk.AccAddress) MsgSubmitClientMisbehaviour {
-	return MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
+func NewMsgSubmitClientMisbehaviour(e *Evidence, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
+	return &MsgSubmitClientMisbehaviour{Evidence: e, Submitter: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -257,7 +219,7 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 // GetSignBytes returns the raw bytes a signer is expected to sign when submitting
 // a MsgSubmitClientMisbehaviour message.
 func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.

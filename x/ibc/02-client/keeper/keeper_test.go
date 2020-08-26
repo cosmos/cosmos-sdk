@@ -21,6 +21,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -43,11 +44,16 @@ var latestTimestamp = time.Date(2020, 01, 01, 20, 34, 58, 651387237, time.UTC)
 type KeeperTestSuite struct {
 	suite.Suite
 
+	coordinator *ibctesting.Coordinator
+
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
+
 	cdc            codec.Marshaler
 	ctx            sdk.Context
 	keeper         *keeper.Keeper
 	consensusState *ibctmtypes.ConsensusState
-	header         ibctmtypes.Header
+	header         *ibctmtypes.Header
 	valSet         *tmtypes.ValidatorSet
 	valSetHash     tmbytes.HexBytes
 	privVal        tmtypes.PrivValidator
@@ -58,6 +64,11 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+
 	isCheckTx := false
 	suite.now = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	suite.past = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -209,10 +220,9 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	}
 
 	// add localhost client
-	// TODO: uncomment after simapp is migrated to proto
-	//	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-	//	suite.Require().True(found)
-	// expClients = append(expClients, localHostClient)
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expClients = append(expClients, localHostClient)
 
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
@@ -237,10 +247,9 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	}
 
 	// add localhost client
-	// TODO: uncomment after simapp is migrated to proto
-	// localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-	// suite.Require().True(found)
-	// expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	suite.Require().True(found)
+	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
 
 	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
 

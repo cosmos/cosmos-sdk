@@ -37,7 +37,7 @@ type ProposalHandlerTestSuite struct {
 	ctx sdk.Context
 	app *simapp.SimApp
 
-	header         ibctmtypes.Header
+	header         *ibctmtypes.Header
 	consensusState *ibctmtypes.ConsensusState
 }
 
@@ -64,7 +64,7 @@ func TestProposalHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(ProposalHandlerTestSuite))
 }
 
-func testClientUpdateProposal(clientID string, header ibctmtypes.Header) (*clienttypes.ClientUpdateProposal, error) {
+func testClientUpdateProposal(clientID string, header *ibctmtypes.Header) (*clienttypes.ClientUpdateProposal, error) {
 	return clienttypes.NewClientUpdateProposal("Test", "description", clientID, header)
 }
 
@@ -133,7 +133,8 @@ func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 			"Test7 should fail for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
 			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, true, 0), false,
 		},
-		{ // For this test, the client update proposal will pass and we expect the client
+		{
+			// For this test, the client update proposal will pass and we expect the client
 			// to be updated with the new header, (suite.header), even tough the client is expired
 			// and the new header as well
 			"Test8 should pass for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",

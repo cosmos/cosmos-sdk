@@ -68,8 +68,8 @@ type TestChain struct {
 
 	App           *simapp.SimApp
 	ChainID       string
-	LastHeader    ibctmtypes.Header // header for last block height committed
-	CurrentHeader tmproto.Header    // header for current block height
+	LastHeader    *ibctmtypes.Header // header for last block height committed
+	CurrentHeader tmproto.Header     // header for current block height
 	QueryServer   types.QueryServer
 	TxConfig      client.TxConfig
 	Codec         codec.BinaryMarshaler
@@ -409,7 +409,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client.
-func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
+func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
 	vsetHash := chain.Vals.Hash()
 	tmHeader := tmtypes.Header{
 		Version:            version.Consensus{Block: 2, App: 2},
@@ -436,7 +436,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
 	require.NoError(chain.t, err)
 
-	signedHeader := tmproto.SignedHeader{
+	signedHeader := &tmproto.SignedHeader{
 		Header: tmHeader.ToProto(),
 		Commit: commit.ToProto(),
 	}
@@ -448,7 +448,7 @@ func (chain *TestChain) CreateTMClientHeader() ibctmtypes.Header {
 
 	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
 	// The relayer is responsible for querying client and injecting appropriate trusted fields.
-	return ibctmtypes.Header{
+	return &ibctmtypes.Header{
 		SignedHeader: signedHeader,
 		ValidatorSet: valSet,
 	}

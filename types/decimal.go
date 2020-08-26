@@ -368,8 +368,7 @@ func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	rootInt := NewIntFromUint64(root)
 	guess, delta := OneDec(), OneDec()
 
-	iter := 0
-	for delta.Abs().GT(SmallestDec()) && iter < 100 {
+	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < 100; iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = SmallestDec()

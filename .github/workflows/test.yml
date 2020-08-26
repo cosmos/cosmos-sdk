@@ -206,7 +206,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
   liveness-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - uses: technote-space/get-diff-action@v1

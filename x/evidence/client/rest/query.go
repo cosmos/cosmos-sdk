@@ -77,7 +77,7 @@ func queryAllEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryAllEvidenceParams(page, limit)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal query params: %s", err))
 			return

@@ -115,7 +115,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler implements the AppModule interface
-func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 

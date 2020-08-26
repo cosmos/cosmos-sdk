@@ -540,7 +540,7 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 }
 
 // LegacyQuerierHandler mocks base method
-func (m *MockAppModule) LegacyQuerierHandler(codec.JSONMarshaler) types0.Querier {
+func (m *MockAppModule) LegacyQuerierHandler(*codec.LegacyAmino) types0.Querier {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LegacyQuerierHandler")
 	ret0, _ := ret[0].(types0.Querier)

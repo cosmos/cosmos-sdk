@@ -202,7 +202,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := clientCtx.LegacyAmino.UnmarshalJSON(contents, &m); err != nil {
+				if err := cdc.UnmarshalJSON(contents, &m); err != nil {
 					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}

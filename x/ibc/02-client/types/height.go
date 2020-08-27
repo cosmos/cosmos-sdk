@@ -58,11 +58,16 @@ func (h Height) EQ(other exported.Height) bool {
 	return h.Compare(other) == 0
 }
 
+// String returns a string representation of Height
+func (h Height) String() string {
+	return fmt.Sprintf("epoch-%d-height-%d", h.EpochNumber, h.EpochHeight)
+}
+
 // Decrement will return a decremented height from the given height. If this is not possible,
 // an error is returned
 // Decrement will return a new height with the EpochHeight decremented
 // If the EpochHeight is already at lowest value (1), then false success flag is returend
-func (h Height) Decrement() (decremented exported.Height, success bool) {
+func (h Height) Decrement() (decremented Height, success bool) {
 	if h.EpochHeight <= 1 {
 		return Height{}, false
 	}
@@ -72,7 +77,7 @@ func (h Height) Decrement() (decremented exported.Height, success bool) {
 // Increment will return an incremented height from the given height.
 // Increment will return a height with the same epoch number but an
 // incremented epoch height
-func (h Height) Increment() exported.Height {
+func (h Height) Increment() Height {
 	return NewHeight(h.EpochNumber, h.EpochHeight+1)
 }
 

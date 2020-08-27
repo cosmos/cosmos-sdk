@@ -31,6 +31,8 @@ message ClientConsensusStates {
 // In these cases, the epoch number is incremented so that height continues to be monitonically increasing
 // even as the EpochHeight gets reset
 message Height {
+  option (gogoproto.goproto_stringer) = false;
+
   // the epoch that the client is currently on
   uint64 epoch_number = 1 [(gogoproto.moretags) = "yaml:\"epoch_number\""];
   // the height within the given epoch

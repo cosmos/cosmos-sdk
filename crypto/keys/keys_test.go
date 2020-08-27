@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	// "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func TestPubKeyEquals(t *testing.T) {
@@ -88,6 +89,14 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"ed25519 pb equals",
 			ed25519PbPubKey,
+			&keys.Ed25519PubKey{
+				Key: ed25519PubKey,
+			},
+			true,
+		},
+		{
+			"tm ed25519 equals pb ed25519",
+			ed25519PubKey,
 			&keys.Ed25519PubKey{
 				Key: ed25519PubKey,
 			},

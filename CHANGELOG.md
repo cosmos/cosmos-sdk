@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
+* (client) [\#7048](https://github.com/cosmos/cosmos-sdk/issues/7048) Fix client `keys add` failure when generating mnemonic in interactive mode.
 
 ## [v0.39.1]
 

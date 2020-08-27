@@ -18,6 +18,7 @@ import (
 const (
 	invalidMnemonic = "invalid mnemonic\n"
 	validMnemonic   = "decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n"
+	password        = "password1!"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -85,13 +86,10 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	require.NoError(t, cmd.Execute())
 
-	// When in recovery mode
+	// In recovery mode
 	cmd.SetArgs([]string{
 		"keyname6",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
-		fmt.Sprintf("--%s=true", "recover"),
+		fmt.Sprintf("--%s=true", flagRecover),
 	})
 
 	mockIn.Reset(invalidMnemonic)
@@ -99,4 +97,19 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	mockIn.Reset(validMnemonic)
 	require.NoError(t, cmd.Execute())
+
+	// In interactive mode
+	cmd.SetArgs([]string{
+		"keyname7",
+		"-i",
+		fmt.Sprintf("--%s=false", flagRecover),
+	})
+
+	// set password and complete interactive mode successfully
+	mockIn.Reset("\n" + password + "\n" + password + "\n")
+	require.NoError(t, cmd.Execute())
+
+	// fail interactive key generation as passwords don't match
+	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
+	require.Error(t, cmd.Execute())
 }

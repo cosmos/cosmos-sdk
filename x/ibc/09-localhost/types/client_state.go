@@ -88,7 +88,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
-	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "cannot submit misbehaviour to localhost client")
+	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
 }
 
 // VerifyClientState verifies that the localhost client state is stored locally

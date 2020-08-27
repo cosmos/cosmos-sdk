@@ -40,7 +40,7 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	pruneHeights   []int64
-	initialVersion uint64
+	initialVersion int64
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -516,7 +516,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
-func (rs *Store) SetInitialVersion(version uint64) error {
+func (rs *Store) SetInitialVersion(version int64) error {
 	rs.initialVersion = version
 
 	// Loop through all the stores, if it's an IAVL store, then set initial

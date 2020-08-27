@@ -99,7 +99,7 @@ func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetInitialVersion(version uint64) error {
+func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }
 

@@ -208,13 +208,13 @@ func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
 
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
-func (st *Store) SetInitialVersion(version uint64) error {
+func (st *Store) SetInitialVersion(version int64) error {
 	mutableTree, ok := st.tree.(MutableTree)
 	if !ok {
 		return fmt.Errorf("cannot set initial version on an immutable tree")
 	}
 
-	mutableTree.SetInitialVersion(version)
+	mutableTree.SetInitialVersion(uint64(version))
 
 	return nil
 }

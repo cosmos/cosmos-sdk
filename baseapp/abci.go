@@ -26,7 +26,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	initHeader := tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 
 	if req.InitialHeight > 0 {
-		err := app.cms.SetInitialVersion(uint64(req.InitialHeight))
+		err := app.cms.SetInitialVersion(req.InitialHeight)
 		if err != nil {
 			panic(err)
 		}

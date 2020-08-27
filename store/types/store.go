@@ -168,7 +168,7 @@ type CommitMultiStore interface {
 
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
-	SetInitialVersion(version uint64) error
+	SetInitialVersion(version int64) error
 }
 
 //---------subsp-------------------------------
@@ -403,5 +403,5 @@ type MultiStorePersistentCache interface {
 type StoreWithVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
-	SetInitialVersion(version uint64) error
+	SetInitialVersion(version int64) error
 }

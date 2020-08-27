@@ -15,6 +15,12 @@ const (
 	TypeMsgSubmitMisbehaviour string = "submit_misbehaviour"
 )
 
+var (
+	_ sdk.Msg = &MsgCreateClient{}
+	_ sdk.Msg = &MsgUpdateClient{}
+	_ sdk.Msg = &MsgSubmitMisbehaviour{}
+)
+
 // NewMsgCreateClient creates a new MsgCreateClient instance
 func NewMsgCreateClient(
 	id string, clientState exported.ClientState, consensusState exported.ConsensusState, signer sdk.AccAddress,
@@ -112,7 +118,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Signer.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
 	}
-	header, err := UnpackConsensusState(msg.Header)
+	header, err := UnpackHeader(msg.Header)
 	if err != nil {
 		return err
 	}

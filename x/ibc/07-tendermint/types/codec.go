@@ -22,6 +22,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*evidenceexported.Evidence)(nil),
 		&Misbehaviour{},
 	)
+	registry.RegisterImplementations(
+		(*clientexported.Misbehaviour)(nil),
+		&Misbehaviour{},
+	)
 }
 
 var (

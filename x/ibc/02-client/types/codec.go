@@ -26,16 +26,14 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		"cosmos_sdk.ibc.v1.client.Header",
 		(*exported.Header)(nil),
 	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.client.Misbehaviour",
+		(*exported.Misbehaviour)(nil),
+	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateClient{},
-	)
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
 		&MsgUpdateClient{},
-	)
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
 		&MsgSubmitMisbehaviour{},
 	)
 }

@@ -85,6 +85,38 @@
           "Params": "UpgradeParams"
         }
       }
+    },
+    {
+      "url": "./ibc/channel/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCChannelParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/client/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCClientParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/connection/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCConnectionParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/transfer/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCTransferParams"
+        }
+      }
     }
   ]
 }

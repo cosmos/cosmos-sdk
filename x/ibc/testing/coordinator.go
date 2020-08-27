@@ -1,4 +1,4 @@
-package testing
+package ibctesting
 
 import (
 	"fmt"
@@ -45,15 +45,15 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 }
 
 // Setup constructs a TM client, connection, and channel on both chains provided. It will
-// fails if any error occurs. The clientID's, TestConnections, and TestChannels are returned
-// for both chains.
+// fail if any error occurs. The clientID's, TestConnections, and TestChannels are returned
+// for both chains. The channels created are connected to the ibc-transfer application.
 func (coord *Coordinator) Setup(
 	chainA, chainB *TestChain,
 ) (string, string, *TestConnection, *TestConnection, TestChannel, TestChannel) {
 	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, clientexported.Tendermint)
 
 	// channels can also be referenced through the returned connections
-	channelA, channelB := coord.CreateChannel(chainA, chainB, connA, connB, channeltypes.UNORDERED)
+	channelA, channelB := coord.CreateTransferChannels(chainA, chainB, connA, connB, channeltypes.UNORDERED)
 
 	return clientA, clientB, connA, connB, channelA, channelB
 }
@@ -164,16 +164,28 @@ func (coord *Coordinator) CreateConnection(
 	return connA, connB
 }
 
+// CreateTransferChannels constructs and executes channel handshake messages to create OPEN
+// ibc-transfer channels on chainA and chainB. The function expects the channels to be
+// successfully opened otherwise testing will fail.
+func (coord *Coordinator) CreateTransferChannels(
+	chainA, chainB *TestChain,
+	connA, connB *TestConnection,
+	order channeltypes.Order,
+) (TestChannel, TestChannel) {
+	return coord.CreateChannel(chainA, chainB, connA, connB, TransferPort, TransferPort, order)
+}
+
 // CreateChannel constructs and executes channel handshake messages in order to create
 // OPEN channels on chainA and chainB. The function expects the channels to be successfully
 // opened otherwise testing will fail.
 func (coord *Coordinator) CreateChannel(
 	chainA, chainB *TestChain,
 	connA, connB *TestConnection,
+	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel) {
 
-	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, order)
+	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, sourcePortID, counterpartyPortID, order)
 	require.NoError(coord.t, err)
 
 	err = coord.ChanOpenTry(chainB, chainA, channelB, channelA, connB, order)
@@ -207,6 +219,23 @@ func (coord *Coordinator) SendPacket(
 	)
 }
 
+// RecvPacket receives a channel packet on the counterparty chain and updates
+// the client on the source chain representing the counterparty.
+func (coord *Coordinator) RecvPacket(
+	source, counterparty *TestChain,
+	sourceClient string,
+	packet channeltypes.Packet,
+) error {
+	// get proof of packet commitment on source
+	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+	proof, proofHeight := source.QueryProof(packetKey)
+
+	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
+
+	// receive on counterparty and update source client
+	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
+}
+
 // PacketExecuted receives a packet through the channel keeper on the source chain and updates the
 // counterparty client for the source chain.
 func (coord *Coordinator) PacketExecuted(
@@ -226,6 +255,24 @@ func (coord *Coordinator) PacketExecuted(
 	)
 }
 
+// AcknowledgePacket acknowledges on the source chain the packet received on
+// the counterparty chain and updates the client on the counterparty representing
+// the source chain.
+// TODO: add a query for the acknowledgement by events
+// - https://github.com/cosmos/cosmos-sdk/issues/6509
+func (coord *Coordinator) AcknowledgePacket(
+	source, counterparty *TestChain,
+	counterpartyClient string,
+	packet channeltypes.Packet, ack []byte,
+) error {
+	// get proof of acknowledgement on counterparty
+	packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	proof, proofHeight := counterparty.QueryProof(packetKey)
+
+	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
+	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
+}
+
 // AcknowledgementExecuted deletes the packet commitment with the given
 // packet sequence since the acknowledgement has been verified.
 func (coord *Coordinator) AcknowledgementExecuted(
@@ -243,41 +290,6 @@ func (coord *Coordinator) AcknowledgementExecuted(
 		counterparty, source,
 		counterpartyClientID, clientexported.Tendermint,
 	)
-}
-
-// RecvPacket receives a channel packet on the counterparty chain and updates
-// the client on the source chain representing the counterparty.
-func (coord *Coordinator) RecvPacket(
-	source, counterparty *TestChain,
-	sourceClient string,
-	packet channeltypes.Packet,
-) error {
-	// get proof of packet commitment on source
-	packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	proof, proofHeight := source.QueryProof(packetKey)
-
-	recvMsg := channeltypes.NewMsgRecvPacket(packet, proof, proofHeight, counterparty.SenderAccount.GetAddress())
-
-	// receive on counterparty and update source client
-	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
-}
-
-// AcknowledgePacket acknowledges on the source chain the packet received on
-// the counterparty chain and updates the client on the counterparty representing
-// the source chain.
-// TODO: add a query for the acknowledgement by events
-// - https://github.com/cosmos/cosmos-sdk/issues/6509
-func (coord *Coordinator) AcknowledgePacket(
-	source, counterparty *TestChain,
-	counterpartyClient string,
-	packet channeltypes.Packet, ack []byte,
-) error {
-	// get proof of acknowledgement on counterparty
-	packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-	proof, proofHeight := counterparty.QueryProof(packetKey)
-
-	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
-	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
 }
 
 // RelayPacket receives a channel packet on counterparty, queries the ack
@@ -314,7 +326,7 @@ func (coord *Coordinator) SendMsg(source, counterparty *TestChain, counterpartyC
 // SendMsgs delivers the provided messages to the chain. The counterparty
 // client is updated with the new source consensus state.
 func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs []sdk.Msg) error {
-	if err := source.SendMsgs(msgs...); err != nil {
+	if err := source.sendMsgs(msgs...); err != nil {
 		return err
 	}
 
@@ -454,10 +466,11 @@ func (coord *Coordinator) ConnOpenConfirm(
 func (coord *Coordinator) ChanOpenInit(
 	source, counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
+	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel()
-	counterpartyChannel := counterpartyConnection.AddTestChannel()
+	sourceChannel := connection.AddTestChannel(sourcePortID)
+	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
 
 	// create port capability
 	source.CreatePortCapability(sourceChannel.PortID)

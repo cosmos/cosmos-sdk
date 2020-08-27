@@ -133,7 +133,7 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
-// Misbehaviour defines a specific consensus kind and an evidence
+// Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
 	evidenceexported.Evidence
 	ClientType() ClientType
@@ -147,11 +147,12 @@ type Header interface {
 	ValidateBasic() error
 }
 
-// message types for the IBC client
+// message and evidence types for the IBC client
 const (
 	TypeMsgCreateClient             string = "create_client"
 	TypeMsgUpdateClient             string = "update_client"
 	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
+	TypeEvidenceClientMisbehaviour  string = "client_misbehaviour"
 )
 
 // MsgCreateClient defines the msg interface that the

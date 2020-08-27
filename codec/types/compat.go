@@ -192,6 +192,7 @@ type ProtoJSONPacker struct {
 var _ AnyUnpacker = ProtoJSONPacker{}
 
 func (a ProtoJSONPacker) UnpackAny(any *Any, _ interface{}) error {
+	fmt.Println("UnpackAny")
 	if any == nil {
 		return nil
 	}

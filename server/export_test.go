@@ -22,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -110,7 +111,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := ExportCmd(
-		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (json.RawMessage, []tmtypes.GenesisValidator, int64, *abci.ConsensusParams, error) {
+		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (types.ExportedApp, error) {
 			return app.ExportAppStateAndValidators(true, []string{})
 		}, tempDir)
 

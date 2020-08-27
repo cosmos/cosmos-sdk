@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -52,7 +53,7 @@ func TestSimappInitialHeight(t *testing.T) {
 
 	// Create the export command.
 	cmd := server.ExportCmd(
-		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (json.RawMessage, []tmtypes.GenesisValidator, int64, *abci.ConsensusParams, error) {
+		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (servertypes.ExportedApp, error) {
 			return app.ExportAppStateAndValidators(true, []string{})
 		}, tempDir1)
 

@@ -64,7 +64,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 
-			appState, validators, appHeight, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
+			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
@@ -74,23 +74,23 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			doc.AppState = appState
-			doc.Validators = validators
-			doc.InitialHeight = appHeight
+			doc.AppState = exported.AppState
+			doc.Validators = exported.Validators
+			doc.InitialHeight = exported.Height
 			doc.ConsensusParams = &tmproto.ConsensusParams{
 				Block: tmproto.BlockParams{
-					MaxBytes:   cp.Block.MaxBytes,
-					MaxGas:     cp.Block.MaxGas,
+					MaxBytes:   exported.ConsensusParams.Block.MaxBytes,
+					MaxGas:     exported.ConsensusParams.Block.MaxGas,
 					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
 				Evidence: tmproto.EvidenceParams{
-					MaxAgeNumBlocks:  cp.Evidence.MaxAgeNumBlocks,
-					MaxAgeDuration:   cp.Evidence.MaxAgeDuration,
-					MaxNum:           cp.Evidence.MaxNum,
-					ProofTrialPeriod: cp.Evidence.ProofTrialPeriod,
+					MaxAgeNumBlocks:  exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
+					MaxAgeDuration:   exported.ConsensusParams.Evidence.MaxAgeDuration,
+					MaxNum:           exported.ConsensusParams.Evidence.MaxNum,
+					ProofTrialPeriod: exported.ConsensusParams.Evidence.ProofTrialPeriod,
 				},
 				Validator: tmproto.ValidatorParams{
-					PubKeyTypes: cp.Validator.PubKeyTypes,
+					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
 				},
 			}
 

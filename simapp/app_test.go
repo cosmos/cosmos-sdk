@@ -31,7 +31,7 @@ func TestSimAppExport(t *testing.T) {
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig())
-	_, _, _, _, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
 

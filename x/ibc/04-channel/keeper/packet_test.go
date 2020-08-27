@@ -671,7 +671,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 				if channelA.Ordering == types.ORDERED {
 					suite.Require().Equal(packet.GetSequence()+1, sequenceAck, "sequence not incremented in ordered channel")
 				} else {
-					suite.Require().Equal(packet.GetSequence(), sequenceAck, "sequence incremented for UNORDERED channel")
+					suite.Require().Equal(uint64(1), sequenceAck, "sequence incremented for UNORDERED channel")
 				}
 			} else {
 				suite.Error(err)

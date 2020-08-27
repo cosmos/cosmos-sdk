@@ -56,7 +56,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight) - infractionHeight
+	ageBlocks := int64(cs.LatestHeight - infractionHeight)
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516

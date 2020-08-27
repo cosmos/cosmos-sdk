@@ -165,6 +165,6 @@ message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
 
   Misbehaviour misbehaviour  = 1;
-  bytes        submitter = 2
+  bytes        signer = 2
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

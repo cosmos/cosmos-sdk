@@ -24,7 +24,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -360,25 +359,25 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
-func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType exported.ClientType) *clienttypes.MsgCreateClient {
+func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
 	var (
-		clientState    exported.ClientState
-		consensusState exported.ConsensusState
+		clientState    clientexported.ClientState
+		consensusState clientexported.ConsensusState
 	)
 
 	switch clientType {
-	case exported.Tendermint:
+	case clientexported.ClientTypeTendermint:
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			counterparty.LastHeader.GetHeight(), commitmenttypes.GetSDKSpecs(),
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
-	case exported.SoloMachine:
+	case clientexported.ClientTypeSoloMachine:
 		solo := NewSolomachine(chain.t, clientID)
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:
-		chain.t.Fatalf("unsupported client state type %s", clientType.String())
+		chain.t.Fatalf("unsupported client state type %s", clientType)
 	}
 
 	msg, err := clienttypes.NewMsgCreateClient(
@@ -392,7 +391,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID, exported.Tendermint)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, clientexported.ClientTypeTendermint)
 	return chain.sendMsgs(msg)
 }
 

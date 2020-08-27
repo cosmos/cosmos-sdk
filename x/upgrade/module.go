@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -51,6 +52,9 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router
 	rest.RegisterRoutes(clientCtx, r)
 }
 
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the upgrade module.
+func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+
 // GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
@@ -89,7 +93,7 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 func (AppModule) QuerierRoute() string { return types.QuerierKey }
 
 // LegacyQuerierHandler registers a query handler to respond to the module-specific queries
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 

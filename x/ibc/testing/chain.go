@@ -369,7 +369,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	switch clientType {
 	case exported.Tendermint:
 		clientState = ibctmtypes.NewClientState(
-			chain.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
+			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			counterparty.LastHeader.GetHeight(), commitmenttypes.GetSDKSpecs(),
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()

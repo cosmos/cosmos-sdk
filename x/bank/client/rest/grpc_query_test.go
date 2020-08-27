@@ -108,8 +108,8 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		expected proto.Message
 	}{
 		{
-			"total account balance grpc",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s?height=1", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
+			"gRPC total account balance",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -121,6 +121,34 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 				),
 				Pagination: &query.PageResponse{
 					Total: 2,
+				},
+			},
+		},
+		{
+			"gPRC account balance of a denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, base64.URLEncoding.EncodeToString(val.Address), s.cfg.BondDenom),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&types.QueryBalanceResponse{},
+			&types.QueryBalanceResponse{
+				Balance: &sdk.Coin{
+					Denom:  s.cfg.BondDenom,
+					Amount: s.cfg.StakingTokens.Sub(s.cfg.BondedTokens),
+				},
+			},
+		},
+		{
+			"gPRC account balance of a bogus denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&types.QueryBalanceResponse{},
+			&types.QueryBalanceResponse{
+				Balance: &sdk.Coin{
+					Denom:  "foobar",
+					Amount: sdk.NewInt(0),
 				},
 			},
 		},

@@ -27,7 +27,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, specs []*ics23.ProofSpec,
+	latestHeight *clienttypes.Height, specs []*ics23.ProofSpec,
 ) *ClientState {
 	return &ClientState{
 		ChainId:         chainID,
@@ -36,7 +36,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LatestHeight:    latestHeight,
-		FrozenHeight:    0,
+		FrozenHeight:    &clienttypes.Height{},
 		ProofSpecs:      specs,
 	}
 }
@@ -52,19 +52,21 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 }
 
 // GetLatestHeight returns latest block height.
+// TODO: return clienttypes.Height once interface has changed
 func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.LatestHeight
+	return cs.LatestHeight.EpochHeight
 }
 
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight != 0
+	return cs.FrozenHeight.IsZero()
 }
 
-// FrozenHeight returns the height at which client is frozen
+// GetFrozenHeight returns the height at which client is frozen
 // NOTE: FrozenHeight is 0 if client is unfrozen
+// TODO: return clienttypes.Height once interface has changed
 func (cs ClientState) GetFrozenHeight() uint64 {
-	return cs.FrozenHeight
+	return cs.FrozenHeight.EpochHeight
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -84,8 +86,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
+	if cs.LatestHeight.IsValid() {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint height is invalid", cs.LatestHeight)
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -413,7 +415,7 @@ func produceVerificationArgs(
 		)
 	}
 
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
+	if cs.IsFrozen() && cs.FrozenHeight.GT(clienttypes.NewHeight(0, height)) {
 		return commitmenttypes.MerkleProof{}, nil, clienttypes.ErrClientFrozen
 	}
 

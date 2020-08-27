@@ -27,7 +27,8 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 ) (clientexported.ClientState, error) {
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
-	if cs.IsFrozen() && cs.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
+	height := clienttypes.NewHeight(0, uint64(misbehaviour.GetHeight()))
+	if cs.IsFrozen() && !cs.FrozenHeight.GT(height) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
@@ -41,13 +42,13 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight.EpochHeight)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight.EpochHeight)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
 	}
@@ -56,7 +57,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight) - infractionHeight
+	ageBlocks := int64(cs.LatestHeight.EpochHeight) - infractionHeight
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -96,7 +97,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = uint64(tmEvidence.GetHeight())
+	cs.FrozenHeight = clienttypes.NewHeight(0, uint64(tmEvidence.GetHeight()))
 	return &cs, nil
 }
 

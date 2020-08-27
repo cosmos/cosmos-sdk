@@ -172,6 +172,16 @@ type MsgUpdateClient interface {
 	GetHeader() Header
 }
 
+// Height is a wrapper interface over clienttypes.Height
+// all clients must use the concrete implementation in types
+type Height interface {
+	IsZero() bool
+	LT(Height) bool
+	EQ(Height) bool
+	GT(Height) bool
+	IsValid() bool
+}
+
 // ClientType defines the type of the consensus algorithm
 type ClientType byte
 

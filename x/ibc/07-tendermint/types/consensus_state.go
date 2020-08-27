@@ -15,7 +15,7 @@ import (
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmenttypes.MerkleRoot, height uint64,
+	timestamp time.Time, root commitmenttypes.MerkleRoot, height *clienttypes.Height,
 	nextValsHash tmbytes.HexBytes,
 ) *ConsensusState {
 	return &ConsensusState{
@@ -38,7 +38,7 @@ func (cs ConsensusState) GetRoot() commitmentexported.Root {
 
 // GetHeight returns the height for the specific consensus state
 func (cs ConsensusState) GetHeight() uint64 {
-	return cs.Height
+	return cs.Height.EpochHeight
 }
 
 // GetTimestamp returns block time in nanoseconds at which the consensus state was stored
@@ -54,8 +54,8 @@ func (cs ConsensusState) ValidateBasic() error {
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}
-	if cs.Height == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "height cannot be 0")
+	if cs.Height.IsValid() {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "height invalid: %v", cs.Height)
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

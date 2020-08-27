@@ -309,7 +309,7 @@ func (rs *Store) Commit() types.CommitID {
 	} else {
 		// This case means that no commit has been registered in the store, we
 		// start from initialVersion (or 0 if not set).
-		previousHeight = int64(rs.initialVersion)
+		previousHeight = rs.initialVersion
 	}
 
 	version := previousHeight + 1

@@ -48,31 +48,3 @@ func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 		}
 	}
 }
-
-func (suite *TendermintTestSuite) TestMsgUpdateClient() {
-	privKey := secp256k1.GenPrivKey()
-	signer := sdk.AccAddress(privKey.PubKey().Address())
-
-	cases := []struct {
-		msg     *types.MsgUpdateClient
-		expPass bool
-		errMsg  string
-	}{
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.header, signer), true, "success msg should pass"},
-		{types.NewMsgUpdateClient("(badClient)", &types.Header{}, signer), false, "invalid client id passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, suite.header, nil), false, "Empty address passed"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{}, nil), false, "empty Header"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, nil, nil), false, "nil header"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: nil}, nil), false, "nil signed header"},
-		{types.NewMsgUpdateClient(exported.ClientTypeTendermint, &types.Header{SignedHeader: &tmproto.SignedHeader{Header: nil}}, nil), false, "nil tendermint header"},
-	}
-
-	for i, tc := range cases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %v", i, err)
-		} else {
-			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
-		}
-	}
-}

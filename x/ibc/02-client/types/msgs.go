@@ -1,7 +1,6 @@
 package types
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -85,12 +84,17 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
-func NewMsgUpdateClient(id string, header *codectypes.Any, signer sdk.AccAddress) *MsgUpdateClient {
+func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress) (*MsgUpdateClient, error) {
+	anyHeader, err := PackHeader(header)
+	if err != nil {
+		return nil, err
+	}
+
 	return &MsgUpdateClient{
 		ClientId: id,
-		Header:   header,
+		Header:   anyHeader,
 		Signer:   signer,
-	}
+	}, nil
 }
 
 // Route implements sdk.Msg
@@ -131,14 +135,18 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-// NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour
-// instance.
-func NewMsgSubmitMisbehaviour(clientID string, misbehaviour *codectypes.Any, signer sdk.AccAddress) *MsgSubmitMisbehaviour {
+// NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance.
+func NewMsgSubmitMisbehaviour(clientID string, misbehaviour exported.Misbehaviour, signer sdk.AccAddress) (*MsgSubmitMisbehaviour, error) {
+	anyMisbehaviour, err := PackMisbehaviour(misbehaviour)
+	if err != nil {
+		return nil, err
+	}
+
 	return &MsgSubmitMisbehaviour{
 		ClientId:     clientID,
-		Misbehaviour: misbehaviour,
+		Misbehaviour: anyMisbehaviour,
 		Signer:       signer,
-	}
+	}, nil
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.

@@ -196,6 +196,23 @@ func MustUnpackHeader(any *codectypes.Any) exported.Header {
 	return header
 }
 
+// PackMisbehaviour constructs a new Any packed with the given header value. It returns
+// an error if the header can't be casted to a protobuf message or if the concrete
+// implemention is not registered to the protobuf codec.
+func PackMisbehaviour(misbehaviour exported.Misbehaviour) (*codectypes.Any, error) {
+	msg, ok := misbehaviour.(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("cannot proto marshal %T", misbehaviour)
+	}
+
+	anyMisbhaviour, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return anyMisbhaviour, nil
+}
+
 // UnpackMisbehaviour unpacks an Any into a Misbehaviour. It returns an error if the
 // consensus state can't be unpacked into a Misbehaviour.
 func UnpackMisbehaviour(any *codectypes.Any) (exported.Misbehaviour, error) {

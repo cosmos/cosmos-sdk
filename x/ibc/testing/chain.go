@@ -431,10 +431,11 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	}
 	header.TrustedValidators = trustedVals
 
-	msg := ibctmtypes.NewMsgUpdateClient(
+	msg, err := clienttypes.NewMsgUpdateClient(
 		clientID, header,
 		chain.SenderAccount.GetAddress(),
 	)
+	require.NoError(chain.t, err)
 
 	return chain.sendMsgs(msg)
 }

@@ -15,6 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	invalidMnemonic = "invalid mnemonic\n"
+	validMnemonic   = "decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n"
+)
+
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
@@ -78,5 +83,20 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 	})
 
+	require.NoError(t, cmd.Execute())
+
+	// When in recovery mode
+	cmd.SetArgs([]string{
+		"keyname6",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=true", "recover"),
+	})
+
+	mockIn.Reset(invalidMnemonic)
+	require.Error(t, cmd.Execute())
+
+	mockIn.Reset(validMnemonic)
 	require.NoError(t, cmd.Execute())
 }

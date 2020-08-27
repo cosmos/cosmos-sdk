@@ -26,11 +26,11 @@ const (
 )
 
 var (
-	_ types.KVStore          = (*Store)(nil)
-	_ types.CommitStore      = (*Store)(nil)
-	_ types.CommitKVStore    = (*Store)(nil)
-	_ types.Queryable        = (*Store)(nil)
-	_ types.StoreWithVersion = (*Store)(nil)
+	_ types.KVStore                 = (*Store)(nil)
+	_ types.CommitStore             = (*Store)(nil)
+	_ types.CommitKVStore           = (*Store)(nil)
+	_ types.Queryable               = (*Store)(nil)
+	_ types.StoreWithInitialVersion = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.

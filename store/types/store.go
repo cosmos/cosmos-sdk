@@ -399,8 +399,9 @@ type MultiStorePersistentCache interface {
 	Reset()
 }
 
-// StoreWithVersion is a store that has versions.
-type StoreWithVersion interface {
+// StoreWithInitialVersion is a store that can have an arbitrary initial
+// version.
+type StoreWithInitialVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error

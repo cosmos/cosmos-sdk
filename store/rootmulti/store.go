@@ -40,6 +40,7 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	pruneHeights   []int64
+	initialVersion uint64
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -300,7 +301,17 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-	previousHeight := rs.lastCommitInfo.Version
+	var previousHeight int64
+	if rs.lastCommitInfo.GetVersion() > 0 {
+		// This case means that there was already a previous commit in the
+		// store. we continue from this commit version.
+		previousHeight = rs.lastCommitInfo.Version
+	} else {
+		// This case means that no commit has been registered in the store, we
+		// start from initialVersion (or 0 if not set).
+		previousHeight = int64(rs.initialVersion)
+	}
+
 	version := previousHeight + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
@@ -506,7 +517,9 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 // SetInitialVersion sets the initial version of the IAVL tree. It is used when
 // starting a new chain at an arbitrary height.
 func (rs *Store) SetInitialVersion(version uint64) error {
-	// Loop through all the stores, if it's a KV store, then set initial
+	rs.initialVersion = version
+
+	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
 	for _, commitKVStore := range rs.stores {
 		if storeWithVersion, ok := commitKVStore.(types.StoreWithVersion); ok {

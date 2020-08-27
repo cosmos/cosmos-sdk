@@ -72,12 +72,12 @@ func TestSimappInitialHeight(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
-	require.Equal(t, int64(4), exportedGenDoc.InitialHeight)
+	require.Equal(t, int64(3), exportedGenDoc.InitialHeight)
 	err = saveGenesisFile(genDoc, tempDir2)
 
 	// Run a new app, with exported genesis.
-	app, clientCtx, serverCtx = setupApp(t, tempDir2)
-	app.InitChain(
+	newApp, _, _ := setupApp(t, tempDir2)
+	newApp.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simapp.DefaultConsensusParams,
@@ -85,10 +85,10 @@ func TestSimappInitialHeight(t *testing.T) {
 			InitialHeight:   exportedGenDoc.InitialHeight,
 		},
 	)
-	app.Commit()
+	newApp.Commit()
 
 	// Check that initial height is taken into account.
-	require.Equal(t, int64(4), app.LastBlockHeight())
+	require.Equal(t, int64(4), newApp.LastBlockHeight())
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, client.Context, *server.Context) {

@@ -110,7 +110,7 @@ func (st *Store) Commit() types.CommitID {
 	}
 }
 
-// Implements Committer.
+// LastCommitID implements Committer.
 func (st *Store) LastCommitID() types.CommitID {
 	return types.CommitID{
 		Version: st.tree.Version(),

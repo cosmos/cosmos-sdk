@@ -76,7 +76,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			doc.AppState = appState
 			doc.Validators = validators
-			doc.InitialHeight = appHeight + 1
+			doc.InitialHeight = appHeight
 			doc.ConsensusParams = &tmproto.ConsensusParams{
 				Block: tmproto.BlockParams{
 					MaxBytes:   cp.Block.MaxBytes,

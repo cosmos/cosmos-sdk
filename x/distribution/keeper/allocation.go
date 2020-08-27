@@ -48,9 +48,10 @@ func (k Keeper) AllocateTokens(
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.MulTruncate(previousFractionVotes))
 	proposerReward := feesCollected.MulDecTruncate(proposerMultiplier)
+	feesCollected = feesCollected.Sub(proposerReward)
 
 	// pay previous proposer
-	remaining := feesCollected
+	// remaining := feesCollected
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, previousProposer)
 
 	if proposerValidator != nil {
@@ -63,7 +64,7 @@ func (k Keeper) AllocateTokens(
 		)
 
 		k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-		remaining = remaining.Sub(proposerReward)
+		// remaining = remaining.Sub(proposerReward)
 	} else {
 		// previous proposer can be unknown if say, the unbonding period is 1 block, so
 		// e.g. a validator undelegates at block X, it's removed entirely by
@@ -78,8 +79,9 @@ func (k Keeper) AllocateTokens(
 	}
 
 	// calculate fraction allocated to validators
+	var communityTaxTotal sdk.DecCoins
 	communityTax := k.GetCommunityTax(ctx)
-	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
+	// voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
@@ -89,13 +91,19 @@ func (k Keeper) AllocateTokens(
 		// TODO consider microslashing for missing votes.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).QuoTruncate(sdk.NewDec(totalPreviousPower))
-		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+		// reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
+
+		reward := feesCollected.MulDecTruncate(powerFraction)
+		rewardCommunityTax := reward.MulDecTruncate(communityTax)
+		communityTaxTotal = communityTaxTotal.Add(rewardCommunityTax...)
+		reward = reward.Sub(rewardCommunityTax)
+
 		k.AllocateTokensToValidator(ctx, validator, reward)
-		remaining = remaining.Sub(reward)
+		// remaining = remaining.Sub(reward)
 	}
 
 	// allocate community funding
-	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
+	feePool.CommunityPool = feePool.CommunityPool.Add(communityTaxTotal...)
 	k.SetFeePool(ctx, feePool)
 }
 

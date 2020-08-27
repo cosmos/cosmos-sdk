@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	// "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -89,14 +89,6 @@ func TestPubKeyEquals(t *testing.T) {
 		{
 			"ed25519 pb equals",
 			ed25519PbPubKey,
-			&keys.Ed25519PubKey{
-				Key: ed25519PubKey,
-			},
-			true,
-		},
-		{
-			"tm ed25519 equals pb ed25519",
-			ed25519PubKey,
 			&keys.Ed25519PubKey{
 				Key: ed25519PubKey,
 			},
@@ -322,4 +314,40 @@ func TestPrivKeyEquals(t *testing.T) {
 			require.Equal(t, eq, tc.expectEq)
 		})
 	}
+}
+
+func TestSignAndVerifySignature(t *testing.T) {
+	testCases := []struct {
+		msg     string
+		privKey crypto.PrivKey
+	}{
+		{
+			"ed25519",
+			&keys.Ed25519PrivKey{Key: ed25519.GenPrivKey()},
+		},
+		{
+			"sr25519",
+			&keys.Sr25519PrivKey{Key: sr25519.GenPrivKey()},
+		},
+		{
+			"secp256k1",
+			&keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			pubKey := tc.privKey.PubKey()
+			msg := crypto.CRandBytes(128)
+			sig, err := tc.privKey.Sign(msg)
+			require.Nil(t, err)
+
+			assert.True(t, pubKey.VerifySignature(msg, sig))
+
+			sig[7] ^= byte(0x01)
+
+			assert.False(t, pubKey.VerifySignature(msg, sig))
+		})
+	}
+
 }

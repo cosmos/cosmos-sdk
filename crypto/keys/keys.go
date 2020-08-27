@@ -5,7 +5,6 @@ import (
 	"crypto/subtle"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
-	// "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -49,10 +48,7 @@ func (m *Ed25519PubKey) VerifySignature(msg []byte, sig []byte) bool {
 }
 
 func (m *Ed25519PubKey) Equals(key crypto.PubKey) bool {
-	if m.Key.Type() != key.Type() {
-		return false
-	}
-	return bytes.Equal(m.Key.Bytes(), key.Bytes())
+	return m.Key.Type() == key.Type() && bytes.Equal(m.Key.Bytes(), key.Bytes())
 }
 
 func (m *Ed25519PubKey) Type() string {
@@ -132,10 +128,7 @@ func (m *Ed25519PrivKey) PubKey() crypto.PubKey {
 }
 
 func (m *Ed25519PrivKey) Equals(key crypto.PrivKey) bool {
-	if m.Key.Type() != key.Type() {
-		return false
-	}
-	return subtle.ConstantTimeCompare(m.Key.Bytes(), key.Bytes()) == 1
+	return m.Key.Type() == key.Type() && subtle.ConstantTimeCompare(m.Key.Bytes(), key.Bytes()) == 1
 }
 
 func (m *Ed25519PrivKey) Type() string {

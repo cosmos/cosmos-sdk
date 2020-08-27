@@ -65,10 +65,7 @@ func (pubKey PubKey) String() string {
 // Equals - checks that two public keys are the same time
 // Runs in constant time based on length of the keys.
 func (pubKey PubKey) Equals(other crypto.PubKey) bool {
-	if pubKey.Type() != other.Type() {
-		return false
-	}
-	return bytes.Equal(pubKey.Bytes(), other.Bytes())
+	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 
 func (pubKey PubKey) Type() string {

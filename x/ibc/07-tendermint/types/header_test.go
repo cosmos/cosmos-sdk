@@ -4,6 +4,7 @@ import (
 	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
@@ -45,7 +46,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 			chainID = "chainid"
 		}, false},
 		{"trusted height is greater than header height", func() {
-			header.TrustedHeight = header.GetHeight() + 1
+			header.TrustedHeight = clienttypes.NewHeight(0, header.GetHeight()+1)
 		}, false},
 		{"validator set nil", func() {
 			header.ValidatorSet = nil

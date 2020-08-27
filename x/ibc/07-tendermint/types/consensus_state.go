@@ -15,7 +15,7 @@ import (
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmenttypes.MerkleRoot, height *clienttypes.Height,
+	timestamp time.Time, root commitmenttypes.MerkleRoot, height clienttypes.Height,
 	nextValsHash tmbytes.HexBytes,
 ) *ConsensusState {
 	return &ConsensusState{
@@ -54,7 +54,7 @@ func (cs ConsensusState) ValidateBasic() error {
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}
-	if cs.Height.IsValid() {
+	if !cs.Height.IsValid() {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "height invalid: %v", cs.Height)
 	}
 	if cs.Timestamp.IsZero() {

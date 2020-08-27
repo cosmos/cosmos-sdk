@@ -9,8 +9,8 @@ import (
 var _ exported.Height = (*Height)(nil)
 
 // NewHeight is a constructor for the IBC height type
-func NewHeight(epochNumber, epochHeight uint64) *Height {
-	return &Height{
+func NewHeight(epochNumber, epochHeight uint64) Height {
+	return Height{
 		EpochNumber: epochNumber,
 		EpochHeight: epochHeight,
 	}
@@ -24,8 +24,8 @@ func NewHeight(epochNumber, epochHeight uint64) *Height {
 //
 // It first compares based on epoch numbers, whichever has the higher epoch number is the higher height
 // If epoch number is the same, then the epoch height is compared
-func (h *Height) Compare(other exported.Height) int64 {
-	height, ok := other.(*Height)
+func (h Height) Compare(other exported.Height) int64 {
+	height, ok := other.(Height)
 	if !ok {
 		panic(fmt.Sprintf("cannot compare against invalid height type: %T. expected height type: %T", other, h))
 	}
@@ -44,17 +44,17 @@ func (h *Height) Compare(other exported.Height) int64 {
 }
 
 // LT Helper comparison function returns true if h < other
-func (h *Height) LT(other exported.Height) bool {
+func (h Height) LT(other exported.Height) bool {
 	return h.Compare(other) == -1
 }
 
 // GT Helper comparison function returns true if h > other
-func (h *Height) GT(other exported.Height) bool {
+func (h Height) GT(other exported.Height) bool {
 	return h.Compare(other) == 1
 }
 
 // EQ Helper comparison function returns true if h == other
-func (h *Height) EQ(other exported.Height) bool {
+func (h Height) EQ(other exported.Height) bool {
 	return h.Compare(other) == 0
 }
 
@@ -62,9 +62,9 @@ func (h *Height) EQ(other exported.Height) bool {
 // an error is returned
 // Decrement will return a new height with the EpochHeight decremented
 // If the EpochHeight is already at lowest value (1), then false success flag is returend
-func (h *Height) Decrement() (decremented exported.Height, success bool) {
+func (h Height) Decrement() (decremented exported.Height, success bool) {
 	if h.EpochHeight <= 1 {
-		return &Height{}, false
+		return Height{}, false
 	}
 	return NewHeight(h.EpochNumber, h.EpochHeight-1), true
 }
@@ -72,16 +72,13 @@ func (h *Height) Decrement() (decremented exported.Height, success bool) {
 // Increment will return an incremented height from the given height.
 // Increment will return a height with the same epoch number but an
 // incremented epoch height
-func (h *Height) Increment() exported.Height {
+func (h Height) Increment() exported.Height {
 	return NewHeight(h.EpochNumber, h.EpochHeight+1)
 }
 
 // IsValid returns true if height is valid, false otherwise
 // Returns false if EpochHeight is 0
-func (h *Height) IsValid() bool {
-	if h == nil {
-		return false
-	}
+func (h Height) IsValid() bool {
 	return h.EpochHeight != 0
 }
 
@@ -91,6 +88,6 @@ func (h *Height) IsValid() bool {
 // }
 
 // IsZero returns true if height epoch and epoch-height are both 0
-func (h *Height) IsZero() bool {
+func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
 }

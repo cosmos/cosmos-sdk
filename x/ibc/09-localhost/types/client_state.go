@@ -24,10 +24,10 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
-func NewClientState(chainID string, height int64) *ClientState {
+func NewClientState(chainID string, height clienttypes.Height) *ClientState {
 	return &ClientState{
 		ChainId: chainID,
-		Height:  uint64(height),
+		Height:  height,
 	}
 }
 
@@ -43,7 +43,7 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 
 // GetLatestHeight returns the latest height stored.
 func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.Height
+	return cs.Height.EpochHeight
 }
 
 // IsFrozen returns false.
@@ -61,8 +61,8 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if cs.Height <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "height must be positive: %d", cs.Height)
+	if !cs.Height.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height: %v", cs.Height)
 	}
 	return nil
 }
@@ -76,9 +76,11 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	// Hardcode 0 for epoch number for now
+	// TODO: Retrieve epoch number from chain-id
 	return NewClientState(
 		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
-		ctx.BlockHeight(),
+		clienttypes.NewHeight(0, uint64(ctx.BlockHeight())),
 	), nil, nil
 }
 

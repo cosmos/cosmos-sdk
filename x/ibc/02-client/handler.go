@@ -24,7 +24,8 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 	// localhost is a special case that must initialize client state
 	// from context and not from msg
 	case *localhosttypes.MsgCreateClient:
-		clientState = localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+		selfHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
+		clientState = localhosttypes.NewClientState(ctx.ChainID(), selfHeight)
 		// Localhost consensus height is chain's blockheight
 		consensusHeight = uint64(ctx.BlockHeight())
 	default:

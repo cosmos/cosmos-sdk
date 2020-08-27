@@ -63,7 +63,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 
 // checkTrustedHeader checks that consensus state matches trusted fields of Header
 func checkTrustedHeader(header *Header, consState *ConsensusState) error {
-	if header.TrustedHeight != consState.Height {
+	if !header.TrustedHeight.EQ(consState.Height) {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
 			"trusted header height %d does not match consensus state height %d",

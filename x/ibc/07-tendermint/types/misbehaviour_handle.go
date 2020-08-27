@@ -25,17 +25,16 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	clientStore sdk.KVStore,
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
+	tmEvidence, ok := misbehaviour.(*Misbehaviour)
+	if !ok {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Misbehaviour{})
+	}
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
 	height := clienttypes.NewHeight(0, uint64(misbehaviour.GetHeight()))
 	if cs.IsFrozen() && !cs.FrozenHeight.GT(height) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
-	}
-
-	tmEvidence, ok := misbehaviour.(*Misbehaviour)
-	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Misbehaviour{})
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour

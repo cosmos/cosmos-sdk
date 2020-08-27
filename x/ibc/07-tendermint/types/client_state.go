@@ -27,7 +27,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight *clienttypes.Height, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
 ) *ClientState {
 	return &ClientState{
 		ChainId:         chainID,
@@ -36,7 +36,7 @@ func NewClientState(
 		UnbondingPeriod: ubdPeriod,
 		MaxClockDrift:   maxClockDrift,
 		LatestHeight:    latestHeight,
-		FrozenHeight:    &clienttypes.Height{},
+		FrozenHeight:    clienttypes.Height{},
 		ProofSpecs:      specs,
 	}
 }
@@ -59,7 +59,7 @@ func (cs ClientState) GetLatestHeight() uint64 {
 
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight.IsZero()
+	return !cs.FrozenHeight.IsZero()
 }
 
 // GetFrozenHeight returns the height at which client is frozen
@@ -86,8 +86,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight.IsValid() {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint height is invalid", cs.LatestHeight)
+	if !cs.LatestHeight.IsValid() {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint height is invalid: %v", cs.LatestHeight)
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -415,7 +415,7 @@ func produceVerificationArgs(
 		)
 	}
 
-	if cs.IsFrozen() && cs.FrozenHeight.GT(clienttypes.NewHeight(0, height)) {
+	if cs.IsFrozen() && !cs.FrozenHeight.GT(clienttypes.NewHeight(0, height)) {
 		return commitmenttypes.MerkleProof{}, nil, clienttypes.ErrClientFrozen
 	}
 

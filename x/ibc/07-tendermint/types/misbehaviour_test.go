@@ -14,10 +14,11 @@ import (
 
 func (suite *TendermintTestSuite) TestEvidence() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
+	epochHeight := int64(height.EpochHeight)
 
 	misbehaviour := &types.Misbehaviour{
 		Header1:  suite.header,
-		Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+		Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
 		ChainId:  chainID,
 		ClientId: clientID,
 	}
@@ -27,7 +28,7 @@ func (suite *TendermintTestSuite) TestEvidence() {
 	suite.Require().Equal(misbehaviour.Route(), "client")
 	suite.Require().Equal(misbehaviour.Type(), "client_misbehaviour")
 	suite.Require().Equal(misbehaviour.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.cdc.MustMarshalBinaryBare(misbehaviour))))
-	suite.Require().Equal(misbehaviour.GetHeight(), int64(height))
+	suite.Require().Equal(misbehaviour.GetHeight(), int64(height.EpochHeight))
 }
 
 func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
@@ -35,7 +36,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	altVal := tmtypes.NewValidator(altPubKey, height)
+	epochHeight := int64(height.EpochHeight)
+
+	altVal := tmtypes.NewValidator(altPubKey, epochHeight)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -60,7 +63,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"valid misbehaviour",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -83,7 +86,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"valid misbehaviour with different trusted headers",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -93,7 +96,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"trusted height is 0 in Header1",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header1:  types.CreateTestHeader(chainID, epochHeight, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -105,7 +108,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"trusted height is 0 in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -115,7 +118,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"trusted valset is nil in Header1",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header1:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -127,7 +130,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"trusted valset is nil in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -138,7 +141,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"invalid client ID ",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: "GAIA",
 			},
@@ -149,7 +152,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header1",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader("ethermint", epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  "ethermint",
 				ClientId: clientID,
 			},
@@ -160,7 +163,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"wrong chainID on header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader("ethermint", height, height-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader("ethermint", epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -192,7 +195,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"header 1 doesn't have 2/3 majority",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -215,7 +218,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"header 2 doesn't have 2/3 majority",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -237,7 +240,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			"validators sign off on wrong commit",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, height-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},

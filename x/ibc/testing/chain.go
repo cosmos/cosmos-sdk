@@ -568,8 +568,7 @@ func (chain *TestChain) CreatePortCapability(portID string) {
 
 		switch portID {
 		case MockPort:
-			fmt.Println("mock port claiming")
-			// claim capability using the provided capability keeper
+			// claim capability using the mock capability keeper
 			err = chain.App.ScopedIBCMockKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(portID))
 			require.NoError(chain.t, err)
 		case TransferPort:

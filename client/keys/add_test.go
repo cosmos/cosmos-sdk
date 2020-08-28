@@ -15,12 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	invalidMnemonic = "invalid mnemonic\n"
-	validMnemonic   = "decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n"
-	password        = "password1!"
-)
-
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
@@ -92,11 +86,13 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=true", flagRecover),
 	})
 
-	mockIn.Reset(invalidMnemonic)
-	require.Error(t, cmd.Execute())
-
-	mockIn.Reset(validMnemonic)
+	// use valid mnemonic and complete recovery key generation successfully
+	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
 	require.NoError(t, cmd.Execute())
+
+	// use invalid mnemonic and fail recovery key generation
+	mockIn.Reset("invalid mnemonic\n")
+	require.Error(t, cmd.Execute())
 
 	// In interactive mode
 	cmd.SetArgs([]string{
@@ -105,11 +101,13 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=false", flagRecover),
 	})
 
-	// set password and complete interactive mode successfully
+	const password = "password1!"
+
+	// set password and complete interactive key generation successfully
 	mockIn.Reset("\n" + password + "\n" + password + "\n")
 	require.NoError(t, cmd.Execute())
 
-	// fail interactive key generation as passwords don't match
+	// passwords don't match and fail interactive key generation
 	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
 	require.Error(t, cmd.Execute())
 }

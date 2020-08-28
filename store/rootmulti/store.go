@@ -90,8 +90,6 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
-	// If we mount the store again with the same initial version, panic with
-	// duplicate key error.
 	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("store duplicate store key %v", key))
 	}
@@ -304,10 +302,10 @@ func (rs *Store) Commit() types.CommitID {
 	var previousHeight int64
 	if rs.lastCommitInfo.GetVersion() > 0 {
 		// This case means that there was already a previous commit in the
-		// store. we continue from this commit version.
+		// store. We continue from that commit version.
 		previousHeight = rs.lastCommitInfo.Version
 	} else {
-		// This case means that no commit has been registered in the store, we
+		// This case means that no commit has been made in the store, we
 		// start from initialVersion (or 0 if not set).
 		previousHeight = rs.initialVersion
 	}

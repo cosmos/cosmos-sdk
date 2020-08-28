@@ -1,8 +1,6 @@
 package types_test
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 
@@ -20,8 +18,6 @@ const (
 	testSequence     = 1
 )
 
-var latestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-
 func (suite *LocalhostTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
@@ -30,17 +26,17 @@ func (suite *LocalhostTestSuite) TestValidate() {
 	}{
 		{
 			name:        "valid client",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			expPass:     true,
 		},
 		{
 			name:        "invalid chain id",
-			clientState: types.NewClientState(" ", 10, latestTimestamp),
+			clientState: types.NewClientState(" ", 10),
 			expPass:     false,
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState("chainID", 0, latestTimestamp),
+			clientState: types.NewClientState("chainID", 0),
 			expPass:     false,
 		},
 	}
@@ -56,8 +52,8 @@ func (suite *LocalhostTestSuite) TestValidate() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyClientState() {
-	clientState := types.NewClientState("chainID", 10, latestTimestamp)
-	invalidClient := types.NewClientState("chainID", 12, latestTimestamp)
+	clientState := types.NewClientState("chainID", 10)
+	invalidClient := types.NewClientState("chainID", 12)
 
 	testCases := []struct {
 		name         string
@@ -117,7 +113,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
-	clientState := types.NewClientState("chainID", 10, latestTimestamp)
+	clientState := types.NewClientState("chainID", 10)
 	err := clientState.VerifyClientConsensusState(
 		nil, nil, nil, 0, "", 0, nil, nil, nil,
 	)
@@ -138,7 +134,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	}{
 		{
 			name:        "proof verification success",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn1)
 				suite.Require().NoError(err)
@@ -149,14 +145,14 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "proof verification failed: connection not stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate:    func() {},
 			connection:  conn1,
 			expPass:     false,
 		},
 		{
 			name:        "proof verification failed: unmarshal error",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(host.KeyConnection(testConnectionID), []byte("connection"))
 			},
@@ -165,7 +161,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			name:        "proof verification failed: different connection stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&conn2)
 				suite.Require().NoError(err)
@@ -210,7 +206,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 	}{
 		{
 			name:        "proof verification success",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch1)
 				suite.Require().NoError(err)
@@ -221,14 +217,14 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "proof verification failed: channel not stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate:    func() {},
 			channel:     ch1,
 			expPass:     false,
 		},
 		{
 			name:        "proof verification failed: unmarshal failed",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(host.KeyChannel(testPortID, testChannelID), []byte("channel"))
 
@@ -238,7 +234,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 		},
 		{
 			name:        "proof verification failed: different channel stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				bz, err := suite.cdc.MarshalBinaryBare(&ch2)
 				suite.Require().NoError(err)
@@ -280,7 +276,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 	}{
 		{
 			name:        "proof verification success",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("commitment"),
@@ -291,7 +287,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "proof verification failed: different commitment stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyPacketCommitment(testPortID, testChannelID, testSequence), []byte("different"),
@@ -302,7 +298,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			name:        "proof verification failed: no commitment stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate:    func() {},
 			commitment:  []byte{},
 			expPass:     false,
@@ -339,7 +335,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	}{
 		{
 			name:        "proof verification success",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("acknowledgement"),
@@ -350,7 +346,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "proof verification failed: different ack stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("different"),
@@ -361,7 +357,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			name:        "proof verification failed: no commitment stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate:    func() {},
 			ack:         []byte{},
 			expPass:     false,
@@ -389,7 +385,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 }
 
 func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
-	clientState := types.NewClientState("chainID", 10, latestTimestamp)
+	clientState := types.NewClientState("chainID", 10)
 
 	err := clientState.VerifyPacketAcknowledgementAbsence(
 		suite.store, suite.cdc, height, nil, nil, testPortID, testChannelID, testSequence,
@@ -417,7 +413,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 	}{
 		{
 			name:        "proof verification success",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyNextSequenceRecv(testPortID, testChannelID),
@@ -429,7 +425,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "proof verification failed: different nextSeqRecv stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate: func() {
 				suite.store.Set(
 					host.KeyNextSequenceRecv(testPortID, testChannelID),
@@ -441,7 +437,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			name:        "proof verification failed: no nextSeqRecv stored",
-			clientState: types.NewClientState("chainID", 10, latestTimestamp),
+			clientState: types.NewClientState("chainID", 10),
 			malleate:    func() {},
 			nextSeqRecv: nextSeqRecv,
 			expPass:     false,

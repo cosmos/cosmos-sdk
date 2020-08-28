@@ -21,22 +21,12 @@ type ClientState interface {
 	ClientType() ClientType
 	GetLatestHeight() uint64
 
-	// GetLatestTimestamp returns latest block time (in nanoseconds).
-	// The following condition should in general be always satisfied:
-	/*******************************************************************/
-	// ClientState.GetLatestTimestamp() = ConsensusState.GetTimestamp()
-	/********************************************************************/
-	// But there may be exception to rule like in case of the localhost clientType
-	GetLatestTimestamp() uint64
-
 	IsFrozen() bool
 	GetFrozenHeight() uint64
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
-	Unfreeze() error
 
 	// Update and Misbehaviour functions
-
 	CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header, bool) (ClientState, ConsensusState, error)
 	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
 
@@ -154,8 +144,6 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
-	MarshalBinaryBare() ([]byte, error)
-	UnmarshalBinaryBare([]byte) (Header, error)
 }
 
 // message and evidence types for the IBC client

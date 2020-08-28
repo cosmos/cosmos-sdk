@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"reflect"
 	"strings"
-	"time"
 
 	ics23 "github.com/confio/ics23/go"
 
@@ -25,11 +24,10 @@ import (
 var _ clientexported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
-func NewClientState(chainID string, height int64, latestTimestamp time.Time) *ClientState {
+func NewClientState(chainID string, height int64) *ClientState {
 	return &ClientState{
-		ChainId:         chainID,
-		Height:          uint64(height),
-		LatestTimestamp: latestTimestamp,
+		ChainId: chainID,
+		Height:  uint64(height),
 	}
 }
 
@@ -48,11 +46,6 @@ func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.Height
 }
 
-// GetLatestTimestamp returns latest block time (in nanoseconds).
-func (cs ClientState) GetLatestTimestamp() uint64 {
-	return uint64(cs.LatestTimestamp.UnixNano())
-}
-
 // IsFrozen returns false.
 func (cs ClientState) IsFrozen() bool {
 	return false
@@ -61,11 +54,6 @@ func (cs ClientState) IsFrozen() bool {
 // GetFrozenHeight returns 0.
 func (cs ClientState) GetFrozenHeight() uint64 {
 	return 0
-}
-
-//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
-func (cs ClientState) Unfreeze() error {
-	return nil
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -93,7 +81,6 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	return NewClientState(
 		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
 		ctx.BlockHeight(),
-		ctx.BlockTime(),
 	), nil, nil
 }
 

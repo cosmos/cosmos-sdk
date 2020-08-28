@@ -95,7 +95,7 @@ func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 	return ch, nil
 }
 
-// setupBusyManager creates a manager with an empty store that is busy taking a snapshot at height 1.
+// setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) (*snapshots.Manager, func()) {
 	tempdir, err := ioutil.TempDir("", "")
@@ -106,7 +106,7 @@ func setupBusyManager(t *testing.T) (*snapshots.Manager, func()) {
 	mgr := snapshots.NewManager(store, hung)
 
 	go func() {
-		_, err := mgr.Take(1)
+		_, err := mgr.Create(1)
 		require.NoError(t, err)
 	}()
 	time.Sleep(10 * time.Millisecond)

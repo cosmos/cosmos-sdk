@@ -332,10 +332,10 @@ func (app *BaseApp) halt() {
 
 // snapshot takes a snapshot of the current state and prunes any old snapshottypes.
 func (app *BaseApp) snapshot(height int64) {
-	app.logger.Info("Taking state snapshot", "height", height)
-	snapshot, err := app.snapshotManager.Take(uint64(height))
+	app.logger.Info("Creating state snapshot", "height", height)
+	snapshot, err := app.snapshotManager.Create(uint64(height))
 	if err != nil {
-		app.logger.Error("Failed to take state snapshot", "height", height, "err", err)
+		app.logger.Error("Failed to create state snapshot", "height", height, "err", err)
 		return
 	}
 	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)

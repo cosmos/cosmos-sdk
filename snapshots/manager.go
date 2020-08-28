@@ -84,28 +84,8 @@ func (m *Manager) endLocked() {
 	m.restorePending = nil
 }
 
-// List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
-func (m *Manager) List() ([]*types.Snapshot, error) {
-	return m.store.List()
-}
-
-// LoadChunk loads a chunk into a byte slice, mirroring ABCI LoadChunk. It can be called
-// concurrently with other operations. If the chunk does not exist, nil is returned.
-func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte, error) {
-	reader, err := m.store.LoadChunk(height, format, chunk)
-	if err != nil {
-		return nil, err
-	}
-	if reader == nil {
-		return nil, nil
-	}
-	defer reader.Close()
-
-	return ioutil.ReadAll(reader)
-}
-
-// Take takes a snapshot and returns its metadata.
-func (m *Manager) Take(height uint64) (*types.Snapshot, error) {
+// Create creates a snapshot and returns its metadata.
+func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
 		return nil, errors.New("no snapshot store configured")
 	}
@@ -128,6 +108,26 @@ func (m *Manager) Take(height uint64) (*types.Snapshot, error) {
 		return nil, err
 	}
 	return m.store.Save(height, types.CurrentFormat, chunks)
+}
+
+// List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
+func (m *Manager) List() ([]*types.Snapshot, error) {
+	return m.store.List()
+}
+
+// LoadChunk loads a chunk into a byte slice, mirroring ABCI LoadChunk. It can be called
+// concurrently with other operations. If the chunk does not exist, nil is returned.
+func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte, error) {
+	reader, err := m.store.LoadChunk(height, format, chunk)
+	if err != nil {
+		return nil, err
+	}
+	if reader == nil {
+		return nil, nil
+	}
+	defer reader.Close()
+
+	return ioutil.ReadAll(reader)
 }
 
 // Prune prunes snapshots, if no other operations are in progress.

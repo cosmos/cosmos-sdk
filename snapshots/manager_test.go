@@ -68,15 +68,15 @@ func TestManager_Take(t *testing.T) {
 	manager := snapshots.NewManager(store, snapshotter)
 
 	// nil manager should return error
-	_, err := (*snapshots.Manager)(nil).Take(1)
+	_, err := (*snapshots.Manager)(nil).Create(1)
 	require.Error(t, err)
 
-	// taking a snapshot at a lower height than the latest should error
-	_, err = manager.Take(3)
+	// creating a snapshot at a lower height than the latest should error
+	_, err = manager.Create(3)
 	require.Error(t, err)
 
-	// taking a snapshot at a higher height should be fine, and should return it
-	snapshot, err := manager.Take(5)
+	// creating a snapshot at a higher height should be fine, and should return it
+	snapshot, err := manager.Create(5)
 	require.NoError(t, err)
 	assert.Equal(t, &types.Snapshot{
 		Height: 5,
@@ -97,10 +97,10 @@ func TestManager_Take(t *testing.T) {
 	assert.Equal(t, snapshot, storeSnapshot)
 	assert.Equal(t, [][]byte{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, readChunks(chunks))
 
-	// taking a snapshot while a different snapshot is being taken should error
+	// creating a snapshot while a different snapshot is being created should error
 	manager, teardown = setupBusyManager(t)
 	defer teardown()
-	_, err = manager.Take(9)
+	_, err = manager.Create(9)
 	require.Error(t, err)
 }
 
@@ -172,7 +172,7 @@ func TestManager_Restore(t *testing.T) {
 	require.NoError(t, err)
 
 	// While the restore is in progress, any other operations fail
-	_, err = manager.Take(4)
+	_, err = manager.Create(4)
 	require.Error(t, err)
 
 	_, err = manager.Prune(1)

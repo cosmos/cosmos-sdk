@@ -80,7 +80,7 @@ func (h Height) String() string {
 // Decrement will return a new height with the EpochHeight decremented
 // If the EpochHeight is already at lowest value (1), then false success flag is returend
 func (h Height) Decrement() (decremented Height, success bool) {
-	if h.EpochHeight <= 1 {
+	if h.EpochHeight == 0 {
 		return Height{}, false
 	}
 	return NewHeight(h.EpochNumber, h.EpochHeight-1), true
@@ -91,12 +91,6 @@ func (h Height) Decrement() (decremented Height, success bool) {
 // incremented epoch height
 func (h Height) Increment() Height {
 	return NewHeight(h.EpochNumber, h.EpochHeight+1)
-}
-
-// IsValid returns true if height is valid, false otherwise
-// Returns false if EpochHeight is 0
-func (h Height) IsValid() bool {
-	return h.EpochHeight != 0
 }
 
 // IsZero returns true if height epoch and epoch-height are both 0

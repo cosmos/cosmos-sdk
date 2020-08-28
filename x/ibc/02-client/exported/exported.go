@@ -181,7 +181,6 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
-	IsValid() bool
 }
 
 // ClientType defines the type of the consensus algorithm

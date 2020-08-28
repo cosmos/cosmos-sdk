@@ -93,11 +93,11 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	if misbehaviour.Header2 == nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, "misbehaviour Header2 cannot be nil")
 	}
-	if !misbehaviour.Header1.TrustedHeight.IsValid() {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 has invalid trusted height: %v", misbehaviour.Header1.TrustedHeight)
+	if misbehaviour.Header1.TrustedHeight.EpochHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header1 cannot have zero epoch height")
 	}
-	if !misbehaviour.Header2.TrustedHeight.IsValid() {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 has invalid trusted height: %v", misbehaviour.Header2.TrustedHeight)
+	if misbehaviour.Header2.TrustedHeight.EpochHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "misbehaviour Header2 cannot have zero epoch height")
 	}
 	if misbehaviour.Header1.TrustedValidators == nil {
 		return sdkerrors.Wrap(ErrInvalidValidatorSet, "trusted validator set in Header1 cannot be empty")

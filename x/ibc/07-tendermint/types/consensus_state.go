@@ -54,8 +54,8 @@ func (cs ConsensusState) ValidateBasic() error {
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
 	}
-	if !cs.Height.IsValid() {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "height invalid: %v", cs.Height)
+	if cs.Height.EpochHeight == 0 {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "tendermint epoch height cannot be zero")
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

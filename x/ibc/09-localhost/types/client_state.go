@@ -61,8 +61,8 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if !cs.Height.IsValid() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height: %v", cs.Height)
+	if cs.Height.EpochHeight == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local epoch height cannot be zero")
 	}
 	return nil
 }

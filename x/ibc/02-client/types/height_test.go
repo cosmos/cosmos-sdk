@@ -47,17 +47,9 @@ func TestDecrement(t *testing.T) {
 		validDecrement, expected, actual)
 	require.True(t, success, "decrement failed unexpectedly")
 
-	invalidDecrement := types.NewHeight(3, 1)
+	invalidDecrement := types.NewHeight(3, 0)
 	actual, success = invalidDecrement.Decrement()
 
 	require.Equal(t, types.Height{}, actual, "invalid decrement returned non-zero height: %s", actual)
 	require.False(t, success, "invalid decrement passed")
-}
-
-func TestIsValid(t *testing.T) {
-	valid := types.NewHeight(0, 2)
-	require.True(t, valid.IsValid(), "valid height did not return true on IsValid()")
-
-	invalid := types.NewHeight(2, 0)
-	require.False(t, invalid.IsValid(), "invalid height returned true on IsValid()")
 }

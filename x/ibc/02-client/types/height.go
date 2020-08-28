@@ -87,11 +87,6 @@ func (h Height) IsValid() bool {
 	return h.EpochHeight != 0
 }
 
-// String implements the fmt.Stringer interface
-// func (h Height) String() string {
-// 	return fmt.Sprintf("epoch-%d_height-%d", h.EpochNumber, h.EpochHeight)
-// }
-
 // IsZero returns true if height epoch and epoch-height are both 0
 func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0

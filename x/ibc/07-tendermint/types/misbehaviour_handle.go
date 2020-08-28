@@ -25,7 +25,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	clientStore sdk.KVStore,
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
-	tmEvidence, ok := misbehaviour.(*Misbehaviour)
+	tmMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Misbehaviour{})
 	}
@@ -41,20 +41,20 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight.EpochHeight)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight.EpochHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmMisbehaviour.Header1.TrustedHeight)
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight.EpochHeight)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight.EpochHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmMisbehaviour.Header2.TrustedHeight)
 	}
 
 	// calculate the age of the misbehaviour
-	infractionHeight := tmEvidence.GetHeight()
-	infractionTime := tmEvidence.GetTime()
+	infractionHeight := tmMisbehaviour.GetHeight()
+	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 	ageBlocks := int64(cs.LatestHeight.EpochHeight) - infractionHeight
 
@@ -86,17 +86,17 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// misbehaviour.ValidateBasic by the client keeper and msg.ValidateBasic
 	// by the base application.
 	if err := checkMisbehaviourHeader(
-		&cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
+		&cs, tmConsensusState1, tmMisbehaviour.Header1, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header1 in Misbehaviour failed")
 	}
 	if err := checkMisbehaviourHeader(
-		&cs, tmConsensusState2, tmEvidence.Header2, ctx.BlockTime(),
+		&cs, tmConsensusState2, tmMisbehaviour.Header2, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = clienttypes.NewHeight(0, uint64(tmEvidence.GetHeight()))
+	cs.FrozenHeight = clienttypes.NewHeight(0, uint64(tmMisbehaviour.GetHeight()))
 	return &cs, nil
 }
 

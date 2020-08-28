@@ -275,7 +275,7 @@ func NewSimApp(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
 	// used for testing only!
-	mockModule := ibcmock.NewAppModule()
+	mockModule := ibcmock.NewAppModule(scopedIBCMockKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()

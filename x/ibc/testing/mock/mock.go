@@ -15,8 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 const (
@@ -70,11 +72,14 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule represents the AppModule for the mock module.
 type AppModule struct {
 	AppModuleBasic
+	scopedKeeper capabilitykeeper.ScopedKeeper
 }
 
 // NewAppModule returns a mock AppModule instance.
-func NewAppModule() AppModule {
-	return AppModule{}
+func NewAppModule(sk capabilitykeeper.ScopedKeeper) AppModule {
+	return AppModule{
+		scopedKeeper: sk,
+	}
 }
 
 // RegisterInvariants implements the AppModule interface.
@@ -121,17 +126,27 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 
 // OnChanOpenInit implements the IBCModule interface.
 func (am AppModule) OnChanOpenInit(
-	sdk.Context, channeltypes.Order, []string, string,
-	string, *capabilitytypes.Capability, channeltypes.Counterparty, string,
+	ctx sdk.Context, _ channeltypes.Order, _ []string, portID string,
+	channelID string, chanCap *capabilitytypes.Capability, _ channeltypes.Counterparty, _ string,
 ) error {
+	// Claim channel capability passed back by IBC module
+	if err := am.scopedKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.
 func (am AppModule) OnChanOpenTry(
-	sdk.Context, channeltypes.Order, []string, string, string, *capabilitytypes.Capability,
-	channeltypes.Counterparty, string, string,
+	ctx sdk.Context, _ channeltypes.Order, _ []string, portID string,
+	channelID string, chanCap *capabilitytypes.Capability, _ channeltypes.Counterparty, _, _ string,
 ) error {
+	// Claim channel capability passed back by IBC module
+	if err := am.scopedKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -26,7 +26,6 @@ message ClientState {
   ];
   // self latest block height
   ibc.client.Height height = 3 [
-    (gogoproto.moretags) = "yaml:\"height\"",
     (gogoproto.nullable) = false
   ];
 }

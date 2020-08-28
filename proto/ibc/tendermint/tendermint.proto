@@ -69,7 +69,6 @@ message ConsensusState {
   // height at which the consensus state was stored.
   ibc.client.Height height               = 3 [
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"height\""
   ];
   bytes  next_validators_hash = 4 [
     (gogoproto.casttype) =

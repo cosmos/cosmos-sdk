@@ -40,36 +40,3 @@ func PubKeyFromProto(k pc.PublicKey) (crypto.PubKey, error) {
 		return nil, fmt.Errorf("fromproto: key type %v is not supported", k)
 	}
 }
-
-// PrivKeyToProto takes crypto.PrivKey and transforms it to a protobuf PrivKey
-func PrivKeyToProto(k crypto.PrivKey) (pc.PrivateKey, error) {
-	var kp pc.PrivateKey
-	switch k := k.(type) {
-	case ed25519.PrivKey:
-		kp = pc.PrivateKey{
-			Sum: &pc.PrivateKey_Ed25519{
-				Ed25519: k,
-			},
-		}
-	default:
-		return kp, errors.New("toproto: key type is not supported")
-	}
-	return kp, nil
-}
-
-// PrivKeyFromProto takes a protobuf PrivateKey and transforms it to a crypto.PrivKey
-func PrivKeyFromProto(k pc.PrivateKey) (crypto.PrivKey, error) {
-	switch k := k.Sum.(type) {
-	case *pc.PrivateKey_Ed25519:
-
-		if len(k.Ed25519) != ed25519.PubKeySize {
-			return nil, fmt.Errorf("invalid size for PubKeyEd25519. Got %d, expected %d",
-				len(k.Ed25519), ed25519.PubKeySize)
-		}
-		pk := make(ed25519.PrivKey, ed25519.PrivateKeySize)
-		copy(pk, k.Ed25519)
-		return pk, nil
-	default:
-		return nil, errors.New("fromproto: key type not supported")
-	}
-}

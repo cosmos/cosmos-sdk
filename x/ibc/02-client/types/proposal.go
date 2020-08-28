@@ -1,9 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
-	"strings"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
@@ -23,12 +20,12 @@ func init() {
 
 // NewClientUpdateProposal creates a new client update proposal.
 func NewClientUpdateProposal(title, description, clientID string, header exported.Header) (*ClientUpdateProposal, error) {
-	headerBytes, err := header.MarshalBinaryBare()
+	any, err := PackHeader(header)
 	if err != nil {
-		return &ClientUpdateProposal{}, err
+		return nil, err
 	}
 
-	return &ClientUpdateProposal{title, description, clientID, headerBytes}, nil
+	return &ClientUpdateProposal{title, description, clientID, any}, nil
 }
 
 // GetTitle returns the title of a community pool spend proposal.
@@ -51,16 +48,4 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface.
-func (cup ClientUpdateProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Client Update Proposal:
-  Title:       %s
-  Description: %s
-  ClientID:   %s
-  Header:      %s
-`, cup.Title, cup.Description, cup.ClientId, cup.Header))
-	return b.String()
 }

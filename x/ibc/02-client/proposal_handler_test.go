@@ -87,7 +87,6 @@ func (suite *ProposalHandlerTestSuite) testStoredClientStatus(exptedHeight uint6
 	suite.Require().True(ok)
 	suite.Require().Equal(exptedHeight, clientStatus.GetLatestHeight())
 	suite.Require().Equal(expectedIsFrozen, clientStatus.IsFrozen())
-	suite.Require().Equal(expectedLatestTimestamp, clientStatus.GetLatestTimestamp())
 }
 
 func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {

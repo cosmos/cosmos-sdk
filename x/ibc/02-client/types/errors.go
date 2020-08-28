@@ -6,8 +6,6 @@ import (
 
 // IBC client sentinel errors
 var (
-	ErrFailUpdateClient                       = sdkerrors.Register(SubModuleName, 22, "unable to update light client")
-	ErrInvalidClientLatestTimestamp           = sdkerrors.Register(SubModuleName, 23, "invalid client latest timestamp")
 	ErrClientExists                           = sdkerrors.Register(SubModuleName, 2, "light client already exists")
 	ErrInvalidClient                          = sdkerrors.Register(SubModuleName, 3, "light client is invalid")
 	ErrClientNotFound                         = sdkerrors.Register(SubModuleName, 4, "light client not found")
@@ -28,4 +26,6 @@ var (
 	ErrFailedPacketAckAbsenceVerification     = sdkerrors.Register(SubModuleName, 19, "packet acknowledgement absence verification failed")
 	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 20, "next sequence receive verification failed")
 	ErrSelfConsensusStateNotFound             = sdkerrors.Register(SubModuleName, 21, "self consensus state not found")
+	ErrUpdateClientFailed                     = sdkerrors.Register(SubModuleName, 22, "unable to update light client")
+	ErrInvalidUpdateClientProposal            = sdkerrors.Register(SubModuleName, 23, "invalid update client proposal")
 )

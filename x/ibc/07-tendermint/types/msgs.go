@@ -37,9 +37,9 @@ func NewMsgCreateClient(
 		UnbondingPeriod:                          unbondingPeriod,
 		MaxClockDrift:                            maxClockDrift,
 		ProofSpecs:                               specs,
-		Signer:                                   signer,
 		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpiry,
 		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
+		Signer:                                   signer,
 	}
 }
 

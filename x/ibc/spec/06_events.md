@@ -47,6 +47,18 @@ callbacks to IBC applications.
 | message             | sender           | {senderAddress}     |
 | submit_evidence     | evidence_hash    | {evidenceHash}      |
 
+### UpdateClientProposal
+
+| Type                   | Attribute Key    | Attribute Value   |
+|------------------------|------------------|-------------------|
+| update_client_proposal | client_id        | {clientId}        |
+| update_client_proposal | client_type      | {clientType}      |
+| update_client_proposal | consensus_height | {consensusHeight} |
+| message                | action           | update_client     |
+| message                | module           | ibc_client        |
+
+
+
 ## ICS 03 - Connection
 
 ### MsgConnectionOpenInit

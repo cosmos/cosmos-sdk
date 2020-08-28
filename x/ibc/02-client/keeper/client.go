@@ -26,17 +26,6 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
 	}
 
-	// @TODO: uncomment this piece of code and fix all tests
-	// if clientState.ClientType() != exported.Localhost {
-	// 	// check timestamp consistency
-	// 	if clientState.GetLatestTimestamp() != consensusState.GetTimestamp() {
-	// 		errMsg := `expected clientStatus and consensusStatus timestamp to be equal.
-	// 				   Got timestamp %s (client) != %s (consensus)  `
-	// 		return nil, sdkerrors.Wrapf(types.ErrInvalidClientLatestTimestamp, errMsg,
-	// 			clientState.GetLatestTimestamp(), consensusState.GetTimestamp())
-	// 	}
-	// }
-
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 	}
@@ -51,7 +40,7 @@ func (k Keeper) CreateClient(
 // UpdateClient updates the consensus state and the state root from a provided header.
 // When override is set to true we will update the client with the new header even if
 // the client is expired (client.latestTimestamp + trustingperiod < ctx.Blocktime())
-func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header, override bool) (exported.ClientState, error) {
+func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) (exported.ClientState, error) {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
@@ -79,7 +68,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		err             error
 	)
 
-	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header, override)
+	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
 
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)

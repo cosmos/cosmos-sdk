@@ -28,7 +28,7 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight uint64, latestTimestamp time.Time, specs []*ics23.ProofSpec,
-	allowGovernanceOverrideAfterExpire bool, allowGovernanceOverrideAfterMisbehaviour bool,
+	allowGovernanceOverrideAfterExpiry, allowGovernanceOverrideAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
 		ChainId:                                  chainID,
@@ -40,7 +40,7 @@ func NewClientState(
 		LatestTimestamp:                          latestTimestamp,
 		FrozenHeight:                             0,
 		ProofSpecs:                               specs,
-		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpire,
+		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpiry,
 		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
 	}
 }
@@ -82,10 +82,10 @@ func (cs *ClientState) Unfreeze() error {
 	return nil
 }
 
-// Expired returns whether or not the client has passed the trusting period since the last update
-// (in which case no headers can be validated)
-func (cs ClientState) Expired(now time.Time) bool {
-	expirationTime := cs.LatestTimestamp.Add(cs.TrustingPeriod)
+// Expired returns whether or not the client has passed the trusting period since the last
+// update (in which case no headers can be validated).
+func (cs ClientState) Expired(latestTimestamp, now time.Time) bool {
+	expirationTime := latestTimestamp.Add(cs.TrustingPeriod)
 	return !expirationTime.After(now)
 }
 

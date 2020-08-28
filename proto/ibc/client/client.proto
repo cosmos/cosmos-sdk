@@ -6,31 +6,37 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-// IdentifiedClientState defines a client state with additional client identifier field.
+// IdentifiedClientState defines a client state with additional client
+// identifier field.
 message IdentifiedClientState {
   // client identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // client state
-  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  google.protobuf.Any client_state = 2
+      [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
-// ClientConsensusStates defines all the stored consensus states for a given client.
+// ClientConsensusStates defines all the stored consensus states for a given
+// client.
 message ClientConsensusStates {
   // client identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // consensus states associated with the client
-  repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
+  repeated google.protobuf.Any consensus_states = 2
+      [(gogoproto.moretags) = "yaml:\"consensus_states\""];
 }
 
-
-// ClientUpdateProposal is a governance proposal. 
+// ClientUpdateProposal is a governance proposal.
 // If it passes, the client is updated with the provided header
 message ClientUpdateProposal {
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
-  string title                        = 1 [(gogoproto.moretags) = "yaml:\"title\""];
-  string description                  = 2 [(gogoproto.moretags) = "yaml:\"description\""];
-  string client_id                    = 3 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  bytes  header                       = 4 [(gogoproto.moretags) = "yaml:\"header\""];
+  option (gogoproto.goproto_getters) = false;
+  // the title of the update proposal
+  string title = 1;
+  // the description of the proposal
+  string description = 2;
+  // the client identifier for the client to be updated if the proposal passes
+  string client_id = 3 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // the header used to update the client if the proposal passes
+  google.protobuf.Any header = 4;
 }
 

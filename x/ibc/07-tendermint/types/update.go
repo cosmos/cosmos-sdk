@@ -37,7 +37,7 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header, override bool,
+	header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmHeader, ok := header.(*Header)
 	if !ok {
@@ -54,7 +54,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime(), override); err != nil {
+	if err := checkValidity(&cs, tmConsState, tmHeader, ctx.BlockTime()); err != nil {
 		return nil, nil, err
 	}
 
@@ -163,7 +163,6 @@ func checkValidity(
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	if header.GetHeight() > clientState.LatestHeight {
 		clientState.LatestHeight = header.GetHeight()
-		clientState.LatestTimestamp = header.GetTime()
 	}
 	consensusState := &ConsensusState{
 		Height:             header.GetHeight(),

@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 		{
 			"success",
 			func() {
-				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				// channel0 on first connection on chainA
 				counterparty0 := types.Counterparty{
 					PortId:    connB0.Channels[0].PortID,
@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 		{
 			"success",
 			func() {
-				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				// channel0 on first connection on chainA
 				counterparty0 := types.Counterparty{
 					PortId:    connB0.Channels[0].PortID,
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 		{
 			"success, empty response",
 			func() {
-				suite.coordinator.Setup(suite.chainA, suite.chainB)
+				suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expChannels = []*types.IdentifiedChannel{}
 				req = &types.QueryConnectionChannelsRequest{
 					Connection: "externalConnID",
@@ -345,7 +345,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"connection not found",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				channel := suite.chainA.GetChannel(channelA)
 				// update channel to reference a connection that does not exist
@@ -363,7 +363,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 		{
 			"client state for channel's connection not found",
 			func() {
-				_, _, connA, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				// set connection to empty so clientID is empty
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connectiontypes.ConnectionEnd{})
@@ -469,7 +469,7 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 		{
 			"connection not found",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				channel := suite.chainA.GetChannel(channelA)
 				// update channel to reference a connection that does not exist
@@ -488,7 +488,7 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 		{
 			"consensus state for channel's connection not found",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:    channelA.PortID,
@@ -606,7 +606,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 		{
 			"success",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expCommitment = []byte("hash")
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, expCommitment)
 
@@ -688,7 +688,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 		{
 			"success",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				expCommitments = make([]*types.PacketAckCommitment, 9)
 
@@ -795,7 +795,7 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
 		{
 			"success",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expAck = []byte("hash")
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, expAck)
 
@@ -881,7 +881,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"basic success unrelayed packet commitments",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				// no ack exists
 
@@ -898,7 +898,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"basic success unrelayed packet commitments, nothing to relay",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				// ack exists
 				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
@@ -917,7 +917,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"basic success unrelayed acknowledgements",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				// ack exists
 				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
@@ -936,7 +936,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"basic success unrelayed acknowledgements, nothing to relay",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				// no ack exists
 
@@ -953,7 +953,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"success multiple unrelayed packet commitments",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = []uint64{} // reset
 				packetCommitments := []uint64{}
 
@@ -981,7 +981,7 @@ func (suite *KeeperTestSuite) TestQueryUnrelayedPackets() {
 		{
 			"success multiple unrelayed acknowledgements",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = []uint64{} // reset
 				packetCommitments := []uint64{}
 
@@ -1077,7 +1077,7 @@ func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 		{
 			"success",
 			func() {
-				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = 1
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.chainA.GetContext(), channelA.PortID, channelA.ID, expSeq)
 

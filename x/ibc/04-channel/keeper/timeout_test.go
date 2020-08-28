@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 		{"success: UNORDERED", func() {
 			ordered = false
 
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			// need to update chainA's client representing chainB to prove missing ack
@@ -42,23 +42,23 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"channel not open", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
 			suite.Require().NoError(err)
 		}, false},
 		{"packet destination port ≠ channel counterparty port", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use wrong port for dest
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"packet destination channel ID ≠ channel counterparty channel ID", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use wrong channel for dest
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestTimeoutPacket() {
 			// set ordered to true resulting in wrong proof provided
 			ordered = true
 
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestTimeoutExecuted() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"incorrect capability", func() {
@@ -226,7 +226,7 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 		}, true},
 		{"success: UNORDERED", func() {
 			ordered = false
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
@@ -237,17 +237,17 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 		}, true},
 		{"channel not found", func() {
 			// use wrong channel naming
-			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, ibctesting.InvalidID, ibctesting.InvalidID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 		}, false},
 		{"packet dest port ≠ channel counterparty port", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use wrong port for dest
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, ibctesting.InvalidID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"packet dest channel ID ≠ channel counterparty channel ID", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use wrong channel for dest
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, ibctesting.InvalidID, timeoutHeight, disabledTimeoutTimestamp)
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestTimeoutOnClose() {
 		{"packet ack verification failed", func() {
 			// set ordered to true providing the wrong proof for UNORDERED case
 			ordered = true
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)

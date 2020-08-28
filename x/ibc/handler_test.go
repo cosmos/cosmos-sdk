@@ -63,7 +63,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -71,7 +71,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 		}, true},
 		{"success: UNORDERED out of order packet", func() {
 			// setup uses an UNORDERED channel
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			// attempts to receive packet with sequence 10 without receiving packet with sequence 1
 			for i := uint64(1); i < 10; i++ {
@@ -98,7 +98,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 			suite.Require().NotNil(packet)
 		}, false},
 		{"packet not sent", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 		}, false},
 		{"ORDERED: packet already received (replay)", func() {
@@ -113,7 +113,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
@@ -189,7 +189,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -200,7 +200,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 		}, true},
 		{"success: UNORDERED acknowledge out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			// attempts to acknowledge ack with sequence 10 without acknowledging ack with sequence 1 (removing packet commitment)
 			for i := uint64(1); i < 10; i++ {
@@ -234,7 +234,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NotNil(packet)
 		}, false},
 		{"packet not received", func() {
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -255,7 +255,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
@@ -340,7 +340,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
 			// send from chainA to chainB
@@ -355,7 +355,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
@@ -402,7 +402,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, false},
@@ -484,7 +484,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
@@ -508,7 +508,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
@@ -571,7 +571,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
-			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			counterpartyChannel = ibctesting.TestChannel{

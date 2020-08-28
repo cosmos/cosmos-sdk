@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"sync"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 const (
@@ -28,7 +30,7 @@ type operation string
 // mirroring the ABCI interface.
 type Manager struct {
 	store  *Store
-	target Snapshotter
+	target types.Snapshotter
 
 	mtx            sync.Mutex
 	operation      operation
@@ -38,7 +40,7 @@ type Manager struct {
 }
 
 // NewManager creates a new manager.
-func NewManager(store *Store, target Snapshotter) *Manager {
+func NewManager(store *Store, target types.Snapshotter) *Manager {
 	return &Manager{
 		store:  store,
 		target: target,
@@ -83,7 +85,7 @@ func (m *Manager) endLocked() {
 }
 
 // List lists snapshots, mirroring ABCI ListSnapshots. It can be concurrent with other operations.
-func (m *Manager) List() ([]*Snapshot, error) {
+func (m *Manager) List() ([]*types.Snapshot, error) {
 	return m.store.List()
 }
 
@@ -103,7 +105,7 @@ func (m *Manager) LoadChunk(height uint64, format uint32, chunk uint32) ([]byte,
 }
 
 // Take takes a snapshot and returns its metadata.
-func (m *Manager) Take(height uint64) (*Snapshot, error) {
+func (m *Manager) Take(height uint64) (*types.Snapshot, error) {
 	if m == nil {
 		return nil, errors.New("no snapshot store configured")
 	}
@@ -121,11 +123,11 @@ func (m *Manager) Take(height uint64) (*Snapshot, error) {
 		return nil, fmt.Errorf("a more recent snapshot already exists at height %v", latest.Height)
 	}
 
-	chunks, err := m.target.Snapshot(height, CurrentFormat)
+	chunks, err := m.target.Snapshot(height, types.CurrentFormat)
 	if err != nil {
 		return nil, err
 	}
-	return m.store.Save(height, CurrentFormat, chunks)
+	return m.store.Save(height, types.CurrentFormat, chunks)
 }
 
 // Prune prunes snapshots, if no other operations are in progress.
@@ -140,13 +142,13 @@ func (m *Manager) Prune(retain uint32) (uint64, error) {
 
 // Restore begins an async snapshot restoration, mirroring ABCI OfferSnapshot. Chunks must be fed
 // via RestoreChunk() until the restore is complete or a chunk fails.
-func (m *Manager) Restore(snapshot Snapshot) error {
+func (m *Manager) Restore(snapshot types.Snapshot) error {
 	if snapshot.Chunks == 0 {
-		return fmt.Errorf("%w: no chunks", ErrInvalidMetadata)
+		return fmt.Errorf("%w: no chunks", types.ErrInvalidMetadata)
 	}
 	if uint32(len(snapshot.Metadata.ChunkHashes)) != snapshot.Chunks {
 		return fmt.Errorf("%w: snapshot has %v chunk hashes, but %v chunks",
-			ErrInvalidMetadata,
+			types.ErrInvalidMetadata,
 			uint32(len(snapshot.Metadata.ChunkHashes)),
 			snapshot.Chunks)
 	}
@@ -205,7 +207,8 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
 	if !bytes.Equal(hash[:], m.restorePending[0]) {
-		return false, fmt.Errorf("%w (expected %x, got %x)", ErrChunkHashMismatch, hash, m.restorePending[0])
+		return false, fmt.Errorf("%w (expected %x, got %x)",
+			types.ErrChunkHashMismatch, hash, m.restorePending[0])
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.

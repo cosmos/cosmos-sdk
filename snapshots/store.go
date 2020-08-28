@@ -241,7 +241,9 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 }
 
 // Save saves a snapshot to disk, returning it.
-func (s *Store) Save(height uint64, format uint32, chunks <-chan io.ReadCloser) (*Snapshot, error) {
+func (s *Store) Save(
+	height uint64, format uint32, chunks <-chan io.ReadCloser,
+) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
 		return nil, errors.New("snapshot height cannot be 0")

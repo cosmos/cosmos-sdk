@@ -23,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -1379,7 +1380,6 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-			return
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {
@@ -1761,7 +1761,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
 	defer teardown()
 
-	m := snapshots.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
+	m := snapshottypes.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
 	metadata, err := m.Marshal()
 	require.NoError(t, err)
 	hash := []byte{1, 2, 3}
@@ -1795,7 +1795,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 	// Offering a snapshot after one has been accepted should error
 	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   1,
-		Format:   snapshots.CurrentFormat,
+		Format:   snapshottypes.CurrentFormat,
 		Chunks:   3,
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,
@@ -1804,7 +1804,7 @@ func TestOfferSnapshot_Errors(t *testing.T) {
 
 	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
 		Height:   2,
-		Format:   snapshots.CurrentFormat,
+		Format:   snapshottypes.CurrentFormat,
 		Chunks:   3,
 		Hash:     []byte{1, 2, 3},
 		Metadata: metadata,

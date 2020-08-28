@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 func TestManager_List(t *testing.T) {
@@ -28,7 +29,7 @@ func TestManager_List(t *testing.T) {
 	defer teardown()
 	list, err := manager.List()
 	require.NoError(t, err)
-	assert.Equal(t, []*snapshots.Snapshot{}, list)
+	assert.Equal(t, []*types.Snapshot{}, list)
 }
 
 func TestManager_LoadChunk(t *testing.T) {
@@ -77,12 +78,12 @@ func TestManager_Take(t *testing.T) {
 	// taking a snapshot at a higher height should be fine, and should return it
 	snapshot, err := manager.Take(5)
 	require.NoError(t, err)
-	assert.Equal(t, &snapshots.Snapshot{
+	assert.Equal(t, &types.Snapshot{
 		Height: 5,
-		Format: snapshots.CurrentFormat,
+		Format: types.CurrentFormat,
 		Chunks: 3,
 		Hash:   []uint8{0x47, 0xe4, 0xee, 0x7f, 0x21, 0x1f, 0x73, 0x26, 0x5d, 0xd1, 0x76, 0x58, 0xf6, 0xe2, 0x1c, 0x13, 0x18, 0xbd, 0x6c, 0x81, 0xf3, 0x75, 0x98, 0xe2, 0xa, 0x27, 0x56, 0x29, 0x95, 0x42, 0xef, 0xcf},
-		Metadata: snapshots.Metadata{
+		Metadata: types.Metadata{
 			ChunkHashes: [][]byte{
 				checksum([]byte{1, 2, 3}),
 				checksum([]byte{4, 5, 6}),
@@ -136,37 +137,37 @@ func TestManager_Restore(t *testing.T) {
 	}
 
 	// Restore errors on invalid format
-	err := manager.Restore(snapshots.Snapshot{
+	err := manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   0,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   uint32(len(chunks)),
-		Metadata: snapshots.Metadata{ChunkHashes: checksums(chunks)},
+		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.Error(t, err)
-	require.Equal(t, err, snapshots.ErrUnknownFormat)
+	require.Equal(t, err, types.ErrUnknownFormat)
 
 	// Restore errors on no chunks
-	err = manager.Restore(snapshots.Snapshot{Height: 3, Format: 1, Hash: []byte{1, 2, 3}})
+	err = manager.Restore(types.Snapshot{Height: 3, Format: 1, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
 	// Restore errors on chunk and chunkhashes mismatch
-	err = manager.Restore(snapshots.Snapshot{
+	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   4,
-		Metadata: snapshots.Metadata{ChunkHashes: checksums(chunks)},
+		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.Error(t, err)
 
 	// Starting a restore works
-	err = manager.Restore(snapshots.Snapshot{
+	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   3,
-		Metadata: snapshots.Metadata{ChunkHashes: checksums(chunks)},
+		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.NoError(t, err)
 
@@ -180,7 +181,7 @@ func TestManager_Restore(t *testing.T) {
 	// Feeding an invalid chunk should error due to invalid checksum, but not abort restoration.
 	_, err = manager.RestoreChunk([]byte{9, 9, 9})
 	require.Error(t, err)
-	require.True(t, errors.Is(err, snapshots.ErrChunkHashMismatch))
+	require.True(t, errors.Is(err, types.ErrChunkHashMismatch))
 
 	// Feeding the chunks should work
 	for i, chunk := range chunks {
@@ -196,12 +197,12 @@ func TestManager_Restore(t *testing.T) {
 	assert.Equal(t, chunks, target.chunks)
 
 	// Starting a new restore should fail now, because the target already has contents.
-	err = manager.Restore(snapshots.Snapshot{
+	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   3,
-		Metadata: snapshots.Metadata{ChunkHashes: checksums(chunks)},
+		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.Error(t, err)
 
@@ -209,12 +210,12 @@ func TestManager_Restore(t *testing.T) {
 	// fail it with a checksum error. That error should stop the operation, so that we can do
 	// a prune operation right after.
 	target.chunks = nil
-	err = manager.Restore(snapshots.Snapshot{
+	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   1,
 		Hash:     []byte{1, 2, 3},
 		Chunks:   3,
-		Metadata: snapshots.Metadata{ChunkHashes: checksums(chunks)},
+		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.NoError(t, err)
 }

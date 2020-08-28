@@ -14,6 +14,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 func checksum(b []byte) []byte {
@@ -64,7 +65,7 @@ type mockSnapshotter struct {
 
 func (m *mockSnapshotter) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
 	if format == 0 {
-		return snapshots.ErrUnknownFormat
+		return types.ErrUnknownFormat
 	}
 	if m.chunks != nil {
 		return errors.New("already has contents")
@@ -84,7 +85,7 @@ func (m *mockSnapshotter) Restore(height uint64, format uint32, chunks <-chan io
 
 func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	if format == 0 {
-		return nil, snapshots.ErrUnknownFormat
+		return nil, types.ErrUnknownFormat
 	}
 	ch := make(chan io.ReadCloser, len(m.chunks))
 	for _, chunk := range m.chunks {

@@ -16,7 +16,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -330,7 +330,7 @@ func (app *BaseApp) halt() {
 	os.Exit(0)
 }
 
-// snapshot takes a snapshot of the current state and prunes any old snapshots.
+// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
 func (app *BaseApp) snapshot(height int64) {
 	app.logger.Info("Taking state snapshot", "height", height)
 	snapshot, err := app.snapshotManager.Take(uint64(height))
@@ -430,7 +430,7 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 	}
 
-	snapshot, err := snapshots.SnapshotFromABCI(req.Snapshot)
+	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
 	if err != nil {
 		app.logger.Error("Failed to decode snapshot metadata", "err", err)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
@@ -440,10 +440,10 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 	case err == nil:
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}
 
-	case errors.Is(err, snapshots.ErrUnknownFormat):
+	case errors.Is(err, snapshottypes.ErrUnknownFormat):
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
 
-	case errors.Is(err, snapshots.ErrInvalidMetadata):
+	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
 		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
 			"format", req.Snapshot.Format, "err", err.Error())
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
@@ -464,7 +464,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 	case err == nil:
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
 
-	case errors.Is(err, snapshots.ErrChunkHashMismatch):
+	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
 		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
 			"chunk", req.Index, "sender", req.Sender, "err", err)
 		return abci.ResponseApplySnapshotChunk{

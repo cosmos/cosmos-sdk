@@ -300,12 +300,12 @@ func TestStore_Save(t *testing.T) {
 	// Saving a snapshot should work
 	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))
 	require.NoError(t, err)
-	assert.Equal(t, &snapshots.Snapshot{
+	assert.Equal(t, &types.Snapshot{
 		Height: 4,
 		Format: 1,
 		Chunks: 2,
 		Hash:   hash([][]byte{{1}, {2}}),
-		Metadata: snapshots.Metadata{
+		Metadata: types.Metadata{
 			ChunkHashes: [][]byte{
 				checksum([]byte{1}),
 				checksum([]byte{2}),

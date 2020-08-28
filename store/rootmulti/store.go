@@ -18,6 +18,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -537,13 +538,13 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 
 //---------------------- Snapshotting ------------------
 
-// Snapshot implements snapshots.Snapshotter. The snapshot output for a given format must be
+// Snapshot implements snapshottypes.Snapshotter. The snapshot output for a given format must be
 // identical across nodes such that chunks from different sources fit together. If the output for a
 // given format changes (at the byte level), the snapshot format must be bumped - see
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
-	if format != snapshots.CurrentFormat {
-		return nil, fmt.Errorf("%w %v", snapshots.ErrUnknownFormat, format)
+	if format != snapshottypes.CurrentFormat {
+		return nil, fmt.Errorf("%w %v", snapshottypes.ErrUnknownFormat, format)
 	}
 	if height == 0 {
 		return nil, errors.New("cannot snapshot height 0")
@@ -656,16 +657,16 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 	return ch, nil
 }
 
-// Restore implements snapshots.Snapshotter.
+// Restore implements snapshottypes.Snapshotter.
 func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
-	if format != snapshots.CurrentFormat {
-		return fmt.Errorf("%w %v", snapshots.ErrUnknownFormat, format)
+	if format != snapshottypes.CurrentFormat {
+		return fmt.Errorf("%w %v", snapshottypes.ErrUnknownFormat, format)
 	}
 	if height == 0 {
-		return fmt.Errorf("%w: cannot restore snapshot at height 0", snapshots.ErrInvalidMetadata)
+		return fmt.Errorf("%w: cannot restore snapshot at height 0", snapshottypes.ErrInvalidMetadata)
 	}
 	if height > math.MaxInt64 {
-		return fmt.Errorf("%w: snapshot height %v cannot exceed %v", snapshots.ErrInvalidMetadata,
+		return fmt.Errorf("%w: snapshot height %v cannot exceed %v", snapshottypes.ErrInvalidMetadata,
 			height, math.MaxInt64)
 	}
 

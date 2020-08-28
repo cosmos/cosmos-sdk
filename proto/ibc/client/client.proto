@@ -25,7 +25,8 @@ message ClientConsensusStates {
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
   // client unique identifier
-  string              client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];  // light client state
+  string              client_id    = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];  
+  // light client state
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
   // consensus state associated with the client that corresponds to a given height.
   google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
@@ -33,12 +34,12 @@ message MsgCreateClient {
   bytes signer = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
-// MsgUpdateClientdefines an sdk.Msg to update a tendermint client state to
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
 message MsgUpdateClient {
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  // block header to which the light client will be updated
+  // header to update the light client
   google.protobuf.Any header = 2;
   // signer address
   bytes signer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];

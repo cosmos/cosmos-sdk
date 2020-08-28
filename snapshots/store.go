@@ -358,16 +358,9 @@ func decodeKey(k []byte) (uint64, uint32, error) {
 
 // encodeKey encodes a snapshot key.
 func encodeKey(height uint64, format uint32) []byte {
-	k := make([]byte, 0, 13)
-	k = append(k, keyPrefixSnapshot)
-
-	bHeight := make([]byte, 8)
-	binary.BigEndian.PutUint64(bHeight, height)
-	k = append(k, bHeight...)
-
-	bFormat := make([]byte, 4)
-	binary.BigEndian.PutUint32(bFormat, format)
-	k = append(k, bFormat...)
-
+	k := make([]byte, 13)
+	k[0] = keyPrefixSnapshot
+	binary.BigEndian.PutUint64(k[1:], height)
+	binary.BigEndian.PutUint32(k[9:], format)
 	return k
 }

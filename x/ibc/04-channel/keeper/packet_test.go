@@ -607,6 +607,23 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 
 	testCases := []testCase{
 		{"success ORDERED", func() {
+			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, types.ORDERED)
+
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// create packet acknowledgement
+			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+
+		}, true},
+		{"success UNORDERED", func() {
 			// setup uses an UNORDERED channel
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
@@ -644,9 +661,18 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.AcknowledgementExecuted(suite.chainA.GetContext(), chanCap, packet)
 			pc := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
+			channelA, _ := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel())
+			sequenceAck, _ := suite.chainA.App.IBCKeeper.ChannelKeeper.GetNextSequenceAck(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel())
+
 			if tc.expPass {
 				suite.NoError(err)
 				suite.Nil(pc)
+
+				if channelA.Ordering == types.ORDERED {
+					suite.Require().Equal(packet.GetSequence()+1, sequenceAck, "sequence not incremented in ordered channel")
+				} else {
+					suite.Require().Equal(uint64(1), sequenceAck, "sequence incremented for UNORDERED channel")
+				}
 			} else {
 				suite.Error(err)
 			}

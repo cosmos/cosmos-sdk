@@ -344,7 +344,7 @@ func (app *BaseApp) snapshot(height int64) {
 		app.logger.Debug("Pruning state snapshots")
 		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
 		if err != nil {
-			app.logger.Error("Failed to prune state snapshots", "err", err.Error())
+			app.logger.Error("Failed to prune state snapshots", "err", err)
 			return
 		}
 		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
@@ -394,13 +394,13 @@ func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseLi
 
 	snapshots, err := app.snapshotManager.List()
 	if err != nil {
-		app.logger.Error("Failed to list snapshots", "err", err.Error())
+		app.logger.Error("Failed to list snapshots", "err", err)
 		return resp
 	}
 	for _, snapshot := range snapshots {
 		abciSnapshot, err := snapshot.ToABCI()
 		if err != nil {
-			app.logger.Error("Failed to list snapshots", "err", err.Error())
+			app.logger.Error("Failed to list snapshots", "err", err)
 			return resp
 		}
 		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
@@ -417,7 +417,7 @@ func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.Re
 	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
 	if err != nil {
 		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
-			"chunk", req.Chunk, "err", err.Error())
+			"chunk", req.Chunk, "err")
 		return abci.ResponseLoadSnapshotChunk{}
 	}
 	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
@@ -445,12 +445,12 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 
 	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
 		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err.Error())
+			"format", req.Snapshot.Format, "err", err)
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
 
 	default:
 		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
-			"format", req.Snapshot.Format, "err", err.Error())
+			"format", req.Snapshot.Format, "err", err)
 		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
 		// so we ask Tendermint to abort all snapshot restoration.
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
@@ -474,7 +474,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 		}
 
 	default:
-		app.logger.Error("Failed to restore snapshot", "err", err.Error())
+		app.logger.Error("Failed to restore snapshot", "err", err)
 		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
 	}
 }

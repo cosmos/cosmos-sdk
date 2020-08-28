@@ -116,7 +116,7 @@ func checkValidity(
 
 	// assert header height is newer than consensus state
 	height := clienttypes.NewHeight(0, header.GetHeight())
-	if consState.Height.GT(height) {
+	if height.LTE(consState.Height) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,

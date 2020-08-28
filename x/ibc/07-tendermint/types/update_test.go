@@ -24,8 +24,8 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	suite.Require().NoError(err)
 
 	epochHeight := int64(height.EpochHeight)
-	altHeight1 := clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-3)
-	altHeight2 := clienttypes.NewHeight(height.EpochNumber, height.EpochHeight+5)
+	heightMinus3 := clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-3)
+	heightPlus5 := clienttypes.NewHeight(height.EpochNumber, height.EpochHeight+5)
 
 	altVal := tmtypes.NewValidator(altPubKey, epochHeight)
 
@@ -81,7 +81,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			name: "successful update for a previous height",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
-				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), altHeight1, suite.valsHash)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), heightMinus3, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, epochHeight-1, epochHeight-3, suite.headerTime, bothValSet, suite.valSet, bothSigners)
 				currentTime = suite.now
 			},
@@ -173,7 +173,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 		{
 			name: "header height < consensus height",
 			setup: func() {
-				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, altHeight2, commitmenttypes.GetSDKSpecs())
+				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, heightPlus5, commitmenttypes.GetSDKSpecs())
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
 				// Make new header at height less than latest client state
 				newHeader = types.CreateTestHeader(chainID, epochHeight-1, epochHeight, suite.headerTime, suite.valSet, suite.valSet, signers)

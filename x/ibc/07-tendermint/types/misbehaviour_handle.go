@@ -32,7 +32,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
 	height := clienttypes.NewHeight(0, uint64(misbehaviour.GetHeight()))
-	if cs.IsFrozen() && !cs.FrozenHeight.GT(height) {
+	if cs.IsFrozen() && cs.FrozenHeight.LTE(height) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}

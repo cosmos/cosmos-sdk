@@ -177,8 +177,10 @@ type MsgUpdateClient interface {
 type Height interface {
 	IsZero() bool
 	LT(Height) bool
+	LTE(Height) bool
 	EQ(Height) bool
 	GT(Height) bool
+	GTE(Height) bool
 	IsValid() bool
 }
 

@@ -48,9 +48,21 @@ func (h Height) LT(other exported.Height) bool {
 	return h.Compare(other) == -1
 }
 
+// LTE Helper comparison function returns true if h <= other
+func (h Height) LTE(other exported.Height) bool {
+	cmp := h.Compare(other)
+	return cmp <= 0
+}
+
 // GT Helper comparison function returns true if h > other
 func (h Height) GT(other exported.Height) bool {
 	return h.Compare(other) == 1
+}
+
+// GTE Helper comparison function returns true if h >= other
+func (h Height) GTE(other exported.Height) bool {
+	cmp := h.Compare(other)
+	return cmp >= 0
 }
 
 // EQ Helper comparison function returns true if h == other

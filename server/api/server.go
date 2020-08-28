@@ -117,6 +117,7 @@ func (s *Server) Start(cfg config.Config) error {
 		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
 
+	s.logger.Info("starting API server...")
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
 }
 

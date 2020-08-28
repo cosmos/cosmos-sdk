@@ -29,8 +29,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case clientexported.MsgSubmitMisbehaviour:
 			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
 
-		// Client Misbehaviour is handled by the evidence module
-
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)

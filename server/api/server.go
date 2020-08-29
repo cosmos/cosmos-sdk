@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
+	_ "github.com/cosmos/cosmos-sdk/client/grpc-gateway/statik"
 )
 
 // Server defines the server's API interface.
@@ -133,7 +133,7 @@ func (s *Server) registerSwaggerUI() {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	s.Router.PathPrefix("/legacy").Handler(staticServer)
+	s.Router.PathPrefix("/swagger").Handler(staticServer)
 }
 
 func (s *Server) registerGRPCRoutes() {

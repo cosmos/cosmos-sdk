@@ -5,18 +5,13 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
-	_ evidenceexported.Evidence   = (*Misbehaviour)(nil)
 	_ clientexported.Misbehaviour = (*Misbehaviour)(nil)
 )
 
@@ -30,11 +25,6 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 	return misbehaviour.ClientId
 }
 
-// Route implements Evidence interface.
-func (misbehaviour Misbehaviour) Route() string {
-	return clienttypes.SubModuleName
-}
-
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
 	return clientexported.TypeEvidenceClientMisbehaviour
@@ -46,15 +36,9 @@ func (misbehaviour Misbehaviour) String() string {
 	return string(out)
 }
 
-// Hash implements Evidence interface
-func (misbehaviour Misbehaviour) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(&misbehaviour)
-	return tmhash.Sum(bz)
-}
-
 // GetHeight returns the sequence at which misbehaviour occurred.
-func (misbehaviour Misbehaviour) GetHeight() int64 {
-	return int64(misbehaviour.Sequence)
+func (misbehaviour Misbehaviour) GetHeight() uint64 {
+	return misbehaviour.Sequence
 }
 
 // ValidateBasic implements Evidence interface.

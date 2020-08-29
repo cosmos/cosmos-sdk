@@ -1,9 +1,6 @@
 package types_test
 
 import (
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
@@ -13,10 +10,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 
 	suite.Require().Equal(clientexported.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
-	suite.Require().Equal("client", misbehaviour.Route())
-	suite.Require().Equal("client_misbehaviour", misbehaviour.Type())
-	suite.Require().Equal(tmbytes.HexBytes(tmhash.Sum(types.SubModuleCdc.MustMarshalBinaryBare(misbehaviour))), misbehaviour.Hash())
-	suite.Require().Equal(int64(suite.solomachine.Sequence), misbehaviour.GetHeight())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight())
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {

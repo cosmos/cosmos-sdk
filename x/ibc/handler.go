@@ -192,9 +192,12 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrap(err, "receive packet callback failed")
 			}
 
-			// Set packet acknowledgement
-			if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
-				return nil, err
+			// If the caller returned a nil ack, it intends to do its own PacketExecuted.
+			if ack != nil {
+				// Set packet acknowledgement
+				if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
+					return nil, err
+				}
 			}
 
 			return res, nil

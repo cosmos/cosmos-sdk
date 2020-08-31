@@ -83,6 +83,16 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			expPass: true,
 		},
 		{
+			name: "unsuccessful update with incorrect header chain-id",
+			setup: func() {
+				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
+				newHeader = types.CreateTestHeader("ethermint", height+1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
+				currentTime = suite.now
+			},
+			expPass: false,
+		},
+		{
 			name: "unsuccessful update with next height: update header mismatches nextValSetHash",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs())

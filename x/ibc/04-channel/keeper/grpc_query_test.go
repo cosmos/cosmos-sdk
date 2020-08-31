@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 				}
 
 				// channel1 is second channel on first connection on chainA
-				testchannel1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				testchannel1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 				counterparty1 := types.Counterparty{
 					PortId:    connB0.Channels[1].PortID,
 					ChannelId: connB0.Channels[1].ID,
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 				}
 
 				// channel1 is second channel on first connection on chainA
-				testchannel1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+				testchannel1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 				counterparty1 := types.Counterparty{
 					PortId:    connB0.Channels[1].PortID,
 					ChannelId: connB0.Channels[1].ID,

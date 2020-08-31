@@ -68,7 +68,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	// channel1 is second channel on first connection on chainA
-	testchannel1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
+	testchannel1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 	counterparty1 := types.Counterparty{
 		PortId:    connB0.Channels[1].PortID,
 		ChannelId: connB0.Channels[1].ID,
@@ -115,7 +115,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 // tests their retrieval.
 func (suite KeeperTestSuite) TestGetAllSequences() {
 	_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
-	channelA1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
+	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 
 	seq1 := types.NewPacketSequence(channelA0.PortID, channelA0.ID, 1)
 	seq2 := types.NewPacketSequence(channelA0.PortID, channelA0.ID, 2)
@@ -148,7 +148,7 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 // channels on chain A and tests their retrieval.
 func (suite KeeperTestSuite) TestGetAllCommitmentsAcks() {
 	_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
-	channelA1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
+	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 
 	// channel 0 acks
 	ack1 := types.NewPacketAckCommitment(channelA0.PortID, channelA0.ID, 1, []byte("ack"))
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestGetAllPacketCommitmentsAtChannel() {
 	_, _, connA, connB, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 	// create second channel
-	channelA1, _ := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
+	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 
 	ctxA := suite.chainA.GetContext()
 	expectedSeqs := make(map[uint64]bool)

@@ -27,6 +27,7 @@ const (
 
 var (
 	MockAcknowledgement = []byte("mock acknowledgement")
+	MockCommitment      = []byte("mock packet commitment")
 )
 
 // AppModuleBasic is the mock AppModuleBasic.

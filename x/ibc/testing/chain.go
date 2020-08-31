@@ -59,6 +59,9 @@ var (
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
+
+	MockAcknowledgement = mock.MockAcknowledgement
+	MockCommitment      = mock.MockCommitment
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI

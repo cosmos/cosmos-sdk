@@ -680,7 +680,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"consensus state not found", func() {
-			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)

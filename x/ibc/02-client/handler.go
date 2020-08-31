@@ -46,9 +46,12 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
 func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateClient) (*sdk.Result, error) {
-	header := types.MustUnpackHeader(msg.Header)
+	header, err := types.UnpackHeader(msg.Header)
+	if err != nil {
+		return nil, err
+	}
 
-	_, err := k.UpdateClient(ctx, msg.ClientId, header)
+	_, err = k.UpdateClient(ctx, msg.ClientId, header)
 	if err != nil {
 		return nil, err
 	}

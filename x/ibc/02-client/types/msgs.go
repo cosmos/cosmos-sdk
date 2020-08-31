@@ -178,7 +178,7 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 		return sdkerrors.Wrapf(
 			ErrInvalidMisbehaviour,
 			"misbehaviour client-id doesn't match client-id from message (%s ≠ %s)",
-			misbehaviour.GetClientID, msg.ClientId,
+			misbehaviour.GetClientID(), msg.ClientId,
 		)
 	}
 

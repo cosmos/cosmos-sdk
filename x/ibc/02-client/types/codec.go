@@ -64,16 +64,6 @@ func PackClientState(clientState exported.ClientState) (*codectypes.Any, error) 
 	return anyClientState, nil
 }
 
-// MustPackClientState calls PackClientState and panics on error.
-func MustPackClientState(clientState exported.ClientState) *codectypes.Any {
-	anyClientState, err := PackClientState(clientState)
-	if err != nil {
-		panic(err)
-	}
-
-	return anyClientState
-}
-
 // UnpackClientState unpacks an Any into a ClientState. It returns an error if the
 // client state can't be unpacked into a ClientState.
 func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
@@ -87,16 +77,6 @@ func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
 	}
 
 	return clientState, nil
-}
-
-// MustUnpackClientState calls UnpackClientState and panics on error.
-func MustUnpackClientState(any *codectypes.Any) exported.ClientState {
-	clientState, err := UnpackClientState(any)
-	if err != nil {
-		panic(err)
-	}
-
-	return clientState
 }
 
 // PackConsensusState constructs a new Any packed with the given consensus state value. It returns
@@ -142,16 +122,6 @@ func UnpackConsensusState(any *codectypes.Any) (exported.ConsensusState, error) 
 	return consensusState, nil
 }
 
-// MustUnpackConsensusState calls UnpackConsensusState and panics on error.
-func MustUnpackConsensusState(any *codectypes.Any) exported.ConsensusState {
-	consensusState, err := UnpackConsensusState(any)
-	if err != nil {
-		panic(err)
-	}
-
-	return consensusState
-}
-
 // PackHeader constructs a new Any packed with the given header value. It returns
 // an error if the header can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.
@@ -184,16 +154,6 @@ func UnpackHeader(any *codectypes.Any) (exported.Header, error) {
 	return header, nil
 }
 
-// MustUnpackHeader calls UnpackHeader and panics on error.
-func MustUnpackHeader(any *codectypes.Any) exported.Header {
-	header, err := UnpackHeader(any)
-	if err != nil {
-		panic(err)
-	}
-
-	return header
-}
-
 // PackMisbehaviour constructs a new Any packed with the given header value. It returns
 // an error if the header can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.
@@ -224,14 +184,4 @@ func UnpackMisbehaviour(any *codectypes.Any) (exported.Misbehaviour, error) {
 	}
 
 	return misbehaviour, nil
-}
-
-// MustUnpackMisbehaviour calls UnpackMisbehaviour and panics on error.
-func MustUnpackMisbehaviour(any *codectypes.Any) exported.Misbehaviour {
-	misbehaviour, err := UnpackMisbehaviour(any)
-	if err != nil {
-		panic(err)
-	}
-
-	return misbehaviour
 }

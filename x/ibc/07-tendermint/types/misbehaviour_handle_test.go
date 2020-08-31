@@ -82,7 +82,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientId: chainID,
 			},
 			suite.now,
-			true,
+			false,
 		},
 		{
 			"valid misbehavior misbehaviour with different trusted heights",

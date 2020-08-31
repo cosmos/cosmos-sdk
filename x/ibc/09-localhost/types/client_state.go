@@ -120,7 +120,8 @@ func (cs ClientState) VerifyClientState(
 // states.
 func (cs ClientState) VerifyClientConsensusState(
 	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
-	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
+	clientexported.Height, string, clientexported.Height, commitmentexported.Prefix,
+	[]byte, clientexported.ConsensusState,
 ) error {
 	return nil
 }

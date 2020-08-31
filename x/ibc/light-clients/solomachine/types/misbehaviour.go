@@ -37,8 +37,10 @@ func (misbehaviour Misbehaviour) String() string {
 }
 
 // GetHeight returns the sequence at which misbehaviour occurred.
-func (misbehaviour Misbehaviour) GetHeight() uint64 {
-	return misbehaviour.Sequence
+// Return clientexported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (misbehaviour Misbehaviour) GetHeight() clientexported.Height {
+	return clienttypes.NewHeight(0, misbehaviour.Sequence)
 }
 
 // ValidateBasic implements Evidence interface.

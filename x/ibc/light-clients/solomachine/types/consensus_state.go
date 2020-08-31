@@ -18,8 +18,10 @@ func (ConsensusState) ClientType() clientexported.ClientType {
 }
 
 // GetHeight returns the sequence number.
-func (cs ConsensusState) GetHeight() uint64 {
-	return cs.Sequence
+// Return clientexported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (cs ConsensusState) GetHeight() clientexported.Height {
+	return clienttypes.NewHeight(0, cs.Sequence)
 }
 
 // GetTimestamp returns zero.

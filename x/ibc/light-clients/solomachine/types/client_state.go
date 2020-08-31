@@ -76,7 +76,7 @@ func (cs ClientState) VerifyClientState(
 	proof []byte,
 	clientState clientexported.ClientState,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -110,12 +110,12 @@ func (cs ClientState) VerifyClientConsensusState(
 	_ commitmentexported.Root,
 	height clientexported.Height,
 	counterpartyClientIdentifier string,
-	consensusHeight uint64,
+	consensusHeight clientexported.Height,
 	prefix commitmentexported.Prefix,
 	proof []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (cs ClientState) VerifyConnectionState(
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	packetSequence uint64,
 	commitmentBytes []byte,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	packetSequence uint64,
 	acknowledgement []byte,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	channelID string,
 	packetSequence uint64,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	signature, sequence, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}

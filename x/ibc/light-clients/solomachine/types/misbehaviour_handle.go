@@ -34,7 +34,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, err
 	}
 
-	cs.FrozenSequence = soloMisbehaviour.GetHeight()
+	cs.FrozenSequence = soloMisbehaviour.Sequence
 	return cs, nil
 }
 

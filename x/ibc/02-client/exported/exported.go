@@ -18,9 +18,9 @@ import (
 type ClientState interface {
 	GetChainID() string
 	ClientType() ClientType
-	GetLatestHeight() uint64
+	GetLatestHeight() Height
 	IsFrozen() bool
-	GetFrozenHeight() uint64
+	GetFrozenHeight() Height
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -35,7 +35,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,
@@ -45,9 +45,9 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		root commitmentexported.Root,
-		height uint64,
+		height Height,
 		counterpartyClientIdentifier string,
-		consensusHeight uint64,
+		consensusHeight Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		consensusState ConsensusState,
@@ -55,7 +55,7 @@ type ClientState interface {
 	VerifyConnectionState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		connectionID string,
@@ -64,7 +64,7 @@ type ClientState interface {
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -74,7 +74,7 @@ type ClientState interface {
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -85,7 +85,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -96,7 +96,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -106,7 +106,7 @@ type ClientState interface {
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix commitmentexported.Prefix,
 		proof []byte,
 		portID,
@@ -120,7 +120,7 @@ type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
 	// GetHeight returns the height of the consensus state
-	GetHeight() uint64
+	GetHeight() Height
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
@@ -140,13 +140,13 @@ type Misbehaviour interface {
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
-	GetHeight() uint64
+	GetHeight() Height
 }
 
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
-	GetHeight() uint64
+	GetHeight() Height
 }
 
 // message and evidence types for the IBC client

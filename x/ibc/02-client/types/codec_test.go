@@ -50,24 +50,24 @@ func TestPackClientState(t *testing.T) {
 
 	testCasesAny := []caseAny{}
 
-	for i := range testCases {
-		clientAny, err := types.PackClientState(testCases[i].clientState)
-		if testCases[i].expPass {
-			require.NoError(t, err, testCases[i].name)
+	for _, tc := range testCases {
+		clientAny, err := types.PackClientState(tc.clientState)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
 		} else {
-			require.Error(t, err, testCases[i].name)
+			require.Error(t, err, tc.name)
 		}
 
-		testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, testCases[i].expPass})
+		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
 	}
 
-	for i := range testCasesAny {
-		cs, err := types.UnpackClientState(testCasesAny[i].any)
-		if testCasesAny[i].expPass {
-			require.NoError(t, err, testCasesAny[i].name)
-			require.Equal(t, testCases[i].clientState, cs, testCasesAny[i].name)
+	for i, tc := range testCasesAny {
+		cs, err := types.UnpackClientState(tc.any)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+			require.Equal(t, testCases[i].clientState, cs, tc.name)
 		} else {
-			require.Error(t, err, testCasesAny[i].name)
+			require.Error(t, err, tc.name)
 		}
 	}
 }
@@ -99,23 +99,23 @@ func TestPackConsensusState(t *testing.T) {
 
 	testCasesAny := []caseAny{}
 
-	for i := range testCases {
-		clientAny, err := types.PackConsensusState(testCases[i].consensusState)
-		if testCases[i].expPass {
-			require.NoError(t, err, testCases[i].name)
+	for _, tc := range testCases {
+		clientAny, err := types.PackConsensusState(tc.consensusState)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
 		} else {
-			require.Error(t, err, testCases[i].name)
+			require.Error(t, err, tc.name)
 		}
-		testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, testCases[i].expPass})
+		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
 	}
 
-	for i := range testCasesAny {
-		cs, err := types.UnpackConsensusState(testCasesAny[i].any)
-		if testCasesAny[i].expPass {
-			require.NoError(t, err, testCasesAny[i].name)
-			require.Equal(t, testCases[i].consensusState, cs, testCasesAny[i].name)
+	for i, tc := range testCasesAny {
+		cs, err := types.UnpackConsensusState(tc.any)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+			require.Equal(t, testCases[i].consensusState, cs, tc.name)
 		} else {
-			require.Error(t, err, testCasesAny[i].name)
+			require.Error(t, err, tc.name)
 		}
 	}
 }
@@ -147,24 +147,24 @@ func TestPackHeader(t *testing.T) {
 
 	testCasesAny := []caseAny{}
 
-	for i := range testCases {
-		clientAny, err := types.PackHeader(testCases[i].header)
-		if testCases[i].expPass {
-			require.NoError(t, err, testCases[i].name)
+	for _, tc := range testCases {
+		clientAny, err := types.PackHeader(tc.header)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
 		} else {
-			require.Error(t, err, testCases[i].name)
+			require.Error(t, err, tc.name)
 		}
 
-		testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, testCases[i].expPass})
+		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
 	}
 
-	for i := range testCasesAny {
-		cs, err := types.UnpackHeader(testCasesAny[i].any)
-		if testCasesAny[i].expPass {
-			require.NoError(t, err, testCasesAny[i].name)
-			require.Equal(t, testCases[i].header, cs, testCasesAny[i].name)
+	for i, tc := range testCasesAny {
+		cs, err := types.UnpackHeader(tc.any)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+			require.Equal(t, testCases[i].header, cs, tc.name)
 		} else {
-			require.Error(t, err, testCasesAny[i].name)
+			require.Error(t, err, tc.name)
 		}
 	}
 }
@@ -196,24 +196,24 @@ func TestPackMisbehaviour(t *testing.T) {
 
 	testCasesAny := []caseAny{}
 
-	for i := range testCases {
-		clientAny, err := types.PackMisbehaviour(testCases[i].misbehaviour)
-		if testCases[i].expPass {
-			require.NoError(t, err, testCases[i].name)
+	for _, tc := range testCases {
+		clientAny, err := types.PackMisbehaviour(tc.misbehaviour)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
 		} else {
-			require.Error(t, err, testCases[i].name)
+			require.Error(t, err, tc.name)
 		}
 
-		testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, testCases[i].expPass})
+		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
 	}
 
-	for i := range testCasesAny {
-		cs, err := types.UnpackMisbehaviour(testCasesAny[i].any)
-		if testCasesAny[i].expPass {
-			require.NoError(t, err, testCasesAny[i].name)
-			require.Equal(t, testCases[i].misbehaviour, cs, testCasesAny[i].name)
+	for i, tc := range testCasesAny {
+		cs, err := types.UnpackMisbehaviour(tc.any)
+		if tc.expPass {
+			require.NoError(t, err, tc.name)
+			require.Equal(t, testCases[i].misbehaviour, cs, tc.name)
 		} else {
-			require.Error(t, err, testCasesAny[i].name)
+			require.Error(t, err, tc.name)
 		}
 	}
 }

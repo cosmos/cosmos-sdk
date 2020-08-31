@@ -8,6 +8,7 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -268,7 +269,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 		{
 			"client state not found",
 			func() {
-				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				// set connection to empty so clientID is empty
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, types.ConnectionEnd{})
@@ -356,7 +357,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 		{
 			"consensus state not found",
 			func() {
-				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,

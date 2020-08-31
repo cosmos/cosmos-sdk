@@ -50,7 +50,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -171,7 +171,7 @@ func WriteGeneratedTxResponse(
 			return
 		}
 
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(ctx, txf, msgs...)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -248,8 +248,8 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 // BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
-	tx, err := BuildUnsignedTx(txf, msgs...)
+func BuildSimTx(txf Factory, from string, msgs ...sdk.Msg) ([]byte, error) {
+	txb, err := BuildUnsignedTx(txf, msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -258,11 +258,13 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// sentinel pubkey.
 	sig := signing.SignatureV2{}
 
-	if err := tx.SetSignatures(sig); err != nil {
+	Sign(txf, from, txb)
+
+	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	simReq := sim.SimulateRequest{Tx: tx.GetProtoTx()}
+	simReq := sim.SimulateRequest{Tx: txb.GetProtoTx()}
 
 	return simReq.Marshal()
 }
@@ -270,14 +272,14 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
+	cliCtx client.Context, txf Factory, msgs ...sdk.Msg,
 ) (sdk.SimulationResponse, uint64, error) {
-	txBytes, err := BuildSimTx(txf, msgs...)
+	txBytes, err := BuildSimTx(txf, cliCtx.GetFromName(), msgs...)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	bz, _, err := queryFunc("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
+	bz, _, err := cliCtx.QueryWithData("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}

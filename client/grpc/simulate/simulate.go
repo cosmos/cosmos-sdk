@@ -2,6 +2,7 @@ package simulate
 
 import (
 	"context"
+	fmt "fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,17 +44,18 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		return nil, err
 	}
 	txBuilder := authtx.WrapTx(req.Tx, s.pubkeyCodec)
-
 	txBytes, err := req.Tx.Marshal()
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("simulating")
 	gasInfo, result, err := s.simulate(txBytes, txBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("response")
 	return &SimulateResponse{
 		GasInfo: &gasInfo,
 		Result:  result,

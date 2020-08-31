@@ -119,7 +119,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 
 	// Ensure that Commit Hashes are different
 	if blockID1.Equals(*blockID2) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are not equal")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are equal")
 	}
 	if err := ValidCommit(misbehaviour.ChainId, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
 		return err

@@ -484,7 +484,7 @@ func (coord *Coordinator) ChanOpenInit(
 	sourceChannel := connection.AddTestChannel(sourcePortID)
 	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
 
-	// NOTE: only creation of a capbility for a transfer or mock port is supported
+	// NOTE: only creation of a capability for a transfer or mock port is supported
 	// Other applications must bind to the port in InitGenesis or modify this code.
 	source.CreatePortCapability(sourceChannel.PortID)
 	coord.IncrementTime()

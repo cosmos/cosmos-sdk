@@ -6,8 +6,6 @@ package mocks
 
 import (
 	json "encoding/json"
-	reflect "reflect"
-
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,6 +16,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
+	reflect "reflect"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface

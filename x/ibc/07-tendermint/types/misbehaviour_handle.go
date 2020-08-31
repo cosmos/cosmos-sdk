@@ -27,7 +27,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 ) (clientexported.ClientState, error) {
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
-	if cs.IsFrozen() && cs.FrozenHeight <= uint64(misbehaviour.GetHeight()) {
+	if cs.IsFrozen() && cs.FrozenHeight <= misbehaviour.GetHeight() {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
@@ -56,7 +56,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	infractionHeight := tmEvidence.GetHeight()
 	infractionTime := tmEvidence.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight) - infractionHeight
+	ageBlocks := int64(cs.LatestHeight - infractionHeight)
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -96,7 +96,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = uint64(tmEvidence.GetHeight())
+	cs.FrozenHeight = tmEvidence.GetHeight()
 	return &cs, nil
 }
 

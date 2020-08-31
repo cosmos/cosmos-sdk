@@ -139,7 +139,7 @@ go.sum: go.mod
 ###############################################################################
 
 update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	$(BINDIR)/statik -src=client/grpc-gateway -dest=client/grpc-gateway -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\
@@ -312,7 +312,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen
 
 proto-gen:
 	@./scripts/protocgen.sh
@@ -320,6 +320,9 @@ proto-gen:
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@./scripts/protocgen-any.sh
+
+proto-swagger-gen:
+	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
 	@buf check lint --error-format=json

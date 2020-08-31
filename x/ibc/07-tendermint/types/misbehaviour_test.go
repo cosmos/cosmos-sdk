@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
 
-func (suite *TendermintTestSuite) TestEvidence() {
+func (suite *TendermintTestSuite) TestMisbehaviour() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
 	epochHeight := int64(height.EpochHeight)
 
@@ -23,15 +22,12 @@ func (suite *TendermintTestSuite) TestEvidence() {
 		ClientId: clientID,
 	}
 
-	suite.Require().Equal(misbehaviour.ClientType(), clientexported.Tendermint)
-	suite.Require().Equal(misbehaviour.GetClientID(), clientID)
-	suite.Require().Equal(misbehaviour.Route(), "client")
-	suite.Require().Equal(misbehaviour.Type(), "client_misbehaviour")
-	suite.Require().Equal(misbehaviour.Hash(), tmbytes.HexBytes(tmhash.Sum(suite.cdc.MustMarshalBinaryBare(misbehaviour))))
-	suite.Require().Equal(misbehaviour.GetHeight(), int64(height.EpochHeight))
+	suite.Require().Equal(clientexported.Tendermint, misbehaviour.ClientType())
+	suite.Require().Equal(clientID, misbehaviour.GetClientID())
+	suite.Require().Equal(uint64(height), misbehaviour.GetHeight())
 }
 
-func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
+func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	altPrivVal := tmtypes.NewMockPV()
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)

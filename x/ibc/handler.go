@@ -26,7 +26,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case clientexported.MsgUpdateClient:
 			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		// Client Misbehaviour is handled by the evidence module
+		case clientexported.MsgSubmitMisbehaviour:
+			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
 
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:
@@ -192,7 +193,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			// Set packet acknowledgement
-			if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
+			if err = k.ChannelKeeper.ReceiveExecuted(ctx, cap, msg.Packet, ack); err != nil {
 				return nil, err
 			}
 

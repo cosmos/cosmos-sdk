@@ -67,8 +67,8 @@ message ConsensusState {
   // commitment root (i.e app hash)
   ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
   // height at which the consensus state was stored.
-  ibc.client.Height height               = 3 [
-    (gogoproto.nullable) = false,
+  ibc.client.Height height = 3 [
+    (gogoproto.nullable) = false
   ];
   bytes  next_validators_hash = 4 [
     (gogoproto.casttype) =
@@ -177,6 +177,6 @@ message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
 
   Misbehaviour misbehaviour  = 1;
-  bytes        submitter = 2
+  bytes        signer = 2
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

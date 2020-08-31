@@ -213,7 +213,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainB.GetConnection(connB)
 
 			var ok bool
@@ -291,7 +291,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			channel := suite.chainB.GetChannel(channelB)
 
 			var ok bool
@@ -370,7 +370,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 100, 0)
 			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
@@ -452,7 +452,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
 
 			// send packet
@@ -460,7 +460,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.Require().NoError(err)
 
 			// write ack
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -540,7 +540,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
 
 			// send packet, but no recv
@@ -627,7 +627,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
 
 			// send packet
@@ -635,7 +635,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// write ack, next seq recv incremented
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB

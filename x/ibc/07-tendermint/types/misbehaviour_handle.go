@@ -31,7 +31,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	}
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
-	height := clienttypes.NewHeight(0, uint64(misbehaviour.GetHeight()))
+	height := clienttypes.NewHeight(0, misbehaviour.GetHeight())
 	if cs.IsFrozen() && cs.FrozenHeight.LTE(height) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
@@ -96,7 +96,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = clienttypes.NewHeight(0, uint64(tmMisbehaviour.GetHeight()))
+	cs.FrozenHeight = tmEvidence.GetHeight()
 	return &cs, nil
 }
 

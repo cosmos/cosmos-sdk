@@ -24,9 +24,11 @@ import (
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// On a new chain, we consider the init chain block height as 0, even though
-	// req.InitialHeight is 1.
+	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
+	// If req.InitialHeight is > 1, then we set the initial version in the
+	// stores.
 	if req.InitialHeight > 1 {
 		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 		err := app.cms.SetInitialVersion(req.InitialHeight)

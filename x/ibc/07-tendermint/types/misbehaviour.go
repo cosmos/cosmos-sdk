@@ -6,20 +6,16 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
-	_ evidenceexported.Evidence   = Misbehaviour{}
 	_ clientexported.Misbehaviour = Misbehaviour{}
 )
 
@@ -44,16 +40,6 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 	return misbehaviour.ClientId
 }
 
-// Route implements Misbehaviour interface
-func (misbehaviour Misbehaviour) Route() string {
-	return clienttypes.SubModuleName
-}
-
-// Type implements Misbehaviour interface
-func (misbehaviour Misbehaviour) Type() string {
-	return clientexported.TypeEvidenceClientMisbehaviour
-}
-
 // String implements Misbehaviour interface
 func (misbehaviour Misbehaviour) String() string {
 	// FIXME: implement custom marshaller
@@ -64,17 +50,11 @@ func (misbehaviour Misbehaviour) String() string {
 	return string(bz)
 }
 
-// Hash implements Misbehaviour interface
-func (misbehaviour Misbehaviour) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(&misbehaviour)
-	return tmhash.Sum(bz)
-}
-
 // GetHeight returns the height at which misbehaviour occurred
 //
 // NOTE: assumes that misbehaviour headers have the same height
-func (misbehaviour Misbehaviour) GetHeight() int64 {
-	return int64(math.Min(float64(misbehaviour.Header1.GetHeight()), float64(misbehaviour.Header2.GetHeight())))
+func (misbehaviour Misbehaviour) GetHeight() uint64 {
+	return uint64(math.Min(float64(misbehaviour.Header1.GetHeight()), float64(misbehaviour.Header2.GetHeight())))
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the

@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -175,6 +174,14 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 	if err := misbehaviour.ValidateBasic(); err != nil {
 		return err
 	}
+	if misbehaviour.GetClientID() != msg.ClientId {
+		return sdkerrors.Wrapf(
+			ErrInvalidMisbehaviour,
+			"misbehaviour client-id doesn't match client-id from message (%s ≠ %s)",
+			misbehaviour.GetClientID, msg.ClientId,
+		)
+	}
+
 	return host.ClientIdentifierValidator(msg.ClientId)
 }
 
@@ -187,14 +194,4 @@ func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
-}
-
-// GetEvidence implements the Evidence interface
-func (msg MsgSubmitMisbehaviour) GetEvidence() evidenceexported.Evidence {
-	return MustUnpackMisbehaviour(msg.Misbehaviour)
-}
-
-// GetSubmitter implements the Evidence interface
-func (msg MsgSubmitMisbehaviour) GetSubmitter() sdk.AccAddress {
-	return msg.Signer
 }

@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -135,9 +134,13 @@ type ConsensusState interface {
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
-	evidenceexported.Evidence
 	ClientType() ClientType
 	GetClientID() string
+	String() string
+	ValidateBasic() error
+
+	// Height at which the infraction occurred
+	GetHeight() uint64
 }
 
 // Header is the consensus state update information
@@ -171,6 +174,13 @@ type MsgUpdateClient interface {
 	sdk.Msg
 	GetClientID() string
 	GetHeader() Header
+}
+
+// MsgSubmitMisbehaviour defines the msg interface that the
+// SubmitMisbehaviour Handler expects
+type MsgSubmitMisbehaviour interface {
+	sdk.Msg
+	GetMisbehaviour() Misbehaviour
 }
 
 // ClientType defines the type of the consensus algorithm

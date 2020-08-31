@@ -85,7 +85,7 @@ message MsgUpdateClient {
 // arbitrary Misbehaviour.
 message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
-  bytes submitter                    = 1
+  bytes signer                    = 1
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   Misbehaviour misbehaviour = 2;
 }

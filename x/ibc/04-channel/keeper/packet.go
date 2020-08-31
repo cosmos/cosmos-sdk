@@ -299,6 +299,8 @@ func (k Keeper) PacketExecuted(
 
 		nextSequenceRecv++
 
+		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
@@ -462,7 +464,9 @@ func (k Keeper) AcknowledgementExecuted(
 
 		nextSequenceAck++
 
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// Since this is the original sending chain, our channelEnd is packet's source port and channel
+		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}
 
 	// log that a packet has been acknowledged

@@ -26,7 +26,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *clienttypes.MsgUpdateClient:
 			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		// NOTE: Client Misbehaviour is handled by the evidence module
+		case *clienttypes.MsgSubmitMisbehaviour:
+			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
 
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:

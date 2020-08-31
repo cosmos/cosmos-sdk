@@ -132,6 +132,9 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
+// TypeEvidenceClientMisbehaviour is the shared evidence misbehaviour type
+const TypeEvidenceClientMisbehaviour string = "client_misbehaviour"
+
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
 	ClientType() ClientType
@@ -148,39 +151,6 @@ type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
 	ValidateBasic() error
-}
-
-// message and evidence types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-	TypeEvidenceClientMisbehaviour  string = "client_misbehaviour"
-)
-
-// MsgCreateClient defines the msg interface that the
-// CreateClient Handler expects
-type MsgCreateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetClientType() string
-	GetConsensusState() ConsensusState
-	InitializeClientState() ClientState
-}
-
-// MsgUpdateClient defines the msg interface that the
-// UpdateClient Handler expects
-type MsgUpdateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetHeader() Header
-}
-
-// MsgSubmitMisbehaviour defines the msg interface that the
-// SubmitMisbehaviour Handler expects
-type MsgSubmitMisbehaviour interface {
-	sdk.Msg
-	GetMisbehaviour() Misbehaviour
 }
 
 // ClientType defines the type of the consensus algorithm

@@ -12,7 +12,9 @@ func TestClientTypeString(t *testing.T) {
 		name       string
 		clientType ClientType
 	}{
+		{"solomachine client", ClientTypeSoloMachine, SoloMachine},
 		{"tendermint client", ClientTypeTendermint, Tendermint},
+		{"localhost client", ClientTypeLocalHost, Localhost},
 		{"empty type", "", 0},
 	}
 
@@ -30,7 +32,9 @@ func TestClientTypeMarshalJSON(t *testing.T) {
 		clientType ClientType
 		expectPass bool
 	}{
-		{"tendermint client should have passed", ClientTypeTendermint, Tendermint, true},
+		{"solomachine client", ClientTypeSoloMachine, SoloMachine, true},
+		{"tendermint client", ClientTypeTendermint, Tendermint, true},
+		{"localhost client", ClientTypeLocalHost, Localhost, true},
 		{"empty type should have failed", "", 0, false},
 	}
 

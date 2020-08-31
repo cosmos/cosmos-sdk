@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -16,9 +15,9 @@ import (
 )
 
 var (
-	_ clientexported.MsgCreateClient     = (*MsgCreateClient)(nil)
-	_ clientexported.MsgUpdateClient     = (*MsgUpdateClient)(nil)
-	_ evidenceexported.MsgSubmitEvidence = (*MsgSubmitClientMisbehaviour)(nil)
+	_ clientexported.MsgCreateClient       = (*MsgCreateClient)(nil)
+	_ clientexported.MsgUpdateClient       = (*MsgUpdateClient)(nil)
+	_ clientexported.MsgSubmitMisbehaviour = (*MsgSubmitClientMisbehaviour)(nil)
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -190,7 +189,7 @@ func (msg MsgUpdateClient) GetHeader() clientexported.Header {
 // NewMsgSubmitClientMisbehaviour creates a new MsgSubmitClientMisbehaviour
 // instance.
 func NewMsgSubmitClientMisbehaviour(m *Misbehaviour, s sdk.AccAddress) *MsgSubmitClientMisbehaviour {
-	return &MsgSubmitClientMisbehaviour{Misbehaviour: m, Submitter: s}
+	return &MsgSubmitClientMisbehaviour{Misbehaviour: m, Signer: s}
 }
 
 // Route returns the MsgSubmitClientMisbehaviour's route.
@@ -209,8 +208,8 @@ func (msg MsgSubmitClientMisbehaviour) ValidateBasic() error {
 	if err := msg.Misbehaviour.ValidateBasic(); err != nil {
 		return err
 	}
-	if msg.Submitter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Submitter.String())
+	if msg.Signer.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer.String())
 	}
 
 	return nil
@@ -224,13 +223,9 @@ func (msg MsgSubmitClientMisbehaviour) GetSignBytes() []byte {
 
 // GetSigners returns the single expected signer for a MsgSubmitClientMisbehaviour.
 func (msg MsgSubmitClientMisbehaviour) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Submitter}
+	return []sdk.AccAddress{msg.Signer}
 }
 
-func (msg MsgSubmitClientMisbehaviour) GetEvidence() evidenceexported.Evidence {
+func (msg MsgSubmitClientMisbehaviour) GetMisbehaviour() clientexported.Misbehaviour {
 	return msg.Misbehaviour
-}
-
-func (msg MsgSubmitClientMisbehaviour) GetSubmitter() sdk.AccAddress {
-	return msg.Submitter
 }

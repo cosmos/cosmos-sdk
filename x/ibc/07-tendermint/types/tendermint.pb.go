@@ -400,7 +400,7 @@ var xxx_messageInfo_MsgUpdateClient proto.InternalMessageInfo
 // light client misbehaviour.
 type MsgSubmitClientMisbehaviour struct {
 	Misbehaviour *Misbehaviour                                 `protobuf:"bytes,1,opt,name=misbehaviour,proto3" json:"misbehaviour,omitempty"`
-	Submitter    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=submitter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"submitter,omitempty"`
+	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
 }
 
 func (m *MsgSubmitClientMisbehaviour) Reset()         { *m = MsgSubmitClientMisbehaviour{} }
@@ -1044,10 +1044,10 @@ func (m *MsgSubmitClientMisbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	if len(m.Submitter) > 0 {
-		i -= len(m.Submitter)
-		copy(dAtA[i:], m.Submitter)
-		i = encodeVarintTendermint(dAtA, i, uint64(len(m.Submitter)))
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTendermint(dAtA, i, uint64(len(m.Signer)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1274,7 +1274,7 @@ func (m *MsgSubmitClientMisbehaviour) Size() (n int) {
 		l = m.Misbehaviour.Size()
 		n += 1 + l + sovTendermint(uint64(l))
 	}
-	l = len(m.Submitter)
+	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTendermint(uint64(l))
 	}
@@ -2864,7 +2864,7 @@ func (m *MsgSubmitClientMisbehaviour) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Submitter", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -2891,9 +2891,9 @@ func (m *MsgSubmitClientMisbehaviour) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Submitter = append(m.Submitter[:0], dAtA[iNdEx:postIndex]...)
-			if m.Submitter == nil {
-				m.Submitter = []byte{}
+			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signer == nil {
+				m.Signer = []byte{}
 			}
 			iNdEx = postIndex
 		default:

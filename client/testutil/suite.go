@@ -119,7 +119,6 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
-	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err := sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Len(sigsV2, 2)
@@ -163,7 +162,6 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
-	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err = sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Len(sigsV2, 2)
@@ -267,7 +265,9 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(feeAmount, tx3.GetFee())
 	s.Require().Equal(gasLimit, tx3.GetGas())
 	s.Require().Equal(memo, tx3.GetMemo())
-	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
+	tx3Sigs, err := tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{dummySig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
 	s.T().Log("JSON encode transaction")
@@ -284,7 +284,9 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(feeAmount, tx3.GetFee())
 	s.Require().Equal(gasLimit, tx3.GetGas())
 	s.Require().Equal(memo, tx3.GetMemo())
-	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
+	tx3Sigs, err = tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([][]byte{dummySig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 }
 

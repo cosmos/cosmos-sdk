@@ -23,9 +23,12 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
-	initHeader := tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
+	// On a new chain, we consider the init chain block height as 0, even though
+	// req.InitialHeight is 1.
+	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
 	if req.InitialHeight > 1 {
+		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 		err := app.cms.SetInitialVersion(req.InitialHeight)
 		if err != nil {
 			panic(err)

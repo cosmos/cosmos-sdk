@@ -68,7 +68,14 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
-	return res
+	return abci.ResponseInitChain{
+		ConsensusParams: res.ConsensusParams,
+		Validators:      res.Validators,
+		// In the case of a new chain, AppHash will be empty. During an
+		// upgrade, it'll be the hash of the last committed block.
+		AppHash: app.LastCommitID().Hash,
+	}
+
 }
 
 // Info implements the ABCI interface.

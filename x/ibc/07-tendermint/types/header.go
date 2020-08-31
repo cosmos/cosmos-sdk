@@ -22,7 +22,7 @@ func (h Header) ClientType() clientexported.ClientType {
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
-		Height:             clienttypes.NewHeight(0, h.GetHeight()),
+		Height:             h.GetHeight().(clienttypes.Height),
 		Timestamp:          h.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
@@ -32,14 +32,15 @@ func (h Header) ConsensusState() *ConsensusState {
 // GetHeight returns the current height. It returns 0 if the tendermint
 // header is nil.
 //
-// NOTE: also referred as `sequence`
 // TODO: return clienttypes.Height once interface changes
-func (h Header) GetHeight() uint64 {
+func (h Header) GetHeight() clientexported.Height {
 	if h.Header == nil {
-		return 0
+		return clienttypes.Height{}
 	}
 
-	return uint64(h.Header.Height)
+	// Enforce clienttypes.Height to use 0 epoch number
+	// TODO: Retrieve epoch number from chain-id
+	return clienttypes.NewHeight(0, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if
@@ -72,10 +73,9 @@ func (h Header) ValidateBasic(chainID string) error {
 
 	// TrustedHeight is less than Header for updates
 	// and less than or equal to Header for misbehaviour
-	height := clienttypes.NewHeight(0, h.GetHeight())
-	if h.TrustedHeight.GT(height) {
+	if h.TrustedHeight.GT(h.GetHeight()) {
 		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %d must be less than or equal to header height %d",
-			h.TrustedHeight, height)
+			h.TrustedHeight, h.GetHeight())
 	}
 
 	if h.ValidatorSet == nil {

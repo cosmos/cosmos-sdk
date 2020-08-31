@@ -119,7 +119,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	return &ConsensusState{
 		Timestamp:          msg.Header.GetTime(),
 		Root:               root,
-		Height:             clienttypes.NewHeight(0, msg.Header.GetHeight()),
+		Height:             msg.Header.GetHeight().(clienttypes.Height),
 		NextValidatorsHash: msg.Header.Header.NextValidatorsHash,
 	}
 }
@@ -128,7 +128,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		clienttypes.NewHeight(0, msg.Header.GetHeight()), msg.ProofSpecs,
+		msg.Header.GetHeight().(clienttypes.Height), msg.ProofSpecs,
 	)
 }
 

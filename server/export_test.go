@@ -79,7 +79,7 @@ func TestExportCmd_Height(t *testing.T) {
 		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
 	}
 
-	require.Equal(t, int64(4), exportedGenDoc.InitialHeight)
+	require.Equal(t, int64(3), exportedGenDoc.InitialHeight)
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {

@@ -138,7 +138,8 @@ func (m *ClientConsensusStates) GetConsensusStates() []*types.Any {
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
 	// client unique identifier
-	ClientId    string     `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// light client state
 	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
 	// consensus state associated with the client that corresponds to a given height.
 	ConsensusState *types.Any `protobuf:"bytes,3,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
@@ -207,12 +208,12 @@ func (m *MsgCreateClient) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddr
 	return nil
 }
 
-// MsgUpdateClientdefines an sdk.Msg to update a tendermint client state to
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
 type MsgUpdateClient struct {
 	// client unique identifier
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	// block header to which the light client will be updated
+	// header to update the light client
 	Header *types.Any `protobuf:"bytes,2,opt,name=header,proto3" json:"header,omitempty"`
 	// signer address
 	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`

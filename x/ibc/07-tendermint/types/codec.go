@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
@@ -19,7 +18,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&ConsensusState{},
 	)
 	registry.RegisterImplementations(
-		(*evidenceexported.Evidence)(nil),
+		(*clientexported.Misbehaviour)(nil),
 		&Misbehaviour{},
 	)
 }

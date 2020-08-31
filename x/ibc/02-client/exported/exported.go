@@ -132,8 +132,8 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
-// TypeEvidenceClientMisbehaviour is the shared evidence misbehaviour type
-const TypeEvidenceClientMisbehaviour string = "client_misbehaviour"
+// TypeClientMisbehaviour is the shared evidence misbehaviour type
+const TypeClientMisbehaviour string = "client_misbehaviour"
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {

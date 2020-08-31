@@ -113,6 +113,10 @@ var (
 	// ErrUnknownExtensionOptions defines an error for unknown extension options.
 	ErrUnknownExtensionOptions = Register(RootCodespace, 31, "unknown extension options")
 
+	// ErrWrongSequence defines an error where the account sequence defined in
+	// the signer info doesn't match the account's actual sequence number.
+	ErrWrongSequence = Register(RootCodespace, 32, "incorrect account sequence")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

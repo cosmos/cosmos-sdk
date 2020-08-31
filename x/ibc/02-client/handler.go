@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -78,29 +76,32 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgUpd
 	}, nil
 }
 
-// HandlerClientMisbehaviour defines the Evidence module handler for submitting a
+// HandleMsgSubmitMisbehaviour defines the Evidence module handler for submitting a
 // light client misbehaviour.
-func HandlerClientMisbehaviour(k keeper.Keeper) evidencetypes.Handler {
-	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
-		misbehaviour, ok := evidence.(exported.Misbehaviour)
-		if !ok {
-			return sdkerrors.Wrapf(types.ErrInvalidEvidence,
-				"expected evidence to implement client Misbehaviour interface, got %T", evidence,
-			)
-		}
-
-		if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
-			return sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeSubmitMisbehaviour,
-				sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
-				sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
-				sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", uint64(misbehaviour.GetHeight()))),
-			),
-		)
-		return nil
+func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg exported.MsgSubmitMisbehaviour) (*sdk.Result, error) {
+	misbehaviour := msg.GetMisbehaviour()
+	if misbehaviour == nil {
+		return nil, sdkerrors.Wrapf(types.ErrInvalidMisbehaviour, "misbehaviour is nil")
 	}
+
+	if err := misbehaviour.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitMisbehaviour,
+			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.GetClientID()),
+			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", misbehaviour.GetHeight())),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
 }

@@ -3,15 +3,14 @@ package std_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/std"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/std"
 )
 
 func roundTripTest(t *testing.T, pubKey crypto.PubKey) {
@@ -25,6 +24,10 @@ func roundTripTest(t *testing.T, pubKey crypto.PubKey) {
 }
 
 func TestDefaultPublicKeyCodec(t *testing.T) {
+	roundTripTest(t, nil)
+
+	roundTripTest(t, crypto.PubKey(nil))
+
 	pubKeySecp256k1 := secp256k1.GenPrivKey().PubKey()
 	roundTripTest(t, pubKeySecp256k1)
 

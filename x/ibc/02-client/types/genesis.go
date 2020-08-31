@@ -4,47 +4,17 @@ import (
 	"fmt"
 	"sort"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 var (
-	_ codectypes.UnpackInterfacesMessage = GenesisClientState{}
+	_ codectypes.UnpackInterfacesMessage = IdentifiedClientState{}
 	_ codectypes.UnpackInterfacesMessage = ClientsConsensusStates{}
 	_ codectypes.UnpackInterfacesMessage = ClientConsensusStates{}
 	_ codectypes.UnpackInterfacesMessage = GenesisState{}
 )
-
-// NewGenesisClientState creates a new GenesisClientState instance.
-func NewGenesisClientState(clientID string, clientState exported.ClientState) GenesisClientState {
-	msg, ok := clientState.(proto.Message)
-	if !ok {
-		panic(fmt.Errorf("cannot proto marshal %T", clientState))
-	}
-
-	anyClientState, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return GenesisClientState{
-		ClientId:    clientID,
-		ClientState: anyClientState,
-	}
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs GenesisClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(gs.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 var _ sort.Interface = ClientsConsensusStates{}
 
@@ -104,7 +74,7 @@ func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // NewGenesisState creates a GenesisState instance.
 func NewGenesisState(
-	clients []GenesisClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
+	clients []IdentifiedClientState, clientsConsensus ClientsConsensusStates, createLocalhost bool,
 ) GenesisState {
 	return GenesisState{
 		Clients:          clients,
@@ -116,9 +86,9 @@ func NewGenesisState(
 // DefaultGenesisState returns the ibc client submodule's default genesis state.
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Clients:          []GenesisClientState{},
+		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
-		CreateLocalhost:  false,
+		CreateLocalhost:  true,
 	}
 }
 

@@ -6,8 +6,6 @@ package mocks
 
 import (
 	json "encoding/json"
-	reflect "reflect"
-
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,8 +13,10 @@ import (
 	grpc "github.com/gogo/protobuf/grpc"
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
+	reflect "reflect"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface
@@ -118,6 +118,18 @@ func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.R
 func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterRESTRoutes), arg0, arg1)
+}
+
+// RegisterGRPCRoutes mocks base method
+func (m *MockAppModuleBasic) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterGRPCRoutes", arg0, arg1)
+}
+
+// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
+func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterGRPCRoutes), arg0, arg1)
 }
 
 // GetTxCmd mocks base method
@@ -247,6 +259,18 @@ func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 client.Context, arg1 *mux
 func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterRESTRoutes), arg0, arg1)
+}
+
+// RegisterGRPCRoutes mocks base method
+func (m *MockAppModuleGenesis) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+}
+
+// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
+func (mr *MockAppModuleGenesisMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterGRPCRoutes), arg0, arg1)
 }
 
 // GetTxCmd mocks base method
@@ -406,6 +430,18 @@ func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
+// RegisterGRPCRoutes mocks base method
+func (m *MockAppModule) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterGRPCRoutes", arg0, arg1)
+}
+
+// RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
+func (mr *MockAppModuleMockRecorder) RegisterGRPCRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterGRPCRoutes), arg0, arg1)
+}
+
 // GetTxCmd mocks base method
 func (m *MockAppModule) GetTxCmd() *cobra.Command {
 	m.ctrl.T.Helper()
@@ -503,7 +539,7 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 }
 
 // LegacyQuerierHandler mocks base method
-func (m *MockAppModule) LegacyQuerierHandler(codec.JSONMarshaler) types0.Querier {
+func (m *MockAppModule) LegacyQuerierHandler(*codec.LegacyAmino) types0.Querier {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LegacyQuerierHandler")
 	ret0, _ := ret[0].(types0.Querier)

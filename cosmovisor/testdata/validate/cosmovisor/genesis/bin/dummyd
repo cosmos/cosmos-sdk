@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo Genesis $@
+sleep 1
+echo 'UPGRADE "chain2" NEEDED at height: 49: {}'
+sleep 2
+echo Never should be printed!!!

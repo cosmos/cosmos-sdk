@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/binary"
+	"reflect"
 	"strings"
 
 	ics23 "github.com/confio/ics23/go"
@@ -17,7 +18,6 @@ import (
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -88,16 +88,39 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
-	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "cannot submit misbehaviour to localhost client")
+	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
 }
 
-// VerifyClientConsensusState returns an error since a local host client does not store consensus
+// VerifyClientState verifies that the localhost client state is stored locally
+func (cs ClientState) VerifyClientState(
+	store sdk.KVStore, cdc codec.BinaryMarshaler, _ commitmentexported.Root,
+	_ uint64, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
+) error {
+	path := host.KeyClientState()
+	bz := store.Get(path)
+	if bz == nil {
+		return sdkerrors.Wrapf(clienttypes.ErrFailedClientStateVerification,
+			"not found for path: %s", path)
+	}
+
+	selfClient := clienttypes.MustUnmarshalClientState(cdc, bz)
+
+	if !reflect.DeepEqual(selfClient, clientState) {
+		return sdkerrors.Wrapf(clienttypes.ErrFailedClientStateVerification,
+			"stored clientState != provided clientState: \n%v\n≠\n%v",
+			selfClient, clientState,
+		)
+	}
+	return nil
+}
+
+// VerifyClientConsensusState returns nil since a local host client does not store consensus
 // states.
 func (cs ClientState) VerifyClientConsensusState(
 	sdk.KVStore, codec.BinaryMarshaler, commitmentexported.Root,
 	uint64, string, uint64, commitmentexported.Prefix, []byte, clientexported.ConsensusState,
 ) error {
-	return ErrConsensusStatesNotStored
+	return nil
 }
 
 // VerifyConnectionState verifies a proof of the connection state of the
@@ -106,28 +129,24 @@ func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	_ uint64,
-	prefix commitmentexported.Prefix,
+	_ commitmentexported.Prefix,
 	_ []byte,
 	connectionID string,
 	connectionEnd connectionexported.ConnectionI,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connectionID))
-	if err != nil {
-		return err
-	}
-
-	bz := store.Get([]byte(path.String()))
+	path := host.KeyConnection(connectionID)
+	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedConnectionStateVerification, "not found for path %s", path)
 	}
 
 	var prevConnection connectiontypes.ConnectionEnd
-	err = cdc.UnmarshalBinaryBare(bz, &prevConnection)
+	err := cdc.UnmarshalBinaryBare(bz, &prevConnection)
 	if err != nil {
 		return err
 	}
 
-	if connectionEnd != &prevConnection {
+	if !reflect.DeepEqual(&prevConnection, connectionEnd) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedConnectionStateVerification,
 			"connection end ≠ previous stored connection: \n%v\n≠\n%v", connectionEnd, prevConnection,
@@ -149,23 +168,19 @@ func (cs ClientState) VerifyChannelState(
 	channelID string,
 	channel channelexported.ChannelI,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
-	if err != nil {
-		return err
-	}
-
-	bz := store.Get([]byte(path.String()))
+	path := host.KeyChannel(portID, channelID)
+	bz := store.Get(path)
 	if bz == nil {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedChannelStateVerification, "not found for path %s", path)
 	}
 
 	var prevChannel channeltypes.Channel
-	err = cdc.UnmarshalBinaryBare(bz, &prevChannel)
+	err := cdc.UnmarshalBinaryBare(bz, &prevChannel)
 	if err != nil {
 		return err
 	}
 
-	if channel != &prevChannel {
+	if !reflect.DeepEqual(&prevChannel, channel) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrFailedChannelStateVerification,
 			"channel end ≠ previous stored channel: \n%v\n≠\n%v", channel, prevChannel,
@@ -181,19 +196,16 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ uint64,
-	prefix commitmentexported.Prefix,
+	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, sequence))
-	if err != nil {
-		return err
-	}
+	path := host.KeyPacketCommitment(portID, channelID, sequence)
 
-	data := store.Get([]byte(path.String()))
+	data := store.Get(path)
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketCommitmentVerification, "not found for path %s", path)
 	}
@@ -214,19 +226,16 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ uint64,
-	prefix commitmentexported.Prefix,
+	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
-	if err != nil {
-		return err
-	}
+	path := host.KeyPacketAcknowledgement(portID, channelID, sequence)
 
-	data := store.Get([]byte(path.String()))
+	data := store.Get(path)
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedPacketAckVerification, "not found for path %s", path)
 	}
@@ -248,18 +257,15 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ uint64,
-	prefix commitmentexported.Prefix,
+	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
-	if err != nil {
-		return err
-	}
+	path := host.KeyPacketAcknowledgement(portID, channelID, sequence)
 
-	data := store.Get([]byte(path.String()))
+	data := store.Get(path)
 	if data != nil {
 		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, "expected no ack absence")
 	}
@@ -273,18 +279,15 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ uint64,
-	prefix commitmentexported.Prefix,
+	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
-	if err != nil {
-		return err
-	}
+	path := host.KeyNextSequenceRecv(portID, channelID)
 
-	data := store.Get([]byte(path.String()))
+	data := store.Get(path)
 	if len(data) == 0 {
 		return sdkerrors.Wrapf(clienttypes.ErrFailedNextSeqRecvVerification, "not found for path %s", path)
 	}

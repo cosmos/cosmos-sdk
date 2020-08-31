@@ -36,12 +36,11 @@ type TendermintTestSuite struct {
 
 	// TODO: deprecate usage in favor of testing package
 	ctx        sdk.Context
-	aminoCdc   *codec.LegacyAmino
 	cdc        codec.Marshaler
 	privVal    tmtypes.PrivValidator
 	valSet     *tmtypes.ValidatorSet
 	valsHash   tmbytes.HexBytes
-	header     ibctmtypes.Header
+	header     *ibctmtypes.Header
 	now        time.Time
 	headerTime time.Time
 	clientTime time.Time
@@ -56,7 +55,6 @@ func (suite *TendermintTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.LegacyAmino()
 	suite.cdc = app.AppCodec()
 
 	// now is the time of the current chain, must be after the updating header

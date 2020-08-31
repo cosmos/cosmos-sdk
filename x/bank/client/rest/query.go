@@ -45,7 +45,7 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 		}
 
-		bz, err := ctx.JSONMarshaler.MarshalJSON(params)
+		bz, err := ctx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -74,7 +74,7 @@ func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -101,7 +101,7 @@ func supplyOfHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySupplyOfParams(denom)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return

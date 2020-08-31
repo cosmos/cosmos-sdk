@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -56,16 +57,16 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
-	createFutureUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height+3, suite.header.Height, suite.header.Time.Add(time.Hour),
+	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()+3), int64(suite.header.GetHeight()), suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
-	createPastUpdateFn := func(s *KeeperTestSuite) ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, suite.header.Height-2, suite.header.Height-4, suite.header.Time,
+	createPastUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()-2), int64(suite.header.GetHeight())-4, suite.header.Header.Time,
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var (
-		updateHeader ibctmtypes.Header
+		updateHeader *ibctmtypes.Header
 		clientState  *ibctmtypes.ClientState
 	)
 
@@ -189,7 +190,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Time.Add(time.Minute))
+			suite.ctx = suite.ctx.WithBlockTime(updateHeader.Header.Time.Add(time.Minute))
 
 			updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, testClientID, updateHeader)
 
@@ -198,9 +199,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 
 				expConsensusState := &ibctmtypes.ConsensusState{
 					Height:             updateHeader.GetHeight(),
-					Timestamp:          updateHeader.Time,
-					Root:               commitmenttypes.NewMerkleRoot(updateHeader.AppHash),
-					NextValidatorsHash: updateHeader.NextValidatorsHash,
+					Timestamp:          updateHeader.GetTime(),
+					Root:               commitmenttypes.NewMerkleRoot(updateHeader.Header.GetAppHash()),
+					NextValidatorsHash: updateHeader.Header.NextValidatorsHash,
 				}
 
 				newClientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -212,9 +213,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().Equal(updatedClientState, newClientState, "updatedClient state not persisted correctly")
 
 				// Determine if clientState should be updated or not
-				if uint64(updateHeader.Height) > clientState.GetLatestHeight() {
-					// Header Height is greater than clientState latest Height, clientState should be updated with header.Height
-					suite.Require().Equal(uint64(updateHeader.Height), updatedClientState.GetLatestHeight(), "clientstate height did not update")
+				if uint64(updateHeader.GetHeight()) > clientState.GetLatestHeight() {
+					// Header Height is greater than clientState latest Height, clientState should be updated with header.GetHeight()
+					suite.Require().Equal(uint64(updateHeader.GetHeight()), updatedClientState.GetLatestHeight(), "clientstate height did not update")
 				} else {
 					// Update will add past consensus state, clientState should not be updated at all
 					suite.Require().Equal(clientState.GetLatestHeight(), updatedClientState.GetLatestHeight(), "client state height updated for past header")
@@ -229,16 +230,15 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	}
 }
 
-/*
 func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
-	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.ChainID, suite.ctx.BlockHeight())
+	var localhostClient exported.ClientState = localhosttypes.NewClientState(suite.header.Header.GetChainID(), suite.ctx.BlockHeight())
 
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
 	suite.Require().NoError(err, err)
 	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
-}*/
+}
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPrivVal := tmtypes.NewMockPV()
@@ -266,18 +266,18 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altTime := suite.ctx.BlockTime().Add(time.Minute)
 
 	testCases := []struct {
-		name     string
-		evidence ibctmtypes.Evidence
-		malleate func() error
-		expPass  bool
+		name         string
+		misbehaviour *ibctmtypes.Misbehaviour
+		malleate     func() error
+		expPass      bool
 	}{
 		{
 			"trusting period misbehavior should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -290,11 +290,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehavior at later height should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, suite.ctx.BlockTime(), bothValSet, valSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -318,11 +318,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehavior at later height with different trusted heights should pass",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -346,11 +346,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"misbehaviour fails validatebasic",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+1, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -363,11 +363,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted ConsensusState1 not found",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, suite.ctx.BlockTime(), bothValSet, valSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -380,11 +380,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		},
 		{
 			"trusted ConsensusState2 not found",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight, altTime, bothValSet, valSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight+5, testClientHeight+3, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = valsHash
@@ -398,17 +398,17 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 		{
 			"client state not found",
-			ibctmtypes.Evidence{},
+			&ibctmtypes.Misbehaviour{},
 			func() error { return nil },
 			false,
 		},
 		{
 			"client already frozen at earlier height",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				suite.consensusState.NextValidatorsHash = bothValsHash
@@ -425,11 +425,11 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 		{
 			"misbehaviour check failed",
-			ibctmtypes.Evidence{
+			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, altTime, bothValSet, bothValSet, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeight, suite.ctx.BlockTime(), altValSet, bothValSet, altSigners),
-				ChainID:  testChainID,
-				ClientID: testClientID,
+				ChainId:  testChainID,
+				ClientId: testClientID,
 			},
 			func() error {
 				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
@@ -453,7 +453,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.evidence)
+			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.misbehaviour)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
@@ -461,8 +461,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(uint64(tc.evidence.GetHeight()), clientState.GetFrozenHeight(),
-					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.evidence.GetHeight(), clientState.GetFrozenHeight())
+				suite.Require().Equal(uint64(tc.misbehaviour.GetHeight()), clientState.GetFrozenHeight(),
+					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}

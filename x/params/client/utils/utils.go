@@ -65,7 +65,7 @@ func (pcj ParamChangesJSON) ToParamChanges() []proposal.ParamChange {
 
 // ParseParamChangeProposalJSON reads and parses a ParamChangeProposalJSON from
 // file.
-func ParseParamChangeProposalJSON(cdc codec.JSONMarshaler, proposalFile string) (ParamChangeProposalJSON, error) {
+func ParseParamChangeProposalJSON(cdc *codec.LegacyAmino, proposalFile string) (ParamChangeProposalJSON, error) {
 	proposal := ParamChangeProposalJSON{}
 
 	contents, err := ioutil.ReadFile(proposalFile)

@@ -2,14 +2,14 @@ package types_test
 
 import (
 	ics23 "github.com/confio/ics23/go"
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	lite "github.com/tendermint/tendermint/lite2"
 
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 const (
@@ -20,55 +20,64 @@ const (
 	testSequence     = 1
 )
 
+var (
+	invalidProof = []byte("invalid proof")
+)
+
 func (suite *TendermintTestSuite) TestValidate() {
 	testCases := []struct {
 		name        string
-		clientState types.ClientState
+		clientState *types.ClientState
 		expPass     bool
 	}{
 		{
 			name:        "valid client",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     true,
 		},
 		{
+			name:        "invalid chainID",
+			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			expPass:     false,
+		},
+		{
 			name:        "invalid trust level",
-			clientState: ibctmtypes.NewClientState(tmmath.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trusting period",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid unbonding period",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "invalid max clock drift",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
-			name:        "invalid header",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, ibctmtypes.Header{}, commitmenttypes.GetSDKSpecs()),
+			name:        "invalid height",
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "trusting period not less than unbonding period",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs is nil",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, nil),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs contains nil",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, suite.header, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
 			expPass:     false,
 		},
 	}
@@ -86,8 +95,8 @@ func (suite *TendermintTestSuite) TestValidate() {
 func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name           string
-		clientState    ibctmtypes.ClientState
-		consensusState ibctmtypes.ConsensusState
+		clientState    *types.ClientState
+		consensusState types.ConsensusState
 		prefix         commitmenttypes.MerklePrefix
 		proof          []byte
 		expPass        bool
@@ -95,46 +104,46 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// FIXME: uncomment
 		// {
 		// 	name:        "successful verification",
-		// 	clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+		// 	clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+		// 	consensusState: types.ConsensusState{
+		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 		// 	},
 		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 		// 	expPass: true,
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.MerklePrefix{},
 			expPass: false,
 		},
 		{
 			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-1)},
+			consensusState: types.ConsensusState{
+				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			expPass: false,
 		},
 		{
 			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			consensusState: types.ConsensusState{
+				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
+				NextValidatorsHash: suite.valsHash,
 			},
 			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
 			proof:   []byte{},
@@ -146,7 +155,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			nil, suite.cdc, suite.aminoCdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			nil, suite.cdc, tc.consensusState.Root, height.EpochHeight, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -157,478 +166,506 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 	}
 }
 
+// test verification of the connection on chainB being represented in the
+// light client on chainA
 func (suite *TendermintTestSuite) TestVerifyConnectionState() {
-	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))
-	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
 
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		connection     connectiontypes.ConnectionEnd
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			connection:  conn,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			connection:  conn,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			connection:  conn,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			connection:  conn,
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyConnectionState(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testConnectionID, tc.connection, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			connection := suite.chainB.GetConnection(connB)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make connection proof
+			connectionKey := host.KeyConnection(connB.ID)
+			proof, proofHeight = suite.chainB.QueryProof(connectionKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err := clientState.VerifyConnectionState(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof, connB.ID, connection,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
+// test verification of the channel on chainB being represented in the light
+// client on chainA
 func (suite *TendermintTestSuite) TestVerifyChannelState() {
-	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
-	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
 
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		channel        channeltypes.Channel
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, height, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			channel:     ch,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			channel:     ch,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			channel:     ch,
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			channel:     ch,
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyChannelState(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, &tc.channel, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			channel := suite.chainB.GetChannel(channelB)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make channel proof
+			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
+			proof, proofHeight = suite.chainB.QueryProof(channelKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err := clientState.VerifyChannelState(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				channelB.PortID, channelB.ID, channel,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
+// test verification of the packet commitment on chainB being represented
+// in the light client on chainA. A send from chainB to chainA is simulated.
 func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
+
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		commitment     []byte
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, height, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			commitment:  []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			commitment:  []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			commitment:  []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			commitment:  []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketCommitment(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.commitment, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 100, 0)
+			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make packet commitment proof
+			packetKey := host.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+			proof, proofHeight = suite.chainB.QueryProof(packetKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err = clientState.VerifyPacketCommitment(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), channeltypes.CommitPacket(packet),
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
+// test verification of the acknowledgement on chainB being represented
+// in the light client on chainA. A send and ack from chainA to chainB
+// is simulated.
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
+
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		ack            []byte
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			ack:         []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			ack:         []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			ack:         []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			ack:         []byte{},
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgement(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.ack, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+
+			// send packet
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// write ack
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make packet acknowledgement proof
+			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err = clientState.VerifyPacketAcknowledgement(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ibctesting.TestHash,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
+// test verification of the absent acknowledgement on chainB being represented
+// in the light client on chainA. A send from chainB to chainA is simulated, but
+// no receive.
 func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
+
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, chainID, height, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+
+			// send packet, but no recv
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// need to update chainA's client representing chainB to prove missing ack
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make packet acknowledgement absence proof
+			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err = clientState.VerifyPacketAcknowledgementAbsence(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }
 
+// test verification of the next receive sequence on chainB being represented
+// in the light client on chainA. A send and receive from chainB to chainA is
+// simulated.
 func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
+	var (
+		clientState *types.ClientState
+		proof       []byte
+		proofHeight uint64
+		prefix      commitmenttypes.MerklePrefix
+	)
+
 	testCases := []struct {
-		name           string
-		clientState    ibctmtypes.ClientState
-		consensusState ibctmtypes.ConsensusState
-		prefix         commitmenttypes.MerklePrefix
-		proof          []byte
-		expPass        bool
+		name     string
+		malleate func()
+		expPass  bool
 	}{
-		// FIXME: uncomment
-		// {
-		// 	name:         "successful verification",
-		// 	clientState:  ibctmtypes.NewClientState(chainID, height, commitmenttypes.GetSDKSpecs()),
-		// 	connection:   conn,
-		// 	consensusState: ibctmtypes.ConsensusState{
-		// 		Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-		// 	},
-		// 	prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-		// 	expPass: true,
-		// },
 		{
-			name:        "ApplyPrefix failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.MerklePrefix{},
-			expPass: false,
+			"successful verification", func() {}, true,
 		},
 		{
-			name:        "latest client height < height",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"ApplyPrefix failed", func() {
+				prefix = commitmenttypes.MerklePrefix{}
+			}, false,
 		},
 		{
-			name:        "client is frozen",
-			clientState: ibctmtypes.ClientState{LastHeader: suite.header, FrozenHeight: height - 1},
-			consensusState: ibctmtypes.ConsensusState{
-				Root: commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			expPass: false,
+			"latest client height < height", func() {
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
+			}, false,
 		},
 		{
-			name:        "proof verification failed",
-			clientState: ibctmtypes.NewClientState(lite.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, suite.header, commitmenttypes.GetSDKSpecs()),
-			consensusState: ibctmtypes.ConsensusState{
-				Root:         commitmenttypes.NewMerkleRoot(suite.header.AppHash),
-				ValidatorSet: suite.valSet,
-			},
-			prefix:  commitmenttypes.NewMerklePrefix([]byte("ibc")),
-			proof:   []byte{},
-			expPass: false,
+			"client is frozen", func() {
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
+			}, false,
+		},
+		{
+			"proof verification failed", func() {
+				proof = invalidProof
+			}, false,
 		},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		err := tc.clientState.VerifyNextSequenceRecv(
-			nil, suite.cdc, height, tc.prefix, tc.proof, testPortID, testChannelID, testSequence, tc.consensusState,
-		)
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
 
-		if tc.expPass {
-			suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
-		}
+			// setup testing conditions
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+
+			// send packet
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
+
+			// write ack, next seq recv incremented
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			// need to update chainA's client representing chainB
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+
+			var ok bool
+			clientStateI := suite.chainA.GetClientState(clientA)
+			clientState, ok = clientStateI.(*types.ClientState)
+			suite.Require().True(ok)
+
+			prefix = suite.chainB.GetPrefix()
+
+			// make next seq recv proof
+			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
+			proof, proofHeight = suite.chainB.QueryProof(nextSeqRecvKey)
+
+			tc.malleate() // make changes as necessary
+
+			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+
+			err = clientState.VerifyNextSequenceRecv(
+				store, suite.chainA.Codec, proofHeight, &prefix, proof,
+				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
 	}
 }

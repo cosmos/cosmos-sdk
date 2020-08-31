@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -42,7 +43,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the distribution module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -59,13 +60,16 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the distribution module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
 }
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the distribution module.
+func (AppModuleBasic) RegisterGRPCRoutes(_ sdkclient.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -129,7 +133,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 

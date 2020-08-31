@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
-	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
+	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
 	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
 	tmp := keyring.NewMultiInfo("myMultisig", pk)
 

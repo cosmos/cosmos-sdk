@@ -3,14 +3,14 @@ package codec
 import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
-var amino *codec.Codec
+var amino *codec.LegacyAmino
 
 func init() {
 	amino = codec.New()
@@ -19,24 +19,24 @@ func init() {
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
-func RegisterCrypto(cdc *codec.Codec) {
+func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
-	cdc.RegisterConcrete(ed25519.PubKeyEd25519{},
-		ed25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(sr25519.PubKeySr25519{},
-		sr25519.PubKeyAminoName, nil)
-	cdc.RegisterConcrete(secp256k1.PubKeySecp256k1{},
-		secp256k1.PubKeyAminoName, nil)
+	cdc.RegisterConcrete(ed25519.PubKey{},
+		ed25519.PubKeyName, nil)
+	cdc.RegisterConcrete(sr25519.PubKey{},
+		sr25519.PubKeyName, nil)
+	cdc.RegisterConcrete(secp256k1.PubKey{},
+		secp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
 		multisig.PubKeyAminoRoute, nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
-	cdc.RegisterConcrete(ed25519.PrivKeyEd25519{},
-		ed25519.PrivKeyAminoName, nil)
-	cdc.RegisterConcrete(sr25519.PrivKeySr25519{},
-		sr25519.PrivKeyAminoName, nil)
-	cdc.RegisterConcrete(secp256k1.PrivKeySecp256k1{},
-		secp256k1.PrivKeyAminoName, nil)
+	cdc.RegisterConcrete(ed25519.PrivKey{},
+		ed25519.PrivKeyName, nil)
+	cdc.RegisterConcrete(sr25519.PrivKey{},
+		sr25519.PrivKeyName, nil)
+	cdc.RegisterConcrete(secp256k1.PrivKey{},
+		secp256k1.PrivKeyName, nil)
 }
 
 // PrivKeyFromBytes unmarshals private key bytes and returns a PrivKey

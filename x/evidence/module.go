@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the evidence module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -82,6 +83,10 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 	}
 
 	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
+}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the evidence module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // GetTxCmd returns the evidence module's root tx command.
@@ -138,7 +143,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the evidence module's Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
@@ -160,7 +165,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
-	InitGenesis(ctx, am.keeper, gs)
+	InitGenesis(ctx, am.keeper, &gs)
 	return []abci.ValidatorUpdate{}
 }
 

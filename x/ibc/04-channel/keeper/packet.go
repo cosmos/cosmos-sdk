@@ -43,17 +43,17 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -164,17 +164,17 @@ func (k Keeper) RecvPacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if packet.GetSourcePort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetSourceChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -243,15 +243,15 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the PacketExecuted function
+	// NOTE: the remaining code is located in the ReceiveExecuted function
 	return nil
 }
 
-// PacketExecuted writes the packet execution acknowledgement to the state,
+// ReceiveExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) PacketExecuted(
+func (k Keeper) ReceiveExecuted(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
@@ -299,6 +299,8 @@ func (k Keeper) PacketExecuted(
 
 		nextSequenceRecv++
 
+		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
@@ -361,17 +363,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -403,11 +405,11 @@ func (k Keeper) AcknowledgePacket(
 
 	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
@@ -452,17 +454,19 @@ func (k Keeper) AcknowledgementExecuted(
 
 	// increment NextSequenceAck
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
 		nextSequenceAck++
 
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// Since this is the original sending chain, our channelEnd is packet's source port and channel
+		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}
 
 	// log that a packet has been acknowledged

@@ -18,6 +18,9 @@ type SignatureV2 struct {
 	// Data is the actual data of the signature which includes SignMode's and
 	// the signatures themselves for either single or multi-signatures.
 	Data SignatureData
+
+	// Sequence is the sequence of this account.
+	Sequence uint64
 }
 
 // SignatureDataToProto converts a SignatureData to SignatureDescriptor_Data.

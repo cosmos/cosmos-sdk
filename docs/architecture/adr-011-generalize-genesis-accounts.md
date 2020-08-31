@@ -77,7 +77,7 @@ type ModuleAccount struct {
 The `auth` codec definition:
 
 ```go
-var ModuleCdc *codec.Codec
+var ModuleCdc *codec.LegacyAmino
 
 func init() {
     ModuleCdc = codec.New()

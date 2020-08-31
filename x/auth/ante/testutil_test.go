@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -41,7 +41,7 @@ type AnteTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx
@@ -85,17 +85,18 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.SigFeeMemoTx, error) {
+func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
-	for _, priv := range privs {
+	for i, priv := range privs {
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
 				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
+			Sequence: accSeqs[i],
 		}
 
 		sigsV2 = append(sigsV2, sigV2)
@@ -109,11 +110,13 @@ func (suite *AnteTestSuite) CreateTestTx(privs []crypto.PrivKey, accNums []uint6
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
-			ChainID:         chainID,
-			AccountNumber:   accNums[i],
-			AccountSequence: accSeqs[i],
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
 		}
-		sigV2, err := tx.SignWithPrivKey(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, suite.txBuilder, priv, suite.clientCtx.TxConfig)
+		sigV2, err := tx.SignWithPrivKey(
+			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
 		}

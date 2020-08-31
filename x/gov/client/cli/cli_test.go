@@ -1,17 +1,16 @@
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -78,7 +77,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -135,25 +134,14 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(s.network.WaitForNextBlock())
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}

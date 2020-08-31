@@ -30,7 +30,7 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is used intentionally here, don't migrate it!
-		if err := clientCtx.Codec.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
+		if err := clientCtx.LegacyAmino.UnmarshalJSON(body, &req); rest.CheckBadRequestError(w, err) {
 			return
 		}
 
@@ -46,8 +46,6 @@ func BroadcastTxRequest(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		// NOTE: amino is set intentionally here, don't migrate it!
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
 		rest.PostProcessResponseBare(w, clientCtx, res)
 	}
 }

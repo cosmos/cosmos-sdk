@@ -18,18 +18,25 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 		msg      string
 		malleate func()
 		expPass  bool
+		numVals  int
+		hasNext  bool
 	}{
 		{
 			"empty request",
 			func() {
 				req = &types.QueryValidatorsRequest{}
 			},
+			true,
+
+			len(vals),
 			false,
 		},
-		{"invalid request with empty status",
+		{"empty status returns all the validators",
 			func() {
 				req = &types.QueryValidatorsRequest{Status: ""}
 			},
+			true,
+			len(vals),
 			false,
 		},
 		{
@@ -38,12 +45,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				req = &types.QueryValidatorsRequest{Status: "test"}
 			},
 			false,
+			0,
+			false,
 		},
 		{"valid request",
 			func() {
 				req = &types.QueryValidatorsRequest{Status: sdk.Bonded.String(),
 					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
+			true,
+			1,
 			true,
 		},
 	}
@@ -54,9 +65,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(valsResp)
-				suite.Equal(1, len(valsResp.Validators))
-				suite.NotNil(valsResp.Pagination.NextKey)
+				suite.Equal(tc.numVals, len(valsResp.Validators))
 				suite.Equal(uint64(len(vals)), valsResp.Pagination.Total)
+
+				if tc.hasNext {
+					suite.NotNil(valsResp.Pagination.NextKey)
+				} else {
+					suite.Nil(valsResp.Pagination.NextKey)
+				}
 			} else {
 				suite.Require().Error(err)
 			}

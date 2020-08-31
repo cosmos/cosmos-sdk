@@ -43,6 +43,11 @@ func SetTrace(trace bool) func(*BaseApp) {
 	return func(app *BaseApp) { app.setTrace(trace) }
 }
 
+// SetIndexEvents provides a BaseApp option function that sets the events to index.
+func SetIndexEvents(ie []string) func(*BaseApp) {
+	return func(app *BaseApp) { app.setIndexEvents(ie) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {

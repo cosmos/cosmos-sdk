@@ -1,10 +1,11 @@
 package client_test
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -14,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -43,58 +43,6 @@ func TestParseQueryResponse(t *testing.T) {
 
 	res, err = authclient.ParseQueryResponse([]byte("fuzzy"))
 	require.Error(t, err)
-}
-
-func TestCalculateGas(t *testing.T) {
-	cdc := makeCodec()
-	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
-		return func(string, []byte) ([]byte, int64, error) {
-			if wantErr {
-				return nil, 0, errors.New("query failed")
-			}
-			simRes := &sdk.SimulationResponse{
-				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
-				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
-			}
-
-			bz, _ := codec.ProtoMarshalJSON(simRes)
-			return bz, 0, nil
-		}
-	}
-
-	type args struct {
-		queryFuncGasUsed uint64
-		queryFuncWantErr bool
-		adjustment       float64
-	}
-
-	tests := []struct {
-		name         string
-		args         args
-		wantEstimate uint64
-		wantAdjusted uint64
-		expPass      bool
-	}{
-		{"error", args{0, true, 1.2}, 0, 0, false},
-		{"adjusted gas", args{10, false, 1.2}, 10, 12, true},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			queryFunc := makeQueryFunc(tt.args.queryFuncGasUsed, tt.args.queryFuncWantErr)
-			simRes, gotAdjusted, err := authclient.CalculateGas(queryFunc, cdc, []byte(""), tt.args.adjustment)
-			if tt.expPass {
-				require.NoError(t, err)
-				require.Equal(t, simRes.GasInfo.GasUsed, tt.wantEstimate)
-				require.Equal(t, gotAdjusted, tt.wantAdjusted)
-				require.NotNil(t, simRes.Result)
-			} else {
-				require.Error(t, err)
-				require.Nil(t, simRes.Result)
-			}
-		})
-	}
 }
 
 // TODO: remove this and authclient.GetTxEncoder after the proto tx migration is complete
@@ -203,7 +151,7 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 	require.Equal(t, defaultEncoderBytes, encoderBytes)
 }
 
-func makeCodec() *codec.Codec {
+func makeCodec() *codec.LegacyAmino {
 	var cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)

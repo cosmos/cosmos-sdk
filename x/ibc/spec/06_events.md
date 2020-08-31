@@ -19,7 +19,7 @@ callbacks to IBC applications.
 
 | Type          | Attribute Key    | Attribute Value   |
 |---------------|------------------|-------------------|
-| create_client | client_id        | {clientID}        |
+| create_client | client_id        | {clientId}        |
 | create_client | client_type      | {clientType}      |
 | create_client | consensus_height | {consensusHeight} |
 | message       | action           | create_client     |
@@ -29,7 +29,7 @@ callbacks to IBC applications.
 
 | Type          | Attribute Key    | Attribute Value   |
 |---------------|------------------|-------------------|
-| update_client | client_id        | {clientID}        |
+| update_client | client_id        | {clientId}        |
 | update_client | client_type      | {clientType}      |
 | update_client | consensus_height | {consensusHeight} |
 | message       | action           | update_client     |
@@ -39,7 +39,7 @@ callbacks to IBC applications.
 
 | Type                | Attribute Key    | Attribute Value     |
 |---------------------|------------------|---------------------|
-| client_misbehaviour | client_id        | {clientID}          |
+| client_misbehaviour | client_id        | {clientId}          |
 | client_misbehaviour | client_type      | {clientType}        |
 | client_misbehaviour | consensus_height | {consensusHeight}   |
 | message             | action           | client_misbehaviour |
@@ -53,10 +53,10 @@ callbacks to IBC applications.
 
 | Type                 | Attribute Key              | Attribute Value             |
 |----------------------|----------------------------|-----------------------------|
-| connection_open_init | connection_id              | {connectionID}              |
-| connection_open_init | client_id                  | {clientID}                  |
-| connection_open_init | counterparty_client_id     | {counterparty.clientID}     |
-| connection_open_init | counterparty_connection_id | {counterparty.connectionID} |
+| connection_open_init | connection_id              | {connectionId}              |
+| connection_open_init | client_id                  | {clientId}                  |
+| connection_open_init | counterparty_client_id     | {counterparty.clientId}     |
+| connection_open_init | counterparty_connection_id | {counterparty.connectionId} |
 | message              | action                     | connection_open_init        |
 | message              | module                     | ibc_connection              |
 
@@ -64,10 +64,10 @@ callbacks to IBC applications.
 
 | Type                | Attribute Key              | Attribute Value             |
 |---------------------|----------------------------|-----------------------------|
-| connection_open_try | connection_id              | {connectionID}              | 
-| connection_open_try | client_id                  | {clientID}                  |
-| connection_open_try | counterparty_client_id     | {counterparty.clientID      |
-| connection_open_try | counterparty_connection_id | {counterparty.connectionID} |
+| connection_open_try | connection_id              | {connectionId}              | 
+| connection_open_try | client_id                  | {clientId}                  |
+| connection_open_try | counterparty_client_id     | {counterparty.clientId      |
+| connection_open_try | counterparty_connection_id | {counterparty.connectionId} |
 | message             | action                     | connection_open_try         |
 | message             | module                     | ibc_connection              |
 
@@ -75,10 +75,10 @@ callbacks to IBC applications.
 
 | Type                 | Attribute Key              | Attribute Value             |
 |----------------------|----------------------------|-----------------------------|
-| connection_open_ack  | connection_id              | {connectionID}              |
-| connection_open_ack  | client_id                  | {clientID}                  |
-| connection_open_ack  | counterparty_client_id     | {counterparty.clientID}     |
-| connection_open_ack  | counterparty_connection_id | {counterparty.connectionID} |
+| connection_open_ack  | connection_id              | {connectionId}              |
+| connection_open_ack  | client_id                  | {clientId}                  |
+| connection_open_ack  | counterparty_client_id     | {counterparty.clientId}     |
+| connection_open_ack  | counterparty_connection_id | {counterparty.connectionId} |
 | message              | module                     | ibc_connection              |
 | message              | action                     | connection_open_ack         |
 
@@ -86,10 +86,10 @@ callbacks to IBC applications.
 
 | Type                    | Attribute Key              | Attribute Value             |
 |-------------------------|----------------------------|-----------------------------|
-| connection_open_confirm | connection_id              | {connectionID}              |
-| connection_open_confirm | client_id                  | {clientID}                  |
-| connection_open_confirm | counterparty_client_id     | {counterparty.clientID}     |
-| connection_open_confirm | counterparty_connection_id | {counterparty.connectionID} |
+| connection_open_confirm | connection_id              | {connectionId}              |
+| connection_open_confirm | client_id                  | {clientId}                  |
+| connection_open_confirm | counterparty_client_id     | {counterparty.clientId}     |
+| connection_open_confirm | counterparty_connection_id | {counterparty.connectionId} |
 | message                 | action                     | connection_open_confirm     |
 | message                 | module                     | ibc_connection              |
 
@@ -99,10 +99,10 @@ callbacks to IBC applications.
 
 | Type              | Attribute Key           | Attribute Value                  |
 |-------------------|-------------------------|----------------------------------|
-| channel_open_init | port_id                 | {portID}                         |
-| channel_open_init | channel_id              | {channelID}                      |
-| channel_open_init | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_open_init | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_open_init | port_id                 | {portId}                         |
+| channel_open_init | channel_id              | {channelId}                      |
+| channel_open_init | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_open_init | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_open_init | connection_id           | {channel.connectionHops}         |
 | message           | action                  | channel_open_init                |
 | message           | module                  | ibc_channel                      |
@@ -111,10 +111,10 @@ callbacks to IBC applications.
 
 | Type             | Attribute Key           | Attribute Value                  |
 |------------------|-------------------------|----------------------------------|
-| channel_open_try | port_id                 | {portID}                         |
-| channel_open_try | channel_id              | {channelID}                      |
-| channel_open_try | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_open_try | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_open_try | port_id                 | {portId}                         |
+| channel_open_try | channel_id              | {channelId}                      |
+| channel_open_try | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_open_try | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_open_try | connection_id           | {channel.connectionHops}         |
 | message          | action                  | channel_open_try                 |
 | message          | module                  | ibc_channel                      |
@@ -123,10 +123,10 @@ callbacks to IBC applications.
 
 | Type             | Attribute Key           | Attribute Value                  |
 |------------------|-------------------------|----------------------------------|
-| channel_open_ack | port_id                 | {portID}                         |
-| channel_open_ack | channel_id              | {channelID}                      |
-| channel_open_ack | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_open_ack | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_open_ack | port_id                 | {portId}                         |
+| channel_open_ack | channel_id              | {channelId}                      |
+| channel_open_ack | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_open_ack | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_open_ack | connection_id           | {channel.connectionHops}         |
 | message          | action                  | channel_open_ack                 |
 | message          | module                  | ibc_channel                      |
@@ -135,10 +135,10 @@ callbacks to IBC applications.
 
 | Type                 | Attribute Key           | Attribute Value                  |
 |----------------------|-------------------------|----------------------------------|
-| channel_open_confirm | port_id                 | {portID}                         |
-| channel_open_confirm | channel_id              | {channelID}                      |
-| channel_open_confirm | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_open_confirm | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_open_confirm | port_id                 | {portId}                         |
+| channel_open_confirm | channel_id              | {channelId}                      |
+| channel_open_confirm | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_open_confirm | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_open_confirm | connection_id           | {channel.connectionHops}         |
 | message              | module                  | ibc_channel                      |
 | message              | action                  | channel_open_confirm             |
@@ -147,10 +147,10 @@ callbacks to IBC applications.
 
 | Type               | Attribute Key           | Attribute Value                  |
 |--------------------|-------------------------|----------------------------------|
-| channel_close_init | port_id                 | {portID}                         |
-| channel_close_init | channel_id              | {channelID}                      |
-| channel_close_init | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_close_init | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_close_init | port_id                 | {portId}                         |
+| channel_close_init | channel_id              | {channelId}                      |
+| channel_close_init | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_close_init | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_close_init | connection_id           | {channel.connectionHops}         |
 | message            | action                  | channel_close_init               |
 | message            | module                  | ibc_channel                      |
@@ -159,10 +159,10 @@ callbacks to IBC applications.
 
 | Type                  | Attribute Key           | Attribute Value                  |
 |-----------------------|-------------------------|----------------------------------|
-| channel_close_confirm | port_id                 | {portID}                         |
-| channel_close_confirm | channel_id              | {channelID}                      |
-| channel_close_confirm | counterparty_port_id    | {channel.counterparty.portID}    |
-| channel_close_confirm | counterparty_channel_id | {channel.counterparty.channelID} |
+| channel_close_confirm | port_id                 | {portId}                         |
+| channel_close_confirm | channel_id              | {channelId}                      |
+| channel_close_confirm | counterparty_port_id    | {channel.counterparty.portId}    |
+| channel_close_confirm | counterparty_channel_id | {channel.counterparty.channelId} |
 | channel_close_confirm | connection_id           | {channel.connectionHops}         |
 | message               | action                  | channel_close_confirm            |
 | message               | module                  | ibc_channel                      |
@@ -183,7 +183,7 @@ callbacks to IBC applications.
 | message     | action                   | application-module-defined-field |
 | message     | module                   | ibc-channel                      |
 
-### RecvPacket 
+### MsgRecvPacket 
 
 | Type        | Attribute Key            | Attribute Value      |
 |-------------|--------------------------|----------------------|
@@ -200,7 +200,7 @@ callbacks to IBC applications.
 | message     | action                   | recv_packet          |
 | message     | module                   | ibc-channel          |
 
-### AcknowledgePacket 
+### MsgAcknowledgePacket 
 
 | Type               | Attribute Key            | Attribute Value      |
 |--------------------|--------------------------|----------------------|
@@ -215,7 +215,7 @@ callbacks to IBC applications.
 | message            | action                   | acknowledge_packet   |
 | message            | module                   | ibc-channel          |
 
-### TimeoutPacket & TimeoutOnClose 
+### MsgTimeoutPacket & MsgTimeoutOnClose 
 
 | Type           | Attribute Key            | Attribute Value      |
 |----------------|--------------------------|----------------------|

@@ -2,13 +2,13 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
 // Any.
-func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgChannelOpenInit{},
@@ -20,6 +20,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRecvPacket{},
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
+		&MsgTimeoutOnClose{},
 	)
 }
 
@@ -28,4 +29,4 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 //
 // The actual codec used for serialization should be provided to x/ibc/04-channel and
 // defined at the application level.
-var SubModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+var SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())

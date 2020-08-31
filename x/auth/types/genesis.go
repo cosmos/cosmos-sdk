@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"sort"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
+func NewGenesisState(params Params, accounts GenesisAccounts) *GenesisState {
 	genAccounts, err := PackAccounts(accounts)
 	if err != nil {
 		panic(err)
 	}
-	return GenesisState{
+	return &GenesisState{
 		Params:   params,
 		Accounts: genAccounts,
 	}
@@ -37,7 +38,7 @@ func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // DefaultGenesisState - Return a default genesis state
-func DefaultGenesisState() GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), GenesisAccounts{})
 }
 

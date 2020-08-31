@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -17,8 +19,8 @@ func NewMsgConnectionOpenInit(
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenInit{
-		ConnectionID: connectionID,
-		ClientID:     clientID,
+		ConnectionId: connectionID,
+		ClientId:     clientID,
 		Counterparty: counterparty,
 		Signer:       signer,
 	}
@@ -36,10 +38,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if msg.Signer.Empty() {
@@ -50,7 +52,7 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -63,17 +65,21 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	counterpartyVersions []string, proofInit, proofConsensus []byte,
+	counterpartyClientID string, counterpartyClient clientexported.ClientState,
+	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
+	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
+	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		ConnectionID:         connectionID,
-		ClientID:             clientID,
+		ConnectionId:         connectionID,
+		ClientId:             clientID,
+		ClientState:          csAny,
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
 		ProofInit:            proofInit,
+		ProofClient:          proofClient,
 		ProofConsensus:       proofConsensus,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
@@ -93,11 +99,21 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if err := host.ClientIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
+	}
+	if msg.ClientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	}
+	clientState, err := clienttypes.UnpackClientState(msg.ClientState)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "unpack err: %v", err)
+	}
+	if err := clientState.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "counterparty client is invalid")
 	}
 	if len(msg.CounterpartyVersions) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidVersion, "empty counterparty versions")
@@ -109,6 +125,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
+	}
+	if len(msg.ProofClient) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit empty proof client")
 	}
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
@@ -127,7 +146,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -139,13 +158,17 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry, proofConsensus []byte,
+	connectionID string, counterpartyClient clientexported.ClientState,
+	proofTry, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
+	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenAck{
-		ConnectionID:    connectionID,
+		ConnectionId:    connectionID,
+		ClientState:     csAny,
 		ProofTry:        proofTry,
+		ProofClient:     proofClient,
 		ProofConsensus:  proofConsensus,
 		ProofHeight:     proofHeight,
 		ConsensusHeight: consensusHeight,
@@ -166,14 +189,27 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := ValidateVersion(msg.Version); err != nil {
 		return err
 	}
+	if msg.ClientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "counterparty client is nil")
+	}
+	clientState, err := clienttypes.UnpackClientState(msg.ClientState)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "unpack err: %v", err)
+	}
+	if err := clientState.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "counterparty client is invalid")
+	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")
+	}
+	if len(msg.ProofClient) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit empty proof client")
 	}
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
@@ -192,7 +228,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
@@ -208,7 +244,7 @@ func NewMsgConnectionOpenConfirm(
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{
-		ConnectionID: connectionID,
+		ConnectionId: connectionID,
 		ProofAck:     proofAck,
 		ProofHeight:  proofHeight,
 		Signer:       signer,
@@ -227,7 +263,7 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if len(msg.ProofAck) == 0 {
@@ -244,7 +280,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg

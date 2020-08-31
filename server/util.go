@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,10 +20,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -130,7 +127,6 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
-		conf.TxIndex.IndexAllKeys = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		tmcfg.WriteConfigFile(configFile, conf)
 	} else {
@@ -169,7 +165,7 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 }
 
 // add server commands
-func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport types.AppExporter) {
+func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter) {
 	tendermintCmd := &cobra.Command{
 		Use:   "tendermint",
 		Short: "Tendermint subcommands",
@@ -183,32 +179,14 @@ func AddCommands(rootCmd *cobra.Command, appCreator types.AppCreator, appExport 
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(appCreator, simapp.DefaultNodeHome),
+		StartCmd(appCreator, defaultNodeHome),
 		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,
-		ExportCmd(appExport, simapp.DefaultNodeHome),
+		ExportCmd(appExport, defaultNodeHome),
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)
-}
-
-// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
-// JSON message. An error is returned if any serialization operation fails.
-//
-// NOTE: The ordering of the keys returned as the resulting JSON message is
-// non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc codec.JSONMarshaler, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
-	var jsonMap map[string]json.RawMessage
-
-	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
-		return nil, err
-	}
-
-	jsonMap[key] = value
-	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
-
-	return json.RawMessage(bz), err
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

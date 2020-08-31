@@ -32,6 +32,7 @@ import (
 	"encoding/json"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -48,7 +49,7 @@ import (
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
-	RegisterCodec(*codec.Codec)
+	RegisterCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
@@ -56,6 +57,7 @@ type AppModuleBasic interface {
 
 	// client functionality
 	RegisterRESTRoutes(client.Context, *mux.Router)
+	RegisterGRPCRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
 	GetQueryCmd() *cobra.Command
 }
@@ -73,7 +75,7 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 }
 
 // RegisterCodec registers all module codecs
-func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
+func (bm BasicManager) RegisterCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
 		b.RegisterCodec(cdc)
 	}
@@ -111,6 +113,13 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONMarshaler, txEncCfg client.
 func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	for _, b := range bm {
 		b.RegisterRESTRoutes(clientCtx, rtr)
+	}
+}
+
+// RegisterGRPCRoutes registers all module rest routes
+func (bm BasicManager) RegisterGRPCRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
+	for _, b := range bm {
+		b.RegisterGRPCRoutes(clientCtx, rtr)
 	}
 }
 
@@ -160,7 +169,7 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
 	// Deprecated: use RegisterQueryService
-	LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier
+	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 
@@ -193,8 +202,9 @@ func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
 // LegacyQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
+func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
+// RegisterQueryService registers all gRPC query services.
 func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
 
 // BeginBlock returns an empty module begin-block
@@ -264,7 +274,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc codec.JSONMarshaler) {
+func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
 	for _, module := range m.Modules {
 		if !module.Route().Empty() {
 			router.AddRoute(module.Route())

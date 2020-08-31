@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,25 +16,25 @@ import (
 // and will not work for protobuf transactions.
 type StdTxBuilder struct {
 	StdTx
-	cdc *codec.Codec
+	cdc *codec.LegacyAmino
 }
 
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
-func (s *StdTxBuilder) GetTx() authsigning.SigFeeMemoTx {
+func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
+}
+
+// GetProtoTx implements TxBuilder.GetProtoTx
+func (s *StdTxBuilder) GetProtoTx() *txtypes.Tx {
+	// Stdtx isn't a proto.Message
+	return nil
 }
 
 // SetMsgs implements TxBuilder.SetMsgs
 func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 	s.Msgs = msgs
-	return nil
-}
-
-// SetSignerInfo implements TxBuilder.SetSignerInfo.
-func (s *StdTxBuilder) SetSignerInfo(_ crypto.PubKey, _ *txtypes.ModeInfo) error {
-	// SetSignerInfo is a no-op for amino StdTx
 	return nil
 }
 
@@ -70,9 +68,14 @@ func (s *StdTxBuilder) SetMemo(memo string) {
 	s.Memo = memo
 }
 
+// SetTimeoutHeight sets the transaction's height timeout.
+func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
+	s.TimeoutHeight = height
+}
+
 // StdTxConfig is a context.TxConfig for StdTx
 type StdTxConfig struct {
-	Cdc *codec.Codec
+	Cdc *codec.LegacyAmino
 }
 
 var _ client.TxConfig = StdTxConfig{}
@@ -146,5 +149,5 @@ func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, e
 }
 
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
-	return LegacyAminoJSONHandler{}
+	return stdTxSignModeHandler{}
 }

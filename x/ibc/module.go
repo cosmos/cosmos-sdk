@@ -7,20 +7,20 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -42,10 +42,8 @@ func (AppModuleBasic) Name() string {
 	return host.ModuleName
 }
 
-// RegisterCodec registers the ibc module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
-}
+// RegisterCodec does nothing. IBC does not support amino.
+func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // module.
@@ -63,9 +61,11 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 	return gs.Validate()
 }
 
-// RegisterRESTRoutes registers the REST routes for the ibc module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr, host.StoreKey)
+// RegisterRESTRoutes does nothing. IBC does not support legacy REST routes.
+func (AppModuleBasic) RegisterRESTRoutes(client.Context, *mux.Router) {}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // GetTxCmd returns the root tx command for the ibc module.
@@ -79,7 +79,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 }
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -119,9 +119,9 @@ func (AppModule) QuerierRoute() string {
 	return host.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the ibc module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
-	return keeper.NewQuerier(*am.keeper, legacyQuerierCdc)
+// LegacyQuerierHandler returns nil. IBC does not support the legacy querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return nil
 }
 
 // RegisterQueryService registers the gRPC query service for the ibc module.
@@ -137,7 +137,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 	if err != nil {
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", host.ModuleName, err))
 	}
-	InitGenesis(ctx, *am.keeper, am.createLocalhost, gs)
+	InitGenesis(ctx, *am.keeper, am.createLocalhost, &gs)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -179,7 +179,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for ibc module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[host.StoreKey] = simulation.NewDecodeStore(am.keeper.Codecs())
+	sdr[host.StoreKey] = simulation.NewDecodeStore(*am.keeper)
 }
 
 // WeightedOperations returns the all the ibc module operations with their respective weights.

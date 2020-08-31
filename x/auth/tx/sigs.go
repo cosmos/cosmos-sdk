@@ -105,7 +105,7 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 	return multisig.Signatures, nil
 }
 
-func (g generator) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
+func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
 	descs := make([]*signing.SignatureDescriptor, len(sigs))
 
 	for i, sig := range sigs {
@@ -127,7 +127,7 @@ func (g generator) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, err
 	return codec.ProtoMarshalJSON(toJSON)
 }
 
-func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
+func (g config) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
 	var sigDescs signing.SignatureDescriptors
 	err := g.protoCodec.UnmarshalJSON(bz, &sigDescs)
 	if err != nil {
@@ -144,8 +144,9 @@ func (g generator) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, err
 		data := signing.SignatureDataFromProto(desc.Data)
 
 		sigs[i] = signing.SignatureV2{
-			PubKey: pubKey,
-			Data:   data,
+			PubKey:   pubKey,
+			Data:     data,
+			Sequence: desc.Sequence,
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -38,7 +39,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterCodec registers the params module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	proposal.RegisterCodec(cdc)
 }
 
@@ -53,6 +54,9 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, config client.TxEnc
 
 // RegisterRESTRoutes registers the REST routes for the params module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the params module.
+func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns no root tx command for the params module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
@@ -99,7 +103,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // LegacyQuerierHandler returns the x/params querier handler.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 

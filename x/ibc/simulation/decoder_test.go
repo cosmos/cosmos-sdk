@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -17,21 +18,18 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	cdc := app.AppCodec()
-	aminoCdc := app.Codec()
-
-	dec := simulation.NewDecodeStore(app.IBCKeeper.Codecs())
+	dec := simulation.NewDecodeStore(*app.IBCKeeper)
 
 	clientID := "clientidone"
 	connectionID := "connectionidone"
 	channelID := "channelidone"
 	portID := "portidone"
 
-	clientState := ibctmtypes.ClientState{
-		FrozenHeight: 10,
+	clientState := &ibctmtypes.ClientState{
+		FrozenHeight: clienttypes.NewHeight(0, 10),
 	}
 	connection := connectiontypes.ConnectionEnd{
-		ClientID: "clientidone",
+		ClientId: "clientidone",
 		Versions: []string{"1.0"},
 	}
 	channel := channeltypes.Channel{
@@ -40,21 +38,23 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{
-			Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
-			Value: aminoCdc.MustMarshalBinaryBare(clientState),
-		},
-		kv.Pair{
-			Key:   host.KeyConnection(connectionID),
-			Value: cdc.MustMarshalBinaryBare(&connection),
-		},
-		kv.Pair{
-			Key:   host.KeyChannel(portID, channelID),
-			Value: cdc.MustMarshalBinaryBare(&channel),
-		},
-		kv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+		Pairs: []kv.Pair{
+			{
+				Key:   host.FullKeyClientPath(clientID, host.KeyClientState()),
+				Value: app.IBCKeeper.ClientKeeper.MustMarshalClientState(clientState),
+			},
+			{
+				Key:   host.KeyConnection(connectionID),
+				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&connection),
+			},
+			{
+				Key:   host.KeyChannel(portID, channelID),
+				Value: app.IBCKeeper.Codec().MustMarshalBinaryBare(&channel),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -71,9 +71,9 @@ func TestDecodeStore(t *testing.T) {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			if i == len(tests)-1 {
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			} else {
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

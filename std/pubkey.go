@@ -3,13 +3,13 @@ package std
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/sr25519"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
-	"github.com/tendermint/tendermint/crypto"
-	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
 // DefaultPublicKeyCodec implements the standard PublicKeyCodec for the SDK which
@@ -20,30 +20,40 @@ var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 
 // Decode implements the PublicKeyCodec.Decode method
 func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
+	// key being nil is allowed as all fields in proto are optional
+	if key == nil {
+		return nil, nil
+	}
+	if key.Sum == nil {
+		return nil, nil
+	}
 	switch key := key.Sum.(type) {
 	case *types.PublicKey_Secp256K1:
 		n := len(key.Secp256K1)
-		if n != secp256k1.PubKeySecp256k1Size {
+		if n != secp256k1.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for secp256k1 public key", n)
 		}
-		var res secp256k1.PubKeySecp256k1
-		copy(res[:], key.Secp256K1)
+
+		res := make(secp256k1.PubKey, secp256k1.PubKeySize)
+		copy(res, key.Secp256K1)
 		return res, nil
 	case *types.PublicKey_Ed25519:
 		n := len(key.Ed25519)
-		if n != ed255192.PubKeyEd25519Size {
+		if n != ed25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for ed25519 public key", n)
 		}
-		var res ed255192.PubKeyEd25519
-		copy(res[:], key.Ed25519)
+
+		res := make(ed25519.PubKey, ed25519.PubKeySize)
+		copy(res, key.Ed25519)
 		return res, nil
 	case *types.PublicKey_Sr25519:
 		n := len(key.Sr25519)
-		if n != sr25519.PubKeySr25519Size {
+		if n != sr25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for sr25519 public key", n)
 		}
-		var res sr25519.PubKeySr25519
-		copy(res[:], key.Sr25519)
+
+		res := make(sr25519.PubKey, sr25519.PubKeySize)
+		copy(res, key.Sr25519)
 
 		return res, nil
 	case *types.PublicKey_Multisig:
@@ -65,13 +75,16 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 
 // Encode implements the PublicKeyCodec.Encode method
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
+	if key == nil {
+		return &types.PublicKey{}, nil
+	}
 	switch key := key.(type) {
-	case secp256k1.PubKeySecp256k1:
-		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key[:]}}, nil
-	case ed255192.PubKeyEd25519:
-		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key[:]}}, nil
-	case sr25519.PubKeySr25519:
-		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key[:]}}, nil
+	case secp256k1.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
+	case ed25519.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
+	case sr25519.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil
 	case multisig.PubKeyMultisigThreshold:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))

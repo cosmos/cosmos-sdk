@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -358,7 +358,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"fix sequence, should pass",
@@ -387,7 +387,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			func() {},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"tx from just second signer with incorrect sequence fails",
@@ -398,7 +398,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"fix the sequence and it passes",
@@ -704,7 +704,7 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"test wrong accNums",
@@ -816,7 +816,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized, // because of wrong accSeq
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"test public key not found",
@@ -862,7 +862,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 		{
 			"make sure previous public key has been set after wrong signature",
@@ -874,7 +874,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 			},
 			false,
 			false,
-			sdkerrors.ErrUnauthorized,
+			sdkerrors.ErrWrongSequence,
 		},
 	}
 
@@ -1002,7 +1002,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	// setup an ante handler that only accepts PubKeyEd25519
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 		switch pubkey := sig.PubKey.(type) {
-		case ed25519.PubKeyEd25519:
+		case ed25519.PubKey:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:

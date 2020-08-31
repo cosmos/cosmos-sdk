@@ -13,15 +13,15 @@ import (
 // DefaultTxEncoder returns a default protobuf TxEncoder using the provided Marshaler
 func DefaultTxEncoder() types.TxEncoder {
 	return func(tx types.Tx) ([]byte, error) {
-		wrapper, ok := tx.(*builder)
+		txWrapper, ok := tx.(*wrapper)
 		if !ok {
-			return nil, fmt.Errorf("expected %T, got %T", &builder{}, tx)
+			return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
 		}
 
 		raw := &txtypes.TxRaw{
-			BodyBytes:     wrapper.GetBodyBytes(),
-			AuthInfoBytes: wrapper.GetAuthInfoBytes(),
-			Signatures:    wrapper.tx.Signatures,
+			BodyBytes:     txWrapper.getBodyBytes(),
+			AuthInfoBytes: txWrapper.getAuthInfoBytes(),
+			Signatures:    txWrapper.tx.Signatures,
 		}
 
 		return proto.Marshal(raw)
@@ -31,11 +31,11 @@ func DefaultTxEncoder() types.TxEncoder {
 // DefaultTxEncoder returns a default protobuf JSON TxEncoder using the provided Marshaler
 func DefaultJSONTxEncoder() types.TxEncoder {
 	return func(tx types.Tx) ([]byte, error) {
-		wrapper, ok := tx.(*builder)
+		txWrapper, ok := tx.(*wrapper)
 		if !ok {
-			return nil, fmt.Errorf("expected %T, got %T", &builder{}, tx)
+			return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
 		}
 
-		return codec.ProtoMarshalJSON(wrapper.tx)
+		return codec.ProtoMarshalJSON(txWrapper.tx)
 	}
 }

@@ -33,7 +33,7 @@ type InterfaceRegistry interface {
 	// as implementations of iface.
 	//
 	// Ex:
-	//   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
+	//   registry.RegisterInterface("cosmos.v1beta1.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
 
 	// RegisterImplementations registers impls as concrete implementations of
@@ -42,6 +42,13 @@ type InterfaceRegistry interface {
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
+
+	// ListAllInterfaces list the type URLs of all registered interfaces.
+	ListAllInterfaces() []string
+
+	// ListImplementations lists the valid type URLs for the given interface name that can be used
+	// for the provided interface type URL.
+	ListImplementations(ifaceTypeURL string) []string
 }
 
 // UnpackInterfacesMessage is meant to extend protobuf types (which implement
@@ -52,7 +59,7 @@ type UnpackInterfacesMessage interface {
 	// Any's using the AnyUnpacker. It should generally be implemented as
 	// follows:
 	//   func (s *MyStruct) UnpackInterfaces(unpacker AnyUnpacker) error {
-	//		var x AnInterface
+	//		var x AnyInterface
 	//		// where X is an Any field on MyStruct
 	//		err := unpacker.UnpackAny(s.X, &x)
 	//		if err != nil {
@@ -109,6 +116,33 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	}
 
 	registry.interfaceImpls[ityp] = imap
+}
+
+func (registry *interfaceRegistry) ListAllInterfaces() []string {
+	interfaceNames := registry.interfaceNames
+	keys := make([]string, 0, len(interfaceNames))
+	for key := range interfaceNames {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func (registry *interfaceRegistry) ListImplementations(ifaceName string) []string {
+	typ, ok := registry.interfaceNames[ifaceName]
+	if !ok {
+		return []string{}
+	}
+
+	impls, ok := registry.interfaceImpls[typ.Elem()]
+	if !ok {
+		return []string{}
+	}
+
+	keys := make([]string, 0, len(impls))
+	for key := range impls {
+		keys = append(keys, key)
+	}
+	return keys
 }
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {

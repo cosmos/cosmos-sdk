@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -24,8 +25,8 @@ func TestTxBuilder(t *testing.T) {
 	cdc := std.DefaultPublicKeyCodec{}
 
 	memo := "sometestmemo"
-
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Arbitrary account sequence
 
 	pk, err := cdc.Encode(pubkey)
 	require.NoError(t, err)
@@ -40,6 +41,7 @@ func TestTxBuilder(t *testing.T) {
 				},
 			},
 		},
+		Sequence: accSeq,
 	})
 
 	var sig signing.SignatureV2
@@ -47,13 +49,14 @@ func TestTxBuilder(t *testing.T) {
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubkey.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		},
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
 
-	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetAuthInfoBytes")
+	t.Log("verify that authInfo bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from getAuthInfoBytes")
 	authInfo := &txtypes.AuthInfo{
 		Fee:         &fee,
 		SignerInfos: signerInfo,
@@ -63,7 +66,7 @@ func TestTxBuilder(t *testing.T) {
 
 	require.NotEmpty(t, authInfoBytes)
 
-	t.Log("verify that body bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from GetBodyBytes")
+	t.Log("verify that body bytes encoded with DefaultTxEncoder and decoded with DefaultTxDecoder can be retrieved from getBodyBytes")
 	anys := make([]*codectypes.Any, len(msgs))
 
 	for i, msg := range msgs {
@@ -80,35 +83,42 @@ func TestTxBuilder(t *testing.T) {
 	}
 	bodyBytes := marshaler.MustMarshalBinaryBare(txBody)
 	require.NotEmpty(t, bodyBytes)
-	require.Empty(t, txBuilder.GetBodyBytes())
+	require.Empty(t, txBuilder.getBodyBytes())
 
-	t.Log("verify that calling the SetMsgs, SetMemo results in the correct GetBodyBytes")
-	require.NotEqual(t, bodyBytes, txBuilder.GetBodyBytes())
+	t.Log("verify that calling the SetMsgs, SetMemo results in the correct getBodyBytes")
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
 	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
-	require.NotEqual(t, bodyBytes, txBuilder.GetBodyBytes())
+	require.NotEqual(t, bodyBytes, txBuilder.getBodyBytes())
 	txBuilder.SetMemo(memo)
-	require.Equal(t, bodyBytes, txBuilder.GetBodyBytes())
+	require.Equal(t, bodyBytes, txBuilder.getBodyBytes())
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
 	require.Equal(t, 0, len(txBuilder.GetPubKeys()))
 
-	t.Log("verify that updated AuthInfo  results in the correct GetAuthInfoBytes and GetPubKeys")
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	t.Log("verify that updated AuthInfo  results in the correct getAuthInfoBytes and GetPubKeys")
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	txBuilder.SetFeeAmount(fee.Amount)
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	txBuilder.SetGasLimit(fee.GasLimit)
-	require.NotEqual(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
 
 	// once fee, gas and signerInfos are all set, AuthInfo bytes should match
-	require.Equal(t, authInfoBytes, txBuilder.GetAuthInfoBytes())
+	require.Equal(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
-	require.Equal(t, pubkey.Bytes(), txBuilder.GetPubKeys()[0].Bytes())
+	require.Equal(t, legacy.Cdc.MustMarshalBinaryBare(pubkey), legacy.Cdc.MustMarshalBinaryBare(txBuilder.GetPubKeys()[0]))
 
-	txBuilder = &builder{}
+	any, err := codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	require.NoError(t, err)
+	txBuilder.SetExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())
+	txBuilder.SetNonCriticalExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
+
+	txBuilder = &wrapper{}
 	require.NotPanics(t, func() {
 		_ = txBuilder.GetMsgs()
 	})
@@ -134,16 +144,18 @@ func TestBuilderValidateBasic(t *testing.T) {
 		PubKey: pubKey1,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey1.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey1),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{
 		PubKey: pubKey2,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey2.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey2),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	err := txBuilder.SetMsgs(msgs...)
@@ -229,25 +241,4 @@ func TestBuilderValidateBasic(t *testing.T) {
 	txBuilder.tx = nil
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-}
-
-func TestDefaultTxDecoderError(t *testing.T) {
-	registry := codectypes.NewInterfaceRegistry()
-	pubKeyCdc := std.DefaultPublicKeyCodec{}
-	encoder := DefaultTxEncoder()
-	decoder := DefaultTxDecoder(registry, pubKeyCdc)
-
-	builder := newBuilder(pubKeyCdc)
-	err := builder.SetMsgs(testdata.NewTestMsg())
-	require.NoError(t, err)
-
-	txBz, err := encoder(builder.GetTx())
-	require.NoError(t, err)
-
-	_, err = decoder(txBz)
-	require.EqualError(t, err, "no registered implementations of type types.Msg: tx parse error")
-
-	registry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
-	_, err = decoder(txBz)
-	require.NoError(t, err)
 }

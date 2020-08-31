@@ -51,7 +51,6 @@ func GetCmdQueryChannels() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(res.Height)
 			return clientCtx.PrintOutput(res)
 		},
 	}
@@ -88,7 +87,6 @@ func GetCmdQueryChannel() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(channelRes.ProofHeight))
 			return clientCtx.PrintOutput(channelRes)
 		},
 	}
@@ -130,7 +128,6 @@ func GetCmdQueryConnectionChannels() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(res.Height)
 			return clientCtx.PrintOutput(res)
 		},
 	}
@@ -159,13 +156,12 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 			portID := args[0]
 			channelID := args[1]
 
-			clientStateRes, height, err := utils.QueryChannelClientState(clientCtx, portID, channelID)
+			res, err := utils.QueryChannelClientState(clientCtx, portID, channelID, false)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutput(clientStateRes)
+			return clientCtx.PrintOutputLegacy(res.IdentifiedClientState)
 		},
 	}
 
@@ -196,8 +192,8 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 			}
 
 			req := &types.QueryPacketCommitmentsRequest{
-				PortID:     args[0],
-				ChannelID:  args[1],
+				PortId:     args[0],
+				ChannelId:  args[1],
 				Pagination: pageReq,
 			}
 
@@ -206,7 +202,6 @@ func GetCmdQueryPacketCommitments() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(res.Height)
 			return clientCtx.PrintOutput(res)
 		},
 	}
@@ -248,7 +243,6 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(res.ProofHeight))
 			return clientCtx.PrintOutput(res)
 		},
 	}
@@ -298,8 +292,8 @@ Otherwise, the return value represents:
 			}
 
 			req := &types.QueryUnrelayedPacketsRequest{
-				PortID:                    args[0],
-				ChannelID:                 args[1],
+				PortId:                    args[0],
+				ChannelId:                 args[1],
 				PacketCommitmentSequences: seqs,
 				Acknowledgements:          acknowledgements,
 			}

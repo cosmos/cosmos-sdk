@@ -2,6 +2,7 @@ syntax = "proto3";
 package ibc.localhost;
 
 import "gogoproto/gogo.proto";
+import "ibc/client/client.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types";
 
@@ -18,12 +19,13 @@ message MsgCreateClient {
 message ClientState {
   option (gogoproto.goproto_getters) = false;
   // client id
-  string id = 1 [(gogoproto.customname) = "ID"];
+  string id = 1;
   // self chain ID
   string chain_id = 2 [
-    (gogoproto.customname) = "ChainID",
     (gogoproto.moretags) = "yaml:\"chain_id\""
   ];
   // self latest block height
-  uint64 height = 3;
+  ibc.client.Height height = 3 [
+    (gogoproto.nullable) = false
+  ];
 }

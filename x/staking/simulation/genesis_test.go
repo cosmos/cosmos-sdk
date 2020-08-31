@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -17,7 +18,9 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
@@ -50,7 +53,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "1000.000000000000000000", stakingGenesis.Delegations[0].Shares.String())
 	// check validators
 	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", stakingGenesis.Validators[2].OperatorAddress.String())
-	require.Equal(t, "cosmosvalconspub1addwnpepqwr8k5g44urevkvz5ys2qjag0nnp6xkd2f8lejn5pw2rehkjt6ftv5d9nrp", stakingGenesis.Validators[2].ConsensusPubkey)
+	require.Equal(t, "cosmosvalconspub1zcjduepq280tm686ma80cva9z620dmknd9a858pd2zmq9ackfenfllecjxds0hg9n7", stakingGenesis.Validators[2].ConsensusPubkey)
 	require.Equal(t, false, stakingGenesis.Validators[2].Jailed)
 	require.Equal(t, "Unbonded", stakingGenesis.Validators[2].Status.String())
 	require.Equal(t, "1000", stakingGenesis.Validators[2].Tokens.String())
@@ -63,7 +66,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

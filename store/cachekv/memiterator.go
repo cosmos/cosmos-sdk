@@ -4,8 +4,9 @@ import (
 	"container/list"
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // Iterates over iterKVCache items.
@@ -88,10 +89,12 @@ func (mi *memIterator) Value() []byte {
 	return mi.items[len(mi.items)-1].Value
 }
 
-func (mi *memIterator) Close() {
+func (mi *memIterator) Close() error {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil
+
+	return nil
 }
 
 // Error returns an error if the memIterator is invalid defined by the Valid

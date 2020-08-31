@@ -13,6 +13,9 @@ import (
 
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultGRPCAddress is the default address the gRPC server binds to.
+	DefaultGRPCAddress = "0.0.0.0:9090"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -42,6 +45,10 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	IndexEvents []string `mapstructure:"index-events"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -131,6 +138,7 @@ func DefaultConfig() *Config {
 			PruningKeepRecent: "0",
 			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
+			IndexEvents:       make([]string, 0),
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -145,8 +153,8 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:  false,
-			Address: "0.0.0.0:9090",
+			Enable:  true,
+			Address: DefaultGRPCAddress,
 		},
 	}
 }
@@ -172,6 +180,7 @@ func GetConfig(v *viper.Viper) Config {
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
+			IndexEvents:       v.GetStringSlice("index-events"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

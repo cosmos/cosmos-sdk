@@ -6,9 +6,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -17,12 +16,6 @@ import (
 func RegisterHandlers(clientCtx client.Context, r *mux.Router) {
 	registerQueryRoutes(clientCtx, r)
 	registerTxHandlers(clientCtx, r)
-}
-
-// RegisterRoutes register distribution REST routes.
-func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	registerQueryRoutes(clientCtx, r)
-	registerTxRoutes(clientCtx, r)
 }
 
 // TODO add proto compatible Handler after x/gov migration
@@ -37,7 +30,7 @@ func ProposalRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CommunityPoolSpendProposalReq
-		if !rest.ReadRESTReq(w, r, clientCtx.Codec, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 
@@ -56,6 +49,6 @@ func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		authclient.WriteGenerateStdTxResponse(w, clientCtx, req.BaseReq, []sdk.Msg{msg})
+		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }

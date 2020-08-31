@@ -7,9 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -58,8 +55,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	// addition to spec: prevent update if the client is frozen
-	if clientState.IsFrozen() {
+	// prevent update if the client is frozen before or at header height
+	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
@@ -69,21 +66,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		err             error
 	)
 
-	switch clientType {
-	case exported.Tendermint:
-		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(
-			clientState, header, ctx.BlockTime(),
-		)
-	case exported.Localhost:
-		// override client state and update the block height
-		clientState = localhosttypes.NewClientState(
-			ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
-			ctx.BlockHeight(),
-		)
-		consensusHeight = uint64(ctx.BlockHeight())
-	default:
-		err = types.ErrInvalidClientType
-	}
+	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
 
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
@@ -119,22 +102,11 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
-
-	consensusState, found := k.GetClientConsensusStateLTE(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
-	if !found {
-		return sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+	if err := misbehaviour.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "IBC misbehaviour failed validate basic")
 	}
 
-	var err error
-	switch e := misbehaviour.(type) {
-	case ibctmtypes.Evidence:
-		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(
-			clientState, consensusState, misbehaviour, consensusState.GetHeight(), ctx.BlockTime(), ctx.ConsensusParams(),
-		)
-
-	default:
-		err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)
-	}
+	clientState, err := clientState.CheckMisbehaviourAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, misbehaviour.GetClientID()), misbehaviour)
 
 	if err != nil {
 		return err

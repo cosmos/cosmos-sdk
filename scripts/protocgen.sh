@@ -10,6 +10,14 @@ for dir in $proto_dirs; do
   --gocosmos_out=plugins=interfacetype+grpc,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
+
+  # command to generate gRPC gateway (*.pb.gw.go in respective modules) files
+  protoc \
+  -I "proto" \
+  -I "third_party/proto" \
+  --grpc-gateway_out=logtostderr=true:. \
+  $(find "${dir}" -maxdepth 1 -name '*.proto')
+
 done
 
 # generate codec/testdata proto code
@@ -19,5 +27,3 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./testutil
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
-
-

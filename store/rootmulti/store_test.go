@@ -9,7 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/rootmulti/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -158,19 +158,6 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	err = store.LoadVersion(ver)
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, ver)
-	checkStore(t, store, commitID, commitID)
-
-	// XXX: commit this older version
-	commitID = store.Commit()
-	expectedCommitID = getExpectedCommitID(store, ver+1)
-	checkStore(t, store, expectedCommitID, commitID)
-
-	// XXX: confirm old commit is overwritten and we have rolled back
-	// LatestVersion
-	store = newMultiStoreWithMounts(db, types.PruneDefault)
-	err = store.LoadLatestVersion()
-	require.Nil(t, err)
-	commitID = getExpectedCommitID(store, ver+1)
 	checkStore(t, store, commitID, commitID)
 }
 
@@ -554,10 +541,9 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
-
 }
 
-func checkContains(t testing.TB, info []storeInfo, wanted []string) {
+func checkContains(t testing.TB, info []types.StoreInfo, wanted []string) {
 	t.Helper()
 
 	for _, want := range wanted {
@@ -565,7 +551,7 @@ func checkContains(t testing.TB, info []storeInfo, wanted []string) {
 	}
 }
 
-func checkHas(t testing.TB, info []storeInfo, want string) {
+func checkHas(t testing.TB, info []types.StoreInfo, want string) {
 	t.Helper()
 	for _, i := range info {
 		if i.Name == want {
@@ -586,13 +572,10 @@ func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()
-		m[name] = storeInfo{
-			Name: name,
-			Core: storeCore{
-				CommitID: store.LastCommitID(),
-				// StoreType: store.GetStoreType(),
-			},
+		m[name] = types.StoreInfo{
+			Name:     name,
+			CommitId: store.LastCommitID(),
 		}.GetHash()
 	}
-	return sdkmaps.SimpleHashFromMap(m)
+	return sdkmaps.HashFromMap(m)
 }

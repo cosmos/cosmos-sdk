@@ -3,7 +3,8 @@ package hd
 import (
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 // PubKeyType defines an algorithm to derive key-pairs which can be used for cryptographic signing.
@@ -54,15 +55,17 @@ func (s secp256k1Algo) Derive() DeriveFn {
 			return masterPriv[:], nil
 		}
 		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
-		return derivedKey[:], err
+
+		return derivedKey, err
 	}
 }
 
 // Generate generates a secp256k1 private key from the given bytes.
 func (s secp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) crypto.PrivKey {
-		var bzArr [32]byte
-		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr)
+		var bzArr = make([]byte, secp256k1.PrivKeySize)
+		copy(bzArr, bz)
+
+		return secp256k1.PrivKey(bzArr)
 	}
 }

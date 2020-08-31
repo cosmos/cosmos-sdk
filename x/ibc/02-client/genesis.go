@@ -12,12 +12,23 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
-		k.SetClientState(ctx, client.ClientID, client.ClientState)
-		k.SetClientType(ctx, client.ClientID, client.ClientState.ClientType())
+		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
+		if !ok {
+			panic("invalid client state")
+		}
+
+		k.SetClientState(ctx, client.ClientId, cs)
+		k.SetClientType(ctx, client.ClientId, cs.ClientType())
 	}
+
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			k.SetClientConsensusState(ctx, cs.ClientID, consState.GetHeight(), consState)
+			consensusState, ok := consState.GetCachedValue().(exported.ConsensusState)
+			if !ok {
+				panic("invalid consensus state")
+			}
+
+			k.SetClientConsensusState(ctx, cs.ClientId, consensusState.GetHeight(), consensusState)
 		}
 	}
 
@@ -32,7 +43,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+	// Hardcode 0 as epoch number for now
+	// TODO: Retrieve epoch from chain-id
+	clientState := localhosttypes.NewClientState(
+		ctx.ChainID(), types.NewHeight(0, uint64(ctx.BlockHeight())),
+	)
 
 	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
 	if err != nil {
@@ -41,10 +56,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 }
 
 // ExportGenesis returns the ibc client submodule's exported genesis.
+// NOTE: CreateLocalhost should always be false on export since a
+// created localhost will be included in the exported clients.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
-		CreateLocalhost:  true,
+		CreateLocalhost:  false,
 	}
 }

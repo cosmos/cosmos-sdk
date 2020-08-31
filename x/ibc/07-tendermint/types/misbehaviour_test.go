@@ -24,7 +24,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 
 	suite.Require().Equal(clientexported.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
-	suite.Require().Equal(uint64(height), misbehaviour.GetHeight())
+	suite.Require().Equal(height.EpochHeight, misbehaviour.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {

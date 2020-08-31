@@ -56,7 +56,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	infractionHeight := tmMisbehaviour.GetHeight()
 	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight.EpochHeight) - infractionHeight
+	ageBlocks := int64(cs.LatestHeight.EpochHeight - infractionHeight)
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -96,7 +96,8 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = tmEvidence.GetHeight()
+	frozenHeight := clienttypes.NewHeight(0, tmMisbehaviour.GetHeight())
+	cs.FrozenHeight = frozenHeight
 	return &cs, nil
 }
 

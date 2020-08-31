@@ -248,14 +248,14 @@ func (coord *Coordinator) RecvPacket(
 	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
 }
 
-// PacketExecuted receives a packet through the channel keeper on the source chain and updates the
+// ReceiveExecuted receives a packet through the channel keeper on the source chain and updates the
 // counterparty client for the source chain.
-func (coord *Coordinator) PacketExecuted(
+func (coord *Coordinator) ReceiveExecuted(
 	source, counterparty *TestChain,
 	packet channelexported.PacketI,
 	counterpartyClientID string,
 ) error {
-	if err := source.PacketExecuted(packet); err != nil {
+	if err := source.ReceiveExecuted(packet); err != nil {
 		return err
 	}
 	coord.IncrementTime()

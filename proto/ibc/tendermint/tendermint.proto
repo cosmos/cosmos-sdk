@@ -154,9 +154,9 @@ message MsgCreateClient {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags)    = "yaml:\"max_clock_drift\""
   ];
-  repeated ics23.ProofSpec proof_specs = 8
+  repeated ics23.ProofSpec proof_specs = 7
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
-  bytes signer = 7
+  bytes signer = 8
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 

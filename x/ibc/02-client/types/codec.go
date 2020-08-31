@@ -24,6 +24,14 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		"cosmos_sdk.ibc.v1.client.Header",
 		(*exported.Header)(nil),
 	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.client.Height",
+		(*exported.Height)(nil),
+	)
+	registry.RegisterImplementations(
+		(*exported.Height)(nil),
+		&Height{},
+	)
 }
 
 var (

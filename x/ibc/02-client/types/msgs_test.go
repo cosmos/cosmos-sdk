@@ -250,14 +250,8 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"valid - tendermint misbehaviour",
 			func() {
-				header1 := suite.chain.CreateTMClientHeader()
-				header1.TrustedHeight = uint64(suite.chain.CurrentHeader.Height) - 1
-				header1.TrustedValidators = header1.ValidatorSet
-
-				header2 := suite.chain.CreateTMClientHeader()
-				header2.TrustedHeight = uint64(suite.chain.CurrentHeader.Height) - 1
-				header2.TrustedValidators = header2.ValidatorSet
-				header2.Header.Time = header2.Header.Time.Add(time.Minute)
+				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
 
 				misbehaviour := ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, header1, header2)
 				msg, err = types.NewMsgSubmitMisbehaviour("tendermint", misbehaviour, suite.signer)
@@ -300,6 +294,15 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 			"invalid solomachine misbehaviour",
 			func() {
 				msg, err = types.NewMsgSubmitMisbehaviour("solomachine", &solomachinetypes.Misbehaviour{}, suite.signer)
+				suite.Require().NoError(err)
+			},
+			false,
+		},
+		{
+			"client-id mismatch",
+			func() {
+				soloMachineMisbehaviour := ibctesting.NewSolomachine(suite.T(), "solomachine").CreateMisbehaviour()
+				msg, err = types.NewMsgSubmitMisbehaviour("external", soloMachineMisbehaviour, suite.signer)
 				suite.Require().NoError(err)
 			},
 			false,

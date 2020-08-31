@@ -48,12 +48,12 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 // fail if any error occurs. The clientID's, TestConnections, and TestChannels are returned
 // for both chains. The channels created are connected to the ibc-transfer application.
 func (coord *Coordinator) Setup(
-	chainA, chainB *TestChain,
+	chainA, chainB *TestChain, order channeltypes.Order,
 ) (string, string, *TestConnection, *TestConnection, TestChannel, TestChannel) {
 	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, clientexported.Tendermint)
 
 	// channels can also be referenced through the returned connections
-	channelA, channelB := coord.CreateTransferChannels(chainA, chainB, connA, connB, channeltypes.UNORDERED)
+	channelA, channelB := coord.CreateMockChannels(chainA, chainB, connA, connB, order)
 
 	return clientA, clientB, connA, connB, channelA, channelB
 }
@@ -162,6 +162,18 @@ func (coord *Coordinator) CreateConnection(
 	require.NoError(coord.t, err)
 
 	return connA, connB
+}
+
+// CreateMockChannels constructs and executes channel handshake messages to create OPEN
+// channels that use a mock application module that returns nil on all callbacks. This
+// function is expects the channels to be successfully opened otherwise testing will
+// fail.
+func (coord *Coordinator) CreateMockChannels(
+	chainA, chainB *TestChain,
+	connA, connB *TestConnection,
+	order channeltypes.Order,
+) (TestChannel, TestChannel) {
+	return coord.CreateChannel(chainA, chainB, connA, connB, MockPort, MockPort, order)
 }
 
 // CreateTransferChannels constructs and executes channel handshake messages to create OPEN
@@ -472,7 +484,8 @@ func (coord *Coordinator) ChanOpenInit(
 	sourceChannel := connection.AddTestChannel(sourcePortID)
 	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
 
-	// create port capability
+	// NOTE: only creation of a capability for a transfer or mock port is supported
+	// Other applications must bind to the port in InitGenesis or modify this code.
 	source.CreatePortCapability(sourceChannel.PortID)
 	coord.IncrementTime()
 

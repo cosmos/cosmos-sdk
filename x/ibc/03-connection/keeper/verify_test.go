@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainB.GetConnection(connB)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -440,7 +440,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID

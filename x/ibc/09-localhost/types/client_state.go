@@ -42,8 +42,8 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 }
 
 // GetLatestHeight returns the latest height stored.
-func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.Height.EpochHeight
+func (cs ClientState) GetLatestHeight() clientexported.Height {
+	return cs.Height
 }
 
 // IsFrozen returns false.
@@ -52,8 +52,8 @@ func (cs ClientState) IsFrozen() bool {
 }
 
 // GetFrozenHeight returns 0.
-func (cs ClientState) GetFrozenHeight() uint64 {
-	return 0
+func (cs ClientState) GetFrozenHeight() clientexported.Height {
+	return clienttypes.Height{}
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -96,7 +96,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // VerifyClientState verifies that the localhost client state is stored locally
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore, cdc codec.BinaryMarshaler, _ commitmentexported.Root,
-	_ uint64, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
+	_ clientexported.Height, _ commitmentexported.Prefix, _ string, _ []byte, clientState clientexported.ClientState,
 ) error {
 	path := host.KeyClientState()
 	bz := store.Get(path)
@@ -130,7 +130,7 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	_ commitmentexported.Prefix,
 	_ []byte,
 	connectionID string,
@@ -163,7 +163,7 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	prefix commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -197,7 +197,7 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -227,7 +227,7 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -258,7 +258,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,
@@ -280,7 +280,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ clientexported.Height,
 	_ commitmentexported.Prefix,
 	_ []byte,
 	portID,

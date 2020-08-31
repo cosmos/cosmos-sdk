@@ -26,22 +26,3 @@ message Secp256K1PubKey {
 message Secp256K1PrivKey {
     bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1.PrivKey"];
 }
-
-message Ed25519PubKey {
-    // bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519.PubKey"];
-    bytes key = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PubKey"];
-}
-
-message Ed25519PrivKey {
-    // bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519.PrivKey"];
-    bytes key = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PrivKey"];
-
-}
-
-message Sr25519PubKey {
-    bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/sr25519.PubKey"];
-}
-
-message Sr25519PrivKey {
-    bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/sr25519.PrivKey"];
-}

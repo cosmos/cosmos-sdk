@@ -274,7 +274,7 @@ func CalculateGas(
 		return sdk.SimulationResponse{}, 0, err
 	}
 
-	bz, _, err := queryFunc("/app/simulate", txBytes)
+	bz, _, err := queryFunc("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
 	if err != nil {
 		return sdk.SimulationResponse{}, 0, err
 	}

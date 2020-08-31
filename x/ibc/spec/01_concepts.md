@@ -7,6 +7,28 @@ order: 1
 > NOTE: if you are not familiar with the IBC terminology and concepts, please read
 this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.md) as prerequisite reading.
 
+## Client Misbehaviour
+
+IBC clients must freeze when the counterparty chain becomes malicious and 
+takes actions that could fool the light client into accepting invalid state 
+transitions. Thus, relayers are able to submit Misbehaviour proofs that prove 
+that a counterparty chain has signed two Headers for the same height. This 
+constitutes misbehaviour as the IBC client could have accepted either header 
+as valid. Upon verifying the misbehaviour the IBC client must freeze at that 
+height so that any proof verifications for the frozen height or later fail.
+
+Note, there is a difference between the chain-level Misbehaviour that IBC is 
+concerned with and the validator-level Evidence that Tendermint is concerned 
+with. Tendermint must be able to detect, submit, and punish any evidence of 
+individual validators breaking the Tendermint consensus protocol and attempting 
+to mount an attack. IBC clients must only act when an attack is successful 
+and the chain has successfully forked. In this case, valid Headers submitted 
+to the IBC client can no longer be trusted and the client must freeze.
+
+Governance may then choose to override a frozen client and provide the correct, 
+canonical Header so that the client can continue operating after the Misbehaviour 
+submission.
+
 ## Connection Version Negotation
 
 During the handshake procedure for connections a version string is agreed

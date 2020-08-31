@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				suite.Equal(tc.numVals, len(valsResp.Validators))
 				suite.Equal(uint64(len(vals)), valsResp.Pagination.Total)
 
-				if (tc.hasNext) {
+				if tc.hasNext {
 					suite.NotNil(valsResp.Pagination.NextKey)
 				} else {
 					suite.Nil(valsResp.Pagination.NextKey)

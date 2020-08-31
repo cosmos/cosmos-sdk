@@ -102,10 +102,10 @@ func NewUpdateClientCmd() *cobra.Command {
 // future updates.
 func NewSubmitMisbehaviourCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "misbehaviour [path/to/evidence.json]",
+		Use:     "misbehaviour [path/to/misbehaviour.json]",
 		Short:   "submit a client misbehaviour",
 		Long:    "submit a client misbehaviour to prevent future updates",
-		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s misbehaviour [path/to/misbehaviour.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -116,19 +116,19 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var ev *types.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[0]), ev); err != nil {
+			var m *types.Misbehaviour
+			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, ev); err != nil {
-					return errors.Wrap(err, "error unmarshalling evidence file")
+				if err := cdc.UnmarshalJSON(contents, m); err != nil {
+					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
+			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

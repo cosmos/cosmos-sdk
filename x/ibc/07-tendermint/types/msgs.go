@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -113,10 +114,12 @@ func (msg MsgCreateClient) GetClientType() string {
 func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 	// Construct initial consensus state from provided Header
 	root := commitmenttypes.NewMerkleRoot(msg.Header.Header.GetAppHash())
+	// NOTE: Using 0 for epoch number for now
+	// TODO: Use clienttypes.Height in Header once Header.GetHeight returns *clienttypes.Height
 	return &ConsensusState{
 		Timestamp:          msg.Header.GetTime(),
 		Root:               root,
-		Height:             msg.Header.GetHeight(),
+		Height:             clienttypes.NewHeight(0, msg.Header.GetHeight()),
 		NextValidatorsHash: msg.Header.Header.NextValidatorsHash,
 	}
 }
@@ -125,7 +128,7 @@ func (msg MsgCreateClient) GetConsensusState() clientexported.ConsensusState {
 func (msg MsgCreateClient) InitializeClientState() clientexported.ClientState {
 	return NewClientState(msg.Header.Header.GetChainID(), msg.TrustLevel,
 		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		msg.Header.GetHeight(), msg.ProofSpecs,
+		clienttypes.NewHeight(0, msg.Header.GetHeight()), msg.ProofSpecs,
 	)
 }
 

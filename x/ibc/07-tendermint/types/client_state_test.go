@@ -4,6 +4,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -61,7 +62,7 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs()),
 			expPass:     false,
 		},
 		{
@@ -130,7 +131,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-1)},
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
@@ -154,7 +155,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			nil, suite.cdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			nil, suite.cdc, tc.consensusState.Root, height.EpochHeight, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -190,12 +191,12 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -268,12 +269,12 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -347,12 +348,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -429,12 +430,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -517,12 +518,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -604,12 +605,12 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.EpochHeight + 1
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{

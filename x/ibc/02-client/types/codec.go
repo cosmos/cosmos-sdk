@@ -153,8 +153,8 @@ func UnpackHeader(any *codectypes.Any) (exported.Header, error) {
 	return header, nil
 }
 
-// PackMisbehaviour constructs a new Any packed with the given header value. It returns
-// an error if the header can't be casted to a protobuf message or if the concrete
+// PackMisbehaviour constructs a new Any packed with the given misbehaviour value. It returns
+// an error if the misbehaviour can't be casted to a protobuf message or if the concrete
 // implemention is not registered to the protobuf codec.
 func PackMisbehaviour(misbehaviour exported.Misbehaviour) (*codectypes.Any, error) {
 	msg, ok := misbehaviour.(proto.Message)
@@ -171,7 +171,7 @@ func PackMisbehaviour(misbehaviour exported.Misbehaviour) (*codectypes.Any, erro
 }
 
 // UnpackMisbehaviour unpacks an Any into a Misbehaviour. It returns an error if the
-// consensus state can't be unpacked into a Misbehaviour.
+// Any can't be unpacked into a Misbehaviour.
 func UnpackMisbehaviour(any *codectypes.Any) (exported.Misbehaviour, error) {
 	if any == nil {
 		return nil, errors.New("protobuf Any message cannot be nil")

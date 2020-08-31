@@ -1,8 +1,11 @@
 package keys
 
 import (
+	fmt "fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 var (
@@ -48,4 +51,22 @@ func (m *Secp256K1PrivKey) Equals(key crypto.PrivKey) bool {
 
 func (m *Secp256K1PrivKey) Type() string {
 	return m.Key.Type()
+}
+
+func ProtoPubKeyToAminoPubKey(msg proto.Message) (crypto.PubKey, error) {
+	switch msg := msg.(type) {
+	case *Secp256K1PubKey:
+		return msg.GetKey(), nil
+	default:
+		return nil, fmt.Errorf("unknown proto public key type: %v", msg)
+	}
+}
+
+func AminoPubKeyToProtoPubKey(key crypto.PubKey) (proto.Message, error) {
+	switch key := key.(type) {
+	case secp256k1.PubKey:
+		return &Secp256K1PubKey{Key: key}, nil
+	default:
+		return nil, fmt.Errorf("unknown public key type: %v", key)
+	}
 }

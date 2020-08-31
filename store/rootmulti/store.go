@@ -658,7 +658,9 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 }
 
 // Restore implements snapshottypes.Snapshotter.
-func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
+func (rs *Store) Restore(
+	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
+) error {
 	if format != snapshottypes.CurrentFormat {
 		return fmt.Errorf("%w %v", snapshottypes.ErrUnknownFormat, format)
 	}
@@ -668,6 +670,12 @@ func (rs *Store) Restore(height uint64, format uint32, chunks <-chan io.ReadClos
 	if height > math.MaxInt64 {
 		return fmt.Errorf("%w: snapshot height %v cannot exceed %v", snapshottypes.ErrInvalidMetadata,
 			height, math.MaxInt64)
+	}
+
+	// Signal readiness. Must be done before the readers below are set up, since the zlib
+	// reader reads from the stream on initialization, potentially causing deadlocks.
+	if ready != nil {
+		close(ready)
 	}
 
 	// Set up a restore stream pipeline

@@ -593,7 +593,7 @@ func TestMultistoreRestore_Errors(t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			err := store.Restore(tc.height, tc.format, nil)
+			err := store.Restore(tc.height, tc.format, nil, nil)
 			require.Error(t, err)
 			if tc.expectType != nil {
 				assert.True(t, errors.Is(err, tc.expectType))
@@ -610,8 +610,10 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 
 	chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
 	require.NoError(t, err)
-	err = target.Restore(version, snapshottypes.CurrentFormat, chunks)
+	ready := make(chan struct{})
+	err = target.Restore(version, snapshottypes.CurrentFormat, chunks, ready)
 	require.NoError(t, err)
+	assert.EqualValues(t, struct{}{}, <-ready)
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 	for key, sourceStore := range source.stores {
@@ -687,7 +689,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 
 		chunks, err := source.Snapshot(version, snapshottypes.CurrentFormat)
 		require.NoError(b, err)
-		err = target.Restore(version, snapshottypes.CurrentFormat, chunks)
+		err = target.Restore(version, snapshottypes.CurrentFormat, chunks, nil)
 		require.NoError(b, err)
 		require.Equal(b, source.LastCommitID(), target.LastCommitID())
 	}

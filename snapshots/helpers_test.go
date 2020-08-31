@@ -63,12 +63,17 @@ type mockSnapshotter struct {
 	chunks [][]byte
 }
 
-func (m *mockSnapshotter) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
+func (m *mockSnapshotter) Restore(
+	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
+) error {
 	if format == 0 {
 		return types.ErrUnknownFormat
 	}
 	if m.chunks != nil {
 		return errors.New("already has contents")
+	}
+	if ready != nil {
+		close(ready)
 	}
 
 	m.chunks = [][]byte{}
@@ -140,6 +145,8 @@ func (m *hungSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 	return ch, nil
 }
 
-func (m *hungSnapshotter) Restore(height uint64, format uint32, chunks <-chan io.ReadCloser) error {
+func (m *hungSnapshotter) Restore(
+	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
+) error {
 	panic("not implemented")
 }

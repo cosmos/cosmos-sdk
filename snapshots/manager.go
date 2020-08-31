@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"sync"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
@@ -169,9 +168,10 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
 	chChunks := make(chan io.ReadCloser, chunkBufferSize)
+	chReady := make(chan struct{}, 1)
 	chDone := make(chan restoreDone, 1)
 	go func() {
-		err := m.target.Restore(snapshot.Height, snapshot.Format, chChunks)
+		err := m.target.Restore(snapshot.Height, snapshot.Format, chChunks, chReady)
 		chDone <- restoreDone{
 			complete: err == nil,
 			err:      err,
@@ -187,7 +187,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 			return done.err
 		}
 		return errors.New("restore ended unexpectedly")
-	case <-time.After(20 * time.Millisecond):
+	case <-chReady:
 	}
 
 	m.chRestore = chChunks

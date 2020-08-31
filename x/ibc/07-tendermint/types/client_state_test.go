@@ -459,7 +459,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.Require().NoError(err)
 
 			// write ack
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -634,7 +634,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// write ack, next seq recv incremented
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB

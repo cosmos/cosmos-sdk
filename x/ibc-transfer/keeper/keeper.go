@@ -72,7 +72,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// PacketExecuted defines a wrapper function for the channel Keeper's function
+// ReceiveExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
 // Keeper retrieves channel capability and passes it into channel keeper for authentication
 func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
@@ -80,7 +80,7 @@ func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, 
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
-	return k.channelKeeper.PacketExecuted(ctx, chanCap, packet, acknowledgement)
+	return k.channelKeeper.ReceiveExecuted(ctx, chanCap, packet, acknowledgement)
 }
 
 // ChanCloseInit defines a wrapper function for the channel Keeper's function

@@ -14,7 +14,7 @@ import (
 // - the currently registered public key did not provide the update signature
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header, _ bool,
+	header clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	smHeader, ok := header.(*Header)
 	if !ok {

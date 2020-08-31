@@ -109,7 +109,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 			// setup test
 			tc.setup()
 
-			clientState, consensusState, err := clientState.CheckHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.Codec, suite.store, header, false)
+			clientState, consensusState, err := clientState.CheckHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.Codec, suite.store, header)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

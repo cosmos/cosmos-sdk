@@ -1,6 +1,11 @@
 package types
 
 import (
+	"time"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -27,21 +32,65 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	}
 
 	// get consensus state corresponding to client state to check if the client is expired
-	tmConsState, err := GetConsensusState(clientStore, cdc, clientState.GetLatestHeight())
+	consensusState, err := GetConsensusState(clientStore, cdc, cs.GetLatestHeight())
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
 			err, "could not get consensus state from clientstore at height: %d", cs.GetLatestHeight(),
 		)
 	}
 
+	// unfreeze client if the client is frozen and this is allowed. Otherwise if the client
+	// is not expired or not allowed to be updated after expiry then the proposal cannot update
+	// the client.
 	if cs.IsFrozen() && cs.AllowGovernanceOverrideAfterMisbehaviour {
 		cs.FrozenHeight = 0
-	} else if !(tmClientState.AllowGovernanceOverrideAfterExpiry && cs.Expired(consensusState, ctx.BlockTime())) {
-		return nil, nil, sdkerrors.Wrap(clienttypes.ErrClientUpdateFailed, "client cannot be updated with proposal")
+	} else if !(cs.AllowGovernanceOverrideAfterExpiry && cs.Expired(consensusState.Timestamp, ctx.BlockTime())) {
+		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
-	// TODO add header checks
+	cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
 
 	newClientState, consensusState := update(&cs, tmHeader)
 	return newClientState, consensusState, nil
+}
+
+// checkProposedHeader checks if the Tendermint header is valid for updating a client after
+// a passed proposal.
+// It returns an error if:
+// - the header provided is not parseable to tendermint types
+// - header height is less than or equal to the latest client state height
+// - signed tendermint header is invalid
+// - header timestamp is less than or equal to the latest consensus state timestamp
+// - header timestamp is expired
+// NOTE: header.ValidateBasic is called in the 02-client proposal handler. Additional checks
+// on the validator set and the validator set hash are done in header.ValidateBasic.
+func (cs ClientState) checkProposedHeader(consensusState *ConsensusState, header *Header, currentTimestamp time.Time) error {
+	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
+	if err != nil {
+		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
+	}
+
+	if !header.GetTime().After(consensusState.Timestamp) {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header timestamp is less than or equal to latest consensus state timestamp (%s ≤ %s)", header.GetTime(), consensusState.Timestamp)
+	}
+
+	// assert header height is newer than latest client state
+	if header.GetHeight() <= cs.GetLatestHeight() {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), cs.GetLatestHeight(),
+		)
+	}
+
+	if err := tmSignedHeader.ValidateBasic(cs.GetChainID()); err != nil {
+		return sdkerrors.Wrap(err, "signed header failed basic validation")
+	}
+
+	if cs.Expired(header.GetTime(), currentTimestamp) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "header timestamp is already expired")
+	}
+
+	return nil
 }

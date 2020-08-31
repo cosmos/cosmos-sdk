@@ -88,15 +88,3 @@ func (h Header) ValidateBasic(chainID string) error {
 	}
 	return nil
 }
-
-// MarshalHeader returns the Header bytes.
-func (h Header) MarshalBinaryBare() ([]byte, error) {
-	return SubModuleCdc.MarshalBinaryBare(&h)
-}
-
-// UnmarshalHeader returns the header
-func (h Header) UnmarshalBinaryBare(value []byte) (clientexported.Header, error) {
-	var tmHeader Header
-	err := SubModuleCdc.UnmarshalBinaryBare(value, &tmHeader)
-	return &tmHeader, err
-}

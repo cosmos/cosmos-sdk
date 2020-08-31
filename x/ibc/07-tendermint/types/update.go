@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	fmt "fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/light"
@@ -46,7 +45,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	// Get consensus bytes from clientStore
+	// get consensus state from clientStore
 	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
@@ -94,7 +93,7 @@ func checkTrustedHeader(header *Header, consState *ConsensusState) error {
 // CONTRACT: consState.Height == header.TrustedHeight
 func checkValidity(
 	clientState *ClientState, consState *ConsensusState,
-	header *Header, currentTimestamp time.Time, override bool,
+	header *Header, currentTimestamp time.Time,
 ) error {
 	if err := checkTrustedHeader(header, consState); err != nil {
 		return err
@@ -121,15 +120,6 @@ func checkValidity(
 			clienttypes.ErrInvalidHeader,
 			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,
 		)
-	}
-
-	// skip furher header checks. This is usually the case when
-	// one wants to force to update a client with a new header
-	if override {
-		if err := header.ValidateBasic(clientState.GetChainID()); err != nil {
-			return fmt.Errorf("header.ValidateBasic failed: %w", err)
-		}
-		return nil
 	}
 
 	// Construct a trusted header using the fields in consensus state

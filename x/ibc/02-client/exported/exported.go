@@ -20,7 +20,6 @@ type ClientState interface {
 	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
-
 	IsFrozen() bool
 	GetFrozenHeight() uint64
 	Validate() error

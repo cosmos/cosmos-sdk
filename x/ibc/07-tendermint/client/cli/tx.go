@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
@@ -116,7 +115,7 @@ func NewCreateClientCmd() *cobra.Command {
 			agoae, _ := cmd.Flags().GetBool(flagAllowGovOverrideAfterExpiry)
 			agoam, _ := cmd.Flags().GetBool(fladAllowGovOverrideAfterMisbehaviour)
 
-			msg := ibctmtypes.NewMsgCreateClient(
+			msg := types.NewMsgCreateClient(
 				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs,
 				agoae, agoam, clientCtx.GetFromAddress(),
 			)

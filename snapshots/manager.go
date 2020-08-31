@@ -32,11 +32,12 @@ type Manager struct {
 	store  *Store
 	target types.Snapshotter
 
-	mtx            sync.Mutex
-	operation      operation
-	chRestore      chan<- io.ReadCloser
-	chRestoreDone  <-chan error
-	restorePending [][]byte // pending chunk hashes
+	mtx                sync.Mutex
+	operation          operation
+	chRestore          chan<- io.ReadCloser
+	chRestoreDone      <-chan error
+	restoreChunkHashes [][]byte
+	restoreChunkIndex  uint32
 }
 
 // NewManager creates a new manager.
@@ -81,7 +82,8 @@ func (m *Manager) endLocked() {
 		m.chRestore = nil
 	}
 	m.chRestoreDone = nil
-	m.restorePending = nil
+	m.restoreChunkHashes = nil
+	m.restoreChunkIndex = 0
 }
 
 // Create creates a snapshot and returns its metadata.
@@ -180,7 +182,8 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 
 	m.chRestore = chChunks
 	m.chRestoreDone = chDone
-	m.restorePending = snapshot.Metadata.ChunkHashes
+	m.restoreChunkHashes = snapshot.Metadata.ChunkHashes
+	m.restoreChunkIndex = 0
 	return nil
 }
 
@@ -191,6 +194,10 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
 		return false, fmt.Errorf("no restore operation in progress")
+	}
+
+	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
+		return false, errors.New("received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -206,16 +213,17 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 
 	// Verify the chunk hash.
 	hash := sha256.Sum256(chunk)
-	if !bytes.Equal(hash[:], m.restorePending[0]) {
+	expected := m.restoreChunkHashes[m.restoreChunkIndex]
+	if !bytes.Equal(hash[:], expected) {
 		return false, fmt.Errorf("%w (expected %x, got %x)",
-			types.ErrChunkHashMismatch, hash, m.restorePending[0])
+			types.ErrChunkHashMismatch, hash, expected)
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
 	m.chRestore <- ioutil.NopCloser(bytes.NewReader(chunk))
-	m.restorePending = m.restorePending[1:]
+	m.restoreChunkIndex++
 
-	if len(m.restorePending) == 0 {
+	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
 		close(m.chRestore)
 		m.chRestore = nil
 		err := <-m.chRestoreDone

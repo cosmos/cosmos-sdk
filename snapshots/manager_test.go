@@ -145,7 +145,7 @@ func TestManager_Restore(t *testing.T) {
 		Metadata: types.Metadata{ChunkHashes: checksums(chunks)},
 	})
 	require.Error(t, err)
-	require.Equal(t, err, types.ErrUnknownFormat)
+	require.Equal(t, types.ErrUnknownFormat, err)
 
 	// Restore errors on no chunks
 	err = manager.Restore(types.Snapshot{Height: 3, Format: 1, Hash: []byte{1, 2, 3}})

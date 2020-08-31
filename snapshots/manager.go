@@ -25,6 +25,12 @@ const (
 // operation represents a Manager operation. Only one operation can be in progress at a time.
 type operation string
 
+// restoreDone represents the result of a restore operation.
+type restoreDone struct {
+	complete bool  // if true, restore completed successfully (not prematurely)
+	err      error // if non-nil, restore errored
+}
+
 // Manager manages snapshot and restore operations for an app, making sure only a single
 // long-running operation is in progress at any given time, and provides convenience methods
 // mirroring the ABCI interface.
@@ -35,7 +41,7 @@ type Manager struct {
 	mtx                sync.Mutex
 	operation          operation
 	chRestore          chan<- io.ReadCloser
-	chRestoreDone      <-chan error
+	chRestoreDone      <-chan restoreDone
 	restoreChunkHashes [][]byte
 	restoreChunkIndex  uint32
 }
@@ -163,20 +169,24 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
 	chChunks := make(chan io.ReadCloser, chunkBufferSize)
-	chDone := make(chan error, 1)
+	chDone := make(chan restoreDone, 1)
 	go func() {
-		chDone <- m.target.Restore(snapshot.Height, snapshot.Format, chChunks)
+		err := m.target.Restore(snapshot.Height, snapshot.Format, chChunks)
+		chDone <- restoreDone{
+			complete: err == nil,
+			err:      err,
+		}
 		close(chDone)
 	}()
 
 	// Check for any initial errors from the restore, before any chunks are fed.
 	select {
-	case err := <-chDone:
-		if err == nil {
-			err = errors.New("restore ended unexpectedly")
-		}
+	case done := <-chDone:
 		m.endLocked()
-		return err
+		if done.err != nil {
+			return done.err
+		}
+		return errors.New("restore ended unexpectedly")
 	case <-time.After(20 * time.Millisecond):
 	}
 
@@ -202,12 +212,12 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 
 	// Check if any errors have occurred yet.
 	select {
-	case err := <-m.chRestoreDone:
-		if err == nil {
-			err = errors.New("restore ended unexpectedly")
-		}
+	case done := <-m.chRestoreDone:
 		m.endLocked()
-		return false, err
+		if done.err != nil {
+			return false, done.err
+		}
+		return false, errors.New("restore ended unexpectedly")
 	default:
 	}
 
@@ -226,9 +236,15 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
 		close(m.chRestore)
 		m.chRestore = nil
-		err := <-m.chRestoreDone
+		done := <-m.chRestoreDone
 		m.endLocked()
-		return true, err
+		if done.err != nil {
+			return false, done.err
+		}
+		if !done.complete {
+			return false, errors.New("restore ended prematurely")
+		}
+		return true, nil
 	}
 	return false, nil
 }

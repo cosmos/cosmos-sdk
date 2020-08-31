@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -276,23 +274,24 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (sdk.SimulationResponse, uint64, error) {
+) (sim.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
+		return sim.SimulateResponse{}, 0, err
 	}
 
 	bz, _, err := queryFunc("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
 	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
+		return sim.SimulateResponse{}, 0, err
 	}
 
-	var simRes sdk.SimulationResponse
-	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
-		return sdk.SimulationResponse{}, 0, err
+	var simRes sim.SimulateResponse
+
+	if err := simRes.Unmarshal(bz); err != nil {
+		return sim.SimulateResponse{}, 0, err
 	}
 
-	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasUsed)), nil
+	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
 // PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and

@@ -75,7 +75,7 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 // ReceiveExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
 // Keeper retrieves channel capability and passes it into channel keeper for authentication
-func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
+func (k Keeper) ReceiveExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")

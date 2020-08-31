@@ -737,14 +737,14 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// PacketExecuted simulates receiving and writing an acknowledgement to the chain.
-func (chain *TestChain) PacketExecuted(
+// ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
+func (chain *TestChain) ReceiveExecuted(
 	packet channelexported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(chain.GetContext(), channelCap, packet, TestHash)
 	if err != nil {
 		return err
 	}

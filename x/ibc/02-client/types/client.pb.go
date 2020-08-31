@@ -134,15 +134,77 @@ func (m *ClientConsensusStates) GetConsensusStates() []*types.Any {
 	return nil
 }
 
+// Height is a monotonically increasing data type
+// that can be compared against another Height for the purposes of updating and freezing clients
+//
+// Normally the EpochHeight is incremented at each height while keeping epoch number the same
+// However some consensus algorithms may choose to reset the height in certain conditions
+// e.g. hard forks, state-machine breaking changes
+// In these cases, the epoch number is incremented so that height continues to be monitonically increasing
+// even as the EpochHeight gets reset
+type Height struct {
+	// the epoch that the client is currently on
+	EpochNumber uint64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty" yaml:"epoch_number"`
+	// the height within the given epoch
+	EpochHeight uint64 `protobuf:"varint,2,opt,name=epoch_height,json=epochHeight,proto3" json:"epoch_height,omitempty" yaml:"epoch_height"`
+}
+
+func (m *Height) Reset()      { *m = Height{} }
+func (*Height) ProtoMessage() {}
+func (*Height) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{2}
+}
+func (m *Height) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Height) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Height.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Height) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Height.Merge(m, src)
+}
+func (m *Height) XXX_Size() int {
+	return m.Size()
+}
+func (m *Height) XXX_DiscardUnknown() {
+	xxx_messageInfo_Height.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Height proto.InternalMessageInfo
+
+func (m *Height) GetEpochNumber() uint64 {
+	if m != nil {
+		return m.EpochNumber
+	}
+	return 0
+}
+
+func (m *Height) GetEpochHeight() uint64 {
+	if m != nil {
+		return m.EpochHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*IdentifiedClientState)(nil), "ibc.client.IdentifiedClientState")
 	proto.RegisterType((*ClientConsensusStates)(nil), "ibc.client.ClientConsensusStates")
+	proto.RegisterType((*Height)(nil), "ibc.client.Height")
 }
 
 func init() { proto.RegisterFile("ibc/client/client.proto", fileDescriptor_226f80e576f20abd) }
 
 var fileDescriptor_226f80e576f20abd = []byte{
-	// 314 bytes of a gzipped FileDescriptorProto
+	// 378 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcf, 0x4c, 0x4a, 0xd6,
 	0x4f, 0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0x81, 0x52, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9, 0x42, 0x5c,
 	0x99, 0x49, 0xc9, 0x7a, 0x10, 0x11, 0x29, 0x91, 0xf4, 0xfc, 0xf4, 0x7c, 0xb0, 0xb0, 0x3e, 0x88,
@@ -157,12 +219,16 @@ var fileDescriptor_226f80e576f20abd = []byte{
 	0xc8, 0x25, 0x0a, 0x71, 0x94, 0x73, 0x7e, 0x5e, 0x71, 0x6a, 0x5e, 0x71, 0x69, 0x31, 0x58, 0xa2,
 	0x98, 0x1c, 0xe7, 0xc5, 0x70, 0x09, 0x24, 0xc3, 0x4c, 0x81, 0xd8, 0x56, 0x2c, 0xc1, 0xa4, 0xc0,
 	0x8c, 0xd3, 0x89, 0xd2, 0x9f, 0xee, 0xc9, 0x8b, 0x43, 0xcd, 0x43, 0xd3, 0xa7, 0x14, 0xc4, 0x9f,
-	0x8c, 0xea, 0x20, 0x27, 0x9f, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48,
-	0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x32,
-	0x4a, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xce, 0x2f, 0xce, 0xcd,
-	0x2f, 0x86, 0x52, 0xba, 0xc5, 0x29, 0xd9, 0xfa, 0x15, 0xfa, 0xa0, 0x88, 0x35, 0x30, 0xd2, 0x85,
-	0xc6, 0x6d, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0xd8, 0x25, 0xc6, 0x80, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x38, 0x45, 0x52, 0x5c, 0xf6, 0x01, 0x00, 0x00,
+	0x8c, 0xea, 0x20, 0xa5, 0x36, 0x46, 0x2e, 0x36, 0x8f, 0xd4, 0xcc, 0xf4, 0x8c, 0x12, 0x21, 0x2b,
+	0x2e, 0x9e, 0xd4, 0x82, 0xfc, 0xe4, 0x8c, 0xf8, 0xbc, 0xd2, 0xdc, 0xa4, 0xd4, 0x22, 0xb0, 0xf3,
+	0x58, 0x90, 0x7d, 0x8c, 0x2c, 0xab, 0x14, 0xc4, 0x0d, 0xe6, 0xfa, 0x81, 0x79, 0x08, 0xbd, 0x19,
+	0x60, 0xb3, 0xc0, 0x61, 0x88, 0x45, 0x2f, 0x44, 0x16, 0xa6, 0x17, 0x62, 0xaf, 0x15, 0xcb, 0x8c,
+	0x05, 0xf2, 0x0c, 0x4e, 0x3e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91,
+	0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0x65,
+	0x94, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x9f, 0x9c, 0x5f, 0x9c, 0x9b,
+	0x5f, 0x0c, 0xa5, 0x74, 0x8b, 0x53, 0xb2, 0xf5, 0x2b, 0xf4, 0x41, 0x29, 0xcc, 0xc0, 0x48, 0x17,
+	0x9a, 0xc8, 0x4a, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x41, 0x62, 0x0c, 0x08, 0x00, 0x00,
+	0xff, 0xff, 0x55, 0xfb, 0xf5, 0xfb, 0x7f, 0x02, 0x00, 0x00,
 }
 
 func (m *IdentifiedClientState) Marshal() (dAtA []byte, err error) {
@@ -251,6 +317,39 @@ func (m *ClientConsensusStates) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *Height) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Height) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Height) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.EpochHeight != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.EpochHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.EpochNumber != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.EpochNumber))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintClient(dAtA []byte, offset int, v uint64) int {
 	offset -= sovClient(v)
 	base := offset
@@ -294,6 +393,21 @@ func (m *ClientConsensusStates) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovClient(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *Height) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.EpochNumber != 0 {
+		n += 1 + sovClient(uint64(m.EpochNumber))
+	}
+	if m.EpochHeight != 0 {
+		n += 1 + sovClient(uint64(m.EpochHeight))
 	}
 	return n
 }
@@ -520,6 +634,97 @@ func (m *ClientConsensusStates) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Height) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Height: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Height: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochNumber", wireType)
+			}
+			m.EpochNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochHeight", wireType)
+			}
+			m.EpochHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClient(dAtA[iNdEx:])

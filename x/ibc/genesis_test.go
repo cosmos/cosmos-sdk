@@ -240,7 +240,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 			"success",
 			func() {
 				// creates clients
-				suite.coordinator.Setup(suite.chainA, suite.chainB)
+				suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 				// create extra clients
 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)

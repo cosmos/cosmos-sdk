@@ -215,7 +215,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// retrieve signer data
-		genesis := ctx.BlockHeight() == 0
+		genesis := ctx.BlockHeight() <= 1
 		chainID := ctx.ChainID()
 		var accNum uint64
 		if !genesis {
@@ -232,7 +232,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrUnauthorized,
-					"signature verification failed; please verify account number (%d) and chain-id (%s)", acc.GetAccountNumber(), ctx.ChainID())
+					"signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
 			}
 		}
 	}

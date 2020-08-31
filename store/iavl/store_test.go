@@ -535,7 +535,7 @@ func TestSetInitialVersion(t *testing.T) {
 		expErrMsg string
 	}{
 		{
-			"work with a mutable tree",
+			"works with a mutable tree",
 			func(db *dbm.MemDB) *Store {
 				tree, err := iavl.NewMutableTree(db, cacheSize)
 				require.NoError(t, err)

@@ -118,8 +118,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 	// create current header and call begin block
 	header := tmproto.Header{
-		Height: 1,
-		Time:   globalStartTime,
+		ChainID: chainID,
+		Height:  1,
+		Time:    globalStartTime,
 	}
 
 	txConfig := simapp.MakeEncodingConfig().TxConfig

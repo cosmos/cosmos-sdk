@@ -109,9 +109,8 @@ func MustPackConsensusState(consensusState exported.ConsensusState) *codectypes.
 // UnpackConsensusState unpacks an Any into a ConsensusState. It returns an error if the
 // consensus state can't be unpacked into a ConsensusState.
 func UnpackConsensusState(any *codectypes.Any) (exported.ConsensusState, error) {
-	// nil consensus states is supported
 	if any == nil {
-		return nil, nil
+		return nil, errors.New("protobuf Any message cannot be nil")
 	}
 
 	consensusState, ok := any.GetCachedValue().(exported.ConsensusState)

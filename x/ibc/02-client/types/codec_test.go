@@ -103,11 +103,10 @@ func TestPackConsensusState(t *testing.T) {
 		clientAny, err := types.PackConsensusState(testCases[i].consensusState)
 		if testCases[i].expPass {
 			require.NoError(t, err, testCases[i].name)
-			testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, true})
 		} else {
 			require.Error(t, err, testCases[i].name)
-			testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, true})
 		}
+		testCasesAny = append(testCasesAny, caseAny{testCases[i].name, clientAny, testCases[i].expPass})
 	}
 
 	for i := range testCasesAny {

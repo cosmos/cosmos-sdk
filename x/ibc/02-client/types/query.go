@@ -17,7 +17,7 @@ func NewQueryClientStateResponse(
 		ClientState: clientStateAny,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
-		ProofHeight: height.EpochHeight,
+		ProofHeight: &height,
 	}
 }
 
@@ -30,6 +30,6 @@ func NewQueryConsensusStateResponse(
 		ConsensusState: consensusStateAny,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),
-		ProofHeight:    height.EpochHeight,
+		ProofHeight:    &height,
 	}
 }

@@ -16,7 +16,7 @@ func NewQueryChannelResponse(portID, channelID string, channel Channel, proof []
 		Channel:     &channel,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
-		ProofHeight: &height,
+		ProofHeight: height,
 	}
 }
 
@@ -27,7 +27,7 @@ func NewQueryChannelClientStateResponse(identifiedClientState clienttypes.Identi
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,
 		ProofPath:             path.Pretty(),
-		ProofHeight:           &height,
+		ProofHeight:           height,
 	}
 }
 
@@ -39,7 +39,7 @@ func NewQueryChannelConsensusStateResponse(clientID string, anyConsensusState *c
 		ClientId:       clientID,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),
-		ProofHeight:    &height,
+		ProofHeight:    height,
 	}
 }
 
@@ -52,7 +52,7 @@ func NewQueryPacketCommitmentResponse(
 		Commitment:  commitment,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
-		ProofHeight: &height,
+		ProofHeight: height,
 	}
 }
 
@@ -65,7 +65,7 @@ func NewQueryPacketAcknowledgementResponse(
 		Acknowledgement: acknowledgement,
 		Proof:           proof,
 		ProofPath:       path.Pretty(),
-		ProofHeight:     &height,
+		ProofHeight:     height,
 	}
 }
 
@@ -78,6 +78,6 @@ func NewQueryNextSequenceReceiveResponse(
 		NextSequenceReceive: sequence,
 		Proof:               proof,
 		ProofPath:           path.Pretty(),
-		ProofHeight:         &height,
+		ProofHeight:         height,
 	}
 }

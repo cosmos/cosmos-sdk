@@ -18,7 +18,7 @@ func NewQueryConnectionResponse(
 		Connection:  &connection,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
-		ProofHeight: &height,
+		ProofHeight: height,
 	}
 }
 
@@ -31,7 +31,7 @@ func NewQueryClientConnectionsResponse(
 		ConnectionPaths: connectionPaths,
 		Proof:           proof,
 		ProofPath:       path.Pretty(),
-		ProofHeight:     &height,
+		ProofHeight:     height,
 	}
 }
 
@@ -49,7 +49,7 @@ func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.Ide
 		IdentifiedClientState: &identifiedClientState,
 		Proof:                 proof,
 		ProofPath:             path.Pretty(),
-		ProofHeight:           &height,
+		ProofHeight:           height,
 	}
 }
 
@@ -61,6 +61,6 @@ func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState
 		ClientId:       clientID,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),
-		ProofHeight:    &height,
+		ProofHeight:    height,
 	}
 }

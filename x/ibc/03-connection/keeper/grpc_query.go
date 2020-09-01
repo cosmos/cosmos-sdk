@@ -135,7 +135,8 @@ func (q Keeper) ConnectionClientState(c context.Context, req *types.QueryConnect
 
 	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientId, clientState)
 
-	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
+	height := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, height), nil
 
 }
 
@@ -172,5 +173,6 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
+	proofHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight().(clienttypes.Height), nil, proofHeight), nil
 }

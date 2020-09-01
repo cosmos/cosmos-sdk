@@ -1,6 +1,7 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -15,9 +16,10 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgCreateClient{}
-	_ sdk.Msg = &MsgUpdateClient{}
-	_ sdk.Msg = &MsgSubmitMisbehaviour{}
+	_ sdk.Msg                            = &MsgCreateClient{}
+	_ codectypes.UnpackInterfacesMessage = MsgCreateClient{}
+	_ sdk.Msg                            = &MsgUpdateClient{}
+	_ sdk.Msg                            = &MsgSubmitMisbehaviour{}
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -86,6 +88,23 @@ func (msg MsgCreateClient) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgCreateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	var consensusState exported.ConsensusState
+	err = unpacker.UnpackAny(msg.ConsensusState, &consensusState)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance

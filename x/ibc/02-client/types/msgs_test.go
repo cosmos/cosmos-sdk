@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -65,13 +66,18 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 
 			tc.malleate()
 
+			cdc := suite.chain.App.AppCodec()
+
 			// marshal message
-			bz, err := types.SubModuleCdc.MarshalJSON(msg)
-			suite.Require().NoError(err)
-			// unmarshal message
-			err = types.SubModuleCdc.UnmarshalJSON(bz, msg)
+			bz, err := cdc.MarshalJSON(msg)
 			suite.Require().NoError(err)
 
+			// unmarshal message
+			newMsg := &types.MsgCreateClient{}
+			err = cdc.UnmarshalJSON(bz, newMsg)
+			suite.Require().NoError(err)
+
+			suite.Require().True(proto.Equal(msg, newMsg))
 		})
 	}
 }

@@ -395,15 +395,19 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-local-simapp:
-	docker build -t cosmos-sdk/simapp .
-
 # Run a 4-node testnet locally
-localnet-start: localnet-stop
-	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/root:Z cosmos-sdk/simapp simd testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+localnet-start: build-simd-linux localnet-stop
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
+	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
+		--user $(shell id -u):$(shell id -g) \
+		-v $(BUILDDIR):/simd:Z \
+		-v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro \
+		-v /etc/shadow:/etc/shadow:ro \
+		cosmossdk/simd-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:
 	docker-compose down
 
-.PHONY: build-docker-local-simapp localnet-start localnet-stop
+.PHONY: localnet-start localnet-stop

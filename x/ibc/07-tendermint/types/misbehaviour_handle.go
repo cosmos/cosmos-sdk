@@ -25,38 +25,38 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	clientStore sdk.KVStore,
 	misbehaviour clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
-
-	// If client is already frozen at earlier height than misbehaviour, return with error
-	if cs.IsFrozen() && cs.FrozenHeight <= misbehaviour.GetHeight() {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
-			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
-	}
-
-	tmEvidence, ok := misbehaviour.(*Misbehaviour)
+	tmMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Misbehaviour{})
+	}
+
+	// If client is already frozen at earlier height than misbehaviour, return with error
+	height := clienttypes.NewHeight(0, misbehaviour.GetHeight())
+	if cs.IsFrozen() && cs.FrozenHeight.LTE(height) {
+		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
+			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmEvidence.Header1.TrustedHeight)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight.EpochHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmEvidence.Header1.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmMisbehaviour.Header1.TrustedHeight)
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmEvidence.Header2.TrustedHeight)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight.EpochHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmEvidence.Header2.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmMisbehaviour.Header2.TrustedHeight)
 	}
 
 	// calculate the age of the misbehaviour
-	infractionHeight := tmEvidence.GetHeight()
-	infractionTime := tmEvidence.GetTime()
+	infractionHeight := tmMisbehaviour.GetHeight()
+	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight - infractionHeight)
+	ageBlocks := int64(cs.LatestHeight.EpochHeight - infractionHeight)
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -86,17 +86,18 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// misbehaviour.ValidateBasic by the client keeper and msg.ValidateBasic
 	// by the base application.
 	if err := checkMisbehaviourHeader(
-		&cs, tmConsensusState1, tmEvidence.Header1, ctx.BlockTime(),
+		&cs, tmConsensusState1, tmMisbehaviour.Header1, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header1 in Misbehaviour failed")
 	}
 	if err := checkMisbehaviourHeader(
-		&cs, tmConsensusState2, tmEvidence.Header2, ctx.BlockTime(),
+		&cs, tmConsensusState2, tmMisbehaviour.Header2, ctx.BlockTime(),
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	cs.FrozenHeight = tmEvidence.GetHeight()
+	frozenHeight := clienttypes.NewHeight(0, tmMisbehaviour.GetHeight())
+	cs.FrozenHeight = frozenHeight
 	return &cs, nil
 }
 

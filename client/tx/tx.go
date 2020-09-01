@@ -288,8 +288,6 @@ func CalculateGas(
 	var simRes sim.SimulateResponse
 
 	if err := simRes.Unmarshal(bz); err != nil {
-		fmt.Println(string(bz))
-		fmt.Println("in this error")
 		return sim.SimulateResponse{}, 0, err
 	}
 

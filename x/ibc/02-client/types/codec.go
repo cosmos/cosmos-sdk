@@ -31,8 +31,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*exported.Height)(nil),
 		&Height{},
-  ) 
-  registry.RegisterInterface(
+	)
+	registry.RegisterInterface(
 		"cosmos_sdk.ibc.v1.client.Misbehaviour",
 		(*exported.Misbehaviour)(nil),
 	)

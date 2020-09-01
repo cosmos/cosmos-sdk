@@ -25,7 +25,7 @@ type LocalhostTestSuite struct {
 	suite.Suite
 
 	cdc   codec.Marshaler
-	ctx sdk.Context
+	ctx   sdk.Context
 	store sdk.KVStore
 }
 

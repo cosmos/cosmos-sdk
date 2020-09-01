@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -110,9 +111,23 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgCreateClient(
-				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
+			// validate header
+			if err := header.ValidateBasic(); err != nil {
+				return err
+			}
+
+			clientState := types.NewClientState(
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, header.GetHeight()), specs,
 			)
+
+			consensusState := header.ConsensusState()
+
+			msg, err := clienttypes.NewMsgCreateClient(
+				clientID, clientState, consensusState, clientCtx.GetFromAddress(),
+			)
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -164,7 +179,11 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -183,11 +202,11 @@ func NewUpdateClientCmd() *cobra.Command {
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func NewSubmitMisbehaviourCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "misbehaviour [path/to/evidence.json]",
+		Use:   "misbehaviour [path/to/misbehaviour.json]",
 		Short: "submit a client misbehaviour",
 		Long:  "submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates",
 		Example: fmt.Sprintf(
-			"$ %s tx ibc %s misbehaviour [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
+			"$ %s tx ibc %s misbehaviour [path/to/misbehaviour.json] --from node0 --home ../node0/<app>cli --chain-id $CID",
 			version.AppName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(1),
@@ -200,19 +219,23 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var ev *types.Evidence
-			if err := cdc.UnmarshalJSON([]byte(args[0]), ev); err != nil {
+			var m *types.Misbehaviour
+			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, ev); err != nil {
-					return errors.Wrap(err, "error unmarshalling evidence file")
+				if err := cdc.UnmarshalJSON(contents, m); err != nil {
+					return errors.Wrap(err, "error unmarshalling misbehaviour file")
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(ev, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgSubmitMisbehaviour(m.ClientId, m, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

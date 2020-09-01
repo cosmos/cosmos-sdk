@@ -91,13 +91,13 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 	}
 
 	// ValidateBasic on both validators
-	if err := misbehaviour.Header1.ValidateBasic(misbehaviour.ChainId); err != nil {
+	if err := misbehaviour.Header1.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidMisbehaviour,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
-	if err := misbehaviour.Header2.ValidateBasic(misbehaviour.ChainId); err != nil {
+	if err := misbehaviour.Header2.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(
 			clienttypes.ErrInvalidMisbehaviour,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
@@ -119,7 +119,7 @@ func (misbehaviour Misbehaviour) ValidateBasic() error {
 
 	// Ensure that Commit Hashes are different
 	if blockID1.Equals(*blockID2) {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are not equal")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "headers blockIDs are equal")
 	}
 	if err := ValidCommit(misbehaviour.ChainId, misbehaviour.Header1.Commit, misbehaviour.Header1.ValidatorSet); err != nil {
 		return err

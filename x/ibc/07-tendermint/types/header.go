@@ -56,7 +56,7 @@ func (h Header) GetTime() time.Time {
 // that validatorsets are not nil.
 // NOTE: TrustedHeight and TrustedValidators may be empty when creating client
 // with MsgCreateClient
-func (h Header) ValidateBasic(chainID string) error {
+func (h Header) ValidateBasic() error {
 	if h.SignedHeader == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint signed header cannot be nil")
 	}
@@ -67,7 +67,7 @@ func (h Header) ValidateBasic(chainID string) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "header is not a tendermint header")
 	}
-	if err := tmSignedHeader.ValidateBasic(chainID); err != nil {
+	if err := tmSignedHeader.ValidateBasic(h.Header.GetChainID()); err != nil {
 		return sdkerrors.Wrap(err, "header failed basic validation")
 	}
 

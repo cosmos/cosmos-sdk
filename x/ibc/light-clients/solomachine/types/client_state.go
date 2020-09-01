@@ -25,11 +25,6 @@ func NewClientState(consensusState *ConsensusState) *ClientState {
 	}
 }
 
-// GetChainID returns an empty string.
-func (cs ClientState) GetChainID() string {
-	return ""
-}
-
 // ClientType is Solo Machine.
 func (cs ClientState) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine
@@ -61,6 +56,9 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 
 // Validate performs basic validation of the client state fields.
 func (cs ClientState) Validate() error {
+	if cs.ConsensusState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be nil")
+	}
 	return cs.ConsensusState.ValidateBasic()
 }
 

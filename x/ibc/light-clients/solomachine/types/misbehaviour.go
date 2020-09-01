@@ -27,7 +27,7 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
-	return clientexported.TypeEvidenceClientMisbehaviour
+	return clientexported.TypeClientMisbehaviour
 }
 
 // String implements Evidence interface.

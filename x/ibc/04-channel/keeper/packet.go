@@ -123,7 +123,7 @@ func (k Keeper) SendPacket(
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%s", timeoutHeight)),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -319,7 +319,7 @@ func (k Keeper) ReceiveExecuted(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%s", timeoutHeight)),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -484,7 +484,7 @@ func (k Keeper) AcknowledgementExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%s", timeoutHeight)),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),

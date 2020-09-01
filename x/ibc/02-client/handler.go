@@ -45,7 +45,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg exported.MsgCre
 			types.EventTypeCreateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.GetClientID()),
 			sdk.NewAttribute(types.AttributeKeyClientType, msg.GetClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%s", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

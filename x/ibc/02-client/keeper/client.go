@@ -88,7 +88,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%s", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 	)
 

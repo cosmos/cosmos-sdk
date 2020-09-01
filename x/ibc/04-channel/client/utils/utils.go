@@ -184,18 +184,22 @@ func QueryChannelConsensusState(
 	return res, nil
 }
 
-// QueryCounterpartyConsensusState uses the channel Querier to return the
-// counterparty ConsensusState given the source port ID and source channel ID.
-func QueryCounterpartyConsensusState(
-	clientCtx client.Context, portID, channelID string, height clienttypes.Height,
+// QueryLatestConsensusState uses the channel Querier to return the
+// latest ConsensusState given the source port ID and source channel ID.
+func QueryLatestConsensusState(
+	clientCtx client.Context, portID, channelID string,
 ) (clientexported.ConsensusState, clienttypes.Height, error) {
-	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
+	clientRes, err := QueryChannelClientState(clientCtx, portID, channelID, false)
+	if err != nil {
+		return nil, clienttypes.Height{}, err
+	}
+	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
 	if err != nil {
 		return nil, clienttypes.Height{}, err
 	}
 
-	counterparty := channelRes.Channel.Counterparty
-	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortId, counterparty.ChannelId, height, false)
+	clientHeight := clientState.GetLatestHeight().(clienttypes.Height)
+	res, err := QueryChannelConsensusState(clientCtx, portID, channelID, clientHeight, false)
 	if err != nil {
 		return nil, clienttypes.Height{}, err
 	}

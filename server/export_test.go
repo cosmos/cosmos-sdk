@@ -65,7 +65,7 @@ func TestExportCmd_Height(t *testing.T) {
 		{
 			"should export correct height",
 			[]string{},
-			3,
+			4,
 		},
 		{
 			"should export height 0 with --for-zero-height",

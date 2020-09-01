@@ -43,7 +43,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+	// Hardcode 0 as epoch number for now
+	// TODO: Retrieve epoch from chain-id
+	clientState := localhosttypes.NewClientState(
+		ctx.ChainID(), types.NewHeight(0, uint64(ctx.BlockHeight())),
+	)
 
 	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
 	if err != nil {

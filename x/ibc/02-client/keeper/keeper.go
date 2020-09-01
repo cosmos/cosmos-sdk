@@ -185,6 +185,7 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
+// TODO: Replace height with *clienttypes.Height once interfaces change
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
 	if !found {
@@ -192,7 +193,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	}
 
 	consensusState := &ibctmtypes.ConsensusState{
-		Height:             height,
+		Height:             types.NewHeight(0, height),
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.GetAppHash()),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
@@ -218,7 +219,10 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	if tmClient.LatestHeight > uint64(ctx.BlockHeight()) {
+	// For now, assume epoch number is zero
+	// TODO: Retrieve epoch number from chain-id
+	selfHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
+	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}

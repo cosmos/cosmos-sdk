@@ -432,7 +432,9 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		}
 	}
 	// inject trusted fields into last header
-	header.TrustedHeight = trustedHeight
+	// for now assume epoch number is 0
+	// TODO: use clienttypes.Height once Header.GetHeight is updated
+	header.TrustedHeight = clienttypes.NewHeight(0, trustedHeight)
 
 	trustedVals, err := tmTrustedVals.ToProto()
 	if err != nil {

@@ -38,7 +38,7 @@ func TestPackClientState(t *testing.T) {
 		},
 		{
 			"localhost client",
-			localhosttypes.NewClientState(chainID, height),
+			localhosttypes.NewClientState(chainID, clientHeight),
 			true,
 		},
 		{

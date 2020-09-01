@@ -535,6 +535,44 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
+func TestInitChain_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+	app.Commit()
+
+	require.Equal(t, int64(4), app.LastBlockHeight())
+}
+
+func TestBeginBlock_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height: 3,
+		},
+	})
+	app.Commit()
+
+	require.Equal(t, int64(4), app.LastBlockHeight())
+}
+
 // Simple tx with a list of Msgs.
 type txTest struct {
 	Msgs       []sdk.Msg

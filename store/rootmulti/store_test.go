@@ -513,7 +513,7 @@ func TestSetInitialVersion(t *testing.T) {
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
-	require.Equal(t, int64(6), multi.LastCommitID().Version)
+	require.Equal(t, int64(5), multi.LastCommitID().Version)
 }
 
 //-----------------------------------------------------------------------

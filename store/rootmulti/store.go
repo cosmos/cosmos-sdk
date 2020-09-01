@@ -299,18 +299,18 @@ func (rs *Store) LastCommitID() types.CommitID {
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-	var previousHeight int64
+	var previousHeight, version int64
 	if rs.lastCommitInfo.GetVersion() > 0 {
 		// This case means that there was already a previous commit in the
 		// store. We increment from that commit version.
 		previousHeight = rs.lastCommitInfo.GetVersion()
+		version = previousHeight + 1
 	} else {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion (or 0 if not set).
-		previousHeight = rs.initialVersion
+		version = rs.initialVersion
 	}
 
-	version := previousHeight + 1
 	rs.lastCommitInfo = commitStores(version, rs.stores)
 
 	// Determine if pruneHeight height needs to be added to the list of heights to

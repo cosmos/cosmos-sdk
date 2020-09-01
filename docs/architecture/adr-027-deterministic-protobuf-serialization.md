@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-08-07: Initial Draft
+- 2020-09-01: Further clarify rules
 
 ## Status
 

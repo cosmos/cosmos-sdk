@@ -59,7 +59,9 @@ func queryPacketCommitmentABCI(
 
 	// FIXME: height + 1 is returned as the proof height
 	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
-	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, res.Value, proofBz, res.Height+1), nil
+	// TODO: retrieve epoch number from chain-id
+	height := clienttypes.NewHeight(0, uint64(res.Height+1))
+	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, res.Value, proofBz, height), nil
 }
 
 // QueryChannel returns a channel end.
@@ -105,7 +107,9 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 		return nil, err
 	}
 
-	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, res.Height), nil
+	// TODO: retrieve epoch number from chain-id
+	height := clienttypes.NewHeight(0, uint64(res.Height))
+	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, height), nil
 }
 
 // QueryChannelClientState returns the ClientState of a channel end. If
@@ -137,7 +141,7 @@ func QueryChannelClientState(
 			ClientId:    res.IdentifiedClientState.ClientId,
 			ClientState: clientStateRes.ClientState,
 		}
-		res = types.NewQueryChannelClientStateResponse(identifiedClientState, clientStateRes.Proof, int64(clientStateRes.ProofHeight))
+		res = types.NewQueryChannelClientStateResponse(identifiedClientState, clientStateRes.Proof, clientStateRes.ProofHeight)
 	}
 
 	return res, nil
@@ -147,14 +151,15 @@ func QueryChannelClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryChannelConsensusState(
-	clientCtx client.Context, portID, channelID string, height uint64, prove bool,
+	clientCtx client.Context, portID, channelID string, height clienttypes.Height, prove bool,
 ) (*types.QueryChannelConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
-		PortId:    portID,
-		ChannelId: channelID,
-		Height:    height,
+		PortId:      portID,
+		ChannelId:   channelID,
+		EpochNumber: height.EpochNumber,
+		EpochHeight: height.EpochHeight,
 	}
 
 	res, err := queryClient.ChannelConsensusState(context.Background(), req)
@@ -173,7 +178,7 @@ func QueryChannelConsensusState(
 			return nil, err
 		}
 
-		res = types.NewQueryChannelConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consensusState.GetHeight(), consensusStateRes.Proof, int64(consensusStateRes.ProofHeight))
+		res = types.NewQueryChannelConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, height, consensusStateRes.Proof, consensusStateRes.ProofHeight)
 	}
 
 	return res, nil
@@ -182,22 +187,22 @@ func QueryChannelConsensusState(
 // QueryCounterpartyConsensusState uses the channel Querier to return the
 // counterparty ConsensusState given the source port ID and source channel ID.
 func QueryCounterpartyConsensusState(
-	clientCtx client.Context, portID, channelID string, height uint64,
-) (clientexported.ConsensusState, uint64, error) {
+	clientCtx client.Context, portID, channelID string, height clienttypes.Height,
+) (clientexported.ConsensusState, clienttypes.Height, error) {
 	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
 	if err != nil {
-		return nil, 0, err
+		return nil, clienttypes.Height{}, err
 	}
 
 	counterparty := channelRes.Channel.Counterparty
 	res, err := QueryChannelConsensusState(clientCtx, counterparty.PortId, counterparty.ChannelId, height, false)
 	if err != nil {
-		return nil, 0, err
+		return nil, clienttypes.Height{}, err
 	}
 
 	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
 	if err != nil {
-		return nil, 0, err
+		return nil, clienttypes.Height{}, err
 	}
 
 	return consensusState, res.ProofHeight, nil
@@ -242,5 +247,7 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 	}
 
 	sequence := binary.BigEndian.Uint64(res.Value)
-	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, res.Height), nil
+	// TODO: retrieve epoch number from chain-id
+	height := clienttypes.NewHeight(0, uint64(res.Height))
+	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, height), nil
 }

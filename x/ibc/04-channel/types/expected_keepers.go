@@ -12,7 +12,7 @@ import (
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
 	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
-	GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (clientexported.ConsensusState, bool)
+	GetClientConsensusState(ctx sdk.Context, clientID string, height clientexported.Height) (clientexported.ConsensusState, bool)
 }
 
 // ConnectionKeeper expected account IBC connection keeper
@@ -21,12 +21,12 @@ type ConnectionKeeper interface {
 	GetTimestampAtHeight(
 		ctx sdk.Context,
 		connection connectiontypes.ConnectionEnd,
-		height uint64,
+		height clientexported.Height,
 	) (uint64, error)
 	VerifyChannelState(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
-		height uint64,
+		height clientexported.Height,
 		proof []byte,
 		portID,
 		channelID string,
@@ -35,7 +35,7 @@ type ConnectionKeeper interface {
 	VerifyPacketCommitment(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
-		height uint64,
+		height clientexported.Height,
 		proof []byte,
 		portID,
 		channelID string,
@@ -45,7 +45,7 @@ type ConnectionKeeper interface {
 	VerifyPacketAcknowledgement(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
-		height uint64,
+		height clientexported.Height,
 		proof []byte,
 		portID,
 		channelID string,
@@ -55,7 +55,7 @@ type ConnectionKeeper interface {
 	VerifyPacketAcknowledgementAbsence(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
-		height uint64,
+		height clientexported.Height,
 		proof []byte,
 		portID,
 		channelID string,
@@ -64,7 +64,7 @@ type ConnectionKeeper interface {
 	VerifyNextSequenceRecv(
 		ctx sdk.Context,
 		connection connectionexported.ConnectionI,
-		height uint64,
+		height clientexported.Height,
 		proof []byte,
 		portID,
 		channelID string,

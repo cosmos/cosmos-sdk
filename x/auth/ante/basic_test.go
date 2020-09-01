@@ -149,7 +149,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
 	// Set suite.ctx with smaller simulated TxBytes manually
-	suite.ctx = suite.ctx.WithTxBytes(txBytes)
+	suite.ctx = suite.ctx.WithTxBytes(simTxBytes)
 
 	beforeSimGas := suite.ctx.GasMeter().GasConsumed()
 

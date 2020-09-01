@@ -102,6 +102,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	// simulate gas cost for signatures in simulate mode
 	if simulate {
 		// in simulate mode, each element should be a nil signature
+		// TODO: Needs to be able to handle SignaturesV2 which may return nil, Currently this cannot return nil signatures
 		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
 			return ctx, err

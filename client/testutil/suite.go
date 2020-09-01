@@ -267,7 +267,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	tx3Sigs, err := tx3.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([][]byte{dummySig}, tx3Sigs)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
 	s.T().Log("JSON encode transaction")
@@ -286,7 +286,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	tx3Sigs, err = tx3.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([][]byte{dummySig}, tx3Sigs)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 }
 

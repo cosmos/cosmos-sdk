@@ -43,7 +43,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	// is not expired or not allowed to be updated after expiry then the proposal cannot update
 	// the client.
 	if cs.IsFrozen() && cs.AllowGovernanceOverrideAfterMisbehaviour {
-		cs.FrozenHeight = 0
+		cs.FrozenHeight = clienttypes.Height{}
 	} else if !(cs.AllowGovernanceOverrideAfterExpiry && cs.Expired(consensusState.Timestamp, ctx.BlockTime())) {
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}

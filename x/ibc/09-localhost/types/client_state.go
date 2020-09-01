@@ -73,10 +73,8 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 }
 
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
-// Localhost client does not have the logic override implemented. Even though we don't use the flag
-// override, we still need to add it in order for the clientStatus interface to be respected.
 func (cs ClientState) CheckHeaderAndUpdateState(
-	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header, override bool,
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	// Hardcode 0 for epoch number for now
 	// TODO: Retrieve epoch number from chain-id
@@ -93,6 +91,13 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Misbehaviour,
 ) (clientexported.ClientState, error) {
 	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
+}
+
+// CheckProposedHeaderAndUpdateState does nothing. The localhost cannot be modified by proposals.
+func (cs ClientState) CheckProposedHeaderAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
+) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	return cs, nil, nil
 }
 
 // VerifyClientState verifies that the localhost client state is stored locally

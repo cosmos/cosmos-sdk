@@ -7,16 +7,16 @@ import (
 )
 
 var (
-	_ ImmutableTree = (*immutableTree)(nil)
-	_ MutableTree   = (*iavl.MutableTree)(nil)
+	_ Tree = (*immutableTree)(nil)
+	_ Tree = (*iavl.MutableTree)(nil)
 )
 
 type (
-	// ImmutableTree defines an interface that immutable IAVL trees
+	// Tree defines an interface that both mutable and immutable IAVL trees
 	// must implement. For mutable IAVL trees, the interface is directly
 	// implemented by an iavl.MutableTree. For an immutable IAVL tree, a wrapper
 	// must be made.
-	ImmutableTree interface {
+	Tree interface {
 		Has(key []byte) bool
 		Get(key []byte) (index int64, value []byte)
 		Set(key, value []byte) bool
@@ -30,12 +30,6 @@ type (
 		GetVersioned(key []byte, version int64) (int64, []byte)
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
-	}
-
-	// MutableTree defines an interface that mutable IAVL trees
-	// must implement.
-	MutableTree interface {
-		ImmutableTree
 		SetInitialVersion(version uint64)
 	}
 
@@ -65,6 +59,10 @@ func (it *immutableTree) DeleteVersion(_ int64) error {
 
 func (it *immutableTree) DeleteVersions(_ ...int64) error {
 	panic("cannot call 'DeleteVersions' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) SetInitialVersion(_ uint64) {
+	panic("cannot call 'SetInitialVersion' on an immutable IAVL tree")
 }
 
 func (it *immutableTree) VersionExists(version int64) bool {

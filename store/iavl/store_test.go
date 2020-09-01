@@ -529,10 +529,9 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 
 func TestSetInitialVersion(t *testing.T) {
 	testCases := []struct {
-		name      string
-		storeFn   func(db *dbm.MemDB) *Store
-		expErr    bool
-		expErrMsg string
+		name     string
+		storeFn  func(db *dbm.MemDB) *Store
+		expPanic bool
 	}{
 		{
 			"works with a mutable tree",
@@ -542,7 +541,7 @@ func TestSetInitialVersion(t *testing.T) {
 				store := UnsafeNewStore(tree)
 
 				return store
-			}, false, "",
+			}, false,
 		},
 		{
 			"throws error on immutable tree",
@@ -557,7 +556,7 @@ func TestSetInitialVersion(t *testing.T) {
 				require.NoError(t, err)
 
 				return store
-			}, true, "cannot set initial version on an immutable tree",
+			}, true,
 		},
 	}
 
@@ -567,12 +566,11 @@ func TestSetInitialVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			db := dbm.NewMemDB()
 			store := tc.storeFn(db)
-			err := store.SetInitialVersion(5)
 
-			if tc.expErr {
-				require.Error(t, err)
-				require.EqualError(t, err, tc.expErrMsg)
+			if tc.expPanic {
+				require.Panics(t, func() { store.SetInitialVersion(5) })
 			} else {
+				store.SetInitialVersion(5)
 				cid := store.Commit()
 				require.Equal(t, int64(5), cid.GetVersion())
 			}

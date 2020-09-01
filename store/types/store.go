@@ -404,5 +404,5 @@ type MultiStorePersistentCache interface {
 type StoreWithInitialVersion interface {
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
-	SetInitialVersion(version int64) error
+	SetInitialVersion(version int64)
 }

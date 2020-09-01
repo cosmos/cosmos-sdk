@@ -521,10 +521,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 	// version on it.
 	for _, commitKVStore := range rs.stores {
 		if storeWithVersion, ok := commitKVStore.(types.StoreWithInitialVersion); ok {
-			err := storeWithVersion.SetInitialVersion(version)
-			if err != nil {
-				return err
-			}
+			storeWithVersion.SetInitialVersion(version)
 		}
 	}
 

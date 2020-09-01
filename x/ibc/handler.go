@@ -193,7 +193,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			// Set packet acknowledgement
-			if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
+			if err = k.ChannelKeeper.ReceiveExecuted(ctx, cap, msg.Packet, ack); err != nil {
 				return nil, err
 			}
 

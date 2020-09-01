@@ -4,6 +4,7 @@ import (
 	"time"
 
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
@@ -50,7 +51,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"height is 0",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             0,
+				Height:             clienttypes.NewHeight(0, 0),
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},

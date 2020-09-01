@@ -12,7 +12,7 @@ import (
 )
 
 func TestPackClientState(t *testing.T) {
-	clientState := localhosttypes.NewClientState(chainID, height, latestTimestamp)
+	clientState := localhosttypes.NewClientState(chainID, clientHeight)
 
 	clientAny, err := types.PackClientState(clientState)
 	require.NoError(t, err, "pack clientstate should not return error")
@@ -27,7 +27,7 @@ func TestPackClientState(t *testing.T) {
 }
 
 func TestPackConsensusState(t *testing.T) {
-	consensusState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), height, []byte("nextvalshash"))
+	consensusState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), clientHeight, []byte("nextvalshash"))
 
 	consensusAny, err := types.PackConsensusState(consensusState)
 	require.NoError(t, err, "pack consensusstate should not return error")

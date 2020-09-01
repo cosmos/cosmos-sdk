@@ -37,10 +37,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", clientHeight),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
@@ -48,7 +48,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]clientexported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight(), suite.header.Header.NextValidatorsHash,
+									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), clienttypes.NewHeight(0, suite.header.GetHeight()), suite.header.Header.NextValidatorsHash,
 								),
 							},
 						),
@@ -97,10 +97,10 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0, latestTimestamp),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", clienttypes.Height{}),
 						),
 					},
 					nil,
@@ -166,10 +166,10 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10, latestTimestamp),
+							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", clientHeight),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
@@ -177,7 +177,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							clientID,
 							[]clientexported.ConsensusState{
 								ibctmtypes.NewConsensusState(
-									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight(), suite.header.Header.NextValidatorsHash,
+									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), clienttypes.NewHeight(0, suite.header.GetHeight()), suite.header.Header.NextValidatorsHash,
 								),
 							},
 						),
@@ -240,7 +240,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 			"success",
 			func() {
 				// creates clients
-				suite.coordinator.Setup(suite.chainA, suite.chainB)
+				suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 				// create extra clients
 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
 				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)

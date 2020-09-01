@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
@@ -38,7 +39,7 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 )
 
-var latestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+var clientHeight = clienttypes.NewHeight(0, 10)
 
 type IBCTestSuite struct {
 	suite.Suite

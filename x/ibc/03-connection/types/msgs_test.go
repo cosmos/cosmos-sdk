@@ -119,7 +119,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, ibctesting.LatestTimestamp, commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenTry{
@@ -190,7 +190,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, ibctesting.LatestTimestamp, commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenAck{

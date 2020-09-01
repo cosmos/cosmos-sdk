@@ -27,7 +27,7 @@ var _ clientexported.ClientState = (*ClientState)(nil)
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, latestTimestamp time.Time, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
 	allowGovernanceOverrideAfterExpiry, allowGovernanceOverrideAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
@@ -37,8 +37,7 @@ func NewClientState(
 		UnbondingPeriod:                          ubdPeriod,
 		MaxClockDrift:                            maxClockDrift,
 		LatestHeight:                             latestHeight,
-		LatestTimestamp:                          latestTimestamp,
-		FrozenHeight:                             0,
+		FrozenHeight:                             clienttypes.Height{},
 		ProofSpecs:                               specs,
 		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpiry,
 		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
@@ -56,8 +55,9 @@ func (cs ClientState) ClientType() clientexported.ClientType {
 }
 
 // GetLatestHeight returns latest block height.
+// TODO: return clienttypes.Height once interface has changed
 func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.LatestHeight
+	return cs.LatestHeight.EpochHeight
 }
 
 // GetLatestTimestamp returns latest block time (in nanoseconds).
@@ -67,13 +67,14 @@ func (cs ClientState) GetLatestTimestamp() uint64 {
 
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight != 0
+	return !cs.FrozenHeight.IsZero()
 }
 
-// FrozenHeight returns the height at which client is frozen
+// GetFrozenHeight returns the height at which client is frozen
 // NOTE: FrozenHeight is 0 if client is unfrozen
+// TODO: return clienttypes.Height once interface has changed
 func (cs ClientState) GetFrozenHeight() uint64 {
-	return cs.FrozenHeight
+	return cs.FrozenHeight.EpochHeight
 }
 
 //Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
@@ -106,8 +107,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
+	if cs.LatestHeight.EpochHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint epoch height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -435,7 +436,7 @@ func produceVerificationArgs(
 		)
 	}
 
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
+	if cs.IsFrozen() && !cs.FrozenHeight.GT(clienttypes.NewHeight(0, height)) {
 		return commitmenttypes.MerkleProof{}, nil, clienttypes.ErrClientFrozen
 	}
 

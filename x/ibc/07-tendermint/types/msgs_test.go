@@ -16,7 +16,7 @@ import (
 func (suite *TendermintTestSuite) TestMsgCreateClientValidateBasic() {
 	privKey := secp256k1.GenPrivKey()
 	signer := sdk.AccAddress(privKey.PubKey().Address())
-	invalidHeader := types.CreateTestHeader(suite.header.Header.GetChainID(), height, 0, suite.now, suite.valSet, nil, []tmtypes.PrivValidator{suite.privVal})
+	invalidHeader := types.CreateTestHeader(suite.header.Header.GetChainID(), int64(height.EpochHeight), 0, suite.now, suite.valSet, nil, []tmtypes.PrivValidator{suite.privVal})
 	invalidHeader.ValidatorSet = nil
 
 	cases := []struct {

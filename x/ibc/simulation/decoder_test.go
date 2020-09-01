@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -25,7 +26,7 @@ func TestDecodeStore(t *testing.T) {
 	portID := "portidone"
 
 	clientState := &ibctmtypes.ClientState{
-		FrozenHeight: 10,
+		FrozenHeight: clienttypes.NewHeight(0, 10),
 	}
 	connection := connectiontypes.ConnectionEnd{
 		ClientId: "clientidone",

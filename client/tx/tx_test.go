@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -67,7 +66,11 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txf := tx.Factory{}.WithChainID("test-chain").WithTxConfig(NewTestTxConfig()).WithSignMode(signing2.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		txCfg := NewTestTxConfig()
+
+		txf := tx.Factory{}.
+			WithChainID("test-chain").
+			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
@@ -86,14 +89,16 @@ func TestCalculateGas(t *testing.T) {
 }
 
 func TestBuildSimTx(t *testing.T) {
+	txCfg := NewTestTxConfig()
+
 	txf := tx.Factory{}.
-		WithTxConfig(NewTestTxConfig()).
+		WithTxConfig(txCfg).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
 		WithChainID("test-chain").
-		WithSignMode(signing2.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := tx.BuildSimTx(txf, msg)

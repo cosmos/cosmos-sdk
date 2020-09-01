@@ -4,7 +4,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/stretchr/testify/require"
@@ -32,8 +34,8 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := &sdk.SimulationResponse{
-				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
+			simRes := &simulate.SimulateResponse{
+				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
@@ -65,7 +67,7 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txf := tx.Factory{}.WithChainID("test-chain").WithTxConfig(NewTestTxConfig())
+		txf := tx.Factory{}.WithChainID("test-chain").WithTxConfig(NewTestTxConfig()).WithSignMode(signing2.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)

@@ -33,7 +33,7 @@ func TestPackClientState(t *testing.T) {
 		},
 		{
 			"tendermint client",
-			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 10, commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs()),
 			true,
 		},
 		{

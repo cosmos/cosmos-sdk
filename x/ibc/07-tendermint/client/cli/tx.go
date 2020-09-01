@@ -117,7 +117,7 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			clientState := types.NewClientState(
-				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, header.GetHeight(), specs,
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, header.GetHeight()), specs,
 			)
 
 			consensusState := header.ConsensusState()

@@ -51,7 +51,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"valid - tendermint client",
 			func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chain.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 10, commitmenttypes.GetSDKSpecs())
+				tendermintClient := ibctmtypes.NewClientState(suite.chain.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs())
 				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chain.CreateTMClientHeader().ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -75,7 +75,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"failed to unpack consensus state",
 			func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chain.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 10, commitmenttypes.GetSDKSpecs())
+				tendermintClient := ibctmtypes.NewClientState(suite.chain.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs())
 				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chain.CreateTMClientHeader().ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 				msg.ConsensusState = nil
@@ -119,7 +119,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"unsupported - localhost client",
 			func() {
-				localhostClient := localhosttypes.NewClientState(suite.chain.ChainID, suite.chain.LastHeader.Header.Height)
+				localhostClient := localhosttypes.NewClientState(suite.chain.ChainID, types.NewHeight(0, uint64(suite.chain.LastHeader.Header.Height)))
 				msg, err = types.NewMsgCreateClient("localhost", localhostClient, suite.chain.LastHeader.ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},

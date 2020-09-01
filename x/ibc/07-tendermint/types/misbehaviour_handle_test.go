@@ -81,8 +81,8 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader("ethermint", height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader("ethermint", height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+				Header1:  types.CreateTestHeader("ethermint", int64(height.EpochHeight), int64(height.EpochHeight), suite.now, bothValSet, bothValSet, bothSigners),
+				Header2:  types.CreateTestHeader("ethermint", int64(height.EpochHeight), int64(height.EpochHeight), suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
 				ChainId:  "ethermint",
 				ClientId: chainID,
 			},

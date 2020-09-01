@@ -16,7 +16,6 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool

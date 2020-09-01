@@ -28,16 +28,16 @@ func NewClientUpdateProposal(title, description, clientID string, header exporte
 	return &ClientUpdateProposal{title, description, clientID, any}, nil
 }
 
-// GetTitle returns the title of a community pool spend proposal.
+// GetTitle returns the title of a client update proposal.
 func (cup *ClientUpdateProposal) GetTitle() string { return cup.Title }
 
-// GetDescription returns the description of a community pool spend proposal.
+// GetDescription returns the description of a client update proposal.
 func (cup *ClientUpdateProposal) GetDescription() string { return cup.Description }
 
-// GetDescription returns the routing key of a community pool spend proposal.
+// GetDescription returns the routing key of a client update proposal.
 func (cup *ClientUpdateProposal) ProposalRoute() string { return RouterKey }
 
-// ProposalType returns the type of a community pool spend proposal.
+// ProposalType returns the type of a client update proposal.
 func (cup *ClientUpdateProposal) ProposalType() string { return ProposalTypeClientUpdate }
 
 // ValidateBasic runs basic stateless validity checks

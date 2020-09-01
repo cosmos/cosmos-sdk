@@ -78,9 +78,9 @@ func (cs *ClientState) Unfreeze() error {
 	return nil
 }
 
-// Expired returns whether or not the client has passed the trusting period since the last
+// IsExpired returns whether or not the client has passed the trusting period since the last
 // update (in which case no headers can be validated).
-func (cs ClientState) Expired(latestTimestamp, now time.Time) bool {
+func (cs ClientState) IsExpired(latestTimestamp, now time.Time) bool {
 	expirationTime := latestTimestamp.Add(cs.TrustingPeriod)
 	return !expirationTime.After(now)
 }

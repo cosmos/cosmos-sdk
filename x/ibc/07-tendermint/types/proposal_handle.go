@@ -39,19 +39,24 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		)
 	}
 
-	// unfreeze client if the client is frozen and this is allowed. Otherwise if the client
-	// is not expired or not allowed to be updated after expiry then the proposal cannot update
-	// the client.
+	// unfreeze client if the client is frozen and this is allowed. If the client is expired
+	// and allowed to be updated after expiry then we use do light validation on the header.
+	// Otherwise we process the header as normal to update the client. If none of these
+	// conditions are met then an error is returned.
 	if cs.IsFrozen() && cs.AllowGovernanceOverrideAfterMisbehaviour {
 		cs.FrozenHeight = clienttypes.Height{}
-	} else if !(cs.AllowGovernanceOverrideAfterExpiry && cs.Expired(consensusState.Timestamp, ctx.BlockTime())) {
-		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
+		if cs.AllowGovernanceOverrideAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
+			cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
+
+			newClientState, consensusState := update(&cs, tmHeader)
+			return newClientState, consensusState, nil
+
+		}
+		return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 	}
 
-	cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
+	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 
-	newClientState, consensusState := update(&cs, tmHeader)
-	return newClientState, consensusState, nil
 }
 
 // checkProposedHeader checks if the Tendermint header is valid for updating a client after
@@ -88,7 +93,7 @@ func (cs ClientState) checkProposedHeader(consensusState *ConsensusState, header
 		return sdkerrors.Wrap(err, "signed header failed basic validation")
 	}
 
-	if cs.Expired(header.GetTime(), currentTimestamp) {
+	if cs.IsExpired(header.GetTime(), currentTimestamp) {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "header timestamp is already expired")
 	}
 

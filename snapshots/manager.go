@@ -33,6 +33,16 @@ type restoreDone struct {
 // Manager manages snapshot and restore operations for an app, making sure only a single
 // long-running operation is in progress at any given time, and provides convenience methods
 // mirroring the ABCI interface.
+//
+// Although the ABCI interface (and this manager) passes chunks as byte slices, the internal
+// snapshot/restore APIs use IO streams (i.e. chan io.ReadCloser), for two reasons:
+//
+// 1) In the future, ABCI should support streaming. Consider e.g. InitChain during chain
+//    upgrades, which currently passes the entire chain state as an in-memory byte slice.
+//    https://github.com/tendermint/tendermint/issues/5184
+//
+// 2) io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
+//    errors via io.Pipe.CloseWithError().
 type Manager struct {
 	store  *Store
 	target types.Snapshotter

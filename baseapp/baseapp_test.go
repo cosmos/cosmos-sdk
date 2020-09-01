@@ -548,7 +548,7 @@ func TestInitChain_WithInitialHeight(t *testing.T) {
 	)
 	app.Commit()
 
-	require.Equal(t, int64(4), app.LastBlockHeight())
+	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
 func TestBeginBlock_WithInitialHeight(t *testing.T) {
@@ -563,6 +563,14 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 		},
 	)
 
+	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
+		app.BeginBlock(abci.RequestBeginBlock{
+			Header: tmproto.Header{
+				Height: 4,
+			},
+		})
+	})
+
 	app.BeginBlock(abci.RequestBeginBlock{
 		Header: tmproto.Header{
 			Height: 3,
@@ -570,7 +578,7 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	})
 	app.Commit()
 
-	require.Equal(t, int64(4), app.LastBlockHeight())
+	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
 // Simple tx with a list of Msgs.
@@ -1330,7 +1338,6 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-			return
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {

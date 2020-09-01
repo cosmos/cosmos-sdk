@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
@@ -96,4 +97,10 @@ func (h Height) Increment() Height {
 // IsZero returns true if height epoch and epoch-height are both 0
 func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
+}
+
+// GetSelfHeight is a utility function that returns self height given context
+// TODO: Retrieve epoch-number from chain-id
+func GetSelfHeight(ctx sdk.Context) Height {
+	return NewHeight(0, uint64(ctx.BlockHeight()))
 }

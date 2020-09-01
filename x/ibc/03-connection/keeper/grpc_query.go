@@ -38,7 +38,7 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 
 	return &types.QueryConnectionResponse{
 		Connection:  &connection,
-		ProofHeight: uint64(ctx.BlockHeight()),
+		ProofHeight: clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 	return &types.QueryConnectionsResponse{
 		Connections: connections,
 		Pagination:  pageRes,
-		Height:      ctx.BlockHeight(),
+		Height:      clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 
@@ -101,7 +101,7 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 
 	return &types.QueryClientConnectionsResponse{
 		ConnectionPaths: clientConnectionPaths,
-		ProofHeight:     uint64(ctx.BlockHeight()),
+		ProofHeight:     clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 

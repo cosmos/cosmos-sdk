@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/client/client.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 
@@ -49,7 +50,9 @@ message QueryClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
@@ -90,7 +93,10 @@ message QueryConsensusStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
+;
 }
 
 // QueryConsensusStatesRequest is the request type for the Query/ConsensusStates RPC method.

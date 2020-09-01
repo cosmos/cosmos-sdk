@@ -62,7 +62,9 @@ message QueryConnectionResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -79,7 +81,9 @@ message QueryConnectionsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.client.Height height = 3;
+  ibc.client.Height height = 3 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryClientConnectionsRequest is the request type for the
@@ -99,7 +103,9 @@ message QueryClientConnectionsResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was generated
-  ibc.client.Height proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -121,7 +127,9 @@ message QueryConnectionClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
@@ -131,7 +139,9 @@ message QueryConnectionConsensusStateRequest {
   string connection_id = 1 [
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  ibc.client.Height height = 2;
+  ibc.client.Height height = 2 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the
@@ -146,5 +156,7 @@ message QueryConnectionConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 5;
+  ibc.client.Height proof_height = 5 [
+    (gogoproto.nullable) = false
+  ];
 }

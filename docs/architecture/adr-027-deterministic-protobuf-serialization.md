@@ -52,7 +52,9 @@ with the following additions:
        endian). Per rule 3 above, the default value of `0` must be omitted, so
        this rule does not apply in such cases.
     1. Highest 4 bytes of 8 must be `0` for 32-bit ints
-    1. For Booleans, the value must be `0` or `1`
+    1. For Booleans, the value must be `0` or `1`. Per rule 3 above, the default
+       value of `0` must be omitted, so if a Boolean is included it must have a
+       value of `1`.
 
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behavior of all protobuf encoders the author is aware of, the 3rd rule

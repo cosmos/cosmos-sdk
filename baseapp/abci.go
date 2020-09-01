@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"sort"
@@ -66,14 +67,24 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
+	// In the case of a new chain, AppHash will be the hash of an empty string.
+	// During an upgrade, it'll be the hash of the last committed block.
+	var appHash []byte
+	if !app.LastCommitID().IsZero() {
+		appHash = app.LastCommitID().Hash
+	} else {
+		// $ echo -n '' | sha256sum
+		// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+		emptyHash := sha256.Sum256([]byte{})
+		appHash = emptyHash[:]
+	}
+
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
 	return abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
-		// In the case of a new chain, AppHash will be empty. During an
-		// upgrade, it'll be the hash of the last committed block.
-		AppHash: app.LastCommitID().Hash,
+		AppHash:         appHash,
 	}
 
 }

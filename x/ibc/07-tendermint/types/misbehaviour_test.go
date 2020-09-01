@@ -167,6 +167,17 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			false,
 		},
 		{
+			"wrong chainID in misbehaviour",
+			&types.Misbehaviour{
+				Header1:  suite.header,
+				Header2:  types.CreateTestHeader(chainID, int64(height.EpochHeight), int64(height.EpochHeight-1), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				ChainId:  "ethermint",
+				ClientId: clientID,
+			},
+			func(misbehaviour *types.Misbehaviour) error { return nil },
+			false,
+		},
+		{
 			"mismatched heights",
 			&types.Misbehaviour{
 				Header1:  suite.header,

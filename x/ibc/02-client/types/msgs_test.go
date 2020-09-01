@@ -38,6 +38,7 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 		msg *types.MsgCreateClient
 		err error
 	)
+
 	testCases := []struct {
 		name     string
 		malleate func()
@@ -190,6 +191,58 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 	}
 }
 
+// tests that different header within MsgUpdateClient can be marshaled
+// and unmarshaled.
+func (suite *TypesTestSuite) TestMarshalMsgUpdateClient() {
+	var (
+		msg *types.MsgUpdateClient
+		err error
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"solo machine client", func() {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine")
+				msg, err = types.NewMsgUpdateClient(soloMachine.ClientID, soloMachine.CreateHeader(), suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+		{
+			"tendermint client", func() {
+				msg, err = types.NewMsgUpdateClient("tendermint", suite.chain.CreateTMClientHeader(), suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			cdc := suite.chain.App.AppCodec()
+
+			// marshal message
+			bz, err := cdc.MarshalJSON(msg)
+			suite.Require().NoError(err)
+
+			// unmarshal message
+			newMsg := &types.MsgUpdateClient{}
+			err = cdc.UnmarshalJSON(bz, newMsg)
+			suite.Require().NoError(err)
+
+			suite.Require().True(proto.Equal(msg, newMsg))
+		})
+	}
+}
+
 func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 	var (
 		msg = &types.MsgUpdateClient{}
@@ -273,6 +326,62 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		} else {
 			suite.Require().Error(err, tc.name)
 		}
+	}
+}
+
+// tests that different misbehaviours within MsgSubmitMisbehaviour can be marshaled
+// and unmarshaled.
+func (suite *TypesTestSuite) TestMarshalMsgSubmitMisbehaviour() {
+	var (
+		msg *types.MsgSubmitMisbehaviour
+		err error
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"solo machine client", func() {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine")
+				msg, err = types.NewMsgSubmitMisbehaviour(soloMachine.ClientID, soloMachine.CreateMisbehaviour(), suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+		{
+			"tendermint client", func() {
+				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+
+				misbehaviour := ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, header1, header2)
+				msg, err = types.NewMsgSubmitMisbehaviour("tendermint", misbehaviour, suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			cdc := suite.chain.App.AppCodec()
+
+			// marshal message
+			bz, err := cdc.MarshalJSON(msg)
+			suite.Require().NoError(err)
+
+			// unmarshal message
+			newMsg := &types.MsgSubmitMisbehaviour{}
+			err = cdc.UnmarshalJSON(bz, newMsg)
+			suite.Require().NoError(err)
+
+			suite.Require().True(proto.Equal(msg, newMsg))
+		})
 	}
 }
 

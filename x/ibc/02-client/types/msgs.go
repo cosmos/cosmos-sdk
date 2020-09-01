@@ -16,10 +16,13 @@ const (
 )
 
 var (
-	_ sdk.Msg                            = &MsgCreateClient{}
+	_ sdk.Msg = &MsgCreateClient{}
+	_ sdk.Msg = &MsgUpdateClient{}
+	_ sdk.Msg = &MsgSubmitMisbehaviour{}
+
 	_ codectypes.UnpackInterfacesMessage = MsgCreateClient{}
-	_ sdk.Msg                            = &MsgUpdateClient{}
-	_ sdk.Msg                            = &MsgSubmitMisbehaviour{}
+	_ codectypes.UnpackInterfacesMessage = MsgUpdateClient{}
+	_ codectypes.UnpackInterfacesMessage = MsgSubmitMisbehaviour{}
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -159,6 +162,17 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var header exported.Header
+	err := unpacker.UnpackAny(msg.Header, &header)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance.
 func NewMsgSubmitMisbehaviour(clientID string, misbehaviour exported.Misbehaviour, signer sdk.AccAddress) (*MsgSubmitMisbehaviour, error) {
 	anyMisbehaviour, err := PackMisbehaviour(misbehaviour)
@@ -213,4 +227,15 @@ func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgSubmitMisbehaviour) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var misbehaviour exported.Misbehaviour
+	err := unpacker.UnpackAny(msg.Misbehaviour, &misbehaviour)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

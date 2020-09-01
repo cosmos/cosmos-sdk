@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -289,7 +287,7 @@ func CalculateGas(
 
 	var simRes sim.SimulateResponse
 
-	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
+	if err := simRes.Unmarshal(bz); err != nil {
 		return sim.SimulateResponse{}, 0, err
 	}
 

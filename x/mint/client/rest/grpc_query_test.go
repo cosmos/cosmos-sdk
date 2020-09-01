@@ -37,37 +37,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryInflation() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-	testCases := []struct {
-		name     string
-		url      string
-		respType proto.Message
-		expected proto.Message
-	}{
-		{
-			"gRPC request inflation",
-			func() string {
-				x := fmt.Sprintf("%s/cosmos/mint/v1beta1/inflation", baseURL)
-				fmt.Println("RPC ENDPOINT = ", x)
-				return x
-			}(),
-			&types.QueryInflationResponse{},
-			&types.QueryInflationResponse{},
-		}}
-
-	for _, tc := range testCases {
-		tc := tc
-		resp, err := rest.GetRequest(tc.url)
-		s.Run(tc.name, func() {
-			s.Require().NoError(err)
-			fmt.Println(string(resp))
-		})
-	}
-
-}
-
 func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
@@ -79,11 +48,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 	}{
 		{
 			"gRPC request params",
-			func() string {
-				x := fmt.Sprintf("%s/cosmos/mint/v1beta1/params", baseURL)
-				fmt.Println("URI = ", x)
-				return x
-			}(),
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/params", baseURL),
 			&types.QueryParamsResponse{},
 			&types.QueryParamsResponse{
 				Params: types.DefaultParams(),
@@ -95,12 +60,64 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 		resp, err := rest.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
-			fmt.Println("resp", string(resp))
-			e := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
-			s.Require().NoError(e)
-
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestQueryInflation() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+	testCases := []struct {
+		name     string
+		url      string
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"gRPC request inflation",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/inflation", baseURL),
+			&types.QueryInflationResponse{},
+			&types.QueryInflationResponse{},
+		}}
+
+	for _, tc := range testCases {
+		tc := tc
+		resp, err := rest.GetRequest(tc.url)
+		s.Run(tc.name, func() {
+			s.Require().NoError(err)
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+		})
+	}
+
+}
+
+func (s *IntegrationTestSuite) TestQueryAnnualProvision() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+	testCases := []struct {
+		name     string
+		url      string
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"gRPC request annual provisions",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/annual_provisions", baseURL),
+			&types.QueryAnnualProvisionsResponse{},
+			&types.QueryAnnualProvisionsResponse{},
+		}}
+
+	for _, tc := range testCases {
+		tc := tc
+		resp, err := rest.GetRequest(tc.url)
+		s.Run(tc.name, func() {
+			s.Require().NoError(err)
+			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+		})
+	}
+
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

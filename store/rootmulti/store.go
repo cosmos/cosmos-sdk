@@ -300,15 +300,19 @@ func (rs *Store) LastCommitID() types.CommitID {
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
-	if rs.lastCommitInfo.GetVersion() > 0 {
-		// This case means that there was already a previous commit in the
-		// store. We increment from that commit version.
+	if rs.lastCommitInfo.GetVersion() == 0 && rs.initialVersion > 1 {
+		// This case means that no commit has been made in the store, we
+		// start from initialVersion.
+		version = rs.initialVersion
+
+	} else {
+		// This case can means two things:
+		// - either there was already a previous commit in the store, in which
+		// case we increment the version from there,
+		// - or there was no previous commit, and initial version was not set,
+		// in which case we start at version 1.
 		previousHeight = rs.lastCommitInfo.GetVersion()
 		version = previousHeight + 1
-	} else {
-		// This case means that no commit has been made in the store, we
-		// start from initialVersion (or 0 if not set).
-		version = rs.initialVersion
 	}
 
 	rs.lastCommitInfo = commitStores(version, rs.stores)

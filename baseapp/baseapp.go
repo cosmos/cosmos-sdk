@@ -427,8 +427,11 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		// (can be 0).
 		expectedHeight = app.initialHeight
 	} else {
-		// This case means that we committed, so we just increment from the
-		// previous height.
+		// This case can means two things:
+		// - either there was already a previous commit in the store, in which
+		// case we increment the version from there,
+		// - or there was no previous commit, and initial version was not set,
+		// in which case we start at version 1.
 		expectedHeight = app.LastBlockHeight() + 1
 	}
 

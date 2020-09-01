@@ -132,6 +132,9 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
+// TypeClientMisbehaviour is the shared evidence misbehaviour type
+const TypeClientMisbehaviour string = "client_misbehaviour"
+
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
 	ClientType() ClientType
@@ -147,39 +150,18 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+	ValidateBasic() error
 }
 
-// message and evidence types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-	TypeEvidenceClientMisbehaviour  string = "client_misbehaviour"
-)
-
-// MsgCreateClient defines the msg interface that the
-// CreateClient Handler expects
-type MsgCreateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetClientType() string
-	GetConsensusState() ConsensusState
-	InitializeClientState() ClientState
-}
-
-// MsgUpdateClient defines the msg interface that the
-// UpdateClient Handler expects
-type MsgUpdateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetHeader() Header
-}
-
-// MsgSubmitMisbehaviour defines the msg interface that the
-// SubmitMisbehaviour Handler expects
-type MsgSubmitMisbehaviour interface {
-	sdk.Msg
-	GetMisbehaviour() Misbehaviour
+// Height is a wrapper interface over clienttypes.Height
+// all clients must use the concrete implementation in types
+type Height interface {
+	IsZero() bool
+	LT(Height) bool
+	LTE(Height) bool
+	EQ(Height) bool
+	GT(Height) bool
+	GTE(Height) bool
 }
 
 // ClientType defines the type of the consensus algorithm
@@ -201,6 +183,8 @@ const (
 
 func (ct ClientType) String() string {
 	switch ct {
+	case SoloMachine:
+		return ClientTypeSoloMachine
 	case Tendermint:
 		return ClientTypeTendermint
 	case Localhost:
@@ -236,6 +220,8 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 // type. It returns 0 if the type is not found/registered.
 func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
+	case ClientTypeSoloMachine:
+		return SoloMachine
 	case ClientTypeTendermint:
 		return Tendermint
 	case ClientTypeLocalHost:

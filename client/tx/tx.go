@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
 

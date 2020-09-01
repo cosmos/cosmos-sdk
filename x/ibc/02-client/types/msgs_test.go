@@ -30,6 +30,52 @@ func TestTypesTestSuite(t *testing.T) {
 	suite.Run(t, new(TypesTestSuite))
 }
 
+// tests that different clients within MsgCreateClient can be marshaled
+// and unmarshaled.
+func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
+	var (
+		msg *types.MsgCreateClient
+		err error
+	)
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"solo machine client", func() {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine")
+				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+		{
+			"tendermint client", func() {
+				tendermintClient := ibctmtypes.NewClientState(suite.chain.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs())
+				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chain.CreateTMClientHeader().ConsensusState(), suite.chain.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			// marshal message
+			bz, err := types.SubModuleCdc.MarshalJSON(msg)
+			suite.Require().NoError(err)
+			// unmarshal message
+			err = types.SubModuleCdc.UnmarshalJSON(bz, msg)
+			suite.Require().NoError(err)
+
+		})
+	}
+}
+
 func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 	var (
 		msg = &types.MsgCreateClient{}

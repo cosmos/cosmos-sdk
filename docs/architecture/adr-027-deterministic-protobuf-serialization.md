@@ -46,7 +46,6 @@ with the following additions:
    must be omitted
 4. `repeated` fields of scalar numeric types must use
    [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
-   by default.
 5. Variant encoding of integers must not be longer than needed.
 
 While rule number 1. and 2. should be pretty straight forward and describe the

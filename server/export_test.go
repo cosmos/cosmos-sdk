@@ -57,29 +57,54 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 }
 
 func TestExportCmd_Height(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
-
-	app, ctx, _, cmd := setupApp(t, tempDir)
-
-	// Fast forward to block 3.
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
-	app.Commit()
-
-	output := &bytes.Buffer{}
-	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
-	require.NoError(t, cmd.ExecuteContext(ctx))
-
-	var exportedGenDoc tmtypes.GenesisDoc
-	err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
-	if err != nil {
-		t.Fatalf("error unmarshaling exported genesis doc: %s", err)
+	testCases := []struct {
+		name      string
+		flags     []string
+		expHeight int64
+	}{
+		{
+			"should export correct height",
+			[]string{},
+			3,
+		},
+		{
+			"should export height 0 with --for-zero-height",
+			[]string{
+				fmt.Sprintf("--%s=%s", FlagForZeroHeight, "true"),
+			},
+			0,
+		},
 	}
 
-	require.Equal(t, int64(3), exportedGenDoc.InitialHeight)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir, clean := testutil.NewTestCaseDir(t)
+			defer clean()
+
+			app, ctx, _, cmd := setupApp(t, tempDir)
+
+			// Fast forward to block 3.
+			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+			app.Commit()
+			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
+			app.Commit()
+
+			output := &bytes.Buffer{}
+			cmd.SetOut(output)
+			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			var exportedGenDoc tmtypes.GenesisDoc
+			err := tmjson.Unmarshal(output.Bytes(), &exportedGenDoc)
+			if err != nil {
+				t.Fatalf("error unmarshaling exported genesis doc: %s", err)
+			}
+
+			require.Equal(t, tc.expHeight, exportedGenDoc.InitialHeight)
+		})
+	}
+
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
@@ -111,8 +136,8 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := ExportCmd(
-		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, b bool, strings []string) (types.ExportedApp, error) {
-			return app.ExportAppStateAndValidators(true, []string{})
+		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, forZeroHeight bool, jailAllowedAddrs []string) (types.ExportedApp, error) {
+			return app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 		}, tempDir)
 
 	ctx := context.Background()

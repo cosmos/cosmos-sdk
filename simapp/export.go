@@ -23,7 +23,9 @@ func (app *SimApp) ExportAppStateAndValidators(
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
+	height := app.LastBlockHeight()
 	if forZeroHeight {
+		height = 0
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
@@ -37,7 +39,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 	return servertypes.ExportedApp{
 		AppState:        appState,
 		Validators:      validators,
-		Height:          app.LastBlockHeight(),
+		Height:          height,
 		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
 	}, nil
 }

@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			portCap = suite.chainA.GetPortCapability(connA.NextTestChannel(ibctesting.TransferPort).PortID)
 		}, true},
 		{"channel already exists", func() {
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 		}, false},
 		{"connection doesn't exist", func() {
 			// any non-nil values of connA and connB are acceptable
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not INIT or TRYOPEN", func() {
 			// create fully open channels on both chains
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelA := connA.Channels[0]
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
@@ -430,7 +430,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 		{"channel doesn't exist", func() {}, false},
 		{"channel state is not TRYOPEN", func() {
 			// create fully open channels on both cahins
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelB := connB.Channels[0]
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
@@ -542,7 +542,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 
 	testCases := []testCase{
 		{"success", func() {
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelA := connA.Channels[0]
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
@@ -557,7 +557,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel state is CLOSED", func() {
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelA := connA.Channels[0]
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 
@@ -566,7 +566,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			suite.Require().NoError(err)
 		}, false},
 		{"connection not found", func() {
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelA := connA.Channels[0]
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 
@@ -590,7 +590,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"channel capability not found", func() {
-			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
 	}
@@ -632,7 +632,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 	testCases := []testCase{
 		{"success", func() {
-			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
@@ -649,14 +649,14 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"channel state is CLOSED", func() {
-			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, channelB)
 			suite.Require().NoError(err)
 		}, false},
 		{"connection not found", func() {
-			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			// set the channel's connection hops to wrong connection ID
@@ -680,7 +680,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"consensus state not found", func() {
-			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)
@@ -690,11 +690,11 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 		}, false},
 		{"channel verification failed", func() {
 			// channel not closed
-			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, _, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 		}, false},
 		{"channel capability not found", func() {
-			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, connB, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
 
 			err := suite.coordinator.SetChannelClosed(suite.chainA, suite.chainB, channelA)

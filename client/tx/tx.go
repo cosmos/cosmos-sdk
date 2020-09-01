@@ -256,7 +256,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
 		Data: &signing.SingleSignatureData{
-			SignMode: txf.signMode,
+			SignMode: txf.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).signMode,
 		},
 		Sequence: txf.Sequence(),
 	}
@@ -288,6 +288,8 @@ func CalculateGas(
 	var simRes sim.SimulateResponse
 
 	if err := simRes.Unmarshal(bz); err != nil {
+		fmt.Println(string(bz))
+		fmt.Println("in this error")
 		return sim.SimulateResponse{}, 0, err
 	}
 

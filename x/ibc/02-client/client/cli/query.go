@@ -12,11 +12,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-const flagLatestHeight = "latest-height"
+const (
+	flagLatestHeight = "latest-height"
+	flagEpochNumber  = "epoch-number"
+)
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
@@ -158,17 +162,23 @@ If the '--latest' flag is included, the query returns the latest consensus state
 
 			queryLatestHeight, _ := cmd.Flags().GetBool(flagLatestHeight)
 
-			var height uint64
+			var height exported.Height
 
 			if !queryLatestHeight {
+				epoch, err := cmd.Flags().GetInt(flagEpochNumber)
+				if err != nil {
+					return fmt.Errorf("expected integer epoch: %w", err)
+				}
+
 				if len(args) != 2 {
 					return errors.New("must include a second 'height' argument when '--latest-height' flag is not provided")
 				}
 
-				height, err = strconv.ParseUint(args[1], 10, 64)
+				epochHeight, err := strconv.ParseUint(args[1], 10, 64)
 				if err != nil {
 					return fmt.Errorf("expected integer height, got: %s", args[1])
 				}
+				height = types.NewHeight(uint64(epoch), epochHeight)
 			}
 
 			prove, _ := cmd.Flags().GetBool(flags.FlagProve)
@@ -184,6 +194,7 @@ If the '--latest' flag is included, the query returns the latest consensus state
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	cmd.Flags().Bool(flagLatestHeight, false, "return latest stored consensus state")
+	cmd.Flags().Int(flagEpochNumber, 0, "epoch number of consensus height")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

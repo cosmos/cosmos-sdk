@@ -191,6 +191,7 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
+	Decrement() (Height, bool)
 	String() string
 }
 

@@ -43,9 +43,11 @@ func (q Keeper) ClientState(c context.Context, req *types.QueryClientStateReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// TODO: parse chain-id for epoch-number
+	proofHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
 	return &types.QueryClientStateResponse{
 		ClientState: any,
-		ProofHeight: uint64(ctx.BlockHeight()),
+		ProofHeight: &proofHeight,
 	}, nil
 }
 
@@ -108,20 +110,21 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		found          bool
 	)
 
+	height := types.NewHeight(req.EpochNumber, req.EpochHeight)
 	if req.LatestHeight {
 		consensusState, found = q.GetLatestClientConsensusState(ctx, req.ClientId)
 	} else {
-		if req.Height == 0 {
+		if req.EpochHeight == 0 {
 			return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
 		}
 
-		consensusState, found = q.GetClientConsensusState(ctx, req.ClientId, req.Height)
+		consensusState, found = q.GetClientConsensusState(ctx, req.ClientId, height)
 	}
 
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "client-id: %s, height: %d", req.ClientId, req.Height).Error(),
+			sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "client-id: %s, height: %s", req.ClientId, height).Error(),
 		)
 	}
 
@@ -130,9 +133,11 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// TODO: parse chain-id for epoch-number
+	proofHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
 	return &types.QueryConsensusStateResponse{
 		ConsensusState: any,
-		ProofHeight:    uint64(ctx.BlockHeight()),
+		ProofHeight:    &proofHeight,
 	}, nil
 }
 

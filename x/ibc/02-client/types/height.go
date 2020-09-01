@@ -79,7 +79,7 @@ func (h Height) String() string {
 // an error is returned
 // Decrement will return a new height with the EpochHeight decremented
 // If the EpochHeight is already at lowest value (1), then false success flag is returend
-func (h Height) Decrement() (decremented Height, success bool) {
+func (h Height) Decrement() (decremented exported.Height, success bool) {
 	if h.EpochHeight == 0 {
 		return Height{}, false
 	}

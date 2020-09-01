@@ -256,7 +256,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
 		Data: &signing.SingleSignatureData{
-			SignMode: txf.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).signMode,
+			SignMode: txf.signMode,
 		},
 		Sequence: txf.Sequence(),
 	}

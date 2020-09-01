@@ -76,6 +76,20 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			true,
 		},
 		{
+			"invalid misbehavior misbehaviour from different chain",
+			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
+			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), height, bothValsHash),
+			&types.Misbehaviour{
+				Header1:  types.CreateTestHeader("ethermint", int64(height.EpochHeight), int64(height.EpochHeight), suite.now, bothValSet, bothValSet, bothSigners),
+				Header2:  types.CreateTestHeader("ethermint", int64(height.EpochHeight), int64(height.EpochHeight), suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
+				ChainId:  "ethermint",
+				ClientId: chainID,
+			},
+			suite.now,
+			false,
+		},
+		{
 			"valid misbehavior misbehaviour with different trusted heights",
 			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), heightMinus1, bothValsHash),

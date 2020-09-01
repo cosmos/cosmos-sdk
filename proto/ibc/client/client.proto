@@ -40,6 +40,46 @@ message ClientUpdateProposal {
   google.protobuf.Any header = 4;
 }
 
+// MsgCreateClient defines a message to create an IBC client
+message MsgCreateClient {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // light client state
+  google.protobuf.Any client_state = 2
+      [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // consensus state associated with the client that corresponds to a given
+  // height.
+  google.protobuf.Any consensus_state = 3
+      [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // signer address
+  bytes signer = 4
+      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
+// the given header.
+message MsgUpdateClient {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // header to update the light client
+  google.protobuf.Any header = 2;
+  // signer address
+  bytes signer = 3
+      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+// MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
+// light client misbehaviour.
+message MsgSubmitMisbehaviour {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // misbehaviour used for freezing the light client
+  google.protobuf.Any misbehaviour = 2;
+  // signer address
+  bytes signer = 3
+      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
 // Height is a monotonically increasing data type
 // that can be compared against another Height for the purposes of updating and
 // freezing clients

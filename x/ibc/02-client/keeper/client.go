@@ -104,12 +104,8 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	if !found {
 		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
-	if err := misbehaviour.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "IBC misbehaviour failed validate basic")
-	}
 
 	clientState, err := clientState.CheckMisbehaviourAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, misbehaviour.GetClientID()), misbehaviour)
-
 	if err != nil {
 		return err
 	}

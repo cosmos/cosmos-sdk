@@ -34,6 +34,11 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 			true,
 		},
 		{
+			"empty ClientState",
+			&types.ClientState{},
+			false,
+		},
+		{
 			"sequence is zero",
 			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}),
 			false,

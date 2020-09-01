@@ -347,23 +347,6 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			true,
 		},
 		{
-			"misbehaviour fails validatebasic",
-			&ibctmtypes.Misbehaviour{
-				Header1:  ibctmtypes.CreateTestHeader(testChainID, height+1, height, altTime, bothValSet, bothValSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(testChainID, height, height, suite.ctx.BlockTime(), bothValSet, bothValSet, bothSigners),
-				ChainId:  testChainID,
-				ClientId: testClientID,
-			},
-			func() error {
-				suite.consensusState.NextValidatorsHash = bothValsHash
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, latestTimestamp, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
-
-				return err
-			},
-			false,
-		},
-		{
 			"trusted ConsensusState1 not found",
 			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(testChainID, height+5, height+3, altTime, bothValSet, bothValSet, bothSigners),

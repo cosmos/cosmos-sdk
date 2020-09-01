@@ -125,8 +125,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 	// create current header and call begin block
 	header := tmproto.Header{
-		Height: 1,
-		Time:   globalStartTime,
+		ChainID: chainID,
+		Height:  1,
+		Time:    globalStartTime,
 	}
 
 	txConfig := simapp.MakeEncodingConfig().TxConfig
@@ -369,19 +370,41 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
-func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string) clientexported.MsgCreateClient {
-	return ibctmtypes.NewMsgCreateClient(
-		clientID, counterparty.LastHeader,
-		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-		commitmenttypes.GetSDKSpecs(), false, false, chain.SenderAccount.GetAddress(),
+// ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
+func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
+	var (
+		clientState    clientexported.ClientState
+		consensusState clientexported.ConsensusState
 	)
+
+	switch clientType {
+	case clientexported.ClientTypeTendermint:
+		clientState = ibctmtypes.NewClientState(
+			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
+			clienttypes.NewHeight(0, counterparty.LastHeader.GetHeight()), commitmenttypes.GetSDKSpecs(),
+			false, false,
+		)
+		consensusState = counterparty.LastHeader.ConsensusState()
+	case clientexported.ClientTypeSoloMachine:
+		solo := NewSolomachine(chain.t, clientID)
+		clientState = solo.ClientState()
+		consensusState = solo.ConsensusState()
+	default:
+		chain.t.Fatalf("unsupported client state type %s", clientType)
+	}
+
+	msg, err := clienttypes.NewMsgCreateClient(
+		clientID, clientState, consensusState, chain.SenderAccount.GetAddress(),
+	)
+	require.NoError(chain.t, err)
+	return msg
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, clientexported.ClientTypeTendermint)
 	return chain.sendMsgs(msg)
 }
 
@@ -422,10 +445,11 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	}
 	header.TrustedValidators = trustedVals
 
-	msg := ibctmtypes.NewMsgUpdateClient(
+	msg, err := clienttypes.NewMsgUpdateClient(
 		clientID, header,
 		chain.SenderAccount.GetAddress(),
 	)
+	require.NoError(chain.t, err)
 
 	return chain.sendMsgs(msg)
 }

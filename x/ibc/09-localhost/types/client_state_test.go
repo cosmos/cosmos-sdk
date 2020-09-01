@@ -118,6 +118,13 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	)
 	suite.Require().NoError(err)
 }
+func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
+	clientState := types.NewClientState("chainID", clientHeight)
+	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
+	suite.Require().NoError(err)
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight()))
+	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
+}
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, commitmenttypes.NewMerklePrefix([]byte("ibc")))

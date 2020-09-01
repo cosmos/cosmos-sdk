@@ -18,6 +18,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&ConsensusState{},
 	)
 	registry.RegisterImplementations(
+		(*clientexported.Header)(nil),
+		&Header{},
+	)
+	registry.RegisterImplementations(
 		(*clientexported.Misbehaviour)(nil),
 		&Misbehaviour{},
 	)

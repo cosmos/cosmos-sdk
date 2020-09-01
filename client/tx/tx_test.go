@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	sim "github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -32,12 +32,12 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := &sdk.SimulationResponse{
-				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
+			simRes := &sim.SimulateResponse{
+				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
-			bz, err := codec.ProtoMarshalJSON(simRes)
+			bz, err := simRes.Marshal()
 			if err != nil {
 				return nil, 0, err
 			}

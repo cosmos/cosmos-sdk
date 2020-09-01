@@ -12,7 +12,7 @@ Proposed
 ## Context
 
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
-seralization is not unique (i.e. there exist a practically unlimited number of
+serialization is not unique (i.e. there exist a practically unlimited number of
 valid binary representations for a protobuf document)<sup>1</sup>. For signature
 verification in Cosmos SDK, signer and verifier need to agree on the same
 serialization of a SignDoc as defined in
@@ -31,7 +31,7 @@ This ADR defines a protobuf3 serializer. The output is a valid protobuf
 serialization, such that every protobuf parser can parse it.
 
 No maps are supported in version 1 due to the complexity of defining a
-derterministic serialization. This might change in future. Implementations must
+deterministic serialization. This might change in future. Implementations must
 reject documents containing maps as invalid input.
 
 ### Serialization rules
@@ -50,7 +50,7 @@ with the following additions:
 5. Variant encoding of integers must not be longer than needed.
 
 While rule number 1. and 2. should be pretty straight forward and describe the
-default behaviour of all protobuf encoders the author is aware of, the 3rd rule
+default behavior of all protobuf encoders the author is aware of, the 3rd rule
 is more interesting. After a protobuf 3 deserialization you cannot differentiate
 between unset fields and fields set to the default value<sup>2</sup>. At
 serialization level however, it is possible to set the fields with an empty
@@ -232,8 +232,8 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
-  don't have a boolean that switches on some behaviour when set to false if you
-  don't want that behaviour to also happen by default._ from
+  don't have a boolean that switches on some behavior when set to false if you
+  don't want that behavior to also happen by default._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
 - <sup>3</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed

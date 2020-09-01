@@ -423,8 +423,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 	var expectedHeight int64
 	if app.LastBlockHeight() == 0 && app.initialHeight > 1 {
 		// In this case, we're validating the first block of the chain (no
-		// previous commit). The height we're expecting is the initial height
-		// (can be 0).
+		// previous commit). The height we're expecting is the initial height.
 		expectedHeight = app.initialHeight
 	} else {
 		// This case can means two things:

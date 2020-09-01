@@ -1,8 +1,9 @@
 package snapshots
 
 import (
-	"errors"
 	"io"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ChunkWriter reads an input stream, splits it into fixed-size chunks, and writes them to a
@@ -66,7 +67,7 @@ func (w *ChunkWriter) CloseWithError(err error) {
 // Write implements io.Writer.
 func (w *ChunkWriter) Write(data []byte) (int, error) {
 	if w.closed {
-		return 0, errors.New("cannot write to closed ChunkWriter")
+		return 0, sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot write to closed ChunkWriter")
 	}
 	nTotal := 0
 	for len(data) > 0 {

@@ -3,13 +3,12 @@ package snapshots
 import (
 	"bytes"
 	"crypto/sha256"
-	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -73,10 +72,10 @@ func (m *Manager) begin(op operation) error {
 // beginLocked begins an operation while already holding the mutex.
 func (m *Manager) beginLocked(op operation) error {
 	if op == opNone {
-		return errors.New("can't begin a none operation")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "can't begin a none operation")
 	}
 	if m.operation != opNone {
-		return fmt.Errorf("a %v operation is in progress", m.operation)
+		return sdkerrors.Wrapf(sdkerrors.ErrConflict, "a %v operation is in progress", m.operation)
 	}
 	m.operation = op
 	return nil
@@ -104,7 +103,7 @@ func (m *Manager) endLocked() {
 // Create creates a snapshot and returns its metadata.
 func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m == nil {
-		return nil, errors.New("no snapshot store configured")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "no snapshot store configured")
 	}
 	err := m.begin(opSnapshot)
 	if err != nil {
@@ -114,10 +113,11 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 
 	latest, err := m.store.GetLatest()
 	if err != nil {
-		return nil, fmt.Errorf("failed to examine latest snapshot: %w", err)
+		return nil, sdkerrors.Wrap(err, "failed to examine latest snapshot")
 	}
 	if latest != nil && latest.Height >= height {
-		return nil, fmt.Errorf("a more recent snapshot already exists at height %v", latest.Height)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
+			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
 	chunks, err := m.target.Snapshot(height, types.CurrentFormat)
@@ -161,11 +161,10 @@ func (m *Manager) Prune(retain uint32) (uint64, error) {
 // via RestoreChunk() until the restore is complete or a chunk fails.
 func (m *Manager) Restore(snapshot types.Snapshot) error {
 	if snapshot.Chunks == 0 {
-		return fmt.Errorf("%w: no chunks", types.ErrInvalidMetadata)
+		return sdkerrors.Wrap(types.ErrInvalidMetadata, "no chunks")
 	}
 	if uint32(len(snapshot.Metadata.ChunkHashes)) != snapshot.Chunks {
-		return fmt.Errorf("%w: snapshot has %v chunk hashes, but %v chunks",
-			types.ErrInvalidMetadata,
+		return sdkerrors.Wrapf(types.ErrInvalidMetadata, "snapshot has %v chunk hashes, but %v chunks",
 			uint32(len(snapshot.Metadata.ChunkHashes)),
 			snapshot.Chunks)
 	}
@@ -196,7 +195,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		if done.err != nil {
 			return done.err
 		}
-		return errors.New("restore ended unexpectedly")
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
 	case <-chReady:
 	}
 
@@ -213,11 +212,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	if m.operation != opRestore {
-		return false, fmt.Errorf("no restore operation in progress")
+		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "no restore operation in progress")
 	}
 
 	if int(m.restoreChunkIndex) >= len(m.restoreChunkHashes) {
-		return false, errors.New("received unexpected chunk")
+		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "received unexpected chunk")
 	}
 
 	// Check if any errors have occurred yet.
@@ -227,7 +226,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		if done.err != nil {
 			return false, done.err
 		}
-		return false, errors.New("restore ended unexpectedly")
+		return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended unexpectedly")
 	default:
 	}
 
@@ -235,8 +234,8 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	hash := sha256.Sum256(chunk)
 	expected := m.restoreChunkHashes[m.restoreChunkIndex]
 	if !bytes.Equal(hash[:], expected) {
-		return false, fmt.Errorf("%w (expected %x, got %x)",
-			types.ErrChunkHashMismatch, hash, expected)
+		return false, sdkerrors.Wrapf(types.ErrChunkHashMismatch,
+			"expected %x, got %x", hash, expected)
 	}
 
 	// Pass the chunk to the restore, and wait for completion if it was the final one.
@@ -252,7 +251,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 			return false, done.err
 		}
 		if !done.complete {
-			return false, errors.New("restore ended prematurely")
+			return false, sdkerrors.Wrap(sdkerrors.ErrLogic, "restore ended prematurely")
 		}
 		return true, nil
 	}

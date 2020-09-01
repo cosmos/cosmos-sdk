@@ -1,8 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
-
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -17,7 +16,7 @@ func SnapshotFromABCI(in *abci.Snapshot) (Snapshot, error) {
 	}
 	err := proto.Unmarshal(in.Metadata, &snapshot.Metadata)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("failed to unmarshal snapshot metadata: %w", err)
+		return Snapshot{}, sdkerrors.Wrap(err, "failed to unmarshal snapshot metadata")
 	}
 	return snapshot, nil
 }
@@ -33,7 +32,7 @@ func (s Snapshot) ToABCI() (abci.Snapshot, error) {
 	var err error
 	out.Metadata, err = proto.Marshal(&s.Metadata)
 	if err != nil {
-		return abci.Snapshot{}, fmt.Errorf("failed to marshal snapshot metadata: %w", err)
+		return abci.Snapshot{}, sdkerrors.Wrap(err, "failed to marshal snapshot metadata")
 	}
 	return out, nil
 }

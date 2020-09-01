@@ -544,13 +544,13 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, error) {
 	if format != snapshottypes.CurrentFormat {
-		return nil, fmt.Errorf("%w %v", snapshottypes.ErrUnknownFormat, format)
+		return nil, sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
 	}
 	if height == 0 {
-		return nil, errors.New("cannot snapshot height 0")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot snapshot height 0")
 	}
 	if height > uint64(rs.LastCommitID().Version) {
-		return nil, fmt.Errorf("cannot snapshot future height %v", height)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
@@ -567,7 +567,8 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
-			return nil, errors.Errorf("don't know how to snapshot store %q of type %T", key.Name(), store)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic,
+				"don't know how to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
 	sort.Slice(stores, func(i, j int) bool {
@@ -589,7 +590,7 @@ func (rs *Store) Snapshot(height uint64, format uint32) (<-chan io.ReadCloser, e
 		}()
 		zWriter, err := zlib.NewWriterLevel(bufWriter, 7)
 		if err != nil {
-			chunkWriter.CloseWithError(fmt.Errorf("zlib error: %w", err))
+			chunkWriter.CloseWithError(sdkerrors.Wrap(err, "zlib failure"))
 			return
 		}
 		defer func() {
@@ -662,14 +663,14 @@ func (rs *Store) Restore(
 	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
 ) error {
 	if format != snapshottypes.CurrentFormat {
-		return fmt.Errorf("%w %v", snapshottypes.ErrUnknownFormat, format)
+		return sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
 	}
 	if height == 0 {
-		return fmt.Errorf("%w: cannot restore snapshot at height 0", snapshottypes.ErrInvalidMetadata)
+		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if height > math.MaxInt64 {
-		return fmt.Errorf("%w: snapshot height %v cannot exceed %v", snapshottypes.ErrInvalidMetadata,
-			height, math.MaxInt64)
+		return sdkerrors.Wrapf(sdkerrors.ErrLogic, "snapshot height %v cannot exceed %v",
+			snapshottypes.ErrInvalidMetadata, height, math.MaxInt64)
 	}
 
 	// Signal readiness. Must be done before the readers below are set up, since the zlib
@@ -684,7 +685,7 @@ func (rs *Store) Restore(
 	defer chunkReader.Close()
 	zReader, err := zlib.NewReader(chunkReader)
 	if err != nil {
-		return fmt.Errorf("zlib error: %w", err)
+		return sdkerrors.Wrap(err, "zlib failure")
 	}
 	defer zReader.Close()
 	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
@@ -700,7 +701,7 @@ func (rs *Store) Restore(
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return fmt.Errorf("invalid protobuf message: %w", err)
+			return sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 
 		switch item := item.Item.(type) {
@@ -708,26 +709,27 @@ func (rs *Store) Restore(
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
-					return fmt.Errorf("IAVL commit failed: %w", err)
+					return sdkerrors.Wrap(err, "IAVL commit failed")
 				}
 				importer.Close()
 			}
 			store, ok := rs.getStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
-				return fmt.Errorf("cannot import into non-IAVL store %q", item.Store.Name)
+				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
 			}
 			importer, err = store.Import(int64(height))
 			if err != nil {
-				return fmt.Errorf("import failed: %w", err)
+				return sdkerrors.Wrap(err, "import failed")
 			}
 			defer importer.Close()
 
 		case *types.SnapshotItem_IAVL:
 			if importer == nil {
-				return fmt.Errorf("received IAVL node item before store item")
+				return sdkerrors.Wrap(sdkerrors.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {
-				return fmt.Errorf("node height %v cannot exceed %v", item.IAVL.Height, math.MaxInt8)
+				return sdkerrors.Wrapf(sdkerrors.ErrLogic, "node height %v cannot exceed %v",
+					item.IAVL.Height, math.MaxInt8)
 			}
 			node := &iavltree.ExportNode{
 				Key:     item.IAVL.Key,
@@ -745,18 +747,18 @@ func (rs *Store) Restore(
 			}
 			err := importer.Add(node)
 			if err != nil {
-				return fmt.Errorf("IAVL node import failed: %w", err)
+				return sdkerrors.Wrap(err, "IAVL node import failed")
 			}
 
 		default:
-			return fmt.Errorf("unknown snapshot item %T", item)
+			return sdkerrors.Wrapf(sdkerrors.ErrLogic, "unknown snapshot item %T", item)
 		}
 	}
 
 	if importer != nil {
 		err := importer.Commit()
 		if err != nil {
-			return fmt.Errorf("IAVL commit failed: %w", err)
+			return sdkerrors.Wrap(err, "IAVL commit failed")
 		}
 		importer.Close()
 	}

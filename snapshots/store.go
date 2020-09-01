@@ -3,8 +3,6 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"io"
 	"math"
 	"os"
@@ -16,6 +14,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -35,11 +34,11 @@ type Store struct {
 // NewStore creates a new snapshot store.
 func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
-		return nil, errors.New("snapshot directory not given")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot directory not given")
 	}
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
+		return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 
 	return &Store{
@@ -55,17 +54,18 @@ func (s *Store) Delete(height uint64, format uint32) error {
 	saving := s.saving[height]
 	s.mtx.Unlock()
 	if saving {
-		return fmt.Errorf("snapshot for height %v format %v is currently being saved", height, format)
+		return sdkerrors.Wrapf(sdkerrors.ErrConflict,
+			"snapshot for height %v format %v is currently being saved", height, format)
 	}
 	err := s.db.DeleteSync(encodeKey(height, format))
 	if err != nil {
-		return fmt.Errorf("failed to delete snapshot for height %v format %v: %w",
-			height, format, err)
+		return sdkerrors.Wrapf(err, "failed to delete snapshot for height %v format %v",
+			height, format)
 	}
 	err = os.RemoveAll(s.pathSnapshot(height, format))
 	if err != nil {
-		return fmt.Errorf("failed to delete snapshot chunks for height %v format %v: %w",
-			height, format, err)
+		return sdkerrors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
+			height, format)
 	}
 	return nil
 }
@@ -74,8 +74,8 @@ func (s *Store) Delete(height uint64, format uint32) error {
 func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	bytes, err := s.db.Get(encodeKey(height, format))
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch snapshot metadata for height %v format %v: %w",
-			height, format, err)
+		return nil, sdkerrors.Wrapf(err, "failed to fetch snapshot metadata for height %v format %v",
+			height, format)
 	}
 	if bytes == nil {
 		return nil, nil
@@ -83,8 +83,8 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	snapshot := &types.Snapshot{}
 	err = proto.Unmarshal(bytes, snapshot)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode snapshot metadata for height %v format %v: %w",
-			height, format, err)
+		return nil, sdkerrors.Wrapf(err, "failed to decode snapshot metadata for height %v format %v",
+			height, format)
 	}
 	if snapshot.Metadata.ChunkHashes == nil {
 		snapshot.Metadata.ChunkHashes = [][]byte{}
@@ -96,7 +96,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 func (s *Store) GetLatest() (*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
-		return nil, fmt.Errorf("failed to find latest snapshot: %w", err)
+		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
 	}
 	defer iter.Close()
 
@@ -105,12 +105,12 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 		snapshot = &types.Snapshot{}
 		err := proto.Unmarshal(iter.Value(), snapshot)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode latest snapshot: %w", err)
+			return nil, sdkerrors.Wrap(err, "failed to decode latest snapshot")
 		}
 	}
 	err = iter.Error()
 	if err != nil {
-		return nil, fmt.Errorf("failed to find latest snapshot: %w", err)
+		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
 	}
 	return snapshot, nil
 }
@@ -119,7 +119,7 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 func (s *Store) List() ([]*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
-		return nil, fmt.Errorf("failed to list snapshots: %w", err)
+		return nil, sdkerrors.Wrap(err, "failed to list snapshots")
 	}
 	defer iter.Close()
 
@@ -128,7 +128,7 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		snapshot := &types.Snapshot{}
 		err := proto.Unmarshal(iter.Value(), snapshot)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode snapshot info: %w", err)
+			return nil, sdkerrors.Wrap(err, "failed to decode snapshot info")
 		}
 		snapshots = append(snapshots, snapshot)
 	}
@@ -200,7 +200,7 @@ func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.Re
 func (s *Store) Prune(retain uint32) (uint64, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
 	if err != nil {
-		return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+		return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 	}
 	defer iter.Close()
 
@@ -210,7 +210,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 	for ; iter.Valid(); iter.Next() {
 		height, format, err := decodeKey(iter.Key())
 		if err != nil {
-			return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+			return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 		}
 		if skip[height] || uint32(len(skip)) < retain {
 			skip[height] = true
@@ -218,7 +218,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 		}
 		err = s.Delete(height, format)
 		if err != nil {
-			return 0, fmt.Errorf("failed to prune snapshots: %w", err)
+			return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 		}
 		pruned++
 		prunedHeights[height] = true
@@ -229,7 +229,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 		if ok {
 			err = os.Remove(s.pathHeight(height))
 			if err != nil {
-				return 0, fmt.Errorf("failed to remove snapshot directory for height %v", height)
+				return 0, sdkerrors.Wrapf(err, "failed to remove snapshot directory for height %v", height)
 			}
 		}
 	}
@@ -246,7 +246,7 @@ func (s *Store) Save(
 ) (*types.Snapshot, error) {
 	defer DrainChunks(chunks)
 	if height == 0 {
-		return nil, errors.New("snapshot height cannot be 0")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "snapshot height cannot be 0")
 	}
 
 	s.mtx.Lock()
@@ -254,7 +254,8 @@ func (s *Store) Save(
 	s.saving[height] = true
 	s.mtx.Unlock()
 	if saving {
-		return nil, fmt.Errorf("a snapshot for height %v is already being saved", height)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
+			"a snapshot for height %v is already being saved", height)
 	}
 	defer func() {
 		s.mtx.Lock()
@@ -267,7 +268,8 @@ func (s *Store) Save(
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("snapshot already exists for height %v format %v", height, format)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict,
+			"snapshot already exists for height %v format %v", height, format)
 	}
 
 	snapshot := &types.Snapshot{
@@ -282,26 +284,26 @@ func (s *Store) Save(
 		dir := s.pathSnapshot(height, format)
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create snapshot directory %q: %w", dir, err)
+			return nil, sdkerrors.Wrapf(err, "failed to create snapshot directory %q", dir)
 		}
 		path := s.pathChunk(height, format, index)
 		file, err := os.Create(path)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create snapshot chunk file %q: %w", path, err)
+			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 		}
 		defer file.Close() // nolint: staticcheck
 		chunkHasher.Reset()
 		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate snapshot chunk %v: %w", index, err)
+			return nil, sdkerrors.Wrapf(err, "failed to generate snapshot chunk %v", index)
 		}
 		err = file.Close()
 		if err != nil {
-			return nil, fmt.Errorf("failed to close snapshot chunk %v: %w", index, err)
+			return nil, sdkerrors.Wrapf(err, "failed to close snapshot chunk %v", index)
 		}
 		err = chunkBody.Close()
 		if err != nil {
-			return nil, fmt.Errorf("failed to close snapshot chunk %v: %w", index, err)
+			return nil, sdkerrors.Wrapf(err, "failed to close snapshot chunk %v", index)
 		}
 		snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 		index++
@@ -319,11 +321,11 @@ func (s *Store) Save(
 func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 	value, err := proto.Marshal(snapshot)
 	if err != nil {
-		return fmt.Errorf("failed to encode snapshot metadata: %w", err)
+		return sdkerrors.Wrap(err, "failed to encode snapshot metadata")
 	}
 	err = s.db.SetSync(encodeKey(snapshot.Height, snapshot.Format), value)
 	if err != nil {
-		return fmt.Errorf("failed to store snapshot: %w", err)
+		return sdkerrors.Wrap(err, "failed to store snapshot")
 	}
 	return nil
 }
@@ -346,10 +348,10 @@ func (s *Store) pathChunk(height uint64, format uint32, chunk uint32) string {
 // decodeKey decodes a snapshot key.
 func decodeKey(k []byte) (uint64, uint32, error) {
 	if len(k) != 13 {
-		return 0, 0, fmt.Errorf("invalid snapshot key with length %v", len(k))
+		return 0, 0, sdkerrors.Wrapf(sdkerrors.ErrLogic, "invalid snapshot key with length %v", len(k))
 	}
 	if k[0] != keyPrefixSnapshot {
-		return 0, 0, fmt.Errorf("invalid snapshot key prefix %x", k[0])
+		return 0, 0, sdkerrors.Wrapf(sdkerrors.ErrLogic, "invalid snapshot key prefix %x", k[0])
 	}
 	height := binary.BigEndian.Uint64(k[1:9])
 	format := binary.BigEndian.Uint32(k[9:13])

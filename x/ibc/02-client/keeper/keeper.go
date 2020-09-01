@@ -175,10 +175,6 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 // less than or equal to the given height
 // It will only search for heights within the same epoch
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
-	found := k.HasClientConsensusState(ctx, clientID, maxHeight)
-	if found {
-		return k.GetClientConsensusState(ctx, clientID, maxHeight)
-	}
 	h := maxHeight
 	ok := true
 	for ok {

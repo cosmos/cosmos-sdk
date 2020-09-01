@@ -43,7 +43,6 @@ func (q Keeper) ClientState(c context.Context, req *types.QueryClientStateReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// TODO: parse chain-id for epoch-number
 	proofHeight := types.GetSelfHeight(ctx)
 	return &types.QueryClientStateResponse{
 		ClientState: any,
@@ -133,7 +132,6 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// TODO: parse chain-id for epoch-number
 	proofHeight := types.GetSelfHeight(ctx)
 	return &types.QueryConsensusStateResponse{
 		ConsensusState: any,

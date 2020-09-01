@@ -2,8 +2,11 @@ package types
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
@@ -73,7 +76,7 @@ func (h Height) EQ(other exported.Height) bool {
 
 // String returns a string representation of Height
 func (h Height) String() string {
-	return fmt.Sprintf("epoch-%d-height-%d", h.EpochNumber, h.EpochHeight)
+	return fmt.Sprintf("%d-%d", h.EpochNumber, h.EpochHeight)
 }
 
 // Decrement will return a decremented height from the given height. If this is not possible,
@@ -97,6 +100,24 @@ func (h Height) Increment() Height {
 // IsZero returns true if height epoch and epoch-height are both 0
 func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
+}
+
+// ParseHeight is a utility function that takes a string representation of the height
+// and returns a Height struct
+func ParseHeight(heightStr string) (Height, error) {
+	splitStr := strings.Split(heightStr, "-")
+	if len(splitStr) != 2 {
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {epoch}-{height}. Got: %s", heightStr)
+	}
+	epochNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
+	if err != nil {
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid epoch number. parse err: %s", err)
+	}
+	epochHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
+	if err != nil {
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid epoch height. parse err: %s", err)
+	}
+	return NewHeight(epochNumber, epochHeight), nil
 }
 
 // GetSelfHeight is a utility function that returns self height given context

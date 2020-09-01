@@ -92,7 +92,8 @@ func TestBuildSimTx(t *testing.T) {
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithSignMode(signing2.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := tx.BuildSimTx(txf, msg)

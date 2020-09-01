@@ -55,23 +55,16 @@ message ClientState {
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
 
-  // Latest timestamp which the client has been updated to
-   google.protobuf.Timestamp  latest_timestamp = 9 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"latest_timestamp\""
-  ];
-
-  // This flag, when set to true, will allow governance to recover a client which has expired
-  bool allow_governance_override_after_expiry = 10[
-    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_expiry,omitempty\""
-  ];
-  // This flag, when set to true, will allow governance to unfreeze a client 
+  // This flag, when set to true, will allow governance to recover a client
+  // which has expired
+  bool allow_governance_override_after_expiry = 9
+      [(gogoproto.moretags) =
+           "yaml:\"allow_governance_override_after_expiry,omitempty\""];
+  // This flag, when set to true, will allow governance to unfreeze a client
   // whose chain has experienced a misbehaviour event
-  bool allow_governance_override_after_misbehaviour = 11[
-    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""
-  ];
-  
+  bool allow_governance_override_after_misbehaviour = 10
+      [(gogoproto.moretags) =
+           "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""];
 }
 
 // ConsensusState defines the consensus state from Tendermint.
@@ -85,10 +78,8 @@ message ConsensusState {
   // commitment root (i.e app hash)
   ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
   // height at which the consensus state was stored.
-  ibc.client.Height height = 3 [
-    (gogoproto.nullable) = false
-  ];
-  bytes  next_validators_hash = 4 [
+  ibc.client.Height height               = 3 [(gogoproto.nullable) = false];
+  bytes             next_validators_hash = 4 [
     (gogoproto.casttype) =
         "github.com/tendermint/tendermint/libs/bytes.HexBytes",
     (gogoproto.moretags) = "yaml:\"next_validators_hash\""
@@ -176,16 +167,17 @@ message MsgCreateClient {
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
   bytes signer = 8
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  
-  // This flag, when set to true, will allow governance to recover a client which has expired
-  bool allow_governance_override_after_expiry = 9[
-    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_expiry,omitempty\""
-  ];
-  // This flag, when set to true, will allow governance to unfreeze a client 
+
+  // This flag, when set to true, will allow governance to recover a client
+  // which has expired
+  bool allow_governance_override_after_expiry = 9
+      [(gogoproto.moretags) =
+           "yaml:\"allow_governance_override_after_expiry,omitempty\""];
+  // This flag, when set to true, will allow governance to unfreeze a client
   // whose chain has experienced a misbehaviour event
-  bool allow_governance_override_after_misbehaviour = 10[
-    (gogoproto.moretags) = "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""
-  ];
+  bool allow_governance_override_after_misbehaviour = 10
+      [(gogoproto.moretags) =
+           "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""];
 }
 
 // MsgCreateClient defines an sdk.Msg to update a tendermint client state to
@@ -204,7 +196,7 @@ message MsgUpdateClient {
 message MsgSubmitClientMisbehaviour {
   option (gogoproto.goproto_getters) = false;
 
-  Misbehaviour misbehaviour  = 1;
-  bytes        signer = 2
+  Misbehaviour misbehaviour = 1;
+  bytes        signer       = 2
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

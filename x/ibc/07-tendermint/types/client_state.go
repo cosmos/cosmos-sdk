@@ -60,11 +60,6 @@ func (cs ClientState) GetLatestHeight() uint64 {
 	return cs.LatestHeight.EpochHeight
 }
 
-// GetLatestTimestamp returns latest block time (in nanoseconds).
-func (cs ClientState) GetLatestTimestamp() uint64 {
-	return uint64(cs.LatestTimestamp.UnixNano())
-}
-
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
 	return !cs.FrozenHeight.IsZero()
@@ -79,7 +74,7 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 
 //Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
 func (cs *ClientState) Unfreeze() error {
-	cs.FrozenHeight = 0
+	cs.FrozenHeight = clienttypes.NewHeight(0, 0)
 	return nil
 }
 
@@ -116,7 +111,6 @@ func (cs ClientState) Validate() error {
 			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
 		)
 	}
-	// Validate ProofSpecs
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}

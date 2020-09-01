@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
@@ -17,7 +16,6 @@ import (
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
@@ -133,42 +131,36 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
-// Misbehaviour defines a specific consensus kind and an evidence
+// TypeClientMisbehaviour is the shared evidence misbehaviour type
+const TypeClientMisbehaviour string = "client_misbehaviour"
+
+// Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
-	evidenceexported.Evidence
 	ClientType() ClientType
 	GetClientID() string
+	String() string
+	ValidateBasic() error
+
+	// Height at which the infraction occurred
+	GetHeight() uint64
 }
 
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+	ValidateBasic() error
 }
 
-// message types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-)
-
-// MsgCreateClient defines the msg interface that the
-// CreateClient Handler expects
-type MsgCreateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetClientType() string
-	GetConsensusState() ConsensusState
-	InitializeClientState() ClientState
-}
-
-// MsgUpdateClient defines the msg interface that the
-// UpdateClient Handler expects
-type MsgUpdateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetHeader() Header
+// Height is a wrapper interface over clienttypes.Height
+// all clients must use the concrete implementation in types
+type Height interface {
+	IsZero() bool
+	LT(Height) bool
+	LTE(Height) bool
+	EQ(Height) bool
+	GT(Height) bool
+	GTE(Height) bool
 }
 
 // ClientType defines the type of the consensus algorithm
@@ -190,6 +182,8 @@ const (
 
 func (ct ClientType) String() string {
 	switch ct {
+	case SoloMachine:
+		return ClientTypeSoloMachine
 	case Tendermint:
 		return ClientTypeTendermint
 	case Localhost:
@@ -225,6 +219,8 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 // type. It returns 0 if the type is not found/registered.
 func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
+	case ClientTypeSoloMachine:
+		return SoloMachine
 	case ClientTypeTendermint:
 		return Tendermint
 	case ClientTypeLocalHost:

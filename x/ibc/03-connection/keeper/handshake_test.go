@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight++
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
 		}, false},
 		{"consensus state verification failed", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
-			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, tmConsState.Height, tmConsState)
+			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, tmConsState.GetHeight(), tmConsState)
 
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -413,7 +413,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// modify counterparty client without setting in store so it still passes validate but fails proof verification
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
 			suite.Require().True(ok)
-			tmClient.LatestHeight++
+			tmClient.LatestHeight = tmClient.LatestHeight.Increment()
 
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
@@ -434,7 +434,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
-			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.Height, tmConsState)
+			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.GetHeight(), tmConsState)
 
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
@@ -535,7 +535,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			tc.malleate()
 
 			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
-			connB := suite.chainA.GetFirstTestConnection(clientB, clientA)
+			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
 			connectionKey := host.KeyConnection(connA.ID)
 			proofAck, proofHeight := suite.chainA.QueryProof(connectionKey)

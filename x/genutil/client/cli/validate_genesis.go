@@ -41,7 +41,7 @@ func ValidateGenesisCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfi
 			}
 
 			var genState map[string]json.RawMessage
-			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
+			if err = json.Unmarshal(genDoc.AppState, &genState); err != nil {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 

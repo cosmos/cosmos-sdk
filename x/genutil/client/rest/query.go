@@ -31,10 +31,10 @@ func QueryGenesisTxs(clientCtx client.Context, w http.ResponseWriter) {
 		return
 	}
 
-	genState := types.GetGenesisStateFromAppState(clientCtx.LegacyAmino, appState)
+	genState := types.GetGenesisStateFromAppState(clientCtx.JSONMarshaler, appState)
 	genTxs := make([]sdk.Tx, len(genState.GenTxs))
 	for i, tx := range genState.GenTxs {
-		err := clientCtx.JSONMarshaler.UnmarshalJSON(tx, &genTxs[i])
+		err := clientCtx.LegacyAmino.UnmarshalJSON(tx, &genTxs[i])
 		if err != nil {
 			rest.WriteErrorResponse(
 				w, http.StatusInternalServerError,

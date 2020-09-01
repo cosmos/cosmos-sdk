@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -72,7 +73,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{

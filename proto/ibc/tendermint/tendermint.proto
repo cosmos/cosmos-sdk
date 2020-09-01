@@ -8,6 +8,7 @@ import "tendermint/types/types.proto";
 import "confio/proofs.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "ibc/client/client.proto";
 import "ibc/commitment/commitment.proto";
 import "gogoproto/gogo.proto";
 
@@ -41,9 +42,15 @@ message ClientState {
     (gogoproto.moretags)    = "yaml:\"max_clock_drift\""
   ];
   // Block height when the client was frozen due to a misbehaviour
-  uint64 frozen_height = 6 [(gogoproto.moretags) = "yaml:\"frozen_height\""];
+  ibc.client.Height frozen_height = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"frozen_height\""
+  ];
   // Latest height the client was updated to
-  uint64 latest_height = 7 [(gogoproto.moretags) = "yaml:\"latest_height\""];
+  ibc.client.Height latest_height = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"latest_height\""
+  ];
   // Proof specifications used in verifying counterparty state
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
@@ -60,17 +67,17 @@ message ConsensusState {
   // commitment root (i.e app hash)
   ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
   // height at which the consensus state was stored.
-  uint64 height               = 3;
-  bytes  next_validators_hash = 4 [
+  ibc.client.Height height               = 3 [(gogoproto.nullable) = false];
+  bytes             next_validators_hash = 4 [
     (gogoproto.casttype) =
         "github.com/tendermint/tendermint/libs/bytes.HexBytes",
     (gogoproto.moretags) = "yaml:\"next_validators_hash\""
   ];
 }
 
-// Evidence is a wrapper over two conflicting Headers
-// that implements Evidence interface expected by ICS-02
-message Evidence {
+// Misbehaviour is a wrapper over two conflicting Headers
+// that implements Misbehaviour interface expected by ICS-02
+message Misbehaviour {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
@@ -78,12 +85,10 @@ message Evidence {
   string chain_id  = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   Header header_1  = 3 [
     (gogoproto.customname) = "Header1",
-    (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"header_1\""
   ];
   Header header_2 = 4 [
     (gogoproto.customname) = "Header2",
-    (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"header_2\""
   ];
 }
@@ -103,13 +108,15 @@ message Evidence {
 message Header {
   .tendermint.types.SignedHeader signed_header = 1 [
     (gogoproto.embed)    = true,
-    (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"signed_header\""
   ];
 
   .tendermint.types.ValidatorSet validator_set = 2
       [(gogoproto.moretags) = "yaml:\"validator_set\""];
-  uint64 trusted_height = 3 [(gogoproto.moretags) = "yaml:\"trusted_height\""];
+  ibc.client.Height trusted_height = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"trusted_height\""
+  ];
   .tendermint.types.ValidatorSet trusted_validators = 4
       [(gogoproto.moretags) = "yaml:\"trusted_validators\""];
 }
@@ -119,3 +126,4 @@ message Fraction {
   int64 numerator   = 1;
   int64 denominator = 2;
 }
+

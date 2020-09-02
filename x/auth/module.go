@@ -6,8 +6,9 @@ import (
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -110,10 +111,8 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the x/auth module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper))
-}
+// Route returns the message routing key for the auth module.
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // QuerierRoute returns the auth module's querier route name.
 func (AppModule) QuerierRoute() string {

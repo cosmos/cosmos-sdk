@@ -2,14 +2,14 @@ package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	var (
-		clientState  clientexported.ClientState
-		misbehaviour clientexported.Misbehaviour
+		clientState  exported.ClientState
+		misbehaviour exported.Misbehaviour
 	)
 
 	testCases := []struct {

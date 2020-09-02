@@ -3,13 +3,10 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// Message types for the x/auth module.
-const (
-	TypeMsgCreateVestingAccount = "msg_create_vesting_account"
-)
+// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
+const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
 
 var _ sdk.Msg = &MsgCreateVestingAccount{}
 
@@ -25,7 +22,7 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 }
 
 // Route returns the message route for a MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) Route() string { return authtypes.RouterKey }
+func (msg MsgCreateVestingAccount) Route() string { return RouterKey }
 
 // Type returns the message type for a MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) Type() string { return TypeMsgCreateVestingAccount }

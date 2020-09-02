@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not the currently registered
@@ -15,8 +15,8 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ctx sdk.Context,
 	cdc codec.BinaryMarshaler,
 	clientStore sdk.KVStore,
-	misbehaviour clientexported.Misbehaviour,
-) (clientexported.ClientState, error) {
+	misbehaviour exported.Misbehaviour,
+) (exported.ClientState, error) {
 
 	soloMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {

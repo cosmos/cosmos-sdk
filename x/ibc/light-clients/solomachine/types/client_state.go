@@ -6,16 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.ClientState = (*ClientState)(nil)
+var _ exported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
 func NewClientState(consensusState *ConsensusState) *ClientState {
@@ -26,14 +23,14 @@ func NewClientState(consensusState *ConsensusState) *ClientState {
 }
 
 // ClientType is Solo Machine.
-func (cs ClientState) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (cs ClientState) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetLatestHeight returns the latest sequence number.
-// Return clientexported.Height to satisfy interface
+// Return exported.Height to satisfy interface
 // Epoch number is always 0 for a solo-machine
-func (cs ClientState) GetLatestHeight() clientexported.Height {
+func (cs ClientState) GetLatestHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.ConsensusState.Sequence)
 }
 
@@ -43,9 +40,9 @@ func (cs ClientState) IsFrozen() bool {
 }
 
 // GetFrozenHeight returns the frozen sequence of the client.
-// Return clientexported.Height to satisfy interface
+// Return exported.Height to satisfy interface
 // Epoch number is always 0 for a solo-machine
-func (cs ClientState) GetFrozenHeight() clientexported.Height {
+func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
 
@@ -67,12 +64,12 @@ func (cs ClientState) Validate() error {
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ commitmentexported.Root,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	_ exported.Root,
+	height exported.Height,
+	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) error {
 	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -105,13 +102,13 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ commitmentexported.Root,
-	height clientexported.Height,
+	_ exported.Root,
+	height exported.Height,
 	counterpartyClientIdentifier string,
-	consensusHeight clientexported.Height,
-	prefix commitmentexported.Prefix,
+	consensusHeight exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
 	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -144,11 +141,11 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	connectionID string,
-	connectionEnd connectionexported.ConnectionI,
+	connectionEnd exported.ConnectionI,
 ) error {
 	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -180,12 +177,12 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
+	channel exported.ChannelI,
 ) error {
 	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -217,8 +214,8 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -252,8 +249,8 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -288,8 +285,8 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -322,8 +319,8 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height clientexported.Height,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -358,8 +355,8 @@ func (cs ClientState) VerifyNextSequenceRecv(
 func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
-	heightI clientexported.Height,
-	prefix commitmentexported.Prefix,
+	heightI exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 ) (signature TimestampedSignature, sequence uint64, err error) {
 	height, ok := heightI.(clienttypes.Height)
@@ -413,7 +410,7 @@ func produceVerificationArgs(
 }
 
 // sets the client state to the store
-func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState clientexported.ClientState) {
+func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState exported.ClientState) {
 	bz := clienttypes.MustMarshalClientState(cdc, clientState)
 	store.Set(host.KeyClientState(), bz)
 }

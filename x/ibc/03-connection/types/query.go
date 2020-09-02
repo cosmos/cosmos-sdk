@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // NewQueryConnectionResponse creates a new QueryConnectionResponse instance
@@ -55,7 +55,7 @@ func NewQueryConnectionClientStateResponse(identifiedClientState clienttypes.Ide
 }
 
 // NewQueryConnectionConsensusStateResponse creates a newQueryConnectionConsensusStateResponse instance
-func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight clientexported.Height, proof []byte, height clienttypes.Height) *QueryConnectionConsensusStateResponse {
+func NewQueryConnectionConsensusStateResponse(clientID string, anyConsensusState *codectypes.Any, consensusStateHeight exported.Height, proof []byte, height clienttypes.Height) *QueryConnectionConsensusStateResponse {
 	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(consensusStateHeight)), "/"))
 	return &QueryConnectionConsensusStateResponse{
 		ConsensusState: anyConsensusState,

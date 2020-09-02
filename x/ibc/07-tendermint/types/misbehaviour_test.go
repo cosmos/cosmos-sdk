@@ -7,8 +7,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
@@ -22,7 +22,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 		ClientId: clientID,
 	}
 
-	suite.Require().Equal(clientexported.Tendermint, misbehaviour.ClientType())
+	suite.Require().Equal(exported.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
 	suite.Require().Equal(height.EpochHeight, misbehaviour.GetHeight())
 }

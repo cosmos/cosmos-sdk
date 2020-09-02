@@ -3,7 +3,7 @@ package host
 import (
 	"fmt"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 const (
@@ -71,7 +71,7 @@ func ClientTypePath() string {
 
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
-func ConsensusStatePath(height clientexported.Height) string {
+func ConsensusStatePath(height exported.Height) string {
 	return fmt.Sprintf("consensusState/%s", height)
 }
 
@@ -87,7 +87,7 @@ func KeyClientType() []byte {
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
-func KeyConsensusState(height clientexported.Height) []byte {
+func KeyConsensusState(height exported.Height) []byte {
 	return []byte(ConsensusStatePath(height))
 }
 

@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // QueryPacketCommitment returns a packet commitment.
@@ -188,7 +188,7 @@ func QueryChannelConsensusState(
 // latest ConsensusState given the source port ID and source channel ID.
 func QueryLatestConsensusState(
 	clientCtx client.Context, portID, channelID string,
-) (clientexported.ConsensusState, clienttypes.Height, error) {
+) (exported.ConsensusState, clienttypes.Height, error) {
 	clientRes, err := QueryChannelClientState(clientCtx, portID, channelID, false)
 	if err != nil {
 		return nil, clienttypes.Height{}, err

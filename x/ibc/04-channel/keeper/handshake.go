@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -106,7 +106,7 @@ func (k Keeper) ChanOpenTry(
 	version,
 	counterpartyVersion string,
 	proofInit []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 ) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
@@ -200,7 +200,7 @@ func (k Keeper) ChanOpenAck(
 	chanCap *capabilitytypes.Capability,
 	counterpartyVersion string,
 	proofTry []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -268,7 +268,7 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	chanCap *capabilitytypes.Capability,
 	proofAck []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -379,7 +379,7 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	chanCap *capabilitytypes.Capability,
 	proofInit []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)")

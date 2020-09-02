@@ -3,10 +3,10 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ sdk.Msg = &MsgConnectionOpenInit{}
@@ -65,7 +65,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyClient clientexported.ClientState,
+	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
@@ -158,7 +158,7 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, counterpartyClient clientexported.ClientState,
+	connectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, version string,
 	signer sdk.AccAddress,

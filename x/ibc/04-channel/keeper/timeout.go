@@ -7,12 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // TimeoutPacket is called by a module which originally attempted to send a
@@ -25,7 +24,7 @@ func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 	nextSequenceRecv uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -183,7 +182,7 @@ func (k Keeper) TimeoutOnClose(
 	packet exported.PacketI,
 	proof,
 	proofClosed []byte,
-	proofHeight clientexported.Height,
+	proofHeight exported.Height,
 	nextSequenceRecv uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())

@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // QueryConnection returns a connection end.
@@ -186,8 +186,8 @@ func QueryConnectionConsensusState(
 
 // ParseClientState unmarshals a cmd input argument from a JSON string to a client state
 // If the input is not a JSON, it looks for a path to the JSON file
-func ParseClientState(cdc *codec.LegacyAmino, arg string) (clientexported.ClientState, error) {
-	var clientState clientexported.ClientState
+func ParseClientState(cdc *codec.LegacyAmino, arg string) (exported.ClientState, error) {
+	var clientState exported.ClientState
 	if err := cdc.UnmarshalJSON([]byte(arg), &clientState); err != nil {
 		// check for file path if JSON input is not provided
 		contents, err := ioutil.ReadFile(arg)

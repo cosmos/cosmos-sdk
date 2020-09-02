@@ -339,7 +339,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: "",
-					Height:       1,
+					Height:       clienttypes.NewHeight(0, 1),
 				}
 			},
 			false,
@@ -349,7 +349,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: "test-connection-id",
-					Height:       1,
+					Height:       clienttypes.NewHeight(0, 1),
 				}
 			},
 			false,
@@ -361,7 +361,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
-					Height:       uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					Height:       clienttypes.GetSelfHeight(suite.chainA.GetContext()), // use current height
 				}
 			}, false,
 		},
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
-					Height:       expConsensusState.GetHeight(),
+					Height:       expConsensusState.GetHeight().(clienttypes.Height),
 				}
 			},
 			true,

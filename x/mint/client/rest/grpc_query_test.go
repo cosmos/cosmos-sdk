@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -72,7 +72,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
 				Params: minttypes.NewParams("stake", sdk.NewDecWithPrec(13, 2), sdk.NewDecWithPrec(100, 2),
-					sdk.NewDecWithPrec(1, 0), sdk.NewDecWithPrec(67, 2), (60 * 60 * 8766 / 5)),
+					sdk.NewDec(1), sdk.NewDecWithPrec(67, 2), (60 * 60 * 8766 / 5)),
 			},
 		},
 		{
@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			},
 			&minttypes.QueryInflationResponse{},
 			&minttypes.QueryInflationResponse{
-				Inflation: sdk.NewDecWithPrec(1, 0),
+				Inflation: sdk.NewDec(1),
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 	}
 
 	for _, tc := range testCases {
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))

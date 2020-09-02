@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -232,15 +230,12 @@ func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
 
 func (ctx Context) printOutput(out []byte) error {
 	if ctx.OutputFormat == "text" {
-		// handle text format by decoding and re-encoding JSON as YAML
-		var j interface{}
-
-		err := json.Unmarshal(out, &j)
+		out, err = codec.MarshalYAML(ctx.JSONMarshaler, toPrint)
 		if err != nil {
 			return err
 		}
-
-		out, err = yaml.Marshal(j)
+	} else {
+		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
 		if err != nil {
 			return err
 		}

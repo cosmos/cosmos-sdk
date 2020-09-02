@@ -57,6 +57,17 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 	require.Equal(t, simapp.DefaultConsensusParams.Validator.PubKeyTypes, exportedGenDoc.ConsensusParams.Validator.PubKeyTypes)
 }
 
+func TestExportCmd_HomeDir(t *testing.T) {
+	tempDir, clean := testutil.NewTestCaseDir(t)
+	defer clean()
+
+	_, ctx, _, cmd := setupApp(t, tempDir)
+
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+	err := cmd.ExecuteContext(ctx)
+	require.EqualError(t, err, "stat foobar/config/genesis.json: no such file or directory")
+}
+
 func TestExportCmd_Height(t *testing.T) {
 	testCases := []struct {
 		name        string

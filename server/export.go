@@ -35,6 +35,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
 
+			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
+				return err
+			}
+
 			db, err := openDB(config.RootDir)
 			if err != nil {
 				return err
@@ -67,10 +71,6 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
-			}
-
-			if _, err := os.Stat(serverCtx.Config.GenesisFile()); os.IsNotExist(err) {
-				return err
 			}
 
 			doc, err := tmtypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())

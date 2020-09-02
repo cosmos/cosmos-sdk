@@ -15,8 +15,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // define constants used for testing
@@ -46,7 +46,7 @@ var (
 	invalidPacket = types.NewPacket(unknownPacketData, 0, portid, chanid, cpportid, cpchanid, timeoutHeight, timeoutTimestamp)
 
 	emptyProof     = []byte{}
-	invalidProofs1 = commitmentexported.Proof(nil)
+	invalidProofs1 = exported.Proof(nil)
 	invalidProofs2 = emptyProof
 
 	addr1     = sdk.AccAddress("testaddr1")

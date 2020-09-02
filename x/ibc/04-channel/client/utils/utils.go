@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -183,7 +183,7 @@ func QueryChannelConsensusState(
 // counterparty ConsensusState given the source port ID and source channel ID.
 func QueryCounterpartyConsensusState(
 	clientCtx client.Context, portID, channelID string, height uint64,
-) (clientexported.ConsensusState, uint64, error) {
+) (exported.ConsensusState, uint64, error) {
 	channelRes, err := QueryChannel(clientCtx, portID, channelID, false)
 	if err != nil {
 		return nil, 0, err

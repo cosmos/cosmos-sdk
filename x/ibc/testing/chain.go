@@ -24,14 +24,13 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -186,7 +185,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 
 // QueryClientStateProof performs and abci query for a client state
 // stored with a given clientID and returns the ClientState along with the proof
-func (chain *TestChain) QueryClientStateProof(clientID string) (clientexported.ClientState, []byte) {
+func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientState, []byte) {
 	// retrieve client state to provide proof for
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
@@ -271,7 +270,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 
 // GetClientState retrieves the client state for the provided clientID. The client is
 // expected to exist otherwise testing will fail.
-func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
+func (chain *TestChain) GetClientState(clientID string) exported.ClientState {
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
@@ -280,7 +279,7 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 
 // GetConsensusState retrieves the consensus state for the provided clientID and height.
 // It will return a success boolean depending on if consensus state exists or not.
-func (chain *TestChain) GetConsensusState(clientID string, height uint64) (clientexported.ConsensusState, bool) {
+func (chain *TestChain) GetConsensusState(clientID string, height uint64) (exported.ConsensusState, bool) {
 	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
 }
 
@@ -316,7 +315,7 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 
 // GetAcknowledgement retrieves an acknowledgement for the provided packet. If the
 // acknowledgement does not exist then testing will fail.
-func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
+func (chain *TestChain) GetAcknowledgement(packet exported.PacketI) []byte {
 	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	require.True(chain.t, found)
 
@@ -371,18 +370,18 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
 func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
 	var (
-		clientState    clientexported.ClientState
-		consensusState clientexported.ConsensusState
+		clientState    exported.ClientState
+		consensusState exported.ConsensusState
 	)
 
 	switch clientType {
-	case clientexported.ClientTypeTendermint:
+	case exported.ClientTypeTendermint:
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			clienttypes.NewHeight(0, counterparty.LastHeader.GetHeight()), commitmenttypes.GetSDKSpecs(),
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
-	case clientexported.ClientTypeSoloMachine:
+	case exported.ClientTypeSoloMachine:
 		solo := NewSolomachine(chain.t, clientID)
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
@@ -401,7 +400,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID, clientexported.ClientTypeTendermint)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, exported.ClientTypeTendermint)
 	return chain.sendMsgs(msg)
 }
 
@@ -746,7 +745,7 @@ func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be
 // passed since this call is made from a module.
 func (chain *TestChain) SendPacket(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 
@@ -765,7 +764,7 @@ func (chain *TestChain) SendPacket(
 
 // ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
 func (chain *TestChain) ReceiveExecuted(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
@@ -785,7 +784,7 @@ func (chain *TestChain) ReceiveExecuted(
 // AcknowledgementExecuted simulates deleting a packet commitment with the
 // given packet sequence.
 func (chain *TestChain) AcknowledgementExecuted(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 

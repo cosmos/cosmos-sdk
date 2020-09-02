@@ -137,8 +137,9 @@ func (m *ClientConsensusStates) GetConsensusStates() []*types.Any {
 	return nil
 }
 
-// ClientUpdateProposal is a governance proposal.
-// If it passes, the client is updated with the provided header
+// ClientUpdateProposal is a governance proposal. If it passes, the client is
+// updated with the provided header. The update may fail if the header is not
+// valid given certain conditions specified by the client implementation.
 type ClientUpdateProposal struct {
 	// the title of the update proposal
 	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`

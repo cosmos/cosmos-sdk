@@ -8,9 +8,8 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-// CheckProposedHeaderAndUpdateState checks if the provided header is valid and updates
-// the consensus state. It returns an error if:
-// - the header provided is not parseable to solo machine types
+// CheckProposedHeaderAndUpdateState updates the consensus state to the header's sequence and
+// public key. An error is returned if the header cannot be casted to a solo machine header.
 func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header clientexported.Header,

@@ -28,19 +28,19 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
-	allowGovernanceOverrideAfterExpiry, allowGovernanceOverrideAfterMisbehaviour bool,
+	allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
-		ChainId:                                  chainID,
-		TrustLevel:                               trustLevel,
-		TrustingPeriod:                           trustingPeriod,
-		UnbondingPeriod:                          ubdPeriod,
-		MaxClockDrift:                            maxClockDrift,
-		LatestHeight:                             latestHeight,
-		FrozenHeight:                             clienttypes.Height{},
-		ProofSpecs:                               specs,
-		AllowGovernanceOverrideAfterExpiry:       allowGovernanceOverrideAfterExpiry,
-		AllowGovernanceOverrideAfterMisbehaviour: allowGovernanceOverrideAfterMisbehaviour,
+		ChainId:                      chainID,
+		TrustLevel:                   trustLevel,
+		TrustingPeriod:               trustingPeriod,
+		UnbondingPeriod:              ubdPeriod,
+		MaxClockDrift:                maxClockDrift,
+		LatestHeight:                 latestHeight,
+		FrozenHeight:                 clienttypes.Height{},
+		ProofSpecs:                   specs,
+		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
+		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,
 	}
 }
 
@@ -72,14 +72,8 @@ func (cs ClientState) GetFrozenHeight() uint64 {
 	return cs.FrozenHeight.EpochHeight
 }
 
-//Unfreeze unfreezes light client after misbehaviour and clears any frozen height previously set
-func (cs *ClientState) Unfreeze() error {
-	cs.FrozenHeight = clienttypes.NewHeight(0, 0)
-	return nil
-}
-
 // IsExpired returns whether or not the client has passed the trusting period since the last
-// update (in which case no headers can be validated).
+// update (in which case no headers are considered validate).
 func (cs ClientState) IsExpired(latestTimestamp, now time.Time) bool {
 	expirationTime := latestTimestamp.Add(cs.TrustingPeriod)
 	return !expirationTime.After(now)

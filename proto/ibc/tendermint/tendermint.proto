@@ -57,14 +57,13 @@ message ClientState {
 
   // This flag, when set to true, will allow governance to recover a client
   // which has expired
-  bool allow_governance_override_after_expiry = 9
-      [(gogoproto.moretags) =
-           "yaml:\"allow_governance_override_after_expiry,omitempty\""];
+  bool allow_update_after_expiry = 9
+      [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry,omitempty\""];
   // This flag, when set to true, will allow governance to unfreeze a client
   // whose chain has experienced a misbehaviour event
-  bool allow_governance_override_after_misbehaviour = 10
+  bool allow_update_after_misbehaviour = 10
       [(gogoproto.moretags) =
-           "yaml:\"allow_governance_override_after_misbehaviour,omitempty\""];
+           "yaml:\"allow_update_after_misbehaviour,omitempty\""];
 }
 
 // ConsensusState defines the consensus state from Tendermint.

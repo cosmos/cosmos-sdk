@@ -26,8 +26,9 @@ message ClientConsensusStates {
       [(gogoproto.moretags) = "yaml:\"consensus_states\""];
 }
 
-// ClientUpdateProposal is a governance proposal.
-// If it passes, the client is updated with the provided header
+// ClientUpdateProposal is a governance proposal. If it passes, the client is
+// updated with the provided header. The update may fail if the header is not
+// valid given certain conditions specified by the client implementation.
 message ClientUpdateProposal {
   option (gogoproto.goproto_getters) = false;
   // the title of the update proposal

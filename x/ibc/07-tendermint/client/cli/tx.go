@@ -23,10 +23,10 @@ import (
 )
 
 const (
-	flagTrustLevel                        = "trust-level"
-	flagProofSpecs                        = "proof-specs"
-	flagAllowGovOverrideAfterExpiry       = "allow_governance_override_after_expiry"
-	fladAllowGovOverrideAfterMisbehaviour = "allow_governance_override_after_misbehaviour"
+	flagTrustLevel                   = "trust-level"
+	flagProofSpecs                   = "proof-specs"
+	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
+	flagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC Client as defined
@@ -113,8 +113,14 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			agoae, _ := cmd.Flags().GetBool(flagAllowGovOverrideAfterExpiry)
-			agoam, _ := cmd.Flags().GetBool(fladAllowGovOverrideAfterMisbehaviour)
+			allowUpdateAfterExpiry, err := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
+			if err != nil {
+				return err
+			}
+			allowUpdateAfterMisbehaviour, err := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
+			if err != nil {
+				return err
+			}
 
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
@@ -122,7 +128,8 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			clientState := types.NewClientState(
-				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, header.GetHeight()), specs, agoae, agoam,
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
+				clienttypes.NewHeight(0, header.GetHeight()), specs, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
 
 			consensusState := header.ConsensusState()
@@ -144,8 +151,8 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
-	cmd.Flags().Bool(flagAllowGovOverrideAfterExpiry, false, "allow governance override after expiry")
-	cmd.Flags().Bool(fladAllowGovOverrideAfterMisbehaviour, false, "allow governance override after misbehaviour")
+	cmd.Flags().Bool(flagAllowUpdateAfterExpiry, false, "allow governance proposal to update client after expiry")
+	cmd.Flags().Bool(flagAllowUpdateAfterMisbehaviour, false, "allow governance proposal to update client after misbehaviour")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

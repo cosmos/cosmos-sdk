@@ -60,7 +60,6 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 		{
 			name: "successful update with future height and different validator set",
 			setup: func() {
-
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false)
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
 				newHeader = types.CreateTestHeader(chainID, epochHeight+5, epochHeight, suite.headerTime, bothValSet, suite.valSet, bothSigners)

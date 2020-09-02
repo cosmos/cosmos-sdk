@@ -446,49 +446,9 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			recv: new(testdata.TestVersion1),
 			wantErr: &errMismatchedWireType{
 				Type:         "*testdata.TestVersion3",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
-		},
-		{
-			name: "From nested proto message, message index 0",
-			in: &testdata.TestVersion3LoneNesting{
-				Inner1: &testdata.TestVersion3LoneNesting_Inner1{
-					Id:   10,
-					Name: "foo",
-					Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
-						Id:   "ID",
-						City: "Palo Alto",
-					},
-				},
-			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner1_InnerInner",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
-		},
-		{
-			name: "From nested proto message, message index 1",
-			in: &testdata.TestVersion3LoneNesting{
-				Inner2: &testdata.TestVersion3LoneNesting_Inner2{
-					Id:      "ID",
-					Country: "Maldives",
-					Inner: &testdata.TestVersion3LoneNesting_Inner2_InnerInner{
-						Id:   "ID",
-						City: "Unknown",
-					},
-				},
-			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner2_InnerInner",
-				TagNum:       2,
-				GotWireType:  2,
-				WantWireType: 0,
+				TagNum:       8,
+				GotWireType:  7,
+				WantWireType: 2,
 			},
 		},
 	}

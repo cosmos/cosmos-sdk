@@ -25,11 +25,6 @@ func NewClientState(consensusState *ConsensusState) *ClientState {
 	}
 }
 
-// GetChainID returns an empty string.
-func (cs ClientState) GetChainID() string {
-	return ""
-}
-
 // ClientType is Solo Machine.
 func (cs ClientState) ClientType() clientexported.ClientType {
 	return clientexported.SoloMachine

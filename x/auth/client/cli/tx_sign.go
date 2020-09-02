@@ -268,7 +268,12 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		var json []byte
 
 		if aminoJSON {
-			json, err = clientCtx.LegacyAmino.MarshalJSON(txBuilder.GetTx())
+			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+			json, err = clientCtx.LegacyAmino.MarshalJSON(stdTx)
 			if err != nil {
 				return err
 			}

@@ -250,54 +250,31 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
-		name         string
-		url          string
-		headers      map[string]string
-		error        bool
-		expectLength int
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
-			0,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
-			0,
-		},
-		{
-			"valid request with less height",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, valAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
-			false,
-			0,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, valAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
-			1,
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubds types.QueryValidatorUnbondingDelegationsResponse
@@ -308,7 +285,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(ubds.UnbondingResponses, tc.expectLength)
+				s.Require().Len(ubds.UnbondingResponses, 1)
+				s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress)
 			}
 		})
 	}

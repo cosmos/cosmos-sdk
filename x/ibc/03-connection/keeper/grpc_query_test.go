@@ -339,7 +339,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: "",
-					Height:       clienttypes.NewHeight(0, 1),
+					EpochNumber:  0,
+					EpochHeight:  1,
 				}
 			},
 			false,
@@ -349,7 +350,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: "test-connection-id",
-					Height:       clienttypes.NewHeight(0, 1),
+					EpochNumber:  0,
+					EpochHeight:  1,
 				}
 			},
 			false,
@@ -361,7 +363,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
-					Height:       clienttypes.GetSelfHeight(suite.chainA.GetContext()), // use current height
+					EpochNumber:  0,
+					EpochHeight:  uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
@@ -377,7 +380,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
-					Height:       expConsensusState.GetHeight().(clienttypes.Height),
+					EpochNumber:  expConsensusState.GetHeight().GetEpochNumber(),
+					EpochHeight:  expConsensusState.GetHeight().GetEpochHeight(),
 				}
 			},
 			true,

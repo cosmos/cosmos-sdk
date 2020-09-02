@@ -40,7 +40,7 @@ service Query {
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
     returns (QueryConnectionConsensusStateResponse) {
-      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state";
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/epoch/{epoch_number}/height/{epoch_height}";
   }
 }
 
@@ -139,9 +139,8 @@ message QueryConnectionConsensusStateRequest {
   string connection_id = 1 [
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  ibc.client.Height height = 2 [
-    (gogoproto.nullable) = false
-  ];
+  uint64 epoch_number = 2;
+  uint64 epoch_height = 3;
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the

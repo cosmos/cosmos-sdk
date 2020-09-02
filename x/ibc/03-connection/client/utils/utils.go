@@ -158,7 +158,8 @@ func QueryConnectionConsensusState(
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
 		ConnectionId: connectionID,
-		Height:       height,
+		EpochNumber:  height.EpochNumber,
+		EpochHeight:  height.EpochHeight,
 	}
 
 	res, err := queryClient.ConnectionConsensusState(context.Background(), req)

@@ -6,14 +6,6 @@ import "ibc/client/client.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types";
 
-// MsgCreateClient defines a message to create a localhost client state
-message MsgCreateClient {
-  option (gogoproto.goproto_getters) = false;
-
-  bytes signer = 1
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
 // ClientState defines a loopback (localhost) client. It requires (read-only)
 // access to keys outside the client prefix.
 message ClientState {
@@ -23,7 +15,5 @@ message ClientState {
   // self chain ID
   string chain_id = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // self latest block height
-  ibc.client.Height height = 3 [
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
 }

@@ -73,15 +73,15 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 }
 
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
-func (cs ClientState) CheckHeaderAndUpdateState(
+func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ clientexported.Header,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	// use the chain ID from context since the localhost client is from the running chain (i.e self).
+	cs.ChainId = ctx.ChainID()
 	// Hardcode 0 for epoch number for now
 	// TODO: Retrieve epoch number from chain-id
-	return NewClientState(
-		ctx.ChainID(), // use the chain ID from context since the client is from the running chain (i.e self).
-		clienttypes.NewHeight(0, uint64(ctx.BlockHeight())),
-	), nil, nil
+	cs.Height = clienttypes.NewHeight(0, uint64(ctx.BlockHeight()))
+	return cs, nil, nil
 }
 
 // CheckMisbehaviourAndUpdateState implements ClientState

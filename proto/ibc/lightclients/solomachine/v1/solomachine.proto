@@ -66,27 +66,4 @@ message TimestampedSignature {
   bytes  signature                   = 1;
   uint64 timestamp                   = 2;
 }
-// MsgCreateClient defines a message to create an IBC client
-message MsgCreateClient {
-  option (gogoproto.goproto_getters) = false;
-  string         client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  ConsensusState consensus_state = 2
-      [(gogoproto.moretags) = "yaml:\"consensus_state\""];
-}
-
-// MsgUpdateClient defines a message to update an IBC client
-message MsgUpdateClient {
-  option (gogoproto.goproto_getters) = false;
-  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  Header header    = 2;
-}
-
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// arbitrary Misbehaviour.
-message MsgSubmitClientMisbehaviour {
-  option (gogoproto.goproto_getters) = false;
-  bytes signer                    = 1
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  Misbehaviour misbehaviour = 2;
-}
 

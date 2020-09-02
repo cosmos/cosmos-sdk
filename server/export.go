@@ -69,6 +69,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return fmt.Errorf("error exporting state: %v", err)
 			}
 
+			if _, err := os.Stat(serverCtx.Config.GenesisFile()); os.IsNotExist(err) {
+				return err
+			}
+
 			doc, err := tmtypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return err

@@ -6,18 +6,18 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
-	_ clientexported.Misbehaviour = (*Misbehaviour)(nil)
+	_ exported.Misbehaviour = (*Misbehaviour)(nil)
 )
 
 // ClientType is a Solo Machine light client.
-func (misbehaviour Misbehaviour) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
@@ -27,7 +27,7 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
-	return clientexported.TypeClientMisbehaviour
+	return exported.TypeClientMisbehaviour
 }
 
 // String implements Evidence interface.

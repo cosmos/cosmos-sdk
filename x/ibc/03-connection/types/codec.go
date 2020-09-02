@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // RegisterInterfaces register the ibc interfaces submodule implementations to protobuf
@@ -15,15 +15,15 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*exported.ConnectionI)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.connection.CounterpartyI",
-		(*exported.CounterpartyI)(nil),
+		"cosmos_sdk.ibc.v1.connection.CounterpartyConnectionI",
+		(*exported.CounterpartyConnectionI)(nil),
 	)
 	registry.RegisterImplementations(
 		(*exported.ConnectionI)(nil),
 		&ConnectionEnd{},
 	)
 	registry.RegisterImplementations(
-		(*exported.CounterpartyI)(nil),
+		(*exported.CounterpartyConnectionI)(nil),
 		&Counterparty{},
 	)
 	registry.RegisterImplementations(

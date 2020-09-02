@@ -95,7 +95,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(i)}})
+				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 				app.Commit()
 			}
 

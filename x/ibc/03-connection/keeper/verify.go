@@ -3,10 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // VerifyClientState verifies a proof of a client state of the running machine
@@ -16,7 +14,7 @@ func (k Keeper) VerifyClientState(
 	connection exported.ConnectionI,
 	height uint64,
 	proof []byte,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) error {
 	clientID := connection.GetClientID()
 	targetClient, found := k.clientKeeper.GetClientState(ctx, clientID)
@@ -46,7 +44,7 @@ func (k Keeper) VerifyClientConsensusState(
 	height uint64,
 	consensusHeight uint64,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
 	clientID := connection.GetClientID()
 	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
@@ -103,7 +101,7 @@ func (k Keeper) VerifyChannelState(
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
+	channel exported.ChannelI,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {

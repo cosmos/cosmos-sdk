@@ -18,6 +18,7 @@ const (
 	flagMultisig = "multisig"
 	flagAppend   = "append"
 	flagSigOnly  = "signature-only"
+	flagAmino    = "amino"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -187,6 +188,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	cmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	cmd.MarkFlagRequired(flags.FlagFrom)
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -257,9 +259,25 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		json, err := marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+		aminoJSON, err := cmd.Flags().GetBool(flagAmino)
+
 		if err != nil {
 			return err
+		}
+
+		var json []byte
+
+		if aminoJSON {
+			json, err = clientCtx.LegacyAmino.MarshalJSON(txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+		} else {
+			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)
+			if err != nil {
+				return err
+			}
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)

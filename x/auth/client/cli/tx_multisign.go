@@ -51,6 +51,7 @@ recommended to set such parameters manually.
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 
@@ -146,9 +147,25 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		json, err := marshalSignatureJSON(txCfg, txBuilder, sigOnly)
+		aminoJSON, err := cmd.Flags().GetBool(flagAmino)
+
 		if err != nil {
 			return err
+		}
+
+		var json []byte
+
+		if aminoJSON {
+			json, err = clientCtx.LegacyAmino.MarshalJSON(txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+
+		} else {
+			json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)
+			if err != nil {
+				return err
+			}
 		}
 
 		outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)

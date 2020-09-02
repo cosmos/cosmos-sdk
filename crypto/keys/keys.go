@@ -63,11 +63,15 @@ func ProtoPubKeyToAminoPubKey(msg proto.Message) (crypto.PubKey, error) {
 	case *MultisigThresholdPubKey:
 		keys := make([]crypto.PubKey, len(msg.PubKeys))
 		for i, any := range msg.PubKeys {
-			k, ok := any.GetCachedValue().(crypto.PubKey)
+			cachedKey, ok := any.GetCachedValue().(proto.Message)
 			if !ok {
-				return nil, fmt.Errorf("expected crypto.PubKey")
+				return nil, fmt.Errorf("can't proto marshal %T", any.GetCachedValue())
 			}
-			keys[i] = k
+			key, err := ProtoPubKeyToAminoPubKey(cachedKey)
+			if err != nil {
+				return nil, err
+			}
+			keys[i] = key
 		}
 		return multisig.PubKeyMultisigThreshold{K: uint(msg.K), PubKeys: keys}, nil
 	default:

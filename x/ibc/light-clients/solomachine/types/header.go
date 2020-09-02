@@ -5,15 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.Header = Header{}
+var _ exported.Header = Header{}
 
 // ClientType defines that the Header is a Solo Machine.
-func (Header) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (Header) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetHeight returns the current sequence number as the height.

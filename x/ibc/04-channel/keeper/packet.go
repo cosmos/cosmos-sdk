@@ -77,7 +77,7 @@ func (k Keeper) SendPacket(
 
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
-	timeoutHeight := clienttypes.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutEpochHeight())
+	timeoutHeight := packet.GetTimeoutHeight()
 	if !timeoutHeight.IsZero() && latestHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
@@ -193,7 +193,7 @@ func (k Keeper) RecvPacket(
 
 	// check if packet timeouted by comparing it with the latest height of the chain
 	selfHeight := clienttypes.GetSelfHeight(ctx)
-	timeoutHeight := clienttypes.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutEpochHeight())
+	timeoutHeight := packet.GetTimeoutHeight()
 	if !timeoutHeight.IsZero() && selfHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
@@ -310,15 +310,13 @@ func (k Keeper) ReceiveExecuted(
 	// log that a packet has been received & executed
 	k.Logger(ctx).Info(fmt.Sprintf("packet received & executed: %v", packet))
 
-	timeoutHeight := clienttypes.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutEpochHeight())
-
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -477,13 +475,11 @@ func (k Keeper) AcknowledgementExecuted(
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
 
-	timeoutHeight := clienttypes.NewHeight(packet.GetTimeoutEpoch(), packet.GetTimeoutEpochHeight())
-
 	// emit an event marking that we have processed the acknowledgement
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),

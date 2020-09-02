@@ -14,8 +14,8 @@ import (
 // hash(timeout_timestamp + timeout_height + data) from a given packet.
 func CommitPacket(packet exported.PacketI) []byte {
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutEpoch())...)
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutEpochHeight())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochNumber())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochHeight())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }
@@ -65,11 +65,8 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 // GetData implements PacketI interface
 func (p Packet) GetData() []byte { return p.Data }
 
-// GetTimeoutEpoch implements PacketI interface
-func (p Packet) GetTimeoutEpoch() uint64 { return p.TimeoutHeight.EpochNumber }
-
 // GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutEpochHeight() uint64 { return p.TimeoutHeight.EpochHeight }
+func (p Packet) GetTimeoutHeight() exported.Height { return p.TimeoutHeight }
 
 // GetTimeoutTimestamp implements PacketI interface
 func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }

@@ -158,6 +158,8 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
+	GetEpochNumber() uint64
+	GetEpochHeight() uint64
 	Decrement() (Height, bool)
 	String() string
 }

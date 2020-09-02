@@ -21,8 +21,7 @@ type CounterpartyChannelI interface {
 // PacketI defines the standard interface for IBC packets
 type PacketI interface {
 	GetSequence() uint64
-	GetTimeoutEpoch() uint64
-	GetTimeoutEpochHeight() uint64
+	GetTimeoutHeight() Height
 	GetTimeoutTimestamp() uint64
 	GetSourcePort() string
 	GetSourceChannel() string

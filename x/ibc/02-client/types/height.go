@@ -20,6 +20,16 @@ func NewHeight(epochNumber, epochHeight uint64) Height {
 	}
 }
 
+// GetEpochNumber returns the epoch-number of the height
+func (h Height) GetEpochNumber() uint64 {
+	return h.EpochNumber
+}
+
+// GetEpochHeight returns the epoch-height of the height
+func (h Height) GetEpochHeight() uint64 {
+	return h.EpochHeight
+}
+
 /// Compare implements a method to compare two heights. When comparing two heights a, b
 // we can call a.Compare(b) which will return
 // -1 if a < b

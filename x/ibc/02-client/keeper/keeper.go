@@ -196,7 +196,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	if !ok {
 		return nil, false
 	}
-	if selfHeight.EpochNumber == 0 {
+	if selfHeight.EpochNumber != 0 {
 		return nil, false
 	}
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.EpochHeight))

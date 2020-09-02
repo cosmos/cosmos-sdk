@@ -14,13 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -142,7 +141,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	testCases := []struct {
 		name        string
-		clientState clientexported.ClientState
+		clientState exported.ClientState
 		expPass     bool
 	}{
 		{

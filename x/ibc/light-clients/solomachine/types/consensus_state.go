@@ -5,16 +5,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.ConsensusState = ConsensusState{}
+var _ exported.ConsensusState = ConsensusState{}
 
 // ClientType returns Solo Machine type.
-func (ConsensusState) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (ConsensusState) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetHeight returns the sequence number.
@@ -28,7 +27,7 @@ func (cs ConsensusState) GetTimestamp() uint64 {
 }
 
 // GetRoot returns nil since solo machines do not have roots.
-func (cs ConsensusState) GetRoot() commitmentexported.Root {
+func (cs ConsensusState) GetRoot() exported.Root {
 	return nil
 }
 

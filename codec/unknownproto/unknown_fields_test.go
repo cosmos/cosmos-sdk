@@ -451,6 +451,36 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 				WantWireType: 2,
 			},
 		},
+		{
+			name: "From nested proto message, message index 0",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner1: &testdata.TestVersion3LoneNesting_Inner1{
+					Id:   10,
+					Name: "foo",
+					Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+						Id:   "ID",
+						City: "Palo Alto",
+					},
+				},
+			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
+		},
+		{
+			name: "From nested proto message, message index 1",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner2: &testdata.TestVersion3LoneNesting_Inner2{
+					Id:      "ID",
+					Country: "Maldives",
+					Inner: &testdata.TestVersion3LoneNesting_Inner2_InnerInner{
+						Id:   "ID",
+						City: "Unknown",
+					},
+				},
+			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -621,8 +651,84 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 	}
 }
 
-// ref: https://github.com/cosmos/cosmos-sdk/issues/7222
-func TestRepeated(t *testing.T) {
+func TestMismatchedTypes_Nested(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      proto.Message
+		recv    proto.Message
+		wantErr error
+	}{
+		{
+			name: "mismatched types.Any in G",
+			in: &testdata.TestVersion1{
+				G: &types.Any{
+					TypeUrl: "/testdata.TestVersion4LoneNesting",
+					Value: mustMarshal(&testdata.TestVersion3LoneNesting_Inner1{
+						Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+							Id:   "ID",
+							City: "Gotham",
+						},
+					}),
+				},
+			},
+			recv: new(testdata.TestVersion1),
+			wantErr: &errMismatchedWireType{
+				Type:         "*testdata.TestVersion3",
+				TagNum:       8,
+				GotWireType:  7,
+				WantWireType: 2,
+			},
+		},
+		{
+			name: "From nested proto message, message index 0",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner1: &testdata.TestVersion3LoneNesting_Inner1{
+					Id:   10,
+					Name: "foo",
+					Inner: &testdata.TestVersion3LoneNesting_Inner1_InnerInner{
+						Id:   "ID",
+						City: "Palo Alto",
+					},
+				},
+			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
+		},
+		{
+			name: "From nested proto message, message index 1",
+			in: &testdata.TestVersion3LoneNesting{
+				Inner2: &testdata.TestVersion3LoneNesting_Inner2{
+					Id:      "ID",
+					Country: "Maldives",
+					Inner: &testdata.TestVersion3LoneNesting_Inner2_InnerInner{
+						Id:   "ID",
+						City: "Unknown",
+					},
+				},
+			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			protoBlob, err := proto.Marshal(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, gotErr := RejectUnknownFields(protoBlob, tt.recv, false)
+			if !reflect.DeepEqual(gotErr, tt.wantErr) {
+				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+// Issue https://github.com/cosmos/cosmos-sdk/issues/7222, we need to ensure that repeated
+// uint64 are recognized as packed.
+func TestPackedEncoding(t *testing.T) {
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
 
 	marshalled, err := data.Marshal()

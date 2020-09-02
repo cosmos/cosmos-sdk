@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 

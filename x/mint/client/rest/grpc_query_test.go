@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
-
 	cfg     network.Config
 	network *network.Network
 }
@@ -23,12 +24,27 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
+
+	genesisState := cfg.GenesisState
 	cfg.NumValidators = 1
+
+	var mintData minttypes.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+
+	inflation := sdk.MustNewDecFromStr("1.0")
+	mintData.Minter.Inflation = inflation
+	mintData.Params.InflationMin = inflation
+	mintData.Params.InflationMax = inflation
+
+	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
+	s.Require().NoError(err)
+	genesisState[minttypes.ModuleName] = mintDataBz
+	cfg.GenesisState = genesisState
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -37,21 +53,48 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
+func (s *IntegrationTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
 		name     string
 		url      string
+		headers  map[string]string
 		respType proto.Message
 		expected proto.Message
 	}{
 		{
 			"gRPC request params",
 			fmt.Sprintf("%s/cosmos/mint/v1beta1/params", baseURL),
-			&types.QueryParamsResponse{},
-			&types.QueryParamsResponse{
-				Params: types.DefaultParams(),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&minttypes.QueryParamsResponse{},
+			&minttypes.QueryParamsResponse{
+				Params: minttypes.NewParams("stake", sdk.NewDecWithPrec(13, 2), sdk.NewDecWithPrec(100, 2),
+					sdk.NewDecWithPrec(1, 0), sdk.NewDecWithPrec(67, 2), (60 * 60 * 8766 / 5)),
+			},
+		},
+		{
+			"gRPC request inflation",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/inflation", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&minttypes.QueryInflationResponse{},
+			&minttypes.QueryInflationResponse{
+				Inflation: sdk.NewDecWithPrec(1, 0),
+			},
+		},
+		{
+			"gRPC request annual provisions",
+			fmt.Sprintf("%s/cosmos/mint/v1beta1/annual_provisions", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			&minttypes.QueryAnnualProvisionsResponse{},
+			&minttypes.QueryAnnualProvisionsResponse{
+				AnnualProvisions: sdk.NewDec(500000000),
 			},
 		},
 	}
@@ -61,63 +104,9 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
-			s.Require().Equal(tc.expected.String(), tc.respType.String())
+			s.Require().Equal(tc.expected, tc.respType)
 		})
 	}
-}
-
-func (s *IntegrationTestSuite) TestQueryInflation() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-	testCases := []struct {
-		name     string
-		url      string
-		respType proto.Message
-		expected proto.Message
-	}{
-		{
-			"gRPC request inflation",
-			fmt.Sprintf("%s/cosmos/mint/v1beta1/inflation", baseURL),
-			&types.QueryInflationResponse{},
-			&types.QueryInflationResponse{},
-		}}
-
-	for _, tc := range testCases {
-		tc := tc
-		resp, err := rest.GetRequest(tc.url)
-		s.Run(tc.name, func() {
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
-		})
-	}
-
-}
-
-func (s *IntegrationTestSuite) TestQueryAnnualProvision() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-	testCases := []struct {
-		name     string
-		url      string
-		respType proto.Message
-		expected proto.Message
-	}{
-		{
-			"gRPC request annual provisions",
-			fmt.Sprintf("%s/cosmos/mint/v1beta1/annual_provisions", baseURL),
-			&types.QueryAnnualProvisionsResponse{},
-			&types.QueryAnnualProvisionsResponse{},
-		}}
-
-	for _, tc := range testCases {
-		tc := tc
-		resp, err := rest.GetRequest(tc.url)
-		s.Run(tc.name, func() {
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
-		})
-	}
-
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

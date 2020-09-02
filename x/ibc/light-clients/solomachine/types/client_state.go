@@ -394,7 +394,7 @@ func produceVerificationArgs(
 		return TimestampedSignature{}, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	latestSequence := cs.GetLatestHeight().(clienttypes.Height).EpochNumber
+	latestSequence := cs.GetLatestHeight().GetEpochHeight()
 	if latestSequence < sequence {
 		return TimestampedSignature{}, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,

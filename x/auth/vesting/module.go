@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -38,6 +39,12 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
+// RegisterInterfaces registers the module's interfaces and implementations with
+// the given interface registry.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
+
 // DefaultGenesis returns the module's default genesis state as raw bytes.
 func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 	return []byte("{}")
@@ -57,19 +64,12 @@ func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux
 
 // GetTxCmd returns the root tx command for the auth module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO:
-	panic("implement me!")
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the module's root query command. Currently, this is a no-op.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil
-}
-
-// RegisterInterfaces registers the module's interfaces and implementations with
-// the given interface registry.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
 }
 
 // AppModule extends the AppModuleBasic implementation by implementing the

@@ -16,9 +16,6 @@ const (
 
 	// QuerierRoute is the querier route for auth
 	QuerierRoute = ModuleName
-
-	// RouterKey defines the module's message routing key
-	RouterKey = ModuleName
 )
 
 var (

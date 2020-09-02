@@ -47,12 +47,12 @@ with the following additions:
 4. `repeated` fields of scalar numeric types must use
    [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
 5. Varint encoding must not be longer than needed:
-    1. The highest 6 bits for 10-byte varints must be `0`
-    1. No trailing zero bytes (in little endian, i.e. no leading zeroes in big
+    * The highest 6 bits for 10-byte varints must be `0`
+    * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
        endian). Per rule 3 above, the default value of `0` must be omitted, so
        this rule does not apply in such cases.
-    1. Highest 4 bytes of 8 must be `0` for 32-bit ints
-    1. For Booleans, the value must be `0` or `1`. Per rule 3 above, the default
+    * Highest 4 bytes of 8 must be `0` for 32-bit ints
+    * For Booleans, the value must be `0` or `1`. Per rule 3 above, the default
        value of `0` must be omitted, so if a Boolean is included it must have a
        value of `1`.
 

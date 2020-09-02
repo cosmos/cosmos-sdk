@@ -1,4 +1,4 @@
-package server
+package server_test
 
 import (
 	"bytes"
@@ -22,7 +22,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -58,21 +60,29 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 func TestExportCmd_Height(t *testing.T) {
 	testCases := []struct {
-		name      string
-		flags     []string
-		expHeight int64
+		name        string
+		flags       []string
+		fastForward int64
+		expHeight   int64
 	}{
 		{
 			"should export correct height",
 			[]string{},
-			4,
+			5, 6,
+		},
+		{
+			"should export correct height with --height",
+			[]string{
+				fmt.Sprintf("--%s=%d", server.FlagHeight, 3),
+			},
+			5, 4,
 		},
 		{
 			"should export height 0 with --for-zero-height",
 			[]string{
-				fmt.Sprintf("--%s=%s", FlagForZeroHeight, "true"),
+				fmt.Sprintf("--%s=%s", server.FlagForZeroHeight, "true"),
 			},
-			0,
+			2, 0,
 		},
 	}
 
@@ -83,11 +93,11 @@ func TestExportCmd_Height(t *testing.T) {
 
 			app, ctx, _, cmd := setupApp(t, tempDir)
 
-			// Fast forward to block 3.
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
-			app.Commit()
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 3}})
-			app.Commit()
+			// Fast forward to block `tc.fastForward`.
+			for i := int64(2); i <= tc.fastForward; i++ {
+				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: int64(i)}})
+				app.Commit()
+			}
 
 			output := &bytes.Buffer{}
 			cmd.SetOut(output)
@@ -113,10 +123,12 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, tempDir, 0, simapp.MakeEncodingConfig())
+	encCfg := simapp.MakeEncodingConfig()
+	app := simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, tempDir, 0, encCfg)
 
-	serverCtx := NewDefaultContext()
+	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
@@ -135,14 +147,27 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 
 	app.Commit()
 
-	cmd := ExportCmd(
-		func(logger log.Logger, db dbm.DB, writer io.Writer, i int64, forZeroHeight bool, jailAllowedAddrs []string) (types.ExportedApp, error) {
-			return app.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	cmd := server.ExportCmd(
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string) (types.ExportedApp, error) {
+			encCfg := simapp.MakeEncodingConfig()
+
+			var simApp *simapp.SimApp
+			if height != -1 {
+				simApp = simapp.NewSimApp(logger, db, nil, false, map[int64]bool{}, "", 0, encCfg)
+
+				if err := simApp.LoadHeight(height); err != nil {
+					return servertypes.ExportedApp{}, err
+				}
+			} else {
+				simApp = simapp.NewSimApp(logger, db, nil, true, map[int64]bool{}, "", 0, encCfg)
+			}
+
+			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 		}, tempDir)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	return app, ctx, genDoc, cmd
 }

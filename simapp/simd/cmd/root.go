@@ -94,7 +94,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		debug.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createSimappAndExport)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
@@ -188,7 +188,9 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	)
 }
 
-func exportAppStateAndTMValidators(
+// createSimappAndExport creates a new simapp (optionally at a given height)
+// and exports state.
+func createSimappAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := simapp.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.

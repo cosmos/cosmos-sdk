@@ -25,12 +25,14 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -48,6 +50,7 @@ const (
 	ChannelIDPrefix    = "chan"
 
 	TransferPort = ibctransfertypes.ModuleName
+	MockPort     = mock.ModuleName
 )
 
 // Default params variables used to create a TM client
@@ -57,6 +60,9 @@ var (
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
+
+	MockAcknowledgement = mock.MockAcknowledgement
+	MockCommitment      = mock.MockCommitment
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -117,8 +123,9 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 	// create current header and call begin block
 	header := tmproto.Header{
-		Height: 1,
-		Time:   globalStartTime,
+		ChainID: chainID,
+		Height:  1,
+		Time:    globalStartTime,
 	}
 
 	txConfig := simapp.MakeEncodingConfig().TxConfig
@@ -139,6 +146,10 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 		ClientIDs:     make([]string, 0),
 		Connections:   make([]*TestConnection, 0),
 	}
+
+	cap := chain.App.IBCKeeper.PortKeeper.BindPort(chain.GetContext(), MockPort)
+	err = chain.App.ScopedIBCMockKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(MockPort))
+	require.NoError(t, err)
 
 	chain.NextBlock()
 
@@ -357,19 +368,40 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 	return chain.ConstructNextTestConnection(clientID, counterpartyClientID)
 }
 
-func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string) clientexported.MsgCreateClient {
-	return ibctmtypes.NewMsgCreateClient(
-		clientID, counterparty.LastHeader,
-		DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-		commitmenttypes.GetSDKSpecs(), chain.SenderAccount.GetAddress(),
+// ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
+func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
+	var (
+		clientState    clientexported.ClientState
+		consensusState clientexported.ConsensusState
 	)
+
+	switch clientType {
+	case clientexported.ClientTypeTendermint:
+		clientState = ibctmtypes.NewClientState(
+			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
+			clienttypes.NewHeight(0, counterparty.LastHeader.GetHeight()), commitmenttypes.GetSDKSpecs(),
+		)
+		consensusState = counterparty.LastHeader.ConsensusState()
+	case clientexported.ClientTypeSoloMachine:
+		solo := NewSolomachine(chain.t, clientID)
+		clientState = solo.ClientState()
+		consensusState = solo.ConsensusState()
+	default:
+		chain.t.Fatalf("unsupported client state type %s", clientType)
+	}
+
+	msg, err := clienttypes.NewMsgCreateClient(
+		clientID, clientState, consensusState, chain.SenderAccount.GetAddress(),
+	)
+	require.NoError(chain.t, err)
+	return msg
 }
 
 // CreateTMClient will construct and execute a 07-tendermint MsgCreateClient. A counterparty
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, clientexported.ClientTypeTendermint)
 	return chain.sendMsgs(msg)
 }
 
@@ -400,7 +432,9 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		}
 	}
 	// inject trusted fields into last header
-	header.TrustedHeight = trustedHeight
+	// for now assume epoch number is 0
+	// TODO: use clienttypes.Height once Header.GetHeight is updated
+	header.TrustedHeight = clienttypes.NewHeight(0, trustedHeight)
 
 	trustedVals, err := tmTrustedVals.ToProto()
 	if err != nil {
@@ -408,10 +442,11 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 	}
 	header.TrustedValidators = trustedVals
 
-	msg := ibctmtypes.NewMsgUpdateClient(
+	msg, err := clienttypes.NewMsgUpdateClient(
 		clientID, header,
 		chain.SenderAccount.GetAddress(),
 	)
+	require.NoError(chain.t, err)
 
 	return chain.sendMsgs(msg)
 }
@@ -550,14 +585,28 @@ func (chain *TestChain) ConnectionOpenConfirm(
 
 // CreatePortCapability binds and claims a capability for the given portID if it does not
 // already exist. This function will fail testing on any resulting error.
+// NOTE: only creation of a capbility for a transfer or mock port is supported
+// Other applications must bind to the port in InitGenesis or modify this code.
 func (chain *TestChain) CreatePortCapability(portID string) {
 	// check if the portId is already binded, if not bind it
 	_, ok := chain.App.ScopedIBCKeeper.GetCapability(chain.GetContext(), host.PortPath(portID))
 	if !ok {
+		// create capability using the IBC capability keeper
 		cap, err := chain.App.ScopedIBCKeeper.NewCapability(chain.GetContext(), host.PortPath(portID))
 		require.NoError(chain.t, err)
-		err = chain.App.ScopedTransferKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(portID))
-		require.NoError(chain.t, err)
+
+		switch portID {
+		case MockPort:
+			// claim capability using the mock capability keeper
+			err = chain.App.ScopedIBCMockKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(portID))
+			require.NoError(chain.t, err)
+		case TransferPort:
+			// claim capability using the transfer capability keeper
+			err = chain.App.ScopedTransferKeeper.ClaimCapability(chain.GetContext(), cap, host.PortPath(portID))
+			require.NoError(chain.t, err)
+		default:
+			panic(fmt.Sprintf("unsupported ibc testing package port ID %s", portID))
+		}
 	}
 
 	chain.App.Commit()
@@ -714,14 +763,14 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// PacketExecuted simulates receiving and writing an acknowledgement to the chain.
-func (chain *TestChain) PacketExecuted(
+// ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
+func (chain *TestChain) ReceiveExecuted(
 	packet channelexported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.PacketExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(chain.GetContext(), channelCap, packet, TestHash)
 	if err != nil {
 		return err
 	}

@@ -746,6 +746,18 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 	}
 }
 
+// ref: https://github.com/cosmos/cosmos-sdk/issues/7222
+func TestRepeated(t *testing.T) {
+	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
+
+	marshalled, err := data.Marshal()
+	require.NoError(t, err)
+
+	unmarshalled := &testdata.TestRepeatedUints{}
+	_, err = RejectUnknownFields(marshalled, unmarshalled, false)
+	require.NoError(t, err)
+}
+
 func mustMarshal(msg proto.Message) []byte {
 	blob, err := proto.Marshal(msg)
 	if err != nil {

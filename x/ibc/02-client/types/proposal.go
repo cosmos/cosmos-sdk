@@ -10,13 +10,7 @@ const (
 	ProposalTypeClientUpdate = "ClientUpdate"
 )
 
-// Assert ClientUpdateProposal implements govtypes.Content at compile-time
 var _ govtypes.Content = &ClientUpdateProposal{}
-
-func init() {
-	govtypes.RegisterProposalType(ProposalTypeClientUpdate)
-	govtypes.RegisterProposalTypeCodec(&ClientUpdateProposal{}, "cosmos-sdk/ClientUpdateProposal")
-}
 
 // NewClientUpdateProposal creates a new client update proposal.
 func NewClientUpdateProposal(title, description, clientID string, header exported.Header) (*ClientUpdateProposal, error) {

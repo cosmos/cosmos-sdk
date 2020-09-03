@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -20,7 +19,7 @@ type StdTxBuilder struct {
 	cdc *codec.LegacyAmino
 }
 
-var _ tx.TxBuilder = &StdTxBuilder{}
+var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() authsigning.Tx {
@@ -81,7 +80,7 @@ type StdTxConfig struct {
 var _ client.TxConfig = StdTxConfig{}
 
 // NewTxBuilder implements TxConfig.NewTxBuilder
-func (s StdTxConfig) NewTxBuilder() tx.TxBuilder {
+func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 	return &StdTxBuilder{
 		StdTx: StdTx{},
 		cdc:   s.Cdc,
@@ -89,7 +88,7 @@ func (s StdTxConfig) NewTxBuilder() tx.TxBuilder {
 }
 
 // WrapTxBuilder returns a StdTxBuilder from provided transaction
-func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (tx.TxBuilder, error) {
+func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	stdTx, ok := newTx.(StdTx)
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)

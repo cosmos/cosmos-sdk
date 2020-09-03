@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -47,7 +46,7 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 // SignTx appends a signature to a transaction. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx txtypes.TxBuilder, offline bool) error {
+func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline bool) error {
 	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
 		return err
@@ -70,7 +69,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx t
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
-	name string, txBuilder txtypes.TxBuilder, offline bool) (err error) {
+	name string, txBuilder client.TxBuilder, offline bool) (err error) {
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {

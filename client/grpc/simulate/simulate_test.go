@@ -99,8 +99,10 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	)
 	txBuilder.SetSignatures(sigV2)
 
-	any := txBuilder.GetAnyTx().GetCachedValue()
-	txTx, ok := any.(*txtypes.Tx)
+	any, ok := txBuilder.(txtypes.IsAnyTx)
+	s.Require().True(ok)
+	cached := any.GetAnyTx().GetCachedValue()
+	txTx, ok := cached.(*txtypes.Tx)
 	s.Require().True(ok)
 	res, err := s.queryClient.Simulate(
 		context.Background(),

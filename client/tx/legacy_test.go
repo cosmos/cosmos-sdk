@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -41,7 +40,7 @@ var (
 	}
 )
 
-func buildTestTx(t *testing.T, builder txtypes.TxBuilder) {
+func buildTestTx(t *testing.T, builder client.TxBuilder) {
 	builder.SetMemo(memo)
 	builder.SetGasLimit(gas)
 	builder.SetFeeAmount(fee)

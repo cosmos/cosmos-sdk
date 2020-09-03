@@ -6,6 +6,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,14 +41,14 @@ type wrapper struct {
 
 var (
 	_ authsigning.Tx             = &wrapper{}
-	_ tx.TxBuilder               = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
 type ExtensionOptionsTxBuilder interface {
-	tx.TxBuilder
+	client.TxBuilder
 
 	SetExtensionOptions(...*codectypes.Any)
 	SetNonCriticalExtensionOptions(...*codectypes.Any)
@@ -365,7 +366,7 @@ func (w *wrapper) GetAnyTx() *codectypes.Any {
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.
-func WrapTx(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) tx.TxBuilder {
+func WrapTx(protoTx *tx.Tx, pubkeyCodec types.PublicKeyCodec) client.TxBuilder {
 	return &wrapper{
 		tx:          protoTx,
 		pubkeyCodec: pubkeyCodec,

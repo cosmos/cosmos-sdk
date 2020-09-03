@@ -8,12 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // Keeper defines the IBC connection keeper
@@ -42,7 +41,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
-func (k Keeper) GetCommitmentPrefix() commitmentexported.Prefix {
+func (k Keeper) GetCommitmentPrefix() exported.Prefix {
 	return commitmenttypes.NewMerklePrefix([]byte(k.storeKey.Name()))
 }
 
@@ -111,7 +110,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 // no paths are stored.
 func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionPaths {
 	var allConnectionPaths []types.ConnectionPaths
-	k.clientKeeper.IterateClients(ctx, func(clientID string, cs clientexported.ClientState) bool {
+	k.clientKeeper.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
 		paths, found := k.GetClientConnectionPaths(ctx, clientID)
 		if !found {
 			// continue when connection handshake is not initialized

@@ -6,16 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.ClientState = (*ClientState)(nil)
+var _ exported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
 func NewClientState(consensusState *ConsensusState) *ClientState {
@@ -26,8 +23,8 @@ func NewClientState(consensusState *ConsensusState) *ClientState {
 }
 
 // ClientType is Solo Machine.
-func (cs ClientState) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (cs ClientState) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetLatestHeight returns the latest sequence number.
@@ -63,12 +60,12 @@ func (cs ClientState) Validate() error {
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ commitmentexported.Root,
+	_ exported.Root,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) error {
 	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
@@ -101,13 +98,13 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ commitmentexported.Root,
+	_ exported.Root,
 	sequence uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
 	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
@@ -141,10 +138,10 @@ func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	connectionID string,
-	connectionEnd connectionexported.ConnectionI,
+	connectionEnd exported.ConnectionI,
 ) error {
 	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
@@ -177,11 +174,11 @@ func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
+	channel exported.ChannelI,
 ) error {
 	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
 	if err != nil {
@@ -214,7 +211,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -249,7 +246,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -285,7 +282,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -319,7 +316,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -354,7 +351,7 @@ func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	sequence uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 ) (signature TimestampedSignature, err error) {
 	if cs.IsFrozen() {
@@ -397,7 +394,7 @@ func produceVerificationArgs(
 }
 
 // sets the client state to the store
-func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState clientexported.ClientState) {
+func setClientState(store sdk.KVStore, cdc codec.BinaryMarshaler, clientState exported.ClientState) {
 	bz := clienttypes.MustMarshalClientState(cdc, clientState)
 	store.Set(host.KeyClientState(), bz)
 }

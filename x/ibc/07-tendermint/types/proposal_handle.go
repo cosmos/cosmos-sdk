@@ -8,22 +8,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckProposedHeaderAndUpdateState will try to update the client with the new header if and
 // only if the proposal passes and one of the following two conditions is satisfied:
-// 		1) AllowGovernanceOverrideAfterExpiry=true and Expire(ctx.BlockTime) = true
-// 		2) AllowGovernanceOverrideAfterMinbehaviour and IsFrozen() = true
+// 		1) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
+// 		2) AllowUpdateAfterMisbehaviour and IsFrozen() = true
 // In case 2) before trying to update the client, the client will be unfrozen by resetting
-// the FrozenHeight to the zero Height. Note, that even if the update happens, it may not be
-// successful. The header may fail validation checks and an error will be returned in that
-// case.
+// the FrozenHeight to the zero Height. If AllowUpdateAfterMisbehaviour is set to true,
+// expired clients will also be updated even if AllowUpdateAfterExpiry is set to false.
+// Note, that even if the update happens, it may not be successful. The header may fail
+// validation checks and an error will be returned in that case.
 func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
-) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	header exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
 	tmHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
@@ -39,23 +40,27 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		)
 	}
 
-	// unfreeze client if the client is frozen and this is allowed. If the client is expired
-	// and allowed to be updated after expiry then we use do light validation on the header.
-	// Otherwise we process the header as normal to update the client. If none of these
-	// conditions are met then an error is returned.
 	if cs.IsFrozen() {
 		if !cs.AllowUpdateAfterMisbehaviour {
 			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is frozen but is not allowed to be unfrozen")
 		}
+
+		// unfreeze the client
 		cs.FrozenHeight = clienttypes.Height{}
-		if !(cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime())) {
+
+		// if the client is not expired, do full validation of the header
+		if !cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
 			return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 		}
 	} else if !(cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime())) {
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
-	cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
+	// the client is expired and either AllowUpdateAfterMisbehaviour or AllowUpdateAfterExpiry
+	// is set to true so light validation of the header is executed
+	if err := cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime()); err != nil {
+		return nil, nil, err
+	}
 
 	newClientState, consensusState := update(&cs, tmHeader)
 	return newClientState, consensusState, nil

@@ -116,7 +116,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -241,7 +241,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -362,7 +362,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -445,7 +445,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -525,7 +525,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -605,7 +605,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -684,7 +684,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,
@@ -764,7 +764,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			types.NewClientState(suite.solomachine.ConsensusState()),
+			&types.ClientState{1, suite.solomachine.ConsensusState()},
 			prefix,
 			proof,
 			false,

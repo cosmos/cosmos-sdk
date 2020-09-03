@@ -465,6 +465,12 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 
 }
 
+// ExpireClient fast forwards the chain's block time by the provided amount of time which will
+// expire any clients with a trusting period less than or equal to this amount of time.
+func (chain *TestChain) ExpireClient(amount time.Duration) {
+	chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(amount).Add(time.Second)
+}
+
 // CreateTMClientHeader creates a TM header to update the TM client.
 func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
 	vsetHash := chain.Vals.Hash()

@@ -4,16 +4,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckProposedHeaderAndUpdateState updates the consensus state to the header's sequence and
 // public key. An error is returned if the header cannot be casted to a solo machine header.
 func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
-) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	header exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
 	smHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(

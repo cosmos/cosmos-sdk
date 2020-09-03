@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 
 				tmClientState, ok := clientState.(*ibctmtypes.ClientState)
 				suite.Require().True(ok)
-				tmClientState.AllowGovernanceOverrideAfterMisbehaviour = true
+				tmClientState.AllowUpdateAfterMisbehaviour = true
 				tmClientState.FrozenHeight = clienttypes.NewHeight(0, tmClientState.GetLatestHeight())
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClientState)
 

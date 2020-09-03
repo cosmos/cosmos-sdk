@@ -9,7 +9,17 @@
 
 Proposed
 
-## Context
+## Abstract
+
+We need fully deterministic Protobuf serializaiton which works across many languages / clients. Tthe major use-case is to sign a structure, and this is the flow:
+
+1. Serialize structure -> raw bytes
+1. Hash raw bytes.
+1. Sign the hash.
+
+We need to be sure that whenever we serialize and deserialize a data structure, no matter in which supported language, the raw bytes will stay the same.
+
+### Context
 
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
 serialization is not bijective (i.e. there exist a practically unlimited number of

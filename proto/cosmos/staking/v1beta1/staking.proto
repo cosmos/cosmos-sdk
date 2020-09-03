@@ -77,7 +77,7 @@ message Validator {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
-  bytes operator_address = 1 [
+  string operator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"operator_address\""
   ];
@@ -113,7 +113,7 @@ message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
-  repeated bytes addresses = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  repeated string addresses = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
 }
 
 // DVPair is struct that just has a delegator-validator pair with no other data.
@@ -123,11 +123,11 @@ message DVPair {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
-  bytes validator_address = 2 [
+  string validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -146,15 +146,15 @@ message DVVTriplet {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
-  bytes validator_src_address = 2 [
+  string validator_src_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
-  bytes validator_dst_address = 3 [
+  string validator_dst_address = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
@@ -172,11 +172,11 @@ message Delegation {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
-  bytes validator_address = 2 [
+  string validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -192,11 +192,11 @@ message UnbondingDelegation {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
-  bytes validator_address = 2 [
+  string validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -254,15 +254,15 @@ message Redelegation {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
-  bytes validator_src_address = 2 [
+  string validator_src_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
-  bytes validator_dst_address = 3 [
+  string validator_dst_address = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];

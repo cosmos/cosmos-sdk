@@ -17,7 +17,7 @@ message MsgConnectionOpenInit {
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  bytes signer = 4
+  string signer = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -46,7 +46,7 @@ message MsgConnectionOpenTry {
   bytes proof_consensus = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes signer = 11
+  string signer = 11
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -70,7 +70,7 @@ message MsgConnectionOpenAck {
   bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   uint64 consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\""];
-  bytes signer = 9
+  string signer = 9
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -83,7 +83,7 @@ message MsgConnectionOpenConfirm {
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   bytes proof_ack = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
   uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes signer = 4
+  string signer = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 

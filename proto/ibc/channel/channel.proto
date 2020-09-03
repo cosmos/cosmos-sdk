@@ -11,7 +11,7 @@ message MsgChannelOpenInit {
   string  port_id    = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   string  channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
   Channel channel    = 3 [(gogoproto.nullable) = false];
-  bytes   signer     = 4
+  string   signer     = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -25,7 +25,7 @@ message MsgChannelOpenTry {
       [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes  proof_init   = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 7
+  string  signer       = 7
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -38,7 +38,7 @@ message MsgChannelOpenAck {
       [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
   bytes  proof_try    = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   uint64 proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 6
+  string  signer       = 6
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -49,7 +49,7 @@ message MsgChannelOpenConfirm {
   string channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
   bytes  proof_ack    = 3 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 5
+  string  signer       = 5
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -58,7 +58,7 @@ message MsgChannelOpenConfirm {
 message MsgChannelCloseInit {
   string port_id    = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  bytes  signer     = 3
+  string  signer     = 3
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -69,7 +69,7 @@ message MsgChannelCloseConfirm {
   string channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
   bytes  proof_init   = 3 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   uint64 proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 5
+  string  signer       = 5
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -78,7 +78,7 @@ message MsgRecvPacket {
   Packet packet       = 1 [(gogoproto.nullable) = false];
   bytes  proof        = 2;
   uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
-  bytes  signer       = 4
+  string  signer       = 4
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
@@ -89,7 +89,7 @@ message MsgTimeout {
   uint64 proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\""];
   uint64 next_sequence_recv = 4
       [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  bytes signer = 5
+  string signer = 5
       [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 

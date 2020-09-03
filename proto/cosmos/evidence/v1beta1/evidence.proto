@@ -16,7 +16,7 @@ message Equivocation {
   int64                     height            = 1;
   google.protobuf.Timestamp time              = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   int64                     power             = 3;
-  bytes                     consensus_address = 4 [
+  string                     consensus_address = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
     (gogoproto.moretags) = "yaml:\"consensus_address\""
   ];

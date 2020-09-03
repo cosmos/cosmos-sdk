@@ -10,9 +10,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -243,15 +243,15 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the PacketExecuted function
+	// NOTE: the remaining code is located in the ReceiveExecuted function
 	return nil
 }
 
-// PacketExecuted writes the packet execution acknowledgement to the state,
+// ReceiveExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) PacketExecuted(
+func (k Keeper) ReceiveExecuted(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,

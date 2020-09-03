@@ -5,9 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -46,7 +47,7 @@ func (suite *KeeperTestSuite) TestQueryConnection() {
 		{
 			"success",
 			func() {
-				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
 				connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
@@ -110,11 +111,11 @@ func (suite *KeeperTestSuite) TestQueryConnections() {
 		{
 			"success",
 			func() {
-				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				connA1, connB1, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 				suite.Require().NoError(err)
 
-				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA1, clientB1, connA2, connB2 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				counterparty1 := types.NewCounterparty(clientB, connB0.ID, suite.chainB.GetPrefix())
 				counterparty2 := types.NewCounterparty(clientB, connB1.ID, suite.chainB.GetPrefix())
@@ -196,7 +197,7 @@ func (suite *KeeperTestSuite) TestQueryClientConnections() {
 		{
 			"success",
 			func() {
-				clientA, clientB, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA, clientB, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 				connA1, _ := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 				expPaths = []string{connA0.ID, connA1.ID}
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.chainA.GetContext(), clientA, expPaths)
@@ -268,7 +269,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 		{
 			"client state not found",
 			func() {
-				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				// set connection to empty so clientID is empty
 				suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, types.ConnectionEnd{})
@@ -281,7 +282,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				expClientState := suite.chainA.GetClientState(clientA)
 				expIdentifiedClientState = clienttypes.NewIdentifiedClientState(clientA, expClientState)
@@ -317,7 +318,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionClientState() {
 func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 	var (
 		req               *types.QueryConnectionConsensusStateRequest
-		expConsensusState clientexported.ConsensusState
+		expConsensusState exported.ConsensusState
 		expClientID       string
 	)
 
@@ -356,7 +357,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 		{
 			"consensus state not found",
 			func() {
-				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
@@ -367,7 +368,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 		{
 			"success",
 			func() {
-				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+				clientA, _, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 				clientState := suite.chainA.GetClientState(clientA)
 				expConsensusState, _ = suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())

@@ -2,15 +2,15 @@ package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
-		clientState clientexported.ClientState
-		header      clientexported.Header
+		clientState exported.ClientState
+		header      exported.Header
 	)
 
 	testCases := []struct {

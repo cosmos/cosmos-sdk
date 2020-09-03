@@ -9,10 +9,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func TestDecodeStore(t *testing.T) {
@@ -20,11 +21,11 @@ func TestDecodeStore(t *testing.T) {
 	clientID := "clientidone"
 
 	clientState := &ibctmtypes.ClientState{
-		FrozenHeight: 10,
+		FrozenHeight: types.NewHeight(0, 10),
 	}
 
 	consState := &ibctmtypes.ConsensusState{
-		Height:    10,
+		Height:    types.NewHeight(0, 10),
 		Timestamp: time.Now().UTC(),
 	}
 

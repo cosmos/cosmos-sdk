@@ -3,6 +3,7 @@ package tx
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,12 +38,12 @@ func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec,
 	}
 }
 
-func (g config) NewTxBuilder() client.TxBuilder {
+func (g config) NewTxBuilder() tx.TxBuilder {
 	return newBuilder(g.pubkeyCodec)
 }
 
 // WrapTxBuilder returns a builder from provided transaction
-func (g config) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
+func (g config) WrapTxBuilder(newTx sdk.Tx) (tx.TxBuilder, error) {
 	newBuilder, ok := newTx.(*wrapper)
 	if !ok {
 		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, newTx)

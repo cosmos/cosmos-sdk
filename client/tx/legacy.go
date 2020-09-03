@@ -6,13 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConvertTxToStdTx converts a transaction to the legacy StdTx format
 func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (types.StdTx, error) {
-
 	if stdTx, ok := tx.(types.StdTx); ok {
 		return stdTx, nil
 	}
@@ -36,7 +36,7 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (types.StdTx, err
 
 // CopyTx copies a Tx to a new TxBuilder, allowing conversion between
 // different transaction formats.
-func CopyTx(tx signing.Tx, builder client.TxBuilder) error {
+func CopyTx(tx signing.Tx, builder tx.TxBuilder) error {
 	err := builder.SetMsgs(tx.GetMsgs()...)
 	if err != nil {
 		return err

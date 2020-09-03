@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
@@ -278,7 +279,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func marshalSignatureJSON(txConfig client.TxConfig, txBldr client.TxBuilder, generateSignatureOnly bool) ([]byte, error) {
+func marshalSignatureJSON(txConfig client.TxConfig, txBldr txtypes.TxBuilder, generateSignatureOnly bool) ([]byte, error) {
 	parsedTx := txBldr.GetTx()
 
 	if generateSignatureOnly {

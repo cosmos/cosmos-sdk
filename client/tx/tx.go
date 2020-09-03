@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -205,7 +206,7 @@ func WriteGeneratedTxResponse(
 // BuildUnsignedTx builds a transaction to be signed given a set of messages. The
 // transaction is initially created via the provided factory's generator. Once
 // created, the fee, memo, and messages are set.
-func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
+func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (tx.TxBuilder, error) {
 	if txf.chainID == "" {
 		return nil, fmt.Errorf("chain ID required but not specified")
 	}
@@ -328,7 +329,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
-	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+	txBuilder tx.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
@@ -363,7 +364,7 @@ func SignWithPrivKey(
 // Sign signs a given tx with the provided name and passphrase. The bytes signed
 // over are canconical. The resulting signature will be set on the transaction.
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
+func Sign(txf Factory, name string, txBuilder tx.TxBuilder) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}

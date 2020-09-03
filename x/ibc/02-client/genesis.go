@@ -2,10 +2,10 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
@@ -43,7 +43,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+	// Hardcode 0 as epoch number for now
+	// TODO: Retrieve epoch from chain-id
+	clientState := localhosttypes.NewClientState(
+		ctx.ChainID(), types.NewHeight(0, uint64(ctx.BlockHeight())),
+	)
 
 	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
 	if err != nil {

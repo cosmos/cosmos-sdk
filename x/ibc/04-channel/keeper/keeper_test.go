@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 // and existence of a channel in INIT on chainA.
 func (suite *KeeperTestSuite) TestSetChannel() {
 	// create client and connections on both chains
-	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 	// check for channel to be created on chainB
 	channelA := connA.NextTestChannel(ibctesting.TransferPort)

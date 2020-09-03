@@ -13,11 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -185,6 +185,7 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
+// TODO: Replace height with *clienttypes.Height once interfaces change
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
 	if !found {
@@ -192,7 +193,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.
 	}
 
 	consensusState := &ibctmtypes.ConsensusState{
-		Height:             height,
+		Height:             types.NewHeight(0, height),
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.GetAppHash()),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
@@ -218,7 +219,10 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	if tmClient.LatestHeight > uint64(ctx.BlockHeight()) {
+	// For now, assume epoch number is zero
+	// TODO: Retrieve epoch number from chain-id
+	selfHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
+	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())
 	}

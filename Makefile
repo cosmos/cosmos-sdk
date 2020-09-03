@@ -86,14 +86,37 @@ include contrib/devtools/Makefile
 build: go.sum
 	go build -mod=readonly ./...
 
-build-simd: go.sum
+simd:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-build-simd-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
+build-simd-all: go.sum
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),$(MAKE) -C contrib/images rbuilder)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='darwin linux windows' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
-.PHONY: build build-simd build-simd-linux
+build-simd-linux: go.sum
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),$(MAKE) -C contrib/images rbuilder)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='linux' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=false \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+	mkdir -p $(BUILDDIR)
+	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
+
+.PHONY: build build-simd build-simd-linux simd
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -116,7 +139,9 @@ distclean: clean
     .gitian-builder-cache/
 
 clean:
-	rm -rf $(BUILDDIR)/
+	rm -rf \
+    $(BUILDDIR)/ \
+    artifacts/ \
 
 .PHONY: distclean clean
 

@@ -15,7 +15,8 @@ Fully deterministic structure serializaiton, which works across many languages /
 is needed for structure signature use-case. We need to be sure that whenever we serialize
 and deserialize a data structure, no matter in which supported language, the raw bytes
 will stay the same. Protobufs are not deterministic. Currently, for Block signature
-we are using a workaround: we create a new TxRaw (as explained in
+we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
+instance (as explained in
 [adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
 by converting all Tx fields to bytes on the client side. This adds additional manual
 step when sending and signing transactions.

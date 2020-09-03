@@ -44,6 +44,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestGRPCQueries() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	consAddrBase64 := base64.URLEncoding.EncodeToString(sdk.ConsAddress(val.PubKey.Address()))
 
 	testCases := []struct {

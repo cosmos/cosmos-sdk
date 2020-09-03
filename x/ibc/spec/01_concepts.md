@@ -17,19 +17,19 @@ type Height struct {
    EpocHeight  uint64
 ```
 
-The EpochNumber represents the epoch of the chain that the height is representing.
+The `EpochNumber` represents the epoch of the chain that the height is representing.
 An epoch typically represents a continuous, monotonically increasing range of block-heights.
-The EpochHeight represents the height of the chain within the given epoch.
+The `EpochHeight` represents the height of the chain within the given epoch.
 
-On any reset of the EpochHeight, for example when hardforking a Tendermint chain,
-the EpochNumber will get incremented. This allows IBC clients to distinguish between a
+On any reset of the `EpochHeight`, for example, when hard-forking a Tendermint chain,
+the `EpochNumber` will get incremented. This allows IBC clients to distinguish between a
 block-height `n` of a previous version of the chain (at epoch `p`) and block-height `n` of the current
 version of the chain (at epoch `e`).
 
-Heights that share the same epoch number can be compared by simply comparing their respective EpochHeights.
-Heights that do not share the same epoch number will only be compared using their respective EpochNumbers.
+`Heights` that share the same epoch number can be compared by simply comparing their respective `EpochHeights`.
+Heights that do not share the same epoch number will only be compared using their respective `EpochNumbers`.
 Thus a height `h` with epoch number `e+1` will always be greater than a height `g` with epoch number `e`,
-REGARDLESS of the difference in epoch heights.
+**REGARDLESS** of the difference in epoch heights.
 
 Ex: `Height{EpochNumber: 3, EpochHeight: 0} > Height{EpochNumber: 2, EpochHeight: 100000000000}`
 
@@ -40,7 +40,7 @@ IBC Tendermint clients then verifies the epoch number against their `ChainId` an
 
 TODO: Explain how to structure chain-id to make epoch-number parsable
 
-Clients that do not require epochs, such as the solo-machine client, simply hardcode 0 into the epoch number whenever they 
+Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they 
 need to return an IBC height when implementing IBC interfaces and use the `EpochHeight` exclusively.
 
 Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their Update, Misbehavior, and 

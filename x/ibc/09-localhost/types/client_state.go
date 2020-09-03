@@ -48,7 +48,7 @@ func (cs ClientState) IsFrozen() bool {
 	return false
 }
 
-// GetFrozenHeight returns 0.
+// GetFrozenHeight returns an uninitialized IBC Height.
 func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.Height{}
 }

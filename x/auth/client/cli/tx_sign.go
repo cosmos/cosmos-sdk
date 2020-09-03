@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 )
 
 const (
@@ -273,10 +274,12 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err = clientCtx.LegacyAmino.MarshalJSON(stdTx)
-			if err != nil {
-				return err
+			req := rest.BroadcastReq{
+				Tx:   stdTx,
+				Mode: "block|sync|async",
 			}
+
+			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
 
 		} else {
 			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)

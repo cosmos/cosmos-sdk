@@ -18,6 +18,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -161,10 +162,12 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			json, err = clientCtx.LegacyAmino.MarshalJSON(stdTx)
-			if err != nil {
-				return err
+			req := rest.BroadcastReq{
+				Tx:   stdTx,
+				Mode: "block|sync|async",
 			}
+
+			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
 
 		} else {
 			json, err = marshalSignatureJSON(txCfg, txBuilder, sigOnly)

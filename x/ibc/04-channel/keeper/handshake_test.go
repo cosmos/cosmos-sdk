@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -263,7 +264,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
 				channelB.PortID, channelB.ID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.TransferPort).Version,
-				proof, proofHeight+heightDiff,
+				proof, malleateHeight(proofHeight, heightDiff),
 			)
 
 			if tc.expPass {
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
 				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, channelB.Version,
-				proof, proofHeight+heightDiff,
+				proof, malleateHeight(proofHeight, heightDiff),
 			)
 
 			if tc.expPass {
@@ -519,7 +520,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID,
-				channelCap, proof, proofHeight+heightDiff,
+				channelCap, proof, malleateHeight(proofHeight, heightDiff),
 			)
 
 			if tc.expPass {
@@ -720,7 +721,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanCloseConfirm(
 				suite.chainB.GetContext(), channelB.PortID, channelB.ID, channelCap,
-				proof, proofHeight+heightDiff,
+				proof, malleateHeight(proofHeight, heightDiff),
 			)
 
 			if tc.expPass {
@@ -730,4 +731,8 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 			}
 		})
 	}
+}
+
+func malleateHeight(height exported.Height, diff uint64) exported.Height {
+	return clienttypes.NewHeight(height.GetEpochNumber(), height.GetEpochHeight()+diff)
 }

@@ -57,7 +57,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 
 	var ageBlocks int64
 	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.EpochNumber {
-		// if the misbehaviour is in the same epoch as the client than
+		// if the misbehaviour is in the same epoch as the client then
 		// perform expiry check using block height in addition to time
 		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
 		ageBlocks = int64(cs.LatestHeight.EpochHeight - infractionHeight)

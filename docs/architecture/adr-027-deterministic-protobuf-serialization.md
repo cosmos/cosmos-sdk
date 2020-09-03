@@ -12,12 +12,12 @@ Proposed
 ## Context
 
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
-serialization is not unique (i.e. there exist a practically unlimited number of
+serialization is not bijective (i.e. there exist a practically unlimited number of
 valid binary representations for a protobuf document)<sup>1</sup>. For signature
 verification in Cosmos SDK, signer and verifier need to agree on the same
 serialization of a SignDoc as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
-serialization. This document describes a deterministic serialization scheme for
+serialization. This document describes a bijective serialization scheme for
 a subset of protobuf documents, that covers this use case but can be reused in
 other cases as well.
 

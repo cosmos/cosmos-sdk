@@ -10,18 +10,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.ClientState = (*ClientState)(nil)
+var _ exported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
@@ -50,8 +47,8 @@ func (cs ClientState) GetChainID() string {
 }
 
 // ClientType is tendermint.
-func (cs ClientState) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
+func (cs ClientState) ClientType() exported.ClientType {
+	return exported.Tendermint
 }
 
 // GetLatestHeight returns latest block height.
@@ -128,12 +125,12 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot commitmentexported.Root,
+	provingRoot exported.Root,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) error {
 	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -168,13 +165,13 @@ func (cs ClientState) VerifyClientState(
 func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot commitmentexported.Root,
+	provingRoot exported.Root,
 	height uint64,
 	counterpartyClientIdentifier string,
 	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
 	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -214,10 +211,10 @@ func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	connectionID string,
-	connectionEnd connectionexported.ConnectionI,
+	connectionEnd exported.ConnectionI,
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -252,11 +249,11 @@ func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
+	channel exported.ChannelI,
 ) error {
 	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
@@ -291,7 +288,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -321,7 +318,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -352,7 +349,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -381,7 +378,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
@@ -414,7 +411,7 @@ func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
 	height uint64,
-	prefix commitmentexported.Prefix,
+	prefix exported.Prefix,
 	proof []byte,
 ) (merkleProof commitmenttypes.MerkleProof, consensusState *ConsensusState, err error) {
 	if cs.GetLatestHeight() < height {

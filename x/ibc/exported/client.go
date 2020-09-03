@@ -9,9 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.
@@ -34,9 +31,9 @@ type ClientState interface {
 	VerifyClientState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
+		root Root,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,
 		clientState ClientState,
@@ -44,11 +41,11 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
+		root Root,
 		height uint64,
 		counterpartyClientIdentifier string,
 		consensusHeight uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		consensusState ConsensusState,
 	) error
@@ -56,26 +53,26 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		connectionID string,
-		connectionEnd connectionexported.ConnectionI,
+		connectionEnd ConnectionI,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
-		channel channelexported.ChannelI,
+		channel ChannelI,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -86,7 +83,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -97,7 +94,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -107,7 +104,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -124,7 +121,7 @@ type ConsensusState interface {
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitmentexported.Root
+	GetRoot() Root
 
 	// GetTimestamp returns the timestamp (in nanoseconds) of the consensus state
 	GetTimestamp() uint64

@@ -7,16 +7,16 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.Header = Header{}
+var _ exported.Header = Header{}
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
-func (h Header) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
+func (h Header) ClientType() exported.ClientType {
+	return exported.Tendermint
 }
 
 // ConsensusState returns the updated consensus state associated with the header

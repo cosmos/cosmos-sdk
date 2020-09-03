@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -98,9 +99,12 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	)
 	txBuilder.SetSignatures(sigV2)
 
+	any := txBuilder.GetAnyTx().GetCachedValue()
+	txTx, ok := any.(*txtypes.Tx)
+	s.Require().True(ok)
 	res, err := s.queryClient.Simulate(
 		context.Background(),
-		&simulate.SimulateRequest{Tx: txBuilder.GetProtoTx()},
+		&simulate.SimulateRequest{Tx: txTx},
 	)
 	s.Require().NoError(err)
 

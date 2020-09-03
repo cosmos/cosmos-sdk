@@ -1,6 +1,7 @@
 package tx
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -13,7 +14,7 @@ import (
 type TxBuilder interface {
 	GetTx() signing.Tx
 	// GetProtoTx returns the tx as a proto.Message.
-	GetProtoTx() *Tx
+	GetAnyTx() *codectypes.Any
 
 	SetMsgs(msgs ...sdk.Msg) error
 	SetSignatures(signatures ...signingtypes.SignatureV2) error

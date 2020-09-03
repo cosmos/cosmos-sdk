@@ -357,8 +357,11 @@ func (w *wrapper) GetTx() authsigning.Tx {
 }
 
 // GetProtoTx returns the tx as a proto.Message.
-func (w *wrapper) GetProtoTx() *tx.Tx {
-	return w.tx
+func (w *wrapper) GetAnyTx() *codectypes.Any {
+	fmt.Println("wrapper GetAnyTx w.tx=", w.tx)
+	// We're sure here that w.tx is a proto.Message, so this will call
+	// codectypes.NewAnyWithValue under the hood.
+	return codectypes.UnsafePackAny(w.tx)
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.

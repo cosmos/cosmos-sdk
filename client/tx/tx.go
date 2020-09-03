@@ -266,7 +266,13 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	simReq := sim.SimulateRequest{Tx: txb.GetProtoTx()}
+	any := txb.GetAnyTx().GetCachedValue()
+	txTx, ok := any.(*tx.Tx)
+	if !ok {
+		return nil, fmt.Errorf("cannot simulate amino tx")
+	}
+
+	simReq := sim.SimulateRequest{Tx: txTx}
 
 	return simReq.Marshal()
 }

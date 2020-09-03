@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -50,7 +51,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			clientA, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			clientState := suite.chainA.GetClientState(clientA)
 			height = clientState.GetLatestHeight()
 

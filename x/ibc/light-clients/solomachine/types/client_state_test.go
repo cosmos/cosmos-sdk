@@ -1,12 +1,11 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -32,6 +31,11 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 			"valid client state",
 			suite.solomachine.ClientState(),
 			true,
+		},
+		{
+			"empty ClientState",
+			&types.ClientState{},
+			false,
 		},
 		{
 			"sequence is zero",
@@ -68,7 +72,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
@@ -92,7 +96,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -191,7 +195,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	// create client for tendermint so we can use consensus state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)
@@ -217,7 +221,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -338,7 +342,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -421,7 +425,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -501,7 +505,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -581,7 +585,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -660,7 +664,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -740,7 +744,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestVerifyClientState() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, clientB, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, clientB, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			counterpartyClient, clientProof := suite.chainB.QueryClientStateProof(clientB)
 			proofHeight := uint64(suite.chainB.GetContext().BlockHeight() - 1)
@@ -79,20 +79,20 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		expPass  bool
 	}{
 		{"verification success", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 		}, true},
 		{"client state not found", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			changeClientID = true
 		}, false},
 		{"consensus state not found", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			heightDiff = 5
 		}, false},
 		{"verification failed", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			clientB := connB.ClientID
 
 			// give chainB wrong consensus state for chainA
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
-			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.Height, tmConsState)
+			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.GetHeight(), tmConsState)
 
 			suite.coordinator.CommitBlock(suite.chainB)
 		}, false},
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestVerifyChannelState() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, _, connA, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketCommitment() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, connB, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainB.GetConnection(connB)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -392,12 +392,12 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.Require().NoError(err)
 
 			if tc.recvAck {
-				err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 			} else {
 				// need to update height to prove absence
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			}
 
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -440,7 +440,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, connA, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
 				connection.ClientId = ibctesting.InvalidID
@@ -451,7 +451,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())

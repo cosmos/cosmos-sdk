@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
@@ -36,8 +36,8 @@ import (
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
-) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	header exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
 	tmHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
@@ -46,7 +46,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
+	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight.EpochHeight)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(
 			err, "could not get consensus state from clientstore at TrustedHeight: %d", tmHeader.TrustedHeight,
@@ -63,7 +63,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 
 // checkTrustedHeader checks that consensus state matches trusted fields of Header
 func checkTrustedHeader(header *Header, consState *ConsensusState) error {
-	if header.TrustedHeight != consState.Height {
+	if !header.TrustedHeight.EQ(consState.Height) {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
 			"trusted header height %d does not match consensus state height %d",
@@ -115,7 +115,8 @@ func checkValidity(
 	}
 
 	// assert header height is newer than consensus state
-	if header.GetHeight() <= consState.Height {
+	height := clienttypes.NewHeight(0, header.GetHeight())
+	if height.LTE(consState.Height) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
 			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,
@@ -125,7 +126,7 @@ func checkValidity(
 	// Construct a trusted header using the fields in consensus state
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
 	trustedHeader := tmtypes.Header{
-		Height:             int64(consState.Height),
+		Height:             int64(consState.Height.EpochHeight),
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}
@@ -151,11 +152,12 @@ func checkValidity(
 
 // update the consensus state from a new header
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
-	if header.GetHeight() > clientState.LatestHeight {
-		clientState.LatestHeight = header.GetHeight()
+	height := clienttypes.NewHeight(0, header.GetHeight())
+	if height.GT(clientState.LatestHeight) {
+		clientState.LatestHeight = height
 	}
 	consensusState := &ConsensusState{
-		Height:             header.GetHeight(),
+		Height:             height,
 		Timestamp:          header.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,

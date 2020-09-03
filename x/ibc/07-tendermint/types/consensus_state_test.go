@@ -3,9 +3,10 @@ package types_test
 import (
 	"time"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
@@ -50,7 +51,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"height is 0",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             0,
+				Height:             clienttypes.NewHeight(0, 0),
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},
@@ -68,7 +69,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		suite.Require().Equal(tc.consensusState.ClientType(), clientexported.Tendermint)
+		suite.Require().Equal(tc.consensusState.ClientType(), exported.Tendermint)
 		suite.Require().Equal(tc.consensusState.GetRoot(), tc.consensusState.Root)
 
 		if tc.expectPass {

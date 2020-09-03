@@ -9,14 +9,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	GetChainID() string
 	ClientType() ClientType
 	GetLatestHeight() uint64
 	IsFrozen() bool
@@ -34,9 +30,9 @@ type ClientState interface {
 	VerifyClientState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
+		root Root,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,
 		clientState ClientState,
@@ -44,11 +40,11 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
+		root Root,
 		height uint64,
 		counterpartyClientIdentifier string,
 		consensusHeight uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		consensusState ConsensusState,
 	) error
@@ -56,26 +52,26 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		connectionID string,
-		connectionEnd connectionexported.ConnectionI,
+		connectionEnd ConnectionI,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
-		channel channelexported.ChannelI,
+		channel ChannelI,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -86,7 +82,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -97,7 +93,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -107,7 +103,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height uint64,
-		prefix commitmentexported.Prefix,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -124,13 +120,16 @@ type ConsensusState interface {
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitmentexported.Root
+	GetRoot() Root
 
 	// GetTimestamp returns the timestamp (in nanoseconds) of the consensus state
 	GetTimestamp() uint64
 
 	ValidateBasic() error
 }
+
+// TypeClientMisbehaviour is the shared evidence misbehaviour type
+const TypeClientMisbehaviour string = "client_misbehaviour"
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
@@ -147,39 +146,18 @@ type Misbehaviour interface {
 type Header interface {
 	ClientType() ClientType
 	GetHeight() uint64
+	ValidateBasic() error
 }
 
-// message and evidence types for the IBC client
-const (
-	TypeMsgCreateClient             string = "create_client"
-	TypeMsgUpdateClient             string = "update_client"
-	TypeMsgSubmitClientMisbehaviour string = "submit_client_misbehaviour"
-	TypeEvidenceClientMisbehaviour  string = "client_misbehaviour"
-)
-
-// MsgCreateClient defines the msg interface that the
-// CreateClient Handler expects
-type MsgCreateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetClientType() string
-	GetConsensusState() ConsensusState
-	InitializeClientState() ClientState
-}
-
-// MsgUpdateClient defines the msg interface that the
-// UpdateClient Handler expects
-type MsgUpdateClient interface {
-	sdk.Msg
-	GetClientID() string
-	GetHeader() Header
-}
-
-// MsgSubmitMisbehaviour defines the msg interface that the
-// SubmitMisbehaviour Handler expects
-type MsgSubmitMisbehaviour interface {
-	sdk.Msg
-	GetMisbehaviour() Misbehaviour
+// Height is a wrapper interface over clienttypes.Height
+// all clients must use the concrete implementation in types
+type Height interface {
+	IsZero() bool
+	LT(Height) bool
+	LTE(Height) bool
+	EQ(Height) bool
+	GT(Height) bool
+	GTE(Height) bool
 }
 
 // ClientType defines the type of the consensus algorithm
@@ -201,6 +179,8 @@ const (
 
 func (ct ClientType) String() string {
 	switch ct {
+	case SoloMachine:
+		return ClientTypeSoloMachine
 	case Tendermint:
 		return ClientTypeTendermint
 	case Localhost:
@@ -236,6 +216,8 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 // type. It returns 0 if the type is not found/registered.
 func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
+	case ClientTypeSoloMachine:
+		return SoloMachine
 	case ClientTypeTendermint:
 		return Tendermint
 	case ClientTypeLocalHost:

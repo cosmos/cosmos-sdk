@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -46,7 +47,11 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgCreateClient(clientID, consensusState)
+			clientState := types.NewClientState(consensusState)
+			msg, err := clienttypes.NewMsgCreateClient(clientID, clientState, consensusState, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -88,7 +93,11 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header)
+			msg, err := clienttypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -128,7 +137,11 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgSubmitMisbehaviour(m.ClientId, m, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

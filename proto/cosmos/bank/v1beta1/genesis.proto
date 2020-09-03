@@ -35,10 +35,11 @@ message GenesisState {
 // Balance defines an account address and balance pair used in the bank module's
 // genesis state.
 message Balance {
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
   // address is the address of the balance holder.
-  bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2 [

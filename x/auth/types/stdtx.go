@@ -193,8 +193,8 @@ func (tx StdTx) ValidateBasic() error {
 }
 
 // AsAny implements IntoAny.AsAny.
-func (s *StdTx) AsAny() *codectypes.Any {
-	return codectypes.UnsafePackAny(s)
+func (tx *StdTx) AsAny() *codectypes.Any {
+	return codectypes.UnsafePackAny(tx)
 }
 
 // GetSigners returns the addresses that must sign the transaction.

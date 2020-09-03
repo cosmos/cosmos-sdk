@@ -91,7 +91,7 @@ func (any *Any) Pack(x proto.Message) error {
 func UnsafePackAny(x interface{}) *Any {
 	if msg, ok := x.(proto.Message); ok {
 		any, err := NewAnyWithValue(msg)
-		if err != nil {
+		if err == nil {
 			return any
 		}
 	}

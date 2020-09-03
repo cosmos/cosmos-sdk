@@ -526,3 +526,54 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		}
 	}
 }
+
+func TestSetInitialVersion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		storeFn  func(db *dbm.MemDB) *Store
+		expPanic bool
+	}{
+		{
+			"works with a mutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+
+				return store
+			}, false,
+		},
+		{
+			"throws error on immutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+				_, version, err := store.tree.SaveVersion()
+				require.NoError(t, err)
+				require.Equal(t, int64(1), version)
+				store, err = store.GetImmutable(1)
+				require.NoError(t, err)
+
+				return store
+			}, true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			db := dbm.NewMemDB()
+			store := tc.storeFn(db)
+
+			if tc.expPanic {
+				require.Panics(t, func() { store.SetInitialVersion(5) })
+			} else {
+				store.SetInitialVersion(5)
+				cid := store.Commit()
+				require.Equal(t, int64(5), cid.GetVersion())
+			}
+		})
+	}
+}

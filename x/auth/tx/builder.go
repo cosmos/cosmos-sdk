@@ -44,6 +44,7 @@ var (
 	_ client.TxBuilder           = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ codectypes.IntoAny         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -358,8 +359,7 @@ func (w *wrapper) GetTx() authsigning.Tx {
 }
 
 // GetProtoTx returns the tx as a proto.Message.
-func (w *wrapper) GetAnyTx() *codectypes.Any {
-	fmt.Println("wrapper GetAnyTx w.tx=", w.tx)
+func (w *wrapper) AsAny() *codectypes.Any {
 	// We're sure here that w.tx is a proto.Message, so this will call
 	// codectypes.NewAnyWithValue under the hood.
 	return codectypes.UnsafePackAny(w.tx)

@@ -107,3 +107,8 @@ func (any *Any) GetCachedValue() interface{} {
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
 }
+
+// IntoAny represents a type that can be wrapped into an Any.
+type IntoAny interface {
+	AsAny() *Any
+}

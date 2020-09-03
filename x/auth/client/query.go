@@ -3,12 +3,14 @@ package client
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -131,15 +133,15 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 }
 
 func formatTxResult(txConfig client.TxConfig, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (*sdk.TxResponse, error) {
-	tx, err := parseTx(txConfig, resTx.Tx)
+	anyTx, err := parseTx(txConfig, resTx.Tx)
 	if err != nil {
 		return nil, err
 	}
 
-	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
+	return sdk.NewResponseResultTx(resTx, anyTx.AsAny(), resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
-func parseTx(txConfig client.TxConfig, txBytes []byte) (sdk.Tx, error) {
+func parseTx(txConfig client.TxConfig, txBytes []byte) (codectypes.IntoAny, error) {
 	var tx sdk.Tx
 
 	tx, err := txConfig.TxDecoder()(txBytes)
@@ -147,5 +149,10 @@ func parseTx(txConfig client.TxConfig, txBytes []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	return tx, nil
+	anyTx, ok := tx.(codectypes.IntoAny)
+	if !ok {
+		return nil, fmt.Errorf("tx cannot be packed into Any")
+	}
+
+	return anyTx, nil
 }

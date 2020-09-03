@@ -18,6 +18,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -266,11 +267,11 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	any, ok := txb.(tx.IsAnyTx)
+	any, ok := txb.(codectypes.IntoAny)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
 	}
-	cached := any.GetAnyTx().GetCachedValue()
+	cached := any.AsAny().GetCachedValue()
 	txTx, ok := cached.(*tx.Tx)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate amino tx")

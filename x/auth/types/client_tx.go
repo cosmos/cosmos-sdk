@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -24,11 +23,6 @@ var _ client.TxBuilder = &StdTxBuilder{}
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
-}
-
-// GetAnyTx implements TxBuilder.GetAnyTx.
-func (s *StdTxBuilder) GetAnyTx() *codectypes.Any {
-	return codectypes.UnsafePackAny(s.StdTx)
 }
 
 // SetMsgs implements TxBuilder.SetMsgs

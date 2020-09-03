@@ -97,8 +97,8 @@ func TestResponseResultTx(t *testing.T) {
 		Timestamp: "timestamp",
 	}
 
-	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp"))
-	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, sdk.Tx(nil), "timestamp"))
+	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, nil, "timestamp"))
+	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, nil, "timestamp"))
 	require.Equal(t, `Response:
   Height: 10
   TxHash: 74657374
@@ -110,7 +110,7 @@ func TestResponseResultTx(t *testing.T) {
   GasWanted: 100
   GasUsed: 90
   Codespace: codespace
-  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp").String())
+  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
 	require.True(t, sdk.TxResponse{}.Empty())
 	require.False(t, want.Empty())
 

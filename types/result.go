@@ -12,7 +12,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var cdc = codec.New()
@@ -60,7 +60,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) *TxResponse {
+func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -78,7 +78,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) *TxRespo
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
-		Tx:        types.UnsafePackAny(tx),
+		Tx:        anyTx,
 		Timestamp: timestamp,
 	}
 }
@@ -231,15 +231,15 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
 // there are generally interfaces to unpack in Tx's
-func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, tx := range s.Txs {
-		err := types.UnpackInterfaces(tx, unpacker)
+		err := codectypes.UnpackInterfaces(tx, unpacker)
 		if err != nil {
 			return err
 		}
@@ -248,7 +248,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
 		var tx Tx
 		return unpacker.UnpackAny(r.Tx, &tx)

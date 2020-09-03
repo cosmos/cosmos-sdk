@@ -43,19 +43,22 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	// and allowed to be updated after expiry then we use do light validation on the header.
 	// Otherwise we process the header as normal to update the client. If none of these
 	// conditions are met then an error is returned.
-	if cs.IsFrozen() && cs.AllowGovernanceOverrideAfterMisbehaviour {
-		cs.FrozenHeight = clienttypes.Height{}
-		if cs.AllowGovernanceOverrideAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
-			cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
-
-			newClientState, consensusState := update(&cs, tmHeader)
-			return newClientState, consensusState, nil
-
+	if cs.IsFrozen() {
+		if !cs.AllowUpdateAfterMisbehaviour {
+			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is frozen but is not allowed to be unfrozen")
 		}
-		return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
+		cs.FrozenHeight = clienttypes.Height{}
+		if !(cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime())) {
+			return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
+		}
+	} else if !(cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime())) {
+		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
-	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
+	cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime())
+
+	newClientState, consensusState := update(&cs, tmHeader)
+	return newClientState, consensusState, nil
 
 }
 

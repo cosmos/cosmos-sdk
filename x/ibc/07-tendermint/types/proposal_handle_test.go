@@ -1,6 +1,5 @@
 package types_test
 
-/*
 import (
 	"testing"
 	"time"
@@ -16,69 +15,149 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-const (
-	chainID  = "chainID"
-	clientID = "clientidone"
+func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
+	testCases := []struct {
+		name            string
+		malleate        func()
+		expPassUnfreeze bool // expected result using a header for unfreezing
+		expPassUnexpire bool // expected result using a header for unexpiring
+	}{
+		{
+			"invalid header - solo machine", func() {
 
-	height = 10
+			}, false, false,
+		},
+		{
+			"consnesus state not found", func() {
 
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
-)
+			}, false, false,
+		},
 
-var latestTimestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+		{
+			"not allowed to be updated, not frozen or expired", func() {
 
-type ProposalHandlerTestSuite struct {
-	suite.Suite
+			}, false, false,
+		},
+		{
+			"not allowed to be updated, client is frozen", func() {
 
-	cdc *codec.LegacyAmino
-	ctx sdk.Context
-	app *simapp.SimApp
+			}, false, false,
+		},
+		{
+			"not allowed to be updated, client is expired", func() {
 
-	header         *ibctmtypes.Header
-	consensusState *ibctmtypes.ConsensusState
-}
+			}, false, false,
+		},
 
-func (suite *ProposalHandlerTestSuite) SetupTest() {
-	isCheckTx := false
-	suite.app = simapp.Setup(isCheckTx)
+		{
+			"not allowed to be updated, client is frozen and expired", func() {
 
-	privVal := tmtypes.NewMockPV()
-	pubKey, err := privVal.GetPubKey()
-	suite.Require().NoError(err)
+			}, false, false,
+		},
 
-	val := tmtypes.NewValidator(pubKey, 10)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+		{
+			"allowed to be updated only after misbehaviour, not frozen or expired", func() {
 
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height+1, height, latestTimestamp.Add(time.Second*5), valSet, valSet, []tmtypes.PrivValidator{privVal})
+			}, false, false,
+		},
 
-	suite.cdc = suite.app.LegacyAmino()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{Time: latestTimestamp.Add(time.Second * 10)})
-	suite.consensusState = ibctmtypes.NewConsensusState(latestTimestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), height, valSet.Hash())
+		{
+			"PASS: allowed to be updated only after misbehaviour, client is frozen", func() {
 
-}
+			}, true, false,
+		},
+		{
+			"allowed to be updated only after misbehaviour, client is expired", func() {
 
-func TestProposalHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(ProposalHandlerTestSuite))
-}
+			}, false, false,
+		},
 
-func testClientUpdateProposal(clientID string, header *ibctmtypes.Header) (*clienttypes.ClientUpdateProposal, error) {
-	return clienttypes.NewClientUpdateProposal("Test", "description", clientID, header)
-}
+		{
+			"allowed to be updated only after misbehaviour, client is frozen and expired", func() {
 
-func (suite *ProposalHandlerTestSuite) testClientState(allowGovernanceOverrideAfterExpire bool, latestTimestamp time.Time, allowGovernanceOverrideAfterMisbehaviour bool, frozenHeight uint64) *ibctmtypes.ClientState {
-	clientState := ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod,
-		maxClockDrift, height, latestTimestamp, commitmenttypes.GetSDKSpecs(),
-		allowGovernanceOverrideAfterExpire, allowGovernanceOverrideAfterMisbehaviour)
+			}, false, false,
+		},
+		{
+			"allowed to be updated only after expiry, not frozen or expired", func() {
 
-	if frozenHeight > 0 {
-		clientState.FrozenHeight = frozenHeight
+			}, false, false,
+		},
+
+		{
+			"allowed to be updated only after expiry, client is frozen", func() {
+
+			}, false, false,
+		},
+		{
+			"PASS: allowed to be updated only after expiry, client is expired", func() {
+
+			}, true, true, // unfreezing headers work since they pass stricter checks
+		},
+
+		{
+			"allowed to be updated only after expiry, client is frozen and expired", func() {
+
+			}, false, false,
+		},
+		{
+			"allowed to be updated after expiry and misbehaviour, not frozen or expired", func() {
+
+			}, false, false,
+		},
+		{
+			"PASS: allowed to be updated after expiry and misbehaviour, client is frozen", func() {
+
+			}, true, false,
+		},
+		{
+			"PASS: allowed to be updated after expiry and misbehaviour, client is expired", func() {
+
+			}, true, true, // unfreezing headers work since they pass stricter checks
+		},
+
+		{
+			"PASS: allowed to be updated after expiry and misbehaviour, client is frozen and expired", func() {
+
+			}, true, true,
+		},
 	}
 
-	return clientState
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
+
+			unexpiredHeader := types.Header{}
+			unfreezeHeader := types.Header{}
+
+			cs, consState, err := cs.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA), unexpiredHeader)
+
+			if tc.expPassUnexpire {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+			cs, consState, err = cs.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA), unfreezeHeader)
+
+			if tc.expPassUnfreeze {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+		})
+	}
+}
+
+func (suite *TendermintTestSuite) testClientUpdateProposal(clientID string, header *ibctmtypes.Header) *clienttypes.ClientUpdateProposal {
+	proposal, err := clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientID, header)
+	suite.Require().NoError(err)
+	return proposal
 }
 
 func (suite *ProposalHandlerTestSuite) testStoredClientStatus(exptedHeight uint64, expectedIsFrozen bool, expectedLatestTimestamp uint64, clientID string) {
@@ -93,89 +172,6 @@ func (suite *ProposalHandlerTestSuite) testStoredClientStatus(exptedHeight uint6
 func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 	expiredTime := latestTimestamp.Add(trustingPeriod).Add(time.Minute)
 	expiredCtx := suite.app.BaseApp.NewContext(false, tmproto.Header{Time: expiredTime})
-
-	testCases := []struct {
-		name            string
-		ctx             sdk.Context
-		clientIsExpired bool
-		clientIsFrozen  bool
-		clientState     *ibctmtypes.ClientState
-		expPass         bool
-	}{
-		// abbreviation:
-		// OAE := allowGovernanceOverrideAfterExpire
-		// OAM := allowGovernanceOverrideAfterMisbehaviour
-		{
-			"Test1 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=false",
-			suite.ctx, false, false, suite.testClientState(false, latestTimestamp, false, 0), false,
-		},
-		{
-			"Test2 should fail for clientStatus with OAE=false, Expired=false, OAM=false, Frozen=True",
-			suite.ctx, false, true, suite.testClientState(false, latestTimestamp, false, 2), false,
-		},
-		{
-			"Test3 should fail for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=false",
-			suite.ctx, false, false, suite.testClientState(false, latestTimestamp, true, 0), false,
-		},
-		{
-			"Test4 should pass for clientStatus with OAE=false, Expired=false, OAM=true, Frozen=true",
-			suite.ctx, false, true, suite.testClientState(false, latestTimestamp, true, 2), true,
-		},
-		{
-			"Test5 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=false",
-			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, false, 0), false,
-		},
-		{
-			"Test6 should fail for clientStatus with OAE=false, Expired=true, OAM=false, Frozen=true",
-			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, false, 2), false,
-		},
-		{
-			"Test7 should fail for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=false",
-			expiredCtx, true, false, suite.testClientState(false, latestTimestamp, true, 0), false,
-		},
-		{
-			// For this test, the client update proposal will pass but the client update will
-			// fail because the new header, (suite.header), is expired and the override flag is
-			// set to be false.
-			"Test8 should pass for clientStatus with OAE=false, Expired=true, OAM=true, Frozen=true",
-			expiredCtx, true, true, suite.testClientState(false, latestTimestamp, true, 2), false,
-		},
-		{
-			"Test10 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=false",
-			suite.ctx, false, false, suite.testClientState(true, latestTimestamp, false, 0), false,
-		},
-		{
-			"Test11 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
-			suite.ctx, false, true, suite.testClientState(true, latestTimestamp, false, 2), false,
-		},
-		{
-			"Test12 should fail for clientStatus with OAE=true, Expired=false, OAM=false, Frozen=true",
-			suite.ctx, false, false, suite.testClientState(true, latestTimestamp, true, 0), false,
-		},
-		{
-			"Test13 should pass for clientStatus with OAE=true, Expired=false, OAM=true, Frozen=true",
-			suite.ctx, false, true, suite.testClientState(true, latestTimestamp, true, 2), true,
-		},
-		{
-			"Test14 should pass for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=false",
-			expiredCtx, true, false, suite.testClientState(true, latestTimestamp, false, 0), true,
-		},
-		{
-			// For this test, the client update proposal will pass but but the client update will
-			// fail (even though the override flag is set to be true) because the client is still frozen
-			// and OAM = false
-			"Test15 should fail for clientStatus with OAE=true, Expired=true, OAM=false, Frozen=true",
-			expiredCtx, true, true, suite.testClientState(true, latestTimestamp, false, 2), false,
-		},
-		{
-			"Test16 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=false",
-			expiredCtx, true, false, suite.testClientState(true, latestTimestamp, true, 0), true,
-		},
-		{
-			"Test17 should pass for clientStatus with OAE=true, Expired=true, OAM=true, Frozen=true",
-			expiredCtx, true, true, suite.testClientState(true, latestTimestamp, true, 2), true,
-		},
-	}
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
@@ -223,4 +219,3 @@ func (suite *ProposalHandlerTestSuite) TestClientUpdateProposalHandler() {
 	}
 
 }
-*/

@@ -100,6 +100,9 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	accAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
 	testCases := []struct {
 		name     string
 		url      string
@@ -109,7 +112,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"gRPC total account balance",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, accAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -126,7 +129,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, base64.URLEncoding.EncodeToString(val.Address), s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, accAddrBase64, s.cfg.BondDenom),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -140,7 +143,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, base64.URLEncoding.EncodeToString(val.Address)),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, accAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},

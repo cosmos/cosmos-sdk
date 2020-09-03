@@ -71,6 +71,8 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
+
 	rewards, err := sdk.ParseDecCoins("19.6stake")
 	s.Require().NoError(err)
 
@@ -94,7 +96,7 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, base64.URLEncoding.EncodeToString(val.ValAddress)),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, valAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -127,6 +129,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
+
 	commission, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
 
@@ -150,7 +154,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, base64.URLEncoding.EncodeToString(val.ValAddress)),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, valAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},

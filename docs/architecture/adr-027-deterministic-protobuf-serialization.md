@@ -21,6 +21,25 @@ serialization. This document describes a bijective serialization scheme for
 a subset of protobuf documents, that covers this use case but can be reused in
 other cases as well.
 
+### Background - Protobuf3 Encoding
+
+All numeric types in protobuf3 are encoded as
+[varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
+Varints are at most 10 bytes, and since each varint byte has 7 bits of data,
+varints are a representation of `uint70` (70-bit unsigned integer). When
+encoding, numeric values are casted from their base type to `uint70`, and when
+decoding, the parsed `uint70` is casted to the appropriate numeric type.
+
+The maximum valid value for a varint that complies with protobuf3 is
+`FF FF FF FF FF FF FF FF FF 7F` (i.e. `2**70 -1`). If the field type is
+`{,u,s}int64`, the highest 6 bits of the 70 are dropped during decoding,
+introducing 6 bits of malleability. If the field type is `{,u,s}int32`, the
+highest 38 bits of the 70 are dropped during decoding, introducing 38 bits of
+malleability.
+
+Among other sources of non-determinism, this ADR eliminates the possibility of
+encoding malleability.
+
 ## Decision
 
 The following encoding scheme is proposed to be used by other ADRs.

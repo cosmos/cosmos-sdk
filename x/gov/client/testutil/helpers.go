@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
@@ -21,9 +20,9 @@ var commonArgs = []string{
 // MsgSubmitProposal creates a tx for submit proposal
 func MsgSubmitProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{
-		fmt.Sprintf("--%s=%s", cli.FlagTitle, title),
-		fmt.Sprintf("--%s=%s", cli.FlagDescription, description),
-		fmt.Sprintf("--%s=%s", cli.FlagProposalType, proposalType),
+		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
+		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
+		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 

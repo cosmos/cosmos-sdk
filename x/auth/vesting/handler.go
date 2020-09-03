@@ -62,14 +62,6 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk 
 		}
 	}()
 
-	if err := bk.SendEnabledCoins(ctx, msg.Amount...); err != nil {
-		return nil, err
-	}
-
-	if bk.BlockedAddr(msg.ToAddress) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
-	}
-
 	err := bk.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
 	if err != nil {
 		return nil, err

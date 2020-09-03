@@ -3,27 +3,31 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // RegisterInterfaces registers the tendermint concrete evidence and client-related
 // implementations and interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
-		(*clientexported.ClientState)(nil),
+		(*exported.ClientState)(nil),
 		&ClientState{},
 	)
 	registry.RegisterImplementations(
-		(*clientexported.ConsensusState)(nil),
+		(*exported.ConsensusState)(nil),
 		&ConsensusState{},
 	)
 	registry.RegisterImplementations(
-		(*clientexported.Misbehaviour)(nil),
+		(*exported.Header)(nil),
+		&Header{},
+	)
+	registry.RegisterImplementations(
+		(*exported.Misbehaviour)(nil),
 		&Misbehaviour{},
 	)
 	registry.RegisterImplementations(
-		(*clientexported.Misbehaviour)(nil),
-		&Misbehaviour{},
+		(*exported.Header)(nil),
+		&Header{},
 	)
 }
 

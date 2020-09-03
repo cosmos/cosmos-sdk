@@ -120,6 +120,6 @@ func (qrt *GRPCQueryRouter) RegisterSimulateService(
 ) {
 	simulate.RegisterSimulateServiceServer(
 		qrt,
-		simulate.NewSimulateServer(simulateFn, qrt.interfaceRegistry, pubkeyCodec),
+		simulate.NewSimulateServer(simulateFn, interfaceRegistry, pubkeyCodec),
 	)
 }

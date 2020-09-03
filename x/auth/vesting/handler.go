@@ -26,8 +26,12 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper) sdk.Handler {
 	}
 }
 
-func handleMsgCreateVestingAccount(ctx sdk.Context, k keeper.AccountKeeper, bk types.BankKeeper, msg *types.MsgCreateVestingAccount) (*sdk.Result, error) {
-	baseAccount := k.NewAccountWithAddress(ctx, msg.ToAddress)
+func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk types.BankKeeper, msg *types.MsgCreateVestingAccount) (*sdk.Result, error) {
+	if acc := ak.GetAccount(ctx, msg.ToAddress); acc != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+	}
+
+	baseAccount := ak.NewAccountWithAddress(ctx, msg.ToAddress)
 	if _, ok := baseAccount.(*authtypes.BaseAccount); !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
 	}
@@ -42,7 +46,7 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, k keeper.AccountKeeper, bk t
 		acc = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
-	k.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, acc)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")

@@ -37,7 +37,7 @@ reject documents containing maps as invalid input.
 ### Serialization rules
 
 The serialization is based on the
-[protobuf 3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
+[protobuf3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
 with the following additions:
 
 1. Fields must be serialized only once in ascending order
@@ -65,7 +65,7 @@ with the following additions:
 
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behavior of all protobuf encoders the author is aware of, the 3rd rule
-is more interesting. After a protobuf 3 deserialization you cannot differentiate
+is more interesting. After a protobuf3 deserialization you cannot differentiate
 between unset fields and fields set to the default value<sup>3</sup>. At
 serialization level however, it is possible to set the fields with an empty
 value or omitting them entirely. This is a significant difference to e.g. JSON

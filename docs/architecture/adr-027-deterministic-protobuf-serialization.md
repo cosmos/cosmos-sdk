@@ -23,7 +23,7 @@ other cases as well.
 
 ### Background - Protobuf3 Encoding
 
-All numeric types in protobuf3 are encoded as
+Most numeric types in protobuf3 are encoded as
 [varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
 Varints are at most 10 bytes, and since each varint byte has 7 bits of data,
 varints are a representation of `uint70` (70-bit unsigned integer). When

@@ -150,26 +150,26 @@ func (m *Header) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Header proto.InternalMessageInfo
 
-// Evidence defines evidence of misbehaviour for a solo machine which consists
+// Misbehaviour defines misbehaviour for a solo machine which consists
 // of a sequence and two signatures over different messages at that sequence.
-type Evidence struct {
+type Misbehaviour struct {
 	ClientId     string            `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	Sequence     uint64            `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	SignatureOne *SignatureAndData `protobuf:"bytes,3,opt,name=signature_one,json=signatureOne,proto3" json:"signature_one,omitempty" yaml:"signature_one"`
 	SignatureTwo *SignatureAndData `protobuf:"bytes,4,opt,name=signature_two,json=signatureTwo,proto3" json:"signature_two,omitempty" yaml:"signature_two"`
 }
 
-func (m *Evidence) Reset()      { *m = Evidence{} }
-func (*Evidence) ProtoMessage() {}
-func (*Evidence) Descriptor() ([]byte, []int) {
+func (m *Misbehaviour) Reset()      { *m = Misbehaviour{} }
+func (*Misbehaviour) ProtoMessage() {}
+func (*Misbehaviour) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6cc2ee18f7f86d4e, []int{3}
 }
-func (m *Evidence) XXX_Unmarshal(b []byte) error {
+func (m *Misbehaviour) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Evidence) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Misbehaviour) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Evidence.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Misbehaviour.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -179,17 +179,17 @@ func (m *Evidence) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Evidence) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Evidence.Merge(m, src)
+func (m *Misbehaviour) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Misbehaviour.Merge(m, src)
 }
-func (m *Evidence) XXX_Size() int {
+func (m *Misbehaviour) XXX_Size() int {
 	return m.Size()
 }
-func (m *Evidence) XXX_DiscardUnknown() {
-	xxx_messageInfo_Evidence.DiscardUnknown(m)
+func (m *Misbehaviour) XXX_DiscardUnknown() {
+	xxx_messageInfo_Misbehaviour.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Evidence proto.InternalMessageInfo
+var xxx_messageInfo_Misbehaviour proto.InternalMessageInfo
 
 // SignatureAndData contains a signature and the data signed over to create that
 // signature.
@@ -271,134 +271,13 @@ func (m *TimestampedSignature) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TimestampedSignature proto.InternalMessageInfo
 
-// MsgCreateClient defines a message to create an IBC client
-type MsgCreateClient struct {
-	ClientId       string          `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	ConsensusState *ConsensusState `protobuf:"bytes,2,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
-}
-
-func (m *MsgCreateClient) Reset()         { *m = MsgCreateClient{} }
-func (m *MsgCreateClient) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateClient) ProtoMessage()    {}
-func (*MsgCreateClient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6cc2ee18f7f86d4e, []int{6}
-}
-func (m *MsgCreateClient) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgCreateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgCreateClient.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgCreateClient) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateClient.Merge(m, src)
-}
-func (m *MsgCreateClient) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgCreateClient) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateClient.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgCreateClient proto.InternalMessageInfo
-
-// MsgUpdateClient defines a message to update an IBC client
-type MsgUpdateClient struct {
-	ClientId string  `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	Header   *Header `protobuf:"bytes,2,opt,name=header,proto3" json:"header,omitempty"`
-}
-
-func (m *MsgUpdateClient) Reset()         { *m = MsgUpdateClient{} }
-func (m *MsgUpdateClient) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdateClient) ProtoMessage()    {}
-func (*MsgUpdateClient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6cc2ee18f7f86d4e, []int{7}
-}
-func (m *MsgUpdateClient) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUpdateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUpdateClient.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUpdateClient) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdateClient.Merge(m, src)
-}
-func (m *MsgUpdateClient) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUpdateClient) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdateClient.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUpdateClient proto.InternalMessageInfo
-
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that supports submitting
-// arbitrary Evidence.
-type MsgSubmitClientMisbehaviour struct {
-	Submitter github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=submitter,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"submitter,omitempty"`
-	Evidence  *Evidence                                     `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`
-}
-
-func (m *MsgSubmitClientMisbehaviour) Reset()         { *m = MsgSubmitClientMisbehaviour{} }
-func (m *MsgSubmitClientMisbehaviour) String() string { return proto.CompactTextString(m) }
-func (*MsgSubmitClientMisbehaviour) ProtoMessage()    {}
-func (*MsgSubmitClientMisbehaviour) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6cc2ee18f7f86d4e, []int{8}
-}
-func (m *MsgSubmitClientMisbehaviour) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSubmitClientMisbehaviour) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSubmitClientMisbehaviour.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSubmitClientMisbehaviour) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSubmitClientMisbehaviour.Merge(m, src)
-}
-func (m *MsgSubmitClientMisbehaviour) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSubmitClientMisbehaviour) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSubmitClientMisbehaviour.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSubmitClientMisbehaviour proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterType((*ClientState)(nil), "ibc.lightclients.solomachine.v1.ClientState")
 	proto.RegisterType((*ConsensusState)(nil), "ibc.lightclients.solomachine.v1.ConsensusState")
 	proto.RegisterType((*Header)(nil), "ibc.lightclients.solomachine.v1.Header")
-	proto.RegisterType((*Evidence)(nil), "ibc.lightclients.solomachine.v1.Evidence")
+	proto.RegisterType((*Misbehaviour)(nil), "ibc.lightclients.solomachine.v1.Misbehaviour")
 	proto.RegisterType((*SignatureAndData)(nil), "ibc.lightclients.solomachine.v1.SignatureAndData")
 	proto.RegisterType((*TimestampedSignature)(nil), "ibc.lightclients.solomachine.v1.TimestampedSignature")
-	proto.RegisterType((*MsgCreateClient)(nil), "ibc.lightclients.solomachine.v1.MsgCreateClient")
-	proto.RegisterType((*MsgUpdateClient)(nil), "ibc.lightclients.solomachine.v1.MsgUpdateClient")
-	proto.RegisterType((*MsgSubmitClientMisbehaviour)(nil), "ibc.lightclients.solomachine.v1.MsgSubmitClientMisbehaviour")
 }
 
 func init() {
@@ -587,7 +466,7 @@ func (m *Header) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Evidence) Marshal() (dAtA []byte, err error) {
+func (m *Misbehaviour) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -597,12 +476,12 @@ func (m *Evidence) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Evidence) MarshalTo(dAtA []byte) (int, error) {
+func (m *Misbehaviour) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Evidence) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Misbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -718,132 +597,6 @@ func (m *TimestampedSignature) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateClient) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgCreateClient) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgCreateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.ConsensusState != nil {
-		{
-			size, err := m.ConsensusState.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSolomachine(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintSolomachine(dAtA, i, uint64(len(m.ClientId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUpdateClient) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUpdateClient) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUpdateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Header != nil {
-		{
-			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSolomachine(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.ClientId) > 0 {
-		i -= len(m.ClientId)
-		copy(dAtA[i:], m.ClientId)
-		i = encodeVarintSolomachine(dAtA, i, uint64(len(m.ClientId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSubmitClientMisbehaviour) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSubmitClientMisbehaviour) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSubmitClientMisbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Evidence != nil {
-		{
-			size, err := m.Evidence.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintSolomachine(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Submitter) > 0 {
-		i -= len(m.Submitter)
-		copy(dAtA[i:], m.Submitter)
-		i = encodeVarintSolomachine(dAtA, i, uint64(len(m.Submitter)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintSolomachine(dAtA []byte, offset int, v uint64) int {
 	offset -= sovSolomachine(v)
 	base := offset
@@ -910,7 +663,7 @@ func (m *Header) Size() (n int) {
 	return n
 }
 
-func (m *Evidence) Size() (n int) {
+func (m *Misbehaviour) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -963,57 +716,6 @@ func (m *TimestampedSignature) Size() (n int) {
 	}
 	if m.Timestamp != 0 {
 		n += 1 + sovSolomachine(uint64(m.Timestamp))
-	}
-	return n
-}
-
-func (m *MsgCreateClient) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ClientId)
-	if l > 0 {
-		n += 1 + l + sovSolomachine(uint64(l))
-	}
-	if m.ConsensusState != nil {
-		l = m.ConsensusState.Size()
-		n += 1 + l + sovSolomachine(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgUpdateClient) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ClientId)
-	if l > 0 {
-		n += 1 + l + sovSolomachine(uint64(l))
-	}
-	if m.Header != nil {
-		l = m.Header.Size()
-		n += 1 + l + sovSolomachine(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgSubmitClientMisbehaviour) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Submitter)
-	if l > 0 {
-		n += 1 + l + sovSolomachine(uint64(l))
-	}
-	if m.Evidence != nil {
-		l = m.Evidence.Size()
-		n += 1 + l + sovSolomachine(uint64(l))
 	}
 	return n
 }
@@ -1401,7 +1103,7 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Evidence) Unmarshal(dAtA []byte) error {
+func (m *Misbehaviour) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1424,10 +1126,10 @@ func (m *Evidence) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Evidence: wiretype end group for non-group")
+			return fmt.Errorf("proto: Misbehaviour: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Evidence: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Misbehaviour: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1780,371 +1482,6 @@ func (m *TimestampedSignature) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSolomachine(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgCreateClient) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSolomachine
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateClient: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateClient: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusState", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ConsensusState == nil {
-				m.ConsensusState = &ConsensusState{}
-			}
-			if err := m.ConsensusState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSolomachine(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUpdateClient) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSolomachine
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdateClient: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdateClient: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ClientId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Header", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Header == nil {
-				m.Header = &Header{}
-			}
-			if err := m.Header.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSolomachine(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSubmitClientMisbehaviour) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSolomachine
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSubmitClientMisbehaviour: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSubmitClientMisbehaviour: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Submitter", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Submitter = append(m.Submitter[:0], dAtA[iNdEx:postIndex]...)
-			if m.Submitter == nil {
-				m.Submitter = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Evidence", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSolomachine
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthSolomachine
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Evidence == nil {
-				m.Evidence = &Evidence{}
-			}
-			if err := m.Evidence.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSolomachine(dAtA[iNdEx:])

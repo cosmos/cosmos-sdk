@@ -118,6 +118,6 @@ func (qrt *GRPCQueryRouter) RegisterSimulateService(
 ) {
 	simulate.RegisterSimulateServiceServer(
 		qrt,
-		simulate.NewSimulateServer(simulateFn, qrt.interfaceRegistry),
+		simulate.NewSimulateServer(simulateFn, interfaceRegistry),
 	)
 }

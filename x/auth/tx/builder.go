@@ -224,15 +224,23 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	res := make([]signing.SignatureV2, n)
 
 	for i, si := range signerInfos {
-		var err error
-		sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
-		if err != nil {
-			return nil, err
-		}
-		res[i] = signing.SignatureV2{
-			PubKey:   pubKeys[i],
-			Data:     sigData,
-			Sequence: si.GetSequence(),
+		// handle nil signatures (in case of simulation)
+		if si.ModeInfo == nil {
+			res[i] = signing.SignatureV2{
+				PubKey: pubKeys[i],
+			}
+		} else {
+			var err error
+			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
+			if err != nil {
+				return nil, err
+			}
+			res[i] = signing.SignatureV2{
+				PubKey:   pubKeys[i],
+				Data:     sigData,
+				Sequence: si.GetSequence(),
+			}
+
 		}
 	}
 

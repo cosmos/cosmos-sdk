@@ -446,9 +446,9 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			recv: new(testdata.TestVersion1),
 			wantErr: &errMismatchedWireType{
 				Type:         "*testdata.TestVersion3",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
+				TagNum:       8,
+				GotWireType:  7,
+				WantWireType: 2,
 			},
 		},
 		{
@@ -463,13 +463,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 					},
 				},
 			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner1_InnerInner",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
 		},
 		{
 			name: "From nested proto message, message index 1",
@@ -483,13 +478,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 					},
 				},
 			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner2_InnerInner",
-				TagNum:       2,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
 		},
 	}
 
@@ -684,9 +674,9 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 			recv: new(testdata.TestVersion1),
 			wantErr: &errMismatchedWireType{
 				Type:         "*testdata.TestVersion3",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
+				TagNum:       8,
+				GotWireType:  7,
+				WantWireType: 2,
 			},
 		},
 		{
@@ -701,13 +691,8 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 					},
 				},
 			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner1_InnerInner",
-				TagNum:       1,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
 		},
 		{
 			name: "From nested proto message, message index 1",
@@ -721,13 +706,8 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 					},
 				},
 			},
-			recv: new(testdata.TestVersion4LoneNesting),
-			wantErr: &errMismatchedWireType{
-				Type:         "*testdata.TestVersion4LoneNesting_Inner2_InnerInner",
-				TagNum:       2,
-				GotWireType:  2,
-				WantWireType: 0,
-			},
+			recv:    new(testdata.TestVersion4LoneNesting),
+			wantErr: nil,
 		},
 	}
 
@@ -744,6 +724,19 @@ func TestMismatchedTypes_Nested(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Issue https://github.com/cosmos/cosmos-sdk/issues/7222, we need to ensure that repeated
+// uint64 are recognized as packed.
+func TestPackedEncoding(t *testing.T) {
+	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
+
+	marshalled, err := data.Marshal()
+	require.NoError(t, err)
+
+	unmarshalled := &testdata.TestRepeatedUints{}
+	_, err = RejectUnknownFields(marshalled, unmarshalled, false)
+	require.NoError(t, err)
 }
 
 func mustMarshal(msg proto.Message) []byte {

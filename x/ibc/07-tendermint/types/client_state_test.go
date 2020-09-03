@@ -3,12 +3,12 @@ package types_test
 import (
 	ics23 "github.com/confio/ics23/go"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -548,7 +548,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
@@ -639,7 +639,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestVerifyClientState() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, clientB, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, clientB, connA, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			counterpartyClient, clientProof := suite.chainB.QueryClientStateProof(clientB)
 			proofHeight := uint64(suite.chainB.GetContext().BlockHeight() - 1)
@@ -79,20 +79,20 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		expPass  bool
 	}{
 		{"verification success", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 		}, true},
 		{"client state not found", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			changeClientID = true
 		}, false},
 		{"consensus state not found", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			heightDiff = 5
 		}, false},
 		{"verification failed", func() {
-			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			clientB := connB.ClientID
 
 			// give chainB wrong consensus state for chainA
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestVerifyConnectionState() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
 
-			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 			connection := suite.chainA.GetConnection(connA)
 			if tc.changeClientID {
@@ -397,7 +397,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			} else {
 				// need to update height to prove absence
 				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			}
 
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())

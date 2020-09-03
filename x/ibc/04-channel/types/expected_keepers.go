@@ -3,16 +3,14 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
-	GetClientState(ctx sdk.Context, clientID string) (clientexported.ClientState, bool)
-	GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (clientexported.ConsensusState, bool)
+	GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool)
+	GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool)
 }
 
 // ConnectionKeeper expected account IBC connection keeper
@@ -25,7 +23,7 @@ type ConnectionKeeper interface {
 	) (uint64, error)
 	VerifyChannelState(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection exported.ConnectionI,
 		height uint64,
 		proof []byte,
 		portID,
@@ -34,7 +32,7 @@ type ConnectionKeeper interface {
 	) error
 	VerifyPacketCommitment(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection exported.ConnectionI,
 		height uint64,
 		proof []byte,
 		portID,
@@ -44,7 +42,7 @@ type ConnectionKeeper interface {
 	) error
 	VerifyPacketAcknowledgement(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection exported.ConnectionI,
 		height uint64,
 		proof []byte,
 		portID,
@@ -54,7 +52,7 @@ type ConnectionKeeper interface {
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection exported.ConnectionI,
 		height uint64,
 		proof []byte,
 		portID,
@@ -63,7 +61,7 @@ type ConnectionKeeper interface {
 	) error
 	VerifyNextSequenceRecv(
 		ctx sdk.Context,
-		connection connectionexported.ConnectionI,
+		connection exported.ConnectionI,
 		height uint64,
 		proof []byte,
 		portID,

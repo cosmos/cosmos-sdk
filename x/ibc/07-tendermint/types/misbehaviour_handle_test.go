@@ -8,10 +8,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
@@ -40,10 +40,10 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	testCases := []struct {
 		name            string
-		clientState     clientexported.ClientState
-		consensusState1 clientexported.ConsensusState
-		consensusState2 clientexported.ConsensusState
-		misbehaviour    clientexported.Misbehaviour
+		clientState     exported.ClientState
+		consensusState1 exported.ConsensusState
+		consensusState2 exported.ConsensusState
+		misbehaviour    exported.Misbehaviour
 		timestamp       time.Time
 		expPass         bool
 	}{

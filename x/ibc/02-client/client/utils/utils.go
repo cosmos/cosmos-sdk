@@ -85,7 +85,7 @@ func QueryConsensusState(
 	height, ok := heightI.(types.Height)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidHeight, "Invalid height type: %T, expected: %T",
+			sdkerrors.ErrInvalidHeight, "invalid height type: %T, expected: %T",
 			heightI, types.Height{},
 		)
 	}

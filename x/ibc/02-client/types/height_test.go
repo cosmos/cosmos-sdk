@@ -69,4 +69,8 @@ func TestString(t *testing.T) {
 
 	require.NoError(t, err, "valid height string could not be parsed")
 	require.Equal(t, height, recovered, "recovered height not equal to original height")
+
+	parse, err := types.ParseHeight("3-10")
+	require.NoError(t, err, "parse err")
+	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }

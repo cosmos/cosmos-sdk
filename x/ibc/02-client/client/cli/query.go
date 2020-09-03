@@ -17,7 +17,6 @@ import (
 
 const (
 	flagLatestHeight = "latest-height"
-	flagEpochNumber  = "epoch-number"
 )
 
 // GetCmdQueryClientStates defines the command to query all the light clients
@@ -186,7 +185,6 @@ If the '--latest' flag is included, the query returns the latest consensus state
 
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	cmd.Flags().Bool(flagLatestHeight, false, "return latest stored consensus state")
-	cmd.Flags().Int(flagEpochNumber, 0, "epoch number of consensus height")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

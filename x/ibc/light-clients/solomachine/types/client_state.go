@@ -355,20 +355,15 @@ func (cs ClientState) VerifyNextSequenceRecv(
 func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
-	heightI exported.Height,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 ) (signature TimestampedSignature, sequence uint64, err error) {
-	height, ok := heightI.(clienttypes.Height)
-	if !ok {
-		return TimestampedSignature{}, 0, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidHeight,
-			"expected height types: %T, got type: %T",
-			clienttypes.Height{}, heightI,
-		)
+	if epoch := height.GetEpochNumber(); epoch != 0 {
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch must be 0 for solomachine, got epoch-number: %d", epoch)
 	}
 	// sequence is encoded in the epoch height of height struct
-	sequence = height.EpochHeight
+	sequence = height.GetEpochHeight()
 	if cs.IsFrozen() {
 		return TimestampedSignature{}, 0, clienttypes.ErrClientFrozen
 	}
@@ -377,7 +372,7 @@ func produceVerificationArgs(
 		return TimestampedSignature{}, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
-	_, ok = prefix.(commitmenttypes.MerklePrefix)
+	_, ok := prefix.(commitmenttypes.MerklePrefix)
 	if !ok {
 		return TimestampedSignature{}, 0, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}

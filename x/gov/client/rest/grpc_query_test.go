@@ -148,6 +148,8 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 
 func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	voterAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -238,6 +240,8 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 
 func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	val := s.network.Validators[0]
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	DepositerAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {

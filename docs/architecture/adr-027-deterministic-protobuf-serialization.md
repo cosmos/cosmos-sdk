@@ -58,7 +58,7 @@ with the following additions:
       with one exception (below). In other words, when decoded, the highest 38
       bits of the 70-bit unsigned integer must be `0`.
         * The one exception to the above is _negative_ `int32`, which is
-          encoded using the full 10 bytes for sign extension.
+          encoded using the full 10 bytes for sign extension<sup>2</sup>.
     * The maximum value for Boolean values in varint encoding is `01` (i.e.
       it must be `0` or `1`). Per rule 3 above, the default value of `0` must
       be omitted, so if a Boolean is included it must have a value of `1`.
@@ -66,18 +66,18 @@ with the following additions:
 While rule number 1. and 2. should be pretty straight forward and describe the
 default behavior of all protobuf encoders the author is aware of, the 3rd rule
 is more interesting. After a protobuf 3 deserialization you cannot differentiate
-between unset fields and fields set to the default value<sup>2</sup>. At
+between unset fields and fields set to the default value<sup>3</sup>. At
 serialization level however, it is possible to set the fields with an empty
 value or omitting them entirely. This is a significant difference to e.g. JSON
 where a property can be empty (`""`, `0`), `null` or undefined, leading to 3
 different documents.
 
 Omitting fields set to default values is valid because the parser must assign
-the default value to fields missing in the serialization<sup>3</sup>. For scalar
-types, omitting defaults is required by the spec<sup>4</sup>. For `repeated`
+the default value to fields missing in the serialization<sup>4</sup>. For scalar
+types, omitting defaults is required by the spec<sup>5</sup>. For `repeated`
 fields, not serializing them is the only way to express empty lists. Enums must
-have a first element of numeric value 0, which is the default<sup>5</sup>. And
-message fields default to unset<sup>6</sup>.
+have a first element of numeric value 0, which is the default<sup>6</sup>. And
+message fields default to unset<sup>7</sup>.
 
 Omitting defaults allows for some amount of forward compatibility: users of
 newer versions of a protobuf schema produce the same serialization as users of
@@ -242,24 +242,25 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
   https://developers.google.com/protocol-buffers/docs/encoding#order
-- <sup>2</sup> _Note that for scalar message fields, once a message is parsed
+- <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
+- <sup>3</sup> _Note that for scalar message fields, once a message is parsed
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
   don't have a boolean that switches on some behavior when set to false if you
   don't want that behavior to also happen by default._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>3</sup> _When a message is parsed, if the encoded message does not
+- <sup>4</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>4</sup> _Also note that if a scalar message field is set to its default,
+- <sup>5</sup> _Also note that if a scalar message field is set to its default,
   the value will not be serialized on the wire._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>5</sup> _For enums, the default value is the first defined enum value,
+- <sup>6</sup> _For enums, the default value is the first defined enum value,
   which must be 0._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>6</sup> _For message fields, the field is not set. Its exact value is
+- <sup>7</sup> _For message fields, the field is not set. Its exact value is
   language-dependent._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
 - Encoding rules and parts of the reasoning taken from

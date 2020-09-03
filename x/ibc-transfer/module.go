@@ -37,7 +37,7 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-// AppModuleBasic is the 20-transfer appmodulebasic
+// AppModuleBasic is the IBC Transfer AppModuleBasic
 type AppModuleBasic struct{}
 
 // Name implements AppModuleBasic interface
@@ -47,6 +47,11 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec implements AppModuleBasic interface
 func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
+
+// RegisterInterfaces registers module concrete types into protobuf Any.
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.
@@ -81,11 +86,6 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 // GetQueryCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
-}
-
-// RegisterInterfaces registers module concrete types into protobuf Any.
-func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
 }
 
 // AppModule represents the AppModule for this module

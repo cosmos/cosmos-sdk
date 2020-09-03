@@ -7,22 +7,22 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.Header = Header{}
+var _ exported.Header = Header{}
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
-func (h Header) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
+func (h Header) ClientType() exported.ClientType {
+	return exported.Tendermint
 }
 
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
-		Height:             h.GetHeight(),
+		Height:             clienttypes.NewHeight(0, h.GetHeight()),
 		Timestamp:          h.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
@@ -33,6 +33,7 @@ func (h Header) ConsensusState() *ConsensusState {
 // header is nil.
 //
 // NOTE: also referred as `sequence`
+// TODO: return clienttypes.Height once interface changes
 func (h Header) GetHeight() uint64 {
 	if h.Header == nil {
 		return 0
@@ -54,7 +55,7 @@ func (h Header) GetTime() time.Time {
 // that validatorsets are not nil.
 // NOTE: TrustedHeight and TrustedValidators may be empty when creating client
 // with MsgCreateClient
-func (h Header) ValidateBasic(chainID string) error {
+func (h Header) ValidateBasic() error {
 	if h.SignedHeader == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "tendermint signed header cannot be nil")
 	}
@@ -65,15 +66,16 @@ func (h Header) ValidateBasic(chainID string) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "header is not a tendermint header")
 	}
-	if err := tmSignedHeader.ValidateBasic(chainID); err != nil {
+	if err := tmSignedHeader.ValidateBasic(h.Header.GetChainID()); err != nil {
 		return sdkerrors.Wrap(err, "header failed basic validation")
 	}
 
 	// TrustedHeight is less than Header for updates
 	// and less than or equal to Header for misbehaviour
-	if h.TrustedHeight > h.GetHeight() {
+	height := clienttypes.NewHeight(0, h.GetHeight())
+	if h.TrustedHeight.GT(height) {
 		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "TrustedHeight %d must be less than or equal to header height %d",
-			h.TrustedHeight, h.GetHeight())
+			h.TrustedHeight, height)
 	}
 
 	if h.ValidatorSet == nil {

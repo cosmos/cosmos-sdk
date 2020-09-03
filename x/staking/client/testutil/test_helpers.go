@@ -18,8 +18,8 @@ var commonArgs = []string{
 }
 
 // MsgRedelegateExec creates a redelegate message.
-func MsgRedelegateExec(clientCtx client.Context, from fmt.Stringer, src sdk.ValAddress, dst sdk.ValAddress,
-	amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stringer,
+	extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := []string{
 		src.String(),
@@ -33,7 +33,7 @@ func MsgRedelegateExec(clientCtx client.Context, from fmt.Stringer, src sdk.ValA
 }
 
 // MsgUnbondExec creates a unbond message.
-func MsgUnbondExec(clientCtx client.Context, from fmt.Stringer, valAddress sdk.ValAddress,
+func MsgUnbondExec(clientCtx client.Context, from fmt.Stringer, valAddress,
 	amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
 
 	args := []string{

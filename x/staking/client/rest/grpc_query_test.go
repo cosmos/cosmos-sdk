@@ -122,6 +122,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -179,6 +181,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -247,6 +251,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -295,7 +301,11 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -388,7 +398,11 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -464,6 +478,8 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -532,6 +548,8 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -603,8 +621,14 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	srcValBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	dstValBase64 := base64.URLEncoding.EncodeToString(val2.Address)
 
 	testCases := []struct {
@@ -689,6 +713,8 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -747,7 +773,11 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {

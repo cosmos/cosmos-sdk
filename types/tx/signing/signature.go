@@ -19,8 +19,21 @@ type SignatureV2 struct {
 	// the signatures themselves for either single or multi-signatures.
 	Data SignatureData
 
-	// Sequence is the sequence of this account.
+	// Sequence is the sequence of this account. Only populated in
+	// SIGN_MODE_DIRECT.
 	Sequence uint64
+
+	// Ugly flag to keep backwards-compatibility with Amino StdSignatures. In
+	// SIGN_MODE_DIRECT, sequence is in AuthInfo, and the ante handler checks
+	// the AuthInfo's sequence with the actual sequence on-chain. In
+	// SIGN_MODE_LEGACY_AMINO_JSON, sequence is signed via StdSignDoc, and
+	// checked during signature verification. This flag indicates that the
+	// Sequence field in SignatureV2 is non-populated, and thus should be
+	// skipped in ante handlers.
+	// TLDR;
+	// - false (by default) in SIGN_MODE_DIRECT
+	// - true in SIGN_MODE_LEGACY_AMINO_JSON
+	SkipSequenceCheck bool
 }
 
 // SignatureDataToProto converts a SignatureData to SignatureDescriptor_Data.

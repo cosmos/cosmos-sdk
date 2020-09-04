@@ -9,23 +9,25 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
 	clientID := "clientidone"
 
+	height := types.NewHeight(0, 10)
+
 	clientState := &ibctmtypes.ClientState{
-		FrozenHeight: types.NewHeight(0, 10),
+		FrozenHeight: height,
 	}
 
 	consState := &ibctmtypes.ConsensusState{
-		Height:    types.NewHeight(0, 10),
+		Height:    height,
 		Timestamp: time.Now().UTC(),
 	}
 
@@ -40,7 +42,7 @@ func TestDecodeStore(t *testing.T) {
 				Value: []byte(exported.Tendermint.String()),
 			},
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
+				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 			},
 			{

@@ -535,6 +535,52 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
+func TestInitChain_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
+func TestBeginBlock_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+
+	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
+		app.BeginBlock(abci.RequestBeginBlock{
+			Header: tmproto.Header{
+				Height: 4,
+			},
+		})
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height: 3,
+		},
+	})
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
 // Simple tx with a list of Msgs.
 type txTest struct {
 	Msgs       []sdk.Msg
@@ -1292,7 +1338,6 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-			return
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {

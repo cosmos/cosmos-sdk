@@ -706,6 +706,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 				suite.NoError(err)
 				suite.Equal(uint64(1), res.Pagination.Total)
 				suite.Equal(1, len(res.UnbondingResponses))
+				suite.Equal(res.UnbondingResponses[0].ValidatorAddress, val1.GetOperator())
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

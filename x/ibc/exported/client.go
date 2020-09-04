@@ -9,17 +9,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
 	ClientType() ClientType
-	GetLatestHeight() uint64
+	GetLatestHeight() Height
 	IsFrozen() bool
-	GetFrozenHeight() uint64
+	GetFrozenHeight() Height
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -33,9 +30,9 @@ type ClientState interface {
 	VerifyClientState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		root Root,
+		height Height,
+		prefix Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,
 		clientState ClientState,
@@ -43,38 +40,38 @@ type ClientState interface {
 	VerifyClientConsensusState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		root commitmentexported.Root,
-		height uint64,
+		root Root,
+		height Height,
 		counterpartyClientIdentifier string,
-		consensusHeight uint64,
-		prefix commitmentexported.Prefix,
+		consensusHeight Height,
+		prefix Prefix,
 		proof []byte,
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		connectionID string,
-		connectionEnd connectionexported.ConnectionI,
+		connectionEnd ConnectionI,
 	) error
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
-		channel channelexported.ChannelI,
+		channel ChannelI,
 	) error
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -84,8 +81,8 @@ type ClientState interface {
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -95,8 +92,8 @@ type ClientState interface {
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -105,8 +102,8 @@ type ClientState interface {
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
-		prefix commitmentexported.Prefix,
+		height Height,
+		prefix Prefix,
 		proof []byte,
 		portID,
 		channelID string,
@@ -119,11 +116,11 @@ type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
 	// GetHeight returns the height of the consensus state
-	GetHeight() uint64
+	GetHeight() Height
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitmentexported.Root
+	GetRoot() Root
 
 	// GetTimestamp returns the timestamp (in nanoseconds) of the consensus state
 	GetTimestamp() uint64
@@ -142,13 +139,13 @@ type Misbehaviour interface {
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
-	GetHeight() uint64
+	GetHeight() Height
 }
 
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
-	GetHeight() uint64
+	GetHeight() Height
 	ValidateBasic() error
 }
 
@@ -161,6 +158,10 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
+	GetEpochNumber() uint64
+	GetEpochHeight() uint64
+	Decrement() (Height, bool)
+	String() string
 }
 
 // ClientType defines the type of the consensus algorithm

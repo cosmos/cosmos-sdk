@@ -40,7 +40,9 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		)
 	}
 
-	if cs.IsFrozen() {
+	switch {
+
+	case cs.IsFrozen():
 		if !cs.AllowUpdateAfterMisbehaviour {
 			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is not allowed to be unfrozen")
 		}
@@ -48,25 +50,39 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		// unfreeze the client
 		cs.FrozenHeight = clienttypes.Height{}
 
-		// if the client is frozen but not expired, do full validation of the header
-		// NOTE: the client may be frozen again since the misbehaviour evidence may
-		// not be expired yet
-		if !cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
+		// if the client is expired we unexpire the client using softer validation, otherwise
+		// full validation on the header is performed.
+		if cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
+			return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())
+		} else {
+			// NOTE: the client may be frozen again since the misbehaviour evidence may
+			// not be expired yet
 			return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 		}
-	} else if !(cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime())) {
+
+	case cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()):
+		return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())
+
+	default:
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
 
+}
+
+// unexpireClient checks if the proposed header is sufficient to update an expired client.
+// The client is updated if no error occurs.
+func (cs ClientState) unexpireClient(
+	consensusState *ConsensusState, header *Header, currentTimestamp time.Time,
+) (exported.ClientState, exported.ConsensusState, error) {
+
 	// the client is expired and either AllowUpdateAfterMisbehaviour or AllowUpdateAfterExpiry
 	// is set to true so light validation of the header is executed
-	if err := cs.checkProposedHeader(consensusState, tmHeader, ctx.BlockTime()); err != nil {
+	if err := cs.checkProposedHeader(consensusState, header, currentTimestamp); err != nil {
 		return nil, nil, err
 	}
 
-	newClientState, consensusState := update(&cs, tmHeader)
+	newClientState, consensusState := update(&cs, header)
 	return newClientState, consensusState, nil
-
 }
 
 // checkProposedHeader checks if the Tendermint header is valid for updating a client after

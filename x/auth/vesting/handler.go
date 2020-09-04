@@ -27,6 +27,10 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper) sdk.Handler {
 }
 
 func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk types.BankKeeper, msg *types.MsgCreateVestingAccount) (*sdk.Result, error) {
+	if bk.BlockedAddr(msg.ToAddress) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
 	if acc := ak.GetAccount(ctx, msg.ToAddress); acc != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}

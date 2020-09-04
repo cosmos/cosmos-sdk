@@ -46,6 +46,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	consAddrBase64 := base64.URLEncoding.EncodeToString(sdk.ConsAddress(val.PubKey.Address()))
 
 	testCases := []struct {
@@ -57,7 +58,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		expected proto.Message
 	}{
 		{
-			"get signing infos",
+			"get signing infos (height specific)",
 			fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos", baseURL),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
@@ -77,7 +78,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			},
 		},
 		{
-			"get signing info",
+			"get signing info (height specific)",
 			fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", baseURL, consAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
@@ -94,9 +95,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 		{
 			"get signing info wrong address",
 			fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", baseURL, "wrongAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			true,
 			&types.QuerySigningInfoResponse{},
 			nil,
@@ -115,11 +114,13 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-
-		err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 
 		s.Run(tc.name, func() {
+			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			s.Require().NoError(err)
+
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+
 			if tc.expErr {
 				s.Require().Error(err)
 			} else {

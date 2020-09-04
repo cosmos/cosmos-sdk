@@ -108,11 +108,12 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-
-		err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
-
 		s.Run(tc.name, func() {
+			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			s.Require().NoError(err)
+
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+
 			if tc.expErr {
 				s.Require().Error(err)
 			} else {

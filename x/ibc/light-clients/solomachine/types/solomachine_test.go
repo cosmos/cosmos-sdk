@@ -50,7 +50,7 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	var clientState exported.ClientState
 	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight()
+	return clientState.GetLatestHeight().GetEpochHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {

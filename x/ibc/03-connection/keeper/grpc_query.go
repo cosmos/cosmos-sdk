@@ -38,7 +38,7 @@ func (q Keeper) Connection(c context.Context, req *types.QueryConnectionRequest)
 
 	return &types.QueryConnectionResponse{
 		Connection:  &connection,
-		ProofHeight: uint64(ctx.BlockHeight()),
+		ProofHeight: clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 	return &types.QueryConnectionsResponse{
 		Connections: connections,
 		Pagination:  pageRes,
-		Height:      ctx.BlockHeight(),
+		Height:      clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 
@@ -101,7 +101,7 @@ func (q Keeper) ClientConnections(c context.Context, req *types.QueryClientConne
 
 	return &types.QueryClientConnectionsResponse{
 		ConnectionPaths: clientConnectionPaths,
-		ProofHeight:     uint64(ctx.BlockHeight()),
+		ProofHeight:     clienttypes.GetSelfHeight(ctx),
 	}, nil
 }
 
@@ -135,7 +135,8 @@ func (q Keeper) ConnectionClientState(c context.Context, req *types.QueryConnect
 
 	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientId, clientState)
 
-	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
+	height := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, height), nil
 
 }
 
@@ -159,7 +160,8 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		)
 	}
 
-	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, req.Height)
+	height := clienttypes.NewHeight(req.EpochNumber, req.EpochHeight)
+	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, height)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
@@ -172,5 +174,6 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
+	proofHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight().(clienttypes.Height), nil, proofHeight), nil
 }

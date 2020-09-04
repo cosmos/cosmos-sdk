@@ -17,8 +17,10 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -33,12 +35,30 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
+	cfg.NumValidators = 2
 
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	unbond, err := sdk.ParseCoin("10stake")
+	s.Require().NoError(err)
+
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	// redelegate
+	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// unbonding
+	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -252,6 +272,185 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
 			s.Require().Equal(tc.minValidatorCount, len(result))
 			s.Require().GreaterOrEqual(len(result), 1)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, nil,
+		},
+		{
+			"with wrong validator address",
+			[]string{
+				val.Address.String(),
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, nil,
+		},
+		{
+			"with json output",
+			[]string{
+				val.Address.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.DelegationResponse{},
+			&types.DelegationResponse{
+				Delegation: types.Delegation{
+					DelegatorAddress: val.Address,
+					ValidatorAddress: val2.ValAddress,
+					Shares:           sdk.NewDec(10),
+				},
+				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegation()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with no delegator address",
+			[]string{},
+			true, nil, nil,
+		},
+		{
+			"with wrong delegator address",
+			[]string{"wrongDelAddr"},
+			true, nil, nil,
+		},
+		{
+			"valid request (height specific)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&types.QueryDelegatorDelegationsResponse{},
+			&types.QueryDelegatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with no validator address",
+			[]string{},
+			true, nil, nil,
+		},
+		{
+			"wrong validator address",
+			[]string{"wrongValAddr"},
+			true, nil, nil,
+		},
+		{
+			"valid request(height specific)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&types.QueryValidatorDelegationsResponse{},
+			&types.QueryValidatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
 		})
 	}
 }

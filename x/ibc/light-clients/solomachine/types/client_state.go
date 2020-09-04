@@ -232,7 +232,10 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	signBz := PacketCommitmentSignBytes(sequence, signature.Timestamp, path, commitmentBytes)
+	signBz, err := PacketCommitmentSignBytes(cdc, sequence, signature.Timestamp, path, commitmentBytes)
+	if err != nil {
+		return err
+	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
@@ -267,7 +270,10 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	signBz := PacketAcknowledgementSignBytes(sequence, signature.Timestamp, path, acknowledgement)
+	signBz, err := PacketAcknowledgementSignBytes(cdc, sequence, signature.Timestamp, path, acknowledgement)
+	if err != nil {
+		return err
+	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
@@ -302,7 +308,10 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	signBz := PacketAcknowledgementAbsenceSignBytes(sequence, signature.Timestamp, path)
+	signBz, err := PacketAcknowledgementAbsenceSignBytes(cdc, sequence, signature.Timestamp, path)
+	if err != nil {
+		return err
+	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
@@ -336,7 +345,10 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	signBz := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
+	signBz, err := NextSequenceRecvSignBytes(cdc, sequence, signature.Timestamp, path, nextSequenceRecv)
+	if err != nil {
+		return err
+	}
 
 	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err

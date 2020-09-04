@@ -490,7 +490,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketCommitmentSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, commitmentBytes)
+	value, err := types.PacketCommitmentSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, commitmentBytes)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -570,7 +571,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, ack)
+	value, err := types.PacketAcknowledgementSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, ack)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -649,7 +651,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementAbsenceSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path)
+	value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -729,7 +732,8 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := types.NextSequenceRecvSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, nextSeqRecv)
+	value, err := types.NextSequenceRecvSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, nextSeqRecv)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)

@@ -40,7 +40,7 @@ func HeaderSignBytes(
 ) ([]byte, error) {
 	data := &HeaderData{
 		Timestamp: timestamp,
-		NewPubKey: header.GetPubKey(),
+		NewPubKey: header.NewPublicKey,
 	}
 
 	dataBz, err := cdc.MarshalBinaryBare(data)

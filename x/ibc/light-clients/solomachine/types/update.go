@@ -23,7 +23,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkHeader(&cs, smHeader); err != nil {
+	if err := checkHeader(cdc, &cs, smHeader); err != nil {
 		return nil, nil, err
 	}
 
@@ -32,7 +32,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 }
 
 // checkHeader checks if the Solo Machine update signature is valid.
-func checkHeader(clientState *ClientState, header *Header) error {
+func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *Header) error {
 	// assert update sequence is current sequence
 	if header.Sequence != clientState.ConsensusState.Sequence {
 		return sdkerrors.Wrapf(
@@ -42,7 +42,12 @@ func checkHeader(clientState *ClientState, header *Header) error {
 	}
 
 	// assert currently registered public key signed over the new public key with correct sequence
-	data := HeaderSignBytes(header)
+	// TODO: get timestamp
+	data, err := HeaderSignBytes(cdc, header)
+	if err != nil {
+		return err
+	}
+
 	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, header.Signature); err != nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, err.Error())
 	}

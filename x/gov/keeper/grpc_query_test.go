@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				app.GovKeeper.SetDeposit(ctx, deposit)
 
 				req = &types.QueryProposalsRequest{
-					Depositor: addrs[0],
+					Depositor: addrs[0].String(),
 				}
 
 				expRes = &types.QueryProposalsResponse{
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].ProposalId, addrs[0], types.OptionAbstain))
 
 				req = &types.QueryProposalsRequest{
-					Voter: addrs[0],
+					Voter: addrs[0].String(),
 				}
 
 				expRes = &types.QueryProposalsResponse{
@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &types.QueryVoteRequest{
 					ProposalId: 0,
-					Voter:      addrs[0],
+					Voter:      addrs[0].String(),
 				}
 			},
 			false,
@@ -255,7 +255,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &types.QueryVoteRequest{
 					ProposalId: 1,
-					Voter:      nil,
+					Voter:      "",
 				}
 			},
 			false,
@@ -265,7 +265,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &types.QueryVoteRequest{
 					ProposalId: 3,
-					Voter:      addrs[0],
+					Voter:      addrs[0].String(),
 				}
 			},
 			false,
@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 				req = &types.QueryVoteRequest{
 					ProposalId: proposal.ProposalId,
-					Voter:      addrs[0],
+					Voter:      addrs[0].String(),
 				}
 
 				expRes = &types.QueryVoteResponse{}
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 				req = &types.QueryVoteRequest{
 					ProposalId: proposal.ProposalId,
-					Voter:      addrs[0],
+					Voter:      addrs[0].String(),
 				}
 
 				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalId, addrs[0], types.OptionAbstain)}
@@ -307,7 +307,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &types.QueryVoteRequest{
 					ProposalId: proposal.ProposalId,
-					Voter:      addrs[1],
+					Voter:      addrs[1].String(),
 				}
 
 				expRes = &types.QueryVoteResponse{}
@@ -538,7 +538,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			func() {
 				req = &types.QueryDepositRequest{
 					ProposalId: 0,
-					Depositor:  addrs[0],
+					Depositor:  addrs[0].String(),
 				}
 			},
 			false,
@@ -548,7 +548,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			func() {
 				req = &types.QueryDepositRequest{
 					ProposalId: 1,
-					Depositor:  nil,
+					Depositor:  "",
 				}
 			},
 			false,
@@ -558,7 +558,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			func() {
 				req = &types.QueryDepositRequest{
 					ProposalId: 2,
-					Depositor:  addrs[0],
+					Depositor:  addrs[0].String(),
 				}
 			},
 			false,
@@ -573,7 +573,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 				req = &types.QueryDepositRequest{
 					ProposalId: proposal.ProposalId,
-					Depositor:  addrs[0],
+					Depositor:  addrs[0].String(),
 				}
 			},
 			false,
@@ -587,7 +587,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 				req = &types.QueryDepositRequest{
 					ProposalId: proposal.ProposalId,
-					Depositor:  addrs[0],
+					Depositor:  addrs[0].String(),
 				}
 
 				expRes = &types.QueryDepositResponse{Deposit: deposit}

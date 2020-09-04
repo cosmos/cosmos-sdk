@@ -15,13 +15,13 @@ func TestDelegationEqual(t *testing.T) {
 	d1 := NewDelegation(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(100))
 	d2 := d1
 
-	ok := d1.Equal(d2)
+	ok := d1.String()==d2.String()
 	require.True(t, ok)
 
 	d2.ValidatorAddress = valAddr3
 	d2.Shares = sdk.NewDec(200)
 
-	ok = d1.Equal(d2)
+	ok = d1.String()==d2.String()
 	require.False(t, ok)
 }
 
@@ -35,13 +35,13 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 		time.Unix(0, 0), sdk.NewInt(0))
 	ubd2 := ubd1
 
-	ok := ubd1.Equal(ubd2)
+	ok := ubd1.String() == ubd2.String()
 	require.True(t, ok)
 
 	ubd2.ValidatorAddress = valAddr3
 
 	ubd2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-	ok = ubd1.Equal(ubd2)
+	ok = (ubd1.String()==ubd2.String())
 	require.False(t, ok)
 }
 
@@ -60,13 +60,13 @@ func TestRedelegationEqual(t *testing.T) {
 		time.Unix(0, 0), sdk.NewInt(0),
 		sdk.NewDec(0))
 
-	ok := r1.Equal(r2)
+	ok := r1.String()==r2.String()
 	require.True(t, ok)
 
 	r2.Entries[0].SharesDst = sdk.NewDec(10)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 
-	ok = r1.Equal(r2)
+	ok = r1.String() == r2.String()
 	require.False(t, ok)
 }
 

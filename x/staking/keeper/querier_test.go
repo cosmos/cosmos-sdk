@@ -259,7 +259,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Error(t, err)
 
 	// Query bonded validator
-	queryBondParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
+	queryBondParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal1.String()}
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
 	require.NoError(t, errRes)
 
@@ -352,7 +352,7 @@ func TestQueryDelegation(t *testing.T) {
 	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
 	require.NoError(t, err)
 
-	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: addrVal1}
+	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal1.String()}
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
 	require.NoError(t, errRes)
 
@@ -639,7 +639,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	//
 	// found: query unbonding delegation by delegator and validator
 	//
-	queryValidatorParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc1, ValidatorAddr: val1.GetOperator()}
+	queryValidatorParams := types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc1.String(), ValidatorAddr: val1.GetOperator().String()}
 	bz, errRes := cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 	query := abci.RequestQuery{
@@ -658,7 +658,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	//
 	// not found: query unbonding delegation by delegator and validator
 	//
-	queryValidatorParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2, ValidatorAddr: val1.GetOperator()}
+	queryValidatorParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: val1.GetOperator().String()}
 	bz, errRes = cdc.MarshalJSON(queryValidatorParams)
 	require.NoError(t, errRes)
 	query = abci.RequestQuery{

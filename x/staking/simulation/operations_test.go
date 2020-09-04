@@ -119,10 +119,10 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
-	require.Equal(t, "jLxzIivHSl", msg.GetDescription().Moniker)
-	require.Equal(t, "rBqDOTtGTO", msg.GetDescription().Identity)
-	require.Equal(t, "BSpYuLyYgg", msg.GetDescription().Website)
-	require.Equal(t, "wNbeHVIkPZ", msg.GetDescription().SecurityContact)
+	require.Equal(t, "jLxzIivHSl", msg.Description.Moniker)
+	require.Equal(t, "rBqDOTtGTO", msg.Description.Identity)
+	require.Equal(t, "BSpYuLyYgg", msg.Description.Website)
+	require.Equal(t, "wNbeHVIkPZ", msg.Description.SecurityContact)
 	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress.String())
 	require.Len(t, futureOperations, 0)
@@ -254,8 +254,8 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	require.Equal(t, "692322", msg.Amount.Amount.String())
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgBeginRedelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.GetValidatorDstAddress().String())
-	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.GetValidatorSrcAddress().String())
+	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress.String())
+	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress.String())
 	require.Len(t, futureOperations, 0)
 
 }

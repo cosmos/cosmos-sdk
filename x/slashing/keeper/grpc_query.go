@@ -30,12 +30,12 @@ func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoReques
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.ConsAddress == nil {
+	if req.ConsAddress == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	signingInfo, found := k.GetValidatorSigningInfo(ctx, req.ConsAddress)
+	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(req.ConsAddress))
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "SigningInfo not found for validator %s", req.ConsAddress)
 	}

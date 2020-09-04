@@ -16,7 +16,7 @@ func NewValidatorSigningInfo(
 ) ValidatorSigningInfo {
 
 	return ValidatorSigningInfo{
-		Address:             condAddr,
+		Address:             condAddr.String(),
 		StartHeight:         startHeight,
 		IndexOffset:         indexOffset,
 		JailedUntil:         jailedUntil,

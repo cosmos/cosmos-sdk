@@ -37,7 +37,7 @@ message QueryParamsResponse {
 // QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC method
 message QuerySigningInfoRequest {
   // cons_address is the address to query signing info of
-  bytes cons_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"];
+  string cons_address = 1;
 }
 
 // QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method

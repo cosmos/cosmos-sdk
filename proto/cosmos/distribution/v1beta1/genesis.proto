@@ -173,7 +173,6 @@ message GenesisState {
 
   // fee_pool defines the previous proposer at genesis.
   string previous_proposer = 4 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
     (gogoproto.moretags) = "yaml:\"previous_proposer\""
   ];
 

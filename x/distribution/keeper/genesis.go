@@ -18,7 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		k.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
+	k.SetPreviousProposerConsAddr(ctx, sdk.ConsAddress(data.PreviousProposer))
 
 	for _, rew := range data.OutstandingRewards {
 		k.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, types.ValidatorOutstandingRewards{Rewards: rew.OutstandingRewards})

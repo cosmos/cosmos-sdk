@@ -66,7 +66,7 @@ func (suite *SlashingTestSuite) TestGRPCQueryParams() {
 func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	queryClient := suite.queryClient
 
-	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: nil})
+	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: ""})
 	suite.Error(err)
 	suite.Nil(infoResp)
 
@@ -75,7 +75,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	suite.True(found)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&types.QuerySigningInfoRequest{ConsAddress: consAddr})
+		&types.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
 	suite.NoError(err)
 	suite.Equal(info, infoResp.ValSigningInfo)
 }

@@ -21,12 +21,12 @@ func TestValidatorTestEquivalent(t *testing.T) {
 	val1 := NewValidator(valAddr1, pk1, Description{})
 	val2 := NewValidator(valAddr1, pk1, Description{})
 
-	ok := val1.Equal(val2)
+	ok := val1.String() == val2.String()
 	require.True(t, ok)
 
 	val2 = NewValidator(valAddr2, pk2, Description{})
 
-	ok = val1.Equal(val2)
+	ok = val1.String() == val2.String()
 	require.False(t, ok)
 }
 

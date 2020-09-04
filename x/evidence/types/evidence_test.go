@@ -16,7 +16,7 @@ func TestEquivocation_Valid(t *testing.T) {
 		Height:           100,
 		Time:             n,
 		Power:            1000000,
-		ConsensusAddress: sdk.ConsAddress("foo"),
+		ConsensusAddress: sdk.ConsAddress("foo").String(),
 	}
 
 	require.Equal(t, e.GetTotalPower(), int64(0))
@@ -40,11 +40,11 @@ func TestEquivocationValidateBasic(t *testing.T) {
 		e         types.Equivocation
 		expectErr bool
 	}{
-		{"valid", types.Equivocation{100, n, 1000000, sdk.ConsAddress("foo")}, false},
-		{"invalid time", types.Equivocation{100, zeroTime, 1000000, sdk.ConsAddress("foo")}, true},
-		{"invalid height", types.Equivocation{0, n, 1000000, sdk.ConsAddress("foo")}, true},
-		{"invalid power", types.Equivocation{100, n, 0, sdk.ConsAddress("foo")}, true},
-		{"invalid address", types.Equivocation{100, n, 1000000, nil}, true},
+		{"valid", types.Equivocation{100, n, 1000000, sdk.ConsAddress("foo").String()}, false},
+		{"invalid time", types.Equivocation{100, zeroTime, 1000000, sdk.ConsAddress("foo").String()}, true},
+		{"invalid height", types.Equivocation{0, n, 1000000, sdk.ConsAddress("foo").String()}, true},
+		{"invalid power", types.Equivocation{100, n, 0, sdk.ConsAddress("foo").String()}, true},
+		{"invalid address", types.Equivocation{100, n, 1000000, ""}, true},
 	}
 
 	for _, tc := range testCases {

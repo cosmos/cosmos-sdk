@@ -73,7 +73,7 @@ message Description {
 // delegated divided by the current exchange rate. Voting power can be
 // calculated as total bonded shares multiplied by exchange rate.
 message Validator {
-  option (gogoproto.equal)            = true;
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
@@ -293,7 +293,7 @@ message Params {
 // DelegationResponse is equivalent to Delegation except that it contains a balance
 // in addition to shares which is more suitable for client responses.
 message DelegationResponse {
-  option (gogoproto.equal)            = true;
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
 
   Delegation delegation = 1 [(gogoproto.nullable) = false];
@@ -318,7 +318,7 @@ message RedelegationEntryResponse {
 // contain a balance in addition to shares which is more suitable for client
 // responses.
 message RedelegationResponse {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal) = false;
 
   Redelegation                       redelegation = 1 [(gogoproto.nullable) = false];
   repeated RedelegationEntryResponse entries      = 2 [(gogoproto.nullable) = false];

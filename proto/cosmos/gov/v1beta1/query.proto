@@ -68,13 +68,13 @@ message QueryProposalsRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // proposal_status defines the status of the proposals.
-  ProposalStatus proposal_status = 1 ;
+  ProposalStatus proposal_status = 1;
   
   // voter defines the voter address for the proposals.
-  string voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string voter = 2;
 
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string depositor = 3;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
@@ -97,7 +97,7 @@ message QueryVoteRequest {
   uint64 proposal_id = 1;
   
   // voter defines the oter address for the proposals.
-  string voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string voter = 2;
 }
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
@@ -149,7 +149,7 @@ message QueryDepositRequest {
   uint64 proposal_id = 1;
   
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string depositor = 2;
 }
 
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.

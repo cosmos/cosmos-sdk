@@ -28,7 +28,7 @@ func (d Deposits) Equal(other Deposits) bool {
 	}
 
 	for i, deposit := range d {
-		if !deposit.Equal(other[i]) {
+		if deposit.String() != other[i].String() {
 			return false
 		}
 	}
@@ -49,5 +49,5 @@ func (d Deposits) String() string {
 
 // Empty returns whether a deposit is empty.
 func (d Deposit) Empty() bool {
-	return d.Equal(Deposit{})
+	return d.String() == Deposit{}.String()
 }

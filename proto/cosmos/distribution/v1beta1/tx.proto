@@ -53,6 +53,9 @@ message MsgWithdrawValidatorCommission {
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 message MsgFundCommunityPool {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

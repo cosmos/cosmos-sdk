@@ -28,7 +28,7 @@ func (v Votes) Equal(other Votes) bool {
 	}
 
 	for i, vote := range v {
-		if !vote.Equal(other[i]) {
+		if vote.String() != other[i].String() {
 			return false
 		}
 	}
@@ -49,7 +49,7 @@ func (v Votes) String() string {
 
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
-	return v.Equal(Vote{})
+	return v.String() == Vote{}.String()
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error

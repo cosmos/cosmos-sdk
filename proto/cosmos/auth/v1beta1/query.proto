@@ -28,7 +28,7 @@ message QueryAccountRequest{
   option (gogoproto.goproto_getters)  = false;
 
   // address defines the address to query for.
-  string address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string address = 1;
 }
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.

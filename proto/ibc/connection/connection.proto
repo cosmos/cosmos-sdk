@@ -10,6 +10,9 @@ import "ibc/commitment/commitment.proto";
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   string client_id = 1 [
     (gogoproto.moretags) = "yaml:\"client_id\""
   ];

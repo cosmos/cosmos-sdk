@@ -19,12 +19,16 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address.Empty() {
+	if req.Address == "" {
 		return nil, status.Error(codes.InvalidArgument, "Address cannot be empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	account := ak.GetAccount(ctx, req.Address)
+	addr, err := sdk.ConvertBech32ToAccAddress(req.Address)
+	if err != nil {
+		return nil, err
+	}
+	account := ak.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 	}

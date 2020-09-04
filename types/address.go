@@ -704,3 +704,35 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 
 	return hex.DecodeString(address)
 }
+
+func ConvertBech32ToValAddress(address string) (ValAddress, error) {
+	_, addressBytes, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return nil, err
+	}
+
+	var addr ValAddress
+	err = addr.UnmarshalJSON(addressBytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return addr, nil
+}
+
+func ConvertBech32ToAccAddress(address string) (AccAddress, error) {
+	_, addressBytes, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return nil, err
+	}
+
+	var addr AccAddress
+	err = addr.UnmarshalJSON(addressBytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return addr, nil
+}

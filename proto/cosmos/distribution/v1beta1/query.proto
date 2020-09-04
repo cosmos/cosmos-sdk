@@ -69,7 +69,7 @@ message QueryParamsResponse {
 // QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method.
 message QueryValidatorOutstandingRewardsRequest {
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  string validator_address = 1;
 }
 
 // QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method.
@@ -80,7 +80,7 @@ message QueryValidatorOutstandingRewardsResponse {
 // QueryValidatorCommissionRequest is the request type for the Query/ValidatorCommission RPC method
 message QueryValidatorCommissionRequest {
   // validator_address defines the validator address to query for.
-  string validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  string validator_address = 1;
 }
 
 // QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method
@@ -92,7 +92,7 @@ message QueryValidatorCommissionResponse {
 // QueryValidatorSlashesRequest is the request type for the Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesRequest {
   // validator_address defines the validator address to query for.
-  bytes validator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  bytes validator_address = 1;
   // starting_height defines the optional starting height to query the slashes.
   uint64 starting_height = 2;
   // starting_height defines the optional ending height to query the slashes.
@@ -116,9 +116,9 @@ message QueryDelegationRewardsRequest {
   option (gogoproto.goproto_getters)  = false;
 
    // delegator_address defines the delegator address to query for.
-  string delegator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string delegator_address = 1;
    // validator_address defines the validator address to query for.
-  string validator_address = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  string validator_address = 2;
 }
 
 // QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method.
@@ -135,7 +135,7 @@ message QueryDelegationTotalRewardsRequest {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
   // delegator_address defines the delegator address to query for.
-  string delegator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string delegator_address = 1;
 }
 
 // QueryDelegationTotalRewardsResponse is the response type for the Query/DelegationTotalRewards RPC method.
@@ -155,7 +155,7 @@ message QueryDelegatorValidatorsRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // delegator_address defines the delegator address to query for.
-  string delegator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string delegator_address = 1;
 }
 
 // QueryDelegatorValidatorsResponse is the response type for the Query/DelegatorValidators RPC method.
@@ -164,7 +164,7 @@ message QueryDelegatorValidatorsResponse {
   option (gogoproto.goproto_getters)  = false;
 
   // validators defines the validators a delegator is delegating for.
-  repeated string validators = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"];
+  repeated string validators = 1;
 }
 
 // QueryDelegatorWithdrawAddressRequest is the request type for the Query/DelegatorWithdrawAddress RPC method.
@@ -173,7 +173,7 @@ message QueryDelegatorWithdrawAddressRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // delegator_address defines the delegator address to query for.
-  string delegator_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string delegator_address = 1;
 }
 
 // QueryDelegatorWithdrawAddressResponse is the response type for the Query/DelegatorWithdrawAddress RPC method.
@@ -182,7 +182,7 @@ message QueryDelegatorWithdrawAddressResponse {
   option (gogoproto.goproto_getters)  = false;
 
   // withdraw_address defines the delegator address to query for.
-  string withdraw_address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string withdraw_address = 1;
 }
 
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC method.

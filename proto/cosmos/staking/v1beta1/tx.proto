@@ -34,7 +34,8 @@ message MsgCreateValidator {
 
 // MsgEditValidator defines an SDK message for editing an existing validator.
 message MsgEditValidator {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters)  = false;
 
   Description description  = 1 [(gogoproto.nullable) = false];
   string validator_address = 2 [

@@ -55,14 +55,23 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 			matchStatus = p.Status == req.ProposalStatus
 		}
 
-		// match voter address (if supplied)
-		if len(req.Voter) > 0 {
-			_, matchVoter = q.GetVote(ctx, p.ProposalId, req.Voter)
+		voter, err := sdk.ConvertBech32ToAccAddress(req.Voter)
+		if err != nil {
+			return false, err
 		}
 
+		// match voter address (if supplied)
+		if len(req.Voter) > 0 {
+			_, matchVoter = q.GetVote(ctx, p.ProposalId, voter)
+		}
+
+		depositor, err := sdk.ConvertBech32ToAccAddress(req.Depositor)
+		if err != nil {
+			return false, err
+		}
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, req.Depositor)
+			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
@@ -93,13 +102,17 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	if req.Voter == nil {
+	if req.Voter == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty voter address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	vote, found := q.GetVote(ctx, req.ProposalId, req.Voter)
+	voter, err := sdk.ConvertBech32ToAccAddress(req.Voter)
+	if err != nil {
+		return nil, err
+	}
+	vote, found := q.GetVote(ctx, req.ProposalId, voter)
 	if !found {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
@@ -178,13 +191,17 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 		return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
 	}
 
-	if req.Depositor == nil {
+	if req.Depositor == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty depositor address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	deposit, found := q.GetDeposit(ctx, req.ProposalId, req.Depositor)
+	depositor, err := sdk.ConvertBech32ToAccAddress(req.Depositor)
+	if err != nil {
+		return nil, err
+	}
+	deposit, found := q.GetDeposit(ctx, req.ProposalId, depositor)
 	if !found {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"depositer: %v not found for proposal: %v", req.Depositor, req.ProposalId)

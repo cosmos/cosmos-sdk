@@ -29,6 +29,9 @@ message DelegatorWithdrawInfo {
 
 // ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 message ValidatorOutstandingRewardsRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // validator_address is the address of the validator.
   string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -45,6 +48,9 @@ message ValidatorOutstandingRewardsRecord {
 
 // ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
 message ValidatorAccumulatedCommissionRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // validator_address is the address of the validator.
   string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -60,6 +66,9 @@ message ValidatorAccumulatedCommissionRecord {
 
 // ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
 message ValidatorHistoricalRewardsRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // validator_address is the address of the validator.
   string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -78,6 +87,9 @@ message ValidatorHistoricalRewardsRecord {
 
 // ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 message ValidatorCurrentRewardsRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // validator_address is the address of the validator.
   bytes validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -117,6 +129,9 @@ message DelegatorStartingInfoRecord {
 
 // ValidatorSlashEventRecord is used for import / export via genesis json.
 message ValidatorSlashEventRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // validator_address is the address of the validator.
   string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
@@ -135,6 +150,9 @@ message ValidatorSlashEventRecord {
 
 // GenesisState defines the distribution module's genesis state.
 message GenesisState {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // params defines all the paramaters of the module.
   Params params = 1 [
     (gogoproto.nullable) = false,

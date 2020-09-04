@@ -31,7 +31,12 @@ func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legac
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	account := k.GetAccount(ctx, params.Address)
+	addr, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := k.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", params.Address)
 	}

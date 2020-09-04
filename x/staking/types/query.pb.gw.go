@@ -83,7 +83,7 @@ func request_Query_Validator_0(ctx context.Context, marshaler runtime.Marshaler,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -110,7 +110,7 @@ func local_request_Query_Validator_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -141,7 +141,7 @@ func request_Query_ValidatorDelegations_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -175,7 +175,7 @@ func local_request_Query_ValidatorDelegations_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -213,7 +213,7 @@ func request_Query_ValidatorUnbondingDelegations_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -247,7 +247,7 @@ func local_request_Query_ValidatorUnbondingDelegations_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -281,7 +281,7 @@ func request_Query_Delegation_0(ctx context.Context, marshaler runtime.Marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -292,7 +292,7 @@ func request_Query_Delegation_0(ctx context.Context, marshaler runtime.Marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -319,7 +319,7 @@ func local_request_Query_Delegation_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -330,7 +330,7 @@ func local_request_Query_Delegation_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -357,7 +357,7 @@ func request_Query_UnbondingDelegation_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -368,7 +368,7 @@ func request_Query_UnbondingDelegation_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -395,7 +395,7 @@ func local_request_Query_UnbondingDelegation_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -406,7 +406,7 @@ func local_request_Query_UnbondingDelegation_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -437,7 +437,7 @@ func request_Query_DelegatorDelegations_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -471,7 +471,7 @@ func local_request_Query_DelegatorDelegations_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -509,7 +509,7 @@ func request_Query_DelegatorUnbondingDelegations_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -543,7 +543,7 @@ func local_request_Query_DelegatorUnbondingDelegations_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -581,7 +581,7 @@ func request_Query_Redelegations_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -615,7 +615,7 @@ func local_request_Query_Redelegations_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -653,7 +653,7 @@ func request_Query_DelegatorValidators_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -687,7 +687,7 @@ func local_request_Query_DelegatorValidators_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -721,7 +721,7 @@ func request_Query_DelegatorValidator_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -732,7 +732,7 @@ func request_Query_DelegatorValidator_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)
@@ -759,7 +759,7 @@ func local_request_Query_DelegatorValidator_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_addr")
 	}
 
-	protoReq.DelegatorAddr, err = runtime.Bytes(val)
+	protoReq.DelegatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_addr", err)
@@ -770,7 +770,7 @@ func local_request_Query_DelegatorValidator_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_addr")
 	}
 
-	protoReq.ValidatorAddr, err = runtime.Bytes(val)
+	protoReq.ValidatorAddr, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_addr", err)

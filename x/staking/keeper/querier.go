@@ -259,7 +259,17 @@ func queryDelegatorValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, l
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	validator, err := k.GetDelegatorValidator(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	delAddr, err := sdk.ConvertBech32ToAccAddress(params.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ConvertBech32ToValAddress(params.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.GetDelegatorValidator(ctx, delAddr, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +290,17 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	delegation, found := k.GetDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	delAddr, err := sdk.ConvertBech32ToAccAddress(params.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ConvertBech32ToValAddress(params.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegation
 	}
@@ -306,7 +326,17 @@ func queryUnbondingDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, 
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	unbond, found := k.GetUnbondingDelegation(ctx, params.DelegatorAddr, params.ValidatorAddr)
+	delAddr, err := sdk.ConvertBech32ToAccAddress(params.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ConvertBech32ToValAddress(params.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	unbond, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, types.ErrNoUnbondingDelegation
 	}

@@ -76,7 +76,7 @@ $ %s query staking validator %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 				return err
 			}
 
-			params := &types.QueryValidatorRequest{ValidatorAddr: addr}
+			params := &types.QueryValidatorRequest{ValidatorAddr: addr.String()}
 			res, err := queryClient.Validator(cmd.Context(), params)
 			if err != nil {
 				return err
@@ -174,7 +174,7 @@ $ %s query staking unbonding-delegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9l
 			}
 
 			params := &types.QueryValidatorUnbondingDelegationsRequest{
-				ValidatorAddr: valAddr,
+				ValidatorAddr: valAddr.String(),
 				Pagination:    pageReq,
 			}
 
@@ -231,7 +231,7 @@ $ %s query staking redelegations-from %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			}
 
 			params := &types.QueryRedelegationsRequest{
-				SrcValidatorAddr: valSrcAddr,
+				SrcValidatorAddr: valSrcAddr.String(),
 				Pagination:       pageReq,
 			}
 
@@ -288,8 +288,8 @@ $ %s query staking delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1gghju
 			}
 
 			params := &types.QueryDelegationRequest{
-				DelegatorAddr: delAddr,
-				ValidatorAddr: valAddr,
+				DelegatorAddr: delAddr.String(),
+				ValidatorAddr: valAddr.String(),
 			}
 
 			res, err := queryClient.Delegation(context.Background(), params)
@@ -344,7 +344,7 @@ $ %s query staking delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			params := &types.QueryDelegatorDelegationsRequest{
-				DelegatorAddr: delAddr,
+				DelegatorAddr: delAddr.String(),
 				Pagination:    pageReq,
 			}
 
@@ -401,7 +401,7 @@ $ %s query staking delegations-to %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			}
 
 			params := &types.QueryValidatorDelegationsRequest{
-				ValidatorAddr: valAddr,
+				ValidatorAddr: valAddr.String(),
 				Pagination:    pageReq,
 			}
 
@@ -459,8 +459,8 @@ $ %s query staking unbonding-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9
 			}
 
 			params := &types.QueryUnbondingDelegationRequest{
-				DelegatorAddr: delAddr,
-				ValidatorAddr: valAddr,
+				DelegatorAddr: delAddr.String(),
+				ValidatorAddr: valAddr.String(),
 			}
 
 			res, err := queryClient.UnbondingDelegation(context.Background(), params)
@@ -515,7 +515,7 @@ $ %s query staking unbonding-delegations %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru
 			}
 
 			params := &types.QueryDelegatorUnbondingDelegationsRequest{
-				DelegatorAddr: delegatorAddr,
+				DelegatorAddr: delegatorAddr.String(),
 				Pagination:    pageReq,
 			}
 
@@ -578,9 +578,9 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1l2r
 			}
 
 			params := &types.QueryRedelegationsRequest{
-				DelegatorAddr:    delAddr,
-				DstValidatorAddr: valDstAddr,
-				SrcValidatorAddr: valSrcAddr,
+				DelegatorAddr:    delAddr.String(),
+				DstValidatorAddr: valDstAddr.String(),
+				SrcValidatorAddr: valSrcAddr.String(),
 			}
 
 			res, err := queryClient.Redelegations(context.Background(), params)
@@ -635,7 +635,7 @@ $ %s query staking redelegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			}
 
 			params := &types.QueryRedelegationsRequest{
-				DelegatorAddr: delAddr,
+				DelegatorAddr: delAddr.String(),
 				Pagination:    pageReq,
 			}
 

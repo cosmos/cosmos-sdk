@@ -39,7 +39,12 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerie
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	balance := k.GetBalance(ctx, params.Address, params.Denom)
+	address, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	balance := k.GetBalance(ctx, address, params.Denom)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, balance)
 	if err != nil {
@@ -56,7 +61,12 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	balances := k.GetAllBalances(ctx, params.Address)
+	address, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	balances := k.GetAllBalances(ctx, address)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, balances)
 	if err != nil {

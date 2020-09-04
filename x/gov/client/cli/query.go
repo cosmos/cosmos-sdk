@@ -114,12 +114,12 @@ $ %s query gov proposals --page=2 --limit=100
 			bechVoterAddr, _ := cmd.Flags().GetString(flagVoter)
 			strProposalStatus, _ := cmd.Flags().GetString(flagStatus)
 
-			depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
+			_, err := sdk.AccAddressFromBech32(bechDepositorAddr)
 			if err != nil {
 				return err
 			}
 
-			voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
+			_, err = sdk.AccAddressFromBech32(bechVoterAddr)
 			if err != nil {
 				return err
 			}
@@ -145,8 +145,8 @@ $ %s query gov proposals --page=2 --limit=100
 				context.Background(),
 				&types.QueryProposalsRequest{
 					ProposalStatus: proposalStatus,
-					Voter:          voterAddr,
-					Depositor:      depositorAddr,
+					Voter:          bechVoterAddr,
+					Depositor:      bechDepositorAddr,
 					Pagination:     pageReq,
 				},
 			)
@@ -217,7 +217,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			res, err := queryClient.Vote(
 				context.Background(),
-				&types.QueryVoteRequest{ProposalId: proposalID, Voter: voterAddr},
+				&types.QueryVoteRequest{ProposalId: proposalID, Voter: args[1]},
 			)
 			if err != nil {
 				return err
@@ -375,7 +375,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			res, err := queryClient.Deposit(
 				context.Background(),
-				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: depositorAddr},
+				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
 			)
 			if err != nil {
 				return err

@@ -43,7 +43,7 @@ message QueryBalanceRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // address is the address to query balances for.
-  string address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string address = 1;
 
   // denom is the coin denom to query balances for.
   string denom = 2;
@@ -61,7 +61,7 @@ message QueryAllBalancesRequest {
   option (gogoproto.goproto_getters)  = false;
 
   // address is the address to query balances for.
-  string address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string address = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;

@@ -437,9 +437,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid port ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    "",
-					ChannelId: "test-channel-id",
-					Height:    1,
+					PortId:      "",
+					ChannelId:   "test-channel-id",
+					EpochNumber: 0,
+					EpochHeight: 1,
 				}
 			},
 			false,
@@ -448,9 +449,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"invalid channel ID",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    "test-port-id",
-					ChannelId: "",
-					Height:    1,
+					PortId:      "test-port-id",
+					ChannelId:   "",
+					EpochNumber: 0,
+					EpochHeight: 1,
 				}
 			},
 			false,
@@ -459,9 +461,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 			"channel not found",
 			func() {
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    "test-port-id",
-					ChannelId: "test-channel-id",
-					Height:    1,
+					PortId:      "test-port-id",
+					ChannelId:   "test-channel-id",
+					EpochNumber: 0,
+					EpochHeight: 1,
 				}
 			},
 			false,
@@ -479,9 +482,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    channelA.PortID,
-					ChannelId: channelA.ID,
-					Height:    1,
+					PortId:      channelA.PortID,
+					ChannelId:   channelA.ID,
+					EpochNumber: 0,
+					EpochHeight: 1,
 				}
 			}, false,
 		},
@@ -491,9 +495,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    channelA.PortID,
-					ChannelId: channelA.ID,
-					Height:    uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					PortId:      channelA.PortID,
+					ChannelId:   channelA.ID,
+					EpochNumber: 0,
+					EpochHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
@@ -511,9 +516,10 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryChannelConsensusStateRequest{
-					PortId:    channelA.PortID,
-					ChannelId: channelA.ID,
-					Height:    expConsensusState.GetHeight(),
+					PortId:      channelA.PortID,
+					ChannelId:   channelA.ID,
+					EpochNumber: expConsensusState.GetHeight().GetEpochNumber(),
+					EpochHeight: expConsensusState.GetHeight().GetEpochHeight(),
 				}
 			},
 			true,

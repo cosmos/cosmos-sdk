@@ -1,6 +1,8 @@
 package types
 
 import (
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -9,11 +11,21 @@ import (
 )
 
 // CheckProposedHeaderAndUpdateState updates the consensus state to the header's sequence and
-// public key. An error is returned if the header cannot be casted to a solo machine header.
+// public key. An error is returned if the client has been disallowed to be updated by a
+// governance proposal, the header cannot be casted to a solo machine header, or the current
+// public key equals the new public key.
 func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header exported.Header,
 ) (exported.ClientState, exported.ConsensusState, error) {
+
+	if !cs.AllowUpdateAfterProposal {
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrUpdateClientFailed,
+			"solo machine client is not allowed to updated with a proposal",
+		)
+	}
+
 	smHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
@@ -21,12 +33,21 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		)
 	}
 
+	if reflect.DeepEqual(cs.ConsensusState.GetPubKey(), smHeader.GetPubKey()) {
+		return nil, nil, sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader, "new public key in header equals current public key",
+		)
+	}
+
+	clientState := &cs
+
 	consensusState := &ConsensusState{
 		Sequence:  smHeader.Sequence,
 		PublicKey: smHeader.NewPublicKey,
 	}
 
-	cs.ConsensusState = consensusState
+	clientState.ConsensusState = consensusState
+	clientState.FrozenSequence = 0
 
-	return cs, consensusState, nil
+	return clientState, consensusState, nil
 }

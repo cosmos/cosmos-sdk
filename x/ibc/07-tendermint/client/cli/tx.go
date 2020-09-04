@@ -113,14 +113,8 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			allowUpdateAfterExpiry, err := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
-			if err != nil {
-				return err
-			}
-			allowUpdateAfterMisbehaviour, err := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
-			if err != nil {
-				return err
-			}
+			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
+			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
 
 			// validate header
 			if err := header.ValidateBasic(); err != nil {

@@ -41,5 +41,14 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 		return err
 	}
 
+	header, err := UnpackHeader(cup.Header)
+	if err != nil {
+		return err
+	}
+
+	if err := header.ValidateBasic(); err != nil {
+		return err
+	}
+
 	return nil
 }

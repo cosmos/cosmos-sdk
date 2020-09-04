@@ -39,8 +39,9 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 	}
 }
 
+// default usage does not allow update after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ConsensusState())
+	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
 
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {

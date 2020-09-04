@@ -118,12 +118,28 @@ func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	)
 	suite.Require().NoError(err)
 }
+
 func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
 	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
+}
+
+func (suite *LocalhostTestSuite) TestMisbehaviourAndUpdateState() {
+	clientState := types.NewClientState("chainID", clientHeight)
+	cs, err := clientState.CheckMisbehaviourAndUpdateState(suite.ctx, nil, nil, nil)
+	suite.Require().Error(err)
+	suite.Require().Nil(cs)
+}
+
+func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
+	clientState := types.NewClientState("chainID", clientHeight)
+	cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.ctx, nil, nil, nil)
+	suite.Require().Error(err)
+	suite.Require().Nil(cs)
+	suite.Require().Nil(consState)
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {

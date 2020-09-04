@@ -15,10 +15,11 @@ import (
 var _ exported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(consensusState *ConsensusState) *ClientState {
+func NewClientState(consensusState *ConsensusState, allowUpdateAfterProposal bool) *ClientState {
 	return &ClientState{
-		FrozenSequence: 0,
-		ConsensusState: consensusState,
+		FrozenSequence:           0,
+		ConsensusState:           consensusState,
+		AllowUpdateAfterProposal: allowUpdateAfterProposal,
 	}
 }
 

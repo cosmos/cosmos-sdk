@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	proto "github.com/gogo/protobuf/proto"
 

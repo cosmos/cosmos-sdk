@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
@@ -29,6 +30,10 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		secp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
 		multisig.PubKeyAminoRoute, nil)
+	cdc.RegisterConcrete(keys.Secp256K1PubKey{},
+		"cosmos-sdk/Secp256K1PubKey", nil)
+	cdc.RegisterConcrete(keys.MultisigThresholdPubKey{},
+		"cosmos-sdk/MultisigThresholdPubKey", nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PrivKey{},

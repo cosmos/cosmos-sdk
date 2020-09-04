@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -77,24 +76,17 @@ func QueryClientStateABCI(
 // If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
 // it uses the gRPC query client.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, heightI exported.Height, prove, latestHeight bool,
+	clientCtx client.Context, clientID string, height exported.Height, prove, latestHeight bool,
 ) (*types.QueryConsensusStateResponse, error) {
 	if prove {
-		return QueryConsensusStateABCI(clientCtx, clientID, heightI)
-	}
-	height, ok := heightI.(types.Height)
-	if !ok {
-		return nil, sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidHeight, "invalid height type: %T, expected: %T",
-			heightI, types.Height{},
-		)
+		return QueryConsensusStateABCI(clientCtx, clientID, height)
 	}
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConsensusStateRequest{
 		ClientId:     clientID,
-		EpochNumber:  height.EpochNumber,
-		EpochHeight:  height.EpochHeight,
+		EpochNumber:  height.GetEpochNumber(),
+		EpochHeight:  height.GetEpochHeight(),
 		LatestHeight: latestHeight,
 	}
 

@@ -1,4 +1,4 @@
-package crypto
+package types
 
 import tmcrypto "github.com/tendermint/tendermint/crypto"
 

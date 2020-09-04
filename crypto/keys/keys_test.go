@@ -5,12 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
@@ -136,7 +137,7 @@ func TestSignAndVerifySignature(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.msg, func(t *testing.T) {
 			pubKey := tc.privKey.PubKey()
-			msg := crypto.CRandBytes(128)
+			msg := tmcrypto.CRandBytes(128)
 			sig, err := tc.privKey.Sign(msg)
 			require.Nil(t, err)
 

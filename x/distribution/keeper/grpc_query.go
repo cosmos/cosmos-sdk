@@ -37,7 +37,7 @@ func (k Keeper) ValidatorOutstandingRewards(c context.Context, req *types.QueryV
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	valAdr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddress)
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (k Keeper) ValidatorCommission(c context.Context, req *types.QueryValidator
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	valAdr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddress)
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	valAdr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddress)
+	valAdr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := sdk.ConvertBech32ToAccAddress(req.ValidatorAddress)
+	delAdr, err := sdk.AccAddressFromBech32(req.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddress)
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAdr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddress)
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddress)
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

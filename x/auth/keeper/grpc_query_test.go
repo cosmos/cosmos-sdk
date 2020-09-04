@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"invalid request",
 			func() {
-				req = &types.QueryAccountRequest{Address: []byte("")}
+				req = &types.QueryAccountRequest{Address: ""}
 			},
 			false,
 			func(res *types.QueryAccountResponse) {},
@@ -39,7 +39,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"invalid request with empty byte array",
 			func() {
-				req = &types.QueryAccountRequest{Address: []byte{}}
+				req = &types.QueryAccountRequest{Address: ""}
 			},
 			false,
 			func(res *types.QueryAccountResponse) {},
@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 		{
 			"account not found",
 			func() {
-				req = &types.QueryAccountRequest{Address: addr}
+				req = &types.QueryAccountRequest{Address: addr.String()}
 			},
 			false,
 			func(res *types.QueryAccountResponse) {},
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			func() {
 				suite.app.AccountKeeper.SetAccount(suite.ctx,
 					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
-				req = &types.QueryAccountRequest{Address: addr}
+				req = &types.QueryAccountRequest{Address: addr.String()}
 			},
 			true,
 			func(res *types.QueryAccountResponse) {
@@ -77,6 +77,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
+			fmt.Println("req::", req)
 			res, err := suite.queryClient.Account(ctx, req)
 
 			if tc.expPass {

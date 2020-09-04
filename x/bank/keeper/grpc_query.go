@@ -29,7 +29,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	address, err := sdk.ConvertBech32ToAccAddress(req.Address)
+	address, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}

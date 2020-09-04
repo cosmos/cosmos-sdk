@@ -31,7 +31,7 @@ func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legac
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	addr, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	addr, err := sdk.AccAddressFromBech32(params.Address)
 	if err != nil {
 		return nil, err
 	}

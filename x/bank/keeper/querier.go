@@ -39,7 +39,7 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerie
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	address, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	address, err := sdk.AccAddressFromBech32(params.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	address, err := sdk.ConvertBech32ToAccAddress(params.Address)
+	address, err := sdk.AccAddressFromBech32(params.Address)
 	if err != nil {
 		return nil, err
 	}

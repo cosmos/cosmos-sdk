@@ -55,7 +55,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 			matchStatus = p.Status == req.ProposalStatus
 		}
 
-		voter, err := sdk.ConvertBech32ToAccAddress(req.Voter)
+		voter, err := sdk.AccAddressFromBech32(req.Voter)
 		if err != nil {
 			return false, err
 		}
@@ -65,7 +65,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 			_, matchVoter = q.GetVote(ctx, p.ProposalId, voter)
 		}
 
-		depositor, err := sdk.ConvertBech32ToAccAddress(req.Depositor)
+		depositor, err := sdk.AccAddressFromBech32(req.Depositor)
 		if err != nil {
 			return false, err
 		}
@@ -108,7 +108,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	voter, err := sdk.ConvertBech32ToAccAddress(req.Voter)
+	voter, err := sdk.AccAddressFromBech32(req.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	depositor, err := sdk.ConvertBech32ToAccAddress(req.Depositor)
+	depositor, err := sdk.AccAddressFromBech32(req.Depositor)
 	if err != nil {
 		return nil, err
 	}

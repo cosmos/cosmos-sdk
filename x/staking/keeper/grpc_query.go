@@ -71,7 +71,7 @@ func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) 
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 			return false, err
 		}
 
-		valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 		if err != nil {
 			return false, err
 		}
@@ -146,7 +146,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 
 	store := ctx.KVStore(k.storeKey)
 
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -188,12 +188,12 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -229,12 +229,12 @@ func (k Querier) UnbondingDelegation(c context.Context, req *types.QueryUnbondin
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +262,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
 
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -309,12 +309,12 @@ func (k Querier) DelegatorValidator(c context.Context, req *types.QueryDelegator
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +422,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -475,17 +475,17 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 
 func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
 
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	srcValAddr, err := sdk.ConvertBech32ToValAddress(req.SrcValidatorAddr)
+	srcValAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	dstValAddr, err := sdk.ConvertBech32ToValAddress(req.DstValidatorAddr)
+	dstValAddr, err := sdk.ValAddressFromBech32(req.DstValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +503,7 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 }
 
 func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	valAddr, err := sdk.ConvertBech32ToValAddress(req.SrcValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -525,7 +525,7 @@ func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types
 }
 
 func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	delAddr, err := sdk.ConvertBech32ToAccAddress(req.DelegatorAddr)
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}

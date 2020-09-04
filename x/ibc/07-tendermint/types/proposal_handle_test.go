@@ -224,7 +224,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 
 			if tc.expPassUnfreeze {
 				suite.Require().NoError(err)
-				suite.Require().Equal(uint64(0), cs.GetFrozenHeight())
+				suite.Require().Equal(clienttypes.Height{}, cs.GetFrozenHeight())
 				suite.Require().NotNil(consState)
 			} else {
 				suite.Require().Error(err)
@@ -294,7 +294,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 			"header height is not newer than client state", func() {
 				consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 				suite.Require().True(found)
-				clientState.LatestHeight = clienttypes.NewHeight(0, header.GetHeight())
+				clientState.LatestHeight = header.GetHeight().(clienttypes.Height)
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
 
 			}, false,

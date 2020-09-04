@@ -92,10 +92,10 @@ func (cs ClientState) checkProposedHeader(consensusState *ConsensusState, header
 	}
 
 	// assert header height is newer than latest client state
-	if header.GetHeight() <= cs.GetLatestHeight() {
+	if header.GetHeight().LTE(cs.GetLatestHeight()) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), cs.GetLatestHeight(),
+			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), cs.GetLatestHeight(),
 		)
 	}
 

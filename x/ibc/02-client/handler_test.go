@@ -30,7 +30,7 @@ func (suite *ClientTestSuite) TestNewClientUpdateProposalHandler() {
 				tmClientState, ok := clientState.(*ibctmtypes.ClientState)
 				suite.Require().True(ok)
 				tmClientState.AllowUpdateAfterMisbehaviour = true
-				tmClientState.FrozenHeight = clienttypes.NewHeight(0, tmClientState.GetLatestHeight())
+				tmClientState.FrozenHeight = tmClientState.LatestHeight
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClientState)
 
 				// use next header for chainB to update the client on chainA

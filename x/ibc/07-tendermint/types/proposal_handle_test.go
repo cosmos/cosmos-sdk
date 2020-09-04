@@ -4,6 +4,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 var (
@@ -34,10 +35,6 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
 // to expire clients, time needs to be fast forwarded on both chainA and chainB.
 // this is to prevent headers from failing when attempting to update later.
 func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
-	var (
-		clientState *types.ClientState
-	)
-
 	testCases := []struct {
 		name                         string
 		AllowUpdateAfterExpiry       bool
@@ -206,7 +203,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 
 			// construct client state based on test case parameters
 			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
+			clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 			clientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
 			clientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
 			if tc.FreezeClient {
@@ -246,6 +243,106 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
 
 			if tc.expPassUnexpire {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(cs)
+				suite.Require().NotNil(consState)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(cs)
+				suite.Require().Nil(consState)
+			}
+		})
+	}
+}
+
+// test softer validation on headers used for unexpiring clients
+func (suite *TendermintTestSuite) TestCheckProposedHeader() {
+	var (
+		header      *types.Header
+		clientState *types.ClientState
+		clientA     string
+		err         error
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"success", func() {}, true,
+		},
+		{
+			"invalid signed header", func() {
+				header.SignedHeader = nil
+			}, false,
+		},
+		{
+			"header time is less than or equal to consensus state timestamp", func() {
+				consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+				suite.Require().True(found)
+				consensusState.(*types.ConsensusState).Timestamp = header.GetTime()
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
+
+				// update block time so client is expired
+				suite.chainA.ExpireClient(clientState.TrustingPeriod)
+				suite.chainB.ExpireClient(clientState.TrustingPeriod)
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+			}, false,
+		},
+		{
+			"header height is not newer than client state", func() {
+				consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
+				suite.Require().True(found)
+				clientState.LatestHeight = clienttypes.NewHeight(0, header.GetHeight())
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
+
+			}, false,
+		},
+		{
+			"signed header failed validate basic - wrong chain ID", func() {
+				clientState.ChainId = ibctesting.InvalidID
+			}, false,
+		},
+		{
+			"header is already expired", func() {
+				// expire client
+				suite.chainA.ExpireClient(clientState.TrustingPeriod)
+				suite.chainB.ExpireClient(clientState.TrustingPeriod)
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+			}, false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest() // reset
+
+			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
+			clientState.AllowUpdateAfterExpiry = true
+			clientState.AllowUpdateAfterMisbehaviour = false
+
+			// expire client
+			suite.chainA.ExpireClient(clientState.TrustingPeriod)
+			suite.chainB.ExpireClient(clientState.TrustingPeriod)
+			suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+
+			// use next header for chainB to unexpire clients but with empty trusted heights
+			// and validators.
+			header, err = suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
+			suite.Require().NoError(err)
+			header.TrustedHeight = clienttypes.Height{}
+			header.TrustedValidators = nil
+
+			tc.malleate()
+
+			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
+
+			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(cs)
 				suite.Require().NotNil(consState)

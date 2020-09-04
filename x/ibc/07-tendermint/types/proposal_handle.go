@@ -54,11 +54,11 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		// full validation on the header is performed.
 		if cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
 			return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())
-		} else {
-			// NOTE: the client may be frozen again since the misbehaviour evidence may
-			// not be expired yet
-			return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 		}
+
+		// NOTE: the client may be frozen again since the misbehaviour evidence may
+		// not be expired yet
+		return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 
 	case cs.AllowUpdateAfterExpiry && cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()):
 		return cs.unexpireClient(consensusState, tmHeader, ctx.BlockTime())

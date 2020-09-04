@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -66,9 +67,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		{
 			"gRPC request params",
 			fmt.Sprintf("%s/cosmos/mint/v1beta1/params", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			&minttypes.QueryParamsResponse{},
 			&minttypes.QueryParamsResponse{
 				Params: minttypes.NewParams("stake", sdk.NewDecWithPrec(13, 2), sdk.NewDecWithPrec(100, 2),
@@ -78,9 +77,7 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 		{
 			"gRPC request inflation",
 			fmt.Sprintf("%s/cosmos/mint/v1beta1/inflation", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			&minttypes.QueryInflationResponse{},
 			&minttypes.QueryInflationResponse{
 				Inflation: sdk.NewDec(1),
@@ -98,13 +95,12 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			},
 		},
 	}
-
 	for _, tc := range testCases {
 		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
-			s.Require().Equal(tc.expected, tc.respType)
+			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
 }

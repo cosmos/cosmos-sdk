@@ -12,7 +12,7 @@ import (
 func (k Keeper) VerifyClientState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	clientState exported.ClientState,
 ) error {
@@ -24,7 +24,7 @@ func (k Keeper) VerifyClientState(
 
 	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
 	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
 	}
 
 	if err := targetClient.VerifyClientState(
@@ -41,8 +41,8 @@ func (k Keeper) VerifyClientState(
 func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
-	consensusHeight uint64,
+	height exported.Height,
+	consensusHeight exported.Height,
 	proof []byte,
 	consensusState exported.ConsensusState,
 ) error {
@@ -54,7 +54,7 @@ func (k Keeper) VerifyClientConsensusState(
 
 	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
 	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
 	}
 
 	if err := clientState.VerifyClientConsensusState(
@@ -72,7 +72,7 @@ func (k Keeper) VerifyClientConsensusState(
 func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
@@ -97,7 +97,7 @@ func (k Keeper) VerifyConnectionState(
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -124,7 +124,7 @@ func (k Keeper) VerifyChannelState(
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -152,7 +152,7 @@ func (k Keeper) VerifyPacketCommitment(
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -181,7 +181,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -208,7 +208,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,

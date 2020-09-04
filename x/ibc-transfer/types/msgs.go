@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -15,7 +16,7 @@ const (
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
 	token sdk.Coin, sender sdk.AccAddress, receiver string,
-	timeoutHeight, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,

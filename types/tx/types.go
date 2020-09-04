@@ -1,17 +1,27 @@
 package tx
 
 import (
+	fmt "fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
-var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}
+var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if m.Body != nil {
-		return m.Body.UnpackInterfaces(unpacker)
+		if err := m.Body.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
 	}
+
+	if m.AuthInfo != nil {
+		return m.AuthInfo.UnpackInterfaces(unpacker)
+	}
+
 	return nil
 }
 
@@ -24,5 +34,28 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, signerInfo := range m.SignerInfos {
+		err := signerInfo.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	fmt.Println("SignerInfo UnpackInterfaces m.PublicKey=", m.PublicKey)
+	var pubKey crypto.PubKey
+	err := unpacker.UnpackAny(m.PublicKey, &pubKey)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -893,7 +894,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.P
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
 		var privkey crypto.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		privkey = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789

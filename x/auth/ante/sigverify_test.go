@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -94,7 +95,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		shouldErr   bool
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
+		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}, params}, types.DefaultSigVerifyCostSecp256k1, false},
 		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
@@ -269,7 +270,11 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 func (suite *AnteTestSuite) TestSigIntegration() {
 	// generate private keys
-	privs := []crypto.PrivKey{secp256k1.GenPrivKey(), secp256k1.GenPrivKey(), secp256k1.GenPrivKey()}
+	privs := []crypto.PrivKey{
+		&keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()},
+		&keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()},
+		&keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()},
+	}
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1

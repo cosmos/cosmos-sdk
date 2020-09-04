@@ -54,6 +54,15 @@ message ClientState {
   // Proof specifications used in verifying counterparty state
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+
+  // This flag, when set to true, will allow governance to recover a client
+  // which has expired
+  bool allow_update_after_expiry = 9
+      [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry\""];
+  // This flag, when set to true, will allow governance to unfreeze a client
+  // whose chain has experienced a misbehaviour event
+  bool allow_update_after_misbehaviour = 10
+      [(gogoproto.moretags) = "yaml:\"allow_update_after_misbehaviour\""];
 }
 
 // ConsensusState defines the consensus state from Tendermint.

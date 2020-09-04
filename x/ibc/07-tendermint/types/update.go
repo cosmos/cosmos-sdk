@@ -45,7 +45,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	// Get consensus bytes from clientStore
+	// get consensus state from clientStore
 	tmConsState, err := GetConsensusState(clientStore, cdc, tmHeader.TrustedHeight)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrapf(

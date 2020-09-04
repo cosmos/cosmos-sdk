@@ -48,7 +48,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		// unfreeze the client
 		cs.FrozenHeight = clienttypes.Height{}
 
-		// if the client is not expired, do full validation of the header
+		// if the client is frozen but not expired, do full validation of the header
 		if !cs.IsExpired(consensusState.Timestamp, ctx.BlockTime()) {
 			return cs.CheckHeaderAndUpdateState(ctx, cdc, clientStore, header)
 		}

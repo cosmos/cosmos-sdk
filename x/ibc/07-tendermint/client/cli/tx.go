@@ -116,8 +116,9 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
+			height := header.GetHeight().(clienttypes.Height)
 			clientState := types.NewClientState(
-				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, header.GetHeight()), specs,
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, specs,
 			)
 
 			consensusState := header.ConsensusState()

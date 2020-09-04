@@ -15,7 +15,7 @@ func (suite *TendermintTestSuite) TestGetHeight() {
 	suite.Require().NotEqual(uint64(0), header.GetHeight())
 
 	header.Header = nil
-	suite.Require().Equal(uint64(0), header.GetHeight())
+	suite.Require().Equal(clienttypes.Height{}, header.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestGetTime() {
@@ -50,7 +50,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 			header.SignedHeader.Commit = nil
 		}, false},
 		{"trusted height is greater than header height", func() {
-			header.TrustedHeight = clienttypes.NewHeight(0, header.GetHeight()+1)
+			header.TrustedHeight = header.GetHeight().(clienttypes.Height).Increment()
 		}, false},
 		{"validator set nil", func() {
 			header.ValidatorSet = nil

@@ -31,29 +31,28 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	}
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
-	height := clienttypes.NewHeight(0, misbehaviour.GetHeight())
-	if cs.IsFrozen() && cs.FrozenHeight.LTE(height) {
+	if cs.IsFrozen() && cs.FrozenHeight.LTE(misbehaviour.GetHeight()) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
-			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
+			"client is already frozen at earlier height %s than misbehaviour height %s", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight.EpochHeight)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmMisbehaviour.Header1.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %s", tmMisbehaviour.Header1)
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight.EpochHeight)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmMisbehaviour.Header2.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %s", tmMisbehaviour.Header2)
 	}
 
 	// calculate the age of the misbehaviour
-	infractionHeight := tmMisbehaviour.GetHeight()
+	infractionHeight := tmMisbehaviour.GetHeight().(clienttypes.Height).EpochHeight
 	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 	ageBlocks := int64(cs.LatestHeight.EpochHeight - infractionHeight)
@@ -96,8 +95,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	frozenHeight := clienttypes.NewHeight(0, tmMisbehaviour.GetHeight())
-	cs.FrozenHeight = frozenHeight
+	cs.FrozenHeight = tmMisbehaviour.GetHeight().(clienttypes.Height)
 	return &cs, nil
 }
 

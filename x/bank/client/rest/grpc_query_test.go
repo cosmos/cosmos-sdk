@@ -101,6 +101,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	accAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {

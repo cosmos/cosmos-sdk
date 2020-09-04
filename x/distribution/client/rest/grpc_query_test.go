@@ -71,6 +71,8 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
 
 	rewards, err := sdk.ParseDecCoins("19.6stake")
@@ -129,6 +131,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
 
 	commission, err := sdk.ParseDecCoins("9.8stake")
@@ -186,6 +190,9 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -260,6 +267,8 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
 	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
 
@@ -343,6 +352,8 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -397,6 +408,8 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
+	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {

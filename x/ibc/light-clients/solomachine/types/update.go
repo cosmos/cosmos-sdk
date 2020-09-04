@@ -42,7 +42,6 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 	}
 
 	// assert currently registered public key signed over the new public key with correct sequence
-	// TODO: get timestamp
 	data, err := HeaderSignBytes(cdc, header)
 	if err != nil {
 		return err
@@ -59,8 +58,10 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	consensusState := &ConsensusState{
 		// increment sequence number
-		Sequence:  clientState.ConsensusState.Sequence + 1,
-		PublicKey: header.NewPublicKey,
+		Sequence:    clientState.ConsensusState.Sequence + 1,
+		PublicKey:   header.NewPublicKey,
+		Diversifier: header.NewDiversifier,
+		Timestamp:   header.Timestamp,
 	}
 
 	clientState.ConsensusState = consensusState

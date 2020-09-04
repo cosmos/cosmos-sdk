@@ -82,7 +82,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	signBz, err := ClientStateSignBytes(cdc, sequence, signature.Timestamp, path, clientState)
+	signBz, err := ClientStateSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, clientState)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	signBz, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, consensusState)
+	signBz, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, consensusState)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	signBz, err := ConnectionStateSignBytes(cdc, sequence, signature.Timestamp, path, connectionEnd)
+	signBz, err := ConnectionStateSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, connectionEnd)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	signBz, err := ChannelStateSignBytes(cdc, sequence, signature.Timestamp, path, channel)
+	signBz, err := ChannelStateSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, channel)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	signBz, err := PacketCommitmentSignBytes(cdc, sequence, signature.Timestamp, path, commitmentBytes)
+	signBz, err := PacketCommitmentSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, commitmentBytes)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	signBz, err := PacketAcknowledgementSignBytes(cdc, sequence, signature.Timestamp, path, acknowledgement)
+	signBz, err := PacketAcknowledgementSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, acknowledgement)
 	if err != nil {
 		return err
 	}
@@ -308,7 +308,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	signBz, err := PacketAcknowledgementAbsenceSignBytes(cdc, sequence, signature.Timestamp, path)
+	signBz, err := PacketAcknowledgementAbsenceSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path)
 	if err != nil {
 		return err
 	}
@@ -345,7 +345,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	signBz, err := NextSequenceRecvSignBytes(cdc, sequence, signature.Timestamp, path, nextSequenceRecv)
+	signBz, err := NextSequenceRecvSignBytes(cdc, sequence, signature.Timestamp, cs.ConsensusState.Diversifier, path, nextSequenceRecv)
 	if err != nil {
 		return err
 	}

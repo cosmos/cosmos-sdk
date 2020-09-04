@@ -19,11 +19,12 @@ import (
 type Solomachine struct {
 	t *testing.T
 
-	ClientID   string
-	PrivateKey crypto.PrivKey
-	PublicKey  crypto.PubKey
-	Sequence   uint64
-	Time       uint64
+	ClientID    string
+	PrivateKey  crypto.PrivKey
+	PublicKey   crypto.PubKey
+	Sequence    uint64
+	Time        uint64
+	Diversifier string
 }
 
 // NewSolomachine returns a new solomachine instance with a generated private/public
@@ -32,27 +33,31 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 	privKey := ed25519.GenPrivKey()
 
 	return &Solomachine{
-		t:          t,
-		ClientID:   clientID,
-		PrivateKey: privKey,
-		PublicKey:  privKey.PubKey(),
-		Sequence:   1,
-		Time:       10,
+		t:           t,
+		ClientID:    clientID,
+		PrivateKey:  privKey,
+		PublicKey:   privKey.PubKey(),
+		Sequence:    1,
+		Time:        10,
+		Diversifier: "", // TODO: use custom diversifier?
 	}
 }
 
+// ClientState returns a new solo machine ClientState instance
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 	return solomachinetypes.NewClientState(solo.ConsensusState())
 }
 
+// ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
-		Sequence:  solo.Sequence,
-		PublicKey: publicKey,
-		Timestamp: solo.Time,
+		Sequence:    solo.Sequence,
+		PublicKey:   publicKey,
+		Diversifier: solo.Diversifier,
+		Timestamp:   solo.Time,
 	}
 }
 
@@ -74,9 +79,11 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	require.NoError(solo.t, err)
 
 	header := &solomachinetypes.Header{
-		Sequence:     solo.Sequence,
-		Signature:    signature,
-		NewPublicKey: publicKey,
+		Sequence:       solo.Sequence,
+		Timestamp:      solo.Time,
+		Signature:      signature,
+		NewPublicKey:   publicKey,
+		NewDiversifier: solo.Diversifier,
 	}
 
 	// assumes successful header update

@@ -42,7 +42,11 @@ func (h Header) ValidateBasic() error {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "sequence number cannot be zero")
 	}
 
-	if h.NewDiversifier != "" && strings.TrimSpace(h.NewDiversifier) {
+	if h.Timestamp == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "timestamp cannot be zero")
+	}
+
+	if h.NewDiversifier != "" && strings.TrimSpace(h.NewDiversifier) == "" {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "diversifier cannot be blank")
 	}
 

@@ -36,8 +36,8 @@ func (cs ConsensusState) GetRoot() exported.Root {
 }
 
 // GetHeight returns the height for the specific consensus state
-func (cs ConsensusState) GetHeight() uint64 {
-	return cs.Height.EpochHeight
+func (cs ConsensusState) GetHeight() exported.Height {
+	return cs.Height
 }
 
 // GetTimestamp returns block time in nanoseconds at which the consensus state was stored

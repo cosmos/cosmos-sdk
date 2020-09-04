@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 			}, false,
 		},
 		{
-			"client does not exsit", func() {
+			"client does not exist", func() {
 				// bypass ClientType check
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientType(suite.chainA.GetContext(), ibctesting.InvalidID, exported.Tendermint)
 				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, &ibctmtypes.Header{})

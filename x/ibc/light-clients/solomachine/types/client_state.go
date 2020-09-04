@@ -82,12 +82,12 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	data, err := ClientStateSignBytes(cdc, sequence, signature.Timestamp, path, clientState)
+	signBz, err := ClientStateSignBytes(cdc, sequence, signature.Timestamp, path, clientState)
 	if err != nil {
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -121,12 +121,12 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	data, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, consensusState)
+	signBz, err := ConsensusStateSignBytes(cdc, sequence, signature.Timestamp, path, consensusState)
 	if err != nil {
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -157,12 +157,12 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	data, err := ConnectionStateSignBytes(cdc, sequence, signature.Timestamp, path, connectionEnd)
+	signBz, err := ConnectionStateSignBytes(cdc, sequence, signature.Timestamp, path, connectionEnd)
 	if err != nil {
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -194,12 +194,12 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	data, err := ChannelStateSignBytes(cdc, sequence, signature.Timestamp, path, channel)
+	signBz, err := ChannelStateSignBytes(cdc, sequence, signature.Timestamp, path, channel)
 	if err != nil {
 		return err
 	}
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -232,9 +232,9 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	data := PacketCommitmentSignBytes(sequence, signature.Timestamp, path, commitmentBytes)
+	signBz := PacketCommitmentSignBytes(sequence, signature.Timestamp, path, commitmentBytes)
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -267,9 +267,9 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	data := PacketAcknowledgementSignBytes(sequence, signature.Timestamp, path, acknowledgement)
+	signBz := PacketAcknowledgementSignBytes(sequence, signature.Timestamp, path, acknowledgement)
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -302,9 +302,9 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	data := PacketAcknowledgementAbsenceSignBytes(sequence, signature.Timestamp, path)
+	signBz := PacketAcknowledgementAbsenceSignBytes(sequence, signature.Timestamp, path)
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 
@@ -336,9 +336,9 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	data := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
+	signBz := NextSequenceRecvSignBytes(sequence, signature.Timestamp, path, nextSequenceRecv)
 
-	if err := VerifySignature(cs.ConsensusState.GetPubKey(), data, signature.Signature); err != nil {
+	if err := VerifySignature(cs.ConsensusState.GetPubKey(), signBz, signature.Signature); err != nil {
 		return err
 	}
 

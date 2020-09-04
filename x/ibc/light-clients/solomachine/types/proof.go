@@ -34,63 +34,94 @@ func EvidenceSignBytes(sequence uint64, data []byte) []byte {
 }
 
 // HeaderSignBytes returns the sign bytes for verification of misbehaviour.
-//
-// Format: {sequence}{header.newPubKey}
-func HeaderSignBytes(header *Header) []byte {
-	return append(
-		sdk.Uint64ToBigEndian(header.Sequence),
-		header.GetPubKey().Bytes()...,
-	)
+func HeaderSignBytes(
+	cdc codec.BinaryMarshaler,
+	timestamp uint64, header *Header,
+) ([]byte, error) {
+	data := &HeaderData{
+		Timestamp: timestamp,
+		NewPubKey: header.GetPubKey(),
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: header.Sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // ClientStateSignBytes returns the sign bytes for verification of the
 // client state.
-//
-// Format: {sequence}{timestamp}{path}{client-state}
 func ClientStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	clientState exported.ClientState,
 ) ([]byte, error) {
-	bz, err := codec.MarshalAny(cdc, clientState)
+	any, err := clienttypes.PackClientState(clientState)
 	if err != nil {
 		return nil, err
 	}
 
-	// sequence + timestamp + path + client state
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		bz...,
-	), nil
+	data := &ClientStateData{
+		Timestamp:   timestamp,
+		Path:        []byte(path.String()),
+		ClientState: any,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // ConsensusStateSignBytes returns the sign bytes for verification of the
 // consensus state.
-//
-// Format: {sequence}{timestamp}{path}{consensus-state}
 func ConsensusStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	consensusState exported.ConsensusState,
 ) ([]byte, error) {
-	bz, err := codec.MarshalAny(cdc, consensusState)
+	any, err := clienttypes.PackConsensusState(consensusState)
 	if err != nil {
 		return nil, err
 	}
 
-	// sequence + timestamp + path + consensus state
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		bz...,
-	), nil
+	data := &ConsensusStateData{
+		Timestamp:      timestamp,
+		Path:           []byte(path.String()),
+		ConsensusState: any,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // ConnectionStateSignBytes returns the sign bytes for verification of the
 // connection state.
-//
-// Format: {sequence}{timestamp}{path}{connection-end}
 func ConnectionStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
@@ -99,25 +130,33 @@ func ConnectionStateSignBytes(
 ) ([]byte, error) {
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid connection type %T", connectionEnd)
+		return nil, sdkerrors.Wrapf(
+			connectiontypes.ErrInvalidConnection,
+			"expected type %T, got %T", connectiontypes.ConnectionEnd{}, connectionEnd,
+		)
 	}
 
-	bz, err := cdc.MarshalBinaryBare(&connection)
+	data := &ConnectionStateData{
+		Timestamp:  timestamp,
+		Path:       []byte(path.String()),
+		Connection: &connection,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
 	if err != nil {
 		return nil, err
 	}
 
-	// sequence + timestamp + path + connection end
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		bz...,
-	), nil
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // ChannelStateSignBytes returns the sign bytes for verification of the
 // channel state.
-//
-// Format: {sequence}{timestamp}{path}{channel-end}
 func ChannelStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
@@ -126,90 +165,132 @@ func ChannelStateSignBytes(
 ) ([]byte, error) {
 	channel, ok := channelEnd.(channeltypes.Channel)
 	if !ok {
-		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "invalid channel type %T", channelEnd)
+		return nil, sdkerrors.Wrapf(
+			channeltypes.ErrInvalidChannel,
+			"expected channel type %T, got %T", channeltypes.Channel{}, channelEnd)
 	}
 
-	bz, err := cdc.MarshalBinaryBare(&channel)
+	data := &ChannelStateData{
+		Timestamp: timestamp,
+		Path:      []byte(path.String()),
+		Channel:   &channel,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
 	if err != nil {
 		return nil, err
 	}
 
-	// sequence + timestamp + path + channel
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		bz...,
-	), nil
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // PacketCommitmentSignBytes returns the sign bytes for verification of the
 // packet commitment.
-//
-// Format: {sequence}{timestamp}{path}{commitment-bytes}
 func PacketCommitmentSignBytes(
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	commitmentBytes []byte,
-) []byte {
+) ([]byte, error) {
+	data := &PacketCommitmentData{
+		Timestamp:  timestamp,
+		Path:       []byte(path.String()),
+		Commitment: commitmentBytes,
+	}
 
-	// sequence + timestamp + path + commitment bytes
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		commitmentBytes...,
-	)
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // PacketAcknowledgementSignBytes returns the sign bytes for verification of
 // the acknowledgement.
-//
-// Format: {sequence}{timestamp}{path}{acknowledgement}
 func PacketAcknowledgementSignBytes(
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	acknowledgement []byte,
-) []byte {
+) ([]byte, error) {
+	data := &PacketAcknowledgementData{
+		Timestamp:       timestamp,
+		Path:            []byte(path.String()),
+		Acknowledgement: acknowledgement,
+	}
 
-	// sequence + timestamp + path + acknowledgement
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		acknowledgement...,
-	)
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verification
 // of the absence of an acknowledgement.
-//
-// Format: {sequence}{timestamp}{path}
 func PacketAcknowledgementAbsenceSignBytes(
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-) []byte {
-	// value = sequence + timestamp + path
-	return combineSequenceTimestampPath(sequence, timestamp, path)
+) ([]byte, error) {
+	data := &PacketAcknowledgementAbsenseData{
+		Timestamp: timestamp,
+		Path:      []byte(path.String()),
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
-// NextSequenceRecv returns the sign bytes for verification of the next
+// NextSequenceRecvSignBytes returns the sign bytes for verification of the next
 // sequence to be received.
-//
-// Format: {sequence}{timestamp}{path}{next-sequence-recv}
 func NextSequenceRecvSignBytes(
+	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
 	nextSequenceRecv uint64,
-) []byte {
+) ([]byte, error) {
+	data := &NextSequenceRecvData{
+		Timestamp:   timestamp,
+		Path:        []byte(path.String()),
+		NextSeqRecv: nextSequenceRecv,
+	}
 
-	// sequence + timestamp + path + nextSequenceRecv
-	return append(
-		combineSequenceTimestampPath(sequence, timestamp, path),
-		sdk.Uint64ToBigEndian(nextSequenceRecv)...,
-	)
-}
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
 
-// combineSequenceTimestampPath combines the sequence, the timestamp and
-// the path into one byte slice.
-func combineSequenceTimestampPath(sequence, timestamp uint64, path commitmenttypes.MerklePath) []byte {
-	bz := append(sdk.Uint64ToBigEndian(sequence), sdk.Uint64ToBigEndian(timestamp)...)
-	return append(
-		bz,
-		[]byte(path.String())...,
-	)
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }

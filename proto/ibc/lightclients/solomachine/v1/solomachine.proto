@@ -4,17 +4,18 @@ package ibc.lightclients.solomachine.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 
 import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "ibc/connection/connection.proto";
+import "ibc/channel/channel.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 
 // ClientState defines a solo machine client that tracks the current consensus
 // state and if the client is frozen.
 message ClientState {
   option (gogoproto.goproto_getters) = false;
   // frozen sequence of the solo machine
-  uint64 frozen_sequence = 1
-      [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
-  ConsensusState consensus_state = 2
-      [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  uint64         frozen_sequence = 1 [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
+  ConsensusState consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
 // ConsensusState defines a solo machine consensus state
@@ -23,9 +24,8 @@ message ConsensusState {
   // current sequence of the consensus state
   uint64 sequence = 1;
   // public key of the solo machine
-  cosmos.base.crypto.v1beta1.PublicKey public_key = 2
-      [(gogoproto.moretags) = "yaml:\"public_key\""];
-  uint64 timestamp = 3;
+  cosmos.base.crypto.v1beta1.PublicKey public_key = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  uint64                               timestamp  = 3;
 }
 
 // Header defines a solo machine consensus header
@@ -34,8 +34,7 @@ message Header {
   // sequence to update solo machine public key at
   uint64                               sequence       = 1;
   bytes                                signature      = 2;
-  cosmos.base.crypto.v1beta1.PublicKey new_public_key = 3
-      [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  cosmos.base.crypto.v1beta1.PublicKey new_public_key = 3 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
 }
 
 // Misbehaviour defines misbehaviour for a solo machine which consists
@@ -43,12 +42,10 @@ message Header {
 message Misbehaviour {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
-  string           client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  uint64           sequence  = 2;
-  SignatureAndData signature_one = 3
-      [(gogoproto.moretags) = "yaml:\"signature_one\""];
-  SignatureAndData signature_two = 4
-      [(gogoproto.moretags) = "yaml:\"signature_two\""];
+  string           client_id          = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  uint64           sequence           = 2;
+  SignatureAndData signature_one      = 3 [(gogoproto.moretags) = "yaml:\"signature_one\""];
+  SignatureAndData signature_two      = 4 [(gogoproto.moretags) = "yaml:\"signature_two\""];
 }
 
 // SignatureAndData contains a signature and the data signed over to create that
@@ -67,3 +64,86 @@ message TimestampedSignature {
   uint64 timestamp                   = 2;
 }
 
+// SignBytes defines the signed bytes used for signature verification.
+message SignBytes {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 sequence = 1;
+  // marshaled data
+  bytes data = 2;
+}
+
+// HeaderData returns the SignBytes data for misbehaviour verification.
+message HeaderData {
+  option (gogoproto.goproto_getters) = false;
+
+  // data timestamp in nanoseconds
+  uint64 timestamp = 1;
+  // header public key
+  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 2 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+}
+
+// ClientStateData returns the SignBytes data for client state verification.
+message ClientStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64              timestamp    = 1;
+  bytes               path         = 2;
+  google.protobuf.Any client_state = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+}
+
+// ConsensusStateSignBytes returns the SignBytes data for consensus state verification.
+message ConsensusStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64              timestamp       = 1;
+  bytes               path            = 2;
+  google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+}
+
+// ConnectionStateSignBytes returns the SignBytes data for connection state verification.
+message ConnectionStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64                       timestamp  = 1;
+  bytes                        path       = 2;
+  ibc.connection.ConnectionEnd connection = 3;
+}
+
+// ChannelStateSignBytes returns the SignBytes data for channel state verification.
+message ChannelStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64              timestamp = 1;
+  bytes               path      = 2;
+  ibc.channel.Channel channel   = 3;
+}
+
+// PacketCommitmentSignBytes returns the SignBytes data for packet commitment verification.
+message PacketCommitmentData {
+  uint64 timestamp  = 1;
+  bytes  path       = 2;
+  bytes  commitment = 3;
+}
+
+// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement verification.
+message PacketAcknowledgementData {
+  uint64 timestamp       = 1;
+  bytes  path            = 2;
+  bytes  acknowledgement = 3;
+}
+
+// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for acknowledgement absence
+// verification.
+message PacketAcknowledgementAbsenseData {
+  uint64 timestamp = 1;
+  bytes  path      = 2;
+}
+
+// NextSequenceRecv returns the SignBytes data for verification of the next
+// sequence to be received.
+message NextSequenceRecvData {
+  uint64 timestamp     = 1;
+  bytes  path          = 2;
+  uint64 next_seq_recv = 3 [(gogoproto.moretags) = "yaml:\"next_seq_recv\""];
+}

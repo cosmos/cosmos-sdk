@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	priv                      = secp256k1.GenPrivKey()
+	priv                      = keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr                      = types.AccAddress(priv.PubKey().Address())
 	depositedCoinsAccAddr     = types.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
 	burnedDepositCoinsAccAddr = types.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))

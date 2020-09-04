@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -21,8 +22,8 @@ import (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
-	priv2 = secp256k1.GenPrivKey()
+	priv1 = keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
+	priv2 = keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	pk1   = priv1.PubKey()
 	pk2   = priv2.PubKey()
 	addr1 = sdk.AccAddress(pk1.Address())
@@ -236,7 +237,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					suite.ctx.ChainID(),
 					[]uint64{0},
 					[]uint64{0},
-					priv1,
+					&priv1,
 				)
 				suite.Require().NoError(err)
 

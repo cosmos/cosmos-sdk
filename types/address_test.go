@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -491,9 +492,9 @@ func TestNilAddressTypesEmpty(t *testing.T) {
 
 func TestGetConsAddress(t *testing.T) {
 	t.Parallel()
-	pk := secp256k1.GenPrivKey().PubKey()
-	require.NotEqual(t, types.GetConsAddress(pk), pk.Address())
-	require.True(t, bytes.Equal(types.GetConsAddress(pk).Bytes(), pk.Address().Bytes()))
+	pk := keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
+	require.NotEqual(t, types.GetConsAddress(&pk), pk.Address())
+	require.True(t, bytes.Equal(types.GetConsAddress(&pk).Bytes(), pk.Address().Bytes()))
 	require.Panics(t, func() { types.GetConsAddress(crypto.PubKey(nil)) })
 }
 

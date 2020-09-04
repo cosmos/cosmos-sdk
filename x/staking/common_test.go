@@ -6,6 +6,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +16,9 @@ import (
 
 // nolint:deadcode,unused,varcheck
 var (
-	priv1 = secp256k1.GenPrivKey()
+	priv1 = keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = secp256k1.GenPrivKey()
+	priv2 = keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 
 	valKey  = ed25519.GenPrivKey()

@@ -931,16 +931,16 @@ func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []crypto.PubKey {
 		var ret []crypto.PubKey
 		for i := 0; i < n; i++ {
-			ret = append(ret, secp256k1.GenPrivKey().PubKey())
+			ret = append(ret, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)})
 		}
 		return ret
 	}
-	singleKey := secp256k1.GenPrivKey().PubKey()
+	singleKey := keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	singleLevelMultiKey := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelSubKey1 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelSubKey2 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelMultiKey := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+		multiLevelSubKey1, multiLevelSubKey2, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}})
 	type args struct {
 		pub crypto.PubKey
 	}
@@ -949,7 +949,7 @@ func TestCountSubkeys(t *testing.T) {
 		args args
 		want int
 	}{
-		{"single key", args{singleKey}, 1},
+		{"single key", args{&singleKey}, 1},
 		{"single level multikey", args{singleLevelMultiKey}, 5},
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}

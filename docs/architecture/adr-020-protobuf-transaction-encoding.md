@@ -283,8 +283,6 @@ To handle this we will need a unknown field filter that:
 This will likely need to be a custom protobuf parser pass that takes message bytes
 and `FileDescriptor`s and returns a boolean result.
 
-# <<<<<<< HEAD
-
 ### Public Key Encoding
 
 Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface,
@@ -311,8 +309,6 @@ message PublicKey {
 Apps should only attempt to handle a registered set of public keys that they
 have tested. The provided signature verification ante handler decorators will
 enforce this.
-
-> > > > > > > e09c8d9360b133dbf2ef6386564ba272e7051ced
 
 ### CLI & REST
 

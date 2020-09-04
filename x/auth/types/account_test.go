@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,9 +83,9 @@ func TestBaseAccountMarshal(t *testing.T) {
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	pubkey := keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	addr := sdk.AccAddress(pubkey.Address())
-	baseAcc := types.NewBaseAccount(addr, pubkey, 0, 0)
+	baseAcc := types.NewBaseAccount(addr, &pubkey, 0, 0)
 
 	tests := []struct {
 		name   string
@@ -98,7 +99,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid base valid account",
-			types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
+			types.NewBaseAccount(addr, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}, 0, 0),
 			true,
 		},
 	}

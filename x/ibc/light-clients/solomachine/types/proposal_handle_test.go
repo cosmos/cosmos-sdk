@@ -7,9 +7,7 @@ import (
 )
 
 func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
-	var (
-		header exported.Header
-	)
+	var header exported.Header
 
 	testCases := []struct {
 		name     string

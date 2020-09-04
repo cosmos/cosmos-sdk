@@ -73,6 +73,5 @@ func TestValidateBasic(t *testing.T) {
 		} else {
 			require.Error(t, err, tc.name)
 		}
-
 	}
 }

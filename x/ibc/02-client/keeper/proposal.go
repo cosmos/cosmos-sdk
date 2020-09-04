@@ -17,7 +17,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", p.ClientId)
 	}
 
-	if clientType == exported.Localhost {
+	if clientType == exported.Localhost || p.ClientId == exported.ClientTypeLocalHost {
 		return sdkerrors.Wrap(types.ErrInvalidUpdateClientProposal, "cannot update localhost client with proposal")
 	}
 

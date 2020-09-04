@@ -19,7 +19,12 @@ func NewClientUpdateProposal(title, description, clientID string, header exporte
 		return nil, err
 	}
 
-	return &ClientUpdateProposal{title, description, clientID, any}, nil
+	return &ClientUpdateProposal{
+		Title:       title,
+		Description: description,
+		ClientId:    clientID,
+		Header:      any,
+	}, nil
 }
 
 // GetTitle returns the title of a client update proposal.
@@ -46,9 +51,5 @@ func (cup *ClientUpdateProposal) ValidateBasic() error {
 		return err
 	}
 
-	if err := header.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return nil
+	return header.ValidateBasic()
 }

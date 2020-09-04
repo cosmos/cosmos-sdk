@@ -42,7 +42,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 
 	if cs.IsFrozen() {
 		if !cs.AllowUpdateAfterMisbehaviour {
-			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is frozen but is not allowed to be unfrozen")
+			return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client is not allowed to be unfrozen")
 		}
 
 		// unfreeze the client

@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -107,16 +108,12 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	testCases := []struct {
 		name     string
 		url      string
-		headers  map[string]string
 		respType proto.Message
 		expected proto.Message
 	}{
 		{
 			"gRPC total account balance",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, accAddrBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			&types.QueryAllBalancesResponse{},
 			&types.QueryAllBalancesResponse{
 				Balances: sdk.NewCoins(
@@ -131,9 +128,6 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		{
 			"gPRC account balance of a denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, accAddrBase64, s.cfg.BondDenom),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -145,9 +139,6 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		{
 			"gPRC account balance of a bogus denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, accAddrBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -161,7 +152,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))

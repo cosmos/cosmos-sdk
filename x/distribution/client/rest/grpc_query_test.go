@@ -89,9 +89,7 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 		{
 			"gRPC request params with wrong validator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, "wrongAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			false,
 			&types.QueryValidatorOutstandingRewardsResponse{},
 			&types.QueryValidatorOutstandingRewardsResponse{},
@@ -149,9 +147,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 		{
 			"gRPC request params with wrong validator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, "wrongAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			false,
 			&types.QueryValidatorCommissionResponse{},
 			&types.QueryValidatorCommissionResponse{},
@@ -198,7 +194,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 	testCases := []struct {
 		name     string
 		url      string
-		headers  map[string]string
 		expErr   bool
 		respType proto.Message
 		expected proto.Message
@@ -206,9 +201,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 		{
 			"invalid validator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "4",
-			},
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
@@ -216,9 +208,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 		{
 			"invalid start height",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "-1", "3"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "4",
-			},
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
@@ -226,9 +215,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 		{
 			"invalid start height",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "1", "-3"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "4",
-			},
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
@@ -236,9 +222,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 		{
 			"valid request get slashes",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "1", "3"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "4",
-			},
 			false,
 			&types.QueryValidatorSlashesResponse{},
 			&types.QueryValidatorSlashesResponse{
@@ -249,7 +232,7 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+		resp, err := rest.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -286,15 +269,13 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		{
 			"wrong delegator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, "wrongDelegatorAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
+			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
 			nil,
 		},
 		{
-			"wrong delegator address",
+			"valid request",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, delAddrBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
@@ -311,9 +292,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		{
 			"wrong validator address(specific validator rewards)",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, delAddrBase64, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
+			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
 			nil,

@@ -144,3 +144,25 @@ in the handshake callbacks.
 
 Implementations which do not feel they would benefit from versioning can do
 basic string matching using a single compatible version.
+
+## ClientUpdateProposal
+
+A governance proposal may be passed to update a specified client with a provided
+header. This is useful in unfreezing clients or updating expired clients. Each 
+client is expected to implement this functionality. A client may choose to disallow
+an update by a governance proposal by returning an error in the client state function
+'CheckProposedHeaderAndUpdateState'.
+
+The localhost client cannot be updated by a governance proposal. 
+
+The solo machine client requires the boolean flag 'AllowUpdateAfterProposal' to be set
+to true in order to be updated by a proposal. This is set upon client creation and cannot 
+be updated later.
+
+The tendermint client has two flags update flags, 'AllowUpdateAfterExpiry' and 
+'AllowUpdateAfterMisbehaviour'. The former flag can only be used to unexpire clients. The
+latter flag can be used to unfreeze a client and if necessary it will also unexpire the client.
+It is advised to let a client expire if it has become frozen before proposing a new header. 
+This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
+expired. These boolean flags are set upon client creation and cannot be updated later.
+

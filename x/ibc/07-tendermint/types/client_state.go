@@ -25,16 +25,19 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
+	allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
-		ChainId:         chainID,
-		TrustLevel:      trustLevel,
-		TrustingPeriod:  trustingPeriod,
-		UnbondingPeriod: ubdPeriod,
-		MaxClockDrift:   maxClockDrift,
-		LatestHeight:    latestHeight,
-		FrozenHeight:    clienttypes.Height{},
-		ProofSpecs:      specs,
+		ChainId:                      chainID,
+		TrustLevel:                   trustLevel,
+		TrustingPeriod:               trustingPeriod,
+		UnbondingPeriod:              ubdPeriod,
+		MaxClockDrift:                maxClockDrift,
+		LatestHeight:                 latestHeight,
+		FrozenHeight:                 clienttypes.Height{},
+		ProofSpecs:                   specs,
+		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
+		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,
 	}
 }
 
@@ -64,6 +67,13 @@ func (cs ClientState) GetFrozenHeight() exported.Height {
 	return cs.FrozenHeight
 }
 
+// IsExpired returns whether or not the client has passed the trusting period since the last
+// update (in which case no headers are considered valid).
+func (cs ClientState) IsExpired(latestTimestamp, now time.Time) bool {
+	expirationTime := latestTimestamp.Add(cs.TrustingPeriod)
+	return !expirationTime.After(now)
+}
+
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
@@ -90,7 +100,6 @@ func (cs ClientState) Validate() error {
 			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
 		)
 	}
-	// Validate ProofSpecs
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}

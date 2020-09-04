@@ -69,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 func (AppModuleBasic) RegisterRESTRoutes(client.Context, *mux.Router) {}
 
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	clienttypes.RegisterQueryHandlerClient(context.Background(), mux, clienttypes.NewQueryClient(clientCtx))
 	connectiontypes.RegisterQueryHandlerClient(context.Background(), mux, connectiontypes.NewQueryClient(clientCtx))
 	channeltypes.RegisterQueryHandlerClient(context.Background(), mux, channeltypes.NewQueryClient(clientCtx))

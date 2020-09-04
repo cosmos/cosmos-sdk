@@ -59,11 +59,11 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()+3), int64(suite.header.GetHeight()), suite.header.Header.Time.Add(time.Hour),
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight().GetEpochHeight()+3), int64(suite.header.GetHeight().GetEpochHeight()), suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createPastUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight()-2), int64(suite.header.GetHeight())-4, suite.header.Header.Time,
+		return ibctmtypes.CreateTestHeader(testChainID, int64(suite.header.GetHeight().GetEpochHeight()-2), int64(suite.header.GetHeight().GetEpochHeight())-4, suite.header.Header.Time,
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	var (
@@ -87,7 +87,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				Timestamp:          suite.now.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, incrementedClientHeight.EpochHeight, intermediateConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, incrementedClientHeight, intermediateConsState)
 
 			clientState.LatestHeight = incrementedClientHeight
 			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
@@ -100,21 +100,25 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 
+			height1 := types.NewHeight(0, 1)
+
 			// store previous consensus state
 			prevConsState := &ibctmtypes.ConsensusState{
-				Height:             types.NewHeight(0, 1),
+				Height:             height1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height1, prevConsState)
+
+			height2 := types.NewHeight(0, 2)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be hightest consensus state before header height
 			intermediateConsState := &ibctmtypes.ConsensusState{
-				Height:             types.NewHeight(0, 2),
+				Height:             height2,
 				Timestamp:          suite.past.Add(time.Minute),
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 2, intermediateConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height2, intermediateConsState)
 
 			// updateHeader will fill in consensus state between prevConsState and suite.consState
 			// clientState should not be updated
@@ -160,13 +164,15 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 
+			height1 := types.NewHeight(0, 1)
+
 			// store previous consensus state
 			prevConsState := &ibctmtypes.ConsensusState{
-				Height:             types.NewHeight(0, 1),
+				Height:             height1,
 				Timestamp:          suite.past,
 				NextValidatorsHash: suite.valSetHash,
 			}
-			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, 1, prevConsState)
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height1, prevConsState)
 
 			// updateHeader will fill in consensus state between prevConsState and suite.consState
 			// clientState should not be updated
@@ -200,7 +206,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().NoError(err, err)
 
 				expConsensusState := &ibctmtypes.ConsensusState{
-					Height:             types.NewHeight(0, updateHeader.GetHeight()),
+					Height:             updateHeader.GetHeight().(types.Height),
 					Timestamp:          updateHeader.GetTime(),
 					Root:               commitmenttypes.NewMerkleRoot(updateHeader.Header.GetAppHash()),
 					NextValidatorsHash: updateHeader.Header.NextValidatorsHash,
@@ -215,9 +221,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 				suite.Require().Equal(updatedClientState, newClientState, "updatedClient state not persisted correctly")
 
 				// Determine if clientState should be updated or not
-				if uint64(updateHeader.GetHeight()) > clientState.GetLatestHeight() {
+				if updateHeader.GetHeight().GT(clientState.GetLatestHeight()) {
 					// Header Height is greater than clientState latest Height, clientState should be updated with header.GetHeight()
-					suite.Require().Equal(uint64(updateHeader.GetHeight()), updatedClientState.GetLatestHeight(), "clientstate height did not update")
+					suite.Require().Equal(updateHeader.GetHeight(), updatedClientState.GetLatestHeight(), "clientstate height did not update")
 				} else {
 					// Update will add past consensus state, clientState should not be updated at all
 					suite.Require().Equal(clientState.GetLatestHeight(), updatedClientState.GetLatestHeight(), "client state height updated for past header")
@@ -239,7 +245,7 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 
 	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
 	suite.Require().NoError(err, err)
-	suite.Require().Equal(localhostClient.GetLatestHeight()+1, updatedClientState.GetLatestHeight())
+	suite.Require().Equal(localhostClient.GetLatestHeight().(types.Height).Increment(), updatedClientState.GetLatestHeight())
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
@@ -266,6 +272,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 	// Create valid Misbehaviour by making a duplicate header that signs over different block time
 	altTime := suite.ctx.BlockTime().Add(time.Minute)
+
+	heightPlus3 := types.NewHeight(0, height+3)
 
 	testCases := []struct {
 		name         string
@@ -305,13 +313,13 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 				intermediateConsState := &ibctmtypes.ConsensusState{
-					Height:             types.NewHeight(0, height+3),
+					Height:             heightPlus3,
 					Timestamp:          suite.now.Add(time.Minute),
 					NextValidatorsHash: suite.valSetHash,
 				}
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height+3, intermediateConsState)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, heightPlus3, intermediateConsState)
 
-				clientState.LatestHeight = types.NewHeight(0, height+3)
+				clientState.LatestHeight = heightPlus3
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				return err
@@ -333,13 +341,13 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				// store trusted consensus state for Header2
 				intermediateConsState := &ibctmtypes.ConsensusState{
-					Height:             types.NewHeight(0, height+3),
+					Height:             heightPlus3,
 					Timestamp:          suite.now.Add(time.Minute),
 					NextValidatorsHash: bothValsHash,
 				}
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, height+3, intermediateConsState)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, heightPlus3, intermediateConsState)
 
-				clientState.LatestHeight = types.NewHeight(0, height+3)
+				clientState.LatestHeight = heightPlus3
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				return err
@@ -380,7 +388,6 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			false,
 		},
-
 		{
 			"client state not found",
 			&ibctmtypes.Misbehaviour{},
@@ -407,7 +414,6 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			},
 			false,
 		},
-
 		{
 			"misbehaviour check failed",
 			&ibctmtypes.Misbehaviour{
@@ -446,8 +452,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
-				suite.Require().Equal(uint64(tc.misbehaviour.GetHeight()), clientState.GetFrozenHeight(),
-					"valid test case %d failed: %s. Expected FrozenHeight %d got %d", tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight())
+				suite.Require().Equal(tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight(),
+					"valid test case %d failed: %s. Expected FrozenHeight %s got %s", tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
 			}

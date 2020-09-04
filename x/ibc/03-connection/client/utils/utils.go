@@ -61,7 +61,9 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 		return nil, err
 	}
 
-	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, res.Height), nil
+	// TODO: Retrieve epoch number from chain-id
+	proofHeight := clienttypes.NewHeight(0, uint64(res.Height))
+	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, proofHeight), nil
 }
 
 // QueryClientConnections queries the connection paths registered for a particular client.
@@ -106,7 +108,9 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 		return nil, err
 	}
 
-	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, res.Height), nil
+	// TODO: Retrieve epoch number from chain-id
+	proofHeight := clienttypes.NewHeight(0, uint64(res.Height))
+	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, proofHeight), nil
 }
 
 // QueryConnectionClientState returns the ClientState of a connection end. If
@@ -138,7 +142,7 @@ func QueryConnectionClientState(
 			ClientState: clientStateRes.ClientState,
 		}
 
-		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, clientStateRes.Proof, int64(clientStateRes.ProofHeight))
+		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, clientStateRes.Proof, clientStateRes.ProofHeight)
 	}
 
 	return res, nil
@@ -148,13 +152,14 @@ func QueryConnectionClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryConnectionConsensusState(
-	clientCtx client.Context, connectionID string, height uint64, prove bool,
+	clientCtx client.Context, connectionID string, height clienttypes.Height, prove bool,
 ) (*types.QueryConnectionConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
 		ConnectionId: connectionID,
-		Height:       height,
+		EpochNumber:  height.EpochNumber,
+		EpochHeight:  height.EpochHeight,
 	}
 
 	res, err := queryClient.ConnectionConsensusState(context.Background(), req)
@@ -173,7 +178,8 @@ func QueryConnectionConsensusState(
 			return nil, err
 		}
 
-		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consensusState.GetHeight(), consensusStateRes.Proof, int64(consensusStateRes.ProofHeight))
+		consHeight := consensusState.GetHeight().(clienttypes.Height)
+		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consHeight, consensusStateRes.Proof, consensusStateRes.ProofHeight)
 	}
 
 	return res, nil

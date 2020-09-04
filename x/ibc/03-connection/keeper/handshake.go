@@ -54,13 +54,14 @@ func (k Keeper) ConnOpenTry(
 	proofInit []byte, // proof that chainA stored connectionEnd in state (on ConnOpenInit)
 	proofClient []byte, // proof that chainA stored a light client of chainB
 	proofConsensus []byte, // proof that chainA stored chainB's consensus state at consensus height
-	proofHeight uint64, // height at which relayer constructs proof of A storing connectionEnd in state
-	consensusHeight uint64, // latest height of chain B which chain A has stored in its chain B client
+	proofHeight exported.Height, // height at which relayer constructs proof of A storing connectionEnd in state
+	consensusHeight exported.Height, // latest height of chain B which chain A has stored in its chain B client
 ) error {
-	if consensusHeight >= uint64(ctx.BlockHeight()) {
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	if consensusHeight.GTE(selfHeight) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+			"consensus height is greater than or equal to the current block height (%s >= %s)", consensusHeight, selfHeight,
 		)
 	}
 
@@ -146,14 +147,15 @@ func (k Keeper) ConnOpenAck(
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofClient []byte, // proof of client state on chainB for chainA
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
-	proofHeight uint64, // height that relayer constructed proofTry
-	consensusHeight uint64, // latest height of chainA that chainB has stored on its chainA client
+	proofHeight exported.Height, // height that relayer constructed proofTry
+	consensusHeight exported.Height, // latest height of chainA that chainB has stored on its chainA client
 ) error {
 	// Check that chainB client hasn't stored invalid height
-	if consensusHeight >= uint64(ctx.BlockHeight()) {
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	if consensusHeight.GTE(selfHeight) {
 		return sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"consensus height is greater than or equal to the current block height (%d >= %d)", consensusHeight, uint64(ctx.BlockHeight()),
+			"consensus height is greater than or equal to the current block height (%s >= %s)", consensusHeight, selfHeight,
 		)
 	}
 
@@ -242,7 +244,7 @@ func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck []byte, // proof that connection opened on ChainA during ConnOpenAck
-	proofHeight uint64, // height that relayer constructed proofAck
+	proofHeight exported.Height, // height that relayer constructed proofAck
 ) error {
 	// Retrieve connection
 	connection, found := k.GetConnection(ctx, connectionID)

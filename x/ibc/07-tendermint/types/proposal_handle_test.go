@@ -29,7 +29,6 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
 	suite.Require().Error(err)
 	suite.Require().Nil(cs)
 	suite.Require().Nil(consState)
-
 }
 
 // to expire clients, time needs to be fast forwarded on both chainA and chainB.
@@ -40,157 +39,157 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 	)
 
 	testCases := []struct {
-		name            string
-		malleate        func()
-		expPassUnfreeze bool // expected result using a header for unfreezing
-		expPassUnexpire bool // expected result using a header for unexpiring
+		name                         string
+		AllowUpdateAfterExpiry       bool
+		AllowUpdateAfterMisbehaviour bool
+		FreezeClient                 bool
+		ExpireClient                 bool
+		expPassUnfreeze              bool // expected result using a header that passes stronger validation
+		expPassUnexpire              bool // expected result using a header that passes weaker validation
 	}{
 		{
-			"not allowed to be updated, not frozen or expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = false
-			}, false, false,
+			name:                         "not allowed to be updated, not frozen or expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 false,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"not allowed to be updated, client is frozen", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				clientState.FrozenHeight = frozenHeight
-			}, false, false,
+			name:                         "not allowed to be updated, client is frozen",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 true,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"not allowed to be updated, client is expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false, false,
-		},
-
-		{
-			"not allowed to be updated, client is frozen and expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				clientState.FrozenHeight = frozenHeight
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false, false,
-		},
-
-		{
-			"allowed to be updated only after misbehaviour, not frozen or expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = true
-			}, false, false,
-		},
-
-		{
-			"PASS: allowed to be updated only after misbehaviour, client is frozen", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				clientState.FrozenHeight = frozenHeight
-			}, true, false,
+			name:                         "not allowed to be updated, client is expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 false,
+			ExpireClient:                 true,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"allowed to be updated only after misbehaviour, client is expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false, false,
-		},
-
-		{
-			"allowed to be updated only after misbehaviour, client is frozen and expired", func() {
-				clientState.AllowUpdateAfterExpiry = false
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				clientState.FrozenHeight = frozenHeight
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, true, true, // client is frozen and expired, lighter validation checks are done
+			name:                         "not allowed to be updated, client is frozen and expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 true,
+			ExpireClient:                 true,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"allowed to be updated only after expiry, not frozen or expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = false
-			}, false, false,
-		},
-
-		{
-			"allowed to be updated only after expiry, client is frozen", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				clientState.FrozenHeight = frozenHeight
-			}, false, false,
+			name:                         "allowed to be updated only after misbehaviour, not frozen or expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 false,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"PASS: allowed to be updated only after expiry, client is expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, true, true, // unfreezing headers work since they pass stricter checks
-		},
-
-		{
-			"allowed to be updated only after expiry, client is frozen and expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = false
-
-				clientState.FrozenHeight = frozenHeight
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, false, false,
+			name:                         "PASS: allowed to be updated only after misbehaviour, client is frozen",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 true,
+			ExpireClient:                 false,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              false,
 		},
 		{
-			"allowed to be updated after expiry and misbehaviour, not frozen or expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = true
-			}, false, false,
+			name:                         "allowed to be updated only after misbehaviour, client is expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 false,
+			ExpireClient:                 true,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
 		{
-			"PASS: allowed to be updated after expiry and misbehaviour, client is frozen", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				clientState.FrozenHeight = frozenHeight
-			}, true, false,
+			name:                         "allowed to be updated only after misbehaviour, client is frozen and expired",
+			AllowUpdateAfterExpiry:       false,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 true,
+			ExpireClient:                 true,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              true,
 		},
 		{
-			"PASS: allowed to be updated after expiry and misbehaviour, client is expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, true, true, // unfreezing headers work since they pass stricter checks
+			name:                         "allowed to be updated only after expiry, not frozen or expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 false,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
 		},
-
 		{
-			"PASS: allowed to be updated after expiry and misbehaviour, client is frozen and expired", func() {
-				clientState.AllowUpdateAfterExpiry = true
-				clientState.AllowUpdateAfterMisbehaviour = true
-
-				clientState.FrozenHeight = frozenHeight
-				suite.chainA.ExpireClient(clientState.TrustingPeriod)
-				suite.chainB.ExpireClient(clientState.TrustingPeriod)
-				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
-			}, true, true,
+			name:                         "allowed to be updated only after expiry, client is frozen",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 true,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
+		},
+		{
+			name:                         "PASS: allowed to be updated only after expiry, client is expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 false,
+			ExpireClient:                 true,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              true,
+		},
+		{
+			name:                         "allowed to be updated only after expiry, client is frozen and expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: false,
+			FreezeClient:                 true,
+			ExpireClient:                 true,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
+		},
+		{
+			name:                         "allowed to be updated after expiry and misbehaviour, not frozen or expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 false,
+			ExpireClient:                 false,
+			expPassUnfreeze:              false,
+			expPassUnexpire:              false,
+		},
+		{
+			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is frozen",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 true,
+			ExpireClient:                 false,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              false,
+		},
+		{
+			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 false,
+			ExpireClient:                 true,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              true,
+		},
+		{
+			name:                         "PASS: allowed to be updated after expiry and misbehaviour, client is frozen and expired",
+			AllowUpdateAfterExpiry:       true,
+			AllowUpdateAfterMisbehaviour: true,
+			FreezeClient:                 true,
+			ExpireClient:                 true,
+			expPassUnfreeze:              true,
+			expPassUnexpire:              true,
 		},
 	}
 
@@ -198,17 +197,43 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 		tc := tc
 
 		// for each test case a header used for unexpiring clients and unfreezing
-		// a client are each tested to ensure the work as expected and that
-		// unexpiring headers cannot unfreeze clients.
+		// a client are each tested to ensure that unexpiry headers cannot update
+		// a client when a unfreezing header is required.
 		suite.Run(tc.name, func() {
 
 			// start by testing unexpiring the client
 			suite.SetupTest() // reset
 
+			// construct client state based on test case parameters
 			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
+			clientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
+			clientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
+			if tc.FreezeClient {
+				clientState.FrozenHeight = frozenHeight
+			}
+			if tc.ExpireClient {
+				suite.chainA.ExpireClient(clientState.TrustingPeriod)
+				suite.chainB.ExpireClient(clientState.TrustingPeriod)
+				suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
+			}
 
-			tc.malleate()
+			// use next header for chainB to unfreeze client on chainA
+			unfreezeClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
+			suite.Require().NoError(err)
+
+			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unfreezeClientHeader)
+
+			if tc.expPassUnfreeze {
+				suite.Require().NoError(err)
+				suite.Require().Equal(uint64(0), cs.GetFrozenHeight())
+				suite.Require().NotNil(consState)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(cs)
+				suite.Require().Nil(consState)
+			}
 
 			// use next header for chainB to unexpire clients but with empty trusted heights
 			// and validators. Update chainB time so header won't be expired.
@@ -217,8 +242,8 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			unexpireClientHeader.TrustedHeight = clienttypes.Height{}
 			unexpireClientHeader.TrustedValidators = nil
 
-			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
+			clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
+			cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unexpireClientHeader)
 
 			if tc.expPassUnexpire {
 				suite.Require().NoError(err)
@@ -226,31 +251,9 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 				suite.Require().NotNil(consState)
 			} else {
 				suite.Require().Error(err)
+				suite.Require().Nil(cs)
+				suite.Require().Nil(consState)
 			}
-
-			// reset and test unfreezing the client
-			suite.SetupTest()
-
-			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
-
-			tc.malleate()
-
-			// use next header for chainB to unfreeze client on chainA
-			unfreezeClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
-			suite.Require().NoError(err)
-
-			clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
-			cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, unfreezeClientHeader)
-
-			if tc.expPassUnfreeze {
-				suite.Require().NoError(err)
-				suite.Require().Equal(uint64(0), cs.GetFrozenHeight())
-				suite.Require().NotNil(consState)
-			} else {
-				suite.Require().Error(err)
-			}
-
 		})
 	}
 }

@@ -39,7 +39,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	k.SetClientState(ctx, p.ClientId, clientState)
 	k.SetClientConsensusState(ctx, p.ClientId, header.GetHeight(), consensusState)
 
-	k.Logger(ctx).Info("client updated after governance proposal passed", "client-id", p.ClientId, "height", clientState.GetLatestHeight()))
+	k.Logger(ctx).Info("client updated after governance proposal passed", "client-id", p.ClientId, "height", clientState.GetLatestHeight())
 
 	// emitting events in the keeper for proposal updates to clients
 	ctx.EventManager().EmitEvent(

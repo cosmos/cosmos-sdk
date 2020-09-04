@@ -270,8 +270,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 
 			var result []types.Validator
 			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
-			s.Require().Equal(tc.minValidatorCount, len(result))
-			s.Require().GreaterOrEqual(len(result), 1)
+			s.Require().Equal(len(s.network.Validators), len(result))
 		})
 	}
 }

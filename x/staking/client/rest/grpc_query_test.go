@@ -66,33 +66,23 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 	baseURL := val.APIAddress
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"test query validators gRPC route with invalid status",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?status=active", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 		},
 		{
 			"test query validators gRPC route without status query param",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators", baseURL),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			false,
 		},
 		{
 			"test query validators gRPC route with valid status",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?status=%s", baseURL, sdk.Bonded.String()),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			false,
 		},
 	}
@@ -100,7 +90,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var valRes types.QueryValidatorsResponse
@@ -124,36 +114,27 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, "wrongValidatorAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, valAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			false,
 		},
 	}
@@ -161,7 +142,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validator types.QueryValidatorResponse
@@ -183,6 +164,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -196,9 +178,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations", baseURL, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			true,
 			&types.QueryValidatorDelegationsResponse{},
 			nil,
@@ -206,15 +186,13 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			true,
 			&types.QueryValidatorDelegationsResponse{},
 			nil,
 		},
 		{
-			"valid request",
+			"valid request(height specific)",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations", baseURL, valAddressBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
@@ -253,6 +231,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -300,18 +279,20 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
+	valAddressBase64 := base64.URLEncoding.EncodeToString(val2.Address)
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
 		name         string
 		url          string
-		headers      map[string]string
 		error        bool
 		respType     proto.Message
 		expectedResp proto.Message
@@ -319,9 +300,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "wrongValAddress", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
@@ -329,9 +307,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		{
 			"wrong account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, "wrongAccAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
@@ -339,9 +314,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
@@ -349,9 +321,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		{
 			"with no account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
@@ -359,19 +328,16 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
 			false,
 			&types.QueryDelegationResponse{},
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
 						DelegatorAddress: val.Address,
-						ValidatorAddress: val.ValAddress,
-						Shares:           sdk.NewDec(100000000),
+						ValidatorAddress: val2.ValAddress,
+						Shares:           sdk.NewDec(10),
 					},
-					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000)),
+					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
 				},
 			},
 		},
@@ -380,7 +346,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
@@ -400,55 +366,41 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "wrongValAddress", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"wrong account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, "wrongAccAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 		},
 	}
@@ -456,7 +408,7 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubd types.QueryUnbondingDelegationResponse
@@ -480,6 +432,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
@@ -493,9 +446,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			true,
 			&types.QueryDelegatorDelegationsResponse{},
 			nil,
@@ -503,15 +454,13 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "1",
-			},
+			map[string]string{},
 			true,
 			&types.QueryDelegatorDelegationsResponse{},
 			nil,
 		},
 		{
-			"valid request",
+			"valid request (height specific)",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, delAddressBase64),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
@@ -550,48 +499,30 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
 		name       string
 		url        string
-		headers    map[string]string
 		error      bool
 		ubdsLength int
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 			0,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
-			0,
-		},
-		{
-			"valid request with less height",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, delAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
-			false,
 			0,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, delAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 			1,
 		},
@@ -600,7 +531,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var ubds types.QueryDelegatorUnbondingDelegationsResponse
@@ -623,66 +554,50 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	srcValBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	dstValBase64 := base64.URLEncoding.EncodeToString(val2.Address)
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, "wrongValAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, delAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 		},
 		{
 			"valid request with src address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s", baseURL, delAddressBase64, srcValBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 		},
 		{
 			"valid request with dst address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, delAddressBase64, dstValBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 		},
 		{
 			"valid request with dst address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, delAddressBase64, srcValBase64, dstValBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "3",
-			},
 			false,
 		},
 	}
@@ -690,7 +605,7 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 			var redelegations types.QueryRedelegationsResponse
 
@@ -715,36 +630,27 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong delegator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators", baseURL, "wrongDelAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no delegator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators", baseURL, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators", baseURL, delAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			false,
 		},
 	}
@@ -752,7 +658,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validators types.QueryDelegatorValidatorsResponse
@@ -775,55 +681,41 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
 	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		error   bool
+		name  string
+		url   string
+		error bool
 	}{
 		{
 			"wrong validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "wrongValAddress", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"wrong account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, "wrongAccAddress"),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no validator address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "", accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"with no account address",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, ""),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, accAddressBase64),
-			map[string]string{
-				grpctypes.GRPCBlockHeightHeader: "2",
-			},
 			false,
 		},
 	}
@@ -831,7 +723,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
 			var validator types.QueryDelegatorValidatorResponse

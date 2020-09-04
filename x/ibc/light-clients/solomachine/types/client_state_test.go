@@ -1,25 +1,25 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 const (
 	counterpartyClientIdentifier = "chainA"
-	consensusHeight              = uint64(0)
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
 )
 
 var (
-	prefix = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	prefix          = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	consensusHeight = clienttypes.Height{}
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -73,7 +73,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
@@ -97,7 +97,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -181,7 +181,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 			}
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
 			)
 
 			if tc.expPass {
@@ -196,7 +196,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	// create client for tendermint so we can use consensus state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)
@@ -222,7 +222,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -306,7 +306,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			}
 
 			err := tc.clientState.VerifyClientConsensusState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 			)
 
 			if tc.expPass {
@@ -343,7 +343,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -390,7 +390,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testConnectionID, conn,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
@@ -426,7 +426,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -473,7 +473,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
@@ -506,7 +506,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -553,7 +553,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
 		)
 
 		if tc.expPass {
@@ -586,7 +586,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -633,7 +633,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
 		)
 
 		if tc.expPass {
@@ -665,7 +665,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -712,7 +712,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
 		)
 
 		if tc.expPass {
@@ -745,7 +745,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -792,7 +792,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {

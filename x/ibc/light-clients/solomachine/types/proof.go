@@ -6,13 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // VerifySignature verifies if the the provided public key generated the signature
@@ -53,7 +51,7 @@ func ClientStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) ([]byte, error) {
 	bz, err := codec.MarshalAny(cdc, clientState)
 	if err != nil {
@@ -75,7 +73,7 @@ func ConsensusStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) ([]byte, error) {
 	bz, err := codec.MarshalAny(cdc, consensusState)
 	if err != nil {
@@ -97,7 +95,7 @@ func ConnectionStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-	connectionEnd connectionexported.ConnectionI,
+	connectionEnd exported.ConnectionI,
 ) ([]byte, error) {
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
 	if !ok {
@@ -124,7 +122,7 @@ func ChannelStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	path commitmenttypes.MerklePath,
-	channelEnd channelexported.ChannelI,
+	channelEnd exported.ChannelI,
 ) ([]byte, error) {
 	channel, ok := channelEnd.(channeltypes.Channel)
 	if !ok {

@@ -81,6 +81,9 @@ type BaseApp struct { // nolint: maligned
 	// transaction. This is mainly used for DoS and spam prevention.
 	minGasPrices sdk.DecCoins
 
+	// initialHeight is the initial height at which we start the baseapp
+	initialHeight int64
+
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
@@ -204,12 +207,6 @@ func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
 	for _, memKey := range keys {
 		app.MountStore(memKey, sdk.StoreTypeMemory)
 	}
-}
-
-// MountStoreWithDB mounts a store to the provided key in the BaseApp
-// multistore, using a specified DB.
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
-	app.cms.MountStoreWithDB(key, typ, db)
 }
 
 // MountStore mounts a store to the provided key in the BaseApp multistore,
@@ -422,9 +419,23 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		return fmt.Errorf("invalid height: %d", req.Header.Height)
 	}
 
-	prevHeight := app.LastBlockHeight()
-	if req.Header.Height != prevHeight+1 {
-		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
+	// expectedHeight holds the expected height to validate.
+	var expectedHeight int64
+	if app.LastBlockHeight() == 0 && app.initialHeight > 1 {
+		// In this case, we're validating the first block of the chain (no
+		// previous commit). The height we're expecting is the initial height.
+		expectedHeight = app.initialHeight
+	} else {
+		// This case can means two things:
+		// - either there was already a previous commit in the store, in which
+		// case we increment the version from there,
+		// - or there was no previous commit, and initial version was not set,
+		// in which case we start at version 1.
+		expectedHeight = app.LastBlockHeight() + 1
+	}
+
+	if req.Header.Height != expectedHeight {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, expectedHeight)
 	}
 
 	return nil

@@ -2,13 +2,13 @@ package types
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
-	_ exported.ChannelI      = (*Channel)(nil)
-	_ exported.CounterpartyI = (*Counterparty)(nil)
+	_ exported.ChannelI             = (*Channel)(nil)
+	_ exported.CounterpartyChannelI = (*Counterparty)(nil)
 )
 
 // NewChannel creates a new Channel instance
@@ -36,7 +36,7 @@ func (ch Channel) GetOrdering() int32 {
 }
 
 // GetCounterparty implements Channel interface.
-func (ch Channel) GetCounterparty() exported.CounterpartyI {
+func (ch Channel) GetCounterparty() exported.CounterpartyChannelI {
 	return ch.Counterparty
 }
 
@@ -78,12 +78,12 @@ func NewCounterparty(portID, channelID string) Counterparty {
 	}
 }
 
-// GetPortID implements CounterpartyI interface
+// GetPortID implements CounterpartyChannelI interface
 func (c Counterparty) GetPortID() string {
 	return c.PortId
 }
 
-// GetChannelID implements CounterpartyI interface
+// GetChannelID implements CounterpartyChannelI interface
 func (c Counterparty) GetChannelID() string {
 	return c.ChannelId
 }

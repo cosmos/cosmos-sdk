@@ -40,7 +40,7 @@ service Query {
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
     returns (QueryConnectionConsensusStateResponse) {
-      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state";
+      option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/epoch/{epoch_number}/height/{epoch_height}";
   }
 }
 
@@ -62,7 +62,9 @@ message QueryConnectionResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -79,7 +81,9 @@ message QueryConnectionsResponse {
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  int64 height = 3;
+  ibc.client.Height height = 3 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryClientConnectionsRequest is the request type for the
@@ -99,7 +103,9 @@ message QueryClientConnectionsResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was generated
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -121,7 +127,9 @@ message QueryConnectionClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  uint64 proof_height = 4;
+  ibc.client.Height proof_height = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
@@ -131,7 +139,8 @@ message QueryConnectionConsensusStateRequest {
   string connection_id = 1 [
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
-  uint64 height = 2;
+  uint64 epoch_number = 2;
+  uint64 epoch_height = 3;
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the
@@ -146,5 +155,7 @@ message QueryConnectionConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  uint64 proof_height = 5;
+  ibc.client.Height proof_height = 5 [
+    (gogoproto.nullable) = false
+  ];
 }

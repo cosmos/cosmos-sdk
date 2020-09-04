@@ -3,10 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // VerifyClientState verifies a proof of a client state of the running machine
@@ -14,9 +12,9 @@ import (
 func (k Keeper) VerifyClientState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
-	clientState clientexported.ClientState,
+	clientState exported.ClientState,
 ) error {
 	clientID := connection.GetClientID()
 	targetClient, found := k.clientKeeper.GetClientState(ctx, clientID)
@@ -26,7 +24,7 @@ func (k Keeper) VerifyClientState(
 
 	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
 	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
 	}
 
 	if err := targetClient.VerifyClientState(
@@ -43,10 +41,10 @@ func (k Keeper) VerifyClientState(
 func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
-	consensusHeight uint64,
+	height exported.Height,
+	consensusHeight exported.Height,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
 	clientID := connection.GetClientID()
 	clientState, found := k.clientKeeper.GetClientState(ctx, clientID)
@@ -56,7 +54,7 @@ func (k Keeper) VerifyClientConsensusState(
 
 	targetConsState, found := k.clientKeeper.GetClientConsensusState(ctx, clientID, height)
 	if !found {
-		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %d", clientID, height)
+		return sdkerrors.Wrapf(clienttypes.ErrConsensusStateNotFound, "clientID: %s with height: %s", clientID, height)
 	}
 
 	if err := clientState.VerifyClientConsensusState(
@@ -74,7 +72,7 @@ func (k Keeper) VerifyClientConsensusState(
 func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	connectionID string,
 	connectionEnd exported.ConnectionI, // opposite connection
@@ -99,11 +97,11 @@ func (k Keeper) VerifyConnectionState(
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
+	channel exported.ChannelI,
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
@@ -126,7 +124,7 @@ func (k Keeper) VerifyChannelState(
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -154,7 +152,7 @@ func (k Keeper) VerifyPacketCommitment(
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -183,7 +181,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,
@@ -210,7 +208,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
-	height uint64,
+	height exported.Height,
 	proof []byte,
 	portID,
 	channelID string,

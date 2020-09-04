@@ -52,10 +52,22 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	}
 
 	// calculate the age of the misbehaviour
-	infractionHeight := tmMisbehaviour.GetHeight().(clienttypes.Height).EpochHeight
 	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight.EpochHeight - infractionHeight)
+
+	var ageBlocks int64
+	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.EpochNumber {
+		// if the misbehaviour is in the same epoch as the client then
+		// perform expiry check using block height in addition to time
+		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
+		ageBlocks = int64(cs.LatestHeight.EpochHeight - infractionHeight)
+	} else {
+		// if the misbehaviour is from a previous epoch, then the epoch-height
+		// of misbehaviour has no correlation with the current epoch-height
+		// so we disable the block check by setting ageBlocks to 0 and only
+		// rely on the time expiry check with ageDuration
+		ageBlocks = 0
+	}
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516

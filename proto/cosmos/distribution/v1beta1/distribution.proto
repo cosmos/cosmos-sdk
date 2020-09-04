@@ -110,11 +110,12 @@ message FeePool {
 // together with how many coins are proposed to be spent, and to which
 // recipient account.
 message CommunityPoolSpendProposal {
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
+
   string   title                      = 1;
   string   description                = 2;
-  bytes    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

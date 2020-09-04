@@ -10,6 +10,9 @@ import "cosmos/base/v1beta1/coin.proto";
 // ICS20 enabled chains. See ICS Spec here:
 // https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message MsgTransfer {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // the port on which the packet will be sent
   string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
   // the channel by which the packet will be sent

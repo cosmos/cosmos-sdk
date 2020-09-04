@@ -42,10 +42,11 @@ message TextProposal {
 
 // Deposit defines an amount deposited by an account address to an active proposal.
 message Deposit {
-  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal) = false;
 
   uint64   proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -112,10 +113,11 @@ message TallyResult {
 // Vote defines a vote on a governance proposal.
 // A Vote consists of a proposal ID, the voter, and the vote option.
 message Vote {
-  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal) = false;
 
   uint64     proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string     voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
 }
 

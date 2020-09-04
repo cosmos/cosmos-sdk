@@ -11,14 +11,17 @@ import "cosmos/distribution/v1beta1/distribution.proto";
 // DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses.
 message DelegatorWithdrawInfo {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // delegator_address is the address of the delegator.
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
 
   // withdraw_address is the address to withdraw the delegation rewards to.
-  bytes withdraw_address = 2 [
+  string withdraw_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"withdraw_address\""
   ];
@@ -27,7 +30,7 @@ message DelegatorWithdrawInfo {
 // ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 message ValidatorOutstandingRewardsRecord {
   // validator_address is the address of the validator.
-  bytes validator_address = 1 [
+  string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -43,7 +46,7 @@ message ValidatorOutstandingRewardsRecord {
 // ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
 message ValidatorAccumulatedCommissionRecord {
   // validator_address is the address of the validator.
-  bytes validator_address = 1 [
+  string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -58,7 +61,7 @@ message ValidatorAccumulatedCommissionRecord {
 // ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
 message ValidatorHistoricalRewardsRecord {
   // validator_address is the address of the validator.
-  bytes validator_address = 1 [
+  string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -90,14 +93,17 @@ message ValidatorCurrentRewardsRecord {
 
 // DelegatorStartingInfoRecord used for import / export via genesis json.
 message DelegatorStartingInfoRecord {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // delegator_address is the address of the delegator.
-  bytes delegator_address = 1 [
+  string delegator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
 
   // validator_address is the address of the validator.
-  bytes validator_address = 2 [
+  string validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -112,7 +118,7 @@ message DelegatorStartingInfoRecord {
 // ValidatorSlashEventRecord is used for import / export via genesis json.
 message ValidatorSlashEventRecord {
   // validator_address is the address of the validator.
-  bytes validator_address = 1 [
+  string validator_address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
@@ -148,7 +154,7 @@ message GenesisState {
   ];
 
   // fee_pool defines the previous proposer at genesis.
-  bytes previous_proposer = 4 [
+  string previous_proposer = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress",
     (gogoproto.moretags) = "yaml:\"previous_proposer\""
   ];

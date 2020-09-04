@@ -54,6 +54,9 @@ message GenesisState {
 
 // LastValidatorPower required for validator set update logic.
 message LastValidatorPower {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
   // address is the address of the validator.
   string address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"

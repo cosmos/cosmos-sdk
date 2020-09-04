@@ -101,7 +101,7 @@ type TestChain struct {
 // Each update of any chain increments the block header time for all chains by 5 seconds.
 func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate validator private/public key
-	privVal := tmtypes.NewMockPV()
+	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 

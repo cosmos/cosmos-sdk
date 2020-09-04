@@ -11,6 +11,7 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -249,7 +250,7 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
-	altPrivVal := tmtypes.NewMockPV()
+	altPrivVal := ibctestingmock.NewPV()
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 	altVal := tmtypes.NewValidator(altPubKey, 4)

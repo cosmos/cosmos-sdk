@@ -8,6 +8,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
@@ -19,7 +20,7 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 	)
 
 	// Setup different validators and signers for testing different types of updates
-	altPrivVal := tmtypes.NewMockPV()
+	altPrivVal := ibctestingmock.NewPV()
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 

@@ -13,6 +13,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -53,7 +54,7 @@ func (suite *IBCTestSuite) SetupTest() {
 	isCheckTx := false
 	suite.app = simapp.Setup(isCheckTx)
 
-	privVal := tmtypes.NewMockPV()
+	privVal := ibctestingmock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	suite.Require().NoError(err)
 

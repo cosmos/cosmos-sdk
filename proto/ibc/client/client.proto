@@ -91,6 +91,7 @@ message MsgSubmitMisbehaviour {
 // In these cases, the epoch number is incremented so that height continues to
 // be monitonically increasing even as the EpochHeight gets reset
 message Height {
+  option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
 
   // the epoch that the client is currently on

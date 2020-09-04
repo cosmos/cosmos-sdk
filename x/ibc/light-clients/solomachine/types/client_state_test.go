@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -11,14 +12,14 @@ import (
 
 const (
 	counterpartyClientIdentifier = "chainA"
-	consensusHeight              = uint64(0)
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
 )
 
 var (
-	prefix = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	prefix          = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	consensusHeight = clienttypes.Height{}
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -180,7 +181,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 			}
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
 			)
 
 			if tc.expPass {
@@ -305,7 +306,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			}
 
 			err := tc.clientState.VerifyClientConsensusState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 			)
 
 			if tc.expPass {
@@ -389,7 +390,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testConnectionID, conn,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
@@ -472,7 +473,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
@@ -552,7 +553,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
 		)
 
 		if tc.expPass {
@@ -632,7 +633,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
 		)
 
 		if tc.expPass {
@@ -711,7 +712,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
 		)
 
 		if tc.expPass {
@@ -791,7 +792,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		expSeq := tc.clientState.ConsensusState.Sequence + 1
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {

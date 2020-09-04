@@ -166,7 +166,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
 // for the query and the height at which the proof will succeed on a tendermint verifier.
-func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
+func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight() - 1,
@@ -184,7 +184,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, uint64(res.Height) + 1
+	return proof, clienttypes.NewHeight(0, uint64(res.Height)+1)
 }
 
 // QueryClientStateProof performs and abci query for a client state
@@ -202,12 +202,12 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
-func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clienttypes.Height) {
 	// retrieve consensus state to provide proof for
 	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
-	consensusHeight := consState.GetHeight()
+	consensusHeight := consState.GetHeight().(clienttypes.Height)
 	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
@@ -283,7 +283,7 @@ func (chain *TestChain) GetClientState(clientID string) exported.ClientState {
 
 // GetConsensusState retrieves the consensus state for the provided clientID and height.
 // It will return a success boolean depending on if consensus state exists or not.
-func (chain *TestChain) GetConsensusState(clientID string, height uint64) (exported.ConsensusState, bool) {
+func (chain *TestChain) GetConsensusState(clientID string, height exported.Height) (exported.ConsensusState, bool) {
 	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
 }
 
@@ -380,9 +380,10 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 
 	switch clientType {
 	case exported.ClientTypeTendermint:
+		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-			clienttypes.NewHeight(0, counterparty.LastHeader.GetHeight()), commitmenttypes.GetSDKSpecs(),
+			height, commitmenttypes.GetSDKSpecs(),
 			false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
@@ -430,7 +431,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, clientID string) (*ibctmtypes.Header, error) {
 	header := counterparty.LastHeader
 	// Relayer must query for LatestHeight on client to get TrustedHeight
-	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
+	trustedHeight := chain.GetClientState(clientID).GetLatestHeight().(clienttypes.Height)
 	var (
 		tmTrustedVals *tmtypes.ValidatorSet
 		ok            bool
@@ -445,15 +446,14 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.EpochHeight + 1))
 		if !ok {
 			return nil, sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
 	// for now assume epoch number is 0
-	// TODO: use clienttypes.Height once Header.GetHeight is updated
-	header.TrustedHeight = clienttypes.NewHeight(0, trustedHeight)
+	header.TrustedHeight = trustedHeight
 
 	trustedVals, err := tmTrustedVals.ToProto()
 	if err != nil {

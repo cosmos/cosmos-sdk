@@ -13,6 +13,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // QueryClientState returns a client state.
@@ -65,7 +66,9 @@ func QueryClientStateABCI(
 		return nil, err
 	}
 
-	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, res.Height)
+	// TODO: retrieve epoch-number from chain-id
+	height := types.NewHeight(0, uint64(res.Height))
+	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, height)
 	return clientStateRes, nil
 }
 
@@ -73,7 +76,7 @@ func QueryClientStateABCI(
 // If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
 // it uses the gRPC query client.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, height uint64, prove, latestHeight bool,
+	clientCtx client.Context, clientID string, height exported.Height, prove, latestHeight bool,
 ) (*types.QueryConsensusStateResponse, error) {
 	if prove {
 		return QueryConsensusStateABCI(clientCtx, clientID, height)
@@ -82,7 +85,8 @@ func QueryConsensusState(
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConsensusStateRequest{
 		ClientId:     clientID,
-		Height:       height,
+		EpochNumber:  height.GetEpochNumber(),
+		EpochHeight:  height.GetEpochHeight(),
 		LatestHeight: latestHeight,
 	}
 
@@ -92,7 +96,7 @@ func QueryConsensusState(
 // QueryConsensusStateABCI queries the store to get the consensus state of a light client and a
 // merkle proof of its existence or non-existence.
 func QueryConsensusStateABCI(
-	clientCtx client.Context, clientID string, height uint64,
+	clientCtx client.Context, clientID string, height exported.Height,
 ) (*types.QueryConsensusStateResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -122,7 +126,9 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, res.Height), nil
+	// TODO: retrieve epoch-number from chain-id
+	proofHeight := types.NewHeight(0, uint64(res.Height))
+	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate

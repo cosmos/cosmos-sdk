@@ -14,9 +14,9 @@ import (
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
 	ClientType() ClientType
-	GetLatestHeight() uint64
+	GetLatestHeight() Height
 	IsFrozen() bool
-	GetFrozenHeight() uint64
+	GetFrozenHeight() Height
 	Validate() error
 	GetProofSpecs() []*ics23.ProofSpec
 
@@ -32,7 +32,7 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		root Root,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		counterpartyClientIdentifier string,
 		proof []byte,
@@ -42,9 +42,9 @@ type ClientState interface {
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		root Root,
-		height uint64,
+		height Height,
 		counterpartyClientIdentifier string,
-		consensusHeight uint64,
+		consensusHeight Height,
 		prefix Prefix,
 		proof []byte,
 		consensusState ConsensusState,
@@ -52,7 +52,7 @@ type ClientState interface {
 	VerifyConnectionState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		connectionID string,
@@ -61,7 +61,7 @@ type ClientState interface {
 	VerifyChannelState(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -71,7 +71,7 @@ type ClientState interface {
 	VerifyPacketCommitment(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -82,7 +82,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgement(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -93,7 +93,7 @@ type ClientState interface {
 	VerifyPacketAcknowledgementAbsence(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -103,7 +103,7 @@ type ClientState interface {
 	VerifyNextSequenceRecv(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
-		height uint64,
+		height Height,
 		prefix Prefix,
 		proof []byte,
 		portID,
@@ -117,7 +117,7 @@ type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
 	// GetHeight returns the height of the consensus state
-	GetHeight() uint64
+	GetHeight() Height
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
@@ -140,13 +140,13 @@ type Misbehaviour interface {
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
-	GetHeight() uint64
+	GetHeight() Height
 }
 
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
-	GetHeight() uint64
+	GetHeight() Height
 	ValidateBasic() error
 }
 
@@ -159,6 +159,10 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
+	GetEpochNumber() uint64
+	GetEpochHeight() uint64
+	Decrement() (Height, bool)
+	String() string
 }
 
 // ClientType defines the type of the consensus algorithm

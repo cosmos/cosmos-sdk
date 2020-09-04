@@ -204,9 +204,9 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 		// Set trusted consensus state in client store
 		suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
 
-		height := clienttypes.NewHeight(0, newHeader.GetHeight())
+		height := newHeader.GetHeight()
 		expectedConsensus := &types.ConsensusState{
-			Height:             height,
+			Height:             height.(clienttypes.Height),
 			Timestamp:          newHeader.GetTime(),
 			Root:               commitmenttypes.NewMerkleRoot(newHeader.Header.GetAppHash()),
 			NextValidatorsHash: newHeader.Header.NextValidatorsHash,
@@ -226,10 +226,10 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			// TODO: check the entire Height struct once GetLatestHeight returns clienttypes.Height
 			if height.GT(clientState.LatestHeight) {
 				// Header Height is greater than clientState latest Height, clientState should be updated with header.GetHeight()
-				suite.Require().Equal(height.EpochHeight, newClientState.GetLatestHeight(), "clientstate height did not update")
+				suite.Require().Equal(height, newClientState.GetLatestHeight(), "clientstate height did not update")
 			} else {
 				// Update will add past consensus state, clientState should not be updated at all
-				suite.Require().Equal(clientState.LatestHeight.EpochHeight, newClientState.GetLatestHeight(), "client state height updated for past header")
+				suite.Require().Equal(clientState.LatestHeight, newClientState.GetLatestHeight(), "client state height updated for past header")
 			}
 
 			suite.Require().Equal(expectedConsensus, consensusState, "valid test case %d failed: %s", i, tc.name)

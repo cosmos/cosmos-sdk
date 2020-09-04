@@ -29,8 +29,10 @@ func (cs ClientState) ClientType() exported.ClientType {
 }
 
 // GetLatestHeight returns the latest sequence number.
-func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.ConsensusState.Sequence
+// Return exported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (cs ClientState) GetLatestHeight() exported.Height {
+	return clienttypes.NewHeight(0, cs.ConsensusState.Sequence)
 }
 
 // IsFrozen returns true if the client is frozen.
@@ -39,8 +41,10 @@ func (cs ClientState) IsFrozen() bool {
 }
 
 // GetFrozenHeight returns the frozen sequence of the client.
-func (cs ClientState) GetFrozenHeight() uint64 {
-	return cs.FrozenSequence
+// Return exported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (cs ClientState) GetFrozenHeight() exported.Height {
+	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
 
 // GetProofSpecs returns nil proof specs since client state verification uses signatures.
@@ -62,13 +66,13 @@ func (cs ClientState) VerifyClientState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	_ exported.Root,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
 	proof []byte,
 	clientState exported.ClientState,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -100,14 +104,14 @@ func (cs ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	_ exported.Root,
-	sequence uint64,
+	height exported.Height,
 	counterpartyClientIdentifier string,
-	consensusHeight uint64,
+	consensusHeight exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	consensusState exported.ConsensusState,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -138,13 +142,13 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	connectionID string,
 	connectionEnd exported.ConnectionI,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -174,14 +178,14 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	channel exported.ChannelI,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -211,7 +215,7 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -219,7 +223,7 @@ func (cs ClientState) VerifyPacketCommitment(
 	packetSequence uint64,
 	commitmentBytes []byte,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -246,7 +250,7 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -254,7 +258,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	packetSequence uint64,
 	acknowledgement []byte,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -282,14 +286,14 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	packetSequence uint64,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -316,14 +320,14 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
 ) error {
-	signature, err := produceVerificationArgs(cdc, cs, sequence, prefix, proof)
+	signature, sequence, err := produceVerificationArgs(cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -347,51 +351,58 @@ func (cs ClientState) VerifyNextSequenceRecv(
 
 // produceVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions and returns the unmarshalled
-// proof representing the signature and timestamp.
+// proof representing the signature and timestamp along with the solo-machine sequence
+// encoded in the proofHeight.
 func produceVerificationArgs(
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
-	sequence uint64,
+	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
-) (signature TimestampedSignature, err error) {
+) (signature TimestampedSignature, sequence uint64, err error) {
+	if epoch := height.GetEpochNumber(); epoch != 0 {
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch must be 0 for solomachine, got epoch-number: %d", epoch)
+	}
+	// sequence is encoded in the epoch height of height struct
+	sequence = height.GetEpochHeight()
 	if cs.IsFrozen() {
-		return TimestampedSignature{}, clienttypes.ErrClientFrozen
+		return TimestampedSignature{}, 0, clienttypes.ErrClientFrozen
 	}
 
 	if prefix == nil {
-		return TimestampedSignature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+		return TimestampedSignature{}, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
 	_, ok := prefix.(commitmenttypes.MerklePrefix)
 	if !ok {
-		return TimestampedSignature{}, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}
 
 	if proof == nil {
-		return TimestampedSignature{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+		return TimestampedSignature{}, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
 	if err = cdc.UnmarshalBinaryBare(proof, &signature); err != nil {
-		return TimestampedSignature{}, sdkerrors.Wrapf(ErrInvalidProof, "failed to unmarshal proof into type %T", TimestampedSignature{})
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(ErrInvalidProof, "failed to unmarshal proof into type %T", TimestampedSignature{})
 	}
 
 	if cs.ConsensusState == nil {
-		return TimestampedSignature{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+		return TimestampedSignature{}, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	if cs.GetLatestHeight() < sequence {
-		return TimestampedSignature{}, sdkerrors.Wrapf(
+	latestSequence := cs.GetLatestHeight().GetEpochHeight()
+	if latestSequence < sequence {
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
-			"client state sequence < proof sequence (%d < %d)", cs.GetLatestHeight(), sequence,
+			"client state sequence < proof sequence (%d < %d)", latestSequence, sequence,
 		)
 	}
 
 	if cs.ConsensusState.GetTimestamp() > signature.Timestamp {
-		return TimestampedSignature{}, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), signature.Timestamp)
+		return TimestampedSignature{}, 0, sdkerrors.Wrapf(ErrInvalidProof, "the consensus state timestamp is greater than the signature timestamp (%d >= %d)", cs.ConsensusState.GetTimestamp(), signature.Timestamp)
 	}
 
-	return signature, nil
+	return signature, sequence, nil
 }
 
 // sets the client state to the store

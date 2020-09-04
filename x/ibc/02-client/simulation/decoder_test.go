@@ -20,12 +20,14 @@ func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
 	clientID := "clientidone"
 
+	height := types.NewHeight(0, 10)
+
 	clientState := &ibctmtypes.ClientState{
-		FrozenHeight: types.NewHeight(0, 10),
+		FrozenHeight: height,
 	}
 
 	consState := &ibctmtypes.ConsensusState{
-		Height:    types.NewHeight(0, 10),
+		Height:    height,
 		Timestamp: time.Now().UTC(),
 	}
 
@@ -40,7 +42,7 @@ func TestDecodeStore(t *testing.T) {
 				Value: []byte(exported.Tendermint.String()),
 			},
 			{
-				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(10)),
+				Key:   host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
 				Value: app.IBCKeeper.ClientKeeper.MustMarshalConsensusState(consState),
 			},
 			{

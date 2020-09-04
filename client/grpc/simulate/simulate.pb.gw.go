@@ -70,6 +70,7 @@ func local_request_SimulateService_Simulate_0(ctx context.Context, marshaler run
 // RegisterSimulateServiceHandlerServer registers the http handlers for service SimulateService to "mux".
 // UnaryRPC     :call SimulateServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterSimulateServiceHandlerFromEndpoint instead.
 func RegisterSimulateServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server SimulateServiceServer) error {
 
 	mux.Handle("POST", pattern_SimulateService_Simulate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {

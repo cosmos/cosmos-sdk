@@ -4,12 +4,16 @@ import (
 	"math/rand"
 	"testing"
 
+	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -130,22 +134,65 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 	require.Error(t, multisigKey.VerifyMultisignature(signBytesFn, multisignature))
 }
 
-// TODO: Fully replace this test with table driven tests
 func TestMultiSigPubKeyEquality(t *testing.T) {
-	msg := []byte{1, 2, 3, 4}
-	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	pubkeys := []crypto.PubKey{pubKey1, pubKey2}
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
-	var unmarshalledMultisig multisig.PubKeyMultisigThreshold
-	multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &unmarshalledMultisig)
-	require.True(t, multisigKey.Equals(unmarshalledMultisig))
+	var other multisig.PubKey
 
-	// Ensure that reordering pubkeys is treated as a different pubkey
-	pubkeysCpy := make([]crypto.PubKey, 5)
-	copy(pubkeysCpy, pubkeys)
-	pubkeysCpy[4] = pubkeys[3]
-	pubkeysCpy[3] = pubkeys[4]
-	multisigKey2 := multisig.NewPubKeyMultisigThreshold(2, pubkeysCpy)
-	require.False(t, multisigKey.Equals(multisigKey2))
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expectEq bool
+	}{
+		{
+			"equals",
+			func() {
+				var otherPubKey multisig.PubKeyMultisigThreshold
+				multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
+				other = otherPubKey
+			},
+			true,
+		},
+		{
+			"ensure that reordering pubkeys is treated as a different pubkey",
+			func() {
+				pubkeysCpy := make([]crypto.PubKey, 2)
+				copy(pubkeysCpy, pubkeys)
+				pubkeysCpy[0] = pubkeys[1]
+				pubkeysCpy[1] = pubkeys[0]
+				other = multisig.NewPubKeyMultisigThreshold(2, pubkeysCpy)
+			},
+			false,
+		},
+		{
+			"equals with proto pub key",
+			func() {
+				pbPubkeys := []crypto.PubKey{
+					&keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)},
+					&keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)},
+				}
+				anyPubKeys := make([]*codectypes.Any, len(pbPubkeys))
+
+				for i := 0; i < len(pubkeys); i++ {
+					any, err := codectypes.NewAnyWithValue(pbPubkeys[i].(proto.Message))
+					require.NoError(t, err)
+					anyPubKeys[i] = any
+				}
+				other = &keys.MultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			tc.malleate()
+			eq := multisigKey.Equals(other)
+			require.Equal(t, eq, tc.expectEq)
+		})
+	}
 }
 
 func TestAddress(t *testing.T) {

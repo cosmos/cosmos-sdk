@@ -61,7 +61,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 	type testCase struct {
 		description string
 		page, limit int
-		msgs         [][]sdk.Msg
+		msgs        [][]sdk.Msg
 		votes       []types.Vote
 	}
 	acc1 := make(sdk.AccAddress, 20)

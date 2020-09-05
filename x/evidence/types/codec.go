@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
-// RegisterCodec registers all the necessary types and interfaces for the
+// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // evidence module.
-func RegisterCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterConcrete(&MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 	cdc.RegisterConcrete(&Equivocation{}, "cosmos-sdk/Equivocation", nil)
@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	RegisterCodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

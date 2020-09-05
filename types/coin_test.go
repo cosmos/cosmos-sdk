@@ -874,7 +874,7 @@ func TestCoinsIsAnyGT(t *testing.T) {
 
 func TestMarshalJSONCoins(t *testing.T) {
 	cdc := codec.New()
-	RegisterCodec(cdc)
+	RegisterLegacyAminoCodec(cdc)
 
 	testCases := []struct {
 		name      string

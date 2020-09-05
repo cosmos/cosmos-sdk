@@ -20,7 +20,7 @@ func Migrate(appState types.AppMap) types.AppMap {
 
 	v038Codec := codec.New()
 	cryptocodec.RegisterCrypto(v038Codec)
-	v038auth.RegisterCodec(v038Codec)
+	v038auth.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

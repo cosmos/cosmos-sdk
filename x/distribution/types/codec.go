@@ -8,9 +8,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// RegisterCodec registers the necessary x/distribution interfaces and concrete types
-// on the provided Amino codec. These types are used for Amino JSON serialization.
-func RegisterCodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec registers the necessary x/distribution interfaces and concrete types
+// on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 	cdc.RegisterConcrete(&MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValidatorCommission", nil)
 	cdc.RegisterConcrete(&MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
@@ -45,7 +45,7 @@ var (
 )
 
 func init() {
-	RegisterCodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
 
-// RegisterCodec registers the vesting interfaces and concrete types on the
-// provided Amino codec.
-func RegisterCodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
+// provided LegacyAmino codec. These types are used for Amino JSON serialization
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
@@ -46,6 +46,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 var amino = codec.New()
 
 func init() {
-	RegisterCodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }

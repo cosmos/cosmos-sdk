@@ -14,11 +14,11 @@ import (
 func Migrate(appState types.AppMap) types.AppMap {
 	v039Codec := codec.New()
 	cryptocodec.RegisterCrypto(v039Codec)
-	v039auth.RegisterCodec(v039Codec)
+	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := codec.New()
 	cryptocodec.RegisterCrypto(v040Codec)
-	v039auth.RegisterCodec(v040Codec)
+	v039auth.RegisterLegacyAminoCodec(v040Codec)
 
 	// remove balances from existing accounts
 	if appState[v039auth.ModuleName] != nil {

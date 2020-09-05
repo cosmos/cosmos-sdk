@@ -27,7 +27,7 @@ import (
 var moduleCdc = codec.New()
 
 func init() {
-	types.RegisterCodec(moduleCdc)
+	types.RegisterLegacyAminoCodec(moduleCdc)
 }
 
 var (
@@ -43,9 +43,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the upgrade types on the amino codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterRESTRoutes registers all REST query handlers

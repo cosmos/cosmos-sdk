@@ -6,9 +6,9 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
-// RegisterCodec registers the account interfaces and concrete types on the
-// provided Amino codec.
-func RegisterCodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
+// provided LegacyAmino codec. These types are used for Amino JSON serialization
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*AccountI)(nil), nil)
@@ -48,6 +48,6 @@ var (
 )
 
 func init() {
-	RegisterCodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 }

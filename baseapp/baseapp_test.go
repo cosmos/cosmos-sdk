@@ -82,7 +82,7 @@ func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register Tx, Msg
-	sdk.RegisterCodec(cdc)
+	sdk.RegisterLegacyAminoCodec(cdc)
 
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)

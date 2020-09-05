@@ -39,7 +39,7 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
-	mockAppModuleBasic1.EXPECT().RegisterCodec(gomock.Eq(legacyAmino)).Times(1)
+	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
@@ -47,7 +47,7 @@ func TestBasicManager(t *testing.T) {
 	mm := module.NewBasicManager(mockAppModuleBasic1)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
-	mm.RegisterCodec(legacyAmino)
+	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
 
 	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))

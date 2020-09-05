@@ -112,8 +112,8 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 
 func TestQueries(t *testing.T) {
 	cdc := codec.New()
-	types.RegisterCodec(cdc)
-	banktypes.RegisterCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
+	banktypes.RegisterLegacyAminoCodec(cdc)
 
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

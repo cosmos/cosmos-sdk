@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-// RegisterInterfaces registers the tendermint concrete evidence and client-related
+// RegisterInterfaces registers the tendermint concrete client-related
 // implementations and interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(

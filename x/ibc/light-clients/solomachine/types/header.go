@@ -5,20 +5,22 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.Header = Header{}
+var _ exported.Header = Header{}
 
 // ClientType defines that the Header is a Solo Machine.
-func (Header) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (Header) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetHeight returns the current sequence number as the height.
-func (h Header) GetHeight() uint64 {
-	return h.Sequence
+// Return clientexported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (h Header) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, h.Sequence)
 }
 
 // GetPubKey unmarshals the new public key into a tmcrypto.PubKey type.

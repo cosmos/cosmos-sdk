@@ -1,124 +1,83 @@
 package types_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
-func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
-	var (
-		clientState clientexported.ClientState
-		evidence    clientexported.Misbehaviour
-	)
+func (suite *SoloMachineTestSuite) TestMisbehaviour() {
+	misbehaviour := suite.solomachine.CreateMisbehaviour()
 
+	suite.Require().Equal(exported.SoloMachine, misbehaviour.ClientType())
+	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
+	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetEpochNumber())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetEpochHeight())
+}
+
+func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 	testCases := []struct {
-		name    string
-		setup   func()
-		expPass bool
+		name                 string
+		malleateMisbehaviour func(misbehaviour *types.Misbehaviour)
+		expPass              bool
 	}{
 		{
-			"valid misbehaviour evidence",
-			func() {
-				clientState = suite.solomachine.ClientState()
-				evidence = suite.solomachine.CreateEvidence()
-			},
+			"valid misbehaviour",
+			func(*types.Misbehaviour) {},
 			true,
 		},
 		{
-			"client is frozen",
-			func() {
-				cs := suite.solomachine.ClientState()
-				cs.FrozenSequence = 1
-				clientState = cs
-				evidence = suite.solomachine.CreateEvidence()
+			"invalid client ID",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.ClientId = "(badclientid)"
 			},
 			false,
 		},
 		{
-			"wrong client state type",
-			func() {
-				clientState = ibctmtypes.ClientState{}
-				evidence = suite.solomachine.CreateEvidence()
+			"sequence is zero",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.Sequence = 0
 			},
 			false,
 		},
 		{
-			"invalid evidence type",
-			func() {
-				clientState = suite.solomachine.ClientState()
-				evidence = ibctmtypes.Evidence{}
+			"signature one sig is empty",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureOne.Signature = []byte{}
 			},
 			false,
 		},
 		{
-			"invalid first signature",
-			func() {
-				clientState = suite.solomachine.ClientState()
-
-				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateEvidence()
-
-				msg := []byte("DATA ONE")
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
-
-				ev.SignatureOne.Signature = sig
-				ev.SignatureOne.Data = msg
-				evidence = ev
+			"signature two sig is empty",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureTwo.Signature = []byte{}
 			},
 			false,
 		},
 		{
-			"invalid second signature",
-			func() {
-				clientState = suite.solomachine.ClientState()
-
-				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateEvidence()
-
-				msg := []byte("DATA TWO")
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
-
-				ev.SignatureTwo.Signature = sig
-				ev.SignatureTwo.Data = msg
-				evidence = ev
+			"signature one data is empty",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureOne.Data = nil
 			},
 			false,
 		},
 		{
-			"signatures sign over different sequence",
-			func() {
-				clientState = suite.solomachine.ClientState()
-
-				// store in temp before assigning to interface type
-				ev := suite.solomachine.CreateEvidence()
-
-				// Signature One
-				msg := []byte("DATA ONE")
-				// sequence used is plus 1
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
-
-				ev.SignatureOne.Signature = sig
-				ev.SignatureOne.Data = msg
-
-				// Signature Two
-				msg = []byte("DATA TWO")
-				// sequence used is minus 1
-				data = append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence-1), msg...)
-				sig, err = suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
-
-				ev.SignatureTwo.Signature = sig
-				ev.SignatureTwo.Data = msg
-
-				evidence = ev
-
+			"signature two data is empty",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureTwo.Data = []byte{}
+			},
+			false,
+		},
+		{
+			"signatures are identical",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureTwo.Signature = misbehaviour.SignatureOne.Signature
+			},
+			false,
+		},
+		{
+			"data signed is identical",
+			func(misbehaviour *types.Misbehaviour) {
+				misbehaviour.SignatureTwo.Data = misbehaviour.SignatureOne.Data
 			},
 			false,
 		},
@@ -128,17 +87,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			// setup test
-			tc.setup()
 
-			clientState, err := clientState.CheckMisbehaviourAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), suite.store, evidence)
+			misbehaviour := suite.solomachine.CreateMisbehaviour()
+			tc.malleateMisbehaviour(misbehaviour)
+
+			err := misbehaviour.ValidateBasic()
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().True(clientState.IsFrozen(), "client not frozen")
 			} else {
 				suite.Require().Error(err)
-				suite.Require().Nil(clientState)
 			}
 		})
 	}

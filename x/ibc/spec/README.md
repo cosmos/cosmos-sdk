@@ -61,7 +61,8 @@ denomination trace path in order to support special characters and limit the max
 consensus states in order to verify their membership in the counterparty clients.
 * [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
 * [ADR 020 - Protocol Buffer Transaction Encoding](./../../docs/architecture/adr-020-protobuf-transaction-encoding.md): Client side migration to Protobuf.
-* [ADR 021 - Protocol Buffer Query Encoding](./../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 021 - Protocol Buffer Query Encoding](../../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 026 - IBC Client Recovery Mechanisms](../../../docs/architecture/adr-026-ibc-client-recovery-mechanisms.md): Allows IBC Clients to be recovered after freezing or expiry.
 
 ### SDK Modules
 

@@ -2,10 +2,9 @@ package types
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
@@ -31,7 +30,7 @@ func (c ConnectionEnd) GetClientID() string {
 }
 
 // GetCounterparty implements the Connection interface
-func (c ConnectionEnd) GetCounterparty() exported.CounterpartyI {
+func (c ConnectionEnd) GetCounterparty() exported.CounterpartyConnectionI {
 	return c.Counterparty
 }
 
@@ -58,7 +57,7 @@ func (c ConnectionEnd) ValidateBasic() error {
 	return c.Counterparty.ValidateBasic()
 }
 
-var _ exported.CounterpartyI = (*Counterparty)(nil)
+var _ exported.CounterpartyConnectionI = (*Counterparty)(nil)
 
 // NewCounterparty creates a new Counterparty instance.
 func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.MerklePrefix) Counterparty {
@@ -69,18 +68,18 @@ func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.Merkl
 	}
 }
 
-// GetClientID implements the CounterpartyI interface
+// GetClientID implements the CounterpartyConnectionI interface
 func (c Counterparty) GetClientID() string {
 	return c.ClientId
 }
 
-// GetConnectionID implements the CounterpartyI interface
+// GetConnectionID implements the CounterpartyConnectionI interface
 func (c Counterparty) GetConnectionID() string {
 	return c.ConnectionId
 }
 
-// GetPrefix implements the CounterpartyI interface
-func (c Counterparty) GetPrefix() commitmentexported.Prefix {
+// GetPrefix implements the CounterpartyConnectionI interface
+func (c Counterparty) GetPrefix() exported.Prefix {
 	return &c.Prefix
 }
 

@@ -535,6 +535,52 @@ func TestInitChainer(t *testing.T) {
 	require.Equal(t, value, res.Value)
 }
 
+func TestInitChain_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
+func TestBeginBlock_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+
+	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
+		app.BeginBlock(abci.RequestBeginBlock{
+			Header: tmproto.Header{
+				Height: 4,
+			},
+		})
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height: 3,
+		},
+	})
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
 // Simple tx with a list of Msgs.
 type txTest struct {
 	Msgs       []sdk.Msg
@@ -832,8 +878,8 @@ func TestDeliverTx(t *testing.T) {
 			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			events := res.GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, counterEvent("ante_handler", counter).ToABCIEvents()[0], events[0], "ante handler event")
-			require.Equal(t, counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents()[0], events[2], "msg handler update counter event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
 		}
 
 		app.EndBlock(abci.RequestEndBlock{})
@@ -1292,7 +1338,6 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-			return
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {

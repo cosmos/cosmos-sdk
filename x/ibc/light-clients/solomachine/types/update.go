@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid and updates
@@ -14,12 +14,12 @@ import (
 // - the currently registered public key did not provide the update signature
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
-) (clientexported.ClientState, clientexported.ConsensusState, error) {
-	smHeader, ok := header.(Header)
+	header exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
+	smHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
-			clienttypes.ErrInvalidHeader, "header type %T is not solomachine", header,
+			clienttypes.ErrInvalidHeader, "header type %T, expected  %T", header, &Header{},
 		)
 	}
 
@@ -32,7 +32,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 }
 
 // checkHeader checks if the Solo Machine update signature is valid.
-func checkHeader(clientState *ClientState, header Header) error {
+func checkHeader(clientState *ClientState, header *Header) error {
 	// assert update sequence is current sequence
 	if header.Sequence != clientState.ConsensusState.Sequence {
 		return sdkerrors.Wrapf(
@@ -51,7 +51,7 @@ func checkHeader(clientState *ClientState, header Header) error {
 }
 
 // update the consensus state to the new public key and an incremented sequence
-func update(clientState *ClientState, header Header) (*ClientState, *ConsensusState) {
+func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	consensusState := &ConsensusState{
 		// increment sequence number
 		Sequence:  clientState.ConsensusState.Sequence + 1,

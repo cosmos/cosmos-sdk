@@ -367,3 +367,7 @@ message TestUpdatedAuthInfo {
     bytes new_field_3 = 3;
     bytes new_field_1024 = 1024;
 }
+
+message TestRepeatedUints {
+    repeated uint64 nums = 1;
+}

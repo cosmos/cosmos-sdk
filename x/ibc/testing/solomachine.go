@@ -1,4 +1,4 @@
-package testing
+package ibctesting
 
 import (
 	"testing"
@@ -9,6 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -39,8 +41,9 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 	}
 }
 
+// default usage does not allow update after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ConsensusState())
+	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
 
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
@@ -54,9 +57,14 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	}
 }
 
+// GetHeight returns an exported.Height with Sequence as EpochHeight
+func (solo *Solomachine) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, solo.Sequence)
+}
+
 // CreateHeader generates a new private/public key pair and creates the
 // necessary signature to construct a valid solo machine header.
-func (solo *Solomachine) CreateHeader() solomachinetypes.Header {
+func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
 	newPrivKey := ed25519.GenPrivKey()
 	data := append(sdk.Uint64ToBigEndian(solo.Sequence), newPrivKey.PubKey().Bytes()...)
@@ -66,7 +74,7 @@ func (solo *Solomachine) CreateHeader() solomachinetypes.Header {
 	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
 	require.NoError(solo.t, err)
 
-	header := solomachinetypes.Header{
+	header := &solomachinetypes.Header{
 		Sequence:     solo.Sequence,
 		Signature:    signature,
 		NewPublicKey: publicKey,
@@ -80,9 +88,9 @@ func (solo *Solomachine) CreateHeader() solomachinetypes.Header {
 	return header
 }
 
-// CreateEvidence constructs testing evidence for the solo machine client
+// CreateMisbehaviour constructs testing misbehaviour for the solo machine client
 // by signing over two different data bytes at the same sequence.
-func (solo *Solomachine) CreateEvidence() solomachinetypes.Evidence {
+func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
@@ -102,7 +110,7 @@ func (solo *Solomachine) CreateEvidence() solomachinetypes.Evidence {
 		Data:      dataTwo,
 	}
 
-	return solomachinetypes.Evidence{
+	return &solomachinetypes.Misbehaviour{
 		ClientId:     solo.ClientID,
 		Sequence:     solo.Sequence,
 		SignatureOne: &signatureOne,

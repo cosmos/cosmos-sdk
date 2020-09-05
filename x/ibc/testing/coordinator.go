@@ -1,4 +1,4 @@
-package testing
+package ibctesting
 
 import (
 	"fmt"
@@ -10,10 +10,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
@@ -45,15 +44,15 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 }
 
 // Setup constructs a TM client, connection, and channel on both chains provided. It will
-// fails if any error occurs. The clientID's, TestConnections, and TestChannels are returned
-// for both chains.
+// fail if any error occurs. The clientID's, TestConnections, and TestChannels are returned
+// for both chains. The channels created are connected to the ibc-transfer application.
 func (coord *Coordinator) Setup(
-	chainA, chainB *TestChain,
+	chainA, chainB *TestChain, order channeltypes.Order,
 ) (string, string, *TestConnection, *TestConnection, TestChannel, TestChannel) {
-	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, clientexported.Tendermint)
+	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, exported.Tendermint)
 
 	// channels can also be referenced through the returned connections
-	channelA, channelB := coord.CreateChannel(chainA, chainB, connA, connB, channeltypes.UNORDERED)
+	channelA, channelB := coord.CreateMockChannels(chainA, chainB, connA, connB, order)
 
 	return clientA, clientB, connA, connB, channelA, channelB
 }
@@ -62,7 +61,7 @@ func (coord *Coordinator) Setup(
 // caller does not anticipate any errors.
 func (coord *Coordinator) SetupClients(
 	chainA, chainB *TestChain,
-	clientType clientexported.ClientType,
+	clientType exported.ClientType,
 ) (string, string) {
 
 	clientA, err := coord.CreateClient(chainA, chainB, clientType)
@@ -79,7 +78,7 @@ func (coord *Coordinator) SetupClients(
 // anticipate any errors.
 func (coord *Coordinator) SetupClientConnections(
 	chainA, chainB *TestChain,
-	clientType clientexported.ClientType,
+	clientType exported.ClientType,
 ) (string, string, *TestConnection, *TestConnection) {
 
 	clientA, clientB := coord.SetupClients(chainA, chainB, clientType)
@@ -92,14 +91,14 @@ func (coord *Coordinator) SetupClientConnections(
 // CreateClient creates a counterparty client on the source chain and returns the clientID.
 func (coord *Coordinator) CreateClient(
 	source, counterparty *TestChain,
-	clientType clientexported.ClientType,
+	clientType exported.ClientType,
 ) (clientID string, err error) {
 	coord.CommitBlock(source, counterparty)
 
 	clientID = source.NewClientID(counterparty.ChainID)
 
 	switch clientType {
-	case clientexported.Tendermint:
+	case exported.Tendermint:
 		err = source.CreateTMClient(counterparty, clientID)
 
 	default:
@@ -119,12 +118,12 @@ func (coord *Coordinator) CreateClient(
 func (coord *Coordinator) UpdateClient(
 	source, counterparty *TestChain,
 	clientID string,
-	clientType clientexported.ClientType,
+	clientType exported.ClientType,
 ) (err error) {
 	coord.CommitBlock(source, counterparty)
 
 	switch clientType {
-	case clientexported.Tendermint:
+	case exported.Tendermint:
 		err = source.UpdateTMClient(counterparty, clientID)
 
 	default:
@@ -164,16 +163,40 @@ func (coord *Coordinator) CreateConnection(
 	return connA, connB
 }
 
+// CreateMockChannels constructs and executes channel handshake messages to create OPEN
+// channels that use a mock application module that returns nil on all callbacks. This
+// function is expects the channels to be successfully opened otherwise testing will
+// fail.
+func (coord *Coordinator) CreateMockChannels(
+	chainA, chainB *TestChain,
+	connA, connB *TestConnection,
+	order channeltypes.Order,
+) (TestChannel, TestChannel) {
+	return coord.CreateChannel(chainA, chainB, connA, connB, MockPort, MockPort, order)
+}
+
+// CreateTransferChannels constructs and executes channel handshake messages to create OPEN
+// ibc-transfer channels on chainA and chainB. The function expects the channels to be
+// successfully opened otherwise testing will fail.
+func (coord *Coordinator) CreateTransferChannels(
+	chainA, chainB *TestChain,
+	connA, connB *TestConnection,
+	order channeltypes.Order,
+) (TestChannel, TestChannel) {
+	return coord.CreateChannel(chainA, chainB, connA, connB, TransferPort, TransferPort, order)
+}
+
 // CreateChannel constructs and executes channel handshake messages in order to create
 // OPEN channels on chainA and chainB. The function expects the channels to be successfully
 // opened otherwise testing will fail.
 func (coord *Coordinator) CreateChannel(
 	chainA, chainB *TestChain,
 	connA, connB *TestConnection,
+	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel) {
 
-	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, order)
+	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, sourcePortID, counterpartyPortID, order)
 	require.NoError(coord.t, err)
 
 	err = coord.ChanOpenTry(chainB, chainA, channelB, channelA, connB, order)
@@ -192,7 +215,7 @@ func (coord *Coordinator) CreateChannel(
 // counterparty client for the source chain.
 func (coord *Coordinator) SendPacket(
 	source, counterparty *TestChain,
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 	counterpartyClientID string,
 ) error {
 	if err := source.SendPacket(packet); err != nil {
@@ -203,45 +226,7 @@ func (coord *Coordinator) SendPacket(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, clientexported.Tendermint,
-	)
-}
-
-// PacketExecuted receives a packet through the channel keeper on the source chain and updates the
-// counterparty client for the source chain.
-func (coord *Coordinator) PacketExecuted(
-	source, counterparty *TestChain,
-	packet channelexported.PacketI,
-	counterpartyClientID string,
-) error {
-	if err := source.PacketExecuted(packet); err != nil {
-		return err
-	}
-	coord.IncrementTime()
-
-	// update source client on counterparty connection
-	return coord.UpdateClient(
-		counterparty, source,
-		counterpartyClientID, clientexported.Tendermint,
-	)
-}
-
-// AcknowledgementExecuted deletes the packet commitment with the given
-// packet sequence since the acknowledgement has been verified.
-func (coord *Coordinator) AcknowledgementExecuted(
-	source, counterparty *TestChain,
-	packet channelexported.PacketI,
-	counterpartyClientID string,
-) error {
-	if err := source.AcknowledgementExecuted(packet); err != nil {
-		return err
-	}
-	coord.IncrementTime()
-
-	// update source client on counterparty connection
-	return coord.UpdateClient(
-		counterparty, source,
-		counterpartyClientID, clientexported.Tendermint,
+		counterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -262,6 +247,25 @@ func (coord *Coordinator) RecvPacket(
 	return coord.SendMsgs(counterparty, source, sourceClient, []sdk.Msg{recvMsg})
 }
 
+// ReceiveExecuted receives a packet through the channel keeper on the source chain and updates the
+// counterparty client for the source chain.
+func (coord *Coordinator) ReceiveExecuted(
+	source, counterparty *TestChain,
+	packet exported.PacketI,
+	counterpartyClientID string,
+) error {
+	if err := source.ReceiveExecuted(packet); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	return coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, exported.Tendermint,
+	)
+}
+
 // AcknowledgePacket acknowledges on the source chain the packet received on
 // the counterparty chain and updates the client on the counterparty representing
 // the source chain.
@@ -278,6 +282,25 @@ func (coord *Coordinator) AcknowledgePacket(
 
 	ackMsg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, source.SenderAccount.GetAddress())
 	return coord.SendMsgs(source, counterparty, counterpartyClient, []sdk.Msg{ackMsg})
+}
+
+// AcknowledgementExecuted deletes the packet commitment with the given
+// packet sequence since the acknowledgement has been verified.
+func (coord *Coordinator) AcknowledgementExecuted(
+	source, counterparty *TestChain,
+	packet exported.PacketI,
+	counterpartyClientID string,
+) error {
+	if err := source.AcknowledgementExecuted(packet); err != nil {
+		return err
+	}
+	coord.IncrementTime()
+
+	// update source client on counterparty connection
+	return coord.UpdateClient(
+		counterparty, source,
+		counterpartyClientID, exported.Tendermint,
+	)
 }
 
 // RelayPacket receives a channel packet on counterparty, queries the ack
@@ -314,7 +337,7 @@ func (coord *Coordinator) SendMsg(source, counterparty *TestChain, counterpartyC
 // SendMsgs delivers the provided messages to the chain. The counterparty
 // client is updated with the new source consensus state.
 func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterpartyClientID string, msgs []sdk.Msg) error {
-	if err := source.SendMsgs(msgs...); err != nil {
+	if err := source.sendMsgs(msgs...); err != nil {
 		return err
 	}
 
@@ -323,7 +346,7 @@ func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterparty
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, clientexported.Tendermint,
+		counterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -382,7 +405,7 @@ func (coord *Coordinator) ConnOpenInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, clientexported.Tendermint,
+		counterpartyClientID, exported.Tendermint,
 	); err != nil {
 		return sourceConnection, counterpartyConnection, err
 	}
@@ -405,7 +428,7 @@ func (coord *Coordinator) ConnOpenTry(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, clientexported.Tendermint,
+		counterpartyConnection.ClientID, exported.Tendermint,
 	)
 }
 
@@ -424,7 +447,7 @@ func (coord *Coordinator) ConnOpenAck(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, clientexported.Tendermint,
+		counterpartyConnection.ClientID, exported.Tendermint,
 	)
 }
 
@@ -442,7 +465,7 @@ func (coord *Coordinator) ConnOpenConfirm(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, clientexported.Tendermint,
+		counterpartyConnection.ClientID, exported.Tendermint,
 	)
 }
 
@@ -454,12 +477,14 @@ func (coord *Coordinator) ConnOpenConfirm(
 func (coord *Coordinator) ChanOpenInit(
 	source, counterparty *TestChain,
 	connection, counterpartyConnection *TestConnection,
+	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel, error) {
-	sourceChannel := connection.AddTestChannel()
-	counterpartyChannel := counterpartyConnection.AddTestChannel()
+	sourceChannel := connection.AddTestChannel(sourcePortID)
+	counterpartyChannel := counterpartyConnection.AddTestChannel(counterpartyPortID)
 
-	// create port capability
+	// NOTE: only creation of a capability for a transfer or mock port is supported
+	// Other applications must bind to the port in InitGenesis or modify this code.
 	source.CreatePortCapability(sourceChannel.PortID)
 	coord.IncrementTime()
 
@@ -472,7 +497,7 @@ func (coord *Coordinator) ChanOpenInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, clientexported.Tendermint,
+		counterpartyConnection.ClientID, exported.Tendermint,
 	); err != nil {
 		return sourceChannel, counterpartyChannel, err
 	}
@@ -498,7 +523,7 @@ func (coord *Coordinator) ChanOpenTry(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, clientexported.Tendermint,
+		connection.CounterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -517,7 +542,7 @@ func (coord *Coordinator) ChanOpenAck(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
+		sourceChannel.CounterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -536,7 +561,7 @@ func (coord *Coordinator) ChanOpenConfirm(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		sourceChannel.CounterpartyClientID, clientexported.Tendermint,
+		sourceChannel.CounterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -557,7 +582,7 @@ func (coord *Coordinator) ChanCloseInit(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		channel.CounterpartyClientID, clientexported.Tendermint,
+		channel.CounterpartyClientID, exported.Tendermint,
 	)
 }
 
@@ -576,6 +601,6 @@ func (coord *Coordinator) SetChannelClosed(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		testChannel.CounterpartyClientID, clientexported.Tendermint,
+		testChannel.CounterpartyClientID, exported.Tendermint,
 	)
 }

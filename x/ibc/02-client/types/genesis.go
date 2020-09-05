@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
@@ -88,7 +88,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Clients:          []IdentifiedClientState{},
 		ClientsConsensus: ClientsConsensusStates{},
-		CreateLocalhost:  false,
+		CreateLocalhost:  true,
 	}
 }
 

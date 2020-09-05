@@ -195,7 +195,7 @@ func (am AppModule) OnChanOpenInit(
 	version string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "invalid ordering: %s, expected %s", order, channeltypes.UNORDERED)
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channels, got  %s ", channeltypes.UNORDERED, order)
 	}
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)
@@ -229,7 +229,7 @@ func (am AppModule) OnChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "invalid ordering: %s, expected %s", order, channeltypes.UNORDERED)
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channels, got  %s ", channeltypes.UNORDERED, order)
 	}
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)

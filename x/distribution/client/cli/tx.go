@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -158,9 +158,18 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
-			msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
-			if err != nil {
-				return err
+			queryClient := types.NewQueryClient(clientCtx)
+			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr})
+
+			validators := delValsRes.Validators
+			// build multi-message transaction
+			msgs := make([]sdk.Msg, 0, len(validators))
+			for _, valAddr := range validators {
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+				if err := msg.ValidateBasic(); err != nil {
+					return err
+				}
+				msgs = append(msgs, msg)
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)

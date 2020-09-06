@@ -83,9 +83,9 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
-	//if cfg.API.Swagger {
-	s.registerSwaggerUI()
-	//}
+	if cfg.API.Swagger {
+		s.registerSwaggerUI()
+	}
 
 	if cfg.Telemetry.Enabled {
 		m, err := telemetry.New(cfg.Telemetry)
@@ -110,7 +110,6 @@ func (s *Server) Start(cfg config.Config) error {
 
 	s.registerGRPCRoutes()
 
-
 	s.listener = listener
 	var h http.Handler = s.Router
 
@@ -118,15 +117,6 @@ func (s *Server) Start(cfg config.Config) error {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
 		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
 	}
-
-	s.Router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		t, err := route.GetPathTemplate()
-		if err != nil {
-			return err
-		}
-		fmt.Println("route:", t)
-		return nil
-	})
 
 	s.logger.Info("starting API server...")
 	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
@@ -144,7 +134,7 @@ func (s *Server) registerSwaggerUI() {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	s.Router.Handle("/", staticServer)
+	s.Router.PathPrefix("/swagger").Handler(http.StripPrefix("/swagger", staticServer))
 }
 
 func (s *Server) registerGRPCRoutes() {

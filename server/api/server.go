@@ -134,7 +134,7 @@ func (s *Server) registerSwaggerUI() {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	s.Router.PathPrefix("/swagger").Handler(http.StripPrefix("/swagger", staticServer))
+	s.Router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 }
 
 func (s *Server) registerGRPCRoutes() {

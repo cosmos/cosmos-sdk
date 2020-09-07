@@ -14,7 +14,8 @@ var _ exported.GenesisBalance = (*Balance)(nil)
 
 // GetAddress returns the account address of the Balance object.
 func (b Balance) GetAddress() sdk.AccAddress {
-	return b.Address
+	addr1, _ := sdk.AccAddressFromBech32(b.Address)
+	return addr1
 }
 
 // GetAddress returns the account coins of the Balance object.
@@ -25,7 +26,9 @@ func (b Balance) GetCoins() sdk.Coins {
 // SanitizeGenesisAccounts sorts addresses and coin sets.
 func SanitizeGenesisBalances(balances []Balance) []Balance {
 	sort.Slice(balances, func(i, j int) bool {
-		return bytes.Compare(balances[i].Address.Bytes(), balances[j].Address.Bytes()) < 0
+		addr1, _ := sdk.AccAddressFromBech32(balances[i].Address)
+		addr2, _ := sdk.AccAddressFromBech32(balances[j].Address)
+		return bytes.Compare(addr1.Bytes(), addr2.Bytes()) < 0
 	})
 
 	for _, balance := range balances {

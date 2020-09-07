@@ -85,7 +85,12 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	}
 
 	for _, in := range inputs {
-		_, err := k.SubtractCoins(ctx, in.Address, in.Coins)
+		inAddress, err := sdk.AccAddressFromBech32(in.Address)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.SubtractCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -93,13 +98,17 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				sdk.EventTypeMessage,
-				sdk.NewAttribute(types.AttributeKeySender, in.Address.String()),
+				sdk.NewAttribute(types.AttributeKeySender, in.Address),
 			),
 		)
 	}
 
 	for _, out := range outputs {
-		_, err := k.AddCoins(ctx, out.Address, out.Coins)
+		outAddress, err := sdk.AccAddressFromBech32(out.Address)
+		if err != nil {
+			return err
+		}
+		_, err = k.AddCoins(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -107,7 +116,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address.String()),
+				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
@@ -116,10 +125,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		acc := k.ak.GetAccount(ctx, out.Address)
+		acc := k.ak.GetAccount(ctx, outAddress)
 		if acc == nil {
 			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.Address))
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
 		}
 	}
 

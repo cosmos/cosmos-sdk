@@ -32,7 +32,7 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	if err != nil {
 		return nil, err
 	}
-	return &MsgSubmitEvidence{Submitter: s, Evidence: any}, nil
+	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
 
 // Route returns the MsgSubmitEvidence's route.
@@ -43,8 +43,8 @@ func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {
-	if m.Submitter.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
+	if m.Submitter == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter)
 	}
 
 	evi := m.GetEvidence()
@@ -66,7 +66,12 @@ func (m MsgSubmitEvidence) GetSignBytes() []byte {
 
 // GetSigners returns the single expected signer for a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Submitter}
+	accAddr, err := sdk.AccAddressFromBech32(m.Submitter)
+	if err != nil {
+		return nil
+	}
+
+	return []sdk.AccAddress{accAddr}
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
@@ -78,7 +83,11 @@ func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {
 }
 
 func (m MsgSubmitEvidence) GetSubmitter() sdk.AccAddress {
-	return m.Submitter
+	accAddr, err := sdk.AccAddressFromBech32(m.Submitter)
+	if err != nil {
+		return nil
+	}
+	return accAddr
 }
 
 func (m MsgSubmitEvidence) UnpackInterfaces(ctx types.AnyUnpacker) error {

@@ -10,7 +10,7 @@ import (
 
 // NewVote creates a new Vote instance
 func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
-	return Vote{proposalID, voter, option}
+	return Vote{proposalID, voter.String(), option}
 }
 
 func (v Vote) String() string {

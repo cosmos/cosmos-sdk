@@ -25,7 +25,7 @@ var (
 // NewBaseAccount creates a new BaseAccount object
 func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
-		Address:       address,
+		Address:       address.String(),
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
@@ -43,13 +43,14 @@ func ProtoBaseAccount() AccountI {
 // NewBaseAccountWithAddress - returns a new base account with a given address
 func NewBaseAccountWithAddress(addr sdk.AccAddress) *BaseAccount {
 	return &BaseAccount{
-		Address: addr,
+		Address: addr.String(),
 	}
 }
 
 // GetAddress - Implements sdk.AccountI.
 func (acc BaseAccount) GetAddress() sdk.AccAddress {
-	return acc.Address
+	addr, _ := sdk.AccAddressFromBech32(acc.Address)
+	return addr
 }
 
 // SetAddress - Implements sdk.AccountI.
@@ -58,7 +59,7 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 		return errors.New("cannot override BaseAccount address")
 	}
 
-	acc.Address = addr
+	acc.Address = addr.String()
 	return nil
 }
 
@@ -107,8 +108,16 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
-	if len(acc.PubKey) != 0 && acc.Address != nil &&
-		!bytes.Equal(acc.GetPubKey().Address().Bytes(), acc.Address.Bytes()) {
+	if len(acc.PubKey) == 0 || acc.Address == "" {
+		return nil
+	}
+
+	accAddr, err := sdk.AccAddressFromBech32(acc.Address)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(acc.GetPubKey().Address().Bytes(), accAddr.Bytes()) {
 		return errors.New("account address and pubkey address do not match")
 	}
 
@@ -129,8 +138,12 @@ type baseAccountPretty struct {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
+	accAddr, err := sdk.AccAddressFromBech32(acc.Address)
+	if err != nil {
+		return nil, err
+	}
 	alias := baseAccountPretty{
-		Address:       acc.Address,
+		Address:       accAddr,
 		AccountNumber: acc.AccountNumber,
 		Sequence:      acc.Sequence,
 	}
@@ -222,7 +235,7 @@ func (ma ModuleAccount) Validate() error {
 		return errors.New("module account name cannot be blank")
 	}
 
-	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
+	if ma.Address != sdk.AccAddress(crypto.AddressHash([]byte(ma.Name))).String() {
 		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
 
@@ -245,8 +258,13 @@ func (ma ModuleAccount) String() string {
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
+	accAddr, err := sdk.AccAddressFromBech32(ma.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	bs, err := yaml.Marshal(moduleAccountPretty{
-		Address:       ma.Address,
+		Address:       accAddr,
 		PubKey:        "",
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,
@@ -263,8 +281,13 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
+	accAddr, err := sdk.AccAddressFromBech32(ma.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(moduleAccountPretty{
-		Address:       ma.Address,
+		Address:       accAddr,
 		PubKey:        "",
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,

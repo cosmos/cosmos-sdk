@@ -6,7 +6,7 @@ import (
 )
 
 func (suite *SoloMachineTestSuite) TestMisbehaviour() {
-	misbehaviour := suite.solomachine.CreateMisbehaviour()
+	misbehaviour := suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
 
 	suite.Require().Equal(exported.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
@@ -88,7 +88,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 
 		suite.Run(tc.name, func() {
 
-			misbehaviour := suite.solomachine.CreateMisbehaviour()
+			misbehaviour := suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
 			tc.malleateMisbehaviour(misbehaviour)
 
 			err := misbehaviour.ValidateBasic()

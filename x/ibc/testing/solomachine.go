@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -43,7 +44,8 @@ func NewSolomachine(t *testing.T, clientID, diversifier string) *Solomachine {
 	}
 }
 
-// ClientState returns a new solo machine ClientState instance
+// ClientState returns a new solo machine ClientState instance. Default usage does not allow update
+// after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
@@ -96,11 +98,19 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 
 // CreateMisbehaviour constructs testing misbehaviour for the solo machine client
 // by signing over two different data bytes at the same sequence.
-func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
+func (solo *Solomachine) CreateMisbehaviour(cdc codec.BinaryMarshaler) *solomachinetypes.Misbehaviour {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
-	sig, err := solo.PrivateKey.Sign(append(sdk.Uint64ToBigEndian(solo.Sequence), dataOne...))
+	signBytes := &solomachinetypes.SignBytes{
+		Sequence: solo.Sequence,
+		Data:     dataOne,
+	}
+
+	signBz, err := cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	sig, err := solo.PrivateKey.Sign(signBz)
 	require.NoError(solo.t, err)
 
 	signatureOne := solomachinetypes.SignatureAndData{
@@ -108,7 +118,15 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Data:      dataOne,
 	}
 
-	sig, err = solo.PrivateKey.Sign(append(sdk.Uint64ToBigEndian(solo.Sequence), dataTwo...))
+	signBytes = &solomachinetypes.SignBytes{
+		Sequence: solo.Sequence,
+		Data:     dataTwo,
+	}
+
+	signBz, err = cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	sig, err = solo.PrivateKey.Sign(signBz)
 	require.NoError(solo.t, err)
 
 	signatureTwo := solomachinetypes.SignatureAndData{

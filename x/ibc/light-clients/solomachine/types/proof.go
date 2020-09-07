@@ -4,7 +4,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -23,14 +22,14 @@ func VerifySignature(pubKey crypto.PubKey, data, signature []byte) error {
 	return nil
 }
 
-// EvidenceSignBytes returns the sign bytes for verification of misbehaviour.
-//
-// Format: {sequence}{data}
-func EvidenceSignBytes(sequence uint64, data []byte) []byte {
-	return append(
-		sdk.Uint64ToBigEndian(sequence),
-		data...,
-	)
+// MisbehaviourSignBytes returns the sign bytes for verification of misbehaviour.
+func MisbehaviourSignBytes(cdc codec.BinaryMarshaler, sequence uint64, data []byte) ([]byte, error) {
+	signBytes := &SignBytes{
+		Sequence: sequence,
+		Data:     data,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
 }
 
 // HeaderSignBytes returns the sign bytes for verification of misbehaviour.
@@ -51,7 +50,7 @@ func HeaderSignBytes(
 	signBytes := &SignBytes{
 		Sequence:    header.Sequence,
 		Timestamp:   header.Timestamp,
-		Diversifier: header.NewDiversifier, // TODO: double check if it needs to be passed from current consensus state
+		Diversifier: header.NewDiversifier,
 		Data:        dataBz,
 	}
 

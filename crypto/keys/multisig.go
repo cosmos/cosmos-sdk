@@ -76,11 +76,11 @@ func (m *MultisigThresholdPubKey) VerifyMultisignature(getSignBytes multisig.Get
 	return nil
 }
 
-// VerifySignature implements crypto.PubKey VerifySignature method
+// VerifySignature implements crypto.PubKey VerifySignature method,
+// it panics because it can't handle MultiSignatureData
+// cf. https://github.com/cosmos/cosmos-sdk/issues/7109#issuecomment-686329936
 func (m *MultisigThresholdPubKey) VerifySignature(msg []byte, sig []byte) bool {
-	// TODO
-	// which type is expected in sig?
-	return false
+	panic("not implemented")
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method

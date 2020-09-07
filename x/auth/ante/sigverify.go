@@ -207,11 +207,17 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
-			return ctx, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
-			)
+		// When using Amino StdSignatures, we actually don't have the Sequence in
+		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
+		// cannot check sequence directly, and must do it via signature
+		// verification.
+		if !sig.SkipSequenceCheck {
+			if sig.Sequence != acc.GetSequence() {
+				return ctx, sdkerrors.Wrapf(
+					sdkerrors.ErrWrongSequence,
+					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+				)
+			}
 		}
 
 		// retrieve signer data
@@ -230,9 +236,14 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !simulate {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
-				return ctx, sdkerrors.Wrapf(
-					sdkerrors.ErrUnauthorized,
-					"signature verification failed; please verify account number (%d) and chain-id (%s)", acc.GetAccountNumber(), ctx.ChainID())
+				var errMsg string
+				if sig.SkipSequenceCheck {
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+				} else {
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
+				}
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+
 			}
 		}
 	}

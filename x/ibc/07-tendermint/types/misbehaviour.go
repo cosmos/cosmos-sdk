@@ -10,13 +10,13 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
-	_ clientexported.Misbehaviour = Misbehaviour{}
+	_ exported.Misbehaviour = Misbehaviour{}
 )
 
 // NewMisbehaviour creates a new Misbehaviour instance.
@@ -31,8 +31,8 @@ func NewMisbehaviour(clientID, chainID string, header1, header2 *Header) *Misbeh
 }
 
 // ClientType is Tendermint light client
-func (misbehaviour Misbehaviour) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
+func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
+	return exported.Tendermint
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
@@ -53,8 +53,8 @@ func (misbehaviour Misbehaviour) String() string {
 // GetHeight returns the height at which misbehaviour occurred
 //
 // NOTE: assumes that misbehaviour headers have the same height
-func (misbehaviour Misbehaviour) GetHeight() uint64 {
-	return uint64(math.Min(float64(misbehaviour.Header1.GetHeight()), float64(misbehaviour.Header2.GetHeight())))
+func (misbehaviour Misbehaviour) GetHeight() exported.Height {
+	return misbehaviour.Header1.GetHeight()
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the

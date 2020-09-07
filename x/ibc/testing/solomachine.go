@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/std"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
@@ -20,6 +19,7 @@ import (
 type Solomachine struct {
 	t *testing.T
 
+	cdc         codec.BinaryMarshaler
 	ClientID    string
 	PrivateKey  crypto.PrivKey
 	PublicKey   crypto.PubKey
@@ -30,11 +30,12 @@ type Solomachine struct {
 
 // NewSolomachine returns a new solomachine instance with a generated private/public
 // key pair and a sequence starting at 1.
-func NewSolomachine(t *testing.T, clientID, diversifier string) *Solomachine {
+func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string) *Solomachine {
 	privKey := ed25519.GenPrivKey()
 
 	return &Solomachine{
 		t:           t,
+		cdc:         cdc,
 		ClientID:    clientID,
 		PrivateKey:  privKey,
 		PublicKey:   privKey.PubKey(),
@@ -73,11 +74,29 @@ func (solo *Solomachine) GetHeight() exported.Height {
 func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
 	newPrivKey := ed25519.GenPrivKey()
-	data := append(sdk.Uint64ToBigEndian(solo.Sequence), newPrivKey.PubKey().Bytes()...)
-	signature, err := solo.PrivateKey.Sign(data)
-	require.NoError(solo.t, err)
 
 	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
+	require.NoError(solo.t, err)
+
+	data := &solomachinetypes.HeaderData{
+		NewPubKey:      publicKey,
+		NewDiversifier: solo.Diversifier,
+	}
+
+	dataBz, err := solo.cdc.MarshalBinaryBare(data)
+	require.NoError(solo.t, err)
+
+	signBytes := &solomachinetypes.SignBytes{
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataBz,
+	}
+
+	signBz, err := solo.cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	signature, err := solo.PrivateKey.Sign(signBz)
 	require.NoError(solo.t, err)
 
 	header := &solomachinetypes.Header{
@@ -98,16 +117,18 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 
 // CreateMisbehaviour constructs testing misbehaviour for the solo machine client
 // by signing over two different data bytes at the same sequence.
-func (solo *Solomachine) CreateMisbehaviour(cdc codec.BinaryMarshaler) *solomachinetypes.Misbehaviour {
+func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
 	signBytes := &solomachinetypes.SignBytes{
-		Sequence: solo.Sequence,
-		Data:     dataOne,
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataOne,
 	}
 
-	signBz, err := cdc.MarshalBinaryBare(signBytes)
+	signBz, err := solo.cdc.MarshalBinaryBare(signBytes)
 	require.NoError(solo.t, err)
 
 	sig, err := solo.PrivateKey.Sign(signBz)
@@ -119,11 +140,13 @@ func (solo *Solomachine) CreateMisbehaviour(cdc codec.BinaryMarshaler) *solomach
 	}
 
 	signBytes = &solomachinetypes.SignBytes{
-		Sequence: solo.Sequence,
-		Data:     dataTwo,
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataTwo,
 	}
 
-	signBz, err = cdc.MarshalBinaryBare(signBytes)
+	signBz, err = solo.cdc.MarshalBinaryBare(signBytes)
 	require.NoError(solo.t, err)
 
 	sig, err = solo.PrivateKey.Sign(signBz)

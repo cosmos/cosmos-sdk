@@ -46,7 +46,12 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloMisbehaviour *Misbehaviour) error {
 	pubKey := clientState.ConsensusState.GetPubKey()
 
-	data, err := MisbehaviourSignBytes(cdc, soloMisbehaviour.Sequence, soloMisbehaviour.SignatureOne.Data)
+	data, err := MisbehaviourSignBytes(
+		cdc,
+		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
+		clientState.ConsensusState.Diversifier,
+		soloMisbehaviour.SignatureOne.Data,
+	)
 	if err != nil {
 		return err
 	}
@@ -56,7 +61,12 @@ func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloM
 		return sdkerrors.Wrap(err, "misbehaviour signature one failed to be verified")
 	}
 
-	data, err = MisbehaviourSignBytes(cdc, soloMisbehaviour.Sequence, soloMisbehaviour.SignatureTwo.Data)
+	data, err = MisbehaviourSignBytes(
+		cdc,
+		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
+		clientState.ConsensusState.Diversifier,
+		soloMisbehaviour.SignatureTwo.Data,
+	)
 	if err != nil {
 		return err
 	}

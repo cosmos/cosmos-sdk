@@ -21,7 +21,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"valid misbehaviour",
 			func() {
 				clientState = suite.solomachine.ClientState()
-				misbehaviour = suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			true,
 		},
@@ -31,7 +31,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				cs := suite.solomachine.ClientState()
 				cs.FrozenSequence = 1
 				clientState = cs
-				misbehaviour = suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,
 		},
@@ -39,7 +39,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"wrong client state type",
 			func() {
 				clientState = &ibctmtypes.ClientState{}
-				misbehaviour = suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,
 		},
@@ -57,7 +57,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				m := suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA ONE")
 				signBytes := &types.SignBytes{
@@ -83,7 +83,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				m := suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA TWO")
 				signBytes := &types.SignBytes{
@@ -109,7 +109,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				clientState = suite.solomachine.ClientState()
 
 				// store in temp before assigning to interface type
-				m := suite.solomachine.CreateMisbehaviour(suite.chainA.Codec)
+				m := suite.solomachine.CreateMisbehaviour()
 
 				// Signature One
 				msg := []byte("DATA ONE")

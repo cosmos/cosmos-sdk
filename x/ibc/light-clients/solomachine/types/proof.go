@@ -23,10 +23,16 @@ func VerifySignature(pubKey crypto.PubKey, data, signature []byte) error {
 }
 
 // MisbehaviourSignBytes returns the sign bytes for verification of misbehaviour.
-func MisbehaviourSignBytes(cdc codec.BinaryMarshaler, sequence uint64, data []byte) ([]byte, error) {
+func MisbehaviourSignBytes(
+	cdc codec.BinaryMarshaler,
+	sequence, timestamp uint64,
+	diversifier string,
+	data []byte) ([]byte, error) {
 	signBytes := &SignBytes{
-		Sequence: sequence,
-		Data:     data,
+		Sequence:    sequence,
+		Timestamp:   timestamp,
+		Diversifier: diversifier,
+		Data:        data,
 	}
 
 	return cdc.MarshalBinaryBare(signBytes)

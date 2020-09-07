@@ -46,7 +46,7 @@ message Deposit {
   option (gogoproto.equal) = false;
 
   uint64   proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string    depositor   = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -117,7 +117,7 @@ message Vote {
   option (gogoproto.equal) = false;
 
   uint64     proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string     voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string     voter       = 2;
   VoteOption option      = 3;
 }
 

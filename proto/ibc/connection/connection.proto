@@ -21,8 +21,7 @@ message MsgConnectionOpenInit {
     (gogoproto.moretags) = "yaml:\"connection_id\""
   ];
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  string signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 4;
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
@@ -58,8 +57,7 @@ message MsgConnectionOpenTry {
     (gogoproto.moretags) = "yaml:\"consensus_height\"",
     (gogoproto.nullable) = false
   ];
-  string signer = 11
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 11;
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
@@ -90,8 +88,7 @@ message MsgConnectionOpenAck {
     (gogoproto.moretags) = "yaml:\"consensus_height\"",
     (gogoproto.nullable) = false
   ];
-  string signer = 9
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 9;
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
@@ -109,8 +106,7 @@ message MsgConnectionOpenConfirm {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 4;
 }
 
 // ICS03 - Connection Data Structures as defined in

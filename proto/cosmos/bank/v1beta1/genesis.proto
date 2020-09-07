@@ -39,7 +39,7 @@ message Balance {
   option (gogoproto.goproto_getters)  = false;
 
   // address is the address of the balance holder.
-  string address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string address = 1;
 
   // coins defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin coins = 2 [

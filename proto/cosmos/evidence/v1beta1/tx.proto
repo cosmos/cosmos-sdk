@@ -14,6 +14,6 @@ message MsgSubmitEvidence {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string submitter = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string submitter = 1;
   google.protobuf.Any evidence = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
 }

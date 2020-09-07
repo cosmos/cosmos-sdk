@@ -21,7 +21,7 @@ message MsgTransfer {
   // the tokens to be transferred
   cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
-  string sender = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string sender = 4;
   // the recipient address on the destination chain
   string receiver = 5;
   // Timeout height relative to the current block height.

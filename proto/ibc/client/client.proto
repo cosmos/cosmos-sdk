@@ -56,8 +56,7 @@ message MsgCreateClient {
   google.protobuf.Any consensus_state = 3
       [(gogoproto.moretags) = "yaml:\"consensus_state\""];
   // signer address
-  string signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 4;
 }
 
 // MsgUpdateClient defines an sdk.Msg to update a IBC client state using
@@ -71,8 +70,7 @@ message MsgUpdateClient {
   // header to update the light client
   google.protobuf.Any header = 2;
   // signer address
-  string signer = 3
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 3;
 }
 
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
@@ -86,8 +84,7 @@ message MsgSubmitMisbehaviour {
   // misbehaviour used for freezing the light client
   google.protobuf.Any misbehaviour = 2;
   // signer address
-  string signer = 3
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 3;
 }
 
 // Height is a monotonically increasing data type

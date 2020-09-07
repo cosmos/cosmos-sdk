@@ -62,7 +62,7 @@ message TestAnyResponse {
 
 // msg type for testing
 message TestMsg {
-  repeated bytes signers = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated string signers = 1;
 }
 
 // bad MultiSignature with extra fields

@@ -15,8 +15,7 @@ message MsgChannelOpenInit {
   string  port_id    = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   string  channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
   Channel channel    = 3 [(gogoproto.nullable) = false];
-  string   signer     = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer     = 4;
 }
 
 // MsgChannelOpenInit  defines a msg sent by a Relayer to try to open a channel
@@ -35,8 +34,7 @@ message MsgChannelOpenTry {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string  signer       = 7
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer       = 7;
 }
 
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -54,8 +52,7 @@ message MsgChannelOpenAck {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string signer       = 6
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer       = 6;
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to
@@ -71,8 +68,7 @@ message MsgChannelOpenConfirm {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string signer       = 5
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer       = 5;
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
@@ -83,8 +79,7 @@ message MsgChannelCloseInit {
 
   string port_id    = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  string  signer     = 3
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer     = 3;
 }
 
 // MsgChannelCloseConfirm defines a msg sent by a Relayer to Chain B
@@ -100,8 +95,7 @@ message MsgChannelCloseConfirm {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string  signer       = 5
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer       = 5;
 }
 
 // MsgRecvPacket receives incoming IBC packet
@@ -115,8 +109,7 @@ message MsgRecvPacket {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string  signer       = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer       = 4;
 }
 
 // MsgTimeout receives timed-out packet
@@ -132,8 +125,7 @@ message MsgTimeout {
   ];
   uint64 next_sequence_recv = 4
       [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  string signer = 5
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 5;
 }
 
 // MsgTimeoutOnClose timed-out packet upon counterparty channel closure.
@@ -150,8 +142,7 @@ message MsgTimeoutOnClose {
   ];
   uint64 next_sequence_recv = 5
       [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  string signer = 6
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 6;
 }
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
@@ -166,8 +157,7 @@ message MsgAcknowledgement {
     (gogoproto.moretags) = "yaml:\"proof_height\"",
     (gogoproto.nullable) = false
   ];
-  string  signer          = 5
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string  signer          = 5;
 }
 
 // Channel defines pipeline for exactly-once packet delivery between specific

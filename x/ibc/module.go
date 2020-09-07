@@ -1,12 +1,14 @@
 package ibc
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,6 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
@@ -62,6 +67,13 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes does nothing. IBC does not support legacy REST routes.
 func (AppModuleBasic) RegisterRESTRoutes(client.Context, *mux.Router) {}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc module.
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	clienttypes.RegisterQueryHandlerClient(context.Background(), mux, clienttypes.NewQueryClient(clientCtx))
+	connectiontypes.RegisterQueryHandlerClient(context.Background(), mux, connectiontypes.NewQueryClient(clientCtx))
+	channeltypes.RegisterQueryHandlerClient(context.Background(), mux, channeltypes.NewQueryClient(clientCtx))
+}
 
 // GetTxCmd returns the root tx command for the ibc module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -115,7 +127,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns nil. IBC does not support the legacy querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 

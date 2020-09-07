@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -310,8 +310,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithJSONMarshaler(encodingConfig.Amino). // amino used intentionally here
-		WithLegacyAmino(encodingConfig.Amino)    // amino used intentionally here
+		WithLegacyAmino(encodingConfig.Amino) // amino used intentionally here
 	// write bytes
 	w := httptest.NewRecorder()
 	bs := []byte("text string")

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 )
@@ -37,6 +38,8 @@ const (
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 	maxClockDrift  time.Duration = time.Second * 10
 )
+
+var clientHeight = clienttypes.NewHeight(0, 10)
 
 type IBCTestSuite struct {
 	suite.Suite

@@ -11,7 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
@@ -33,7 +33,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	}
 }
 
-func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryEvidenceRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -54,7 +54,7 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQueri
 	return res, nil
 }
 
-func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryAllEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryAllEvidenceParams
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)

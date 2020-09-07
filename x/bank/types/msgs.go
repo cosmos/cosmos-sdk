@@ -47,7 +47,7 @@ func (msg MsgSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -85,7 +85,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgMultiSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.

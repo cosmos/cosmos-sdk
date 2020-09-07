@@ -65,8 +65,6 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		response := DecodeResp(stdTx)
 
-		// NOTE: amino is set intentionally here, don't migrate it
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.LegacyAmino)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -49,7 +50,7 @@ func (k Keeper) SendTransfer(
 	token sdk.Coin,
 	sender sdk.AccAddress,
 	receiver string,
-	timeoutHeight,
+	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 ) error {
 

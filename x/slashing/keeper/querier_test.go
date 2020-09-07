@@ -19,7 +19,7 @@ func TestNewQuerier(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keeper.NewQuerier(app.SlashingKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(app.SlashingKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -37,7 +37,7 @@ func TestQueryParams(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
-	querier := keeper.NewQuerier(app.SlashingKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(app.SlashingKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
 		Path: "",

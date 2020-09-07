@@ -5,15 +5,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CommitPacket returns a packet commitment bytes. The commitment consists of:
-// hash(timeout_timestamp + timeout_height + data) from a given packet.
+// hash(timeout_timestamp + timeout_epoch + timeout_height + data) from a given packet.
 func CommitPacket(packet exported.PacketI) []byte {
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochNumber())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochHeight())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }
@@ -31,7 +33,7 @@ func NewPacket(
 	data []byte,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
-	timeoutHeight uint64, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 ) Packet {
 	return Packet{
 		Data:               data,
@@ -64,7 +66,7 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 func (p Packet) GetData() []byte { return p.Data }
 
 // GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutHeight() uint64 { return p.TimeoutHeight }
+func (p Packet) GetTimeoutHeight() exported.Height { return p.TimeoutHeight }
 
 // GetTimeoutTimestamp implements PacketI interface
 func (p Packet) GetTimeoutTimestamp() uint64 { return p.TimeoutTimestamp }
@@ -86,7 +88,7 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.TimeoutHeight == 0 && p.TimeoutTimestamp == 0 {
+	if p.TimeoutHeight.IsZero() && p.TimeoutTimestamp == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout height and packet timeout timestamp cannot both be 0")
 	}
 	if len(p.Data) == 0 {

@@ -50,7 +50,7 @@ func NewCreateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
-			legacyAmino := codec.New()
+			legacyAmino := codec.NewLegacyAmino()
 
 			var header *types.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {

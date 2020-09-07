@@ -56,7 +56,7 @@ func getBaseSimappWithCustomKeeper() (*codec.LegacyAmino, *simapp.SimApp, sdk.Co
 	)
 	app.StakingKeeper.SetParams(ctx, types.DefaultParams())
 
-	return codec.New(), app, ctx
+	return codec.NewLegacyAmino(), app, ctx
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs

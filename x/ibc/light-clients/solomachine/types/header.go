@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/std"
@@ -38,6 +40,14 @@ func (h Header) GetPubKey() tmcrypto.PubKey {
 func (h Header) ValidateBasic() error {
 	if h.Sequence == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "sequence number cannot be zero")
+	}
+
+	if h.Timestamp == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "timestamp cannot be zero")
+	}
+
+	if h.NewDiversifier != "" && strings.TrimSpace(h.NewDiversifier) == "" {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "diversifier cannot contain only spaces")
 	}
 
 	if len(h.Signature) == 0 {

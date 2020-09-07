@@ -454,6 +454,388 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryUnbondingDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubds types.QueryDelegatorUnbondingDelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+
+				s.Require().NoError(err)
+				s.Require().Len(ubds.UnbondingResponses, 1)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong validator address",
+			[]string{
+				val.Address.String(),
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryUnbondingDelegation()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubd types.UnbondingDelegation
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubd)
+				s.Require().NoError(err)
+				s.Require().Equal(ubd.DelegatorAddress, val.Address)
+				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress)
+				s.Require().Len(ubd.Entries, 1)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong validator address",
+			[]string{
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorUnbondingDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubds types.QueryValidatorUnbondingDelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+
+				s.Require().NoError(err)
+				s.Require().Len(ubds.UnbondingResponses, 1)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongdeladdr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryRedelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongdeladdr",
+				val.ValAddress.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong source validator address address",
+			[]string{
+				val.Address.String(),
+				"wrongSrcValAddress",
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong destination validator address address",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				"wrongDestValAddress",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryRedelegation()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong validator address",
+			[]string{
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorRedelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name  string
+		args  []string
+		error bool
+	}{
+		{
+			"wrong height",
+			[]string{
+				"-1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryHistoricalInfo()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.error {
+				s.Require().Error(err)
+			} else {
+				var historical_info types.HistoricalInfo
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &historical_info)
+				s.Require().NoError(err)
+				s.Require().NotNil(historical_info)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 	val := s.network.Validators[0]
 	testCases := []struct {
@@ -497,14 +879,20 @@ func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
 	}{
 		{
 			"with text",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
-			`bonded_tokens: "100000000"
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			`bonded_tokens: "200000000"
 not_bonded_tokens: "0"`,
 		},
 		{
 			"with json",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"not_bonded_tokens":"0","bonded_tokens":"100000000"}`,
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			`{"not_bonded_tokens":"0","bonded_tokens":"200000000"}`,
 		},
 	}
 	for _, tc := range testCases {

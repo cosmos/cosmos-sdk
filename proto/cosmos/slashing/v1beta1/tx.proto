@@ -10,8 +10,10 @@ import "gogoproto/gogo.proto";
 // them into the bonded validator set, so they can begin receiving provisions
 // and rewards again.
 message MsgUnjail {
-  bytes validator_addr = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+  option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = true;
+
+  string validator_addr = 1 [
     (gogoproto.moretags) = "yaml:\"address\"",
     (gogoproto.jsontag)  = "address"
   ];

@@ -15,11 +15,16 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	genState.Balances = types.SanitizeGenesisBalances(genState.Balances)
 	for _, balance := range genState.Balances {
-		if err := k.ValidateBalance(ctx, balance.Address); err != nil {
+		addr, err := sdk.AccAddressFromBech32(balance.Address)
+		if err != nil {
 			panic(err)
 		}
 
-		if err := k.SetBalances(ctx, balance.Address, balance.Coins); err != nil {
+		if err := k.ValidateBalance(ctx, addr); err != nil {
+			panic(err)
+		}
+
+		if err := k.SetBalances(ctx, addr, balance.Coins); err != nil {
 			panic(fmt.Errorf("error on setting balances %w", err))
 		}
 

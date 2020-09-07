@@ -35,7 +35,7 @@ message ValidatorOutstandingRewardsRecord {
 
   // validator_address is the address of the validator.
   string validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
@@ -55,7 +55,7 @@ message ValidatorAccumulatedCommissionRecord {
 
   // validator_address is the address of the validator.
   string validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
@@ -72,7 +72,7 @@ message ValidatorHistoricalRewardsRecord {
 
   // validator_address is the address of the validator.
   string validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
@@ -89,8 +89,7 @@ message ValidatorCurrentRewardsRecord {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address is the address of the validator.
-  bytes validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+  string validator_address = 1 [
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
@@ -111,7 +110,7 @@ message DelegatorStartingInfoRecord {
 
   // validator_address is the address of the validator.
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
@@ -127,7 +126,7 @@ message ValidatorSlashEventRecord {
 
   // validator_address is the address of the validator.
   string validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   // height defines the block height at which the slash event occured.

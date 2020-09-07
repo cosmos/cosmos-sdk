@@ -103,8 +103,11 @@ message QueryValidatorCommissionResponse {
 // QueryValidatorSlashesRequest is the request type for the
 // Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesRequest {
+  option (gogoproto.goproto_getters)         = false;
+  option (gogoproto.goproto_stringer)        = false;
+
   // validator_address defines the validator address to query for.
-  bytes validator_address = 1;
+  string validator_address = 1;
   // starting_height defines the optional starting height to query the slashes.
   uint64 starting_height = 2;
   // starting_height defines the optional ending height to query the slashes.

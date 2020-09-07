@@ -46,7 +46,7 @@ message LastValidatorPower {
   option (gogoproto.goproto_getters) = false;
 
   // address is the address of the validator.
-  string address = 1 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress" ];
+  string address = 1;
 
   // power defines the power of the validator.
   int64 power = 2;

@@ -34,7 +34,7 @@ message MsgWithdrawDelegatorReward {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }
@@ -46,7 +46,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.goproto_getters) = false;
 
   string validator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }

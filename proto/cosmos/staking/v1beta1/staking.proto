@@ -73,7 +73,7 @@ message Validator {
   option (gogoproto.goproto_getters)  = false;
 
   string operator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"operator_address\""
   ];
   string consensus_pubkey = 2 [ (gogoproto.moretags) = "yaml:\"consensus_pubkey\"" ];
@@ -102,7 +102,7 @@ message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
-  repeated string addresses = 1 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress" ];
+  repeated string addresses = 1;
 }
 
 // DVPair is struct that just has a delegator-validator pair with no other data.
@@ -118,7 +118,7 @@ message DVPair {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }
@@ -142,11 +142,11 @@ message DVVTriplet {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
 }
@@ -169,7 +169,7 @@ message Delegation {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   string shares = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
@@ -187,7 +187,7 @@ message UnbondingDelegation {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   repeated UnbondingDelegationEntry entries = 3 [ (gogoproto.nullable) = false ]; // unbonding delegation entries
@@ -239,11 +239,11 @@ message Redelegation {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
   repeated RedelegationEntry entries = 4 [ (gogoproto.nullable) = false ]; // redelegation entries

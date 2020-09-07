@@ -24,7 +24,7 @@ message MsgCreateValidator {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 5 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   string                   pubkey = 6;
@@ -38,7 +38,7 @@ message MsgEditValidator {
 
   Description description       = 1 [ (gogoproto.nullable) = false ];
   string      validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"address\""
   ];
 
@@ -68,7 +68,7 @@ message MsgDelegate {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
@@ -85,11 +85,11 @@ message MsgBeginRedelegate {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = false ];
@@ -106,7 +106,7 @@ message MsgUndelegate {
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
+
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];

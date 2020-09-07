@@ -14,8 +14,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types";
 service Query {
   // Connection queries an IBC connection end.
   rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse) {
-    option (google.api.http).get =
-        "/ibc/connection/v1beta1/connections/{connection_id}";
+    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}";
   }
 
   // Connections queries all the IBC connections of a chain.
@@ -25,27 +24,21 @@ service Query {
 
   // ClientConnections queries the connection paths associated with a client
   // state.
-  rpc ClientConnections(QueryClientConnectionsRequest)
-      returns (QueryClientConnectionsResponse) {
-    option (google.api.http).get =
-        "/ibc/connection/v1beta1/client_connections/{client_id}";
+  rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse) {
+    option (google.api.http).get = "/ibc/connection/v1beta1/client_connections/{client_id}";
   }
 
   // ConnectionClientState queries the client state associated with the
   // connection.
-  rpc ConnectionClientState(QueryConnectionClientStateRequest)
-      returns (QueryConnectionClientStateResponse) {
-    option (google.api.http).get =
-        "/ibc/connection/v1beta1/connections/{connection_id}/client_state";
+  rpc ConnectionClientState(QueryConnectionClientStateRequest) returns (QueryConnectionClientStateResponse) {
+    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/client_state";
   }
 
   // ConnectionConsensusState queries the consensus state associated with the
   // connection.
-  rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest)
-      returns (QueryConnectionConsensusStateResponse) {
-    option (google.api.http).get =
-        "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/"
-        "epoch/{epoch_number}/height/{epoch_height}";
+  rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse) {
+    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/"
+                                   "epoch/{epoch_number}/height/{epoch_height}";
   }
 }
 
@@ -72,9 +65,7 @@ message QueryConnectionResponse {
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
 // method
-message QueryConnectionsRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
+message QueryConnectionsRequest { cosmos.base.query.v1beta1.PageRequest pagination = 1; }
 
 // QueryConnectionsResponse is the response type for the Query/Connections RPC
 // method.

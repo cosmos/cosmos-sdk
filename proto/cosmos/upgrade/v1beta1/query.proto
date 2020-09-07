@@ -15,8 +15,7 @@ service Query {
 
   // AppliedPlan queries a previously applied upgrade plan by its name.
   rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {
-    option (google.api.http).get =
-        "/cosmos/upgrade/v1beta1/applied_plan/{name}";
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/applied_plan/{name}";
   }
 }
 

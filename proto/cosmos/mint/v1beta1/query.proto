@@ -20,8 +20,7 @@ service Query {
   }
 
   // AnnualProvisions current minting annual provisions value.
-  rpc AnnualProvisions(QueryAnnualProvisionsRequest)
-      returns (QueryAnnualProvisionsResponse) {
+  rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
     option (google.api.http).get = "/cosmos/mint/v1beta1/annual_provisions";
   }
 }
@@ -42,10 +41,8 @@ message QueryInflationRequest {}
 // method.
 message QueryInflationResponse {
   // inflation is the current minting inflation value.
-  bytes inflation = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
+  bytes inflation = 1
+      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
 }
 
 // QueryAnnualProvisionsRequest is the request type for the
@@ -56,8 +53,6 @@ message QueryAnnualProvisionsRequest {}
 // Query/AnnualProvisions RPC method.
 message QueryAnnualProvisionsResponse {
   // annual_provisions is the current minting annual provisions value.
-  bytes annual_provisions = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
+  bytes annual_provisions = 1
+      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
 }

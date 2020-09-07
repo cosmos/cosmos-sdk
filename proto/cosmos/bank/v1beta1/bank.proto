@@ -10,10 +10,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 // Params defines the parameters for the bank module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated SendEnabled send_enabled = 1
-      [ (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\"" ];
-  bool default_send_enabled = 2
-      [ (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\"" ];
+  repeated SendEnabled send_enabled = 1 [ (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\"" ];
+  bool default_send_enabled = 2 [ (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\"" ];
 }
 
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is
@@ -31,10 +29,8 @@ message Input {
   option (gogoproto.goproto_getters) = false;
 
   string address = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 2
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
 
 // Output models transaction outputs.
@@ -43,10 +39,8 @@ message Output {
   option (gogoproto.goproto_getters) = false;
 
   string address = 1;
-  repeated cosmos.base.v1beta1.Coin coins = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin coins = 2
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
 
 // Supply represents a struct that passively keeps track of the total supply
@@ -56,13 +50,10 @@ message Supply {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
 
-  option (cosmos_proto.implements_interface) =
-      "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
+  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
 
-  repeated cosmos.base.v1beta1.Coin total = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin total = 1
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
 
 // DenomUnit represents a struct that describes a given

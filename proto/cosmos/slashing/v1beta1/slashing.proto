@@ -20,23 +20,18 @@ message ValidatorSigningInfo {
   // index offset into signed block bit array
   int64 index_offset = 3 [ (gogoproto.moretags) = "yaml:\"index_offset\"" ];
   // timestamp validator cannot be unjailed until
-  google.protobuf.Timestamp jailed_until = 4 [
-    (gogoproto.moretags) = "yaml:\"jailed_until\"",
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false
-  ];
+  google.protobuf.Timestamp jailed_until = 4
+      [ (gogoproto.moretags) = "yaml:\"jailed_until\"", (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
   // whether or not a validator has been tombstoned (killed out of validator
   // set)
   bool tombstoned = 5;
   // missed blocks counter (to avoid scanning the array every time)
-  int64 missed_blocks_counter = 6
-      [ (gogoproto.moretags) = "yaml:\"missed_blocks_counter\"" ];
+  int64 missed_blocks_counter = 6 [ (gogoproto.moretags) = "yaml:\"missed_blocks_counter\"" ];
 }
 
 // Params represents the parameters used for by the slashing module.
 message Params {
-  int64 signed_blocks_window = 1
-      [ (gogoproto.moretags) = "yaml:\"signed_blocks_window\"" ];
+  int64 signed_blocks_window = 1 [ (gogoproto.moretags) = "yaml:\"signed_blocks_window\"" ];
   bytes min_signed_per_window = 2 [
     (gogoproto.moretags) = "yaml:\"min_signed_per_window\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

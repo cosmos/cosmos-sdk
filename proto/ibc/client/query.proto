@@ -13,31 +13,25 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 service Query {
   // ClientState queries an IBC light client.
   rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse) {
-    option (google.api.http).get =
-        "/ibc/client/v1beta1/client_states/{client_id}";
+    option (google.api.http).get = "/ibc/client/v1beta1/client_states/{client_id}";
   }
 
   // ClientStates queries all the IBC light clients of a chain.
-  rpc ClientStates(QueryClientStatesRequest)
-      returns (QueryClientStatesResponse) {
+  rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/client_states";
   }
 
   // ConsensusState queries a consensus state associated with a client state at
   // a given height.
-  rpc ConsensusState(QueryConsensusStateRequest)
-      returns (QueryConsensusStateResponse) {
-    option (google.api.http).get =
-        "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/"
-        "height/{epoch_height}";
+  rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/"
+                                   "height/{epoch_height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given
   // client.
-  rpc ConsensusStates(QueryConsensusStatesRequest)
-      returns (QueryConsensusStatesResponse) {
-    option (google.api.http).get =
-        "/ibc/client/v1beta1/consensus_states/{client_id}";
+  rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
   }
 }
 

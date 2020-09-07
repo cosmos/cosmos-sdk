@@ -17,6 +17,5 @@ message GenesisState {
     (gogoproto.moretags) = "yaml:\"clients_consensus\""
   ];
   // create localhost on initialization
-  bool create_localhost = 3
-      [ (gogoproto.moretags) = "yaml:\"create_localhost\"" ];
+  bool create_localhost = 3 [ (gogoproto.moretags) = "yaml:\"create_localhost\"" ];
 }

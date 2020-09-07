@@ -27,13 +27,9 @@ message MsgChannelOpenTry {
   string port_id = 1 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
   string channel_id = 2 [ (gogoproto.moretags) = "yaml:\"channel_id\"" ];
   Channel channel = 3 [ (gogoproto.nullable) = false ];
-  string counterparty_version = 4
-      [ (gogoproto.moretags) = "yaml:\"counterparty_version\"" ];
+  string counterparty_version = 4 [ (gogoproto.moretags) = "yaml:\"counterparty_version\"" ];
   bytes proof_init = 5 [ (gogoproto.moretags) = "yaml:\"proof_init\"" ];
-  ibc.client.Height proof_height = 6 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 6 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 7;
 }
 
@@ -45,13 +41,9 @@ message MsgChannelOpenAck {
 
   string port_id = 1 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
   string channel_id = 2 [ (gogoproto.moretags) = "yaml:\"channel_id\"" ];
-  string counterparty_version = 3
-      [ (gogoproto.moretags) = "yaml:\"counterparty_version\"" ];
+  string counterparty_version = 3 [ (gogoproto.moretags) = "yaml:\"counterparty_version\"" ];
   bytes proof_try = 4 [ (gogoproto.moretags) = "yaml:\"proof_try\"" ];
-  ibc.client.Height proof_height = 5 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 5 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 6;
 }
 
@@ -64,10 +56,7 @@ message MsgChannelOpenConfirm {
   string port_id = 1 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
   string channel_id = 2 [ (gogoproto.moretags) = "yaml:\"channel_id\"" ];
   bytes proof_ack = 3 [ (gogoproto.moretags) = "yaml:\"proof_ack\"" ];
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 4 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 5;
 }
 
@@ -91,10 +80,7 @@ message MsgChannelCloseConfirm {
   string port_id = 1 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
   string channel_id = 2 [ (gogoproto.moretags) = "yaml:\"channel_id\"" ];
   bytes proof_init = 3 [ (gogoproto.moretags) = "yaml:\"proof_init\"" ];
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 4 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 5;
 }
 
@@ -105,10 +91,7 @@ message MsgRecvPacket {
 
   Packet packet = 1 [ (gogoproto.nullable) = false ];
   bytes proof = 2;
-  ibc.client.Height proof_height = 3 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 3 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 4;
 }
 
@@ -119,12 +102,8 @@ message MsgTimeout {
 
   Packet packet = 1 [ (gogoproto.nullable) = false ];
   bytes proof = 2;
-  ibc.client.Height proof_height = 3 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
-  uint64 next_sequence_recv = 4
-      [ (gogoproto.moretags) = "yaml:\"next_sequence_recv\"" ];
+  ibc.client.Height proof_height = 3 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
+  uint64 next_sequence_recv = 4 [ (gogoproto.moretags) = "yaml:\"next_sequence_recv\"" ];
   string signer = 5;
 }
 
@@ -136,12 +115,8 @@ message MsgTimeoutOnClose {
   Packet packet = 1 [ (gogoproto.nullable) = false ];
   bytes proof = 2;
   bytes proof_close = 3 [ (gogoproto.moretags) = "yaml:\"proof_close\"" ];
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
-  uint64 next_sequence_recv = 5
-      [ (gogoproto.moretags) = "yaml:\"next_sequence_recv\"" ];
+  ibc.client.Height proof_height = 4 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
+  uint64 next_sequence_recv = 5 [ (gogoproto.moretags) = "yaml:\"next_sequence_recv\"" ];
   string signer = 6;
 }
 
@@ -153,10 +128,7 @@ message MsgAcknowledgement {
   Packet packet = 1 [ (gogoproto.nullable) = false ];
   bytes acknowledgement = 2;
   bytes proof = 3;
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 4 [ (gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false ];
   string signer = 5;
 }
 
@@ -174,8 +146,7 @@ message Channel {
   Counterparty counterparty = 3 [ (gogoproto.nullable) = false ];
   // list of connection identifiers, in order, along which packets sent on this
   // channel will travel
-  repeated string connection_hops = 4
-      [ (gogoproto.moretags) = "yaml:\"connection_hops\"" ];
+  repeated string connection_hops = 4 [ (gogoproto.moretags) = "yaml:\"connection_hops\"" ];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
 }
@@ -193,8 +164,7 @@ message IdentifiedChannel {
   Counterparty counterparty = 3 [ (gogoproto.nullable) = false ];
   // list of connection identifiers, in order, along which packets sent on this
   // channel will travel
-  repeated string connection_hops = 4
-      [ (gogoproto.moretags) = "yaml:\"connection_hops\"" ];
+  repeated string connection_hops = 4 [ (gogoproto.moretags) = "yaml:\"connection_hops\"" ];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
   // port identifier
@@ -209,8 +179,7 @@ enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // Default State
-  STATE_UNINITIALIZED_UNSPECIFIED = 0
-      [ (gogoproto.enumvalue_customname) = "UNINITIALIZED" ];
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "UNINITIALIZED" ];
   // A channel has just started the opening handshake.
   STATE_INIT = 1 [ (gogoproto.enumvalue_customname) = "INIT" ];
   // A channel has acknowledged the handshake step on the counterparty chain.
@@ -257,22 +226,17 @@ message Packet {
   // identifies the port on the sending chain.
   string source_port = 2 [ (gogoproto.moretags) = "yaml:\"source_port\"" ];
   // identifies the channel end on the sending chain.
-  string source_channel = 3
-      [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
+  string source_channel = 3 [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
   // identifies the port on the receiving chain.
-  string destination_port = 4
-      [ (gogoproto.moretags) = "yaml:\"destination_port\"" ];
+  string destination_port = 4 [ (gogoproto.moretags) = "yaml:\"destination_port\"" ];
   // identifies the channel end on the receiving chain.
-  string destination_channel = 5
-      [ (gogoproto.moretags) = "yaml:\"destination_channel\"" ];
+  string destination_channel = 5 [ (gogoproto.moretags) = "yaml:\"destination_channel\"" ];
   // actual opaque bytes transferred directly to the application module
   bytes data = 6;
   // block height after which the packet times out
-  uint64 timeout_height = 7
-      [ (gogoproto.moretags) = "yaml:\"timeout_height\"" ];
+  uint64 timeout_height = 7 [ (gogoproto.moretags) = "yaml:\"timeout_height\"" ];
   // block timestamp (in nanoseconds) after which the packet times out
-  uint64 timeout_timestamp = 8
-      [ (gogoproto.moretags) = "yaml:\"timeout_timestamp\"" ];
+  uint64 timeout_timestamp = 8 [ (gogoproto.moretags) = "yaml:\"timeout_timestamp\"" ];
 }
 
 // PacketAckCommitment defines the genesis type necessary to retrieve and store

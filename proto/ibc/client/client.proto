@@ -12,8 +12,7 @@ message IdentifiedClientState {
   // client identifier
   string client_id = 1 [ (gogoproto.moretags) = "yaml:\"client_id\"" ];
   // client state
-  google.protobuf.Any client_state = 2
-      [ (gogoproto.moretags) = "yaml:\"client_state\"" ];
+  google.protobuf.Any client_state = 2 [ (gogoproto.moretags) = "yaml:\"client_state\"" ];
 }
 
 // ClientConsensusStates defines all the stored consensus states for a given
@@ -22,8 +21,7 @@ message ClientConsensusStates {
   // client identifier
   string client_id = 1 [ (gogoproto.moretags) = "yaml:\"client_id\"" ];
   // consensus states associated with the client
-  repeated google.protobuf.Any consensus_states = 2
-      [ (gogoproto.moretags) = "yaml:\"consensus_states\"" ];
+  repeated google.protobuf.Any consensus_states = 2 [ (gogoproto.moretags) = "yaml:\"consensus_states\"" ];
 }
 
 // ClientUpdateProposal is a governance proposal. If it passes, the client is
@@ -49,12 +47,10 @@ message MsgCreateClient {
   // client unique identifier
   string client_id = 1 [ (gogoproto.moretags) = "yaml:\"client_id\"" ];
   // light client state
-  google.protobuf.Any client_state = 2
-      [ (gogoproto.moretags) = "yaml:\"client_state\"" ];
+  google.protobuf.Any client_state = 2 [ (gogoproto.moretags) = "yaml:\"client_state\"" ];
   // consensus state associated with the client that corresponds to a given
   // height.
-  google.protobuf.Any consensus_state = 3
-      [ (gogoproto.moretags) = "yaml:\"consensus_state\"" ];
+  google.protobuf.Any consensus_state = 3 [ (gogoproto.moretags) = "yaml:\"consensus_state\"" ];
   // signer address
   string signer = 4;
 }

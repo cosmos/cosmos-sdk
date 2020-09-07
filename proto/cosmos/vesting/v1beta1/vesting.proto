@@ -57,10 +57,8 @@ message Period {
   option (gogoproto.goproto_stringer) = false;
 
   int64 length = 1;
-  repeated cosmos.base.v1beta1.Coin amount = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
 
 // PeriodicVestingAccount implements the VestingAccount interface. It
@@ -71,8 +69,6 @@ message PeriodicVestingAccount {
 
   BaseVestingAccount base_vesting_account = 1 [ (gogoproto.embed) = true ];
   int64 start_time = 2 [ (gogoproto.moretags) = "yaml:\"start_time\"" ];
-  repeated Period vesting_periods = 3 [
-    (gogoproto.moretags) = "yaml:\"vesting_periods\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated Period vesting_periods = 3
+      [ (gogoproto.moretags) = "yaml:\"vesting_periods\"", (gogoproto.nullable) = false ];
 }

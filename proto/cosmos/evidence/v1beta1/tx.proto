@@ -15,6 +15,5 @@ message MsgSubmitEvidence {
   option (gogoproto.goproto_getters) = false;
 
   string submitter = 1;
-  google.protobuf.Any evidence = 2
-      [ (cosmos_proto.accepts_interface) = "Evidence" ];
+  google.protobuf.Any evidence = 2 [ (cosmos_proto.accepts_interface) = "Evidence" ];
 }

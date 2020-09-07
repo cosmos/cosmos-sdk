@@ -24,54 +24,43 @@ service Query {
   }
 
   // ValidatorCommission queries accumulated commission for a validator.
-  rpc ValidatorCommission(QueryValidatorCommissionRequest)
-      returns (QueryValidatorCommissionResponse) {
+  rpc ValidatorCommission(QueryValidatorCommissionRequest) returns (QueryValidatorCommissionResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/commission";
   }
 
   // ValidatorSlashes queries slash events of a validator.
-  rpc ValidatorSlashes(QueryValidatorSlashesRequest)
-      returns (QueryValidatorSlashesResponse) {
-    option (google.api.http).get =
-        "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes";
+  rpc ValidatorSlashes(QueryValidatorSlashesRequest) returns (QueryValidatorSlashesResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes";
   }
 
   // DelegationRewards queries the total rewards accrued by a delegation.
-  rpc DelegationRewards(QueryDelegationRewardsRequest)
-      returns (QueryDelegationRewardsResponse) {
-    option (google.api.http).get =
-        "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/"
-        "{validator_address}";
+  rpc DelegationRewards(QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/"
+                                   "{validator_address}";
   }
 
   // DelegationTotalRewards queries the total rewards accrued by a each
   // validator.
-  rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest)
-      returns (QueryDelegationTotalRewardsResponse) {
-    option (google.api.http).get =
-        "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";
+  rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";
   }
 
   // DelegatorValidators queries the validators of a delegator.
-  rpc DelegatorValidators(QueryDelegatorValidatorsRequest)
-      returns (QueryDelegatorValidatorsResponse) {
+  rpc DelegatorValidators(QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/validators";
   }
 
   // DelegatorWithdrawAddress queries withdraw address of a delegator.
-  rpc DelegatorWithdrawAddress(QueryDelegatorWithdrawAddressRequest)
-      returns (QueryDelegatorWithdrawAddressResponse) {
+  rpc DelegatorWithdrawAddress(QueryDelegatorWithdrawAddressRequest) returns (QueryDelegatorWithdrawAddressResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/withdraw_address";
   }
 
   // CommunityPool queries the community pool coins.
-  rpc CommunityPool(QueryCommunityPoolRequest)
-      returns (QueryCommunityPoolResponse) {
-    option (google.api.http).get =
-        "/cosmos/distribution/v1beta1/community_pool";
+  rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
 }
 
@@ -108,8 +97,7 @@ message QueryValidatorCommissionRequest {
 // Query/ValidatorCommission RPC method
 message QueryValidatorCommissionResponse {
   // commission defines the commision the validator received.
-  ValidatorAccumulatedCommission commission = 1
-      [ (gogoproto.nullable) = false ];
+  ValidatorAccumulatedCommission commission = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryValidatorSlashesRequest is the request type for the
@@ -151,10 +139,8 @@ message QueryDelegationRewardsRequest {
 // Query/DelegationRewards RPC method.
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
-  ];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins" ];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
@@ -170,13 +156,10 @@ message QueryDelegationTotalRewardsRequest {
 // Query/DelegationTotalRewards RPC method.
 message QueryDelegationTotalRewardsResponse {
   // rewards defines all the rewards accrued by a delegator.
-  repeated DelegationDelegatorReward rewards = 1
-      [ (gogoproto.nullable) = false ];
+  repeated DelegationDelegatorReward rewards = 1 [ (gogoproto.nullable) = false ];
   // total defines the sum of all the rewards.
-  repeated cosmos.base.v1beta1.DecCoin total = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
-  ];
+  repeated cosmos.base.v1beta1.DecCoin total = 2
+      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins" ];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the
@@ -227,8 +210,6 @@ message QueryCommunityPoolRequest {}
 // RPC method.
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
-  repeated cosmos.base.v1beta1.DecCoin pool = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin pool = 1
+      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false ];
 }

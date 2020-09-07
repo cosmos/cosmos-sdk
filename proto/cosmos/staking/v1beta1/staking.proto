@@ -124,7 +124,9 @@ message DVPair {
 }
 
 // DVPairs defines an array of DVPair objects.
-message DVPairs { repeated DVPair pairs = 1 [ (gogoproto.nullable) = false ]; }
+message DVPairs {
+  repeated DVPair pairs = 1 [ (gogoproto.nullable) = false ];
+}
 
 // DVVTriplet is struct that just has a delegator-validator-validator triplet
 // with no other data. It is intended to be used as a marshalable pointer. For
@@ -150,7 +152,9 @@ message DVVTriplet {
 }
 
 // DVVTriplets defines an array of DVVTriplet objects.
-message DVVTriplets { repeated DVVTriplet triplets = 1 [ (gogoproto.nullable) = false ]; }
+message DVVTriplets {
+  repeated DVVTriplet triplets = 1 [ (gogoproto.nullable) = false ];
+}
 
 // Delegation represents the bond with tokens held by an account. It is
 // owned by one delegator, and is associated with the voting power of one

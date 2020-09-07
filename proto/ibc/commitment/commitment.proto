@@ -17,7 +17,9 @@ message MerkleRoot {
 // MerklePrefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath,
 // append(Path.KeyPrefix, key...))
-message MerklePrefix { bytes key_prefix = 1 [ (gogoproto.moretags) = "yaml:\"key_prefix\"" ]; }
+message MerklePrefix {
+  bytes key_prefix = 1 [ (gogoproto.moretags) = "yaml:\"key_prefix\"" ];
+}
 
 // MerklePath is the path used to verify commitment proofs, which can be an
 // arbitrary structured object (defined by a commitment type).
@@ -31,7 +33,9 @@ message MerklePath {
 // It demonstrates membership or non-membership for an element or set of
 // elements, verifiable in conjunction with a known commitment root. Proofs
 // should be succinct.
-message MerkleProof { tendermint.crypto.ProofOps proof = 1; }
+message MerkleProof {
+  tendermint.crypto.ProofOps proof = 1;
+}
 
 // KeyPath defines a slice of keys
 message KeyPath {

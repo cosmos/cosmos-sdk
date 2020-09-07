@@ -58,7 +58,9 @@ message QueryProposalRequest {
 }
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
-message QueryProposalResponse { Proposal proposal = 1 [ (gogoproto.nullable) = false ]; }
+message QueryProposalResponse {
+  Proposal proposal = 1 [ (gogoproto.nullable) = false ];
+}
 
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 message QueryProposalsRequest {

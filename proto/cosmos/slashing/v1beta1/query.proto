@@ -30,7 +30,9 @@ service Query {
 message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method
-message QueryParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
 
 // QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC
 // method
@@ -48,7 +50,9 @@ message QuerySigningInfoResponse {
 
 // QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC
 // method
-message QuerySigningInfosRequest { cosmos.base.query.v1beta1.PageRequest pagination = 1; }
+message QuerySigningInfosRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC
 // method

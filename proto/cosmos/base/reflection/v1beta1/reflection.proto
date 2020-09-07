@@ -39,4 +39,6 @@ message ListImplementationsRequest {
 
 // ListImplementationsResponse is the response type of the ListImplementations
 // RPC.
-message ListImplementationsResponse { repeated string implementation_message_names = 1; }
+message ListImplementationsResponse {
+  repeated string implementation_message_names = 1;
+}

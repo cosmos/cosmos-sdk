@@ -65,7 +65,9 @@ message QueryConnectionResponse {
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
 // method
-message QueryConnectionsRequest { cosmos.base.query.v1beta1.PageRequest pagination = 1; }
+message QueryConnectionsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryConnectionsResponse is the response type for the Query/Connections RPC
 // method.

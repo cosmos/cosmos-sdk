@@ -193,7 +193,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err := txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
 	// Test generate sendTx with --gas=$amount
 	limitedGasGeneratedTx, err := bankcli.MsgSendExec(
@@ -215,7 +217,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
@@ -274,7 +278,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
 	s.Require().NoError(err)
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(1, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(sigs))
 	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
 
 	// Write the output to disk

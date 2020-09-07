@@ -2,10 +2,10 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis

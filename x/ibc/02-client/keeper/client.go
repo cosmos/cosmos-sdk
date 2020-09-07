@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -56,13 +56,13 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	// prevent update if the client is frozen before or at header height
-	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
+	if clientState.IsFrozen() && clientState.GetFrozenHeight().LTE(header.GetHeight()) {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
 	var (
 		consensusState  exported.ConsensusState
-		consensusHeight uint64
+		consensusHeight exported.Height
 		err             error
 	)
 
@@ -78,6 +78,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	if header != nil && clientType != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 		consensusHeight = consensusState.GetHeight()
+	} else {
+		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
@@ -88,7 +90,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 	)
 

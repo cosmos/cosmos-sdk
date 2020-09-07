@@ -3,12 +3,12 @@ package types_test
 import (
 	ics23 "github.com/confio/ics23/go"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -155,7 +155,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		tc := tc
 
 		err := tc.clientState.VerifyClientConsensusState(
-			nil, suite.cdc, tc.consensusState.Root, height.EpochHeight, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
+			nil, suite.cdc, tc.consensusState.Root, height, "chainA", tc.consensusState.GetHeight(), tc.prefix, tc.proof, tc.consensusState,
 		)
 
 		if tc.expPass {
@@ -172,7 +172,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -191,7 +191,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -250,7 +250,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -269,7 +269,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -329,7 +329,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -348,7 +348,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -371,7 +371,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 
 			// setup testing conditions
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 100, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, clienttypes.NewHeight(0, 100), 0)
 			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
@@ -411,7 +411,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -430,7 +430,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -453,7 +453,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -499,7 +499,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -518,7 +518,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -541,14 +541,14 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet, but no recv
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
@@ -586,7 +586,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -605,7 +605,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight.EpochHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
@@ -628,7 +628,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 
 			// setup testing conditions
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
@@ -639,7 +639,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)

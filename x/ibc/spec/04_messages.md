@@ -117,11 +117,11 @@ type MsgConnectionOpenTry struct {
 	ClientState          *types.Any // proto-packed counterparty client
 	Counterparty         Counterparty
 	CounterpartyVersions []string
-	ProofHeight          uint64
+	ProofHeight          Height
 	ProofInit            []byte
 	ProofClient          []byte
 	ProofConsensus       []byte
-	ConsensusHeight      uint64  
+	ConsensusHeight      Height
 	Signer               sdk.AccAddress
 }
 ```
@@ -157,11 +157,11 @@ type MsgConnectionOpenAck struct {
 	ConnectionId    string
 	Version         string
 	ClientState     *types.Any // proto-packed counterparty client
-	ProofHeight     uint64
+	ProofHeight     Height
 	ProofTry        []byte
 	ProofClient     []byte
 	ProofConsensus  []byte
-	ConsensusHeight uint64
+	ConsensusHeight Height
 	Signer          sdk.AccAddress
 }
 ```
@@ -192,7 +192,7 @@ the `MsgConnectionOpenConfirm`.
 type MsgConnectionOpenConfirm struct {
   ConnectionId string
 	ProofAck     []byte
-	ProofHeight  uint64
+	ProofHeight  Height
 	Signer       sdk.AccAddress
 }
 ```
@@ -247,7 +247,7 @@ type MsgChannelOpenTry struct {
 	Channel             Channel 
 	CounterpartyVersion string 
 	ProofInit           []byte
-	ProofHeight         uint64
+	ProofHeight         Height
 	Signer              sdk.AccAddress 
 }
 ```
@@ -277,7 +277,7 @@ type MsgChannelOpenAck struct {
 	ChannelId           string
 	CounterpartyVersion string
 	ProofTry            []byte
-	ProofHeight         uint64
+	ProofHeight         Height
 	Signer              sdk.AccAddress
 }
 ```
@@ -304,7 +304,7 @@ type MsgChannelOpenConfirm struct {
 	PortId              string
 	ChannelId           string
 	ProofAck            []byte
-	ProofHeight         uint64
+	ProofHeight         Height
 	Signer              sdk.AccAddress
 }
 ```
@@ -350,7 +350,7 @@ type MsgChannelCloseConfirm struct {
 	PortId      string
 	ChannelId   string
 	ProofInit   []byte  
-	ProofHeight uint64
+	ProofHeight Height
 	Signer      sdk.AccAddress
 }
 ```
@@ -375,7 +375,7 @@ A packet is received on chain B using the `MsgRecvPacket`.
 type MsgRecvPacket struct {
     Packet      Packet
     Proof       []byte
-    ProofHeight uint64
+    ProofHeight Height
     Signer      sdk.AccAddress
 }
 ```
@@ -398,7 +398,7 @@ A packet is timed out on chain A using the `MsgTimeout`.
 type MsgTimeout struct {
     Packet           Packet
     Proof            []byte
-    ProofHeight      uint64
+    ProofHeight      Height
     NextSequenceRecv uint64
     Signer           sdk.AccAddress
 }
@@ -425,7 +425,7 @@ type MsgTimeoutOnClose struct {
     Packet           Packet
     Proof            []byte
     ProofClose       []byte
-    ProofHeight      uint64
+    ProofHeight      Height
     NextSequenceRecv uint64
     Signer           sdk.AccAddress
 }
@@ -453,7 +453,7 @@ type MsgAcknowledgement struct {
     Packet          Packet
     Acknowledgement []byte
     Proof           []byte
-    ProofHeight     uint64
+    ProofHeight     Height
     Signer          sdk.AccAddress
 }
 ```

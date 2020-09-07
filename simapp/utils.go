@@ -79,12 +79,12 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		appState, _, _, err := app.ExportAppStateAndValidators(false, nil)
+		exported, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			return err
 		}
 
-		if err := ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0600); err != nil {
+		if err := ioutil.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0600); err != nil {
 			return err
 		}
 	}

@@ -20,7 +20,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 
 	// ModuleCdc references the global x/crisis module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding as Amino is

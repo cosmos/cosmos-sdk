@@ -48,7 +48,7 @@ func (mock TxSearchMock) Block(height *int64) (*ctypes.ResultBlock, error) {
 }
 
 func newTestCodec() *codec.LegacyAmino {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	types.RegisterLegacyAminoCodec(cdc)
 	authtypes.RegisterLegacyAminoCodec(cdc)

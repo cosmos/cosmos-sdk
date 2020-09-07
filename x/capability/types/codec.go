@@ -13,7 +13,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 )
 
 func init() {

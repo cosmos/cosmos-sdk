@@ -17,7 +17,7 @@ import (
 )
 
 func testCodec() *codec.LegacyAmino {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptoAmino.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&testdata.TestMsg{}, "cosmos-sdk/Test", nil)

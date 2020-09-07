@@ -24,7 +24,7 @@ var (
 )
 
 func makeTestCodec() (cdc *codec.LegacyAmino) {
-	cdc = codec.New()
+	cdc = codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	types.RegisterLegacyAminoCodec(cdc)

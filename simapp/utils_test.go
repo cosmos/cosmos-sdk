@@ -15,7 +15,7 @@ import (
 )
 
 func makeCodec(bm module.BasicManager) *codec.LegacyAmino {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	bm.RegisterLegacyAminoCodec(cdc)
 	std.RegisterLegacyAminoCodec(cdc)

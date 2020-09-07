@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 )
 
 func init() {

@@ -42,7 +42,7 @@ func RegisterKeyTypeCodec(o interface{}, name string) {
 }
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 
 	ModuleCdc = codec.NewAminoCodec(amino)
 )

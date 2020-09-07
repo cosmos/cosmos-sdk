@@ -65,7 +65,7 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 }
 
 func TestParseProposal(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",

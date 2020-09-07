@@ -42,7 +42,7 @@ func TestContentAccessors(t *testing.T) {
 		},
 	}
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	gov.RegisterLegacyAminoCodec(cdc)
 	RegisterLegacyAminoCodec(cdc)
 

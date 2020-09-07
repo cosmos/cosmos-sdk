@@ -23,11 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// module codec
-var moduleCdc = codec.New()
-
 func init() {
-	types.RegisterLegacyAminoCodec(moduleCdc)
+	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
 
 var (

@@ -25,7 +25,7 @@ var errFoo = errors.New("dummy")
 func TestBasicManager(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	legacyAmino := codec.New()
+	legacyAmino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -165,7 +165,7 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mockAppModule1.EXPECT().NewQuerierHandler().Times(1).Return(handler3)
 	queryRouter.EXPECT().AddRoute(gomock.Eq("querierRoute1"), gomock.Eq(handler3)).Times(1)
 
-	amino := codec.New()
+	amino := codec.NewLegacyAmino()
 	mm.RegisterRoutes(router, queryRouter, amino)
 }
 

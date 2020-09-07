@@ -43,7 +43,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 }
 
-var amino = codec.New()
+var amino = codec.NewLegacyAmino()
 
 func init() {
 	RegisterLegacyAminoCodec(amino)

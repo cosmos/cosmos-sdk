@@ -15,7 +15,7 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v040Codec := codec.New()
+	v040Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v040Codec)
 	v039auth.RegisterLegacyAminoCodec(v040Codec)
 

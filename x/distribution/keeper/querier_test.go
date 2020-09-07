@@ -111,7 +111,7 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 }
 
 func TestQueries(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	types.RegisterLegacyAminoCodec(cdc)
 	banktypes.RegisterLegacyAminoCodec(cdc)
 

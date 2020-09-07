@@ -29,7 +29,7 @@ func TestVerifySignature(t *testing.T) {
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	types.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)

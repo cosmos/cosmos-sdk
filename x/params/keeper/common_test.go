@@ -31,7 +31,7 @@ type s struct {
 }
 
 func createTestCodec() *codec.LegacyAmino {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
 	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)

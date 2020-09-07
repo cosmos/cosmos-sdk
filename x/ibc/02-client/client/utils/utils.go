@@ -12,7 +12,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibcquery "github.com/cosmos/cosmos-sdk/x/ibc/client/query"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -39,7 +39,7 @@ func QueryClientStateABCI(
 ) (*types.QueryClientStateResponse, error) {
 	key := host.FullKeyClientPath(clientID, host.KeyClientState())
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func QueryConsensusStateABCI(
 ) (*types.QueryConsensusStateResponse, error) {
 	key := host.FullKeyClientPath(clientID, host.KeyConsensusState(height))
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}

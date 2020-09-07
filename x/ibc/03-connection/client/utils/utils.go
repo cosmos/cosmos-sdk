@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibcquery "github.com/cosmos/cosmos-sdk/x/ibc/client/query"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -39,7 +39,7 @@ func QueryConnection(
 func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
 	key := host.KeyConnection(connectionID)
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func QueryClientConnections(
 func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
 	key := host.KeyClientConnections(clientID)
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}

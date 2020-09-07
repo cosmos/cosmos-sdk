@@ -11,7 +11,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	ibcquery "github.com/cosmos/cosmos-sdk/x/ibc/client/query"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -41,7 +41,7 @@ func queryPacketCommitmentABCI(
 ) (*types.QueryPacketCommitmentResponse, error) {
 	key := host.KeyPacketCommitment(portID, channelID, sequence)
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func QueryChannel(
 func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*types.QueryChannelResponse, error) {
 	key := host.KeyChannel(portID, channelID)
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func QueryNextSequenceReceive(
 func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID string) (*types.QueryNextSequenceReceiveResponse, error) {
 	key := host.KeyNextSequenceRecv(portID, channelID)
 
-	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}

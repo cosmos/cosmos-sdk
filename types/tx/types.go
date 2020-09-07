@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -99,9 +98,9 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (m *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if m.Body != nil {
-		return m.Body.UnpackInterfaces(unpacker)
+func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if t.Body != nil {
+		return t.Body.UnpackInterfaces(unpacker)
 	}
 	return nil
 }
@@ -119,7 +118,7 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 }

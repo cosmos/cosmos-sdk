@@ -40,12 +40,12 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 	// check for channel to be created on chainB
-	channelA := connA.NextTestChannel(ibctesting.TransferPort)
+	channelA := connA.NextTestChannel(ibctesting.MockPort)
 	_, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
 	suite.False(found)
 
 	// init channel
-	channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.TransferPort, ibctesting.TransferPort, types.UNORDERED)
+	channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 	suite.NoError(err)
 
 	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 	suite.True(found)
 	suite.Equal(types.INIT, storedChannel.State)
-	suite.Equal(types.UNORDERED, storedChannel.Ordering)
+	suite.Equal(types.ORDERED, storedChannel.Ordering)
 	suite.Equal(expectedCounterparty, storedChannel.Counterparty)
 }
 
@@ -68,7 +68,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	// channel1 is second channel on first connection on chainA
-	testchannel1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA0, connB0, types.UNORDERED)
+	testchannel1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA0, connB0, types.ORDERED)
 	counterparty1 := types.Counterparty{
 		PortId:    connB0.Channels[1].PortID,
 		ChannelId: connB0.Channels[1].ID,
@@ -77,7 +77,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 
 	// channel2 is on a second connection on chainA
-	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.TransferPort, ibctesting.TransferPort, types.UNORDERED)
+	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.MockPort, ibctesting.MockPort, types.UNORDERED)
 	suite.Require().NoError(err)
 
 	counterparty2 := types.Counterparty{
@@ -90,7 +90,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 		counterparty0, []string{connA0.ID}, testchannel0.Version,
 	)
 	channel1 := types.NewChannel(
-		types.OPEN, types.UNORDERED,
+		types.OPEN, types.ORDERED,
 		counterparty1, []string{connA0.ID}, testchannel1.Version,
 	)
 	channel2 := types.NewChannel(

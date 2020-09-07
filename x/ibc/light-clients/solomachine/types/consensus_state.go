@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/std"
@@ -50,6 +52,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
+	}
+	if cs.Diversifier != "" && strings.TrimSpace(cs.Diversifier) == "" {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "diversifier cannot contain only spaces")
 	}
 	if cs.PublicKey == nil || cs.GetPubKey() == nil || len(cs.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")

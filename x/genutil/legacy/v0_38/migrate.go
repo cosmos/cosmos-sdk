@@ -15,12 +15,12 @@ import (
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
 func Migrate(appState types.AppMap) types.AppMap {
-	v036Codec := codec.New()
+	v036Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v036Codec)
 
-	v038Codec := codec.New()
+	v038Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v038Codec)
-	v038auth.RegisterCodec(v038Codec)
+	v038auth.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

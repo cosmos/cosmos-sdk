@@ -55,22 +55,22 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 			matchStatus = p.Status == req.ProposalStatus
 		}
 
-		voter, err := sdk.AccAddressFromBech32(req.Voter)
-		if err != nil {
-			return false, err
-		}
-
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
+			voter, err := sdk.AccAddressFromBech32(req.Voter)
+			if err != nil {
+				return false, err
+			}
+
 			_, matchVoter = q.GetVote(ctx, p.ProposalId, voter)
 		}
 
-		depositor, err := sdk.AccAddressFromBech32(req.Depositor)
-		if err != nil {
-			return false, err
-		}
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
+			depositor, err := sdk.AccAddressFromBech32(req.Depositor)
+			if err != nil {
+				return false, err
+			}
 			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, depositor)
 		}
 

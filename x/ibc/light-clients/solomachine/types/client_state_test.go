@@ -40,17 +40,22 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}, false),
+			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
 			false,
 		},
 		{
-			"timstamp is zero",
-			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, 0}, false),
+			"timestamp is zero",
+			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, 0}, false),
+			false,
+		},
+		{
+			"diversifier is blank",
+			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, "  ", 1}, false),
 			false,
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState(&types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Time}, false),
+			types.NewClientState(&types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
 			false,
 		},
 	}
@@ -80,7 +85,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, clientState)
+	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, clientState)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -205,7 +210,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, consensusState)
+	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, consensusState)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -326,7 +331,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
 	suite.Require().NoError(err)
 
-	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, conn)
+	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, conn)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -409,7 +414,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, ch)
+	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ch)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -490,7 +495,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketCommitmentSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, commitmentBytes)
+	value, err := types.PacketCommitmentSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, commitmentBytes)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -570,7 +576,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, ack)
+	value, err := types.PacketAcknowledgementSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ack)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -649,7 +656,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementAbsenceSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path)
+	value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -729,7 +737,8 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := types.NextSequenceRecvSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, nextSeqRecv)
+	value, err := types.NextSequenceRecvSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, nextSeqRecv)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)

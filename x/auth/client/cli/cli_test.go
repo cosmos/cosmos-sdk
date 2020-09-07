@@ -374,9 +374,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
@@ -485,9 +485,9 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
@@ -586,9 +586,9 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.

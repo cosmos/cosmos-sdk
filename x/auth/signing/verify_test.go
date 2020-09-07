@@ -29,9 +29,9 @@ func TestVerifySignature(t *testing.T) {
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
-	types.RegisterCodec(cdc)
+	cdc := codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr)

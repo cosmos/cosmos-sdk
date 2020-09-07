@@ -1,6 +1,7 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -144,6 +145,17 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	return msg.Counterparty.ValidateBasic()
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
@@ -175,6 +187,17 @@ func NewMsgConnectionOpenAck(
 		Version:         version,
 		Signer:          signer,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Route implements sdk.Msg

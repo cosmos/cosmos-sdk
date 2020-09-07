@@ -152,3 +152,15 @@ message DelegationDelegatorReward {
     (gogoproto.nullable)     = false
   ];
 }
+
+// CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal with a deposit
+message CommunityPoolSpendProposalWithDeposit {
+  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  bytes recipient = 3 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"recipient\""
+  ];
+  string amount = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
+  string deposit = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
+}

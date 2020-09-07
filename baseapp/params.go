@@ -67,10 +67,6 @@ func ValidateEvidenceParams(i interface{}) error {
 		return fmt.Errorf("evidence maximum number of evidence must be positive: %v", v.MaxAgeDuration)
 	}
 
-	if v.ProofTrialPeriod <= 0 {
-		return fmt.Errorf("proof of trial period must be greater than 0: %v", v.MaxAgeDuration)
-	}
-
 	return nil
 }
 

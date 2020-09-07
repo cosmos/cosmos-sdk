@@ -46,8 +46,8 @@ func (AppModuleBasic) Name() string {
 	return host.ModuleName
 }
 
-// RegisterCodec does nothing. IBC does not support amino.
-func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
+// RegisterLegacyAminoCodec does nothing. IBC does not support amino.
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // module.

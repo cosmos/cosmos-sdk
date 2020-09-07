@@ -372,6 +372,7 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
+// NOTE: a solo machine client will be created with an empty diversifier.
 func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
 	var (
 		clientState    exported.ClientState
@@ -388,7 +389,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case exported.ClientTypeSoloMachine:
-		solo := NewSolomachine(chain.t, clientID)
+		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:

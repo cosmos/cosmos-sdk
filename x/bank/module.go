@@ -39,8 +39,10 @@ type AppModuleBasic struct {
 // Name returns the bank module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterCodec registers the bank module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) { types.RegisterCodec(cdc) }
+// RegisterLegacyAminoCodec registers the bank module's types on the LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank
 // module.

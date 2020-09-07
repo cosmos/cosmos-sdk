@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -115,4 +116,10 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// RegisterInterfaces registers the sdk.Tx interface.
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
+	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 }

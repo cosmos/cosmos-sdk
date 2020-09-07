@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestCLITxQueryCmd() {
 
 	s.network.WaitForNextBlock()
 
-	s.Run("", func() {
+	s.Run("test QueryTxCmd", func() {
 		cmd := authcli.QueryTxCmd()
 		args := []string{
 			txHash,

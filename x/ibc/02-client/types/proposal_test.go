@@ -1,32 +1,28 @@
 package types_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func TestNewUpdateClientProposal(t *testing.T) {
+func (suite *TypesTestSuite) TestNewUpdateClientProposal() {
 	p, err := types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientID, &ibctmtypes.Header{})
-	require.NoError(t, err)
-	require.NotNil(t, p)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(p)
 
 	p, err = types.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientID, nil)
-	require.Error(t, err)
-	require.Nil(t, p)
+	suite.Require().Error(err)
+	suite.Require().Nil(p)
 }
 
-func TestValidateBasic(t *testing.T) {
+func (suite *TypesTestSuite) TestValidateBasic() {
 	// use solo machine header for testing
-	solomachine := ibctesting.NewSolomachine(t, clientID, "")
+	solomachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, clientID, "")
 	smHeader := solomachine.CreateHeader()
 	header, err := types.PackHeader(smHeader)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	// use a different pointer so we don't modify 'header'
 	smInvalidHeader := solomachine.CreateHeader()
@@ -35,7 +31,7 @@ func TestValidateBasic(t *testing.T) {
 	smInvalidHeader.Sequence = 0
 
 	invalidHeader, err := types.PackHeader(smInvalidHeader)
-	require.NoError(t, err)
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name     string
@@ -69,9 +65,9 @@ func TestValidateBasic(t *testing.T) {
 		err := tc.proposal.ValidateBasic()
 
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }

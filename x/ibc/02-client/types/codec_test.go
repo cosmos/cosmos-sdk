@@ -1,10 +1,6 @@
 package types_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
@@ -20,7 +16,8 @@ type caseAny struct {
 	expPass bool
 }
 
-func TestPackClientState(t *testing.T) {
+func (suite *TypesTestSuite) TestPackClientState() {
+
 	testCases := []struct {
 		name        string
 		clientState exported.ClientState
@@ -28,7 +25,7 @@ func TestPackClientState(t *testing.T) {
 	}{
 		{
 			"solo machine client",
-			ibctesting.NewSolomachine(t, "solomachine", "").ClientState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").ClientState(),
 			true,
 		},
 		{
@@ -53,9 +50,9 @@ func TestPackClientState(t *testing.T) {
 	for _, tc := range testCases {
 		clientAny, err := types.PackClientState(tc.clientState)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 
 		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
@@ -64,17 +61,15 @@ func TestPackClientState(t *testing.T) {
 	for i, tc := range testCasesAny {
 		cs, err := types.UnpackClientState(tc.any)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
-			require.Equal(t, testCases[i].clientState, cs, tc.name)
+			suite.Require().NoError(err, tc.name)
+			suite.Require().Equal(testCases[i].clientState, cs, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }
 
-func TestPackConsensusState(t *testing.T) {
-	chain := ibctesting.NewTestChain(t, "cosmoshub")
-
+func (suite *TypesTestSuite) TestPackConsensusState() {
 	testCases := []struct {
 		name           string
 		consensusState exported.ConsensusState
@@ -82,12 +77,12 @@ func TestPackConsensusState(t *testing.T) {
 	}{
 		{
 			"solo machine consensus",
-			ibctesting.NewSolomachine(t, "solomachine", "").ConsensusState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").ConsensusState(),
 			true,
 		},
 		{
 			"tendermint consensus",
-			chain.LastHeader.ConsensusState(),
+			suite.chain.LastHeader.ConsensusState(),
 			true,
 		},
 		{
@@ -102,9 +97,9 @@ func TestPackConsensusState(t *testing.T) {
 	for _, tc := range testCases {
 		clientAny, err := types.PackConsensusState(tc.consensusState)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
 	}
@@ -112,17 +107,15 @@ func TestPackConsensusState(t *testing.T) {
 	for i, tc := range testCasesAny {
 		cs, err := types.UnpackConsensusState(tc.any)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
-			require.Equal(t, testCases[i].consensusState, cs, tc.name)
+			suite.Require().NoError(err, tc.name)
+			suite.Require().Equal(testCases[i].consensusState, cs, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }
 
-func TestPackHeader(t *testing.T) {
-	chain := ibctesting.NewTestChain(t, "cosmoshub")
-
+func (suite *TypesTestSuite) TestPackHeader() {
 	testCases := []struct {
 		name    string
 		header  exported.Header
@@ -130,12 +123,12 @@ func TestPackHeader(t *testing.T) {
 	}{
 		{
 			"solo machine header",
-			ibctesting.NewSolomachine(t, "solomachine", "").CreateHeader(),
+			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").CreateHeader(),
 			true,
 		},
 		{
 			"tendermint header",
-			chain.LastHeader,
+			suite.chain.LastHeader,
 			true,
 		},
 		{
@@ -150,9 +143,9 @@ func TestPackHeader(t *testing.T) {
 	for _, tc := range testCases {
 		clientAny, err := types.PackHeader(tc.header)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 
 		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
@@ -161,17 +154,15 @@ func TestPackHeader(t *testing.T) {
 	for i, tc := range testCasesAny {
 		cs, err := types.UnpackHeader(tc.any)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
-			require.Equal(t, testCases[i].header, cs, tc.name)
+			suite.Require().NoError(err, tc.name)
+			suite.Require().Equal(testCases[i].header, cs, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }
 
-func TestPackMisbehaviour(t *testing.T) {
-	chain := ibctesting.NewTestChain(t, "cosmoshub")
-
+func (suite *TypesTestSuite) TestPackMisbehaviour() {
 	testCases := []struct {
 		name         string
 		misbehaviour exported.Misbehaviour
@@ -179,12 +170,12 @@ func TestPackMisbehaviour(t *testing.T) {
 	}{
 		{
 			"solo machine misbehaviour",
-			ibctesting.NewSolomachine(t, "solomachine", "").CreateMisbehaviour(),
+			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").CreateMisbehaviour(),
 			true,
 		},
 		{
 			"tendermint misbehaviour",
-			ibctmtypes.NewMisbehaviour("tendermint", chain.ChainID, chain.LastHeader, chain.LastHeader),
+			ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, suite.chain.LastHeader, suite.chain.LastHeader),
 			true,
 		},
 		{
@@ -199,9 +190,9 @@ func TestPackMisbehaviour(t *testing.T) {
 	for _, tc := range testCases {
 		clientAny, err := types.PackMisbehaviour(tc.misbehaviour)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 
 		testCasesAny = append(testCasesAny, caseAny{tc.name, clientAny, tc.expPass})
@@ -210,10 +201,10 @@ func TestPackMisbehaviour(t *testing.T) {
 	for i, tc := range testCasesAny {
 		cs, err := types.UnpackMisbehaviour(tc.any)
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
-			require.Equal(t, testCases[i].misbehaviour, cs, tc.name)
+			suite.Require().NoError(err, tc.name)
+			suite.Require().Equal(testCases[i].misbehaviour, cs, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 	}{
 		{
 			"solo machine client", func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -145,7 +145,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"valid - solomachine client",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), soloMachine.ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -154,7 +154,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid solomachine client",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, &solomachinetypes.ClientState{}, soloMachine.ConsensusState(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -163,7 +163,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid solomachine consensus state",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgCreateClient(soloMachine.ClientID, soloMachine.ClientState(), &solomachinetypes.ConsensusState{}, suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -205,7 +205,7 @@ func (suite *TypesTestSuite) TestMarshalMsgUpdateClient() {
 	}{
 		{
 			"solo machine client", func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgUpdateClient(soloMachine.ClientID, soloMachine.CreateHeader(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -294,7 +294,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"valid - solomachine header",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgUpdateClient(soloMachine.ClientID, soloMachine.CreateHeader(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -343,7 +343,7 @@ func (suite *TypesTestSuite) TestMarshalMsgSubmitMisbehaviour() {
 	}{
 		{
 			"solo machine client", func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgSubmitMisbehaviour(soloMachine.ClientID, soloMachine.CreateMisbehaviour(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -440,7 +440,7 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"valid - solomachine misbehaviour",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "")
 				msg, err = types.NewMsgSubmitMisbehaviour(soloMachine.ClientID, soloMachine.CreateMisbehaviour(), suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -457,7 +457,7 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"client-id mismatch",
 			func() {
-				soloMachineMisbehaviour := ibctesting.NewSolomachine(suite.T(), "solomachine", "").CreateMisbehaviour()
+				soloMachineMisbehaviour := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").CreateMisbehaviour()
 				msg, err = types.NewMsgSubmitMisbehaviour("external", soloMachineMisbehaviour, suite.chain.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},

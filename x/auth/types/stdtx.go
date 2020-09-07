@@ -395,8 +395,9 @@ func StdSignatureToSignatureV2(cdc *codec.LegacyAmino, sig StdSignature) (signin
 	}
 
 	return signing.SignatureV2{
-		PubKey: pk,
-		Data:   data,
+		PubKey:            pk,
+		Data:              data,
+		SkipSequenceCheck: true,
 	}, nil
 }
 

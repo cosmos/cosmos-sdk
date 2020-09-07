@@ -39,8 +39,8 @@ func (cs ClientState) ClientType() exported.ClientType {
 }
 
 // GetLatestHeight returns the latest height stored.
-func (cs ClientState) GetLatestHeight() uint64 {
-	return cs.Height.EpochHeight
+func (cs ClientState) GetLatestHeight() exported.Height {
+	return cs.Height
 }
 
 // IsFrozen returns false.
@@ -48,9 +48,9 @@ func (cs ClientState) IsFrozen() bool {
 	return false
 }
 
-// GetFrozenHeight returns 0.
-func (cs ClientState) GetFrozenHeight() uint64 {
-	return 0
+// GetFrozenHeight returns an uninitialized IBC Height.
+func (cs ClientState) GetFrozenHeight() exported.Height {
+	return clienttypes.Height{}
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -90,10 +90,18 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	return nil, sdkerrors.Wrap(clienttypes.ErrInvalidMisbehaviour, "cannot submit misbehaviour to localhost client")
 }
 
+// CheckProposedHeaderAndUpdateState returns an error. The localhost cannot be modified by
+// proposals.
+func (cs ClientState) CheckProposedHeaderAndUpdateState(
+	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
+	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
+}
+
 // VerifyClientState verifies that the localhost client state is stored locally
 func (cs ClientState) VerifyClientState(
 	store sdk.KVStore, cdc codec.BinaryMarshaler, _ exported.Root,
-	_ uint64, _ exported.Prefix, _ string, _ []byte, clientState exported.ClientState,
+	_ exported.Height, _ exported.Prefix, _ string, _ []byte, clientState exported.ClientState,
 ) error {
 	path := host.KeyClientState()
 	bz := store.Get(path)
@@ -117,7 +125,8 @@ func (cs ClientState) VerifyClientState(
 // states.
 func (cs ClientState) VerifyClientConsensusState(
 	sdk.KVStore, codec.BinaryMarshaler, exported.Root,
-	uint64, string, uint64, exported.Prefix, []byte, exported.ConsensusState,
+	exported.Height, string, exported.Height, exported.Prefix,
+	[]byte, exported.ConsensusState,
 ) error {
 	return nil
 }
@@ -127,7 +136,7 @@ func (cs ClientState) VerifyClientConsensusState(
 func (cs ClientState) VerifyConnectionState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	_ exported.Prefix,
 	_ []byte,
 	connectionID string,
@@ -160,7 +169,7 @@ func (cs ClientState) VerifyConnectionState(
 func (cs ClientState) VerifyChannelState(
 	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	prefix exported.Prefix,
 	_ []byte,
 	portID,
@@ -194,7 +203,7 @@ func (cs ClientState) VerifyChannelState(
 func (cs ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -224,7 +233,7 @@ func (cs ClientState) VerifyPacketCommitment(
 func (cs ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -255,7 +264,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	_ exported.Prefix,
 	_ []byte,
 	portID,
@@ -277,7 +286,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 func (cs ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
-	_ uint64,
+	_ exported.Height,
 	_ exported.Prefix,
 	_ []byte,
 	portID,

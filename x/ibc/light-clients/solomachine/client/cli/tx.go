@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -16,9 +17,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
+const (
+	flagAllowUpdateAfterProposal = "allow_update_after_proposal"
+)
+
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "create [client-id] [path/to/consensus_state.json]",
 		Short:   "create new solo machine client",
 		Long:    "create a new solo machine client with the specified identifier and consensus state",
@@ -47,7 +52,9 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			clientState := types.NewClientState(consensusState)
+			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)
+
+			clientState := types.NewClientState(consensusState, allowUpdateAfterProposal)
 			msg, err := clienttypes.NewMsgCreateClient(clientID, clientState, consensusState, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
@@ -60,6 +67,11 @@ func NewCreateClientCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	cmd.Flags().Bool(flagAllowUpdateAfterProposal, false, "allow governance proposal to update client")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewUpdateClientCmd defines the command to update a solo machine client.

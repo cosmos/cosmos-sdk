@@ -7,6 +7,48 @@ order: 1
 > NOTE: if you are not familiar with the IBC terminology and concepts, please read
 this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.md) as prerequisite reading.
 
+## IBC Client Heights
+
+IBC Client Heights are represented by the struct:
+
+```go
+type Height struct {
+   EpochNumber uint64
+   EpocHeight  uint64
+```
+
+The `EpochNumber` represents the epoch of the chain that the height is representing.
+An epoch typically represents a continuous, monotonically increasing range of block-heights.
+The `EpochHeight` represents the height of the chain within the given epoch.
+
+On any reset of the `EpochHeight`, for example, when hard-forking a Tendermint chain,
+the `EpochNumber` will get incremented. This allows IBC clients to distinguish between a
+block-height `n` of a previous version of the chain (at epoch `p`) and block-height `n` of the current
+version of the chain (at epoch `e`).
+
+`Heights` that share the same epoch number can be compared by simply comparing their respective `EpochHeights`.
+Heights that do not share the same epoch number will only be compared using their respective `EpochNumbers`.
+Thus a height `h` with epoch number `e+1` will always be greater than a height `g` with epoch number `e`,
+**REGARDLESS** of the difference in epoch heights.
+
+Ex: `Height{EpochNumber: 3, EpochHeight: 0} > Height{EpochNumber: 2, EpochHeight: 100000000000}`
+
+When a Tendermint chain is running a particular version, relayers can simply submit headers and proofs with the epoch number
+given by the chain's chainID, and the epoch height given by the Tendermint block height. When a chain updates using a hard-fork 
+and resets its block-height, it is responsible for updating its chain-id to increment the epoch number.
+IBC Tendermint clients then verifies the epoch number against their `ChainId` and treat the `EpochHeight` as the Tendermint block-height.
+
+TODO: Explain how to structure chain-id to make epoch-number parsable
+
+Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they 
+need to return an IBC height when implementing IBC interfaces and use the `EpochHeight` exclusively.
+
+Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their Update, Misbehavior, and 
+Verify functions respectively.
+
+The IBC interfaces expect an `ibcexported.Height` interface, however all clients should use the concrete implementation provided in
+`02-client/types` and reproduced above.
+
 ## Client Misbehaviour
 
 IBC clients must freeze when the counterparty chain becomes malicious and 
@@ -102,3 +144,25 @@ in the handshake callbacks.
 
 Implementations which do not feel they would benefit from versioning can do
 basic string matching using a single compatible version.
+
+## ClientUpdateProposal
+
+A governance proposal may be passed to update a specified client with a provided
+header. This is useful in unfreezing clients or updating expired clients. Each 
+client is expected to implement this functionality. A client may choose to disallow
+an update by a governance proposal by returning an error in the client state function
+'CheckProposedHeaderAndUpdateState'.
+
+The localhost client cannot be updated by a governance proposal. 
+
+The solo machine client requires the boolean flag 'AllowUpdateAfterProposal' to be set
+to true in order to be updated by a proposal. This is set upon client creation and cannot 
+be updated later.
+
+The tendermint client has two flags update flags, 'AllowUpdateAfterExpiry' and 
+'AllowUpdateAfterMisbehaviour'. The former flag can only be used to unexpire clients. The
+latter flag can be used to unfreeze a client and if necessary it will also unexpire the client.
+It is advised to let a client expire if it has become frozen before proposing a new header. 
+This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
+expired. These boolean flags are set upon client creation and cannot be updated later.
+

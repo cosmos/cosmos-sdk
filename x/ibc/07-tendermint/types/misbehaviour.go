@@ -53,8 +53,8 @@ func (misbehaviour Misbehaviour) String() string {
 // GetHeight returns the height at which misbehaviour occurred
 //
 // NOTE: assumes that misbehaviour headers have the same height
-func (misbehaviour Misbehaviour) GetHeight() uint64 {
-	return uint64(math.Min(float64(misbehaviour.Header1.GetHeight()), float64(misbehaviour.Header2.GetHeight())))
+func (misbehaviour Misbehaviour) GetHeight() exported.Height {
+	return misbehaviour.Header1.GetHeight()
 }
 
 // GetTime returns the timestamp at which misbehaviour occurred. It uses the

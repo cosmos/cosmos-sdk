@@ -17,8 +17,10 @@ func (Header) ClientType() exported.ClientType {
 }
 
 // GetHeight returns the current sequence number as the height.
-func (h Header) GetHeight() uint64 {
-	return h.Sequence
+// Return clientexported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (h Header) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, h.Sequence)
 }
 
 // GetPubKey unmarshals the new public key into a tmcrypto.PubKey type.

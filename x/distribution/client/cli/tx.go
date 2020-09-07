@@ -159,7 +159,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr})
+			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,12 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			// build multi-message transaction
 			msgs := make([]sdk.Msg, 0, len(validators))
 			for _, valAddr := range validators {
-				msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+				val, err := sdk.ValAddressFromBech32(valAddr)
+				if err != nil {
+					return err
+				}
+
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
 				if err := msg.ValidateBasic(); err != nil {
 					return err
 				}

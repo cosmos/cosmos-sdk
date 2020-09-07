@@ -72,6 +72,9 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 
 // GetPubKey - Implements sdk.AccountI.
 func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
+	if acc.PubKey == nil {
+		return nil
+	}
 	content, ok := acc.PubKey.GetCachedValue().(crypto.PubKey)
 	if !ok {
 		return nil
@@ -81,17 +84,21 @@ func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
 
 // SetPubKey - Implements sdk.AccountI.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
-	protoMsg, ok := pubKey.(proto.Message)
-	if !ok {
-		return sdkerrors.ErrInvalidPubKey
-	}
+	if pubKey == nil {
+		acc.PubKey = nil
+	} else {
+		protoMsg, ok := pubKey.(proto.Message)
+		if !ok {
+			return sdkerrors.ErrInvalidPubKey
+		}
 
-	any, err := codectypes.NewAnyWithValue(protoMsg)
-	if err != nil {
-		return nil
-	}
+		any, err := codectypes.NewAnyWithValue(protoMsg)
+		if err != nil {
+			return nil
+		}
 
-	acc.PubKey = any
+		acc.PubKey = any
+	}
 
 	return nil
 }
@@ -135,11 +142,20 @@ func (acc BaseAccount) String() string {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), acc)
+	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &acc)
 	if err != nil {
 		return nil, err
 	}
 	return string(bz), err
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if acc.PubKey == nil {
+		return nil
+	}
+	var pubKey crypto.PubKey
+	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name

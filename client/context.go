@@ -1,10 +1,12 @@
 package client
 
 import (
+	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/gogo/protobuf/proto"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -230,12 +232,15 @@ func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
 
 func (ctx Context) printOutput(out []byte) error {
 	if ctx.OutputFormat == "text" {
-		out, err = codec.MarshalYAML(ctx.JSONMarshaler, toPrint)
+		// handle text format by decoding and re-encoding JSON as YAML
+		var j interface{}
+
+		err := json.Unmarshal(out, &j)
 		if err != nil {
 			return err
 		}
-	} else {
-		out, err = ctx.JSONMarshaler.MarshalJSON(toPrint)
+
+		out, err = yaml.Marshal(j)
 		if err != nil {
 			return err
 		}

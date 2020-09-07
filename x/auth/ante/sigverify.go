@@ -5,8 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -79,7 +81,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if acc.GetPubKey() != nil {
 			continue
 		}
-		err = acc.SetPubKey(pk)
+		protoPk, err := keys.AminoPubKeyToProtoPubKey(pk)
+		if err != nil {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+		}
+		err = acc.SetPubKey(protoPk.(crypto.PubKey))
 		if err != nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 		}
@@ -331,7 +337,10 @@ func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig signing.SignatureV2, params types.Params,
 ) error {
 	pubkey := sig.PubKey
-
+	// protoPk, err := keys.AminoPubKeyToProtoPubKey(pubkey)
+	// if err != nil {
+	// 	return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+	// }
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

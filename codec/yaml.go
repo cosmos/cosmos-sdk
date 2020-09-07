@@ -3,12 +3,13 @@ package codec
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
 )
 
 // MarshalYAML marshals the provided toPrint content with the provided JSON marshaler
 // by encoding JSON, decoding JSON, and then encoding YAML.
-func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint interface{}) ([]byte, error) {
+func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint proto.Message) ([]byte, error) {
 	bz, err := jsonMarshaler.MarshalJSON(toPrint)
 	if err != nil {
 		return nil, err

@@ -35,7 +35,7 @@ x: "0"
 `, string(bz))
 
 	// amino
-	aminoCdc := &codec.Codec{testdata.NewTestAmino()}
+	aminoCdc := codec.NewAminoCodec(&codec.LegacyAmino{testdata.NewTestAmino()})
 	bz, err = codec.MarshalYAML(aminoCdc, hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t, `type: testdata/HasAnimal

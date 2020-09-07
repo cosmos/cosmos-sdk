@@ -160,6 +160,9 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 
 			queryClient := types.NewQueryClient(clientCtx)
 			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr})
+			if err != nil {
+				return err
+			}
 
 			validators := delValsRes.Validators
 			// build multi-message transaction

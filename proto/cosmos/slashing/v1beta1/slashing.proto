@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.slashing.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 // ValidatorSigningInfo defines a validator's signing info for monitoring their
 // liveness activity.
 message ValidatorSigningInfo {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string address = 1;
@@ -31,25 +31,25 @@ message ValidatorSigningInfo {
 
 // Params represents the parameters used for by the slashing module.
 message Params {
-  int64 signed_blocks_window = 1 [ (gogoproto.moretags) = "yaml:\"signed_blocks_window\"" ];
+  int64 signed_blocks_window  = 1 [ (gogoproto.moretags) = "yaml:\"signed_blocks_window\"" ];
   bytes min_signed_per_window = 2 [
-    (gogoproto.moretags) = "yaml:\"min_signed_per_window\"",
+    (gogoproto.moretags)   = "yaml:\"min_signed_per_window\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
   google.protobuf.Duration downtime_jail_duration = 3 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.moretags) = "yaml:\"downtime_jail_duration\""
+    (gogoproto.moretags)    = "yaml:\"downtime_jail_duration\""
   ];
   bytes slash_fraction_double_sign = 4 [
-    (gogoproto.moretags) = "yaml:\"slash_fraction_double_sign\"",
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_double_sign\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
   bytes slash_fraction_downtime = 5 [
-    (gogoproto.moretags) = "yaml:\"slash_fraction_downtime\"",
+    (gogoproto.moretags)   = "yaml:\"slash_fraction_downtime\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
 }

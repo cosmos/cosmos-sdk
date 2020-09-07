@@ -163,7 +163,7 @@ message QueryValidatorUnbondingDelegationsResponse {
 
 // QueryDelegationRequest is request type for the Query/Delegation RPC method.
 message QueryDelegationRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -182,7 +182,7 @@ message QueryDelegationResponse {
 // QueryUnbondingDelegationRequest is request type for the
 // Query/UnbondingDelegation RPC method.
 message QueryUnbondingDelegationRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -202,7 +202,7 @@ message QueryUnbondingDelegationResponse {
 // QueryDelegatorDelegationsRequest is request type for the
 // Query/DelegatorDelegations RPC method.
 message QueryDelegatorDelegationsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -225,7 +225,7 @@ message QueryDelegatorDelegationsResponse {
 // QueryDelegatorUnbondingDelegationsRequest is request type for the
 // Query/DelegatorUnbondingDelegations RPC method.
 message QueryDelegatorUnbondingDelegationsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -247,7 +247,7 @@ message QueryDelegatorUnbondingDelegationsResponse {
 // QueryRedelegationsRequest is request type for the Query/Redelegations RPC
 // method.
 message QueryRedelegationsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -275,7 +275,7 @@ message QueryRedelegationsResponse {
 // QueryDelegatorValidatorsRequest is request type for the
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.
@@ -298,7 +298,7 @@ message QueryDelegatorValidatorsResponse {
 // QueryDelegatorValidatorRequest is request type for the
 // Query/DelegatorValidator RPC method.
 message QueryDelegatorValidatorRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_addr defines the delegator address to query for.

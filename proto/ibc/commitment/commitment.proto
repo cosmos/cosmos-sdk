@@ -36,7 +36,7 @@ message MerkleProof { tendermint.crypto.ProofOps proof = 1; }
 // KeyPath defines a slice of keys
 message KeyPath {
   option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_getters)  = false;
 
   repeated Key keys = 1;
 }
@@ -45,14 +45,14 @@ message KeyPath {
 message Key {
   option (gogoproto.goproto_getters) = false;
 
-  bytes name = 1 [ (gogoproto.customname) = "name" ];
-  KeyEncoding enc = 2 [ (gogoproto.customname) = "enc" ];
+  bytes       name = 1 [ (gogoproto.customname) = "name" ];
+  KeyEncoding enc  = 2 [ (gogoproto.customname) = "enc" ];
 }
 
 // KeyEncoding defines the encoding format of a key's bytes.
 enum KeyEncoding {
   option (gogoproto.goproto_enum_stringer) = false;
-  option (gogoproto.goproto_enum_prefix) = false;
+  option (gogoproto.goproto_enum_prefix)   = false;
 
   // URL encoding
   KEY_ENCODING_URL_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "URL" ];

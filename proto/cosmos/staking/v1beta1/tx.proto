@@ -9,15 +9,15 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
 // MsgCreateValidator defines an SDK message for creating a new validator.
 message MsgCreateValidator {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description description = 1 [ (gogoproto.nullable) = false ];
-  CommissionRates commission = 2 [ (gogoproto.nullable) = false ];
-  string min_self_delegation = 3 [
+  Description     description         = 1 [ (gogoproto.nullable) = false ];
+  CommissionRates commission          = 2 [ (gogoproto.nullable) = false ];
+  string          min_self_delegation = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"min_self_delegation\"",
-    (gogoproto.nullable) = false
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
+    (gogoproto.nullable)   = false
   ];
   string delegator_address = 4 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
@@ -27,17 +27,17 @@ message MsgCreateValidator {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
-  string pubkey = 6;
-  cosmos.base.v1beta1.Coin value = 7 [ (gogoproto.nullable) = false ];
+  string                   pubkey = 6;
+  cosmos.base.v1beta1.Coin value  = 7 [ (gogoproto.nullable) = false ];
 }
 
 // MsgEditValidator defines an SDK message for editing an existing validator.
 message MsgEditValidator {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description description = 1 [ (gogoproto.nullable) = false ];
-  string validator_address = 2 [
+  Description description       = 1 [ (gogoproto.nullable) = false ];
+  string      validator_address = 2 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"address\""
   ];
@@ -49,18 +49,18 @@ message MsgEditValidator {
   // REF: #2373
   string commission_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"commission_rate\""
+    (gogoproto.moretags)   = "yaml:\"commission_rate\""
   ];
   string min_self_delegation = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"min_self_delegation\""
+    (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
   ];
 }
 
 // MsgDelegate defines an SDK message for performing a delegation of coins
 // from a delegator to a validator.
 message MsgDelegate {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
@@ -77,7 +77,7 @@ message MsgDelegate {
 // MsgBeginRedelegate defines an SDK message for performing a redelegation
 // of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
@@ -98,7 +98,7 @@ message MsgBeginRedelegate {
 // MsgUndelegate defines an SDK message for performing an undelegation from a
 // delegate and a validator.
 message MsgUndelegate {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [

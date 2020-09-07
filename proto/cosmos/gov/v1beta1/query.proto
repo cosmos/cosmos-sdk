@@ -62,7 +62,7 @@ message QueryProposalResponse { Proposal proposal = 1 [ (gogoproto.nullable) = f
 
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 message QueryProposalsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // proposal_status defines the status of the proposals.
@@ -89,7 +89,7 @@ message QueryProposalsResponse {
 
 // QueryVoteRequest is the request type for the Query/Vote RPC method.
 message QueryVoteRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
@@ -143,7 +143,7 @@ message QueryParamsResponse {
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
 message QueryDepositRequest {
   option (gogoproto.goproto_getters) = false;
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;

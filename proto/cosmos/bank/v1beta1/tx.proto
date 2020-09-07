@@ -9,7 +9,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string from_address = 1 [
@@ -28,6 +28,6 @@ message MsgSend {
 message MsgMultiSend {
   option (gogoproto.equal) = false;
 
-  repeated Input inputs = 1 [ (gogoproto.nullable) = false ];
+  repeated Input inputs   = 1 [ (gogoproto.nullable) = false ];
   repeated Output outputs = 2 [ (gogoproto.nullable) = false ];
 }

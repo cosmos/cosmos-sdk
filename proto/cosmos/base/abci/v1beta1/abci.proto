@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/types";
+option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
 
 // TxResponse defines a structure containing relevant tx data and metadata. The
@@ -46,7 +46,7 @@ message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
   uint32 msg_index = 1;
-  string log = 2;
+  string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
@@ -58,14 +58,14 @@ message ABCIMessageLog {
 message StringEvent {
   option (gogoproto.stringer) = true;
 
-  string type = 1;
+  string   type                 = 1;
   repeated Attribute attributes = 2 [ (gogoproto.nullable) = false ];
 }
 
 // Attribute defines an attribute wrapper where the key and value are
 // strings instead of raw bytes.
 message Attribute {
-  string key = 1;
+  string key   = 1;
   string value = 2;
 }
 
@@ -98,7 +98,7 @@ message Result {
 // successfully simulated.
 message SimulationResponse {
   GasInfo gas_info = 1 [ (gogoproto.embed) = true, (gogoproto.nullable) = false ];
-  Result result = 2;
+  Result  result   = 2;
 }
 
 // MsgData defines the data returned in a Result object during message
@@ -107,7 +107,7 @@ message MsgData {
   option (gogoproto.stringer) = true;
 
   string msg_type = 1;
-  bytes data = 2;
+  bytes  data     = 2;
 }
 
 // TxMsgData defines a list of MsgData. A transaction will have a MsgData object

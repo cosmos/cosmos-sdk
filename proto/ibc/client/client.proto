@@ -41,7 +41,7 @@ message ClientUpdateProposal {
 
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // client unique identifier
@@ -58,7 +58,7 @@ message MsgCreateClient {
 // MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
 message MsgUpdateClient {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // client unique identifier
@@ -72,7 +72,7 @@ message MsgUpdateClient {
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
 message MsgSubmitMisbehaviour {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // client unique identifier
@@ -93,7 +93,7 @@ message MsgSubmitMisbehaviour {
 // In these cases, the epoch number is incremented so that height continues to
 // be monitonically increasing even as the EpochHeight gets reset
 message Height {
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
   // the epoch that the client is currently on

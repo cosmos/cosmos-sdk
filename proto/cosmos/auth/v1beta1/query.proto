@@ -24,7 +24,7 @@ service Query {
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
 message QueryAccountRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address defines the address to query for.

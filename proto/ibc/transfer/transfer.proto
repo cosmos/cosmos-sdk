@@ -11,7 +11,7 @@ import "ibc/client/client.proto";
 // ICS20 enabled chains. See ICS Spec here:
 // https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
 message MsgTransfer {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // the port on which the packet will be sent
@@ -52,8 +52,8 @@ message FungibleTokenPacketData {
 // onAcknowledgePacket:
 // https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
 message FungibleTokenPacketAcknowledgement {
-  bool success = 1;
-  string error = 2;
+  bool   success = 1;
+  string error   = 2;
 }
 
 // DenomTrace contains the base denomination for ICS20 fungible tokens and the

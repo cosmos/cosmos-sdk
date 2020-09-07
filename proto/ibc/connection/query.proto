@@ -123,8 +123,8 @@ message QueryConnectionClientStateResponse {
 message QueryConnectionConsensusStateRequest {
   // connection identifier
   string connection_id = 1 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  uint64 epoch_number = 2;
-  uint64 epoch_height = 3;
+  uint64 epoch_number  = 2;
+  uint64 epoch_height  = 3;
 }
 
 // QueryConnectionConsensusStateResponse is the response type for the

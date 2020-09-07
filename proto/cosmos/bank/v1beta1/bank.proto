@@ -9,36 +9,36 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
-  option (gogoproto.goproto_stringer) = false;
-  repeated SendEnabled send_enabled = 1 [ (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\"" ];
-  bool default_send_enabled = 2 [ (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\"" ];
+  option (gogoproto.goproto_stringer)       = false;
+  repeated SendEnabled send_enabled         = 1 [ (gogoproto.moretags) = "yaml:\"send_enabled,omitempty\"" ];
+  bool                 default_send_enabled = 2 [ (gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\"" ];
 }
 
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is
 // sendable).
 message SendEnabled {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
-  string denom = 1;
-  bool enabled = 2;
+  string denom                        = 1;
+  bool   enabled                      = 2;
 }
 
 // Input models transaction input.
 message Input {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string address = 1;
+  string   address                        = 1;
   repeated cosmos.base.v1beta1.Coin coins = 2
       [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
 
 // Output models transaction outputs.
 message Output {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string address = 1;
+  string   address                        = 1;
   repeated cosmos.base.v1beta1.Coin coins = 2
       [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
 }
@@ -46,8 +46,8 @@ message Output {
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 message Supply {
-  option (gogoproto.equal) = true;
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
   option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";

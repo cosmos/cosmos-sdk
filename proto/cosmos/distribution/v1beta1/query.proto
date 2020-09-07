@@ -126,7 +126,7 @@ message QueryValidatorSlashesResponse {
 // QueryDelegationRewardsRequest is the request type for the
 // Query/DelegationRewards RPC method.
 message QueryDelegationRewardsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_address defines the delegator address to query for.
@@ -146,7 +146,7 @@ message QueryDelegationRewardsResponse {
 // QueryDelegationTotalRewardsRequest is the request type for the
 // Query/DelegationTotalRewards RPC method.
 message QueryDelegationTotalRewardsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
   // delegator_address defines the delegator address to query for.
   string delegator_address = 1;
@@ -165,7 +165,7 @@ message QueryDelegationTotalRewardsResponse {
 // QueryDelegatorValidatorsRequest is the request type for the
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_address defines the delegator address to query for.
@@ -175,7 +175,7 @@ message QueryDelegatorValidatorsRequest {
 // QueryDelegatorValidatorsResponse is the response type for the
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsResponse {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // validators defines the validators a delegator is delegating for.
@@ -185,7 +185,7 @@ message QueryDelegatorValidatorsResponse {
 // QueryDelegatorWithdrawAddressRequest is the request type for the
 // Query/DelegatorWithdrawAddress RPC method.
 message QueryDelegatorWithdrawAddressRequest {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // delegator_address defines the delegator address to query for.
@@ -195,7 +195,7 @@ message QueryDelegatorWithdrawAddressRequest {
 // QueryDelegatorWithdrawAddressResponse is the response type for the
 // Query/DelegatorWithdrawAddress RPC method.
 message QueryDelegatorWithdrawAddressResponse {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // withdraw_address defines the delegator address to query for.

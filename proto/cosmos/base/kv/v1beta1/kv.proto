@@ -10,6 +10,6 @@ message Pairs { repeated Pair pairs = 1 [ (gogoproto.nullable) = false ]; }
 
 // Pair defines a key/value bytes tuple.
 message Pair {
-  bytes key = 1;
+  bytes key   = 1;
   bytes value = 2;
 }

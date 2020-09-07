@@ -15,8 +15,8 @@ message GenesisState {
   // the previous end block.
   bytes last_total_power = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"last_total_power\"",
-    (gogoproto.nullable) = false
+    (gogoproto.moretags)   = "yaml:\"last_total_power\"",
+    (gogoproto.nullable)   = false
   ];
 
   // last_validator_powers is a special index that provides a historical list
@@ -42,7 +42,7 @@ message GenesisState {
 
 // LastValidatorPower required for validator set update logic.
 message LastValidatorPower {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address of the validator.

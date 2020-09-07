@@ -27,7 +27,7 @@ message GenesisState {
 // Balance defines an account address and balance pair used in the bank module's
 // genesis state.
 message Balance {
-  option (gogoproto.equal) = false;
+  option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   // address is the address of the balance holder.

@@ -54,6 +54,6 @@ message QuerySigningInfosRequest { cosmos.base.query.v1beta1.PageRequest paginat
 // method
 message QuerySigningInfosResponse {
   // info is the signing info of all validators
-  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info       = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse                pagination = 2;
 }

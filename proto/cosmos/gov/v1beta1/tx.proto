@@ -7,21 +7,22 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
-option (gogoproto.stringer_all)         = false;
-option (gogoproto.goproto_getters_all)  = false;
+option (gogoproto.stringer_all) = false;
+option (gogoproto.goproto_getters_all) = false;
 
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 message MsgSubmitProposal {
   option (gogoproto.equal) = false;
 
-  google.protobuf.Any content          = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content = 1
+      [ (cosmos_proto.accepts_interface) = "Content" ];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
-    (gogoproto.nullable)     = false,
+    (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"initial_deposit\""
+    (gogoproto.moretags) = "yaml:\"initial_deposit\""
   ];
   string proposer = 3;
 }
@@ -31,10 +32,10 @@ message MsgVote {
   option (gogoproto.equal) = false;
 
   uint64 proposal_id = 1 [
-    (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\""
+    (gogoproto.jsontag) = "proposal_id",
+    (gogoproto.moretags) = "yaml:\"proposal_id\""
   ];
-  string      voter  = 2;
+  string voter = 2;
   VoteOption option = 3;
 }
 
@@ -43,10 +44,12 @@ message MsgDeposit {
   option (gogoproto.equal) = false;
 
   uint64 proposal_id = 1 [
-    (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\""
+    (gogoproto.jsontag) = "proposal_id",
+    (gogoproto.moretags) = "yaml:\"proposal_id\""
   ];
-  string    depositor          = 2;
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string depositor = 2;
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

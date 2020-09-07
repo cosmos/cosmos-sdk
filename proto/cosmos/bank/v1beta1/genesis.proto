@@ -10,14 +10,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 // GenesisState defines the bank module's genesis state.
 message GenesisState {
   // params defines all the paramaters of the module.
-  Params params = 1 [
-    (gogoproto.nullable) = false
-  ];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 
   // balances is an array containing the balances of all the accounts.
-  repeated Balance balances = 2 [
-    (gogoproto.nullable) = false
-  ];
+  repeated Balance balances = 2 [ (gogoproto.nullable) = false ];
 
   // supply represents the total supply.
   repeated cosmos.base.v1beta1.Coin supply = 3 [
@@ -35,8 +31,8 @@ message GenesisState {
 // Balance defines an account address and balance pair used in the bank module's
 // genesis state.
 message Balance {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
 
   // address is the address of the balance holder.
   string address = 1;

@@ -8,13 +8,15 @@ import "gogoproto/gogo.proto";
 // Minter represents the minting state.
 message Minter {
   // current annual inflation rate
-  string inflation = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string inflation = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
   // current annual expected provisions
   string annual_provisions = 2 [
-    (gogoproto.moretags)   = "yaml:\"annual_provisions\"",
+    (gogoproto.moretags) = "yaml:\"annual_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
 }
 
@@ -26,28 +28,29 @@ message Params {
   string mint_denom = 1;
   // maximum annual change in inflation rate
   string inflation_rate_change = 2 [
-    (gogoproto.moretags)   = "yaml:\"inflation_rate_change\"",
+    (gogoproto.moretags) = "yaml:\"inflation_rate_change\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   // maximum inflation rate
   string inflation_max = 3 [
-    (gogoproto.moretags)   = "yaml:\"inflation_max\"",
+    (gogoproto.moretags) = "yaml:\"inflation_max\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   // minimum inflation rate
   string inflation_min = 4 [
-    (gogoproto.moretags)   = "yaml:\"inflation_min\"",
+    (gogoproto.moretags) = "yaml:\"inflation_min\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   // goal of percent bonded atoms
   string goal_bonded = 5 [
-    (gogoproto.moretags)   = "yaml:\"goal_bonded\"",
+    (gogoproto.moretags) = "yaml:\"goal_bonded\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   // expected blocks per year
-  uint64 blocks_per_year = 6 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  uint64 blocks_per_year = 6
+      [ (gogoproto.moretags) = "yaml:\"blocks_per_year\"" ];
 }

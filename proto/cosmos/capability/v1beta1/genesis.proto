@@ -10,9 +10,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
 message GenesisOwners {
   // index is the index of the capability owner.
   uint64 index = 1;
-  
+
   // index_owners are the owners at the given index.
-  CapabilityOwners index_owners = 2[
+  CapabilityOwners index_owners = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"index_owners\""
   ];
@@ -25,7 +25,5 @@ message GenesisState {
 
   // owners represents a map from index to owners of the capability index
   // index key is string to allow amino marshalling.
-  repeated GenesisOwners owners = 2 [
-    (gogoproto.nullable) = false
-  ];
+  repeated GenesisOwners owners = 2 [ (gogoproto.nullable) = false ];
 }

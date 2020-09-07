@@ -13,7 +13,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 service Query {
   // Balance queries the balance of a single coin for a single account.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/{denom}";
+    option (google.api.http).get =
+        "/cosmos/bank/v1beta1/balances/{address}/{denom}";
   }
 
   // AllBalances queries the balance of all coins for a single account.
@@ -39,8 +40,8 @@ service Query {
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
 message QueryBalanceRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
   string address = 1;
@@ -57,8 +58,8 @@ message QueryBalanceResponse {
 
 // QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
 message QueryAllBalancesRequest {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
 
   // address is the address to query balances for.
   string address = 1;
@@ -67,24 +68,31 @@ message QueryAllBalancesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method.
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+// method.
 message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
-  repeated cosmos.base.v1beta1.Coin balances = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin balances = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method.
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
+// method.
 message QueryTotalSupplyRequest {}
 
-// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+// method
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
-  repeated cosmos.base.v1beta1.Coin supply = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin supply = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
@@ -96,7 +104,7 @@ message QuerySupplyOfRequest {
 // QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 message QuerySupplyOfResponse {
   // amount is the supply of the coin.
-  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryParamsRequest defines the request type for querying x/bank parameters.
@@ -104,5 +112,5 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }

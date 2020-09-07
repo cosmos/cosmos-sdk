@@ -3,9 +3,9 @@ package cosmos.base.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/types";
+option go_package = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
-option (gogoproto.stringer_all)         = false;
+option (gogoproto.stringer_all) = false;
 
 // Coin defines a token with a denomination and an amount.
 //
@@ -14,8 +14,9 @@ option (gogoproto.stringer_all)         = false;
 message Coin {
   option (gogoproto.equal) = true;
 
-  string denom  = 1;
-  string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+  string denom = 1;
+  string amount = 2
+      [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
 
 // DecCoin defines a token with a denomination and a decimal amount.
@@ -25,16 +26,19 @@ message Coin {
 message DecCoin {
   option (gogoproto.equal) = true;
 
-  string denom  = 1;
-  string amount = 2 [(gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
+  string denom = 1;
+  string amount = 2
+      [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
 }
 
 // IntProto defines a Protobuf wrapper around an Int object.
 message IntProto {
-  string int = 1 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+  string int = 1
+      [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
 
 // DecProto defines a Protobuf wrapper around a Dec object.
 message DecProto {
-  string dec = 1 [(gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
+  string dec = 1
+      [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
 }

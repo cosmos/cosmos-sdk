@@ -7,8 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
@@ -16,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcquery "github.com/cosmos/cosmos-sdk/x/ibc/client/query"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -38,13 +37,9 @@ func QueryConnection(
 }
 
 func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyConnection(connectionID),
-		Prove: true,
-	}
+	key := host.KeyConnection(connectionID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -52,17 +47,10 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 	var connection types.ConnectionEnd
-	if err := cdc.UnmarshalBinaryBare(res.Value, &connection); err != nil {
+	if err := cdc.UnmarshalBinaryBare(value, &connection); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Retrieve epoch number from chain-id
-	proofHeight := clienttypes.NewHeight(0, uint64(res.Height))
 	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, proofHeight), nil
 }
 
@@ -85,31 +73,18 @@ func QueryClientConnections(
 }
 
 func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyClientConnections(clientID),
-		Prove: true,
-	}
+	key := host.KeyClientConnections(clientID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
-
-	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 	var paths []string
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &paths); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(value, paths); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Retrieve epoch number from chain-id
-	proofHeight := clienttypes.NewHeight(0, uint64(res.Height))
 	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, proofHeight), nil
 }
 

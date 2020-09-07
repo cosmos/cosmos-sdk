@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,6 +11,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcquery "github.com/cosmos/cosmos-sdk/x/ibc/client/query"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -40,29 +39,15 @@ func QueryPacketCommitment(
 func queryPacketCommitmentABCI(
 	clientCtx client.Context, portID, channelID string, sequence uint64,
 ) (*types.QueryPacketCommitmentResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyPacketCommitment(portID, channelID, sequence),
-		Prove: true,
-	}
+	key := host.KeyPacketCommitment(portID, channelID, sequence)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
-
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	// FIXME: height + 1 is returned as the proof height
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
 	// TODO: retrieve epoch number from chain-id
-	height := clienttypes.NewHeight(0, uint64(res.Height+1))
-	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, res.Value, proofBz, height), nil
+	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
 }
 
 // QueryChannel returns a channel end.
@@ -85,13 +70,9 @@ func QueryChannel(
 }
 
 func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*types.QueryChannelResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyChannel(portID, channelID),
-		Prove: true,
-	}
+	key := host.KeyChannel(portID, channelID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -99,18 +80,11 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 	var channel types.Channel
-	if err := cdc.UnmarshalBinaryBare(res.Value, &channel); err != nil {
+	if err := cdc.UnmarshalBinaryBare(value, &channel); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: retrieve epoch number from chain-id
-	height := clienttypes.NewHeight(0, uint64(res.Height))
-	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, height), nil
+	return types.NewQueryChannelResponse(portID, channelID, channel, proofBz, proofHeight), nil
 }
 
 // QueryChannelClientState returns the ClientState of a channel end. If
@@ -237,26 +211,15 @@ func QueryNextSequenceReceive(
 }
 
 func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID string) (*types.QueryNextSequenceReceiveResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyNextSequenceRecv(portID, channelID),
-		Prove: true,
-	}
+	key := host.KeyNextSequenceRecv(portID, channelID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcquery.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+	sequence := binary.BigEndian.Uint64(value)
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	sequence := binary.BigEndian.Uint64(res.Value)
 	// TODO: retrieve epoch number from chain-id
-	height := clienttypes.NewHeight(0, uint64(res.Height))
-	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, height), nil
+	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, proofHeight), nil
 }

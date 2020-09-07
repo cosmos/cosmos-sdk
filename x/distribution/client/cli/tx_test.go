@@ -78,7 +78,7 @@ func TestParseProposal(t *testing.T) {
 `)
 	t.Cleanup(cleanup)
 
-	proposal, err := ParseCommunityPoolSpendProposalJSON(encodingConfig.Marshaler, okJSON.Name())
+	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, okJSON.Name())
 	require.NoError(t, err)
 
 	addr, err := sdk.AccAddressFromBech32("cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq")

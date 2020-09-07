@@ -305,7 +305,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseCommunityPoolSpendProposalJSON(clientCtx.JSONMarshaler, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalWithDeposit(clientCtx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}

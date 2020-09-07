@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// ParseCommunityPoolSpendProposalJSON reads and parses a CommunityPoolSpendProposalJSON from a file.
-func ParseCommunityPoolSpendProposalJSON(cdc codec.JSONMarshaler, proposalFile string) (types.CommunityPoolSpendProposalJSON, error) {
-	proposal := types.CommunityPoolSpendProposalJSON{}
+// ParseCommunityPoolSpendProposalWithDeposit reads and parses a CommunityPoolSpendProposalWithDeposit from a file.
+func ParseCommunityPoolSpendProposalWithDeposit(cdc codec.JSONMarshaler, proposalFile string) (types.CommunityPoolSpendProposalWithDeposit, error) {
+	proposal := types.CommunityPoolSpendProposalWithDeposit{}
 
 	contents, err := ioutil.ReadFile(proposalFile)
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -93,7 +92,7 @@ func TestResponseResultTx(t *testing.T) {
 		Info:      "info",
 		GasWanted: 100,
 		GasUsed:   90,
-		Tx:        &types.Any{},
+		Tx:        nil,
 		Timestamp: "timestamp",
 	}
 

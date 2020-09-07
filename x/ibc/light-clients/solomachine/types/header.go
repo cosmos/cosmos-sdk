@@ -47,7 +47,7 @@ func (h Header) ValidateBasic() error {
 	}
 
 	if h.NewDiversifier != "" && strings.TrimSpace(h.NewDiversifier) == "" {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "diversifier cannot be blank")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "diversifier cannot contain only spaces")
 	}
 
 	if len(h.Signature) == 0 {

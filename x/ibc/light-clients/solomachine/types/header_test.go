@@ -52,7 +52,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 			false,
 		},
 		{
-			"diversifier is blank",
+			"diversifier contains only spaces",
 			&types.Header{
 				Sequence:       header.Sequence,
 				Timestamp:      header.Timestamp,

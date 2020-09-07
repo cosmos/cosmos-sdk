@@ -28,12 +28,12 @@ func TestPackClientState(t *testing.T) {
 	}{
 		{
 			"solo machine client",
-			ibctesting.NewSolomachine(t, "solomachine").ClientState(),
+			ibctesting.NewSolomachine(t, "solomachine", "").ClientState(),
 			true,
 		},
 		{
 			"tendermint client",
-			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			true,
 		},
 		{
@@ -82,7 +82,7 @@ func TestPackConsensusState(t *testing.T) {
 	}{
 		{
 			"solo machine consensus",
-			ibctesting.NewSolomachine(t, "solomachine").ConsensusState(),
+			ibctesting.NewSolomachine(t, "solomachine", "").ConsensusState(),
 			true,
 		},
 		{
@@ -130,7 +130,7 @@ func TestPackHeader(t *testing.T) {
 	}{
 		{
 			"solo machine header",
-			ibctesting.NewSolomachine(t, "solomachine").CreateHeader(),
+			ibctesting.NewSolomachine(t, "solomachine", "").CreateHeader(),
 			true,
 		},
 		{
@@ -179,7 +179,7 @@ func TestPackMisbehaviour(t *testing.T) {
 	}{
 		{
 			"solo machine misbehaviour",
-			ibctesting.NewSolomachine(t, "solomachine").CreateMisbehaviour(),
+			ibctesting.NewSolomachine(t, "solomachine", "").CreateMisbehaviour(),
 			true,
 		},
 		{

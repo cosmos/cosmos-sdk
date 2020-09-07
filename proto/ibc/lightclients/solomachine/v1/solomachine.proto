@@ -16,6 +16,9 @@ message ClientState {
   // frozen sequence of the solo machine
   uint64         frozen_sequence = 1 [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
   ConsensusState consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // when set to true, will allow governance to update a solo machine client.
+  // The client will be unfrozen if it is frozen.
+  bool allow_update_after_proposal = 3 [(gogoproto.moretags) = "yaml:\"allow_update_after_proposal\""];
 }
 
 // ConsensusState defines a solo machine consensus state

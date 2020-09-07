@@ -29,7 +29,7 @@ type Solomachine struct {
 
 // NewSolomachine returns a new solomachine instance with a generated private/public
 // key pair and a sequence starting at 1.
-func NewSolomachine(t *testing.T, clientID string) *Solomachine {
+func NewSolomachine(t *testing.T, clientID, diversifier string) *Solomachine {
 	privKey := ed25519.GenPrivKey()
 
 	return &Solomachine{
@@ -39,13 +39,13 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 		PublicKey:   privKey.PubKey(),
 		Sequence:    1,
 		Time:        10,
-		Diversifier: "", // TODO: use custom diversifier?
+		Diversifier: diversifier,
 	}
 }
 
 // ClientState returns a new solo machine ClientState instance
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ConsensusState())
+	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
 
 // ConsensusState returns a new solo machine ConsensusState instance

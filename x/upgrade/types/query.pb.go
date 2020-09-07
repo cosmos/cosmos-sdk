@@ -28,7 +28,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC method.
+// QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
+// method.
 type QueryCurrentPlanRequest struct {
 }
 
@@ -65,7 +66,8 @@ func (m *QueryCurrentPlanRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryCurrentPlanRequest proto.InternalMessageInfo
 
-// QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method.
+// QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC
+// method.
 type QueryCurrentPlanResponse struct {
 	// plan is the current upgrade plan.
 	Plan *Plan `protobuf:"bytes,1,opt,name=plan,proto3" json:"plan,omitempty"`
@@ -111,7 +113,8 @@ func (m *QueryCurrentPlanResponse) GetPlan() *Plan {
 	return nil
 }
 
-// QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC method.
+// QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC
+// method.
 type QueryAppliedPlanRequest struct {
 	// name is the name of the applied plan to query for.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -157,7 +160,8 @@ func (m *QueryAppliedPlanRequest) GetName() string {
 	return ""
 }
 
-// QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC method.
+// QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC
+// method.
 type QueryAppliedPlanResponse struct {
 	// height is the block height at which the plan was applied.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`

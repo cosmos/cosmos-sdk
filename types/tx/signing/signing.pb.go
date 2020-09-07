@@ -27,13 +27,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type SignMode int32
 
 const (
-	// SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected
+	// SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
+	// rejected
 	SignMode_SIGN_MODE_UNSPECIFIED SignMode = 0
-	// SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified
-	// with raw bytes from Tx
+	// SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
+	// verified with raw bytes from Tx
 	SignMode_SIGN_MODE_DIRECT SignMode = 1
-	// SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable
-	// textual representation on top of the binary representation from SIGN_MODE_DIRECT
+	// SIGN_MODE_TEXTUAL is a future signing mode that will verify some
+	// human-readable textual representation on top of the binary representation
+	// from SIGN_MODE_DIRECT
 	SignMode_SIGN_MODE_TEXTUAL SignMode = 2
 	// SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
 	// Amino JSON and will be removed in the future
@@ -108,16 +110,17 @@ func (m *SignatureDescriptors) GetSignatures() []*SignatureDescriptor {
 	return nil
 }
 
-// SignatureDescriptor is a convenience type which represents the full data for a
-// signature including the public key of the signer, signing modes and the signature
-// itself. It is primarily used for coordinating signatures between clients.
+// SignatureDescriptor is a convenience type which represents the full data for
+// a signature including the public key of the signer, signing modes and the
+// signature itself. It is primarily used for coordinating signatures between
+// clients.
 type SignatureDescriptor struct {
 	// public_key is the public key of the signer
 	PublicKey *types.PublicKey          `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	Data      *SignatureDescriptor_Data `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	// sequence is the sequence of the account, which describes the
-	// number of committed transactions signed by a given address. It is used to prevent
-	// replay attacks.
+	// number of committed transactions signed by a given address. It is used to
+	// prevent replay attacks.
 	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
@@ -177,7 +180,8 @@ func (m *SignatureDescriptor) GetSequence() uint64 {
 
 // Data represents signature data
 type SignatureDescriptor_Data struct {
-	// sum is the oneof that specifies whether this represents single or multi-signature data
+	// sum is the oneof that specifies whether this represents single or
+	// multi-signature data
 	//
 	// Types that are valid to be assigned to Sum:
 	//	*SignatureDescriptor_Data_Single_

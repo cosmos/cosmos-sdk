@@ -29,7 +29,8 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity.
+// ValidatorSigningInfo defines a validator's signing info for monitoring their
+// liveness activity.
 type ValidatorSigningInfo struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// height at which validator was first a candidate OR was unjailed
@@ -38,7 +39,8 @@ type ValidatorSigningInfo struct {
 	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty" yaml:"index_offset"`
 	// timestamp validator cannot be unjailed until
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until" yaml:"jailed_until"`
-	// whether or not a validator has been tombstoned (killed out of validator set)
+	// whether or not a validator has been tombstoned (killed out of validator
+	// set)
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
 	// missed blocks counter (to avoid scanning the array every time)
 	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty" yaml:"missed_blocks_counter"`

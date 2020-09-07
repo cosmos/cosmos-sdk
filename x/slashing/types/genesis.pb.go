@@ -144,7 +144,8 @@ func (m *SigningInfo) GetValidatorSigningInfo() ValidatorSigningInfo {
 	return ValidatorSigningInfo{}
 }
 
-// ValidatorMissedBlocks contains array of missed blocks of corresponding address.
+// ValidatorMissedBlocks contains array of missed blocks of corresponding
+// address.
 type ValidatorMissedBlocks struct {
 	// address is the validator address.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`

@@ -112,7 +112,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC method
+// QuerySigningInfoRequest is the request type for the Query/SigningInfo RPC
+// method
 type QuerySigningInfoRequest struct {
 	// cons_address is the address to query signing info of
 	ConsAddress string `protobuf:"bytes,1,opt,name=cons_address,json=consAddress,proto3" json:"cons_address,omitempty"`
@@ -158,7 +159,8 @@ func (m *QuerySigningInfoRequest) GetConsAddress() string {
 	return ""
 }
 
-// QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC method
+// QuerySigningInfoResponse is the response type for the Query/SigningInfo RPC
+// method
 type QuerySigningInfoResponse struct {
 	// val_signing_info is the signing info of requested val cons address
 	ValSigningInfo ValidatorSigningInfo `protobuf:"bytes,1,opt,name=val_signing_info,json=valSigningInfo,proto3" json:"val_signing_info"`
@@ -204,7 +206,8 @@ func (m *QuerySigningInfoResponse) GetValSigningInfo() ValidatorSigningInfo {
 	return ValidatorSigningInfo{}
 }
 
-// QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC method
+// QuerySigningInfosRequest is the request type for the Query/SigningInfos RPC
+// method
 type QuerySigningInfosRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -249,7 +252,8 @@ func (m *QuerySigningInfosRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC method
+// QuerySigningInfosResponse is the response type for the Query/SigningInfos RPC
+// method
 type QuerySigningInfosResponse struct {
 	// info is the signing info of all validators
 	Info       []ValidatorSigningInfo `protobuf:"bytes,1,rep,name=info,proto3" json:"info"`

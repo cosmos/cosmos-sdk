@@ -30,7 +30,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryDenomTraceRequest is the request type for the Query/DenomTrace RPC method
+// QueryDenomTraceRequest is the request type for the Query/DenomTrace RPC
+// method
 type QueryDenomTraceRequest struct {
 	// hash (in hex format) of the denomination trace information.
 	Hash string `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
@@ -76,7 +77,8 @@ func (m *QueryDenomTraceRequest) GetHash() string {
 	return ""
 }
 
-// QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC method.
+// QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC
+// method.
 type QueryDenomTraceResponse struct {
 	// denom_trace returns the requested denomination trace information.
 	DenomTrace *DenomTrace `protobuf:"bytes,1,opt,name=denom_trace,json=denomTrace,proto3" json:"denom_trace,omitempty"`
@@ -122,7 +124,8 @@ func (m *QueryDenomTraceResponse) GetDenomTrace() *DenomTrace {
 	return nil
 }
 
-// QueryConnectionsRequest is the request type for the Query/DenomTraces RPC method
+// QueryConnectionsRequest is the request type for the Query/DenomTraces RPC
+// method
 type QueryDenomTracesRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -168,7 +171,8 @@ func (m *QueryDenomTracesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryConnectionsResponse is the response type for the Query/DenomTraces RPC method.
+// QueryConnectionsResponse is the response type for the Query/DenomTraces RPC
+// method.
 type QueryDenomTracesResponse struct {
 	// denom_traces returns all denominations trace information.
 	DenomTraces Traces `protobuf:"bytes,1,rep,name=denom_traces,json=denomTraces,proto3,castrepeated=Traces" json:"denom_traces"`

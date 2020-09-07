@@ -77,8 +77,9 @@ type ConsensusState struct {
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	// public key of the solo machine
 	PublicKey *types.PublicKey `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty" yaml:"public_key"`
-	// diversifier allows the same public key to be re-used across different solo machine clients
-	// (potentially on different chains) without being considered misbehaviour.
+	// diversifier allows the same public key to be re-used across different solo
+	// machine clients (potentially on different chains) without being considered
+	// misbehaviour.
 	Diversifier string `protobuf:"bytes,3,opt,name=diversifier,proto3" json:"diversifier,omitempty"`
 	Timestamp   uint64 `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
@@ -402,7 +403,8 @@ func (m *ClientStateData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ClientStateData proto.InternalMessageInfo
 
-// ConsensusStateSignBytes returns the SignBytes data for consensus state verification.
+// ConsensusStateSignBytes returns the SignBytes data for consensus state
+// verification.
 type ConsensusStateData struct {
 	Path           []byte      `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	ConsensusState *types1.Any `protobuf:"bytes,2,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
@@ -441,7 +443,8 @@ func (m *ConsensusStateData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConsensusStateData proto.InternalMessageInfo
 
-// ConnectionStateSignBytes returns the SignBytes data for connection state verification.
+// ConnectionStateSignBytes returns the SignBytes data for connection state
+// verification.
 type ConnectionStateData struct {
 	Path       []byte                `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	Connection *types2.ConnectionEnd `protobuf:"bytes,2,opt,name=connection,proto3" json:"connection,omitempty"`
@@ -480,7 +483,8 @@ func (m *ConnectionStateData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConnectionStateData proto.InternalMessageInfo
 
-// ChannelStateSignBytes returns the SignBytes data for channel state verification.
+// ChannelStateSignBytes returns the SignBytes data for channel state
+// verification.
 type ChannelStateData struct {
 	Path    []byte          `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	Channel *types3.Channel `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
@@ -519,7 +523,8 @@ func (m *ChannelStateData) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ChannelStateData proto.InternalMessageInfo
 
-// PacketCommitmentSignBytes returns the SignBytes data for packet commitment verification.
+// PacketCommitmentSignBytes returns the SignBytes data for packet commitment
+// verification.
 type PacketCommitmentData struct {
 	Path       []byte `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	Commitment []byte `protobuf:"bytes,2,opt,name=commitment,proto3" json:"commitment,omitempty"`
@@ -572,7 +577,8 @@ func (m *PacketCommitmentData) GetCommitment() []byte {
 	return nil
 }
 
-// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement verification.
+// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement
+// verification.
 type PacketAcknowledgementData struct {
 	Path            []byte `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	Acknowledgement []byte `protobuf:"bytes,2,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
@@ -625,8 +631,8 @@ func (m *PacketAcknowledgementData) GetAcknowledgement() []byte {
 	return nil
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for acknowledgement absence
-// verification.
+// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for
+// acknowledgement absence verification.
 type PacketAcknowledgementAbsenseData struct {
 	Path []byte `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }

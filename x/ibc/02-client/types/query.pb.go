@@ -256,8 +256,9 @@ func (m *QueryClientStatesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryConsensusStateRequest is the request type for the Query/ConsensusState RPC method. Besides
-// the consensus state, it includes a proof and the height from which the proof was retrieved.
+// QueryConsensusStateRequest is the request type for the Query/ConsensusState
+// RPC method. Besides the consensus state, it includes a proof and the height
+// from which the proof was retrieved.
 type QueryConsensusStateRequest struct {
 	// client identifier
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -265,7 +266,8 @@ type QueryConsensusStateRequest struct {
 	EpochNumber uint64 `protobuf:"varint,2,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
 	// consensus state epoch height
 	EpochHeight uint64 `protobuf:"varint,3,opt,name=epoch_height,json=epochHeight,proto3" json:"epoch_height,omitempty"`
-	// latest_height overrrides the height field and queries the latest stored ConsensusState
+	// latest_height overrrides the height field and queries the latest stored
+	// ConsensusState
 	LatestHeight bool `protobuf:"varint,4,opt,name=latest_height,json=latestHeight,proto3" json:"latest_height,omitempty"`
 }
 
@@ -330,7 +332,8 @@ func (m *QueryConsensusStateRequest) GetLatestHeight() bool {
 	return false
 }
 
-// QueryConsensusStateResponse is the response type for the Query/ConsensusState RPC method
+// QueryConsensusStateResponse is the response type for the Query/ConsensusState
+// RPC method
 type QueryConsensusStateResponse struct {
 	// consensus state associated with the client identifier at the given height
 	ConsensusState *types.Any `protobuf:"bytes,1,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty"`
@@ -403,7 +406,8 @@ func (m *QueryConsensusStateResponse) GetProofHeight() Height {
 	return Height{}
 }
 
-// QueryConsensusStatesRequest is the request type for the Query/ConsensusStates RPC method.
+// QueryConsensusStatesRequest is the request type for the Query/ConsensusStates
+// RPC method.
 type QueryConsensusStatesRequest struct {
 	// client identifier
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -458,7 +462,8 @@ func (m *QueryConsensusStatesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryConsensusStatesResponse is the response type for the Query/ConsensusStates RPC method
+// QueryConsensusStatesResponse is the response type for the
+// Query/ConsensusStates RPC method
 type QueryConsensusStatesResponse struct {
 	// consensus states associated with the identifier
 	ConsensusStates []*types.Any `protobuf:"bytes,1,rep,name=consensus_states,json=consensusStates,proto3" json:"consensus_states,omitempty"`
@@ -593,9 +598,11 @@ type QueryClient interface {
 	ClientState(ctx context.Context, in *QueryClientStateRequest, opts ...grpc.CallOption) (*QueryClientStateResponse, error)
 	// ClientStates queries all the IBC light clients of a chain.
 	ClientStates(ctx context.Context, in *QueryClientStatesRequest, opts ...grpc.CallOption) (*QueryClientStatesResponse, error)
-	// ConsensusState queries a consensus state associated with a client state at a given height.
+	// ConsensusState queries a consensus state associated with a client state at
+	// a given height.
 	ConsensusState(ctx context.Context, in *QueryConsensusStateRequest, opts ...grpc.CallOption) (*QueryConsensusStateResponse, error)
-	// ConsensusStates queries all the consensus state associated with a given client.
+	// ConsensusStates queries all the consensus state associated with a given
+	// client.
 	ConsensusStates(ctx context.Context, in *QueryConsensusStatesRequest, opts ...grpc.CallOption) (*QueryConsensusStatesResponse, error)
 }
 
@@ -649,9 +656,11 @@ type QueryServer interface {
 	ClientState(context.Context, *QueryClientStateRequest) (*QueryClientStateResponse, error)
 	// ClientStates queries all the IBC light clients of a chain.
 	ClientStates(context.Context, *QueryClientStatesRequest) (*QueryClientStatesResponse, error)
-	// ConsensusState queries a consensus state associated with a client state at a given height.
+	// ConsensusState queries a consensus state associated with a client state at
+	// a given height.
 	ConsensusState(context.Context, *QueryConsensusStateRequest) (*QueryConsensusStateResponse, error)
-	// ConsensusStates queries all the consensus state associated with a given client.
+	// ConsensusStates queries all the consensus state associated with a given
+	// client.
 	ConsensusStates(context.Context, *QueryConsensusStatesRequest) (*QueryConsensusStatesResponse, error)
 }
 

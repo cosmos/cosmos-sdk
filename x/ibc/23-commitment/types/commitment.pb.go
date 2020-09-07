@@ -88,7 +88,8 @@ func (m *MerkleRoot) XXX_DiscardUnknown() {
 var xxx_messageInfo_MerkleRoot proto.InternalMessageInfo
 
 // MerklePrefix is merkle path prefixed to the key.
-// The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
+// The constructed key from the Path and the key will be append(Path.KeyPath,
+// append(Path.KeyPrefix, key...))
 type MerklePrefix struct {
 	KeyPrefix []byte `protobuf:"bytes,1,opt,name=key_prefix,json=keyPrefix,proto3" json:"key_prefix,omitempty" yaml:"key_prefix"`
 }
@@ -133,8 +134,8 @@ func (m *MerklePrefix) GetKeyPrefix() []byte {
 	return nil
 }
 
-// MerklePath is the path used to verify commitment proofs, which can be an arbitrary
-// structured object (defined by a commitment type).
+// MerklePath is the path used to verify commitment proofs, which can be an
+// arbitrary structured object (defined by a commitment type).
 type MerklePath struct {
 	KeyPath KeyPath `protobuf:"bytes,1,opt,name=key_path,json=keyPath,proto3" json:"key_path" yaml:"key_path"`
 }
@@ -179,9 +180,9 @@ func (m *MerklePath) GetKeyPath() KeyPath {
 }
 
 // MerkleProof is a wrapper type that contains a merkle proof.
-// It demonstrates membership or non-membership for an element or set of elements,
-// verifiable in conjunction with a known commitment root. Proofs should be
-// succinct.
+// It demonstrates membership or non-membership for an element or set of
+// elements, verifiable in conjunction with a known commitment root. Proofs
+// should be succinct.
 type MerkleProof struct {
 	Proof *crypto.ProofOps `protobuf:"bytes,1,opt,name=proof,proto3" json:"proof,omitempty"`
 }

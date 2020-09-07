@@ -160,7 +160,8 @@ func (m *QueryAllBalancesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAllBalancesRequest proto.InternalMessageInfo
 
-// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC method.
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+// method.
 type QueryAllBalancesResponse struct {
 	// balances is the balances of all the coins.
 	Balances github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=balances,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"balances"`
@@ -215,7 +216,8 @@ func (m *QueryAllBalancesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method.
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
+// method.
 type QueryTotalSupplyRequest struct {
 }
 
@@ -252,7 +254,8 @@ func (m *QueryTotalSupplyRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTotalSupplyRequest proto.InternalMessageInfo
 
-// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+// method
 type QueryTotalSupplyResponse struct {
 	// supply is the supply of the coins
 	Supply github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=supply,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"supply"`

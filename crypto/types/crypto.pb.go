@@ -164,8 +164,8 @@ func (*PublicKey) XXX_OneofWrappers() []interface{} {
 	}
 }
 
-// PubKeyMultisigThreshold specifies a public key type which nests multiple public
-// keys and a threshold
+// PubKeyMultisigThreshold specifies a public key type which nests multiple
+// public keys and a threshold
 type PubKeyMultisigThreshold struct {
 	K       uint32       `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty" yaml:"threshold"`
 	PubKeys []*PublicKey `protobuf:"bytes,2,rep,name=public_keys,json=publicKeys,proto3" json:"public_keys,omitempty" yaml:"pubkeys"`
@@ -219,8 +219,8 @@ func (m *PubKeyMultisigThreshold) GetPubKeys() []*PublicKey {
 }
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
-// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers signed and
-// with which modes.
+// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers
+// signed and with which modes.
 type MultiSignature struct {
 	Signatures       [][]byte `protobuf:"bytes,1,rep,name=signatures,proto3" json:"signatures,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`

@@ -234,7 +234,8 @@ message Packet {
   // actual opaque bytes transferred directly to the application module
   bytes data = 6;
   // block height after which the packet times out
-  uint64 timeout_height = 7 [ (gogoproto.moretags) = "yaml:\"timeout_height\"" ];
+  ibc.client.Height timeout_height = 7
+      [ (gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false ];
   // block timestamp (in nanoseconds) after which the packet times out
   uint64 timeout_timestamp = 8 [ (gogoproto.moretags) = "yaml:\"timeout_timestamp\"" ];
 }

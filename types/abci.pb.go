@@ -40,7 +40,8 @@ type TxResponse struct {
 	Code uint32 `protobuf:"varint,4,opt,name=code,proto3" json:"code,omitempty"`
 	// Result bytes, if any.
 	Data string `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
-	// The output of the application's logger (raw string). May be non-deterministic.
+	// The output of the application's logger (raw string). May be
+	// non-deterministic.
 	RawLog string `protobuf:"bytes,6,opt,name=raw_log,json=rawLog,proto3" json:"raw_log,omitempty"`
 	// The output of the application's logger (typed). May be non-deterministic.
 	Logs ABCIMessageLogs `protobuf:"bytes,7,rep,name=logs,proto3,castrepeated=ABCIMessageLogs" json:"logs"`
@@ -52,8 +53,9 @@ type TxResponse struct {
 	GasUsed int64 `protobuf:"varint,10,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
 	// The request transaction bytes.
 	Tx *types.Any `protobuf:"bytes,11,opt,name=tx,proto3" json:"tx,omitempty"`
-	// Time of the previous block. For heights > 1, it's the weighted median of the
-	// timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time.
+	// Time of the previous block. For heights > 1, it's the weighted median of
+	// the timestamps of the valid votes in the block.LastCommit. For height == 1,
+	// it's genesis time.
 	Timestamp string `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
@@ -313,13 +315,13 @@ func (m *GasInfo) GetGasUsed() uint64 {
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
-	// Data is any data returned from message or handler execution. It MUST be length
-	// prefixed in order to separate data from multiple message executions.
+	// Data is any data returned from message or handler execution. It MUST be
+	// length prefixed in order to separate data from multiple message executions.
 	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	// Log contains the log information from message or handler execution.
 	Log string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
-	// Events contains a slice of Event objects that were emitted during message or
-	// handler execution.
+	// Events contains a slice of Event objects that were emitted during message
+	// or handler execution.
 	Events []types1.Event `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
 }
 
@@ -401,7 +403,8 @@ func (m *SimulationResponse) GetResult() *Result {
 	return nil
 }
 
-// MsgData defines the data returned in a Result object during message execution.
+// MsgData defines the data returned in a Result object during message
+// execution.
 type MsgData struct {
 	MsgType string `protobuf:"bytes,1,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"`
 	Data    []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
@@ -453,8 +456,8 @@ func (m *MsgData) GetData() []byte {
 	return nil
 }
 
-// TxMsgData defines a list of MsgData. A transaction will have a MsgData object for
-// each message.
+// TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+// for each message.
 type TxMsgData struct {
 	Data []*MsgData `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
 }

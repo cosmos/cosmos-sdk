@@ -25,8 +25,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
-// this struct is only used at genesis to feed in default withdraw addresses.
+// DelegatorWithdrawInfo is the address for where distributions rewards are
+// withdrawn to by default this struct is only used at genesis to feed in
+// default withdraw addresses.
 type DelegatorWithdrawInfo struct {
 	// delegator_address is the address of the delegator.
 	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
@@ -108,7 +109,8 @@ func (m *ValidatorOutstandingRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorOutstandingRewardsRecord proto.InternalMessageInfo
 
-// ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
+// ValidatorAccumulatedCommissionRecord is used for import / export via genesis
+// json.
 type ValidatorAccumulatedCommissionRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
@@ -149,7 +151,8 @@ func (m *ValidatorAccumulatedCommissionRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorAccumulatedCommissionRecord proto.InternalMessageInfo
 
-// ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
+// ValidatorHistoricalRewardsRecord is used for import / export via genesis
+// json.
 type ValidatorHistoricalRewardsRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`

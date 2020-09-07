@@ -232,7 +232,8 @@ func (m *QueryValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
+// QueryValidatorDelegationsRequest is request type for the
+// Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsRequest struct {
 	// validator_addr defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -287,7 +288,8 @@ func (m *QueryValidatorDelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryValidatorDelegationsResponse is response type for the Query/ValidatorDelegations RPC method
+// QueryValidatorDelegationsResponse is response type for the
+// Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsResponse struct {
 	DelegationResponses DelegationResponses `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3,castrepeated=DelegationResponses" json:"delegation_responses"`
 	// pagination defines the pagination in the response.
@@ -341,7 +343,8 @@ func (m *QueryValidatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
+// QueryValidatorUnbondingDelegationsRequest is required type for the
+// Query/ValidatorUnbondingDelegations RPC method
 type QueryValidatorUnbondingDelegationsRequest struct {
 	// validator_addr defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
@@ -400,7 +403,8 @@ func (m *QueryValidatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method.
+// QueryValidatorUnbondingDelegationsResponse is response type for the
+// Query/ValidatorUnbondingDelegations RPC method.
 type QueryValidatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
 	// pagination defines the pagination in the response.
@@ -545,7 +549,8 @@ func (m *QueryDelegationResponse) GetDelegationResponse() *DelegationResponse {
 	return nil
 }
 
-// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method.
+// QueryUnbondingDelegationRequest is request type for the
+// Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -586,7 +591,8 @@ func (m *QueryUnbondingDelegationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryUnbondingDelegationRequest proto.InternalMessageInfo
 
-// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method.
+// QueryDelegationResponse is response type for the Query/UnbondingDelegation
+// RPC method.
 type QueryUnbondingDelegationResponse struct {
 	// unbond defines the unbonding information of a delegation.
 	Unbond UnbondingDelegation `protobuf:"bytes,1,opt,name=unbond,proto3" json:"unbond"`
@@ -632,7 +638,8 @@ func (m *QueryUnbondingDelegationResponse) GetUnbond() UnbondingDelegation {
 	return UnbondingDelegation{}
 }
 
-// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method.
+// QueryDelegatorDelegationsRequest is request type for the
+// Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -673,7 +680,8 @@ func (m *QueryDelegatorDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorDelegationsRequest proto.InternalMessageInfo
 
-// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method.
+// QueryDelegatorDelegationsResponse is response type for the
+// Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsResponse struct {
 	// delegation_responses defines all the delegations' info of a delegator.
 	DelegationResponses []DelegationResponse `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3" json:"delegation_responses"`
@@ -728,7 +736,8 @@ func (m *QueryDelegatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method.
+// QueryDelegatorUnbondingDelegationsRequest is request type for the
+// Query/DelegatorUnbondingDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -773,7 +782,8 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorUnbondingDelegationsRequest proto.InternalMessageInfo
 
-// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method.
+// QueryUnbondingDelegatorDelegationsResponse is response type for the
+// Query/UnbondingDelegatorDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
 	// pagination defines the pagination in the response.
@@ -831,7 +841,8 @@ func (m *QueryDelegatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method.
+// QueryRedelegationsRequest is request type for the Query/Redelegations RPC
+// method.
 type QueryRedelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -876,7 +887,8 @@ func (m *QueryRedelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryRedelegationsRequest proto.InternalMessageInfo
 
-// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method.
+// QueryRedelegationsResponse is response type for the Query/Redelegations RPC
+// method.
 type QueryRedelegationsResponse struct {
 	RedelegationResponses []RedelegationResponse `protobuf:"bytes,1,rep,name=redelegation_responses,json=redelegationResponses,proto3" json:"redelegation_responses"`
 	// pagination defines the pagination in the response.
@@ -930,7 +942,8 @@ func (m *QueryRedelegationsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsRequest is request type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -971,7 +984,8 @@ func (m *QueryDelegatorValidatorsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorsRequest proto.InternalMessageInfo
 
-// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsResponse is response type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
 	// validators defines the the validators' info of a delegator.
 	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
@@ -1026,7 +1040,8 @@ func (m *QueryDelegatorValidatorsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method.
+// QueryDelegatorValidatorRequest is request type for the
+// Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorRequest struct {
 	// delegator_addr defines the delegator address to query for.
 	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
@@ -1067,7 +1082,8 @@ func (m *QueryDelegatorValidatorRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorRequest proto.InternalMessageInfo
 
-// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method.
+// QueryDelegatorValidatorResponse response type for the
+// Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
 	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
@@ -1113,7 +1129,8 @@ func (m *QueryDelegatorValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method.
+// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
+// method.
 type QueryHistoricalInfoRequest struct {
 	// height defines at which height to query the historical info.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
@@ -1159,7 +1176,8 @@ func (m *QueryHistoricalInfoRequest) GetHeight() int64 {
 	return 0
 }
 
-// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method.
+// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
+// method.
 type QueryHistoricalInfoResponse struct {
 	// hist defines the historical info at the given height.
 	Hist *HistoricalInfo `protobuf:"bytes,1,opt,name=hist,proto3" json:"hist,omitempty"`
@@ -1514,17 +1532,21 @@ type QueryClient interface {
 	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
 	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(ctx context.Context, in *QueryDelegationRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for given validator delegator pair.
+	// UnbondingDelegation queries unbonding info for given validator delegator
+	// pair.
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
+	// delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validators info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator
+	// address.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair.
+	// DelegatorValidator queries validator info for given delegator validator
+	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
@@ -1680,17 +1702,21 @@ type QueryServer interface {
 	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
 	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for given validator delegator pair.
+	// UnbondingDelegation queries unbonding info for given validator delegator
+	// pair.
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
+	// delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validators info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator
+	// address.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair.
+	// DelegatorValidator queries validator info for given delegator validator
+	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)

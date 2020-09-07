@@ -166,7 +166,8 @@ func (m *QueryProposalsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryProposalsRequest proto.InternalMessageInfo
 
-// QueryProposalsResponse is the response type for the Query/Proposals RPC method.
+// QueryProposalsResponse is the response type for the Query/Proposals RPC
+// method.
 type QueryProposalsResponse struct {
 	Proposals []Proposal `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals"`
 	// pagination defines the pagination in the response.
@@ -419,7 +420,8 @@ func (m *QueryVotesResponse) GetPagination() *query.PageResponse {
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
-	// params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit".
+	// params_type defines which parameters to query for, can be one of "voting",
+	// "tallying" or "deposit".
 	ParamsType string `protobuf:"bytes,1,opt,name=params_type,json=paramsType,proto3" json:"params_type,omitempty"`
 }
 

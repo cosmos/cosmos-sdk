@@ -115,7 +115,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryValidatorOutstandingRewardsRequest is the request type for the Query/ValidatorOutstandingRewards RPC method.
+// QueryValidatorOutstandingRewardsRequest is the request type for the
+// Query/ValidatorOutstandingRewards RPC method.
 type QueryValidatorOutstandingRewardsRequest struct {
 	// validator_address defines the validator address to query for.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -163,7 +164,8 @@ func (m *QueryValidatorOutstandingRewardsRequest) GetValidatorAddress() string {
 	return ""
 }
 
-// QueryValidatorOutstandingRewardsResponse is the response type for the Query/ValidatorOutstandingRewards RPC method.
+// QueryValidatorOutstandingRewardsResponse is the response type for the
+// Query/ValidatorOutstandingRewards RPC method.
 type QueryValidatorOutstandingRewardsResponse struct {
 	Rewards ValidatorOutstandingRewards `protobuf:"bytes,1,opt,name=rewards,proto3" json:"rewards"`
 }
@@ -210,7 +212,8 @@ func (m *QueryValidatorOutstandingRewardsResponse) GetRewards() ValidatorOutstan
 	return ValidatorOutstandingRewards{}
 }
 
-// QueryValidatorCommissionRequest is the request type for the Query/ValidatorCommission RPC method
+// QueryValidatorCommissionRequest is the request type for the
+// Query/ValidatorCommission RPC method
 type QueryValidatorCommissionRequest struct {
 	// validator_address defines the validator address to query for.
 	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -256,7 +259,8 @@ func (m *QueryValidatorCommissionRequest) GetValidatorAddress() string {
 	return ""
 }
 
-// QueryValidatorCommissionResponse is the response type for the Query/ValidatorCommission RPC method
+// QueryValidatorCommissionResponse is the response type for the
+// Query/ValidatorCommission RPC method
 type QueryValidatorCommissionResponse struct {
 	// commission defines the commision the validator received.
 	Commission ValidatorAccumulatedCommission `protobuf:"bytes,1,opt,name=commission,proto3" json:"commission"`
@@ -302,7 +306,8 @@ func (m *QueryValidatorCommissionResponse) GetCommission() ValidatorAccumulatedC
 	return ValidatorAccumulatedCommission{}
 }
 
-// QueryValidatorSlashesRequest is the request type for the Query/ValidatorSlashes RPC method
+// QueryValidatorSlashesRequest is the request type for the
+// Query/ValidatorSlashes RPC method
 type QueryValidatorSlashesRequest struct {
 	// validator_address defines the validator address to query for.
 	ValidatorAddress []byte `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -375,7 +380,8 @@ func (m *QueryValidatorSlashesRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryValidatorSlashesResponse is the response type for the Query/ValidatorSlashes RPC method.
+// QueryValidatorSlashesResponse is the response type for the
+// Query/ValidatorSlashes RPC method.
 type QueryValidatorSlashesResponse struct {
 	// slashes defines the slashes the validator received.
 	Slashes []ValidatorSlashEvent `protobuf:"bytes,1,rep,name=slashes,proto3" json:"slashes"`
@@ -430,7 +436,8 @@ func (m *QueryValidatorSlashesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegationRewardsRequest is the request type for the Query/DelegationRewards RPC method.
+// QueryDelegationRewardsRequest is the request type for the
+// Query/DelegationRewards RPC method.
 type QueryDelegationRewardsRequest struct {
 	// delegator_address defines the delegator address to query for.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
@@ -471,7 +478,8 @@ func (m *QueryDelegationRewardsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegationRewardsRequest proto.InternalMessageInfo
 
-// QueryDelegationRewardsResponse is the response type for the Query/DelegationRewards RPC method.
+// QueryDelegationRewardsResponse is the response type for the
+// Query/DelegationRewards RPC method.
 type QueryDelegationRewardsResponse struct {
 	// rewards defines the rewards accrued by a delegation.
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
@@ -517,7 +525,8 @@ func (m *QueryDelegationRewardsResponse) GetRewards() github_com_cosmos_cosmos_s
 	return nil
 }
 
-// QueryDelegationTotalRewardsRequest is the request type for the Query/DelegationTotalRewards RPC method.
+// QueryDelegationTotalRewardsRequest is the request type for the
+// Query/DelegationTotalRewards RPC method.
 type QueryDelegationTotalRewardsRequest struct {
 	// delegator_address defines the delegator address to query for.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
@@ -556,7 +565,8 @@ func (m *QueryDelegationTotalRewardsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegationTotalRewardsRequest proto.InternalMessageInfo
 
-// QueryDelegationTotalRewardsResponse is the response type for the Query/DelegationTotalRewards RPC method.
+// QueryDelegationTotalRewardsResponse is the response type for the
+// Query/DelegationTotalRewards RPC method.
 type QueryDelegationTotalRewardsResponse struct {
 	// rewards defines all the rewards accrued by a delegator.
 	Rewards []DelegationDelegatorReward `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards"`
@@ -611,7 +621,8 @@ func (m *QueryDelegationTotalRewardsResponse) GetTotal() github_com_cosmos_cosmo
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is the request type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsRequest is the request type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
 	// delegator_address defines the delegator address to query for.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
@@ -650,7 +661,8 @@ func (m *QueryDelegatorValidatorsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorsRequest proto.InternalMessageInfo
 
-// QueryDelegatorValidatorsResponse is the response type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsResponse is the response type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
 	// validators defines the validators a delegator is delegating for.
 	Validators []string `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators,omitempty"`
@@ -689,7 +701,8 @@ func (m *QueryDelegatorValidatorsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorsResponse proto.InternalMessageInfo
 
-// QueryDelegatorWithdrawAddressRequest is the request type for the Query/DelegatorWithdrawAddress RPC method.
+// QueryDelegatorWithdrawAddressRequest is the request type for the
+// Query/DelegatorWithdrawAddress RPC method.
 type QueryDelegatorWithdrawAddressRequest struct {
 	// delegator_address defines the delegator address to query for.
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
@@ -728,7 +741,8 @@ func (m *QueryDelegatorWithdrawAddressRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorWithdrawAddressRequest proto.InternalMessageInfo
 
-// QueryDelegatorWithdrawAddressResponse is the response type for the Query/DelegatorWithdrawAddress RPC method.
+// QueryDelegatorWithdrawAddressResponse is the response type for the
+// Query/DelegatorWithdrawAddress RPC method.
 type QueryDelegatorWithdrawAddressResponse struct {
 	// withdraw_address defines the delegator address to query for.
 	WithdrawAddress string `protobuf:"bytes,1,opt,name=withdraw_address,json=withdrawAddress,proto3" json:"withdraw_address,omitempty"`
@@ -767,7 +781,8 @@ func (m *QueryDelegatorWithdrawAddressResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorWithdrawAddressResponse proto.InternalMessageInfo
 
-// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC method.
+// QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC
+// method.
 type QueryCommunityPoolRequest struct {
 }
 
@@ -804,7 +819,8 @@ func (m *QueryCommunityPoolRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryCommunityPoolRequest proto.InternalMessageInfo
 
-// QueryCommunityPoolResponse is the response type for the Query/CommunityPool RPC method.
+// QueryCommunityPoolResponse is the response type for the Query/CommunityPool
+// RPC method.
 type QueryCommunityPoolResponse struct {
 	// pool defines community pool's coins.
 	Pool github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=pool,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"pool"`
@@ -970,7 +986,8 @@ type QueryClient interface {
 	ValidatorSlashes(ctx context.Context, in *QueryValidatorSlashesRequest, opts ...grpc.CallOption) (*QueryValidatorSlashesResponse, error)
 	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards queries the total rewards accrued by a each validator.
+	// DelegationTotalRewards queries the total rewards accrued by a each
+	// validator.
 	DelegationTotalRewards(ctx context.Context, in *QueryDelegationTotalRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationTotalRewardsResponse, error)
 	// DelegatorValidators queries the validators of a delegator.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
@@ -1081,7 +1098,8 @@ type QueryServer interface {
 	ValidatorSlashes(context.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
 	// DelegationRewards queries the total rewards accrued by a delegation.
 	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
-	// DelegationTotalRewards queries the total rewards accrued by a each validator.
+	// DelegationTotalRewards queries the total rewards accrued by a each
+	// validator.
 	DelegationTotalRewards(context.Context, *QueryDelegationTotalRewardsRequest) (*QueryDelegationTotalRewardsResponse, error)
 	// DelegatorValidators queries the validators of a delegator.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)

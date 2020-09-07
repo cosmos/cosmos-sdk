@@ -93,6 +93,9 @@ build-simd: go.sum
 build-simd-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
 
+go-install: go.sum
+	@go install -mod=readonly ./...
+
 .PHONY: build build-simd build-simd-linux
 
 mocks: $(MOCKS_DIR)

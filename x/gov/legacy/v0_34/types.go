@@ -326,7 +326,7 @@ func (pt ProposalKind) String() string {
 	}
 }
 
-func RegisterCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
 }

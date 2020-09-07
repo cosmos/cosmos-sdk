@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/std"
@@ -17,8 +19,10 @@ func (ConsensusState) ClientType() exported.ClientType {
 }
 
 // GetHeight returns the sequence number.
-func (cs ConsensusState) GetHeight() uint64 {
-	return cs.Sequence
+// Return clientexported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (cs ConsensusState) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, cs.Sequence)
 }
 
 // GetTimestamp returns zero.
@@ -48,6 +52,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
+	}
+	if cs.Diversifier != "" && strings.TrimSpace(cs.Diversifier) == "" {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "diversifier cannot contain only spaces")
 	}
 	if cs.PublicKey == nil || cs.GetPubKey() == nil || len(cs.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")

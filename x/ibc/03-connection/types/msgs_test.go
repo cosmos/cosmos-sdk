@@ -107,7 +107,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(),
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -119,27 +119,27 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(),
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenTry{
-		types.NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		&types.MsgConnectionOpenTry{"ibcconntest", "clienttotesta", invalidAny, counterparty, []string{ibctesting.ConnectionVersion}, 10, suite.proof, suite.proof, suite.proof, 10, signer},
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", invalidClient, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, emptyProof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, emptyProof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, emptyProof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 0, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 0, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, nil),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
-		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{"(invalid version)"}, suite.proof, suite.proof, suite.proof, 10, 10, signer),
+		types.NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		{"ibcconntest", "clienttotesta", invalidAny, counterparty, []string{ibctesting.ConnectionVersion}, clientHeight, suite.proof, suite.proof, suite.proof, clientHeight, signer},
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", invalidClient, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, emptyPrefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, emptyProof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, emptyProof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, emptyProof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clienttypes.Height{}, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.Height{}, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, nil),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
+		types.NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{"(invalid version)"}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer),
 	}
 
 	var testCases = []struct {
@@ -179,7 +179,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(),
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -190,22 +190,22 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(),
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.Height{}, commitmenttypes.GetSDKSpecs(), false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenAck{
-		types.NewMsgConnectionOpenAck("test/conn1", clientState, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", nil, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		&types.MsgConnectionOpenAck{"ibcconntest", ibctesting.ConnectionVersion, invalidAny, 10, suite.proof, suite.proof, suite.proof, 10, signer},
-		types.NewMsgConnectionOpenAck("ibcconntest", invalidClient, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, emptyProof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, emptyProof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, emptyProof, 10, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, 0, 10, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, 10, 0, ibctesting.ConnectionVersion, signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, 10, 10, "", signer),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, nil),
-		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, 10, 10, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("test/conn1", clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", nil, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		{"ibcconntest", ibctesting.ConnectionVersion, invalidAny, clientHeight, suite.proof, suite.proof, suite.proof, clientHeight, signer},
+		types.NewMsgConnectionOpenAck("ibcconntest", invalidClient, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, emptyProof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, emptyProof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, emptyProof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, clienttypes.Height{}, clientHeight, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, clientHeight, clienttypes.Height{}, ibctesting.ConnectionVersion, signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, "", signer),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, nil),
+		types.NewMsgConnectionOpenAck("ibcconntest", clientState, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, ibctesting.ConnectionVersion, signer),
 	}
 	var testCases = []struct {
 		msg     *types.MsgConnectionOpenAck
@@ -240,11 +240,11 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenConfirm() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []*types.MsgConnectionOpenConfirm{
-		types.NewMsgConnectionOpenConfirm("test/conn1", suite.proof, 10, signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, 10, signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 0, signer),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, nil),
-		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, 10, signer),
+		types.NewMsgConnectionOpenConfirm("test/conn1", suite.proof, clientHeight, signer),
+		types.NewMsgConnectionOpenConfirm("ibcconntest", emptyProof, clientHeight, signer),
+		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clienttypes.Height{}, signer),
+		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clientHeight, nil),
+		types.NewMsgConnectionOpenConfirm("ibcconntest", suite.proof, clientHeight, signer),
 	}
 
 	var testCases = []struct {

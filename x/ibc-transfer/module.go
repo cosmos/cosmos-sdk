@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -44,8 +45,8 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec implements AppModuleBasic interface
-func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
+// RegisterLegacyAminoCodec implements AppModuleBasic interface
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -73,7 +74,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc-transfer module.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd implements AppModuleBasic interface

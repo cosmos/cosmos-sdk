@@ -37,7 +37,7 @@ func (k Keeper) CreateClient(
 	return clientState, nil
 }
 
-// UpdateClient updates the consensus state and the state root from a provided header
+// UpdateClient updates the consensus state and the state root from a provided header.
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) (exported.ClientState, error) {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
@@ -56,13 +56,13 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	// prevent update if the client is frozen before or at header height
-	if clientState.IsFrozen() && clientState.GetFrozenHeight() <= header.GetHeight() {
+	if clientState.IsFrozen() && clientState.GetFrozenHeight().LTE(header.GetHeight()) {
 		return nil, sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
 	var (
 		consensusState  exported.ConsensusState
-		consensusHeight uint64
+		consensusHeight exported.Height
 		err             error
 	)
 
@@ -78,6 +78,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	if header != nil && clientType != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 		consensusHeight = consensusState.GetHeight()
+	} else {
+		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))
@@ -88,7 +90,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", consensusHeight)),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 	)
 

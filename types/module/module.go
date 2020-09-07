@@ -49,7 +49,7 @@ import (
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
-	RegisterCodec(*codec.LegacyAmino)
+	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	DefaultGenesis(codec.JSONMarshaler) json.RawMessage
@@ -74,10 +74,10 @@ func NewBasicManager(modules ...AppModuleBasic) BasicManager {
 	return moduleMap
 }
 
-// RegisterCodec registers all module codecs
-func (bm BasicManager) RegisterCodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec registers all module codecs
+func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	for _, b := range bm {
-		b.RegisterCodec(cdc)
+		b.RegisterLegacyAminoCodec(cdc)
 	}
 }
 

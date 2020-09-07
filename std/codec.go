@@ -8,9 +8,9 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
-func RegisterCodec(cdc *codec.LegacyAmino) {
-	vesting.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	vesting.RegisterLegacyAminoCodec(cdc)
+	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 }
 

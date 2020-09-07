@@ -38,8 +38,8 @@ func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// RegisterCodec implements AppModuleBasic interface.
-func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
+// RegisterLegacyAminoCodec implements AppModuleBasic interface.
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // RegisterInterfaces implements AppModuleBasic interface.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {}

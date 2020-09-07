@@ -185,7 +185,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -301,7 +301,7 @@ func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -365,39 +365,11 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	)
-	s.Require().NoError(err)
-
-	args := []string{
-		val.Address.String(),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewDelegateCmd(), args)
-	_, err = s.network.WaitForHeight(1)
-
 	testCases := []struct {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -481,7 +453,7 @@ func (s *IntegrationTestSuite) TestNewCmdUnbond() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{

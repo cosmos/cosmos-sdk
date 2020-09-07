@@ -25,7 +25,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 				Timestamp:      header.Timestamp,
 				Signature:      header.Signature,
 				NewPublicKey:   header.NewPublicKey,
-				NewDiversifier: "",
+				NewDiversifier: header.NewDiversifier,
 			},
 			false,
 		},

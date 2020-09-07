@@ -17,13 +17,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 const (
-	flagTrustLevel = "trust-level"
-	flagProofSpecs = "proof-specs"
+	flagTrustLevel                   = "trust-level"
+	flagProofSpecs                   = "proof-specs"
+	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
+	flagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC Client as defined
@@ -110,9 +113,28 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgCreateClient(
-				clientID, header, trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, specs, clientCtx.GetFromAddress(),
+			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
+			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
+
+			// validate header
+			if err := header.ValidateBasic(); err != nil {
+				return err
+			}
+
+			height := header.GetHeight().(clienttypes.Height)
+			clientState := types.NewClientState(
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
+				height, specs, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
+
+			consensusState := header.ConsensusState()
+
+			msg, err := clienttypes.NewMsgCreateClient(
+				clientID, clientState, consensusState, clientCtx.GetFromAddress(),
+			)
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -124,6 +146,8 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+	cmd.Flags().Bool(flagAllowUpdateAfterExpiry, false, "allow governance proposal to update client after expiry")
+	cmd.Flags().Bool(flagAllowUpdateAfterMisbehaviour, false, "allow governance proposal to update client after misbehaviour")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -164,7 +188,11 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -212,7 +240,11 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgSubmitMisbehaviour(m.ClientId, m, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

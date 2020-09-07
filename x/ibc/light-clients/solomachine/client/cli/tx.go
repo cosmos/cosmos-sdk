@@ -9,15 +9,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+)
+
+const (
+	flagAllowUpdateAfterProposal = "allow_update_after_proposal"
 )
 
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "create [client-id] [path/to/consensus_state.json]",
 		Short:   "create new solo machine client",
 		Long:    "create a new solo machine client with the specified identifier and consensus state",
@@ -46,7 +52,13 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgCreateClient(clientID, consensusState)
+			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)
+
+			clientState := types.NewClientState(consensusState, allowUpdateAfterProposal)
+			msg, err := clienttypes.NewMsgCreateClient(clientID, clientState, consensusState, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -55,6 +67,11 @@ func NewCreateClientCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	cmd.Flags().Bool(flagAllowUpdateAfterProposal, false, "allow governance proposal to update client")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewUpdateClientCmd defines the command to update a solo machine client.
@@ -88,7 +105,11 @@ func NewUpdateClientCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgUpdateClient(clientID, header)
+			msg, err := clienttypes.NewMsgUpdateClient(clientID, header, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -128,7 +149,11 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgSubmitClientMisbehaviour(m, clientCtx.GetFromAddress())
+			msg, err := clienttypes.NewMsgSubmitMisbehaviour(m.ClientId, m, clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

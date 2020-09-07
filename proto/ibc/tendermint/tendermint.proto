@@ -54,6 +54,15 @@ message ClientState {
   // Proof specifications used in verifying counterparty state
   repeated ics23.ProofSpec proof_specs = 8
       [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+
+  // This flag, when set to true, will allow governance to recover a client
+  // which has expired
+  bool allow_update_after_expiry = 9
+      [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry\""];
+  // This flag, when set to true, will allow governance to unfreeze a client
+  // whose chain has experienced a misbehaviour event
+  bool allow_update_after_misbehaviour = 10
+      [(gogoproto.moretags) = "yaml:\"allow_update_after_misbehaviour\""];
 }
 
 // ConsensusState defines the consensus state from Tendermint.
@@ -67,10 +76,8 @@ message ConsensusState {
   // commitment root (i.e app hash)
   ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
   // height at which the consensus state was stored.
-  ibc.client.Height height = 3 [
-    (gogoproto.nullable) = false
-  ];
-  bytes  next_validators_hash = 4 [
+  ibc.client.Height height               = 3 [(gogoproto.nullable) = false];
+  bytes             next_validators_hash = 4 [
     (gogoproto.casttype) =
         "github.com/tendermint/tendermint/libs/bytes.HexBytes",
     (gogoproto.moretags) = "yaml:\"next_validators_hash\""
@@ -129,54 +136,3 @@ message Fraction {
   int64 denominator = 2;
 }
 
-// MsgCreateClient defines a message to create a tendermint client.
-message MsgCreateClient {
-  option (gogoproto.goproto_getters) = false;
-
-  string   client_id   = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  Header   header      = 2;
-  Fraction trust_level = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"trust_level\""
-  ];
-  google.protobuf.Duration trusting_period = 4 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"trusting_period\""
-  ];
-  google.protobuf.Duration unbonding_period = 5 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"unbonding_period\""
-  ];
-  google.protobuf.Duration max_clock_drift = 6 [
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags)    = "yaml:\"max_clock_drift\""
-  ];
-  repeated ics23.ProofSpec proof_specs = 7
-      [(gogoproto.moretags) = "yaml:\"proof_specs\""];
-  bytes signer = 8
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-// MsgCreateClient defines an sdk.Msg to update a tendermint client state to
-// the given header.
-message MsgUpdateClient {
-  option (gogoproto.goproto_getters) = false;
-
-  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  Header header    = 2;
-  bytes  signer    = 3
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-// MsgSubmitClientMisbehaviour defines an sdk.Msg type that submits Evidence for
-// light client misbehaviour.
-message MsgSubmitClientMisbehaviour {
-  option (gogoproto.goproto_getters) = false;
-
-  Misbehaviour misbehaviour  = 1;
-  bytes        signer = 2
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}

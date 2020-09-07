@@ -24,7 +24,20 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	// On a new chain, we consider the init chain block height as 0, even though
+	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
+
+	// If req.InitialHeight is > 1, then we set the initial version in the
+	// stores.
+	if req.InitialHeight > 1 {
+		app.initialHeight = req.InitialHeight
+		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
+		err := app.cms.SetInitialVersion(req.InitialHeight)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
@@ -61,7 +74,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
 		for i := range res.Validators {
-			if proto.Equal(&res.Validators[i], &req.Validators[i]) {
+			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}
@@ -79,14 +92,13 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		appHash = emptyHash[:]
 	}
 
-	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
+	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
 	// deliverState.
 	return abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
 		AppHash:         appHash,
 	}
-
 }
 
 // Info implements the ABCI interface.
@@ -115,7 +127,7 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// FilterPeerByIDfilters peers by node ID.
+// FilterPeerByID filters peers by node ID.
 func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 	if app.idPeerFilter != nil {
 		return app.idPeerFilter(info)
@@ -395,7 +407,7 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 func gRPCErrorToSDKError(err error) error {
 	status, ok := grpcstatus.FromError(err)
 	if !ok {
-		return err
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	switch status.Code() {

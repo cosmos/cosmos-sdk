@@ -9,6 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -39,8 +41,9 @@ func NewSolomachine(t *testing.T, clientID string) *Solomachine {
 	}
 }
 
+// default usage does not allow update after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ConsensusState())
+	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
 
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
@@ -52,6 +55,11 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 		PublicKey: publicKey,
 		Timestamp: solo.Time,
 	}
+}
+
+// GetHeight returns an exported.Height with Sequence as EpochHeight
+func (solo *Solomachine) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, solo.Sequence)
 }
 
 // CreateHeader generates a new private/public key pair and creates the

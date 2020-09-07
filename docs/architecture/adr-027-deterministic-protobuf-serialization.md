@@ -69,16 +69,16 @@ with the following additions:
     * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
       endian). Per rule 3 above, the default value of `0` must be omitted, so
       this rule does not apply in such cases.
-    * The maximum value for a varint is `FF FF FF FF FF FF FF FF FF 01`.
+    * The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
       In other words, when decoded, the highest 6 bits of the 70-bit unsigned
       integer must be `0`. (10-byte varints are 10 groups of 7 bits, i.e.
       70 bits, of which only the lowest 70-6=64 are useful.)
-    * The maximum value for 32-bit values in varint encoding is `FF FF FF FF 0F`
+    * The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
       with one exception (below). In other words, when decoded, the highest 38
       bits of the 70-bit unsigned integer must be `0`.
         * The one exception to the above is _negative_ `int32`, which must be
           encoded using the full 10 bytes for sign extension<sup>2</sup>.
-    * The maximum value for Boolean values in varint encoding is `01` (i.e.
+    * The maximum value for Boolean values in varint encoding must be `01` (i.e.
       it must be `0` or `1`). Per rule 3 above, the default value of `0` must
       be omitted, so if a Boolean is included it must have a value of `1`.
 

@@ -29,7 +29,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 		{
 			"wrong client state type",
 			func() {
-				clientState = ibctmtypes.ClientState{}
+				clientState = &ibctmtypes.ClientState{}
 				header = suite.solomachine.CreateHeader()
 			},
 			false,

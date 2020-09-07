@@ -38,7 +38,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"wrong client state type",
 			func() {
-				clientState = ibctmtypes.ClientState{}
+				clientState = &ibctmtypes.ClientState{}
 				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,

@@ -239,6 +239,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: dummySig,
 		},
+		SkipSequenceCheck: s.TxConfig.SignModeHandler().DefaultMode() == signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}
 
 	txBuilder := s.TxConfig.NewTxBuilder()

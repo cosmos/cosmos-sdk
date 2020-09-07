@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.Height{}, commitmenttypes.GetSDKSpecs())
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.Height{}, commitmenttypes.GetSDKSpecs(), false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -208,7 +208,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
 				)

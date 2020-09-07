@@ -36,8 +36,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Default params constants used to create a TM client
 const (
+	// Default params constants used to create a TM client
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
@@ -50,6 +50,10 @@ const (
 
 	TransferPort = ibctransfertypes.ModuleName
 	MockPort     = mock.ModuleName
+
+	// used for testing UpdateClientProposal
+	Title       = "title"
+	Description = "description"
 )
 
 // Default params variables used to create a TM client
@@ -380,6 +384,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, commitmenttypes.GetSDKSpecs(),
+			false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case exported.ClientTypeSoloMachine:
@@ -406,9 +411,24 @@ func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string)
 }
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
-// client will be updated on the (target) chain.
-// UpdateTMClient mocks the relayer flow necessary for updating a Tendermint client
+// client will be updated on the (target) chain. UpdateTMClient mocks the relayer flow
+// necessary for updating a Tendermint client.
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
+	header, err := chain.ConstructUpdateTMClientHeader(counterparty, clientID)
+	require.NoError(chain.t, err)
+
+	msg, err := clienttypes.NewMsgUpdateClient(
+		clientID, header,
+		chain.SenderAccount.GetAddress(),
+	)
+	require.NoError(chain.t, err)
+
+	return chain.sendMsgs(msg)
+}
+
+// ConstructUpdateTMClientHeader will construct a valid 07-tendermint Header to update the
+// light client on the source chain.
+func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, clientID string) (*ibctmtypes.Header, error) {
 	header := counterparty.LastHeader
 	// Relayer must query for LatestHeight on client to get TrustedHeight
 	trustedHeight := chain.GetClientState(clientID).GetLatestHeight().(clienttypes.Height)
@@ -428,7 +448,7 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		// NextValidatorsHash
 		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.EpochHeight + 1))
 		if !ok {
-			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
+			return nil, sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
@@ -437,17 +457,18 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 
 	trustedVals, err := tmTrustedVals.ToProto()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	header.TrustedValidators = trustedVals
 
-	msg, err := clienttypes.NewMsgUpdateClient(
-		clientID, header,
-		chain.SenderAccount.GetAddress(),
-	)
-	require.NoError(chain.t, err)
+	return header, nil
 
-	return chain.sendMsgs(msg)
+}
+
+// ExpireClient fast forwards the chain's block time by the provided amount of time which will
+// expire any clients with a trusting period less than or equal to this amount of time.
+func (chain *TestChain) ExpireClient(amount time.Duration) {
+	chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(amount)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client.

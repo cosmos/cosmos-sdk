@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseProposal(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Staking Param Change",

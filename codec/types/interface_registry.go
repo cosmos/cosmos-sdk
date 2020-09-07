@@ -202,7 +202,6 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 // on x if x implements UnpackInterfacesMessage
 func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 	if msg, ok := x.(UnpackInterfacesMessage); ok {
-		// fmt.Println("UnpackInterfaces msg=", msg)
 		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil

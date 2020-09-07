@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,6 +74,16 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().Equal([]string{"1"}, blockHeight)
+}
+
+func (s *IntegrationTestSuite) TestSwaggerRoute() {
+	baseURL := s.network.Validators[0].APIAddress
+	s.Run("grpc swagger", func() {
+		resp, err := testutil.GetRequestWithHeaders(fmt.Sprintf("%s/swagger/", baseURL), nil)
+		s.Require().NoError(err)
+
+		fmt.Println(string(resp))
+	})
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

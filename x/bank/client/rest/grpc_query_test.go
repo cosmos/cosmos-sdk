@@ -92,11 +92,4 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
-
-	s.Run("grpc swagger", func() {
-		resp, err := testutil.GetRequestWithHeaders(fmt.Sprintf("%s/swagger", baseURL), nil)
-		s.Require().NoError(err)
-
-		fmt.Println(string(resp))
-	})
 }

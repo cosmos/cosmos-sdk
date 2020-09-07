@@ -431,8 +431,6 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
-			fmt.Println("req:", req)
-
 			rewards, err := queryClient.DelegationRewards(gocontext.Background(), req)
 
 			if testCase.expPass {
@@ -528,18 +526,22 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			},
 			true,
 		},
-		//{
-		//	"valid request",
-		//	func() {
-		//		delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
-		//			DelegatorAddress: addrs[0].String(),
-		//		}
-		//		expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
-		//			Validators: valAddrs[:1],
-		//		}
-		//	},
-		//	true,
-		//},
+		{
+			"valid request",
+			func() {
+				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
+					DelegatorAddress: addrs[0].String(),
+				}
+				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
+					Validators: func() []string {
+						addrs := make([]string, 2)
+						addrs = append(addrs, valAddrs[0].String(), valAddrs[1].String())
+						return addrs
+					}(),
+				}
+			},
+			true,
+		},
 	}
 
 	for _, testCase := range testCases {

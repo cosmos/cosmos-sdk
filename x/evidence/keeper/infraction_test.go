@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 		Height:           0,
 		Time:             time.Unix(0, 0),
 		Power:            power,
-		ConsensusAddress: sdk.ConsAddress(val.Address()),
+		ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
 	}
 	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
 
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 		Height:           0,
 		Time:             ctx.BlockTime(),
 		Power:            power,
-		ConsensusAddress: sdk.ConsAddress(val.Address()),
+		ConsensusAddress: sdk.ConsAddress(val.Address()).String(),
 	}
 
 	cp := suite.app.BaseApp.GetConsensusParams(ctx)

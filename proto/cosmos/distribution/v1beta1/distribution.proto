@@ -52,20 +52,16 @@ message ValidatorHistoricalRewards {
 // period for a validator kept as a running counter and incremented
 // each block as long as the validator's tokens remain constant.
 message ValidatorCurrentRewards {
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
   uint64 period = 2;
 }
 
 // ValidatorAccumulatedCommission represents accumulated commission
 // for a validator kept as a running counter, can be withdrawn at any time.
 message ValidatorAccumulatedCommission {
-  repeated cosmos.base.v1beta1.DecCoin commission = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin commission = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
@@ -84,10 +80,7 @@ message ValidatorOutstandingRewards {
 // for delegations which are withdrawn after a slash has occurred.
 message ValidatorSlashEvent {
   uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
-  string fraction         = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
+  string fraction = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
@@ -110,15 +103,13 @@ message FeePool {
 // together with how many coins are proposed to be spent, and to which
 // recipient account.
 message CommunityPoolSpendProposal {
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
-  string   title                      = 1;
-  string   description                = 2;
-  bytes    recipient = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  repeated cosmos.base.v1beta1.Coin amount = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  option (gogoproto.goproto_stringer)      = false;
+  option (gogoproto.goproto_getters)       = false;
+  string   title                           = 1;
+  string   description                     = 2;
+  bytes    recipient                       = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  repeated cosmos.base.v1beta1.Coin amount = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // DelegatorStartingInfo represents the starting info for a delegator reward period.
@@ -135,8 +126,7 @@ message DelegatorStartingInfo {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3
-      [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
+  uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
 }
 
 // DelegationDelegatorReward represents the properties
@@ -147,20 +137,18 @@ message DelegationDelegatorReward {
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 
-  repeated cosmos.base.v1beta1.DecCoin reward = 2 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin reward = 2
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal with a deposit
 message CommunityPoolSpendProposalWithDeposit {
-  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
   string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
-  bytes recipient = 3 [
+  bytes  recipient   = 3 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"recipient\""
   ];
-  string amount = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
+  string amount  = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
   string deposit = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }

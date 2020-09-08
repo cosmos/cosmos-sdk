@@ -72,7 +72,7 @@ message QueryAllBalancesRequest {
 message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
   repeated cosmos.base.v1beta1.Coin balances = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -87,7 +87,7 @@ message QueryTotalSupplyRequest {}
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
   repeated cosmos.base.v1beta1.Coin supply = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
@@ -99,7 +99,7 @@ message QuerySupplyOfRequest {
 // QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
 message QuerySupplyOfResponse {
   // amount is the supply of the coin.
-  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest defines the request type for querying x/bank parameters.
@@ -107,5 +107,5 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse defines the response type for querying x/bank parameters.
 message QueryParamsResponse {
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }

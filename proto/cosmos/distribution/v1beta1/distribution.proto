@@ -25,7 +25,7 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  bool withdraw_addr_enabled = 4 [ (gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\"" ];
+  bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.
@@ -46,7 +46,7 @@ message ValidatorHistoricalRewards {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false
   ];
-  uint32 reference_count = 2 [ (gogoproto.moretags) = "yaml:\"reference_count\"" ];
+  uint32 reference_count = 2 [(gogoproto.moretags) = "yaml:\"reference_count\""];
 }
 
 // ValidatorCurrentRewards represents current rewards and current
@@ -54,7 +54,7 @@ message ValidatorHistoricalRewards {
 // each block as long as the validator's tokens remain constant.
 message ValidatorCurrentRewards {
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false ];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
   uint64 period = 2;
 }
 
@@ -62,7 +62,7 @@ message ValidatorCurrentRewards {
 // for a validator kept as a running counter, can be withdrawn at any time.
 message ValidatorAccumulatedCommission {
   repeated cosmos.base.v1beta1.DecCoin commission = 1
-      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false ];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
@@ -80,16 +80,15 @@ message ValidatorOutstandingRewards {
 // This is needed to calculate appropriate amount of staking tokens
 // for delegations which are withdrawn after a slash has occurred.
 message ValidatorSlashEvent {
-  uint64 validator_period = 1 [ (gogoproto.moretags) = "yaml:\"validator_period\"" ];
-  string fraction         = 2
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
+  uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
+  string fraction = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 message ValidatorSlashEvents {
   option (gogoproto.goproto_stringer)                 = false;
   repeated ValidatorSlashEvent validator_slash_events = 1
-      [ (gogoproto.moretags) = "yaml:\"validator_slash_events\"", (gogoproto.nullable) = false ];
+      [(gogoproto.moretags) = "yaml:\"validator_slash_events\"", (gogoproto.nullable) = false];
 }
 
 // FeePool is the global fee pool for distribution.
@@ -113,7 +112,7 @@ message CommunityPoolSpendProposal {
   string   description                     = 2;
   string   recipient                       = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
@@ -123,40 +122,36 @@ message CommunityPoolSpendProposal {
 // the delegators within the validator may be left with less than a full token,
 // thus sdk.Dec is used.
 message DelegatorStartingInfo {
-  uint64 previous_period = 1 [ (gogoproto.moretags) = "yaml:\"previous_period\"" ];
+  uint64 previous_period = 1 [(gogoproto.moretags) = "yaml:\"previous_period\""];
   string stake           = 2 [
     (gogoproto.moretags)   = "yaml:\"stake\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  uint64 height = 3 [ (gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height" ];
+  uint64 height = 3 [(gogoproto.moretags) = "yaml:\"creation_height\"", (gogoproto.jsontag) = "creation_height"];
 }
 
 // DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 message DelegationDelegatorReward {
-  option (gogoproto.goproto_getters)         = false;
-  option (gogoproto.goproto_stringer)        = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
 
-  string validator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
   repeated cosmos.base.v1beta1.DecCoin reward = 2
-      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false ];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
 // with a deposit
 message CommunityPoolSpendProposalWithDeposit {
-  option (gogoproto.goproto_getters)         = false;
-  option (gogoproto.goproto_stringer)        = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
 
-  string title       = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
-  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
-  string  recipient   = 3 [
-    (gogoproto.moretags) = "yaml:\"recipient\""
-  ];
-  string amount  = 4 [ (gogoproto.moretags) = "yaml:\"amount\"" ];
-  string deposit = 5 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+  string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string recipient   = 3 [(gogoproto.moretags) = "yaml:\"recipient\""];
+  string amount      = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
+  string deposit     = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }

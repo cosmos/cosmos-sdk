@@ -10,7 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 // GenesisState defines the auth module's genesis state.
 message GenesisState {
   // params defines all the paramaters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 
   // accounts are the accounts present at genesis.
   repeated google.protobuf.Any accounts = 2;

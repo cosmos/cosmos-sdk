@@ -9,14 +9,14 @@ option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 // a version/height.
 message CommitInfo {
   int64    version               = 1;
-  repeated StoreInfo store_infos = 2 [ (gogoproto.nullable) = false ];
+  repeated StoreInfo store_infos = 2 [(gogoproto.nullable) = false];
 }
 
 // StoreInfo defines store-specific commit information. It contains a reference
 // between a store name and the commit ID.
 message StoreInfo {
   string   name      = 1;
-  CommitID commit_id = 2 [ (gogoproto.nullable) = false ];
+  CommitID commit_id = 2 [(gogoproto.nullable) = false];
 }
 
 // CommitID defines the committment information when a specific store is

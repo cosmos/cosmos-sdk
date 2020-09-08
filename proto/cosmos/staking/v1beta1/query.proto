@@ -104,7 +104,7 @@ message QueryValidatorsRequest {
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 message QueryValidatorsResponse {
   // validators contains all the queried validators.
-  repeated Validator validators = 1 [ (gogoproto.nullable) = false ];
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -119,7 +119,7 @@ message QueryValidatorRequest {
 // QueryValidatorResponse is response type for the Query/Validator RPC method
 message QueryValidatorResponse {
   // validator defines the the validator info.
-  Validator validator = 1 [ (gogoproto.nullable) = false ];
+  Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryValidatorDelegationsRequest is request type for the
@@ -136,7 +136,7 @@ message QueryValidatorDelegationsRequest {
 // Query/ValidatorDelegations RPC method
 message QueryValidatorDelegationsResponse {
   repeated DelegationResponse delegation_responses = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "DelegationResponses"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -155,7 +155,7 @@ message QueryValidatorUnbondingDelegationsRequest {
 // QueryValidatorUnbondingDelegationsResponse is response type for the
 // Query/ValidatorUnbondingDelegations RPC method.
 message QueryValidatorUnbondingDelegationsResponse {
-  repeated UnbondingDelegation unbonding_responses = 1 [ (gogoproto.nullable) = false ];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -196,7 +196,7 @@ message QueryUnbondingDelegationRequest {
 // RPC method.
 message QueryUnbondingDelegationResponse {
   // unbond defines the unbonding information of a delegation.
-  UnbondingDelegation unbond = 1 [ (gogoproto.nullable) = false ];
+  UnbondingDelegation unbond = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryDelegatorDelegationsRequest is request type for the
@@ -216,7 +216,7 @@ message QueryDelegatorDelegationsRequest {
 // Query/DelegatorDelegations RPC method.
 message QueryDelegatorDelegationsResponse {
   // delegation_responses defines all the delegations' info of a delegator.
-  repeated DelegationResponse delegation_responses = 1 [ (gogoproto.nullable) = false ];
+  repeated DelegationResponse delegation_responses = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -238,7 +238,7 @@ message QueryDelegatorUnbondingDelegationsRequest {
 // QueryUnbondingDelegatorDelegationsResponse is response type for the
 // Query/UnbondingDelegatorDelegations RPC method.
 message QueryDelegatorUnbondingDelegationsResponse {
-  repeated UnbondingDelegation unbonding_responses = 1 [ (gogoproto.nullable) = false ];
+  repeated UnbondingDelegation unbonding_responses = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -266,7 +266,7 @@ message QueryRedelegationsRequest {
 // QueryRedelegationsResponse is response type for the Query/Redelegations RPC
 // method.
 message QueryRedelegationsResponse {
-  repeated RedelegationResponse redelegation_responses = 1 [ (gogoproto.nullable) = false ];
+  repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -289,7 +289,7 @@ message QueryDelegatorValidatorsRequest {
 // Query/DelegatorValidators RPC method.
 message QueryDelegatorValidatorsResponse {
   // validators defines the the validators' info of a delegator.
-  repeated Validator validators = 1 [ (gogoproto.nullable) = false ];
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -312,7 +312,7 @@ message QueryDelegatorValidatorRequest {
 // Query/DelegatorValidator RPC method.
 message QueryDelegatorValidatorResponse {
   // validator defines the the validator info.
-  Validator validator = 1 [ (gogoproto.nullable) = false ];
+  Validator validator = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
@@ -335,7 +335,7 @@ message QueryPoolRequest {}
 // QueryPoolResponse is response type for the Query/Pool RPC method.
 message QueryPoolResponse {
   // pool defines the pool info.
-  Pool pool = 1 [ (gogoproto.nullable) = false ];
+  Pool pool = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -344,5 +344,5 @@ message QueryParamsRequest {}
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params holds all the parameters of this module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }

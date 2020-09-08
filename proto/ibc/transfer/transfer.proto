@@ -15,22 +15,21 @@ message MsgTransfer {
   option (gogoproto.goproto_getters) = false;
 
   // the port on which the packet will be sent
-  string source_port = 1 [ (gogoproto.moretags) = "yaml:\"source_port\"" ];
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
   // the channel by which the packet will be sent
-  string source_channel = 2 [ (gogoproto.moretags) = "yaml:\"source_channel\"" ];
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
   // the tokens to be transferred
-  cosmos.base.v1beta1.Coin token = 3 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
   string sender = 4;
   // the recipient address on the destination chain
   string receiver = 5;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
-  ibc.client.Height timeout_height = 6
-      [ (gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false ];
+  ibc.client.Height timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7 [ (gogoproto.moretags) = "yaml:\"timeout_timestamp\"" ];
+  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload
@@ -73,8 +72,8 @@ message DenomTrace {
 message Params {
   // send_enabled enables or disables all cross-chain token transfers from this
   // chain.
-  bool send_enabled = 1 [ (gogoproto.moretags) = "yaml:\"send_enabled\"" ];
+  bool send_enabled = 1 [(gogoproto.moretags) = "yaml:\"send_enabled\""];
   // receive_enabled enables or disables all cross-chain token transfers to this
   // chain.
-  bool receive_enabled = 2 [ (gogoproto.moretags) = "yaml:\"receive_enabled\"" ];
+  bool receive_enabled = 2 [(gogoproto.moretags) = "yaml:\"receive_enabled\""];
 }

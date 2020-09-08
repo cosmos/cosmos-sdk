@@ -12,8 +12,8 @@ message MsgCreateValidator {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description     description         = 1 [ (gogoproto.nullable) = false ];
-  CommissionRates commission          = 2 [ (gogoproto.nullable) = false ];
+  Description     description         = 1 [(gogoproto.nullable) = false];
+  CommissionRates commission          = 2 [(gogoproto.nullable) = false];
   string          min_self_delegation = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
@@ -28,7 +28,7 @@ message MsgCreateValidator {
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   string                   pubkey = 6;
-  cosmos.base.v1beta1.Coin value  = 7 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin value  = 7 [(gogoproto.nullable) = false];
 }
 
 // MsgEditValidator defines an SDK message for editing an existing validator.
@@ -36,7 +36,7 @@ message MsgEditValidator {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description description       = 1 [ (gogoproto.nullable) = false ];
+  Description description       = 1 [(gogoproto.nullable) = false];
   string      validator_address = 2 [
 
     (gogoproto.moretags) = "yaml:\"address\""
@@ -71,7 +71,7 @@ message MsgDelegate {
 
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
-  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgBeginRedelegate defines an SDK message for performing a redelegation
@@ -92,7 +92,7 @@ message MsgBeginRedelegate {
 
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
-  cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin amount = 4 [(gogoproto.nullable) = false];
 }
 
 // MsgUndelegate defines an SDK message for performing an undelegation from a
@@ -109,5 +109,5 @@ message MsgUndelegate {
 
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
-  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }

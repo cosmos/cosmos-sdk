@@ -58,6 +58,6 @@ message MsgFundCommunityPool {
   option (gogoproto.goproto_getters) = false;
 
   repeated cosmos.base.v1beta1.Coin amount = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   string depositor = 2;
 }

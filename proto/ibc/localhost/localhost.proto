@@ -13,7 +13,7 @@ message ClientState {
   // client id
   string id = 1;
   // self chain ID
-  string chain_id = 2 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string chain_id = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // self latest block height
-  ibc.client.Height height = 3 [ (gogoproto.nullable) = false ];
+  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
 }

@@ -28,5 +28,5 @@ message QueryParamsRequest {
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // param defines the queried parameter.
-  ParamChange param = 1 [ (gogoproto.nullable) = false ];
+  ParamChange param = 1 [(gogoproto.nullable) = false];
 }

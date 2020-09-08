@@ -70,7 +70,7 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryValidatorOutstandingRewardsRequest is the request type for the
@@ -83,7 +83,7 @@ message QueryValidatorOutstandingRewardsRequest {
 // QueryValidatorOutstandingRewardsResponse is the response type for the
 // Query/ValidatorOutstandingRewards RPC method.
 message QueryValidatorOutstandingRewardsResponse {
-  ValidatorOutstandingRewards rewards = 1 [ (gogoproto.nullable) = false ];
+  ValidatorOutstandingRewards rewards = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryValidatorCommissionRequest is the request type for the
@@ -97,14 +97,14 @@ message QueryValidatorCommissionRequest {
 // Query/ValidatorCommission RPC method
 message QueryValidatorCommissionResponse {
   // commission defines the commision the validator received.
-  ValidatorAccumulatedCommission commission = 1 [ (gogoproto.nullable) = false ];
+  ValidatorAccumulatedCommission commission = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryValidatorSlashesRequest is the request type for the
 // Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesRequest {
-  option (gogoproto.goproto_getters)         = false;
-  option (gogoproto.goproto_stringer)        = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
 
   // validator_address defines the validator address to query for.
   string validator_address = 1;
@@ -120,7 +120,7 @@ message QueryValidatorSlashesRequest {
 // Query/ValidatorSlashes RPC method.
 message QueryValidatorSlashesResponse {
   // slashes defines the slashes the validator received.
-  repeated ValidatorSlashEvent slashes = 1 [ (gogoproto.nullable) = false ];
+  repeated ValidatorSlashEvent slashes = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -143,7 +143,7 @@ message QueryDelegationRewardsRequest {
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
   repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
@@ -159,10 +159,10 @@ message QueryDelegationTotalRewardsRequest {
 // Query/DelegationTotalRewards RPC method.
 message QueryDelegationTotalRewardsResponse {
   // rewards defines all the rewards accrued by a delegator.
-  repeated DelegationDelegatorReward rewards = 1 [ (gogoproto.nullable) = false ];
+  repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false];
   // total defines the sum of all the rewards.
   repeated cosmos.base.v1beta1.DecCoin total = 2
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the
@@ -214,5 +214,5 @@ message QueryCommunityPoolRequest {}
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
   repeated cosmos.base.v1beta1.DecCoin pool = 1
-      [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false ];
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }

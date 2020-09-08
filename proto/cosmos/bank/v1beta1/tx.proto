@@ -21,13 +21,13 @@ message MsgSend {
     (gogoproto.moretags) = "yaml:\"to_address\""
   ];
   repeated cosmos.base.v1beta1.Coin amount = 3
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {
   option (gogoproto.equal) = false;
 
-  repeated Input inputs   = 1 [ (gogoproto.nullable) = false ];
-  repeated Output outputs = 2 [ (gogoproto.nullable) = false ];
+  repeated Input inputs   = 1 [(gogoproto.nullable) = false];
+  repeated Output outputs = 2 [(gogoproto.nullable) = false];
 }

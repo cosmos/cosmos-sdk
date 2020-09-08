@@ -51,7 +51,7 @@ message QueryDenomTracesRequest {
 // method.
 message QueryDenomTracesResponse {
   // denom_traces returns all denominations trace information.
-  repeated DenomTrace denom_traces = 1 [ (gogoproto.castrepeated) = "Traces", (gogoproto.nullable) = false ];
+  repeated DenomTrace denom_traces = 1 [(gogoproto.castrepeated) = "Traces", (gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

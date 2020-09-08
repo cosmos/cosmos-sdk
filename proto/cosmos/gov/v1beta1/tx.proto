@@ -17,7 +17,7 @@ option (gogoproto.goproto_getters_all)  = false;
 message MsgSubmitProposal {
   option (gogoproto.equal) = false;
 
-  google.protobuf.Any content                       = 1 [ (cosmos_proto.accepts_interface) = "Content" ];
+  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -30,7 +30,7 @@ message MsgSubmitProposal {
 message MsgVote {
   option (gogoproto.equal) = false;
 
-  uint64     proposal_id = 1 [ (gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\"" ];
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   string     voter       = 2;
   VoteOption option      = 3;
 }
@@ -39,8 +39,8 @@ message MsgVote {
 message MsgDeposit {
   option (gogoproto.equal) = false;
 
-  uint64   proposal_id = 1 [ (gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\"" ];
+  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
   string   depositor   = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

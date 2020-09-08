@@ -448,14 +448,14 @@ func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAm
 // util
 
 func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	val, found := k.GetValidator(ctx, del.ValidatorAddress)
+	val, found := k.GetValidator(ctx, del.GetValidatorAddr())
 	if !found {
 		return types.DelegationResponse{}, types.ErrNoValidatorFound
 	}
 
 	return types.NewDelegationResp(
 		del.DelegatorAddress,
-		del.ValidatorAddress,
+		del.GetValidatorAddr(),
 		del.Shares,
 		sdk.NewCoin(k.BondDenom(ctx), val.TokensFromShares(del.Shares).TruncateInt()),
 	), nil
@@ -484,7 +484,15 @@ func RedelegationsToRedelegationResponses(
 	resp := make(types.RedelegationResponses, len(redels))
 
 	for i, redel := range redels {
-		val, found := k.GetValidator(ctx, redel.ValidatorDstAddress)
+		valSrcAddr, err := sdk.ValAddressFromBech32(redel.ValidatorSrcAddress)
+		if err != nil {
+			panic(err)
+		}
+		valDstAddr, err := sdk.ValAddressFromBech32(redel.ValidatorDstAddress)
+		if err != nil {
+			panic(err)
+		}
+		val, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound
 		}
@@ -502,8 +510,8 @@ func RedelegationsToRedelegationResponses(
 
 		resp[i] = types.NewRedelegationResponse(
 			redel.DelegatorAddress,
-			redel.ValidatorSrcAddress,
-			redel.ValidatorDstAddress,
+			valSrcAddr,
+			valDstAddr,
 			entryResponses,
 		)
 	}

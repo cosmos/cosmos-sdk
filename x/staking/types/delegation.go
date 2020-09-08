@@ -32,7 +32,7 @@ func (dvv DVVTriplet) String() string {
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr,
-		ValidatorAddress: validatorAddr,
+		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
 	}
 }
@@ -59,9 +59,17 @@ func UnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) (delegation De
 	return delegation, err
 }
 
-func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
-func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
-func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
+	return d.DelegatorAddress
+}
+func (d Delegation) GetValidatorAddr() sdk.ValAddress {
+	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+func (d Delegation) GetShares() sdk.Dec { return d.Shares }
 
 // String returns a human readable string representation of a Delegation.
 func (d Delegation) String() string {
@@ -107,7 +115,7 @@ func NewUnbondingDelegation(
 ) UnbondingDelegation {
 	return UnbondingDelegation{
 		DelegatorAddress: delegatorAddr,
-		ValidatorAddress: validatorAddr,
+		ValidatorAddress: validatorAddr.String(),
 		Entries: []UnbondingDelegationEntry{
 			NewUnbondingDelegationEntry(creationHeight, minTime, balance),
 		},
@@ -200,8 +208,8 @@ func NewRedelegation(
 ) Redelegation {
 	return Redelegation{
 		DelegatorAddress:    delegatorAddr,
-		ValidatorSrcAddress: validatorSrcAddr,
-		ValidatorDstAddress: validatorDstAddr,
+		ValidatorSrcAddress: validatorSrcAddr.String(),
+		ValidatorDstAddress: validatorDstAddr.String(),
 		Entries: []RedelegationEntry{
 			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst),
 		},
@@ -326,8 +334,8 @@ func NewRedelegationResponse(
 	return RedelegationResponse{
 		Redelegation: Redelegation{
 			DelegatorAddress:    delegatorAddr,
-			ValidatorSrcAddress: validatorSrc,
-			ValidatorDstAddress: validatorDst,
+			ValidatorSrcAddress: validatorSrc.String(),
+			ValidatorDstAddress: validatorDst.String(),
 		},
 		Entries: entries,
 	}

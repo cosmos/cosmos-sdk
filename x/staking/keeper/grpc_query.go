@@ -434,7 +434,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 			return err
 		}
 
-		validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
+		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			return types.ErrNoValidatorFound
 		}

@@ -40,7 +40,7 @@ func NewMsgCreateValidator(
 	return &MsgCreateValidator{
 		Description:       description,
 		DelegatorAddress:  sdk.AccAddress(valAddr),
-		ValidatorAddress:  valAddr,
+		ValidatorAddress:  valAddr.String(),
 		Pubkey:            pkStr,
 		Value:             selfDelegation,
 		Commission:        commission,
@@ -61,8 +61,11 @@ func (msg MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	// delegator is first signer so delegator pays fees
 	addrs := []sdk.AccAddress{msg.DelegatorAddress}
-
-	if !bytes.Equal(msg.DelegatorAddress.Bytes(), msg.ValidatorAddress.Bytes()) {
+	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	if !bytes.Equal(msg.DelegatorAddress.Bytes(), addr.Bytes()) {
 		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddress))
 	}
 
@@ -82,7 +85,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return ErrEmptyDelegatorAddr
 	}
 
-	if msg.ValidatorAddress.Empty() {
+	if msg.ValidatorAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 
@@ -126,7 +129,7 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr,
+		ValidatorAddress:  valAddr.String(),
 		MinSelfDelegation: newMinSelfDelegation,
 	}
 }
@@ -150,7 +153,7 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgEditValidator) ValidateBasic() error {
-	if msg.ValidatorAddress.Empty() {
+	if msg.ValidatorAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 
@@ -175,7 +178,7 @@ func (msg MsgEditValidator) ValidateBasic() error {
 func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
 		DelegatorAddress: delAddr,
-		ValidatorAddress: valAddr,
+		ValidatorAddress: valAddr.String(),
 		Amount:           amount,
 	}
 }
@@ -203,7 +206,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 		return ErrEmptyDelegatorAddr
 	}
 
-	if msg.ValidatorAddress.Empty() {
+	if msg.ValidatorAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 
@@ -220,8 +223,8 @@ func NewMsgBeginRedelegate(
 ) *MsgBeginRedelegate {
 	return &MsgBeginRedelegate{
 		DelegatorAddress:    delAddr,
-		ValidatorSrcAddress: valSrcAddr,
-		ValidatorDstAddress: valDstAddr,
+		ValidatorSrcAddress: valSrcAddr.String(),
+		ValidatorDstAddress: valDstAddr.String(),
 		Amount:              amount,
 	}
 }
@@ -249,11 +252,11 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 		return ErrEmptyDelegatorAddr
 	}
 
-	if msg.ValidatorSrcAddress.Empty() {
+	if msg.ValidatorSrcAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 
-	if msg.ValidatorDstAddress.Empty() {
+	if msg.ValidatorDstAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 
@@ -268,7 +271,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
 		DelegatorAddress: delAddr,
-		ValidatorAddress: valAddr,
+		ValidatorAddress: valAddr.String(),
 		Amount:           amount,
 	}
 }
@@ -294,7 +297,7 @@ func (msg MsgUndelegate) ValidateBasic() error {
 		return ErrEmptyDelegatorAddr
 	}
 
-	if msg.ValidatorAddress.Empty() {
+	if msg.ValidatorAddress == "" {
 		return ErrEmptyValidatorAddr
 	}
 

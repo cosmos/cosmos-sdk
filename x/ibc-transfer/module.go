@@ -358,6 +358,23 @@ func (am AppModule) OnAcknowledgementPacket(
 		),
 	)
 
+	switch resp := ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Result:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
+			),
+		)
+	case *channeltypes.Acknowledgement_Error:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
+			),
+		)
+	}
+
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, nil

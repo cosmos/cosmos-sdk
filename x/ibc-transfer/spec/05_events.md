@@ -32,7 +32,7 @@ order: 5
 | fungible_token_packet | receiver        | {receiver}        |
 | fungible_token_packet | denom           | {denom}           |
 | fungible_token_packet | amount          | {amount}          |
-| fungible_token_packet | acknowledgement | {acknowledgement} |
+| fungible_token_packet | success | error | {ack.Response}    |
 
 ## OnTimeoutPacket callback
 

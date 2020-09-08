@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
@@ -53,7 +53,7 @@ func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 
 // ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
-	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(solo.PublicKey)
+	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
@@ -74,7 +74,7 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
 	newPrivKey := ed25519.GenPrivKey()
 
-	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
+	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	data := &solomachinetypes.HeaderData{

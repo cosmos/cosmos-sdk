@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -116,10 +115,9 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 func (qrt *GRPCQueryRouter) RegisterSimulateService(
 	simulateFn simulate.BaseAppSimulateFn,
 	interfaceRegistry codectypes.InterfaceRegistry,
-	pubkeyCodec cryptotypes.PublicKeyCodec,
 ) {
 	simulate.RegisterSimulateServiceServer(
 		qrt,
-		simulate.NewSimulateServer(simulateFn, interfaceRegistry, pubkeyCodec),
+		simulate.NewSimulateServer(simulateFn, interfaceRegistry),
 	)
 }

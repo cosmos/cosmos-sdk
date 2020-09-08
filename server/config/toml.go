@@ -47,7 +47,8 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # MinRetainBlocks defines the minimum block height offset from the current
 # block being committed, such that all blocks past this offset are pruned
 # from Tendermint. It is used as part of the process of determining the
-# ResponseCommit.RetainHeight value during ABCI Commit.
+# ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+# that no blocks should be pruned.
 #
 # This configuration value is only responsible for pruning Tendermint blocks.
 # It has no bearing on application state pruning which is determined by the

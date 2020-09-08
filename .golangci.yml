@@ -4,13 +4,15 @@ run:
 #   timeout: 5m
 
 linters:
-  disable-all: true
+  disable:
+    - errcheck
+    - wsl
+    - varcheck
   enable:
     - bodyclose
     - deadcode
     - depguard
     - dogsled
-    # - errcheck
     - goconst
     - gocritic
     - gofmt
@@ -34,7 +36,6 @@ linters:
     - unused
     - unparam
     - misspell
-    # - wsl
     - nolintlint
 
 issues:

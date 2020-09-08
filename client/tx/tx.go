@@ -272,12 +272,12 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
 	}
 	cached := any.AsAny().GetCachedValue()
-	txTx, ok := cached.(*tx.Tx)
+	protoTx, ok := cached.(*tx.Tx)
 	if !ok {
 		return nil, fmt.Errorf("cannot simulate amino tx")
 	}
 
-	simReq := sim.SimulateRequest{Tx: txTx}
+	simReq := sim.SimulateRequest{Tx: protoTx}
 
 	return simReq.Marshal()
 }

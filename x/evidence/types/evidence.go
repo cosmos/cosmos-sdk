@@ -85,9 +85,9 @@ func (e Equivocation) GetValidatorPower() int64 {
 // GetTotalPower is a no-op for the Equivocation type.
 func (e Equivocation) GetTotalPower() int64 { return 0 }
 
-// ConvertDuplicateVoteEvidence converts a Tendermint concrete Evidence type to
+// FromABCIEvidence converts a Tendermint concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
-func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.Evidence {
+func FromABCIEvidence(dupVote abci.Evidence) exported.Evidence {
 	consAddr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixConsAddr, dupVote.Validator.Address)
 	if err != nil {
 		panic(err)

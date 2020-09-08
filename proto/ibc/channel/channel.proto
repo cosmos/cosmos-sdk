@@ -164,7 +164,8 @@ message IdentifiedChannel {
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
   // list of connection identifiers, in order, along which packets sent on this
   // channel will travel
-  repeated string connection_hops = 4 [(gogoproto.moretags) = "yaml:\"connection_hops\""];
+  repeated string connection_hops = 4
+      [(gogoproto.moretags) = "yaml:\"connection_hops\""];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
   // port identifier

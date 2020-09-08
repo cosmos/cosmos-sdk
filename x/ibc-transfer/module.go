@@ -194,7 +194,9 @@ func (am AppModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	// TODO: Enforce ordering, currently relayers use ORDERED channels
+	if order != channeltypes.UNORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
 
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)
@@ -211,7 +213,6 @@ func (am AppModule) OnChanOpenInit(
 		return err
 	}
 
-	// TODO: escrow
 	return nil
 }
 
@@ -227,7 +228,9 @@ func (am AppModule) OnChanOpenTry(
 	version,
 	counterpartyVersion string,
 ) error {
-	// TODO: Enforce ordering, currently relayers use ORDERED channels
+	if order != channeltypes.UNORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
 
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)
@@ -248,7 +251,6 @@ func (am AppModule) OnChanOpenTry(
 		return err
 	}
 
-	// TODO: escrow
 	return nil
 }
 

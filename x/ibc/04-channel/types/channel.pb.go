@@ -429,7 +429,7 @@ func (m *MsgChannelOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_types.A
 	return nil
 }
 
-// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
+// MsgChannelCloseInit defines a msg sent by a Relayer to Chain A
 // to close a channel with Chain B.
 type MsgChannelCloseInit struct {
 	PortId    string                                        `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
@@ -887,8 +887,8 @@ type Channel struct {
 	Ordering Order `protobuf:"varint,2,opt,name=ordering,proto3,enum=ibc.channel.Order" json:"ordering,omitempty"`
 	// counterparty channel end
 	Counterparty Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	// list of connection identifiers, in order, along which packets sent on this
-	// channel will travel
+	// list of connection identifiers, in order, along which packets sent on
+	// this channel will travel
 	ConnectionHops []string `protobuf:"bytes,4,rep,name=connection_hops,json=connectionHops,proto3" json:"connection_hops,omitempty" yaml:"connection_hops"`
 	// opaque channel version, which is agreed upon during the handshake
 	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
@@ -936,8 +936,8 @@ type IdentifiedChannel struct {
 	Ordering Order `protobuf:"varint,2,opt,name=ordering,proto3,enum=ibc.channel.Order" json:"ordering,omitempty"`
 	// counterparty channel end
 	Counterparty Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	// list of connection identifiers, in order, along which packets sent on this
-	// channel will travel
+	// list of connection identifiers, in order, along which packets sent on
+	// this channel will travel
 	ConnectionHops []string `protobuf:"bytes,4,rep,name=connection_hops,json=connectionHops,proto3" json:"connection_hops,omitempty" yaml:"connection_hops"`
 	// opaque channel version, which is agreed upon during the handshake
 	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
@@ -1023,9 +1023,9 @@ var xxx_messageInfo_Counterparty proto.InternalMessageInfo
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	// number corresponds to the order of sends and receives, where a Packet with
-	// an earlier sequence number must be sent and received before a Packet with a
-	// later sequence number.
+	// number corresponds to the order of sends and receives, where a Packet
+	// with an earlier sequence number must be sent and received before a Packet
+	// with a later sequence number.
 	Sequence uint64 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	// identifies the port on the sending chain.
 	SourcePort string `protobuf:"bytes,2,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty" yaml:"source_port"`

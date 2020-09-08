@@ -44,6 +44,9 @@ flags:
       - "client/"
       - "x/**/client/"
 
+github_checks:
+  annotations: false
+
 ignore:
   - "docs"
   - "*.md"

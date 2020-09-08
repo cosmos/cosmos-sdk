@@ -12,8 +12,8 @@ import (
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
 func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := secp256k1.GenPrivKey()
-	pub := &keys.Secp256K1PubKey{Key: key.PubKey().(secp256k1.PubKey)}
+	key := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
+	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -579,7 +580,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	pubkey := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
 	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50))
@@ -596,7 +597,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid base valid account",
-			authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
+			authtypes.NewBaseAccount(addr, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}, 0, 0),
 			true,
 		},
 		{
@@ -645,7 +646,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 }
 
 func TestContinuousVestingAccountMarshal(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	pubkey := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	addr := sdk.AccAddress(pubkey.Address())
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
@@ -667,7 +668,7 @@ func TestContinuousVestingAccountMarshal(t *testing.T) {
 }
 
 func TestPeriodicVestingAccountMarshal(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	pubkey := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	addr := sdk.AccAddress(pubkey.Address())
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
@@ -688,7 +689,7 @@ func TestPeriodicVestingAccountMarshal(t *testing.T) {
 }
 
 func TestDelayedVestingAccountMarshal(t *testing.T) {
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	pubkey := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	addr := sdk.AccAddress(pubkey.Address())
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)

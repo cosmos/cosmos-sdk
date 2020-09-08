@@ -135,8 +135,8 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 }
 
 func TestMultiSigPubKeyEquality(t *testing.T) {
-	pubKey1 := secp256k1.GenPrivKey().PubKey()
-	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	pubKey1 := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
+	pubKey2 := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	pubkeys := []crypto.PubKey{pubKey1, pubKey2}
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
 	var other multisig.PubKey
@@ -170,8 +170,8 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 			"equals with proto pub key",
 			func() {
 				pbPubkeys := []crypto.PubKey{
-					&keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)},
-					&keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)},
+					pubKey1,
+					pubKey2,
 				}
 				anyPubKeys := make([]*codectypes.Any, len(pbPubkeys))
 

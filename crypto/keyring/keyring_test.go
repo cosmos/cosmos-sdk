@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -392,7 +393,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 	require.NoError(t, err)
 	multi := multisig.PubKeyMultisigThreshold{
 		K:       1,
-		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
+		PubKeys: []tmcrypto.PubKey{&keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}},
 	}
 	_, err = kb.SaveMultisig("multi", multi)
 	require.NoError(t, err)

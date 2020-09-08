@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
@@ -23,7 +24,7 @@ func NewTestCoins() sdk.Coins {
 
 // KeyTestPubAddr generates a test key pair
 func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := secp256k1.GenPrivKey()
+	key := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr

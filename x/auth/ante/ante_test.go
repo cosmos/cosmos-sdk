@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -893,7 +894,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []crypto.P
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
 		var privkey crypto.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		privkey = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
@@ -930,16 +931,16 @@ func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []crypto.PubKey {
 		var ret []crypto.PubKey
 		for i := 0; i < n; i++ {
-			ret = append(ret, secp256k1.GenPrivKey().PubKey())
+			ret = append(ret, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)})
 		}
 		return ret
 	}
-	singleKey := secp256k1.GenPrivKey().PubKey()
+	singleKey := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 	singleLevelMultiKey := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelSubKey1 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelSubKey2 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
 	multiLevelMultiKey := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+		multiLevelSubKey1, multiLevelSubKey2, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}})
 	type args struct {
 		pub crypto.PubKey
 	}

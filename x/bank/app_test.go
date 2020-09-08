@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,12 +35,12 @@ type (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
+	priv1 = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
-	priv2 = secp256k1.GenPrivKey()
+	priv2 = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
 	addr3 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	priv4 = secp256k1.GenPrivKey()
+	priv4 = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}

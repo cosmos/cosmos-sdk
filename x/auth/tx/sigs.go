@@ -137,8 +137,10 @@ func (g config) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error)
 
 	sigs := make([]signing.SignatureV2, len(sigDescs.Signatures))
 	for i, desc := range sigDescs.Signatures {
-		pubKey, _ := desc.PublicKey.GetCachedValue().(crypto.PubKey)
-
+		pubKey, ok := desc.PublicKey.GetCachedValue().(crypto.PubKey)
+		if !ok {
+			return nil, fmt.Errorf("public key expected %T, got %T", crypto.PubKey(nil), pubKey)
+		}
 		data := signing.SignatureDataFromProto(desc.Data)
 
 		sigs[i] = signing.SignatureV2{

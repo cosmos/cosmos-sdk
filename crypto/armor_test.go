@@ -18,12 +18,13 @@ import (
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestArmorUnarmorPrivKey(t *testing.T) {
-	priv := secp256k1.GenPrivKey()
+	priv := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	armored := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
 	_, _, err := crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
 	require.Error(t, err)

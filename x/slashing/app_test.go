@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,7 @@ import (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
+	priv1 = &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 
 	valKey  = ed25519.GenPrivKey()

@@ -12,6 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -199,7 +200,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	})
 
 	addr := valAddrs[0]
-	invalidPk := secp256k1.GenPrivKey().PubKey()
+	invalidPk := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
 
 	// invalid pukKey type should not be allowed
 	msgCreateValidator := NewTestMsgCreateValidator(addr, invalidPk, sdk.NewInt(10))

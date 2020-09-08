@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,7 +116,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	signers := []tmtypes.PrivValidator{privVal}
 
 	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
+	senderPrivKey := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress(),

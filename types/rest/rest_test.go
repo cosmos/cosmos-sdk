@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -192,7 +193,7 @@ func TestProcessPostResponse(t *testing.T) {
 	ctx := client.Context{}
 	height := int64(194423)
 
-	privKey := secp256k1.GenPrivKey()
+	privKey := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	pubKey := privKey.PubKey()
 	addr := types.AccAddress(pubKey.Address())
 	coins := types.NewCoins(types.NewCoin("atom", types.NewInt(100)), types.NewCoin("tree", types.NewInt(125)))

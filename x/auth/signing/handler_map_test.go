@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -23,9 +24,9 @@ func MakeTestHandlerMap() signing.SignModeHandler {
 }
 
 func TestHandlerMap_GetSignBytes(t *testing.T) {
-	priv1 := secp256k1.GenPrivKey()
+	priv1 := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
-	priv2 := secp256k1.GenPrivKey()
+	priv2 := &keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
 	addr2 := sdk.AccAddress(priv2.PubKey().Address())
 
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}

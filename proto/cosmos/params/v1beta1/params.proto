@@ -13,7 +13,7 @@ message ParameterChangeProposal {
 
   string   title               = 1;
   string   description         = 2;
-  repeated ParamChange changes = 3 [ (gogoproto.nullable) = false ];
+  repeated ParamChange changes = 3 [(gogoproto.nullable) = false];
 }
 
 // ParamChange defines an individual parameter change, for use in ParameterChangeProposal.

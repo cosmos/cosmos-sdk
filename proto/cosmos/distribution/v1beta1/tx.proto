@@ -45,6 +45,6 @@ message MsgWithdrawValidatorCommission {
 // fund the community pool.
 message MsgFundCommunityPool {
   repeated cosmos.base.v1beta1.Coin amount = 1
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
-  bytes depositor = 2 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

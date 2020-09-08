@@ -17,21 +17,21 @@ option (gogoproto.goproto_getters_all)  = false;
 message MsgSubmitProposal {
   option (gogoproto.equal) = true;
 
-  google.protobuf.Any content                       = 1 [ (cosmos_proto.accepts_interface) = "Content" ];
+  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
-  bytes proposer = 3 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  bytes proposer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {
   option (gogoproto.equal) = true;
 
-  uint64     proposal_id = 1 [ (gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\"" ];
-  bytes      voter       = 2 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   VoteOption option      = 3;
 }
 
@@ -39,8 +39,8 @@ message MsgVote {
 message MsgDeposit {
   option (gogoproto.equal) = true;
 
-  uint64   proposal_id = 1 [ (gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\"" ];
-  bytes    depositor   = 2 [ (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.base.v1beta1.Coin amount = 3
-      [ (gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins" ];
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

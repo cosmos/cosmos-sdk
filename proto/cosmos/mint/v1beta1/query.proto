@@ -31,7 +31,7 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryInflationRequest is the request type for the Query/Inflation RPC method.
@@ -40,8 +40,7 @@ message QueryInflationRequest {}
 // QueryInflationResponse is the response type for the Query/Inflation RPC method.
 message QueryInflationResponse {
   // inflation is the current minting inflation value.
-  bytes inflation = 1
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
+  bytes inflation = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // QueryAnnualProvisionsRequest is the request type for the Query/AnnualProvisions RPC method.
@@ -51,5 +50,5 @@ message QueryAnnualProvisionsRequest {}
 message QueryAnnualProvisionsResponse {
   // annual_provisions is the current minting annual provisions value.
   bytes annual_provisions = 1
-      [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }

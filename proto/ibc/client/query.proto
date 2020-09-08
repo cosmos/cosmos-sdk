@@ -51,7 +51,7 @@ message QueryClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [ (gogoproto.nullable) = false ];
+  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
@@ -92,7 +92,7 @@ message QueryConsensusStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [ (gogoproto.nullable) = false ];
+  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
   ;
 }
 

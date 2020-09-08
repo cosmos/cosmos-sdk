@@ -12,11 +12,11 @@ import "ibc/channel/genesis.proto";
 message GenesisState {
   // ICS002 - Clients genesis state
   ibc.client.GenesisState client_genesis = 1
-      [ (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"client_genesis\"" ];
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"client_genesis\""];
   // ICS003 - Connections genesis state
   ibc.connection.GenesisState connection_genesis = 2
-      [ (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"connection_genesis\"" ];
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"connection_genesis\""];
   // ICS004 - Channel genesis state
   ibc.channel.GenesisState channel_genesis = 3
-      [ (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"channel_genesis\"" ];
+      [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"channel_genesis\""];
 }

@@ -6,7 +6,6 @@ run:
 linters:
   disable:
     - errcheck
-    - wsl
     - varcheck
   enable:
     - bodyclose

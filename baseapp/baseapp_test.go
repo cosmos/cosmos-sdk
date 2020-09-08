@@ -113,7 +113,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 
 // simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
 func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {

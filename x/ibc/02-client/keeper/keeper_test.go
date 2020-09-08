@@ -21,6 +21,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -77,7 +78,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = app.AppCodec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: height, ChainID: testClientID, Time: now2})
 	suite.keeper = &app.IBCKeeper.ClientKeeper
-	suite.privVal = tmtypes.NewMockPV()
+	suite.privVal = ibctestingmock.NewPV()
 
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
@@ -90,7 +91,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	var validators stakingtypes.Validators
 	for i := 1; i < 11; i++ {
-		privVal := tmtypes.NewMockPV()
+		privVal := ibctestingmock.NewPV()
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
 		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})

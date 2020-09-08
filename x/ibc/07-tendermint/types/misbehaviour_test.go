@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
@@ -28,7 +29,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 }
 
 func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
-	altPrivVal := tmtypes.NewMockPV()
+	altPrivVal := ibctestingmock.NewPV()
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 

@@ -164,7 +164,7 @@ func (ack Acknowledgement) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement error cannot be empty")
 		}
 	default:
-		return sdkerrors.Wrapf(ErrInvalidAcknowledgement, "unsupported acknowledgement response field type %T", ack.Response)
+		return sdkerrors.Wrapf(ErrInvalidAcknowledgement, "unsupported acknowledgement response field type %T", resp)
 	}
 	return nil
 }

@@ -166,10 +166,13 @@ type AppModule interface {
 
 	// routes
 	Route() sdk.Route
+
 	// Deprecated: use RegisterQueryService
 	QuerierRoute() string
+
 	// Deprecated: use RegisterQueryService
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
+
 	// RegisterQueryService allows a module to register a gRPC query service
 	RegisterQueryService(grpc.Server)
 

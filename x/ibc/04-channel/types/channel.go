@@ -161,10 +161,10 @@ func (ack Acknowledgement) ValidateBasic() error {
 		}
 	case *Acknowledgement_Error:
 		if strings.TrimSpace(ack.Response.(*Acknowledgement_Error).Error) == "" {
-			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement error cannot be nil")
+			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement error cannot be empty")
 		}
 	default:
-		return sdkerrors.Wrap(ErrInvalidAcknowledgement, "unsupported acknowledgement response field")
+		return sdkerrors.Wrapf(ErrInvalidAcknowledgement, "unsupported acknowledgement response field type %T", ack.Response)
 	}
 	return nil
 }

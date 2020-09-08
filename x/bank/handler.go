@@ -30,6 +30,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.Result, error) {
+	if err := k.SendEnabledCoins(ctx, msg.Amount...); err != nil {
+		return nil, err
+	}
+
 	if k.BlockedAddr(msg.ToAddress) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}

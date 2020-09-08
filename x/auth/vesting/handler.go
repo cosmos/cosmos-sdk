@@ -27,6 +27,10 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper) sdk.Handler {
 }
 
 func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk types.BankKeeper, msg *types.MsgCreateVestingAccount) (*sdk.Result, error) {
+	if err := bk.SendEnabledCoins(ctx, msg.Amount...); err != nil {
+		return nil, err
+	}
+
 	if bk.BlockedAddr(msg.ToAddress) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}

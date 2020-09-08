@@ -21,7 +21,7 @@ message Plan {
 
   // The time after which the upgrade must be performed.
   // Leave set to its zero value to use a pre-defined Height instead.
-  google.protobuf.Timestamp time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp time = 2 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
@@ -38,7 +38,7 @@ message SoftwareUpgradeProposal {
 
   string title       = 1;
   string description = 2;
-  Plan   plan        = 3 [(gogoproto.nullable) = false];
+  Plan   plan        = 3 [ (gogoproto.nullable) = false ];
 }
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software upgrade.

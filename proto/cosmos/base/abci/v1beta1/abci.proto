@@ -15,7 +15,7 @@ message TxResponse {
   // The block height
   int64 height = 1;
   // The transaction hash.
-  string txhash = 2 [(gogoproto.customname) = "TxHash"];
+  string txhash = 2 [ (gogoproto.customname) = "TxHash" ];
   // Namespace for the Code
   string codespace = 3;
   // Response code.
@@ -25,7 +25,7 @@ message TxResponse {
   // The output of the application's logger (raw string). May be non-deterministic.
   string raw_log = 6;
   // The output of the application's logger (typed). May be non-deterministic.
-  repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
+  repeated ABCIMessageLog logs = 7 [ (gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false ];
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
@@ -48,7 +48,7 @@ message ABCIMessageLog {
 
   // Events contains a slice of Event objects that were emitted during some
   // execution.
-  repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
+  repeated StringEvent events = 3 [ (gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false ];
 }
 
 // StringEvent defines en Event object wrapper where all the attributes
@@ -56,8 +56,8 @@ message ABCIMessageLog {
 message StringEvent {
   option (gogoproto.stringer) = true;
 
-  string             type       = 1;
-  repeated Attribute attributes = 2 [(gogoproto.nullable) = false];
+  string   type                 = 1;
+  repeated Attribute attributes = 2 [ (gogoproto.nullable) = false ];
 }
 
 // Attribute defines an attribute wrapper where the key and value are
@@ -70,10 +70,10 @@ message Attribute {
 // GasInfo defines tx execution gas context.
 message GasInfo {
   // GasWanted is the maximum units of work we allow this tx to perform.
-  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+  uint64 gas_wanted = 1 [ (gogoproto.moretags) = "yaml:\"gas_wanted\"" ];
 
   // GasUsed is the amount of gas actually consumed.
-  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+  uint64 gas_used = 2 [ (gogoproto.moretags) = "yaml:\"gas_used\"" ];
 }
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
@@ -89,13 +89,13 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message or
   // handler execution.
-  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
+  repeated tendermint.abci.Event events = 3 [ (gogoproto.nullable) = false ];
 }
 
 // SimulationResponse defines the response generated when a transaction is
 // successfully simulated.
 message SimulationResponse {
-  GasInfo gas_info = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  GasInfo gas_info = 1 [ (gogoproto.embed) = true, (gogoproto.nullable) = false ];
   Result  result   = 2;
 }
 

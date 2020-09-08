@@ -9,7 +9,7 @@ import "gogoproto/gogo.proto";
 // GenesisState defines the ibc client submodule's genesis state.
 message GenesisState {
   // client states with their corresponding identifiers
-  repeated IdentifiedClientState clients = 1 [(gogoproto.nullable) = false];
+  repeated IdentifiedClientState clients = 1 [ (gogoproto.nullable) = false ];
   // consensus states from each client
   repeated ClientConsensusStates clients_consensus = 2 [
     (gogoproto.nullable)     = false,
@@ -17,5 +17,5 @@ message GenesisState {
     (gogoproto.moretags)     = "yaml:\"clients_consensus\""
   ];
   // create localhost on initialization
-  bool create_localhost = 3 [(gogoproto.moretags) = "yaml:\"create_localhost\""];
+  bool create_localhost = 3 [ (gogoproto.moretags) = "yaml:\"create_localhost\"" ];
 }

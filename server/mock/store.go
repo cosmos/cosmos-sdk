@@ -110,6 +110,8 @@ func (ms multiStore) Snapshot(height uint64, format uint32) (<-chan io.ReadClose
 func (ms multiStore) Restore(
 	height uint64, format uint32, chunks <-chan io.ReadCloser, ready chan<- struct{},
 ) error {
+	panic("not implemented")
+}
 
 var _ sdk.KVStore = kvStore{}
 

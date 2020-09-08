@@ -1127,7 +1127,8 @@ var xxx_messageInfo_PacketAckCommitment proto.InternalMessageInfo
 // NOTE: The field numbers 21 and 22 were explicitly chosen to avoid accidental
 // conflicts with other protobuf message formats used for acknowledgements.
 // The first byte of any message with this format will be the non-ASCII values
-// `0xaa` (result) or `0xb2` (error).
+// `0xaa` (result) or `0xb2` (error). Implemented as defined by ICS:
+// https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope
 type Acknowledgement struct {
 	// response contains either a result or an error and must be non-empty
 	//

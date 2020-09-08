@@ -48,7 +48,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	// relay send
 	fungibleTokenPacket := types.NewFungibleTokenPacketData(coinToSendToB.Denom, coinToSendToB.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 	packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-	ack := types.FungibleTokenPacketAcknowledgement{Success: true}
+	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
 

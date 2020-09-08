@@ -5,10 +5,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +22,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -88,6 +93,7 @@ func registerTestCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
 	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
 	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
+	cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
 	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
 }
 
@@ -103,6 +109,64 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	err := app.LoadLatestVersion()
 	require.Nil(t, err)
 	return app
+}
+
+// simple one store baseapp with data and snapshots. Each tx is 1 MB in size (uncompressed).
+func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options ...func(*BaseApp)) (*BaseApp, func()) {
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			kv := msg.(*msgKeyValue)
+			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
+			return &sdk.Result{}, nil
+		}))
+	}
+
+	snapshotDir, err := ioutil.TempDir("", "baseapp")
+	require.NoError(t, err)
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
+	require.NoError(t, err)
+	teardown := func() {
+		os.RemoveAll(snapshotDir)
+	}
+
+	app := setupBaseApp(t, append(options,
+		SetSnapshotStore(snapshotStore),
+		SetSnapshotInterval(2),
+		SetPruning(sdk.PruningOptions{KeepEvery: 1}),
+		routerOpt)...)
+
+	app.InitChain(abci.RequestInitChain{})
+
+	r := rand.New(rand.NewSource(3920758213583))
+	keyCounter := 0
+	for height := int64(1); height <= int64(blocks); height++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
+		for txNum := 0; txNum < blockTxs; txNum++ {
+			tx := txTest{Msgs: []sdk.Msg{}}
+			for msgNum := 0; msgNum < 100; msgNum++ {
+				key := []byte(fmt.Sprintf("%v", keyCounter))
+				value := make([]byte, 10000)
+				_, err := r.Read(value)
+				require.NoError(t, err)
+				tx.Msgs = append(tx.Msgs, msgKeyValue{Key: key, Value: value})
+				keyCounter++
+			}
+			txBytes, err := codec.MarshalBinaryBare(tx)
+			require.NoError(t, err)
+			resp := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, resp.IsOK(), "%v", resp.String())
+		}
+		app.EndBlock(abci.RequestEndBlock{Height: height})
+		app.Commit()
+
+		// Wait for snapshot to be taken, since it happens asynchronously. This
+		// heuristic is likely to be flaky on low-IO machines.
+		time.Sleep(time.Duration(int(height)*blockTxs) * 200 * time.Millisecond)
+	}
+
+	return app, teardown
 }
 
 func TestMountStores(t *testing.T) {
@@ -605,6 +669,7 @@ func (tx txTest) ValidateBasic() error { return nil }
 const (
 	routeMsgCounter  = "msgCounter"
 	routeMsgCounter2 = "msgCounter2"
+	routeMsgKeyValue = "msgKeyValue"
 )
 
 // ValidateBasic() fails on negative counters.
@@ -674,6 +739,29 @@ func (msg msgCounter2) ValidateBasic() error {
 		return nil
 	}
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+// A msg that sets a key/value pair.
+type msgKeyValue struct {
+	Key   []byte
+	Value []byte
+}
+
+func (msg msgKeyValue) Reset()                       {}
+func (msg msgKeyValue) String() string               { return "TODO" }
+func (msg msgKeyValue) ProtoMessage()                {}
+func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
+func (msg msgKeyValue) Type() string                 { return "keyValue" }
+func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
+func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgKeyValue) ValidateBasic() error {
+	if msg.Key == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
+	}
+	if msg.Value == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	return nil
 }
 
 // amino decode
@@ -1660,6 +1748,166 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 	app.StoreConsensusParams(ctx, &abci.ConsensusParams{Block: &abci.BlockParams{MaxGas: -5000000}})
 	require.Panics(t, func() { app.getMaximumBlockGas(ctx) })
+}
+
+func TestListSnapshots(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 5, 4)
+	defer teardown()
+
+	resp := app.ListSnapshots(abci.RequestListSnapshots{})
+	for _, s := range resp.Snapshots {
+		assert.NotEmpty(t, s.Hash)
+		assert.NotEmpty(t, s.Metadata)
+		s.Hash = nil
+		s.Metadata = nil
+	}
+	assert.Equal(t, abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{
+		{Height: 4, Format: 1, Chunks: 2},
+		{Height: 2, Format: 1, Chunks: 1},
+	}}, resp)
+}
+
+func TestLoadSnapshotChunk(t *testing.T) {
+	app, teardown := setupBaseAppWithSnapshots(t, 2, 5)
+	defer teardown()
+
+	testcases := map[string]struct {
+		height      uint64
+		format      uint32
+		chunk       uint32
+		expectEmpty bool
+	}{
+		"Existing snapshot": {2, 1, 1, false},
+		"Missing height":    {100, 1, 1, true},
+		"Missing format":    {2, 2, 1, true},
+		"Missing chunk":     {2, 1, 9, true},
+		"Zero height":       {0, 1, 1, true},
+		"Zero format":       {2, 0, 1, true},
+		"Zero chunk":        {2, 1, 0, false},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+				Height: tc.height,
+				Format: tc.format,
+				Chunk:  tc.chunk,
+			})
+			if tc.expectEmpty {
+				assert.Equal(t, abci.ResponseLoadSnapshotChunk{}, resp)
+				return
+			}
+			assert.NotEmpty(t, resp.Chunk)
+		})
+	}
+}
+
+func TestOfferSnapshot_Errors(t *testing.T) {
+	// Set up app before test cases, since it's fairly expensive.
+	app, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	m := snapshottypes.Metadata{ChunkHashes: [][]byte{{1}, {2}, {3}}}
+	metadata, err := m.Marshal()
+	require.NoError(t, err)
+	hash := []byte{1, 2, 3}
+
+	testcases := map[string]struct {
+		snapshot *abci.Snapshot
+		result   abci.ResponseOfferSnapshot_Result
+	}{
+		"nil snapshot": {nil, abci.ResponseOfferSnapshot_REJECT},
+		"invalid format": {&abci.Snapshot{
+			Height: 1, Format: 9, Chunks: 3, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT_FORMAT},
+		"incorrect chunk count": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 2, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT},
+		"no chunks": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: metadata,
+		}, abci.ResponseOfferSnapshot_REJECT},
+		"invalid metadata serialization": {&abci.Snapshot{
+			Height: 1, Format: 1, Chunks: 0, Hash: hash, Metadata: []byte{3, 1, 4},
+		}, abci.ResponseOfferSnapshot_REJECT},
+	}
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
+			assert.Equal(t, tc.result, resp.Result)
+		})
+	}
+
+	// Offering a snapshot after one has been accepted should error
+	resp := app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height:   1,
+		Format:   snapshottypes.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadata,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, resp)
+
+	resp = app.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: &abci.Snapshot{
+		Height:   2,
+		Format:   snapshottypes.CurrentFormat,
+		Chunks:   3,
+		Hash:     []byte{1, 2, 3},
+		Metadata: metadata,
+	}})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
+}
+
+func TestApplySnapshotChunk(t *testing.T) {
+	source, teardown := setupBaseAppWithSnapshots(t, 4, 10)
+	defer teardown()
+
+	target, teardown := setupBaseAppWithSnapshots(t, 0, 0)
+	defer teardown()
+
+	// Fetch latest snapshot to restore
+	respList := source.ListSnapshots(abci.RequestListSnapshots{})
+	require.NotEmpty(t, respList.Snapshots)
+	snapshot := respList.Snapshots[0]
+
+	// Make sure the snapshot has at least 3 chunks
+	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
+
+	// Begin a snapshot restoration in the target
+	respOffer := target.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
+
+	// We should be able to pass an invalid chunk and get a verify failure, before reapplying it.
+	respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+		Index:  0,
+		Chunk:  []byte{9},
+		Sender: "sender",
+	})
+	require.Equal(t, abci.ResponseApplySnapshotChunk{
+		Result:        abci.ResponseApplySnapshotChunk_RETRY,
+		RefetchChunks: []uint32{0},
+		RejectSenders: []string{"sender"},
+	}, respApply)
+
+	// Fetch each chunk from the source and apply it to the target
+	for index := uint32(0); index < snapshot.Chunks; index++ {
+		respChunk := source.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+			Height: snapshot.Height,
+			Format: snapshot.Format,
+			Chunk:  index,
+		})
+		require.NotNil(t, respChunk.Chunk)
+		respApply := target.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Index: index,
+			Chunk: respChunk.Chunk,
+		})
+		require.Equal(t, abci.ResponseApplySnapshotChunk{
+			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
+		}, respApply)
+	}
+
+	// The target should now have the same hash as the source
+	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 }
 
 // NOTE: represents a new custom router for testing purposes of WithRouter()

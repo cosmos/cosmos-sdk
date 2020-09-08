@@ -154,13 +154,13 @@ func (ack Acknowledgement) GetBytes() []byte {
 
 // ValidateBasic performs a basic validation of the acknowledgement
 func (ack Acknowledgement) ValidateBasic() error {
-	switch ack.Response.(type) {
+	switch resp := ack.Response.(type) {
 	case *Acknowledgement_Result:
-		if len(ack.Response.(*Acknowledgement_Result).Result) == 0 {
+		if len(resp.Result) == 0 {
 			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement result cannot be empty")
 		}
 	case *Acknowledgement_Error:
-		if strings.TrimSpace(ack.Response.(*Acknowledgement_Error).Error) == "" {
+		if strings.TrimSpace(resp.Error) == "" {
 			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement error cannot be empty")
 		}
 	default:

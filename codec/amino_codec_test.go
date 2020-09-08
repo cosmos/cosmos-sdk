@@ -14,7 +14,7 @@ import (
 )
 
 func createTestCodec() *codec.LegacyAmino {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
 	cdc.RegisterConcrete(testdata.Dog{}, "testdata/Dog", nil)

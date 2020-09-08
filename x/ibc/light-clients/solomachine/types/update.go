@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid and updates
@@ -14,8 +14,8 @@ import (
 // - the currently registered public key did not provide the update signature
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	header clientexported.Header,
-) (clientexported.ClientState, clientexported.ConsensusState, error) {
+	header exported.Header,
+) (exported.ClientState, exported.ConsensusState, error) {
 	smHeader, ok := header.(*Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrapf(
@@ -23,7 +23,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 		)
 	}
 
-	if err := checkHeader(&cs, smHeader); err != nil {
+	if err := checkHeader(cdc, &cs, smHeader); err != nil {
 		return nil, nil, err
 	}
 
@@ -32,7 +32,7 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 }
 
 // checkHeader checks if the Solo Machine update signature is valid.
-func checkHeader(clientState *ClientState, header *Header) error {
+func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *Header) error {
 	// assert update sequence is current sequence
 	if header.Sequence != clientState.ConsensusState.Sequence {
 		return sdkerrors.Wrapf(
@@ -42,7 +42,11 @@ func checkHeader(clientState *ClientState, header *Header) error {
 	}
 
 	// assert currently registered public key signed over the new public key with correct sequence
-	data := HeaderSignBytes(header)
+	data, err := HeaderSignBytes(cdc, header)
+	if err != nil {
+		return err
+	}
+
 	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, header.Signature); err != nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, err.Error())
 	}
@@ -54,8 +58,10 @@ func checkHeader(clientState *ClientState, header *Header) error {
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	consensusState := &ConsensusState{
 		// increment sequence number
-		Sequence:  clientState.ConsensusState.Sequence + 1,
-		PublicKey: header.NewPublicKey,
+		Sequence:    clientState.ConsensusState.Sequence + 1,
+		PublicKey:   header.NewPublicKey,
+		Diversifier: header.NewDiversifier,
+		Timestamp:   header.Timestamp,
 	}
 
 	clientState.ConsensusState = consensusState

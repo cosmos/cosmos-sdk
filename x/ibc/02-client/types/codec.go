@@ -7,7 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // RegisterInterfaces registers the client interfaces to protobuf Any.
@@ -23,6 +23,14 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos_sdk.ibc.v1.client.Header",
 		(*exported.Header)(nil),
+	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.client.Height",
+		(*exported.Height)(nil),
+	)
+	registry.RegisterImplementations(
+		(*exported.Height)(nil),
+		&Height{},
 	)
 	registry.RegisterInterface(
 		"cosmos_sdk.ibc.v1.client.Misbehaviour",

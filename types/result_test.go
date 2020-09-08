@@ -28,7 +28,7 @@ func TestParseABCILog(t *testing.T) {
 
 func TestABCIMessageLog(t *testing.T) {
 	t.Parallel()
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 

@@ -1,16 +1,17 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 	var (
-		clientState clientexported.ClientState
-		header      clientexported.Header
+		clientState exported.ClientState
+		header      exported.Header
 	)
 
 	testCases := []struct {
@@ -29,7 +30,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 		{
 			"wrong client state type",
 			func() {
-				clientState = ibctmtypes.ClientState{}
+				clientState = &ibctmtypes.ClientState{}
 				header = suite.solomachine.CreateHeader()
 			},
 			false,
@@ -69,9 +70,29 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				cs := suite.solomachine.ClientState()
 				h := suite.solomachine.CreateHeader()
 
+				publicKey, err := std.DefaultPublicKeyCodec{}.Encode(suite.solomachine.PublicKey)
+				suite.NoError(err)
+
+				data := &types.HeaderData{
+					NewPubKey:      publicKey,
+					NewDiversifier: h.NewDiversifier,
+				}
+
+				dataBz, err := suite.chainA.Codec.MarshalBinaryBare(data)
+				suite.Require().NoError(err)
+
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), suite.solomachine.PublicKey.Bytes()...)
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
+				signBytes := &types.SignBytes{
+					Sequence:    cs.ConsensusState.Sequence,
+					Timestamp:   suite.solomachine.Time,
+					Diversifier: suite.solomachine.Diversifier,
+					Data:        dataBz,
+				}
+
+				signBz, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
+				suite.Require().NoError(err)
+
+				sig, err := suite.solomachine.PrivateKey.Sign(signBz)
 				suite.Require().NoError(err)
 				h.Signature = sig
 

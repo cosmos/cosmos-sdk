@@ -80,14 +80,14 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
 func registerTestCodec(cdc *codec.LegacyAmino) {
 	// register Tx, Msg
-	sdk.RegisterCodec(cdc)
+	sdk.RegisterLegacyAminoCodec(cdc)
 
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
@@ -448,7 +448,7 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 // Test that txs can be unmarshalled and read and that
 // correct error codes are returned when not
 func TestTxDecoder(t *testing.T) {
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
 	app := newBaseApp(t.Name())
@@ -597,6 +597,52 @@ func TestInitChainer(t *testing.T) {
 
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
+}
+
+func TestInitChain_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
+func TestBeginBlock_WithInitialHeight(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	logger := defaultLogger()
+	app := NewBaseApp(name, logger, db, nil)
+
+	app.InitChain(
+		abci.RequestInitChain{
+			InitialHeight: 3,
+		},
+	)
+
+	require.PanicsWithError(t, "invalid height: 4; expected: 3", func() {
+		app.BeginBlock(abci.RequestBeginBlock{
+			Header: tmproto.Header{
+				Height: 4,
+			},
+		})
+	})
+
+	app.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{
+			Height: 3,
+		},
+	})
+	app.Commit()
+
+	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
 // Simple tx with a list of Msgs.
@@ -852,7 +898,7 @@ func TestCheckTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
 	for i := int64(0); i < nTxs; i++ {
@@ -899,7 +945,7 @@ func TestDeliverTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
 	nBlocks := 3
@@ -954,7 +1000,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
 	// run a multi-msg tx
@@ -1035,7 +1081,7 @@ func TestSimulateTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	registerTestCodec(cdc)
 
 	nBlocks := 3
@@ -1170,7 +1216,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		tx.Msgs = append(tx.Msgs, msgNoDecode{})
 
 		// new codec so we can encode the tx, but we shouldn't be able to decode
-		newCdc := codec.New()
+		newCdc := codec.NewLegacyAmino()
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
@@ -1427,7 +1473,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 		bapp.Router().AddRoute(r)
 	}
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
@@ -1527,7 +1573,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 		bapp.Router().AddRoute(r)
 	}
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	registerTestCodec(cdc)
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -1900,7 +1946,7 @@ func TestWithRouter(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := codec.New()
+	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
 	nBlocks := 3

@@ -34,7 +34,7 @@ The `AppModuleBasic` interface defines the independent methods modules need to i
 Let us go through the methods:
 
 - `Name()`: Returns the name of the module as a `string`.
-- `RegisterCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marhsal and unmarshal structs to/from `[]byte` in order to persist them in the moduel's `KVStore`.
+- `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marhsal and unmarshal structs to/from `[]byte` in order to persist them in the moduel's `KVStore`.
 - `DefaultGenesis()`: Returns a default [`GenesisState`](./genesis.md#genesisstate) for the module, marshalled to `json.RawMessage`. The default `GenesisState` need to be defined by the module developer and is primarily used for testing.
 - `ValidateGenesis(json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./genesis.md#validategenesis) function defined by the module developer.
 - `RegisterRESTRoutes(client.Context, *mux.Router)`: Registers the REST routes for the module. These routes will be used to map REST request to the module in order to process them. See [../interfaces/rest.md] for more.
@@ -108,7 +108,7 @@ The `BasicManager` is a structure that lists all the `AppModuleBasic` of an appl
 It implements the following methods:
 
 - `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L59-L74) to see an example).
-- `RegisterCodec(cdc *codec.LegacyAmino)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/app-anatomy.md#constructor).
+- `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/app-anatomy.md#constructor).
 - `DefaultGenesis()`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis()`](./genesis.md#defaultgenesis) function of each module. It is used to construct a default genesis file for the application.
 - `ValidateGenesis(genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis()`](./genesis.md#validategenesis) function of each module.
 - `RegisterRESTRoutes(ctx client.Context, rtr *mux.Router)`: Registers REST routes for modules by calling the [`RegisterRESTRoutes`](./module-interfaces.md#register-routes) function of each module. This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).

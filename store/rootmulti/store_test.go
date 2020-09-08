@@ -628,6 +628,17 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 	}
 }
 
+func TestSetInitialVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+
+	multi.SetInitialVersion(5)
+	require.Equal(t, int64(5), multi.initialVersion)
+
+	multi.Commit()
+	require.Equal(t, int64(5), multi.LastCommitID().Version)
+}
+
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
 	benchmarkMultistoreSnapshot(b, 10, 10000)
 }

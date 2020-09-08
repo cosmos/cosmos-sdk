@@ -19,7 +19,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/handlers v1.5.0
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/grpc-gateway v1.14.7
+	github.com/grpc-ecosystem/grpc-gateway v1.14.8
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.2
 	github.com/mattn/go-isatty v0.0.12

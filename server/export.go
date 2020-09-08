@@ -88,10 +88,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
 				Evidence: tmproto.EvidenceParams{
-					MaxAgeNumBlocks:  exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
-					MaxAgeDuration:   exported.ConsensusParams.Evidence.MaxAgeDuration,
-					MaxNum:           exported.ConsensusParams.Evidence.MaxNum,
-					ProofTrialPeriod: exported.ConsensusParams.Evidence.ProofTrialPeriod,
+					MaxAgeNumBlocks: exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
+					MaxAgeDuration:  exported.ConsensusParams.Evidence.MaxAgeDuration,
+					MaxNum:          exported.ConsensusParams.Evidence.MaxNum,
 				},
 				Validator: tmproto.ValidatorParams{
 					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,

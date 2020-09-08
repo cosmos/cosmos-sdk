@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -39,11 +38,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Set up TxConfig.
 	encodingConfig := simapp.MakeEncodingConfig()
-	pubKeyCodec := std.DefaultPublicKeyCodec{}
 	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 
 	// Create new simulation server.
-	srv := simulate.NewSimulateServer(app.BaseApp.Simulate, encodingConfig.InterfaceRegistry, pubKeyCodec)
+	srv := simulate.NewSimulateServer(app.BaseApp.Simulate, encodingConfig.InterfaceRegistry)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(sdkCtx, app.InterfaceRegistry())
 	simulate.RegisterSimulateServiceServer(queryHelper, srv)

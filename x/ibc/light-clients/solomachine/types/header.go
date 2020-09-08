@@ -1,9 +1,9 @@
 package types
 
 import (
+	"github.com/tendermint/tendermint/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
@@ -25,9 +25,9 @@ func (h Header) GetHeight() exported.Height {
 
 // GetPubKey unmarshals the new public key into a tmcrypto.PubKey type.
 func (h Header) GetPubKey() tmcrypto.PubKey {
-	publicKey, err := std.DefaultPublicKeyCodec{}.Decode(h.NewPublicKey)
-	if err != nil {
-		panic(err)
+	publicKey, ok := h.NewPublicKey.GetCachedValue().(crypto.PubKey)
+	if !ok {
+		panic("Header NewPublicKey is not crypto.PubKey")
 	}
 
 	return publicKey

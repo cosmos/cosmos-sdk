@@ -43,6 +43,19 @@ type BaseConfig struct {
 	// Note: Commitment of state will be attempted on the corresponding block.
 	HaltTime uint64 `mapstructure:"halt-time"`
 
+	// MinRetainBlocks defines the minimum block height offset from the current
+	// block being committed, such that all blocks past this offset are pruned
+	// from Tendermint. It is used as part of the process of determining the
+	// ResponseCommit.RetainHeight value during ABCI Commit.
+	//
+	// This configuration value is only responsible for pruning Tendermint blocks.
+	// It has no bearing on application state pruning which is determined by the
+	// "pruning-*" configurations.
+	//
+	// Note: This configuration can and should be used in conjunction with other
+	// parameters to determine the correct minimum value of ResponseCommit.RetainHeight.
+	MinRetainBlocks uint64 `mapstructure:"min-retain-blocks"`
+
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
@@ -150,6 +163,7 @@ func DefaultConfig() *Config {
 			PruningKeepRecent: "0",
 			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
+			MinRetainBlocks:   0,
 			IndexEvents:       make([]string, 0),
 		},
 		Telemetry: telemetry.Config{
@@ -197,6 +211,7 @@ func GetConfig(v *viper.Viper) Config {
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
 			IndexEvents:       v.GetStringSlice("index-events"),
+			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),

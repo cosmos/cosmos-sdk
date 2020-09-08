@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -44,8 +45,8 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec implements AppModuleBasic interface
-func (AppModuleBasic) RegisterCodec(*codec.LegacyAmino) {}
+// RegisterLegacyAminoCodec implements AppModuleBasic interface
+func (AppModuleBasic) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -73,7 +74,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 }
 
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the ibc-transfer module.
-func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd implements AppModuleBasic interface
@@ -192,7 +194,9 @@ func (am AppModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	// TODO: Enforce ordering, currently relayers use ORDERED channels
+	if order != channeltypes.UNORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
 
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)
@@ -209,7 +213,6 @@ func (am AppModule) OnChanOpenInit(
 		return err
 	}
 
-	// TODO: escrow
 	return nil
 }
 
@@ -225,7 +228,9 @@ func (am AppModule) OnChanOpenTry(
 	version,
 	counterpartyVersion string,
 ) error {
-	// TODO: Enforce ordering, currently relayers use ORDERED channels
+	if order != channeltypes.UNORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
 
 	// Require portID is the portID transfer module is bound to
 	boundPort := am.keeper.GetPort(ctx)
@@ -246,7 +251,6 @@ func (am AppModule) OnChanOpenTry(
 		return err
 	}
 
-	// TODO: escrow
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -89,7 +89,7 @@ func NewChannelOpenTryCmd() *cobra.Command {
 				return err
 			}
 
-			proofHeight, err := strconv.ParseInt(args[6], 10, 64)
+			proofHeight, err := clienttypes.ParseHeight(args[6])
 			if err != nil {
 				return err
 			}
@@ -97,7 +97,7 @@ func NewChannelOpenTryCmd() *cobra.Command {
 			msg := types.NewMsgChannelOpenTry(
 				portID, channelID, version, order, hops,
 				counterpartyPortID, counterpartyChannelID, version,
-				proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
+				proofInit, proofHeight, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -133,18 +133,18 @@ func NewChannelOpenAckCmd() *cobra.Command {
 			// TODO: Differentiate between channel and counterparty versions.
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
-			proofTry, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
+			proofTry, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
 
-			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
+			proofHeight, err := clienttypes.ParseHeight(args[3])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgChannelOpenAck(
-				portID, channelID, version, proofTry, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, version, proofTry, proofHeight, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -175,18 +175,18 @@ func NewChannelOpenConfirmCmd() *cobra.Command {
 			portID := args[0]
 			channelID := args[1]
 
-			proofAck, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
+			proofAck, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
 
-			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
+			proofHeight, err := clienttypes.ParseHeight(args[3])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgChannelOpenConfirm(
-				portID, channelID, proofAck, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, proofAck, proofHeight, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -247,18 +247,18 @@ func NewChannelCloseConfirmCmd() *cobra.Command {
 			portID := args[0]
 			channelID := args[1]
 
-			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
 
-			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
+			proofHeight, err := clienttypes.ParseHeight(args[3])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgChannelCloseConfirm(
-				portID, channelID, proofInit, uint64(proofHeight), clientCtx.GetFromAddress(),
+				portID, channelID, proofInit, proofHeight, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

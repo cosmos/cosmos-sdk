@@ -56,16 +56,16 @@ func (mr *MockAppModuleBasicMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleBasic)(nil).Name))
 }
 
-// RegisterCodec mocks base method
-func (m *MockAppModuleBasic) RegisterCodec(arg0 *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec mocks base method
+func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterCodec", arg0)
+	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
 
-// RegisterCodec indicates an expected call of RegisterCodec
-func (mr *MockAppModuleBasicMockRecorder) RegisterCodec(arg0 interface{}) *gomock.Call {
+// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec
+func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterCodec), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterInterfaces mocks base method
@@ -197,16 +197,16 @@ func (mr *MockAppModuleGenesisMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModuleGenesis)(nil).Name))
 }
 
-// RegisterCodec mocks base method
-func (m *MockAppModuleGenesis) RegisterCodec(arg0 *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec mocks base method
+func (m *MockAppModuleGenesis) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterCodec", arg0)
+	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
 
-// RegisterCodec indicates an expected call of RegisterCodec
-func (mr *MockAppModuleGenesisMockRecorder) RegisterCodec(arg0 interface{}) *gomock.Call {
+// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec
+func (mr *MockAppModuleGenesisMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCodec", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterCodec), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterInterfaces mocks base method
@@ -366,16 +366,16 @@ func (mr *MockAppModuleMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAppModule)(nil).Name))
 }
 
-// RegisterCodec mocks base method
-func (m *MockAppModule) RegisterCodec(arg0 *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec mocks base method
+func (m *MockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterCodec", arg0)
+	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
 
-// RegisterCodec indicates an expected call of RegisterCodec
-func (mr *MockAppModuleMockRecorder) RegisterCodec(arg0 interface{}) *gomock.Call {
+// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec
+func (mr *MockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCodec", reflect.TypeOf((*MockAppModule)(nil).RegisterCodec), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // RegisterInterfaces mocks base method

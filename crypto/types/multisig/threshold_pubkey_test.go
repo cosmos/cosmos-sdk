@@ -187,7 +187,7 @@ func TestMultiSigMigration(t *testing.T) {
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 

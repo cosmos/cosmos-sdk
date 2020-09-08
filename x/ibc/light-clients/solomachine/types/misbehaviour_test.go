@@ -1,16 +1,17 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 	misbehaviour := suite.solomachine.CreateMisbehaviour()
 
-	suite.Require().Equal(clientexported.SoloMachine, misbehaviour.ClientType())
+	suite.Require().Equal(exported.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
-	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight())
+	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetEpochNumber())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetEpochHeight())
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {

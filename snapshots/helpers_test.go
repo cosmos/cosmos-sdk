@@ -2,7 +2,6 @@ package snapshots_test
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -12,26 +11,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 	db "github.com/tendermint/tm-db"
+	"github.com/zeebo/blake3"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
-func checksum(b []byte) []byte {
-	hash := sha256.Sum256(b)
-	return hash[:]
-}
-
 func checksums(slice [][]byte) [][]byte {
-	checksums := [][]byte{}
-	for _, chunk := range slice {
-		checksums = append(checksums, checksum(chunk))
+	hasher := blake3.New()
+	checksums := make([][]byte, len(slice))
+	for i, chunk := range slice {
+		hasher.Write(chunk)
+		checksums[i] = hasher.Sum(nil)
+		hasher.Reset()
 	}
 	return checksums
 }
 
 func hash(chunks [][]byte) []byte {
-	hasher := sha256.New()
+	hasher := blake3.New()
 	for _, chunk := range chunks {
 		hasher.Write(chunk)
 	}

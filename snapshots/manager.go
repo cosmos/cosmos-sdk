@@ -2,13 +2,13 @@ package snapshots
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"io"
 	"io/ioutil"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/snapshots/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeebo/blake3"
 )
 
 const (
@@ -231,9 +231,11 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 	}
 
 	// Verify the chunk hash.
-	hash := sha256.Sum256(chunk)
+	hasher := blake3.New()
+	hasher.Write(chunk)
+	hash := hasher.Sum(nil)
 	expected := m.restoreChunkHashes[m.restoreChunkIndex]
-	if !bytes.Equal(hash[:], expected) {
+	if !bytes.Equal(hash, expected) {
 		return false, sdkerrors.Wrapf(types.ErrChunkHashMismatch,
 			"expected %x, got %x", hash, expected)
 	}

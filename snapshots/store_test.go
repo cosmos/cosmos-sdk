@@ -131,10 +131,8 @@ func TestStore_Get(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{2, 1, 0}),
-				checksum([]byte{2, 1, 1}),
-			},
+			ChunkHashes: checksums([][]byte{
+				{2, 1, 0}, {2, 1, 1}}),
 		},
 	}, snapshot)
 }
@@ -207,10 +205,8 @@ func TestStore_Load(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{2, 1, 0}, {2, 1, 1}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{2, 1, 0}),
-				checksum([]byte{2, 1, 1}),
-			},
+			ChunkHashes: checksums([][]byte{
+				{2, 1, 0}, {2, 1, 1}}),
 		},
 	}, snapshot)
 
@@ -306,10 +302,7 @@ func TestStore_Save(t *testing.T) {
 		Chunks: 2,
 		Hash:   hash([][]byte{{1}, {2}}),
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{1}),
-				checksum([]byte{2}),
-			},
+			ChunkHashes: checksums([][]byte{{1}, {2}}),
 		},
 	}, snapshot)
 	loaded, err := store.Get(snapshot.Height, snapshot.Format)

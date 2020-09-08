@@ -1,7 +1,6 @@
 package rootmulti
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -15,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/zeebo/blake3"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -527,12 +527,12 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		chunkHashes []string
 	}{
 		{1, []string{
-			"503e5b51b657055b77e88169fadae543619368744ad15f1de0736c0a20482f24",
-			"e1a0daaa738eeb43e778aefd2805e3dd720798288a410b06da4b8459c4d8f72e",
-			"aa048b4ee0f484965d7b3b06822cf0772cdcaad02f3b1b9055e69f2cb365ef3c",
-			"7921eaa3ed4921341e504d9308a9877986a879fe216a099c86e8db66fcba4c63",
-			"a4a864e6c02c9fca5837ec80dc84f650b25276ed7e4820cf7516ced9f9901b86",
-			"ca2879ac6e7205d257440131ba7e72bef784cd61642e32b847729e543c1928b9",
+			"549f0bf509242ec785297db0a565f177215dd06985e1ec11960d9f675a387bbf",
+			"9358f48120b936f3e821439dfbeefb6dd71c3d60168e59c35319f96ad30ffd5e",
+			"349f477bf4225ac2a09d83963e7b12c78d1dd6fb50a810d6c6b4f80d74a4fdc8",
+			"418027f332603531248015634e2613d399b531f3d49e88ef93a85ae79c0cf8ed",
+			"6de71204263d43fded1216142382952b0baa0bcc899ddcc97bc7d7c622ff1dcb",
+			"d26306884098a2875ff1c4da340270a817c8de9c2d4c60369c37089e40e9b9ae",
 		}},
 	}
 	for _, tc := range testcases {
@@ -541,8 +541,9 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 			chunks, err := store.Snapshot(version, tc.format)
 			require.NoError(t, err)
 			hashes := []string{}
+			hasher := blake3.New()
 			for chunk := range chunks {
-				hasher := sha256.New()
+				hasher.Reset()
 				_, err := io.Copy(hasher, chunk)
 				require.NoError(t, err)
 				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))

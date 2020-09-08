@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 		Power:            power,
 		ConsensusAddress: sdk.ConsAddress(val.Address()),
 	}
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	// should be jailed and tombstoned
 	suite.True(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	suite.True(newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	// tokens should be the same (capped slash)
 	suite.True(suite.app.StakingKeeper.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(cp.Evidence.MaxAgeDuration + 1))
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1)
-	suite.app.EvidenceKeeper.HandleDoubleSign(ctx, evidence)
+	suite.app.EvidenceKeeper.HandleEquivocationEvidence(ctx, evidence)
 
 	suite.False(suite.app.StakingKeeper.Validator(ctx, operatorAddr).IsJailed())
 	suite.False(suite.app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())))

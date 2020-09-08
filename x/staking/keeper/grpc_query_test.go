@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 
 func (suite *KeeperTestSuite) TestGRPCValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
-	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].OperatorAddress)
+	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
 	suite.True(found)
 	var req *types.QueryValidatorRequest
 	testCases := []struct {
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 		},
 		{"valid request",
 			func() {
-				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].OperatorAddress.String()}
+				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].OperatorAddress}
 			},
 			true,
 		},
@@ -185,7 +185,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			func() {
 				req = &types.QueryDelegatorValidatorRequest{
 					DelegatorAddr: addr.String(),
-					ValidatorAddr: addrVal.String(),
+					ValidatorAddr: addrVal,
 				}
 			},
 			false,
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			func() {
 				req = &types.QueryDelegatorValidatorRequest{
 					DelegatorAddr: addr.String(),
-					ValidatorAddr: addrVal1.String(),
+					ValidatorAddr: addrVal1,
 				}
 			},
 			true,
@@ -220,8 +220,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
 	addrVal := vals[0].OperatorAddress
-
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal)
+	suite.NoError(err)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegationRequest
 
@@ -240,14 +241,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 			func() {
 				req = &types.QueryDelegationRequest{
 					DelegatorAddr: addrAcc1.String(),
-					ValidatorAddr: addrVal.String(),
+					ValidatorAddr: addrVal,
 				}
 			},
 			false,
 		},
 		{"valid request",
 			func() {
-				req = &types.QueryDelegationRequest{DelegatorAddr: addrAcc.String(), ValidatorAddr: addrVal.String()}
+				req = &types.QueryDelegationRequest{DelegatorAddr: addrAcc.String(), ValidatorAddr: addrVal}
 			},
 			true,
 		},
@@ -273,8 +274,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 	addrAcc := addrs[0]
 	addrVal1 := vals[0].OperatorAddress
-
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
+	suite.NoError(err)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 	var req *types.QueryDelegatorDelegationsRequest
 
@@ -326,8 +328,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 	addrVal1 := vals[1].OperatorAddress
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	addrVal2 := valAddrs[4]
-
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, addrVal1)
+	valAddr, err := sdk.ValAddressFromBech32(addrVal1)
+	suite.NoError(err)
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc, valAddr)
 	suite.True(found)
 
 	var req *types.QueryValidatorDelegationsRequest
@@ -353,7 +356,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		},
 		{"valid request",
 			func() {
-				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1.String(),
+				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1,
 					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
@@ -389,10 +392,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 	addrVal2 := vals[1].OperatorAddress
 
 	unbondingTokens := sdk.TokensFromConsensusPower(2)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, addrVal2, unbondingTokens.ToDec())
+	valAddr, err1 := sdk.ValAddressFromBech32(addrVal2)
+	suite.NoError(err1)
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc2, valAddr, unbondingTokens.ToDec())
 	suite.NoError(err)
 
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, addrVal2)
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc2, valAddr)
 	suite.True(found)
 	var req *types.QueryUnbondingDelegationRequest
 	testCases := []struct {
@@ -415,7 +420,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 		{"valid request",
 			func() {
 				req = &types.QueryUnbondingDelegationRequest{
-					DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal2.String()}
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal2}
 			},
 			true,
 		},
@@ -442,12 +447,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	addrVal, addrVal2 := vals[0].OperatorAddress, vals[1].OperatorAddress
 
 	unbondingTokens := sdk.TokensFromConsensusPower(2)
-	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc, addrVal, unbondingTokens.ToDec())
+	valAddr1, err1 := sdk.ValAddressFromBech32(addrVal)
+	suite.NoError(err1)
+	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc, valAddr1, unbondingTokens.ToDec())
 	suite.NoError(err)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc, addrVal2, unbondingTokens.ToDec())
+	valAddr2, err1 := sdk.ValAddressFromBech32(addrVal2)
+	suite.NoError(err1)
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc, valAddr2, unbondingTokens.ToDec())
 	suite.NoError(err)
 
-	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc, addrVal)
+	unbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc, valAddr1)
 	suite.True(found)
 	var req *types.QueryDelegatorUnbondingDelegationsRequest
 	testCases := []struct {
@@ -589,7 +598,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	suite.NoError(err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.OperatorAddress, val2.OperatorAddress)
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
 	suite.True(found)
 
 	var req *types.QueryRedelegationsRequest
@@ -617,8 +626,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		{"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
-					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress.String(),
-					DstValidatorAddr: val2.OperatorAddress.String(), Pagination: &query.PageRequest{}}
+					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress,
+					DstValidatorAddr: val2.OperatorAddress, Pagination: &query.PageRequest{}}
 			},
 			true,
 			false,
@@ -626,7 +635,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		{"request redelegations with delegatoraddr and sourceValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
-					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress.String(),
+					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress,
 					Pagination: &query.PageRequest{}}
 			},
 			true,

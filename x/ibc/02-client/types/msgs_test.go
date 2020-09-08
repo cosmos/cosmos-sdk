@@ -138,7 +138,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},
@@ -287,7 +287,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},
@@ -433,7 +433,7 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},

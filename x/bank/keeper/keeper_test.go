@@ -311,10 +311,10 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
 
 	inputs := []types.Input{
-		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 	outputs := []types.Output{
-		{Address: addr2, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
@@ -342,12 +342,12 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	app.AccountKeeper.SetAccount(ctx, acc3)
 
 	inputs := []types.Input{
-		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
-		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 	outputs := []types.Output{
-		{Address: addr2, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
-		{Address: addr3, Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
@@ -356,12 +356,12 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
 
 	insufficientInputs := []types.Input{
-		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
-		{Address: addr1, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
 	insufficientOutputs := []types.Output{
-		{Address: addr2, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
-		{Address: addr3, Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
@@ -589,12 +589,12 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 	inputs := []types.Input{
-		{Address: addr, Coins: newCoins},
-		{Address: addr2, Coins: newCoins2},
+		{Address: addr.String(), Coins: newCoins},
+		{Address: addr2.String(), Coins: newCoins2},
 	}
 	outputs := []types.Output{
-		{Address: addr3, Coins: newCoins},
-		{Address: addr4, Coins: newCoins2},
+		{Address: addr3.String(), Coins: newCoins},
+		{Address: addr4.String(), Coins: newCoins2},
 	}
 
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))

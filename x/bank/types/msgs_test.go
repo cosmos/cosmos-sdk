@@ -197,7 +197,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			Outputs: []Output{output1}}},
 		{false, MsgMultiSend{
 			Inputs:  []Input{input1},
-			Outputs: []Output{{emptyAddr, atom123}}}, // invalid output
+			Outputs: []Output{{emptyAddr.String(), atom123}}}, // invalid output
 		},
 		{false, MsgMultiSend{
 			Inputs:  []Input{input1},

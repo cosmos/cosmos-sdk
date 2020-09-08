@@ -331,7 +331,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 
 		valAddr := validator.GetOperator()
-		delegations := k.GetValidatorDelegations(ctx, validator.OperatorAddress)
+		delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
 		if delegations == nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "keeper does have any delegation entries"), nil, nil
 		}

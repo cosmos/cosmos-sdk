@@ -15,7 +15,7 @@ var _ sdk.Msg = &MsgUnjail{}
 // NewMsgUnjail creates a new MsgUnjail instance
 func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	return &MsgUnjail{
-		ValidatorAddr: validatorAddr,
+		ValidatorAddr: validatorAddr.String(),
 	}
 }
 
@@ -33,7 +33,7 @@ func (msg MsgUnjail) GetSignBytes() []byte {
 
 // ValidateBasic validity check for the AnteHandler
 func (msg MsgUnjail) ValidateBasic() error {
-	if msg.ValidatorAddr.Empty() {
+	if msg.ValidatorAddr == "" {
 		return ErrBadValidatorAddr
 	}
 

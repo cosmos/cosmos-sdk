@@ -44,8 +44,14 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // now we just perform action and save
 
 func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
+
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	// check to see if the pubkey or sender has been registered before
-	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
+	if _, found := k.GetValidator(ctx, valAddr); found {
 		return nil, types.ErrValidatorOwnerExists
 	}
 
@@ -77,7 +83,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 		}
 	}
 
-	validator := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
+	validator := types.NewValidator(valAddr, pk, msg.Description)
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
@@ -95,7 +101,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	k.AfterValidatorCreated(ctx, validator.OperatorAddress)
+	k.AfterValidatorCreated(ctx, validator.GetOperator())
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -108,7 +114,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeCreateValidator,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.Amount.String()),
 		),
 		sdk.NewEvent(
@@ -122,8 +128,12 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 }
 
 func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
 	// validator must already be registered
-	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -143,7 +153,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keep
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, msg.ValidatorAddress)
+		k.BeforeValidatorModified(ctx, valAddr)
 
 		validator.Commission = commission
 	}
@@ -171,7 +181,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keep
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
 		),
 	})
 
@@ -179,7 +189,12 @@ func handleMsgEditValidator(ctx sdk.Context, msg *types.MsgEditValidator, k keep
 }
 
 func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
-	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, types.ErrNoValidatorFound
 	}
@@ -207,7 +222,7 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeDelegate,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
 		),
 		sdk.NewEvent(
@@ -221,8 +236,12 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 }
 
 func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
+	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount,
+		ctx, msg.DelegatorAddress, addr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
@@ -233,7 +252,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
-	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
+	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, addr, shares)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +275,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeUnbond,
-			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
 		),
@@ -271,8 +290,12 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
+	valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
+	if err != nil {
+		return nil, err
+	}
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount,
+		ctx, msg.DelegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
@@ -283,8 +306,13 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
+	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	completionTime, err := k.BeginRedelegation(
-		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.ValidatorDstAddress, shares,
+		ctx, msg.DelegatorAddress, valSrcAddr, valDstAddr, shares,
 	)
 	if err != nil {
 		return nil, err
@@ -308,8 +336,8 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRedelegate,
-			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress.String()),
-			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress.String()),
+			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
+			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
 		),

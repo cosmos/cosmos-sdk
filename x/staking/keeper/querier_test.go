@@ -182,7 +182,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Query each validator
 	for _, validator := range validators {
-		queryParams := types.NewQueryValidatorParams(validator.OperatorAddress, 0, 0)
+		queryParams := types.NewQueryValidatorParams(validator.GetOperator(), 0, 0)
 		bz, err := cdc.MarshalJSON(queryParams)
 		require.NoError(t, err)
 
@@ -349,7 +349,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query unbonding delegation
 	unbondingTokens := sdk.TokensFromConsensusPower(10)
-	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.OperatorAddress, unbondingTokens.ToDec())
+	_, err = app.StakingKeeper.Undelegate(ctx, addrAcc2, val1.GetOperator(), unbondingTokens.ToDec())
 	require.NoError(t, err)
 
 	queryBondParams = types.QueryDelegatorValidatorRequest{DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal1.String()}
@@ -402,13 +402,13 @@ func TestQueryDelegation(t *testing.T) {
 
 	// Query redelegation
 	redelegationTokens := sdk.TokensFromConsensusPower(10)
-	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddress,
-		val2.OperatorAddress, redelegationTokens.ToDec())
+	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(),
+		val2.GetOperator(), redelegationTokens.ToDec())
 	require.NoError(t, err)
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator())
 	require.True(t, found)
 
-	bz, errRes = cdc.MarshalJSON(types.NewQueryRedelegationParams(addrAcc2, val1.OperatorAddress, val2.OperatorAddress))
+	bz, errRes = cdc.MarshalJSON(types.NewQueryRedelegationParams(addrAcc2, val1.GetOperator(), val2.GetOperator()))
 	require.NoError(t, errRes)
 
 	query = abci.RequestQuery{
@@ -561,7 +561,7 @@ func TestQueryRedelegations(t *testing.T) {
 	require.NoError(t, err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddress, val2.OperatorAddress)
+	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator())
 	require.True(t, found)
 
 	// delegator redelegations
@@ -633,7 +633,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	require.NoError(t, err)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	_, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc1, val1.OperatorAddress)
+	_, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrAcc1, val1.GetOperator())
 	require.True(t, found)
 
 	//

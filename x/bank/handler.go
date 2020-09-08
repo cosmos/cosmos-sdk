@@ -73,7 +73,11 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSen
 	}
 
 	for _, out := range msg.Outputs {
-		if k.BlockedAddr(out.Address) {
+		accAddr, err := sdk.AccAddressFromBech32(out.Address)
+		if err != nil {
+			panic(err)
+		}
+		if k.BlockedAddr(accAddr) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}

@@ -362,7 +362,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 			false,
 			&types.QueryDelegatorValidatorsResponse{},
 			&types.QueryDelegatorValidatorsResponse{
-				Validators: []sdk.ValAddress{val.ValAddress},
+				Validators: []string{val.ValAddress.String()},
 			},
 		},
 	}
@@ -418,7 +418,7 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 			false,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			&types.QueryDelegatorWithdrawAddressResponse{
-				WithdrawAddress: val.Address,
+				WithdrawAddress: val.Address.String(),
 			},
 		},
 	}

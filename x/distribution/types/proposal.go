@@ -23,7 +23,7 @@ func init() {
 
 // NewCommunityPoolSpendProposal creates a new community pool spned proposal.
 func NewCommunityPoolSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) *CommunityPoolSpendProposal {
-	return &CommunityPoolSpendProposal{title, description, recipient, amount}
+	return &CommunityPoolSpendProposal{title, description, recipient.String(), amount}
 }
 
 // GetTitle returns the title of a community pool spend proposal.
@@ -47,7 +47,7 @@ func (csp *CommunityPoolSpendProposal) ValidateBasic() error {
 	if !csp.Amount.IsValid() {
 		return ErrInvalidProposalAmount
 	}
-	if csp.Recipient.Empty() {
+	if csp.Recipient == "" {
 		return ErrEmptyProposalRecipient
 	}
 

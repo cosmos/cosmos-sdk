@@ -49,10 +49,10 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Len(t, stakingGenesis.Validators, 3)
 	// check Delegations
 	require.Equal(t, "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", stakingGenesis.Delegations[0].DelegatorAddress.String())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", stakingGenesis.Delegations[0].ValidatorAddress.String())
+	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", stakingGenesis.Delegations[0].ValidatorAddress)
 	require.Equal(t, "1000.000000000000000000", stakingGenesis.Delegations[0].Shares.String())
 	// check validators
-	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", stakingGenesis.Validators[2].OperatorAddress.String())
+	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", stakingGenesis.Validators[2].GetOperator())
 	require.Equal(t, "cosmosvalconspub1zcjduepq280tm686ma80cva9z620dmknd9a858pd2zmq9ackfenfllecjxds0hg9n7", stakingGenesis.Validators[2].ConsensusPubkey)
 	require.Equal(t, false, stakingGenesis.Validators[2].Jailed)
 	require.Equal(t, "Unbonded", stakingGenesis.Validators[2].Status.String())

@@ -84,7 +84,97 @@ func TestEquals(t *testing.T) {
 }
 
 func TestVerifyMultisignature(t *testing.T) {
-	// TODO
+	var (
+		pk  multisig.PubKey
+		sig *signing.MultiSignatureData
+	)
+	msg := []byte{1, 2, 3, 4}
+	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+
+	testCases := []struct {
+		msg        string
+		malleate   func()
+		expectPass bool
+	}{
+		{
+			"nested multisignature",
+			func() {
+				genPk, genSig, err := generateNestedMultiSignature(3, msg)
+				require.NoError(t, err)
+				sig = genSig
+				pk = genPk
+			},
+			true,
+		},
+		{
+			"wrong size for sig bit array",
+			func() {
+				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
+				anyPubKeys, err := packPubKeys(pubKeys)
+				require.NoError(t, err)
+				pk = &keys.MultisigThresholdPubKey{K: 3, PubKeys: anyPubKeys}
+				sig = multisig.NewMultisig(1)
+			},
+			false,
+		},
+		{
+			"single signature data",
+			func() {
+				k := 2
+				signingIndices := []int{0, 3, 1}
+				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
+				anyPubKeys, err := packPubKeys(pubKeys)
+				require.NoError(t, err)
+				pk = &keys.MultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
+				sig = multisig.NewMultisig(len(pubKeys))
+				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
+
+				for i := 0; i < k-1; i++ {
+					signingIndex := signingIndices[i]
+					require.NoError(
+						t,
+						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
+					)
+					require.Error(
+						t,
+						pk.VerifyMultisignature(signBytesFn, sig),
+						"multisig passed when i < k, i %d", i,
+					)
+					require.NoError(
+						t,
+						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
+					)
+				}
+				require.Error(
+					t,
+					pk.VerifyMultisignature(signBytesFn, sig),
+					"multisig passed with k - 1 sigs",
+				)
+				require.NoError(
+					t,
+					multisig.AddSignatureFromPubKey(
+						sig,
+						sigs[signingIndices[k]],
+						pubKeys[signingIndices[k]],
+						pubKeys,
+					),
+				)
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			tc.malleate()
+			err := pk.VerifyMultisignature(signBytesFn, sig)
+			if tc.expectPass {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
+		})
+	}
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []crypto.PubKey, signatures []signing.SignatureData) {
@@ -99,6 +189,38 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []crypto.PubKey, s
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
 	}
 	return
+}
+
+func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData, error) {
+	pubKeys := make([]crypto.PubKey, n)
+	signatures := make([]signing.SignatureData, n)
+	bitArray := crypto.NewCompactBitArray(n)
+	for i := 0; i < n; i++ {
+		nestedPks, nestedSigs := generatePubKeysAndSignatures(5, msg)
+		nestedBitArray := crypto.NewCompactBitArray(5)
+		for j := 0; j < 5; j++ {
+			nestedBitArray.SetIndex(j, true)
+		}
+		nestedSig := &signing.MultiSignatureData{
+			BitArray:   nestedBitArray,
+			Signatures: nestedSigs,
+		}
+		signatures[i] = nestedSig
+		anyNestedPks, err := packPubKeys(nestedPks)
+		if err != nil {
+			return nil, nil, err
+		}
+		pubKeys[i] = &keys.MultisigThresholdPubKey{K: 5, PubKeys: anyNestedPks}
+		bitArray.SetIndex(i, true)
+	}
+	anyPubKeys, err := packPubKeys(pubKeys)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &keys.MultisigThresholdPubKey{K: uint32(n), PubKeys: anyPubKeys}, &signing.MultiSignatureData{
+		BitArray:   bitArray,
+		Signatures: signatures,
+	}, nil
 }
 
 func packPubKeys(pubKeys []crypto.PubKey) ([]*types.Any, error) {

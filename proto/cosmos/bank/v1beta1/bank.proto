@@ -52,30 +52,30 @@ message Supply {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// DenomUnit represents a struct that describes a given 
+// DenomUnit represents a struct that describes a given
 // denomination unit of the basic token.
 message DenomUnit {
   // denom represents the string name of the given denom unit (e.g uatom).
-  string          denom    = 1;
+  string denom = 1;
   // exponent represents power of 10 exponent that one must
   // raise the base_denom to in order to equal the given DenomUnit's denom
   // 1 denom = 1^exponent base_denom
-  // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with 
+  // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with
   // exponent = 6, thus: 1 atom = 10^6 uatom).
-  uint32          exponent = 2;  
+  uint32 exponent = 2;
   // aliases is a list of string aliases for the given denom
-  repeated string aliases  = 3;
+  repeated string aliases = 3;
 }
 
-// Metadata represents a struct that describes 
+// Metadata represents a struct that describes
 // a basic token.
 message Metadata {
-  string             description = 1;
+  string description = 1;
   // denom_units represents the list of DenomUnit's for a given coin
   repeated DenomUnit denom_units = 2;
   // base represents the base denom (should be the DenomUnit with exponent = 0).
-  string             base        = 3;
+  string base = 3;
   // display indicates the suggested denom that should be
   // displayed in clients.
-  string             display     = 4;
+  string display = 4;
 }

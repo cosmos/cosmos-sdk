@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -135,8 +135,8 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 }
 
 func TestMultiSigPubKeyEquality(t *testing.T) {
-	pubKey1 := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
-	pubKey2 := &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
 	pubkeys := []crypto.PubKey{pubKey1, pubKey2}
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
 	var other multisig.PubKey
@@ -170,13 +170,13 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 			"equals with proto pub key",
 			func() {
 				pbPubkeys := []crypto.PubKey{
-					pubKey1,
-					pubKey2,
+					&keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)},
+					&keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)},
 				}
 				anyPubKeys := make([]*codectypes.Any, len(pbPubkeys))
 
 				for i := 0; i < len(pubkeys); i++ {
-					any, err := codectypes.NewAnyWithValue(pbPubkeys[i].(proto.Message))
+					any, err := tx.PubKeyToAny(pbPubkeys[i])
 					require.NoError(t, err)
 					anyPubKeys[i] = any
 				}

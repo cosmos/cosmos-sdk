@@ -585,6 +585,11 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 // be a need to vary retention for other nodes, e.g. sentry nodes which do not
 // need historical blocks.
 func (app *BaseApp) GetBlockRentionHeight(commitHeight int64) int64 {
+	// pruning is disabled if minRetainBlocks is zero
+	if app.minRetainBlocks == 0 {
+		return 0
+	}
+
 	min := func(x, y int64) int64 {
 		if x < y {
 			return x
@@ -628,13 +633,11 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight int64) int64 {
 		}
 	}
 
-	if app.minRetainBlocks > 0 {
-		v := commitHeight - int64(app.minRetainBlocks)
-		if retentionHeight == 0 {
-			retentionHeight = v
-		} else {
-			retentionHeight = min(retentionHeight, v)
-		}
+	v := commitHeight - int64(app.minRetainBlocks)
+	if retentionHeight == 0 {
+		retentionHeight = v
+	} else {
+		retentionHeight = min(retentionHeight, v)
 	}
 
 	if retentionHeight <= 0 {

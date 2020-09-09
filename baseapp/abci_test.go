@@ -22,32 +22,44 @@ func TestGetBlockRentionHeight(t *testing.T) {
 		commitHeight int64
 		expected     int64
 	}{
-		"no pruning": {
+		"defaults": {
 			bapp:         NewBaseApp(name, logger, db, nil),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         NewBaseApp(name, logger, db, nil),
+			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetPruning(sdk.PruningOptions{Interval: 10000})),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(sdk.PruningOptions{Interval: 10000}),
+				SetMinRetainBlocks(1),
+			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetSnapshotInterval(50000), SetSnapshotKeepRecent(3)),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetSnapshotInterval(50000),
+				SetSnapshotKeepRecent(3),
+				SetMinRetainBlocks(1),
+			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(400000)),
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetMinRetainBlocks(400000),
+			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
@@ -62,6 +74,17 @@ func TestGetBlockRentionHeight(t *testing.T) {
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
+		},
+		"disable pruning": {
+			bapp: NewBaseApp(
+				name, logger, db, nil,
+				SetPruning(sdk.PruningOptions{Interval: 10000}),
+				SetMinRetainBlocks(0),
+				SetSnapshotInterval(50000), SetSnapshotKeepRecent(3),
+			),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     0,
 		},
 	}
 

@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestZeroHeight(t *testing.T) {
+	require.Equal(t, types.Height{}, types.ZeroHeight())
+}
+
 func TestCompareHeights(t *testing.T) {
 	testCases := []struct {
 		name        string
@@ -50,7 +54,7 @@ func TestDecrement(t *testing.T) {
 	invalidDecrement := types.NewHeight(3, 0)
 	actual, success = invalidDecrement.Decrement()
 
-	require.Equal(t, types.Height{}, actual, "invalid decrement returned non-zero height: %s", actual)
+	require.Equal(t, types.ZeroHeight(), actual, "invalid decrement returned non-zero height: %s", actual)
 	require.False(t, success, "invalid decrement passed")
 }
 

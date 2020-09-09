@@ -19,7 +19,7 @@ const (
 
 var (
 	prefix          = commitmenttypes.NewMerklePrefix([]byte("ibc"))
-	consensusHeight = clienttypes.Height{}
+	consensusHeight = clienttypes.ZeroHeight()
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {

@@ -84,7 +84,7 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-	go build -mod=readonly ./...
+	GOBIN=$(shell pwd)/bin go install -mod=readonly ./...
 
 build-simd: go.sum
 	mkdir -p $(BUILDDIR)
@@ -93,8 +93,6 @@ build-simd: go.sum
 build-simd-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
 
-go-install: go.sum
-	@go install -mod=readonly ./...
 
 .PHONY: build build-simd build-simd-linux
 

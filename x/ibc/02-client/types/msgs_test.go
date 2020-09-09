@@ -350,8 +350,10 @@ func (suite *TypesTestSuite) TestMarshalMsgSubmitMisbehaviour() {
 		},
 		{
 			"tendermint client", func() {
-				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
-				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				height := types.NewHeight(0, uint64(suite.chain.CurrentHeader.Height))
+				heightMinus1 := types.NewHeight(0, uint64(suite.chain.CurrentHeader.Height)-1)
+				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, height, heightMinus1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, height, heightMinus1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
 
 				misbehaviour := ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, header1, header2)
 				msg, err = types.NewMsgSubmitMisbehaviour("tendermint", misbehaviour, suite.chain.SenderAccount.GetAddress())
@@ -406,8 +408,10 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"valid - tendermint misbehaviour",
 			func() {
-				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
-				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, suite.chain.CurrentHeader.Height, suite.chain.CurrentHeader.Height-1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				height := types.NewHeight(0, uint64(suite.chain.CurrentHeader.Height))
+				heightMinus1 := types.NewHeight(0, uint64(suite.chain.CurrentHeader.Height)-1)
+				header1 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, height, heightMinus1, suite.chain.CurrentHeader.Time, suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
+				header2 := ibctmtypes.CreateTestHeader(suite.chain.ChainID, height, heightMinus1, suite.chain.CurrentHeader.Time.Add(time.Minute), suite.chain.Vals, suite.chain.Vals, suite.chain.Signers)
 
 				misbehaviour := ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, header1, header2)
 				msg, err = types.NewMsgSubmitMisbehaviour("tendermint", misbehaviour, suite.chain.SenderAccount.GetAddress())

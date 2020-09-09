@@ -18,7 +18,6 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"success",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             height,
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},
@@ -26,7 +25,6 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"root is nil",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             height,
 				Root:               commitmenttypes.MerkleRoot{},
 				NextValidatorsHash: suite.valsHash,
 			},
@@ -34,7 +32,6 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"root is empty",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             height,
 				Root:               commitmenttypes.MerkleRoot{},
 				NextValidatorsHash: suite.valsHash,
 			},
@@ -42,24 +39,14 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		{"nextvalshash is invalid",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
-				Height:             height,
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: []byte("hi"),
 			},
 			false},
 
-		{"height is 0",
-			&types.ConsensusState{
-				Timestamp:          suite.now,
-				Height:             clienttypes.NewHeight(0, 0),
-				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
-				NextValidatorsHash: suite.valsHash,
-			},
-			false},
 		{"timestamp is zero",
 			&types.ConsensusState{
 				Timestamp:          time.Time{},
-				Height:             height,
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},

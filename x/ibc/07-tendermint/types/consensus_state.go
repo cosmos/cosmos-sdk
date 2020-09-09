@@ -20,7 +20,6 @@ func NewConsensusState(
 	return &ConsensusState{
 		Timestamp:          timestamp,
 		Root:               root,
-		Height:             height,
 		NextValidatorsHash: nextValsHash,
 	}
 }
@@ -35,9 +34,10 @@ func (cs ConsensusState) GetRoot() exported.Root {
 	return cs.Root
 }
 
-// GetHeight returns the height for the specific consensus state
+// GetHeight satisifes the ConsensusState interface
+// NOTE: this function will be deprecated.
 func (cs ConsensusState) GetHeight() exported.Height {
-	return cs.Height
+	return clienttypes.Height{}
 }
 
 // GetTimestamp returns block time in nanoseconds at which the consensus state was stored
@@ -52,9 +52,6 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
-	}
-	if cs.Height.EpochHeight == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "tendermint epoch height cannot be zero")
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

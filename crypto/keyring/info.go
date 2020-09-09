@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -63,7 +64,12 @@ func (i localInfo) GetName() string {
 
 // GetType implements Info interface
 func (i localInfo) GetPubKey() crypto.PubKey {
-	return i.PubKey
+	protoPubKey, err := keys.AminoPubKeyToProtoPubKey(i.PubKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return protoPubKey.(crypto.PubKey)
 }
 
 // GetType implements Info interface
@@ -111,7 +117,12 @@ func (i ledgerInfo) GetName() string {
 
 // GetPubKey implements Info interface
 func (i ledgerInfo) GetPubKey() crypto.PubKey {
-	return i.PubKey
+	protoPubKey, err := keys.AminoPubKeyToProtoPubKey(i.PubKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return protoPubKey.(crypto.PubKey)
 }
 
 // GetAddress implements Info interface
@@ -158,7 +169,12 @@ func (i offlineInfo) GetName() string {
 
 // GetPubKey implements Info interface
 func (i offlineInfo) GetPubKey() crypto.PubKey {
-	return i.PubKey
+	protoPubKey, err := keys.AminoPubKeyToProtoPubKey(i.PubKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return protoPubKey.(crypto.PubKey)
 }
 
 // GetAlgo returns the signing algorithm for the key
@@ -219,7 +235,12 @@ func (i multiInfo) GetName() string {
 
 // GetPubKey implements Info interface
 func (i multiInfo) GetPubKey() crypto.PubKey {
-	return i.PubKey
+	protoPubKey, err := keys.AminoPubKeyToProtoPubKey(i.PubKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return protoPubKey.(crypto.PubKey)
 }
 
 // GetAddress implements Info interface

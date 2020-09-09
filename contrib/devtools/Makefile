@@ -122,6 +122,14 @@ ifeq (, $(shell which protoc-gen-swagger))
 else
 	@echo "protoc-gen-grpc-gateway already installed; skipping..."
 endif
+ifeq ($(UNAME_S),Linux)
+	@echo "Installing clang-format..."
+	sudo apt-get install clang-format
+endif
+ifeq ($(UNAME_S),Darwin)
+	@echo "Installing clang-format..."
+	brew install clang-format
+endif
 
 buf: buf-stamp
 

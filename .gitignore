@@ -10,7 +10,6 @@
 *.pyc
 
 # Build
-/bin
 vendor
 build
 tools/bin/*

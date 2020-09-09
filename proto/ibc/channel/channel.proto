@@ -60,7 +60,7 @@ message MsgChannelOpenConfirm {
   string            signer       = 5;
 }
 
-// MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain A
+// MsgChannelCloseInit defines a msg sent by a Relayer to Chain A
 // to close a channel with Chain B.
 message MsgChannelCloseInit {
   option (gogoproto.equal)           = false;
@@ -144,8 +144,8 @@ message Channel {
   Order ordering = 2;
   // counterparty channel end
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  // list of connection identifiers, in order, along which packets sent on this
-  // channel will travel
+  // list of connection identifiers, in order, along which packets sent on
+  // this channel will travel
   repeated string connection_hops = 4 [(gogoproto.moretags) = "yaml:\"connection_hops\""];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
@@ -162,10 +162,9 @@ message IdentifiedChannel {
   Order ordering = 2;
   // counterparty channel end
   Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  // list of connection identifiers, in order, along which packets sent on this
-  // channel will travel
-  repeated string connection_hops = 4
-      [(gogoproto.moretags) = "yaml:\"connection_hops\""];
+  // list of connection identifiers, in order, along which packets sent on
+  // this channel will travel
+  repeated string connection_hops = 4 [(gogoproto.moretags) = "yaml:\"connection_hops\""];
   // opaque channel version, which is agreed upon during the handshake
   string version = 5;
   // port identifier
@@ -220,9 +219,9 @@ message Counterparty {
 message Packet {
   option (gogoproto.goproto_getters) = false;
 
-  // number corresponds to the order of sends and receives, where a Packet with
-  // an earlier sequence number must be sent and received before a Packet with a
-  // later sequence number.
+  // number corresponds to the order of sends and receives, where a Packet
+  // with an earlier sequence number must be sent and received before a Packet
+  // with a later sequence number.
   uint64 sequence = 1;
   // identifies the port on the sending chain.
   string source_port = 2 [(gogoproto.moretags) = "yaml:\"source_port\""];
@@ -253,4 +252,19 @@ message PacketAckCommitment {
   uint64 sequence = 3;
   // packet commitment hash.
   bytes hash = 4;
+}
+
+// Acknowledgement is the recommended acknowledgement format to be used by
+// app-specific protocols.
+// NOTE: The field numbers 21 and 22 were explicitly chosen to avoid accidental
+// conflicts with other protobuf message formats used for acknowledgements.
+// The first byte of any message with this format will be the non-ASCII values
+// `0xaa` (result) or `0xb2` (error). Implemented as defined by ICS:
+// https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope
+message Acknowledgement {
+  // response contains either a result or an error and must be non-empty
+  oneof response {
+    bytes  result = 21;
+    string error  = 22;
+  }
 }

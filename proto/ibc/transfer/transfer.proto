@@ -46,15 +46,6 @@ message FungibleTokenPacketData {
   string receiver = 4;
 }
 
-// FungibleTokenPacketAcknowledgement contains a boolean success flag and an
-// optional error msg error msg is empty string on success See spec for
-// onAcknowledgePacket:
-// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-message FungibleTokenPacketAcknowledgement {
-  bool   success = 1;
-  string error   = 2;
-}
-
 // DenomTrace contains the base denomination for ICS20 fungible tokens and the
 // source tracing information path.
 message DenomTrace {

@@ -87,16 +87,16 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 
 // FromABCIEvidence converts a Tendermint concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
-func FromABCIEvidence(dupVote abci.Evidence) exported.Evidence {
+func FromABCIEvidence(e abci.Evidence) exported.Evidence {
 	consAddr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixConsAddr, dupVote.Validator.Address)
 	if err != nil {
 		panic(err)
 	}
 
 	return &Equivocation{
-		Height:           dupVote.Height,
-		Power:            dupVote.Validator.Power,
+		Height:           e.Height,
+		Power:            e.Validator.Power,
 		ConsensusAddress: consAddr,
-		Time:             dupVote.Time,
+		Time:             e.Time,
 	}
 }

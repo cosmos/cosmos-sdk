@@ -198,7 +198,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                               // reset
-			consensusHeight = clienttypes.Height{}          // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()      // must be explicitly changed in malleate
 			versions = types.GetCompatibleEncodedVersions() // must be explicitly changed in malleate
 
 			tc.malleate()
@@ -447,7 +447,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                                 // reset
 			version = types.GetCompatibleEncodedVersions()[0] // must be explicitly changed in malleate
-			consensusHeight = clienttypes.Height{}            // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()        // must be explicitly changed in malleate
 
 			tc.malleate()
 

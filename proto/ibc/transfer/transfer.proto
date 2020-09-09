@@ -18,20 +18,15 @@ message MsgTransfer {
   // the tokens to be transferred
   cosmos.base.v1beta1.Coin token = 3 [(gogoproto.nullable) = false];
   // the sender address
-  bytes sender = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes sender = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // the recipient address on the destination chain
   string receiver = 5;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
-  ibc.client.Height timeout_height = 6 [
-    (gogoproto.moretags) = "yaml:\"timeout_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7
-      [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
 // FungibleTokenPacketData defines a struct for the packet payload

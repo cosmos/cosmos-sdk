@@ -83,7 +83,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 
 				// generate invalid signature
 				signBytes := &types.SignBytes{
-					Sequence:    cs.ConsensusState.Sequence,
+					Sequence:    cs.Sequence,
 					Timestamp:   suite.solomachine.Time,
 					Diversifier: suite.solomachine.Diversifier,
 					Data:        dataBz,
@@ -111,7 +111,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				h := suite.solomachine.CreateHeader()
 
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.ConsensusState.Sequence), oldPrivKey.PubKey().Bytes()...)
+				data := append(sdk.Uint64ToBigEndian(cs.Sequence), oldPrivKey.PubKey().Bytes()...)
 				sig, err := oldPrivKey.Sign(data)
 				suite.Require().NoError(err)
 				h.Signature = sig
@@ -136,7 +136,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(header.(*types.Header).NewPublicKey, clientState.(*types.ClientState).ConsensusState.PublicKey)
 				suite.Require().Equal(uint64(0), clientState.(*types.ClientState).FrozenSequence)
-				suite.Require().Equal(header.(*types.Header).Sequence+1, clientState.(*types.ClientState).ConsensusState.Sequence)
+				suite.Require().Equal(header.(*types.Header).Sequence+1, clientState.(*types.ClientState).Sequence)
 				suite.Require().Equal(consensusState, clientState.(*types.ClientState).ConsensusState)
 			} else {
 				suite.Require().Error(err)

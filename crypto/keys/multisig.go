@@ -88,7 +88,7 @@ func (m *MultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
 	if m != nil {
 		pubKeys := make([]crypto.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
-			pubKeys[i] = m.PubKeys[i].GetCachedValue().(tmcrypto.PubKey)
+			pubKeys[i] = m.PubKeys[i].GetCachedValue().(crypto.PubKey)
 		}
 		return pubKeys
 	}

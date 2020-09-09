@@ -5,6 +5,7 @@ import (
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
+// asserting interface implementation
 var (
 	_ crypto.PubKey  = &Secp256K1PubKey{}
 	_ crypto.PrivKey = &Secp256K1PrivKey{}

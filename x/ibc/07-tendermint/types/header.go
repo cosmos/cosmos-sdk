@@ -37,10 +37,11 @@ func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
 		return clienttypes.Height{}
 	}
-
-	// Enforce clienttypes.Height to use 0 epoch number
-	// TODO: Retrieve epoch number from chain-id
-	return clienttypes.NewHeight(0, uint64(h.Header.Height))
+	epoch, err := clienttypes.ParseChainID(h.Header.ChainID)
+	if err != nil {
+		return clienttypes.Height{}
+	}
+	return clienttypes.NewHeight(epoch, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if

@@ -317,7 +317,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	return abci.ResponseCommit{
-		Data: commitID.Hash,
+		Data:         commitID.Hash,
+		RetainHeight: int64(app.GetBlockRentionHeight(uint64(header.Height))),
 	}
 }
 

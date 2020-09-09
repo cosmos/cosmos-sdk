@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
-						DelegatorAddress: val.Address,
+						DelegatorAddress: val.Address.String(),
 						ValidatorAddress: val2.ValAddress.String(),
 						Shares:           sdk.NewDec(10),
 					},

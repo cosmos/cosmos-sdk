@@ -37,7 +37,15 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // These functions assume everything has been authenticated (ValidateBasic passed, and signatures checked)
 
 func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg *types.MsgSetWithdrawAddress, k keeper.Keeper) (*sdk.Result, error) {
-	err := k.SetWithdrawAddr(ctx, msg.DelegatorAddress, msg.WithdrawAddress)
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	withdrawAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	err = k.SetWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +54,7 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg *types.MsgSetWithdrawAd
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	)
 
@@ -58,7 +66,11 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg *types.MsgWithdrawDel
 	if err != nil {
 		return nil, err
 	}
-	amount, err := k.WithdrawDelegationRewards(ctx, msg.DelegatorAddress, valAddr)
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	amount, err := k.WithdrawDelegationRewards(ctx, delegatorAddress, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +89,7 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg *types.MsgWithdrawDel
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	)
 

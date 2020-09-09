@@ -11,12 +11,10 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 message MsgCreateVestingAccount {
   option (gogoproto.equal) = true;
 
-  bytes from_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+  string from_address = 1 [
     (gogoproto.moretags) = "yaml:\"from_address\""
   ];
-  bytes to_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+  string to_address = 2 [
     (gogoproto.moretags) = "yaml:\"to_address\""
   ];
   repeated cosmos.base.v1beta1.Coin amount = 3

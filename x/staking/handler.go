@@ -94,6 +94,11 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 		return nil, err
 	}
 
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
@@ -106,7 +111,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Delegate(ctx, msg.DelegatorAddress, msg.Value.Amount, sdk.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, sdk.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +125,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -199,13 +204,18 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 		return nil, types.ErrNoValidatorFound
 	}
 
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
 		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	// NOTE: source funds are always unbonded
-	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +238,7 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -240,8 +250,12 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 	if err != nil {
 		return nil, err
 	}
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, addr, msg.Amount.Amount,
+		ctx, delegatorAddress, addr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
@@ -252,7 +266,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 		return nil, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
-	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, addr, shares)
+	completionTime, err := k.Undelegate(ctx, delegatorAddress, addr, shares)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +296,7 @@ func handleMsgUndelegate(ctx sdk.Context, msg *types.MsgUndelegate, k keeper.Kee
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -294,8 +308,12 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 	if err != nil {
 		return nil, err
 	}
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
 	shares, err := k.ValidateUnbondAmount(
-		ctx, msg.DelegatorAddress, valSrcAddr, msg.Amount.Amount,
+		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
@@ -312,7 +330,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 	}
 
 	completionTime, err := k.BeginRedelegation(
-		ctx, msg.DelegatorAddress, valSrcAddr, valDstAddr, shares,
+		ctx, delegatorAddress, valSrcAddr, valDstAddr, shares,
 	)
 	if err != nil {
 		return nil, err
@@ -344,7 +362,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg *types.MsgBeginRedelegate, k 
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 

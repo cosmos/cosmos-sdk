@@ -141,7 +141,7 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
 
 		// validate delegator and validator addresses and funds against the accounts in the state
-		delAddr := msg.DelegatorAddress.String()
+		delAddr := msg.DelegatorAddress
 		valAddr := sdk.AccAddress(msg.ValidatorAddress).String()
 
 		delBal, delOk := balancesMap[delAddr]

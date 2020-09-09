@@ -12,12 +12,12 @@ var (
 	pk1      = ed25519.GenPrivKey().PubKey()
 	pk2      = ed25519.GenPrivKey().PubKey()
 	pk3      = ed25519.GenPrivKey().PubKey()
-	addr1    = pk1.Address()
-	addr2    = pk2.Address()
-	addr3    = pk3.Address()
-	valAddr1 = sdk.ValAddress(addr1)
-	valAddr2 = sdk.ValAddress(addr2)
-	valAddr3 = sdk.ValAddress(addr3)
+	addr1, _    = sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk1.Address().Bytes())
+	addr2, _    = sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk2.Address().Bytes())
+	addr3, _    = sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, pk3.Address().Bytes())
+	valAddr1 = sdk.ValAddress(pk1.Address())
+	valAddr2 = sdk.ValAddress(pk2.Address())
+	valAddr3 = sdk.ValAddress(pk3.Address())
 
 	emptyAddr   sdk.ValAddress
 	emptyPubkey crypto.PubKey

@@ -157,19 +157,24 @@ func TestSendToModuleAcc(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			acc := &authtypes.BaseAccount{
-				Address: test.msg.FromAddress.String(),
+				Address: test.msg.FromAddress,
 			}
 
 			genAccs := []authtypes.GenesisAccount{acc}
 			app := simapp.SetupWithGenesisAccounts(genAccs)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-			err := app.BankKeeper.SetBalances(ctx, test.msg.FromAddress, test.fromBalance)
+			fromAddr, err := sdk.AccAddressFromBech32(test.msg.FromAddress)
+			require.NoError(t, err)
+			toAddr, err := sdk.AccAddressFromBech32(test.msg.FromAddress)
+			require.NoError(t, err)
+
+			err = app.BankKeeper.SetBalances(ctx, fromAddr, test.fromBalance)
 			require.NoError(t, err)
 
 			app.Commit()
 
-			res1 := app.AccountKeeper.GetAccount(ctx, test.msg.FromAddress)
+			res1 := app.AccountKeeper.GetAccount(ctx, fromAddr)
 			require.NotNil(t, res1)
 			require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
@@ -185,8 +190,8 @@ func TestSendToModuleAcc(t *testing.T) {
 				require.Error(t, err)
 			}
 
-			simapp.CheckBalance(t, app, test.msg.FromAddress, test.expFromBalance)
-			simapp.CheckBalance(t, app, test.msg.ToAddress, test.expToBalance)
+			simapp.CheckBalance(t, app, fromAddr, test.expFromBalance)
+			simapp.CheckBalance(t, app, toAddr, test.expToBalance)
 
 			res2 := app.AccountKeeper.GetAccount(app.NewContext(true, tmproto.Header{}), addr1)
 			require.NotNil(t, res2)

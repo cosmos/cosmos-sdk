@@ -114,11 +114,9 @@ message DVPair {
   option (gogoproto.goproto_stringer) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }
@@ -138,15 +136,12 @@ message DVVTriplet {
   option (gogoproto.goproto_stringer) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
 }
@@ -165,11 +160,9 @@ message Delegation {
   option (gogoproto.goproto_stringer) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
@@ -183,11 +176,9 @@ message UnbondingDelegation {
   option (gogoproto.goproto_stringer) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
@@ -234,15 +225,12 @@ message Redelegation {
   option (gogoproto.goproto_stringer) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
   repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries

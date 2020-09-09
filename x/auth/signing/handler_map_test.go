@@ -37,8 +37,8 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	memo := "foo"
 	msgs := []sdk.Msg{
 		&banktypes.MsgSend{
-			FromAddress: addr1,
-			ToAddress:   addr2,
+			FromAddress: addr1.String(),
+			ToAddress:   addr2.String(),
 			Amount:      coins,
 		},
 	}

@@ -20,7 +20,6 @@ message MsgCreateValidator {
     (gogoproto.nullable)   = false
   ];
   string delegator_address = 4 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 5 [
@@ -64,11 +63,9 @@ message MsgDelegate {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
@@ -81,15 +78,12 @@ message MsgBeginRedelegate {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_src_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_src_address\""
   ];
   string validator_dst_address = 3 [
-
     (gogoproto.moretags) = "yaml:\"validator_dst_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 4 [(gogoproto.nullable) = false];
@@ -102,11 +96,9 @@ message MsgUndelegate {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];

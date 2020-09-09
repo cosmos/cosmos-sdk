@@ -15,7 +15,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	k.SetParams(ctx, data.Params)
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
-		k.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddress, dwi.WithdrawAddress)
+		delegatorAddress, err := sdk.AccAddressFromBech32(dwi.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		withdrawAddress, err := sdk.AccAddressFromBech32(dwi.WithdrawAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	}
 
 	k.SetPreviousProposerConsAddr(ctx, sdk.ConsAddress(data.PreviousProposer))
@@ -54,7 +63,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		k.SetDelegatorStartingInfo(ctx, valAddr, del.DelegatorAddress, del.StartingInfo)
+		delegatorAddress, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		k.SetDelegatorStartingInfo(ctx, valAddr, delegatorAddress, del.StartingInfo)
 	}
 	for _, evt := range data.ValidatorSlashEvents {
 		valAddr, err := sdk.ValAddressFromBech32(evt.ValidatorAddress)
@@ -91,8 +104,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	k.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
-			DelegatorAddress: del,
-			WithdrawAddress:  addr,
+			DelegatorAddress: del.String(),
+			WithdrawAddress:  addr.String(),
 		})
 		return false
 	})
@@ -149,7 +162,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		func(val sdk.ValAddress, del sdk.AccAddress, info types.DelegatorStartingInfo) (stop bool) {
 			dels = append(dels, types.DelegatorStartingInfoRecord{
 				ValidatorAddress: val.String(),
-				DelegatorAddress: del,
+				DelegatorAddress: del.String(),
 				StartingInfo:     info,
 			})
 			return false

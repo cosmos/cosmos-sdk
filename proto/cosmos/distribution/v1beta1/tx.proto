@@ -14,11 +14,9 @@ message MsgSetWithdrawAddress {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string withdraw_address = 2 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"withdraw_address\""
   ];
 }
@@ -30,11 +28,9 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.goproto_getters) = false;
 
   string delegator_address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"delegator_address\""
   ];
   string validator_address = 2 [
-
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
 }

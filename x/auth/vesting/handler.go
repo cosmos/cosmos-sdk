@@ -31,15 +31,24 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk 
 		return nil, err
 	}
 
-	if bk.BlockedAddr(msg.ToAddress) {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if bk.BlockedAddr(to) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := ak.GetAccount(ctx, msg.ToAddress); acc != nil {
+	if acc := ak.GetAccount(ctx, from); acc != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	baseAccount := ak.NewAccountWithAddress(ctx, msg.ToAddress)
+	baseAccount := ak.NewAccountWithAddress(ctx, to)
 	if _, ok := baseAccount.(*authtypes.BaseAccount); !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid account type; expected: BaseAccount, got: %T", baseAccount)
 	}
@@ -70,7 +79,7 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk 
 		}
 	}()
 
-	err := bk.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	err = bk.SendCoins(ctx, from, to, msg.Amount)
 	if err != nil {
 		return nil, err
 	}

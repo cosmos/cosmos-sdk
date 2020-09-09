@@ -453,8 +453,13 @@ func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegat
 		return types.DelegationResponse{}, types.ErrNoValidatorFound
 	}
 
+	delegatorAddress, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
+	if err != nil {
+		return types.DelegationResponse{}, err
+	}
+
 	return types.NewDelegationResp(
-		del.DelegatorAddress,
+		delegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
 		sdk.NewCoin(k.BondDenom(ctx), val.TokensFromShares(del.Shares).TruncateInt()),
@@ -492,6 +497,11 @@ func RedelegationsToRedelegationResponses(
 		if err != nil {
 			panic(err)
 		}
+
+		delegatorAddress, err := sdk.AccAddressFromBech32(redel.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 		val, found := k.GetValidator(ctx, valDstAddr)
 		if !found {
 			return nil, types.ErrNoValidatorFound
@@ -509,7 +519,7 @@ func RedelegationsToRedelegationResponses(
 		}
 
 		resp[i] = types.NewRedelegationResponse(
-			redel.DelegatorAddress,
+			delegatorAddress,
 			valSrcAddr,
 			valDstAddr,
 			entryResponses,

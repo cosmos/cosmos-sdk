@@ -31,7 +31,7 @@ func (dvv DVVTriplet) String() string {
 // NewDelegation creates a new delegation object
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
-		DelegatorAddress: delegatorAddr,
+		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
 	}
@@ -60,7 +60,11 @@ func UnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) (delegation De
 }
 
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
-	return d.DelegatorAddress
+	delAddr, err := sdk.AccAddressFromBech32(d.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return delAddr
 }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
@@ -114,7 +118,7 @@ func NewUnbondingDelegation(
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) UnbondingDelegation {
 	return UnbondingDelegation{
-		DelegatorAddress: delegatorAddr,
+		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Entries: []UnbondingDelegationEntry{
 			NewUnbondingDelegationEntry(creationHeight, minTime, balance),
@@ -207,7 +211,7 @@ func NewRedelegation(
 	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec,
 ) Redelegation {
 	return Redelegation{
-		DelegatorAddress:    delegatorAddr,
+		DelegatorAddress:    delegatorAddr.String(),
 		ValidatorSrcAddress: validatorSrcAddr.String(),
 		ValidatorDstAddress: validatorDstAddr.String(),
 		Entries: []RedelegationEntry{
@@ -333,7 +337,7 @@ func NewRedelegationResponse(
 ) RedelegationResponse {
 	return RedelegationResponse{
 		Redelegation: Redelegation{
-			DelegatorAddress:    delegatorAddr,
+			DelegatorAddress:    delegatorAddr.String(),
 			ValidatorSrcAddress: validatorSrc.String(),
 			ValidatorDstAddress: validatorDst.String(),
 		},

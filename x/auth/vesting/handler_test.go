@@ -68,7 +68,9 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 
-				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.ToAddress)
+				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+				suite.Require().NoError(err)
+				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
 
 				if tc.msg.Delayed {

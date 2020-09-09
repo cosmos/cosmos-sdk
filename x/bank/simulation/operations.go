@@ -93,7 +93,12 @@ func sendMsgSend(
 		err  error
 	)
 
-	account := ak.GetAccount(ctx, msg.FromAddress)
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
+
+	account := ak.GetAccount(ctx, from)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 	coins, hasNeg := spendable.SafeSub(msg.Amount)

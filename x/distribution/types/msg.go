@@ -19,8 +19,8 @@ var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
 	return &MsgSetWithdrawAddress{
-		DelegatorAddress: delAddr,
-		WithdrawAddress:  withdrawAddr,
+		DelegatorAddress: delAddr.String(),
+		WithdrawAddress:  withdrawAddr.String(),
 	}
 }
 
@@ -40,10 +40,10 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgSetWithdrawAddress) ValidateBasic() error {
-	if msg.DelegatorAddress.Empty() {
+	if msg.DelegatorAddress == "" {
 		return ErrEmptyDelegatorAddr
 	}
-	if msg.WithdrawAddress.Empty() {
+	if msg.WithdrawAddress == "" {
 		return ErrEmptyWithdrawAddr
 	}
 
@@ -52,7 +52,7 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 
 func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgWithdrawDelegatorReward {
 	return &MsgWithdrawDelegatorReward{
-		DelegatorAddress: delAddr,
+		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: valAddr.String(),
 	}
 }
@@ -73,7 +73,7 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
-	if msg.DelegatorAddress.Empty() {
+	if msg.DelegatorAddress == "" {
 		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorAddress == "" {

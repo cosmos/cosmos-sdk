@@ -1,34 +1,23 @@
 #/bin/bash
 
 f_make_release_tarball() {
-    local l_tarball l_dir
+    SOURCEDIST=${BASEDIR}/${APP}-${VERSION}.tar.gz
 
-    l_dir=$1
-    l_tarball=${l_dir}/${APP}-${VERSION}.tar.gz
-
-    git archive --format tar.gz --prefix "${APP}-${VERSION}/" -o "${l_tarball}" HEAD
+    git archive --format tar.gz --prefix "${APP}-${VERSION}/" -o "${SOURCEDIST}" HEAD
 
     l_tempdir="$(mktemp -d)"
     pushd "${l_tempdir}" >/dev/null
-    tar xf "${l_tarball}"
-    rm "${l_tarball}"
-    find ${APP}-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > "${l_tarball}"
+    tar xf "${SOURCEDIST}"
+    rm "${SOURCEDIST}"
+    find ${APP}-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > "${SOURCEDIST}"
     popd >/dev/null
     rm -rf "${l_tempdir}"
-
-    printf '%s' "${l_tarball}"
 }
 
-f_prepare_pristine_src_dir() {
-    local l_tarball l_dir
-
-    l_tarball=$1
-    l_dir=$2
-
-    pushd ${l_dir} >/dev/null
-    tar --strip-components=1 -xf "${l_tarball}"
+f_setup_pristine_src_dir() {
+    cd ${pristinesrcdir}
+    tar --strip-components=1 -xf "${SOURCEDIST}"
     go mod download
-    popd >/dev/null
 }
 
 f_build_archs() {
@@ -54,12 +43,11 @@ f_binary_file_ext() {
 }
 
 f_generate_build_report() {
-    local l_dir l_tempfile
+    local l_tempfile
 
-    l_dir=$1
     l_tempfile="$(mktemp)"
 
-    pushd "${l_dir}" >/dev/null
+    pushd "${OUTDIR}" >/dev/null
     cat >>"${l_tempfile}" <<EOF
 App: ${APP}
 Version: ${VERSION}
@@ -72,3 +60,21 @@ EOF
     mv "${l_tempfile}" build_report
     popd >/dev/null
 }
+
+[ "x${DEBUG}" = "x" ] || set -x
+
+BASEDIR="$(mktemp -d)"
+OUTDIR=$HOME/artifacts
+rm -rfv ${OUTDIR}/
+mkdir -p ${OUTDIR}/
+pristinesrcdir=${BASEDIR}/buildsources
+mkdir -p ${pristinesrcdir}
+
+# Make release tarball
+f_make_release_tarball
+
+# Extract release tarball and cache dependencies
+f_setup_pristine_src_dir
+
+# Move the release tarball to the out directory
+mv ${SOURCEDIST} ${OUTDIR}/

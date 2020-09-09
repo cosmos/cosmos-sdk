@@ -10,27 +10,14 @@ set -ue
 # - LEDGER_ENABLED
 # - DEBUG
 
-[ "x${DEBUG}" = "x" ] || set -x
+# Source builder's functions library
+. /usr/local/share/cosmos-sdk/buildlib.sh
 
-BASEDIR="$(mktemp -d)"
-OUTDIR=$HOME/artifacts
-rm -rfv ${OUTDIR}/
-mkdir -p ${OUTDIR}/
-pristinesrcdir=${BASEDIR}/buildsources
-mkdir -p ${pristinesrcdir}
-
-
-# Make release tarball
-SOURCEDIST="`f_make_release_tarball ${BASEDIR}`"
-
-# Extract release tarball and cache dependencies
-f_prepare_pristine_src_dir "${SOURCEDIST}" "${pristinesrcdir}"
-
-# Move the release tarball to the out directory
-mv ${SOURCEDIST} ${OUTDIR}/
+# These variables are now available
+# - BASEDIR
+# - OUTDIR
 
 # Build for each os-architecture pair
-cd ${pristinesrcdir}
 for os in ${TARGET_OS} ; do
     archs="`f_build_archs ${os}`"
     exe_file_extension="`f_binary_file_ext ${os}`"
@@ -47,5 +34,6 @@ for os in ${TARGET_OS} ; do
     unset exe_file_extension
 done
 
+# Generate and display build report
 f_generate_build_report ${OUTDIR}
 cat ${OUTDIR}/build_report

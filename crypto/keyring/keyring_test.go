@@ -393,7 +393,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 	require.NoError(t, err)
 	multi := multisig.PubKeyMultisigThreshold{
 		K:       1,
-		PubKeys: []tmcrypto.PubKey{&keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}},
+		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
 	}
 	_, err = kb.SaveMultisig("multi", multi)
 	require.NoError(t, err)
@@ -469,11 +469,11 @@ func TestInMemoryKeyManagement(t *testing.T) {
 
 	// create an offline key
 	o1 := "offline"
-	priv1 := ed25519.GenPrivKey()
+	priv1 := secp256k1.GenPrivKey()
 	pub1 := priv1.PubKey()
 	i, err = cstore.SavePubKey(o1, pub1, hd.Ed25519Type)
 	require.Nil(t, err)
-	require.Equal(t, pub1, i.GetPubKey())
+	require.Equal(t, &keys.Secp256K1PubKey{Key: pub1.(secp256k1.PubKey)}, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
 	iOffline := i.(*offlineInfo)
 	require.Equal(t, hd.Ed25519Type, iOffline.GetAlgo())

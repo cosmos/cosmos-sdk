@@ -47,7 +47,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func TestAccountMapperGetSet(t *testing.T) {
 	app, ctx := createTestApp(true)
-	addr := sdk.AccAddress([]byte("some-address"))
+	addr := sdk.AccAddress([]byte("some---------address"))
 
 	// no account before its created
 	acc := app.AccountKeeper.GetAccount(ctx, addr)
@@ -77,8 +77,8 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
 	app, ctx := createTestApp(true)
-	addr1 := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
 	// create accounts
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)

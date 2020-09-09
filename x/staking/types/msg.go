@@ -66,7 +66,7 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	if !bytes.Equal(msg.DelegatorAddress.Bytes(), addr.Bytes()) {
-		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddress))
+		addrs = append(addrs, sdk.AccAddress(addr))
 	}
 
 	return addrs

@@ -177,7 +177,7 @@ func TestQueryValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(validatorsResp))
-		require.ElementsMatch(t, validators[i].OperatorAddress, validatorsResp[0].OperatorAddress)
+		require.Equal(t, validators[i].OperatorAddress, validatorsResp[0].OperatorAddress)
 	}
 
 	// Query each validator

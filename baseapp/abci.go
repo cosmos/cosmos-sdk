@@ -561,6 +561,59 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	return ctx, nil
 }
 
+// GetBlockRentionHeight returns the height for which all blocks below this height
+// are pruned from Tendermint. Given a commitment height and a non-zero local
+// minRetainBlocks configuration, the retentionHeight is the smallest height that
+// satisfies:
+//
+// - Unbonding (safety threshold) time: The block interval in which validators
+// can be economically punished for misbehavior. Blocks in this interval must be
+// auditable e.g. by the light client.
+//
+// - Logical store snapshot interval: The block interval at which the underlying
+// logical store database is persisted to disk, e.g. every 10000 heights. Blocks
+// since the last IAVL snapshot must be available for replay on application restart.
+//
+// - State sync snapshots: Blocks since the oldest available snapshot must be
+// available for state sync nodes to catch up (oldest because a node may be
+// restoring an old snapshot while a new snapshot was taken).
+//
+// - Local (minRetainBlocks) config: Archive nodes may want to retain more or
+// all blocks, e.g. via a local config option min-retain-blocks. There may also
+// be a need to vary retention for other nodes, e.g. sentry nodes which do not
+// need historical blocks.
+func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
+	min := func(x, y uint64) uint64 {
+		if x < y {
+			return x
+		}
+		return y
+	}
+
+	// Define the number of blocks needed to protect against misbehaving validators
+	// which allows light clients to operate safely. Note, we piggy back of the
+	// evidence parameters instead of computing an estimated nubmer of blocks based
+	// on the unbonding period and block commitment time as the two should be
+	// equivalent.
+	blockSafetyThreshold := app.GetConsensusParams(app.deliverState.ctx).Evidence.MaxAgeNumBlocks
+
+	// Define the state pruning interval, i.e. the block interval at which the
+	// underlying logical database is persisted to disk.
+	statePruningInterval := app.cms.GetPruning().Interval
+
+	// Define retentionHeight as the minimum value that satisfies all constraints.
+	// All blocks past (commitHeight-retentionHeight) are pruned from Tendermint.
+	retentionHeight := min(app.minRetainBlocks, uint64(blockSafetyThreshold))
+	retentionHeight = min(retentionHeight, statePruningInterval)
+	retentionHeight = min(retentionHeight, app.snapshotInterval)
+
+	if retentionHeight == 0 || (retentionHeight >= commitHeight) {
+		return 0
+	}
+
+	return commitHeight - retentionHeight
+}
+
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	if len(path) >= 2 {
 		switch path[1] {

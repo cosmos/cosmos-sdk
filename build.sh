@@ -43,12 +43,12 @@ for os in ${TARGET_OS} ; do
     for arch in ${archs} ; do
         make clean
         GOOS="${os}" GOARCH="${arch}" GOROOT_FINAL="$(go env GOROOT)" \
-        make simd \
+        make ${APP} \
             LDFLAGS=-buildid=${VERSION} \
             VERSION=${VERSION} \
             COMMIT=${COMMIT} \
             LEDGER_ENABLED=${LEDGER_ENABLED}
-        mv ./build/simd${exe_file_extension} ${OUTDIR}/${DISTNAME}-${os}-${arch}${exe_file_extension}
+        mv ./build/${APP}${exe_file_extension} ${OUTDIR}/${DISTNAME}-${os}-${arch}${exe_file_extension}
     done
     unset exe_file_extension
 done

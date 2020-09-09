@@ -199,7 +199,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	aminoCdc := codec.New()
+	aminoCdc := codec.NewLegacyAmino()
 	// We're using TestMsg amino encoding in some tests, so register it here.
 	txConfig := authtypes.StdTxConfig{Cdc: aminoCdc}
 

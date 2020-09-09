@@ -23,7 +23,8 @@ service Query {
 
   // ConsensusState queries a consensus state associated with a client state at a given height.
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/height/{epoch_height}";
+    option (google.api.http).get =
+        "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/height/{epoch_height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given client.
@@ -50,9 +51,7 @@ message QueryClientStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryClientStatesRequest is the request type for the Query/ClientStates RPC
@@ -76,7 +75,7 @@ message QueryClientStatesResponse {
 message QueryConsensusStateRequest {
   // client identifier
   string client_id = 1;
-  // consensus state epoch number 
+  // consensus state epoch number
   uint64 epoch_number = 2;
   // consensus state epoch height
   uint64 epoch_height = 3;
@@ -93,10 +92,8 @@ message QueryConsensusStateResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.nullable) = false
-  ];
-;
+  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ;
 }
 
 // QueryConsensusStatesRequest is the request type for the Query/ConsensusStates RPC method.

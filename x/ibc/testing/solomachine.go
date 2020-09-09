@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
@@ -19,41 +19,48 @@ import (
 type Solomachine struct {
 	t *testing.T
 
-	ClientID   string
-	PrivateKey crypto.PrivKey
-	PublicKey  crypto.PubKey
-	Sequence   uint64
-	Time       uint64
+	cdc         codec.BinaryMarshaler
+	ClientID    string
+	PrivateKey  crypto.PrivKey
+	PublicKey   crypto.PubKey
+	Sequence    uint64
+	Time        uint64
+	Diversifier string
 }
 
 // NewSolomachine returns a new solomachine instance with a generated private/public
 // key pair and a sequence starting at 1.
-func NewSolomachine(t *testing.T, clientID string) *Solomachine {
+func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string) *Solomachine {
 	privKey := ed25519.GenPrivKey()
 
 	return &Solomachine{
-		t:          t,
-		ClientID:   clientID,
-		PrivateKey: privKey,
-		PublicKey:  privKey.PubKey(),
-		Sequence:   1,
-		Time:       10,
+		t:           t,
+		cdc:         cdc,
+		ClientID:    clientID,
+		PrivateKey:  privKey,
+		PublicKey:   privKey.PubKey(),
+		Sequence:    1,
+		Time:        10,
+		Diversifier: diversifier,
 	}
 }
 
-// default usage does not allow update after governance proposal
+// ClientState returns a new solo machine ClientState instance. Default usage does not allow update
+// after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
 }
 
+// ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
-		Sequence:  solo.Sequence,
-		PublicKey: publicKey,
-		Timestamp: solo.Time,
+		Sequence:    solo.Sequence,
+		PublicKey:   publicKey,
+		Diversifier: solo.Diversifier,
+		Timestamp:   solo.Time,
 	}
 }
 
@@ -67,17 +74,37 @@ func (solo *Solomachine) GetHeight() exported.Height {
 func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
 	newPrivKey := ed25519.GenPrivKey()
-	data := append(sdk.Uint64ToBigEndian(solo.Sequence), newPrivKey.PubKey().Bytes()...)
-	signature, err := solo.PrivateKey.Sign(data)
-	require.NoError(solo.t, err)
 
 	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)
 
+	data := &solomachinetypes.HeaderData{
+		NewPubKey:      publicKey,
+		NewDiversifier: solo.Diversifier,
+	}
+
+	dataBz, err := solo.cdc.MarshalBinaryBare(data)
+	require.NoError(solo.t, err)
+
+	signBytes := &solomachinetypes.SignBytes{
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataBz,
+	}
+
+	signBz, err := solo.cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	signature, err := solo.PrivateKey.Sign(signBz)
+	require.NoError(solo.t, err)
+
 	header := &solomachinetypes.Header{
-		Sequence:     solo.Sequence,
-		Signature:    signature,
-		NewPublicKey: publicKey,
+		Sequence:       solo.Sequence,
+		Timestamp:      solo.Time,
+		Signature:      signature,
+		NewPublicKey:   publicKey,
+		NewDiversifier: solo.Diversifier,
 	}
 
 	// assumes successful header update
@@ -94,7 +121,17 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	dataOne := []byte("DATA ONE")
 	dataTwo := []byte("DATA TWO")
 
-	sig, err := solo.PrivateKey.Sign(append(sdk.Uint64ToBigEndian(solo.Sequence), dataOne...))
+	signBytes := &solomachinetypes.SignBytes{
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataOne,
+	}
+
+	signBz, err := solo.cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	sig, err := solo.PrivateKey.Sign(signBz)
 	require.NoError(solo.t, err)
 
 	signatureOne := solomachinetypes.SignatureAndData{
@@ -102,7 +139,17 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Data:      dataOne,
 	}
 
-	sig, err = solo.PrivateKey.Sign(append(sdk.Uint64ToBigEndian(solo.Sequence), dataTwo...))
+	signBytes = &solomachinetypes.SignBytes{
+		Sequence:    solo.Sequence,
+		Timestamp:   solo.Time,
+		Diversifier: solo.Diversifier,
+		Data:        dataTwo,
+	}
+
+	signBz, err = solo.cdc.MarshalBinaryBare(signBytes)
+	require.NoError(solo.t, err)
+
+	sig, err = solo.PrivateKey.Sign(signBz)
 	require.NoError(solo.t, err)
 
 	signatureTwo := solomachinetypes.SignatureAndData{

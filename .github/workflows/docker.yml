@@ -16,7 +16,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
       - name: Publish to Docker Hub
-        uses: docker/build-push-action@v1.1.0
+        uses: docker/build-push-action@v2
         with:
           repository: interchainio/simapp
           username: ${{ secrets.DOCKER_USERNAME }}

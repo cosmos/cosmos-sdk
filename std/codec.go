@@ -9,10 +9,10 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
-// RegisterCodec registers codecs using LegacyAmino.
-func RegisterCodec(cdc *codec.LegacyAmino) {
-	vesting.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers codecs using LegacyAmino.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	vesting.RegisterLegacyAminoCodec(cdc)
+	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 }
 

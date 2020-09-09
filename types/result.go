@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-var cdc = codec.New()
+var cdc = codec.NewLegacyAmino()
 
 func (gi GasInfo) String() string {
 	bz, _ := yaml.Marshal(gi)

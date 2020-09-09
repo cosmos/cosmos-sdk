@@ -14,7 +14,7 @@ import (
 var amino *codec.LegacyAmino
 
 func init() {
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 	RegisterCrypto(amino)
 }
 

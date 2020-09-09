@@ -1,8 +1,9 @@
 package types
 
 import (
+	"strings"
+
 	"github.com/tendermint/tendermint/crypto"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -33,8 +34,8 @@ func (cs ConsensusState) GetRoot() exported.Root {
 	return nil
 }
 
-// GetPubKey unmarshals the public key into a tmcrypto.PubKey type.
-func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
+// GetPubKey unmarshals the public key into a crypto.PubKey type.
+func (cs ConsensusState) GetPubKey() crypto.PubKey {
 	publicKey, ok := cs.PublicKey.GetCachedValue().(crypto.PubKey)
 	if !ok {
 		panic("ConsensusState PublicKey is not crypto.PubKey")
@@ -50,6 +51,9 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
+	}
+	if cs.Diversifier != "" && strings.TrimSpace(cs.Diversifier) == "" {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "diversifier cannot contain only spaces")
 	}
 	if cs.PublicKey == nil || cs.GetPubKey() == nil || len(cs.GetPubKey().Bytes()) == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "public key cannot be empty")

@@ -26,7 +26,5 @@ message Owner {
 // CapabilityOwners defines a set of owners of a single Capability. The set of
 // owners must be unique.
 message CapabilityOwners {
-  repeated Owner owners = 1 [
-    (gogoproto.nullable) = false
-  ];
+  repeated Owner owners = 1 [(gogoproto.nullable) = false];
 }

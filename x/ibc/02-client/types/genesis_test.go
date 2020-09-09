@@ -13,6 +13,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 var clientHeight = types.NewHeight(0, 10)
 
 func TestValidateGenesis(t *testing.T) {
-	privVal := tmtypes.NewMockPV()
+	privVal := ibctestingmock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 

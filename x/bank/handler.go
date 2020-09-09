@@ -35,7 +35,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 	}
 
 	if k.BlockedAddr(msg.ToAddress) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
 	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)

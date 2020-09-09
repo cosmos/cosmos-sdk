@@ -106,6 +106,7 @@ func local_request_ReflectionService_ListImplementations_0(ctx context.Context, 
 // RegisterReflectionServiceHandlerServer registers the http handlers for service ReflectionService to "mux".
 // UnaryRPC     :call ReflectionServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterReflectionServiceHandlerFromEndpoint instead.
 func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ReflectionServiceServer) error {
 
 	mux.Handle("GET", pattern_ReflectionService_ListAllInterfaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {

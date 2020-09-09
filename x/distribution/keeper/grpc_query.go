@@ -73,7 +73,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	if req.ValidatorAddress == nil {
+	if req.ValidatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty validator address")
 	}
 
@@ -84,7 +84,11 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	ctx := sdk.UnwrapSDKContext(c)
 	events := make([]types.ValidatorSlashEvent, 0)
 	store := ctx.KVStore(k.storeKey)
-	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(req.ValidatorAddress))
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid validator address")
+	}
+	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
 	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent

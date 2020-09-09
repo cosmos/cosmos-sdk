@@ -326,7 +326,11 @@ Where proposal.json contains:
 			}
 
 			from := clientCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

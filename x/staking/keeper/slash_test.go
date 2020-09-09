@@ -217,7 +217,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator, found = app.StakingKeeper.GetValidator(ctx, validator.OperatorAddress)
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	require.True(t, found)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetConsensusPower())
@@ -249,7 +249,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-	validator, found = app.StakingKeeper.GetValidator(ctx, validator.OperatorAddress)
+	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	assert.True(t, found)
 	// power decreased
 	require.Equal(t, int64(5), validator.GetConsensusPower())

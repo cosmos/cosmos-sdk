@@ -37,7 +37,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 	}
 
 	return Validator{
-		OperatorAddress:   operator,
+		OperatorAddress:   operator.String(),
 		ConsensusPubkey:   pkStr,
 		Jailed:            false,
 		Status:            sdk.Unbonded,
@@ -99,7 +99,7 @@ func (v Validators) Len() int {
 
 // Implements sort interface
 func (v Validators) Less(i, j int) bool {
-	return bytes.Compare(v[i].OperatorAddress, v[j].OperatorAddress) == -1
+	return bytes.Compare(v[i].GetOperator().Bytes(), v[j].GetOperator().Bytes()) == -1
 }
 
 // Implements sort interface
@@ -408,7 +408,7 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 // validators.
 func (v Validator) MinEqual(other Validator) bool {
 	return v.ConsensusPubkey == other.ConsensusPubkey &&
-		bytes.Equal(v.OperatorAddress, other.OperatorAddress) &&
+		(v.OperatorAddress == other.OperatorAddress) &&
 		v.Status.Equal(other.Status) &&
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
@@ -416,10 +416,19 @@ func (v Validator) MinEqual(other Validator) bool {
 		v.Commission.Equal(other.Commission)
 }
 
-func (v Validator) IsJailed() bool              { return v.Jailed }
-func (v Validator) GetMoniker() string          { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus   { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress { return v.OperatorAddress }
+func (v Validator) IsJailed() bool            { return v.Jailed }
+func (v Validator) GetMoniker() string        { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
+func (v Validator) GetOperator() sdk.ValAddress {
+	if v.OperatorAddress == "" {
+		return nil
+	}
+	addr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
 func (v Validator) GetConsPubKey() crypto.PubKey {
 	return sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, v.ConsensusPubkey)
 }

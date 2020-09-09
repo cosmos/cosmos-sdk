@@ -20,7 +20,7 @@ var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 
 	// construct genesis state
@@ -62,7 +62,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 
 	// Construct genesis state

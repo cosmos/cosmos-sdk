@@ -23,7 +23,7 @@ func NewMsgConnectionOpenInit(
 		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
-		Signer:       signer,
+		Signer:       signer.String(),
 	}
 }
 
@@ -45,7 +45,7 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return msg.Counterparty.ValidateBasic()
@@ -58,7 +58,11 @@ func (msg MsgConnectionOpenInit) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenTry{}
@@ -84,7 +88,7 @@ func NewMsgConnectionOpenTry(
 		ProofConsensus:       proofConsensus,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
-		Signer:               signer,
+		Signer:               signer.String(),
 	}
 }
 
@@ -139,7 +143,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return msg.Counterparty.ValidateBasic()
@@ -163,7 +167,11 @@ func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenAck{}
@@ -185,7 +193,7 @@ func NewMsgConnectionOpenAck(
 		ProofHeight:     proofHeight,
 		ConsensusHeight: consensusHeight,
 		Version:         version,
-		Signer:          signer,
+		Signer:          signer.String(),
 	}
 }
 
@@ -243,7 +251,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if msg.ConsensusHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
@@ -256,7 +264,11 @@ func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenConfirm{}
@@ -270,7 +282,7 @@ func NewMsgConnectionOpenConfirm(
 		ConnectionId: connectionID,
 		ProofAck:     proofAck,
 		ProofHeight:  proofHeight,
-		Signer:       signer,
+		Signer:       signer.String(),
 	}
 }
 
@@ -295,7 +307,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
@@ -308,5 +320,9 @@ func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }

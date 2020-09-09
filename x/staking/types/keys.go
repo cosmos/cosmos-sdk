@@ -94,8 +94,11 @@ func getValidatorPowerRank(validator Validator) []byte {
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-
-	operAddrInvr := sdk.CopyBytes(validator.OperatorAddress)
+	addr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	operAddrInvr := sdk.CopyBytes(addr)
 
 	for i, b := range operAddrInvr {
 		operAddrInvr[i] = ^b

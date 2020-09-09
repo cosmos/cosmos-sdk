@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 			"Ending height lesser than start height request",
 			func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1],
+					ValidatorAddress: valAddrs[1].String(),
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 			"no slash event validator request",
 			func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1],
+					ValidatorAddress: valAddrs[1].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,

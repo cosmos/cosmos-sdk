@@ -5,13 +5,14 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -529,8 +530,9 @@ type DelegationDelegatorReward struct {
 	Reward           github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=reward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"reward"`
 }
 
-func (m *DelegationDelegatorReward) Reset()      { *m = DelegationDelegatorReward{} }
-func (*DelegationDelegatorReward) ProtoMessage() {}
+func (m *DelegationDelegatorReward) Reset()         { *m = DelegationDelegatorReward{} }
+func (*DelegationDelegatorReward) ProtoMessage()    {}
+func (m *DelegationDelegatorReward) String() string { return proto.CompactTextString(m) }
 func (*DelegationDelegatorReward) Descriptor() ([]byte, []int) {
 	return fileDescriptor_cd78a31ea281a992, []int{10}
 }
@@ -571,8 +573,9 @@ type CommunityPoolSpendProposalWithDeposit struct {
 	Deposit     string `protobuf:"bytes,5,opt,name=deposit,proto3" json:"deposit,omitempty" yaml:"deposit"`
 }
 
-func (m *CommunityPoolSpendProposalWithDeposit) Reset()      { *m = CommunityPoolSpendProposalWithDeposit{} }
-func (*CommunityPoolSpendProposalWithDeposit) ProtoMessage() {}
+func (m *CommunityPoolSpendProposalWithDeposit) Reset()         { *m = CommunityPoolSpendProposalWithDeposit{} }
+func (*CommunityPoolSpendProposalWithDeposit) ProtoMessage()    {}
+func (m *CommunityPoolSpendProposalWithDeposit) String() string { return proto.CompactTextString(m) }
 func (*CommunityPoolSpendProposalWithDeposit) Descriptor() ([]byte, []int) {
 	return fileDescriptor_cd78a31ea281a992, []int{11}
 }

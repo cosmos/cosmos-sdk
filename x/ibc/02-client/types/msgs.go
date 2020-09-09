@@ -44,7 +44,7 @@ func NewMsgCreateClient(
 		ClientId:       id,
 		ClientState:    anyClientState,
 		ConsensusState: anyConsensusState,
-		Signer:         signer,
+		Signer:         signer.String(),
 	}, nil
 }
 
@@ -60,7 +60,7 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
 	}
 	clientState, err := UnpackClientState(msg.ClientState)
@@ -90,7 +90,11 @@ func (msg MsgCreateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -120,7 +124,7 @@ func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress
 	return &MsgUpdateClient{
 		ClientId: id,
 		Header:   anyHeader,
-		Signer:   signer,
+		Signer:   signer.String(),
 	}, nil
 }
 
@@ -136,7 +140,7 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
 	}
 	header, err := UnpackHeader(msg.Header)
@@ -159,7 +163,11 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -183,7 +191,7 @@ func NewMsgSubmitMisbehaviour(clientID string, misbehaviour exported.Misbehaviou
 	return &MsgSubmitMisbehaviour{
 		ClientId:     clientID,
 		Misbehaviour: anyMisbehaviour,
-		Signer:       signer,
+		Signer:       signer.String(),
 	}, nil
 }
 
@@ -197,7 +205,7 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
 	}
 	misbehaviour, err := UnpackMisbehaviour(msg.Misbehaviour)
@@ -226,7 +234,11 @@ func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
 
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

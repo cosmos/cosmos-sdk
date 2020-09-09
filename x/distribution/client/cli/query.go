@@ -205,7 +205,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			res, err := queryClient.ValidatorSlashes(
 				context.Background(),
 				&types.QueryValidatorSlashesRequest{
-					ValidatorAddress: validatorAddr,
+					ValidatorAddress: validatorAddr.String(),
 					StartingHeight:   startHeight,
 					EndingHeight:     endHeight,
 					Pagination:       pageReq,

@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -16,9 +20,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -319,8 +320,9 @@ type QueryValidatorSlashesRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryValidatorSlashesRequest) Reset()      { *m = QueryValidatorSlashesRequest{} }
-func (*QueryValidatorSlashesRequest) ProtoMessage() {}
+func (m *QueryValidatorSlashesRequest) Reset()         { *m = QueryValidatorSlashesRequest{} }
+func (*QueryValidatorSlashesRequest) ProtoMessage()    {}
+func (m *QueryValidatorSlashesRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorSlashesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5efd02cbc06efdc9, []int{6}
 }

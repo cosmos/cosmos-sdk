@@ -87,7 +87,7 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 	require.Equal(t, types.TypeMsgCreateValidator, msg.Type())
 	require.Equal(t, "cosmosvalconspub1zcjduepq280tm686ma80cva9z620dmknd9a858pd2zmq9ackfenfllecjxds0hg9n7", msg.Pubkey)
 	require.Equal(t, "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress.String())
-	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorAddress.String())
+	require.Equal(t, "cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 }
 
@@ -124,7 +124,7 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 	require.Equal(t, "BSpYuLyYgg", msg.Description.Website)
 	require.Equal(t, "wNbeHVIkPZ", msg.Description.SecurityContact)
 	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress.String())
+	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 }
 
@@ -142,7 +142,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 
 	// setup accounts[0] as validator
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
-	setupValidatorRewards(app, ctx, validator0.OperatorAddress)
+	setupValidatorRewards(app, ctx, validator0.GetOperator())
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -160,7 +160,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 	require.Equal(t, "4896096", msg.Amount.Amount.String())
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgDelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress.String())
+	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 }
 
@@ -183,11 +183,11 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
-	delegation := types.NewDelegation(delegator.Address, validator0.OperatorAddress, issuedShares)
+	delegation := types.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.OperatorAddress, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
-	setupValidatorRewards(app, ctx, validator0.OperatorAddress)
+	setupValidatorRewards(app, ctx, validator0.GetOperator())
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -205,7 +205,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	require.Equal(t, "560969", msg.Amount.Amount.String())
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgUndelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress.String())
+	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 
 }
@@ -231,12 +231,12 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 
 	// setup accounts[2] as delegator
 	delegator := accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator1.OperatorAddress, issuedShares)
+	delegation := types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.OperatorAddress, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
-	setupValidatorRewards(app, ctx, validator0.OperatorAddress)
-	setupValidatorRewards(app, ctx, validator1.OperatorAddress)
+	setupValidatorRewards(app, ctx, validator0.GetOperator())
+	setupValidatorRewards(app, ctx, validator1.GetOperator())
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
@@ -254,8 +254,8 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	require.Equal(t, "692322", msg.Amount.Amount.String())
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgBeginRedelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress.String())
-	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress.String())
+	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress)
+	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress)
 	require.Len(t, futureOperations, 0)
 
 }

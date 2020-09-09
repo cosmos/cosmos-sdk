@@ -225,7 +225,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == types.TypeMsgSubmitProposal {
 				subMsg := msg.(*types.MsgSubmitProposal)
-				return NewProposer(proposalID, subMsg.Proposer.String()), nil
+				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
 		}
 	}

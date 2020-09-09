@@ -84,7 +84,7 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-	go build -mod=readonly ./...
+	go install -mod=readonly ./...
 
 build-simd: go.sum
 	mkdir -p $(BUILDDIR)

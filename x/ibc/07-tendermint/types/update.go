@@ -21,7 +21,8 @@ import (
 // It returns an error if:
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
-// - header height is less than or equal to the consensus state height
+// - header height is less than or equal to the truested header height
+// - header epoch is not equal to trusted header epoch
 // - header valset commit verification fails
 // - header timestamp is past the trusting period in relation to the consensus state
 // - header timestamp is less than or equal to the consensus state timestamp
@@ -31,7 +32,9 @@ import (
 // - a past height that was skipped during bisection
 // If we are updating to a past height, a consensus state is created for that height to be persisted in client store
 // If we are updating to a future height, the consensus state is created and the client state is updated to reflect
-// the new latest height
+// the new latest height state
+// UpdateClient must only be used to update within a single epoch, thus header epoch number and trusted height's epoch
+// number must be the same. To update to a new epoch, use a separate upgrade path
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
@@ -68,6 +71,13 @@ func checkTrustedHeader(header *Header, consState *ConsensusState) error {
 			ErrInvalidHeaderHeight,
 			"trusted header height %d does not match consensus state height %d",
 			header.TrustedHeight, consState.Height,
+		)
+	}
+	if header.GetHeight().GetEpochNumber() != consState.Height.EpochNumber {
+		return sdkerrors.Wrapf(
+			ErrInvalidHeaderHeight,
+			"Header height epoch %d does not match trusted header epoch %d",
+			header.GetHeight().GetEpochNumber(), consState.Height.EpochNumber,
 		)
 	}
 
@@ -118,7 +128,7 @@ func checkValidity(
 	if header.GetHeight().LTE(consState.Height) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height ≤ consensus state height (%d ≤ %d)", header.GetHeight(), consState.Height,
+			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), consState.Height,
 		)
 	}
 

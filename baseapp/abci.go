@@ -590,28 +590,42 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
 		return y
 	}
 
+	// Define retentionHeight as the minimum value that satisfies all non-zero
+	// constraints. All blocks below (commitHeight-retentionHeight) are pruned
+	// from Tendermint.
+	var retentionHeight uint64
+
 	// Define the number of blocks needed to protect against misbehaving validators
 	// which allows light clients to operate safely. Note, we piggy back of the
 	// evidence parameters instead of computing an estimated nubmer of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
 	blockSafetyThreshold := app.GetConsensusParams(app.deliverState.ctx).Evidence.MaxAgeNumBlocks
+	if blockSafetyThreshold > 0 {
+		retentionHeight = commitHeight - uint64(blockSafetyThreshold)
+	}
 
 	// Define the state pruning interval, i.e. the block interval at which the
 	// underlying logical database is persisted to disk.
 	statePruningInterval := app.cms.GetPruning().Interval
+	if statePruningInterval > 0 {
+		retentionHeight = min(retentionHeight, commitHeight-statePruningInterval)
+	}
 
-	// Define retentionHeight as the minimum value that satisfies all constraints.
-	// All blocks past (commitHeight-retentionHeight) are pruned from Tendermint.
-	retentionHeight := min(app.minRetainBlocks, uint64(blockSafetyThreshold))
-	retentionHeight = min(retentionHeight, statePruningInterval)
-	retentionHeight = min(retentionHeight, app.snapshotInterval)
+	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
+		retentionHeight = min(retentionHeight, commitHeight-(app.snapshotInterval*uint64(app.snapshotKeepRecent)))
+	}
 
-	if retentionHeight == 0 || (retentionHeight >= commitHeight) {
+	if app.minRetainBlocks > 0 {
+		retentionHeight = min(retentionHeight, commitHeight-app.minRetainBlocks)
+	}
+
+	if retentionHeight <= 0 {
+		// prune nothing in the case of a non-positive height
 		return 0
 	}
 
-	return commitHeight - retentionHeight
+	return retentionHeight
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

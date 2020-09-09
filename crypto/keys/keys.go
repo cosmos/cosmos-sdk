@@ -57,3 +57,13 @@ func AminoPubKeyToProtoPubKey(key crypto.PubKey) (proto.Message, error) {
 		return nil, fmt.Errorf("unknown public key type: %v", key)
 	}
 }
+
+// RegisterInterfaces registers the keys in the interface registry.
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"cosmos.crypto.PubKey",
+		(*crypto.PubKey)(nil),
+		&Secp256K1PubKey{},
+		&MultisigThresholdPubKey{},
+	)
+}

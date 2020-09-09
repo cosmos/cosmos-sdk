@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -71,7 +72,11 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	_, cdc := simapp.MakeCodecs()
 
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
-	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
+	pkSet1Anys := make([]*codectypes.Any, len(pkSet1))
+	for i, pk := range pkSet1 {
+		pkSet1Anys[i] = codectypes.UnsafePackAny(pk)
+	}
+	multisigKey1 := keys.MultisigThresholdPubKey{K: 2, PubKeys: pkSet1Anys}
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
@@ -96,7 +101,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
 		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, &keys.Secp256K1PubKey{Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey)}, params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
+		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, &multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {

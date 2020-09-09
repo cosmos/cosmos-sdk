@@ -609,15 +609,30 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
 	// underlying logical database is persisted to disk.
 	statePruningInterval := app.cms.GetPruning().Interval
 	if statePruningInterval > 0 {
-		retentionHeight = min(retentionHeight, commitHeight-statePruningInterval)
+		v := commitHeight - statePruningInterval
+		if retentionHeight == 0 {
+			retentionHeight = v
+		} else {
+			retentionHeight = min(retentionHeight, v)
+		}
 	}
 
 	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
-		retentionHeight = min(retentionHeight, commitHeight-(app.snapshotInterval*uint64(app.snapshotKeepRecent)))
+		v := commitHeight - (app.snapshotInterval * uint64(app.snapshotKeepRecent))
+		if retentionHeight == 0 {
+			retentionHeight = v
+		} else {
+			retentionHeight = min(retentionHeight, v)
+		}
 	}
 
 	if app.minRetainBlocks > 0 {
-		retentionHeight = min(retentionHeight, commitHeight-app.minRetainBlocks)
+		v := commitHeight - app.minRetainBlocks
+		if retentionHeight == 0 {
+			retentionHeight = v
+		} else {
+			retentionHeight = min(retentionHeight, v)
+		}
 	}
 
 	if retentionHeight <= 0 {

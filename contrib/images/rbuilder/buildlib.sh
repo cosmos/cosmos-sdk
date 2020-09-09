@@ -1,18 +1,22 @@
 #/bin/bash
 
-f_tarball_fix_file_order() {
-    local l_tarball l_app l_dir
+f_make_release_tarball() {
+    local l_tarball l_dir
 
-    l_tarball=$1
-    l_app=$2
-    l_dir="$(mktemp -d)"
+    l_dir=$1
+    l_tarball=${l_dir}/${APP}-${VERSION}.tar.gz
 
-    pushd "${l_dir}"
+    git archive --format tar.gz --prefix "${APP}-${VERSION}/" -o "${l_tarball}" HEAD
+
+    l_tempdir="$(mktemp -d)"
+    pushd "${l_tempdir}" >/dev/null
     tar xf "${l_tarball}"
     rm "${l_tarball}"
-    find ${l_app}-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > "${l_tarball}"
-    popd
-    rm -rf "${l_dir}"
+    find ${APP}-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > "${l_tarball}"
+    popd >/dev/null
+    rm -rf "${l_tempdir}"
+
+    printf '%s' "${l_tarball}"
 }
 
 f_prepare_pristine_src_dir() {
@@ -21,10 +25,10 @@ f_prepare_pristine_src_dir() {
     l_tarball=$1
     l_dir=$2
 
-    pushd ${l_dir}
+    pushd ${l_dir} >/dev/null
     tar --strip-components=1 -xf "${l_tarball}"
     go mod download
-    popd
+    popd >/dev/null
 }
 
 f_build_archs() {
@@ -50,24 +54,21 @@ f_binary_file_ext() {
 }
 
 f_generate_build_report() {
-    local l_dir l_app l_version l_commit l_tempfile
+    local l_dir l_tempfile
 
     l_dir=$1
-    l_app=$2
-    l_version=$3
-    l_commit=$4
     l_tempfile="$(mktemp)"
 
-    pushd "${l_dir}"
+    pushd "${l_dir}" >/dev/null
     cat >>"${l_tempfile}" <<EOF
-App: ${l_app}
-Version: ${l_version}
-Commit: ${l_commit}
+App: ${APP}
+Version: ${VERSION}
+Commit: ${COMMIT}
 EOF
     echo 'Files:' >> "${l_tempfile}"
     md5sum * | sed 's/^/ /' >> "${l_tempfile}"
     echo 'Checksums-Sha256:' >> "${l_tempfile}"
     sha256sum * | sed 's/^/ /' >> "${l_tempfile}"
     mv "${l_tempfile}" build_report
-    popd
+    popd >/dev/null
 }

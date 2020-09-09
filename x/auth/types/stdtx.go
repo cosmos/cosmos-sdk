@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -83,12 +82,7 @@ func (ss StdSignature) GetSignature() []byte {
 // GetPubKey returns the public key of a signature as a crypto.PubKey using the
 // Amino codec.
 func (ss StdSignature) GetPubKey() crypto.PubKey {
-	protoPubKey, err := keys.AminoPubKeyToProtoPubKey(ss.PubKey)
-	if err != nil {
-		panic(err)
-	}
-
-	return protoPubKey.(crypto.PubKey)
+	return ss.PubKey
 }
 
 // MarshalYAML returns the YAML representation of the signature.

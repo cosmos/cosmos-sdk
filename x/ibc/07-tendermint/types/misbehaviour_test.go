@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
@@ -14,11 +15,11 @@ import (
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
-	epochHeight := int64(height.EpochHeight)
+	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
 
 	misbehaviour := &types.Misbehaviour{
 		Header1:  suite.header,
-		Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
+		Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 		ChainId:  chainID,
 		ClientId: clientID,
 	}
@@ -50,6 +51,8 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
+	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+
 	testCases := []struct {
 		name                 string
 		misbehaviour         *types.Misbehaviour
@@ -60,7 +63,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -83,7 +86,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour with different trusted headers",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-3, suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, clienttypes.NewHeight(0, height.EpochHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -93,7 +96,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"trusted height is 0 in Header1",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, epochHeight, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header1:  types.CreateTestHeader(chainID, height, clienttypes.Height{}, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -105,7 +108,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"trusted height is 0 in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, 0, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, clienttypes.Height{}, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -115,7 +118,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"trusted valset is nil in Header1",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header1:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -127,7 +130,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"trusted valset is nil in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now.Add(time.Minute), suite.valSet, nil, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -138,7 +141,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"invalid client ID ",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: "GAIA",
 			},
@@ -149,7 +152,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"wrong chainID on header1",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader("ethermint", epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader("ethermint", height, heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  "ethermint",
 				ClientId: clientID,
 			},
@@ -160,7 +163,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"wrong chainID on header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader("ethermint", epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader("ethermint", height, heightMinus1, suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -171,7 +174,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"wrong chainID in misbehaviour",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, int64(height.EpochHeight), int64(height.EpochHeight-1), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  "ethermint",
 				ClientId: clientID,
 			},
@@ -182,7 +185,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"mismatched heights",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, 6, 4, suite.now, suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, clienttypes.NewHeight(0, 6), clienttypes.NewHeight(0, 4), suite.now, suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -203,7 +206,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"header 1 doesn't have 2/3 majority",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header1:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -226,7 +229,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"header 2 doesn't have 2/3 majority",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -248,7 +251,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"validators sign off on wrong commit",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, bothValSet, suite.valSet, bothSigners),
+				Header2:  types.CreateTestHeader(chainID, height, heightMinus1, suite.now, bothValSet, suite.valSet, bothSigners),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},

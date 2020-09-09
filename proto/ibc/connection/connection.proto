@@ -11,94 +11,60 @@ import "ibc/client/client.proto";
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
-  string connection_id = 2 [
-    (gogoproto.moretags) = "yaml:\"connection_id\""
-  ];
-  Counterparty counterparty = 3 [(gogoproto.nullable) = false];
-  bytes signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
+  bytes        signer        = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
 message MsgConnectionOpenTry {
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
-  string connection_id = 2 [
-    (gogoproto.moretags) = "yaml:\"connection_id\""
-  ];
-  google.protobuf.Any client_state = 3 [
-    (gogoproto.moretags) = "yaml:\"client_state\""
-  ];
-  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
-  repeated string counterparty_versions = 5
-      [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.client.Height proof_height = 6 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  string              client_id           = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string              connection_id       = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  google.protobuf.Any client_state        = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty        counterparty        = 4 [(gogoproto.nullable) = false];
+  repeated string   counterparty_versions = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.client.Height proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
   bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   // proof of client state included in message
   bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes proof_consensus = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  ibc.client.Height consensus_height = 10 [
-    (gogoproto.moretags) = "yaml:\"consensus_height\"",
-    (gogoproto.nullable) = false
-  ];
-  bytes signer = 11
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes             proof_consensus  = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.client.Height consensus_height = 10
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
+  bytes signer = 11 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
 // acknowledge the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
-  string connection_id = 1 [
-    (gogoproto.moretags) = "yaml:\"connection_id\""
-  ];
-  string version = 2;
-  google.protobuf.Any client_state = 3 [
-    (gogoproto.moretags) = "yaml:\"client_state\""
-  ];
-  ibc.client.Height proof_height = 4 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
+  string              connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string              version       = 2;
+  google.protobuf.Any client_state  = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  ibc.client.Height   proof_height  = 4 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain B: `UNITIALIZED ->
   // TRYOPEN`
   bytes proof_try = 5 [(gogoproto.moretags) = "yaml:\"proof_try\""];
   // proof of client state included in message
   bytes proof_client = 6 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes proof_consensus = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  ibc.client.Height consensus_height = 8 [
-    (gogoproto.moretags) = "yaml:\"consensus_height\"",
-    (gogoproto.nullable) = false
-  ];
-  bytes signer = 9
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes             proof_consensus  = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.client.Height consensus_height = 8
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
+  bytes signer = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
 // acknowledge the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
-  string connection_id = 1 [
-    (gogoproto.moretags) = "yaml:\"connection_id\""
-  ];
+  string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
-  bytes proof_ack = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  ibc.client.Height proof_height = 3 [
-    (gogoproto.moretags) = "yaml:\"proof_height\"",
-    (gogoproto.nullable) = false
-  ];
-  bytes signer = 4
-      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes             proof_ack    = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
+  ibc.client.Height proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  bytes             signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // ICS03 - Connection Data Structures as defined in
@@ -110,9 +76,7 @@ message MsgConnectionOpenConfirm {
 message ConnectionEnd {
   option (gogoproto.goproto_getters) = false;
   // client associated with this connection.
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
   repeated string versions = 2;
@@ -127,12 +91,9 @@ message ConnectionEnd {
 message IdentifiedConnection {
   option (gogoproto.goproto_getters) = false;
   // connection identifier.
-  string id = 1
-      [(gogoproto.moretags) = "yaml:\"id\""];
+  string id = 1 [(gogoproto.moretags) = "yaml:\"id\""];
   // client associated with this connection.
-  string client_id = 2 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
+  string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // IBC version which can be utilised to determine encodings or protocols for
   // channels or packets utilising this connection
   repeated string versions = 3;
@@ -148,8 +109,7 @@ enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // Default State
-  STATE_UNINITIALIZED_UNSPECIFIED = 0
-      [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
   // A connection end has just started the opening handshake.
   STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
   // A connection end has acknowledged the handshake step on the counterparty
@@ -165,14 +125,10 @@ message Counterparty {
 
   // identifies the client on the counterparty chain associated with a given
   // connection.
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // identifies the connection end on the counterparty chain associated with a
   // given connection.
-  string connection_id = 2 [
-    (gogoproto.moretags) = "yaml:\"connection_id\""
-  ];
+  string connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   // commitment merkle prefix of the counterparty chain
   ibc.commitment.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
 }
@@ -186,9 +142,7 @@ message ClientPaths {
 // ConnectionPaths define all the connection paths for a given client state.
 message ConnectionPaths {
   // client state unique identifier
-  string client_id = 1 [
-    (gogoproto.moretags) = "yaml:\"client_id\""
-  ];
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // list of connection paths
   repeated string paths = 2;
 }

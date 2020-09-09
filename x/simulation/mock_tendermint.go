@@ -11,7 +11,6 @@ import (
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type mockValidator struct {
@@ -201,7 +200,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 		evidence = append(evidence,
 			abci.Evidence{
-				Type:             tmtypes.ABCIEvidenceTypeDuplicateVote,
+				Type:             abci.EvidenceType_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             time,

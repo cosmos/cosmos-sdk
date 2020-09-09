@@ -40,12 +40,12 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 
 	// check for channel to be created on chainB
-	channelA := connA.NextTestChannel(ibctesting.TransferPort)
+	channelA := connA.NextTestChannel(ibctesting.MockPort)
 	_, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
 	suite.False(found)
 
 	// init channel
-	channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.TransferPort, ibctesting.TransferPort, types.ORDERED)
+	channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 	suite.NoError(err)
 
 	storedChannel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
@@ -77,7 +77,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 
 	// channel2 is on a second connection on chainA
-	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.TransferPort, ibctesting.TransferPort, types.UNORDERED)
+	testchannel2, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA1, connB1, ibctesting.MockPort, ibctesting.MockPort, types.UNORDERED)
 	suite.Require().NoError(err)
 
 	counterparty2 := types.Counterparty{

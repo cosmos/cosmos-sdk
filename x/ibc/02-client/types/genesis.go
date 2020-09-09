@@ -47,24 +47,18 @@ func (ccs ClientsConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpack
 }
 
 // NewClientConsensusStates creates a new ClientConsensusStates instance.
-func NewClientConsensusStates(clientID string, consensusStates []exported.ConsensusState) ClientConsensusStates {
-	anyConsensusStates := make([]*codectypes.Any, len(consensusStates))
-
-	for i := range consensusStates {
-		anyConsensusStates[i] = MustPackConsensusState(consensusStates[i])
-	}
-
+func NewClientConsensusStates(clientID string, consensusStates []ConsensusStateWithHeight) ClientConsensusStates {
 	return ClientConsensusStates{
 		ClientId:        clientID,
-		ConsensusStates: anyConsensusStates,
+		ConsensusStates: consensusStates,
 	}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (ccs ClientConsensusStates) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, any := range ccs.ConsensusStates {
+	for _, consStateWithHeight := range ccs.ConsensusStates {
 		var consensusState exported.ConsensusState
-		err := unpacker.UnpackAny(any, &consensusState)
+		err := unpacker.UnpackAny(consStateWithHeight.ConsensusState, &consensusState)
 		if err != nil {
 			return err
 		}
@@ -120,13 +114,17 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	for i, cs := range gs.ClientsConsensus {
-		if err := host.ClientIdentifierValidator(cs.ClientId); err != nil {
-			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cs.ClientId, i, err)
+	for i, cc := range gs.ClientsConsensus {
+		if err := host.ClientIdentifierValidator(cc.ClientId); err != nil {
+			return fmt.Errorf("invalid client consensus state identifier %s index %d: %w", cc.ClientId, i, err)
 		}
 
-		for _, consensusState := range cs.ConsensusStates {
-			cs, ok := consensusState.GetCachedValue().(exported.ConsensusState)
+		for _, consensusState := range cc.ConsensusStates {
+			if consensusState.Height.IsZero() {
+				return fmt.Errorf("consensus state height cannot be zero")
+			}
+
+			cs, ok := consensusState.ConsensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
 				return fmt.Errorf("invalid consensus state")
 			}

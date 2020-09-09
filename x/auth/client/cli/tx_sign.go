@@ -280,6 +280,9 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			}
 
 			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
+			if err != nil {
+				return err
+			}
 
 		} else {
 			json, err = marshalSignatureJSON(txCfg, txBuilder, generateSignatureOnly)

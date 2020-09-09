@@ -277,6 +277,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRentionHeight(header.Height)
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
@@ -318,7 +319,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	return abci.ResponseCommit{
 		Data:         commitID.Hash,
-		RetainHeight: int64(app.GetBlockRentionHeight(uint64(header.Height))),
+		RetainHeight: retainHeight,
 	}
 }
 
@@ -583,8 +584,8 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 // all blocks, e.g. via a local config option min-retain-blocks. There may also
 // be a need to vary retention for other nodes, e.g. sentry nodes which do not
 // need historical blocks.
-func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
-	min := func(x, y uint64) uint64 {
+func (app *BaseApp) GetBlockRentionHeight(commitHeight int64) int64 {
+	min := func(x, y int64) int64 {
 		if x < y {
 			return x
 		}
@@ -594,21 +595,21 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
 	// Define retentionHeight as the minimum value that satisfies all non-zero
 	// constraints. All blocks below (commitHeight-retentionHeight) are pruned
 	// from Tendermint.
-	var retentionHeight uint64
+	var retentionHeight int64
 
 	// Define the number of blocks needed to protect against misbehaving validators
 	// which allows light clients to operate safely. Note, we piggy back of the
 	// evidence parameters instead of computing an estimated nubmer of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
-	blockSafetyThreshold := app.GetConsensusParams(app.deliverState.ctx).Evidence.MaxAgeNumBlocks
-	if blockSafetyThreshold > 0 {
-		retentionHeight = commitHeight - uint64(blockSafetyThreshold)
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}
 
 	// Define the state pruning interval, i.e. the block interval at which the
 	// underlying logical database is persisted to disk.
-	statePruningInterval := app.cms.GetPruning().Interval
+	statePruningInterval := int64(app.cms.GetPruning().Interval)
 	if statePruningInterval > 0 {
 		v := commitHeight - statePruningInterval
 		if retentionHeight == 0 {
@@ -619,7 +620,7 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
 	}
 
 	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
-		v := commitHeight - (app.snapshotInterval * uint64(app.snapshotKeepRecent))
+		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
 		if retentionHeight == 0 {
 			retentionHeight = v
 		} else {
@@ -628,7 +629,7 @@ func (app *BaseApp) GetBlockRentionHeight(commitHeight uint64) uint64 {
 	}
 
 	if app.minRetainBlocks > 0 {
-		v := commitHeight - app.minRetainBlocks
+		v := commitHeight - int64(app.minRetainBlocks)
 		if retentionHeight == 0 {
 			retentionHeight = v
 		} else {

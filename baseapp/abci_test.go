@@ -19,8 +19,8 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	testCases := map[string]struct {
 		bapp         *BaseApp
 		maxAgeBlocks int64
-		commitHeight uint64
-		expected     uint64
+		commitHeight int64
+		expected     int64
 	}{
 		"no pruning": {
 			bapp:         NewBaseApp(name, logger, db, nil),

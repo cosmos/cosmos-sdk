@@ -14,7 +14,7 @@ import (
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmenttypes.MerkleRoot, height clienttypes.Height,
+	timestamp time.Time, root commitmenttypes.MerkleRoot,
 	nextValsHash tmbytes.HexBytes,
 ) *ConsensusState {
 	return &ConsensusState{

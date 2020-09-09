@@ -27,7 +27,7 @@ func (k Keeper) CreateClient(
 	}
 
 	if consensusState != nil {
-		k.SetClientConsensusState(ctx, clientID, consensusState.GetHeight(), consensusState)
+		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
 	k.SetClientState(ctx, clientID, clientState)
@@ -61,9 +61,8 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	var (
-		consensusState  exported.ConsensusState
-		consensusHeight exported.Height
-		err             error
+		consensusState exported.ConsensusState
+		err            error
 	)
 
 	clientState, consensusState, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, clientID), header)
@@ -72,14 +71,13 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return nil, sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
+	consensusHeight := clientState.GetLatestHeight()
+
 	k.SetClientState(ctx, clientID, clientState)
 
 	// we don't set consensus state for localhost client
 	if header != nil && clientType != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
-		consensusHeight = consensusState.GetHeight()
-	} else {
-		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, clientState.GetLatestHeight()))

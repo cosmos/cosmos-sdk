@@ -13,25 +13,26 @@ import "google/protobuf/any.proto";
 // state and if the client is frozen.
 message ClientState {
   option (gogoproto.goproto_getters) = false;
+  // latest sequence of the client state
+  uint64 sequence = 1;
   // frozen sequence of the solo machine
-  uint64         frozen_sequence = 1 [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
-  ConsensusState consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  uint64         frozen_sequence = 2 [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
+  ConsensusState consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
   // when set to true, will allow governance to update a solo machine client.
   // The client will be unfrozen if it is frozen.
-  bool allow_update_after_proposal = 3 [(gogoproto.moretags) = "yaml:\"allow_update_after_proposal\""];
+  bool allow_update_after_proposal = 4 [(gogoproto.moretags) = "yaml:\"allow_update_after_proposal\""];
 }
 
-// ConsensusState defines a solo machine consensus state
+// ConsensusState defines a solo machine consensus state. The sequence of a consensus state
+// is contained in the "height" key used in storing the consensus state.
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
-  // current sequence of the consensus state
-  uint64 sequence = 1;
   // public key of the solo machine
-  cosmos.base.crypto.v1beta1.PublicKey public_key = 2 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  cosmos.base.crypto.v1beta1.PublicKey public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
   // diversifier allows the same public key to be re-used across different solo machine clients
   // (potentially on different chains) without being considered misbehaviour.
-  string diversifier = 3;
-  uint64 timestamp   = 4;
+  string diversifier = 2;
+  uint64 timestamp   = 3;
 }
 
 // Header defines a solo machine consensus header

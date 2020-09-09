@@ -141,7 +141,7 @@ distclean: clean
 clean:
 	rm -rf \
     $(BUILDDIR)/ \
-    artifacts/ \
+    artifacts/
 
 .PHONY: distclean clean
 

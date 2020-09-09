@@ -127,8 +127,34 @@ func ParseHeight(heightStr string) (Height, error) {
 	return NewHeight(epochNumber, epochHeight), nil
 }
 
+// ParseChainID is a utility function that returns an epoch number from the given ChainID.
+// ParseChainID attempts to parse a chain id in the format: `{chainID}-epoch-{epochNumber}`
+// and return the epochnumber as a uint64. If the chainID is in the expected format but the parse fails,
+// an error is returned. If the chainID is not in the expected format, a default epoch value of 0 is returned.
+func ParseChainID(chainID string) (uint64, error) {
+	splitStr := strings.Split(chainID, "-")
+	// check if second-to-last element is `epoch`
+	if len(splitStr) >= 3 && splitStr[len(splitStr)-2] == "epoch" {
+		epoch, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
+		if err != nil {
+			return 0, sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidChainID,
+				"chainID is in epoch format but epochNumber cannot be parsed to uint64. Expected format `{chainID}-epoch-{number}`, got: %s",
+				chainID,
+			)
+		}
+		return epoch, nil
+	}
+	// chainID is not in epoch format, return 0 as default
+	return 0, nil
+}
+
 // GetSelfHeight is a utility function that returns self height given context
-// TODO: Retrieve epoch-number from chain-id
+// Context must have chainID in valid format, otherwise this function panics
 func GetSelfHeight(ctx sdk.Context) Height {
-	return NewHeight(0, uint64(ctx.BlockHeight()))
+	epoch, err := ParseChainID(ctx.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	return NewHeight(epoch, uint64(ctx.BlockHeight()))
 }

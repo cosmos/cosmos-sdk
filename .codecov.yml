@@ -4,6 +4,8 @@
 # below in your own codecov.yml in your repository.
 #
 coverage:
+  require_ci_to_pass: true
+  wait_for_ci: true
   precision: 2
   round: down
   range: 70...100

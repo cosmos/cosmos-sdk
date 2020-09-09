@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -74,7 +75,10 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	pkSet1Anys := make([]*codectypes.Any, len(pkSet1))
 	for i, pk := range pkSet1 {
-		pkSet1Anys[i] = codectypes.UnsafePackAny(pk)
+		any, err := authtx.PubKeyToAny(pk)
+		suite.Require().NoError(err)
+
+		pkSet1Anys[i] = any
 	}
 	multisigKey1 := keys.MultisigThresholdPubKey{K: 2, PubKeys: pkSet1Anys}
 	multisignature1 := multisig.NewMultisig(len(pkSet1))

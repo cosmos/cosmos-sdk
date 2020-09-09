@@ -88,7 +88,7 @@ message HeaderData {
   option (gogoproto.goproto_getters) = false;
 
   // header public key
-  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  google.protobuf.Any new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
   // header diversifier
   string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }

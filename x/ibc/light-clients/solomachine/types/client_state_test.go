@@ -1,25 +1,25 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 const (
 	counterpartyClientIdentifier = "chainA"
-	consensusHeight              = uint64(0)
 	testConnectionID             = "connectionid"
 	testChannelID                = "testchannelid"
 	testPortID                   = "testportid"
 )
 
 var (
-	prefix = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	prefix          = commitmenttypes.NewMerklePrefix([]byte("ibc"))
+	consensusHeight = clienttypes.ZeroHeight()
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -34,18 +34,28 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 			true,
 		},
 		{
-			"sequence is zero",
-			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Time}),
+			"empty ClientState",
+			&types.ClientState{},
 			false,
 		},
 		{
-			"timstamp is zero",
-			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, 0}),
+			"sequence is zero",
+			types.NewClientState(0, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
+			false,
+		},
+		{
+			"timestamp is zero",
+			types.NewClientState(1, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, 0}, false),
+			false,
+		},
+		{
+			"diversifier is blank",
+			types.NewClientState(1, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, "  ", 1}, false),
 			false,
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState(&types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Time}),
+			types.NewClientState(1, &types.ConsensusState{nil, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
 			false,
 		},
 	}
@@ -68,14 +78,14 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, clientState)
+	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, clientState)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -92,7 +102,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -112,38 +122,41 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState(nil),
+			types.NewClientState(1, nil, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence-1,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
-				}),
+				}, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
-				}),
+				}, false),
 			prefix,
 			proof,
 			false,
@@ -172,11 +185,11 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 			var expSeq uint64
 			if tc.clientState.ConsensusState != nil {
-				expSeq = tc.clientState.ConsensusState.Sequence + 1
+				expSeq = tc.clientState.Sequence + 1
 			}
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), tc.prefix, counterpartyClientIdentifier, tc.proof, clientState,
 			)
 
 			if tc.expPass {
@@ -191,7 +204,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	// create client for tendermint so we can use consensus state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, clientexported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)
@@ -200,7 +213,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	suite.Require().NoError(err)
 
-	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, consensusState)
+	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, consensusState)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -217,7 +230,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -237,38 +250,41 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState(nil),
+			types.NewClientState(1, nil, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence-1,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
-				}),
+				}, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
-				}),
+				}, false),
 			prefix,
 			proof,
 			false,
@@ -297,11 +313,11 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 			var expSeq uint64
 			if tc.clientState.ConsensusState != nil {
-				expSeq = tc.clientState.ConsensusState.Sequence + 1
+				expSeq = tc.clientState.Sequence + 1
 			}
 
 			err := tc.clientState.VerifyClientConsensusState(
-				suite.store, suite.chainA.Codec, nil, suite.solomachine.Sequence, counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
+				suite.store, suite.chainA.Codec, nil, suite.solomachine.GetHeight(), counterpartyClientIdentifier, consensusHeight, tc.prefix, tc.proof, consensusState,
 			)
 
 			if tc.expPass {
@@ -321,7 +337,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
 	suite.Require().NoError(err)
 
-	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, conn)
+	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, conn)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -338,7 +354,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -358,7 +374,12 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -382,10 +403,10 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyConnectionState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testConnectionID, conn,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testConnectionID, conn,
 		)
 
 		if tc.expPass {
@@ -404,7 +425,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, path, ch)
+	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ch)
 	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
@@ -421,7 +442,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -441,7 +462,12 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -465,10 +491,10 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyChannelState(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, ch,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, ch,
 		)
 
 		if tc.expPass {
@@ -485,7 +511,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketCommitmentSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, commitmentBytes)
+	value, err := types.PacketCommitmentSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, commitmentBytes)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -501,7 +528,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -521,7 +548,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -545,10 +577,10 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketCommitment(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
 		)
 
 		if tc.expPass {
@@ -565,7 +597,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, ack)
+	value, err := types.PacketAcknowledgementSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ack)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -581,7 +614,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -601,7 +634,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -625,10 +663,10 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
 		)
 
 		if tc.expPass {
@@ -644,7 +682,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
-	value := types.PacketAcknowledgementAbsenceSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path)
+	value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -660,7 +699,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -680,7 +719,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -704,10 +748,10 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
 		)
 
 		if tc.expPass {
@@ -724,7 +768,8 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
 	suite.Require().NoError(err)
 
-	value := types.NextSequenceRecvSignBytes(suite.solomachine.Sequence, suite.solomachine.Time, path, nextSeqRecv)
+	value, err := types.NextSequenceRecvSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, nextSeqRecv)
+	suite.Require().NoError(err)
 
 	sig, err := suite.solomachine.PrivateKey.Sign(value)
 	suite.Require().NoError(err)
@@ -740,7 +785,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	testCases := []struct {
 		name        string
 		clientState *types.ClientState
-		prefix      commitmentexported.Prefix
+		prefix      exported.Prefix
 		proof       []byte
 		expPass     bool
 	}{
@@ -760,7 +805,12 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState()},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -784,10 +834,10 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyNextSequenceRecv(
-			suite.store, suite.chainA.Codec, suite.solomachine.Sequence, tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
+			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,
 		)
 
 		if tc.expPass {

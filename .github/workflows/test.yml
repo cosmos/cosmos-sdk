@@ -23,7 +23,7 @@ jobs:
         id: git_diff
         with:
           PREFIX_FILTER: |
-              cosmovisor
+            cosmovisor
           SUFFIX_FILTER: |
             .go
             .mod
@@ -204,6 +204,7 @@ jobs:
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
+
   liveness-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -216,12 +217,9 @@ jobs:
             .go
             .mod
             .sum
-      - name: build image
-        run: |
-          make build-docker-local-simapp
       - name: start localnet
         run: |
-          make clean build-sim-linux localnet-start
+          make clean localnet-start
         if: "env.GIT_DIFF != ''"
       - name: test liveness
         run: |

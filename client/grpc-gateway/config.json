@@ -1,0 +1,122 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Cosmos SDK - GRPC Gateway",
+    "version": "1.0.0"
+  },
+  "apis": [
+    {
+      "url": "./cosmos/auth/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuthParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/bank/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BankParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/distribution/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "DistributionParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/evidence/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "EvidenceParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/gov/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/mint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MintParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/params/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "Params"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/slashing/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SlashingParams"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/staking/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "StakingParams",
+          "DelegatorValidators": "StakingDelegatorValidators"
+        }
+      }
+    },
+    {
+      "url": "./cosmos/upgrade/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "UpgradeParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/channel/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCChannelParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/client/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCClientParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/connection/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCConnectionParams"
+        }
+      }
+    },
+    {
+      "url": "./ibc/transfer/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCTransferParams"
+        }
+      }
+    }
+  ]
+}

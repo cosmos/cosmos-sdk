@@ -4,26 +4,23 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func NewTestTxConfig() client.TxConfig {
-	_, cdc := simapp.MakeCodecs()
-	return types.StdTxConfig{Cdc: cdc}
+	cfg := simapp.MakeEncodingConfig()
+	return cfg.TxConfig
 }
 
 func TestCalculateGas(t *testing.T) {
@@ -32,12 +29,12 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, 0, errors.New("query failed")
 			}
-			simRes := &sdk.SimulationResponse{
-				GasInfo: sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
+			simRes := &simulate.SimulateResponse{
+				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
 				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
 			}
 
-			bz, err := codec.ProtoMarshalJSON(simRes)
+			bz, err := simRes.Marshal()
 			if err != nil {
 				return nil, 0, err
 			}
@@ -65,7 +62,11 @@ func TestCalculateGas(t *testing.T) {
 
 	for _, tc := range testCases {
 		stc := tc
-		txf := tx.Factory{}.WithChainID("test-chain").WithTxConfig(NewTestTxConfig())
+		txCfg := NewTestTxConfig()
+
+		txf := tx.Factory{}.
+			WithChainID("test-chain").
+			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 		t.Run(stc.name, func(t *testing.T) {
 			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
@@ -84,13 +85,16 @@ func TestCalculateGas(t *testing.T) {
 }
 
 func TestBuildSimTx(t *testing.T) {
+	txCfg := NewTestTxConfig()
+
 	txf := tx.Factory{}.
-		WithTxConfig(NewTestTxConfig()).
+		WithTxConfig(txCfg).
 		WithAccountNumber(50).
 		WithSequence(23).
 		WithFees("50stake").
 		WithMemo("memo").
-		WithChainID("test-chain")
+		WithChainID("test-chain").
+		WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := tx.BuildSimTx(txf, msg)
@@ -111,7 +115,10 @@ func TestBuildUnsignedTx(t *testing.T) {
 	tx, err := tx.BuildUnsignedTx(txf, msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
-	require.Empty(t, tx.GetTx().(signing.SigVerifiableTx).GetSignatures())
+
+	sigs, err := tx.GetTx().(signing.SigVerifiableTx).GetSignaturesV2()
+	require.NoError(t, err)
+	require.Empty(t, sigs)
 }
 
 func TestSign(t *testing.T) {

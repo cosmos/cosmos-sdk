@@ -115,6 +115,22 @@ else
 	@echo "protoc-gen-grpc-gateway already installed; skipping..."
 endif
 
+ifeq (, $(shell which protoc-gen-swagger))
+	@echo "Installing protoc-gen-swagger..."
+	@go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	@npm install -g swagger-combine
+else
+	@echo "protoc-gen-grpc-gateway already installed; skipping..."
+endif
+ifeq ($(UNAME_S),Linux)
+	@echo "Installing clang-format..."
+	sudo apt-get install clang-format
+endif
+ifeq ($(UNAME_S),Darwin)
+	@echo "Installing clang-format..."
+	brew install clang-format
+endif
+
 buf: buf-stamp
 
 buf-stamp:

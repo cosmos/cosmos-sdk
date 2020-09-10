@@ -12,18 +12,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
 	chainID                      = "gaia"
 	clientID                     = "gaiamainnet"
-	height                       = 4
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
 	maxClockDrift  time.Duration = time.Second * 10
 )
+
+var height = clienttypes.NewHeight(0, 4)
 
 type TendermintTestSuite struct {
 	suite.Suite
@@ -36,12 +39,11 @@ type TendermintTestSuite struct {
 
 	// TODO: deprecate usage in favor of testing package
 	ctx        sdk.Context
-	aminoCdc   *codec.LegacyAmino
 	cdc        codec.Marshaler
 	privVal    tmtypes.PrivValidator
 	valSet     *tmtypes.ValidatorSet
 	valsHash   tmbytes.HexBytes
-	header     ibctmtypes.Header
+	header     *ibctmtypes.Header
 	now        time.Time
 	headerTime time.Time
 	clientTime time.Time
@@ -56,7 +58,6 @@ func (suite *TendermintTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.aminoCdc = app.LegacyAmino()
 	suite.cdc = app.AppCodec()
 
 	// now is the time of the current chain, must be after the updating header
@@ -66,15 +67,17 @@ func (suite *TendermintTestSuite) SetupTest() {
 	// Header time is intended to be time for any new header used for updates
 	suite.headerTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 
-	suite.privVal = tmtypes.NewMockPV()
+	suite.privVal = ibctestingmock.NewPV()
 
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
+	epochHeight := int64(height.EpochHeight)
+
 	val := tmtypes.NewValidator(pubKey, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 

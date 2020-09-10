@@ -13,13 +13,13 @@ import (
 // NOTE: No actual migration occurs since the types do not change, but JSON
 // serialization of accounts do change.
 func Migrate(appState types.AppMap) types.AppMap {
-	v038Codec := codec.New()
+	v038Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v038Codec)
-	v038auth.RegisterCodec(v038Codec)
+	v038auth.RegisterLegacyAminoCodec(v038Codec)
 
-	v039Codec := codec.New()
+	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
-	v039auth.RegisterCodec(v039Codec)
+	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
 	// migrate x/auth state (JSON serialization only)
 	if appState[v038auth.ModuleName] != nil {

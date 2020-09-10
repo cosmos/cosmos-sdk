@@ -95,8 +95,23 @@ func TestMarkEventsToIndex(t *testing.T) {
 		expected []abci.Event
 	}{
 		"empty index set": {
-			events:   events,
-			expected: events,
+			events: events,
+			expected: []abci.Event{
+				{
+					Type: "message",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("sender"), Value: []byte("foo"), Index: true},
+						{Key: []byte("recipient"), Value: []byte("bar"), Index: true},
+					},
+				},
+				{
+					Type: "staking",
+					Attributes: []abci.EventAttribute{
+						{Key: []byte("deposit"), Value: []byte("5"), Index: true},
+						{Key: []byte("unbond"), Value: []byte("10"), Index: true},
+					},
+				},
+			},
 			indexSet: map[string]struct{}{},
 		},
 		"index some events": {

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -13,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -151,10 +152,10 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 }
 
 func makeCodec() *codec.LegacyAmino {
-	var cdc = codec.New()
-	sdk.RegisterCodec(cdc)
+	var cdc = codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
-	authtypes.RegisterCodec(cdc)
+	authtypes.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	return cdc
 }

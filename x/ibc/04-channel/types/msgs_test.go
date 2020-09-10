@@ -40,7 +40,7 @@ var (
 	height            = clienttypes.NewHeight(0, 1)
 	timeoutHeight     = clienttypes.NewHeight(0, 100)
 	timeoutTimestamp  = uint64(100)
-	disabledTimeout   = clienttypes.Height{}
+	disabledTimeout   = clienttypes.ZeroHeight()
 	validPacketData   = []byte("testdata")
 	unknownPacketData = []byte("unknown")
 
@@ -166,7 +166,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTry() {
 		types.NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                 // too long channel id
 		types.NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // channel id contains non-alpha
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, height, addr),                         // empty counterparty version
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, clienttypes.Height{}, addr),        // suite.proof height is zero
+		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, clienttypes.ZeroHeight(), addr),    // suite.proof height is zero
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // invalid channel order
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),             // connection hops more than 1
 		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),        // too short connection id
@@ -216,16 +216,16 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTry() {
 // TestMsgChannelOpenAck tests ValidateBasic for MsgChannelOpenAck
 func (suite *TypesTestSuite) TestMsgChannelOpenAck() {
 	testMsgs := []*types.MsgChannelOpenAck{
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, height, addr),               // valid msg
-		types.NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, height, addr),           // too short port id
-		types.NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, height, addr),            // too long port id
-		types.NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, height, addr),                // port id contains non-alpha
-		types.NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, height, addr),         // too short channel id
-		types.NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, height, addr),          // too long channel id
-		types.NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, height, addr),              // channel id contains non-alpha
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, height, addr),                  // empty counterparty version
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", emptyProof, height, addr),                // empty proof
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, clienttypes.Height{}, addr), // proof height is zero
+		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, height, addr),                   // valid msg
+		types.NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, height, addr),               // too short port id
+		types.NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, height, addr),                // too long port id
+		types.NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, height, addr),                    // port id contains non-alpha
+		types.NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, height, addr),             // too short channel id
+		types.NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, height, addr),              // too long channel id
+		types.NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, height, addr),                  // channel id contains non-alpha
+		types.NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, height, addr),                      // empty counterparty version
+		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", emptyProof, height, addr),                    // empty proof
+		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, clienttypes.ZeroHeight(), addr), // proof height is zero
 	}
 
 	testCases := []struct {
@@ -258,15 +258,15 @@ func (suite *TypesTestSuite) TestMsgChannelOpenAck() {
 // TestMsgChannelOpenConfirm tests ValidateBasic for MsgChannelOpenConfirm
 func (suite *TypesTestSuite) TestMsgChannelOpenConfirm() {
 	testMsgs := []*types.MsgChannelOpenConfirm{
-		types.NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, height, addr),               // valid msg
-		types.NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", suite.proof, height, addr),           // too short port id
-		types.NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", suite.proof, height, addr),            // too long port id
-		types.NewMsgChannelOpenConfirm(invalidPort, "testchannel", suite.proof, height, addr),                // port id contains non-alpha
-		types.NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, height, addr),         // too short channel id
-		types.NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, height, addr),          // too long channel id
-		types.NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, height, addr),              // channel id contains non-alpha
-		types.NewMsgChannelOpenConfirm("testportid", "testchannel", emptyProof, height, addr),                // empty proof
-		types.NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, clienttypes.Height{}, addr), // proof height is zero
+		types.NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, height, addr),                   // valid msg
+		types.NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", suite.proof, height, addr),               // too short port id
+		types.NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", suite.proof, height, addr),                // too long port id
+		types.NewMsgChannelOpenConfirm(invalidPort, "testchannel", suite.proof, height, addr),                    // port id contains non-alpha
+		types.NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, height, addr),             // too short channel id
+		types.NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, height, addr),              // too long channel id
+		types.NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, height, addr),                  // channel id contains non-alpha
+		types.NewMsgChannelOpenConfirm("testportid", "testchannel", emptyProof, height, addr),                    // empty proof
+		types.NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, clienttypes.ZeroHeight(), addr), // proof height is zero
 	}
 
 	testCases := []struct {
@@ -334,15 +334,15 @@ func (suite *TypesTestSuite) TestMsgChannelCloseInit() {
 // TestMsgChannelCloseConfirm tests ValidateBasic for MsgChannelCloseConfirm
 func (suite *TypesTestSuite) TestMsgChannelCloseConfirm() {
 	testMsgs := []*types.MsgChannelCloseConfirm{
-		types.NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, height, addr),               // valid msg
-		types.NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", suite.proof, height, addr),           // too short port id
-		types.NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", suite.proof, height, addr),            // too long port id
-		types.NewMsgChannelCloseConfirm(invalidPort, "testchannel", suite.proof, height, addr),                // port id contains non-alpha
-		types.NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, height, addr),         // too short channel id
-		types.NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, height, addr),          // too long channel id
-		types.NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, height, addr),              // channel id contains non-alpha
-		types.NewMsgChannelCloseConfirm("testportid", "testchannel", emptyProof, height, addr),                // empty proof
-		types.NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, clienttypes.Height{}, addr), // proof height is zero
+		types.NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, height, addr),                   // valid msg
+		types.NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", suite.proof, height, addr),               // too short port id
+		types.NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", suite.proof, height, addr),                // too long port id
+		types.NewMsgChannelCloseConfirm(invalidPort, "testchannel", suite.proof, height, addr),                    // port id contains non-alpha
+		types.NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, height, addr),             // too short channel id
+		types.NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, height, addr),              // too long channel id
+		types.NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, height, addr),                  // channel id contains non-alpha
+		types.NewMsgChannelCloseConfirm("testportid", "testchannel", emptyProof, height, addr),                    // empty proof
+		types.NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, clienttypes.ZeroHeight(), addr), // proof height is zero
 	}
 
 	testCases := []struct {
@@ -381,11 +381,11 @@ func (suite *TypesTestSuite) TestMsgRecvPacketType() {
 // TestMsgRecvPacketValidation tests ValidateBasic for MsgRecvPacket
 func (suite *TypesTestSuite) TestMsgRecvPacketValidation() {
 	testMsgs := []*types.MsgRecvPacket{
-		types.NewMsgRecvPacket(packet, suite.proof, height, addr1),               // valid msg
-		types.NewMsgRecvPacket(packet, suite.proof, clienttypes.Height{}, addr1), // proof height is zero
-		types.NewMsgRecvPacket(packet, emptyProof, height, addr1),                // empty proof
-		types.NewMsgRecvPacket(packet, suite.proof, height, emptyAddr),           // missing signer address
-		types.NewMsgRecvPacket(invalidPacket, suite.proof, height, addr1),        // unknown packet
+		types.NewMsgRecvPacket(packet, suite.proof, height, addr1),                   // valid msg
+		types.NewMsgRecvPacket(packet, suite.proof, clienttypes.ZeroHeight(), addr1), // proof height is zero
+		types.NewMsgRecvPacket(packet, emptyProof, height, addr1),                    // empty proof
+		types.NewMsgRecvPacket(packet, suite.proof, height, emptyAddr),               // missing signer address
+		types.NewMsgRecvPacket(invalidPacket, suite.proof, height, addr1),            // unknown packet
 	}
 
 	testCases := []struct {
@@ -435,7 +435,7 @@ func (suite *TypesTestSuite) TestMsgRecvPacketGetSigners() {
 func (suite *TypesTestSuite) TestMsgTimeout() {
 	testMsgs := []*types.MsgTimeout{
 		types.NewMsgTimeout(packet, 1, suite.proof, height, addr),
-		types.NewMsgTimeout(packet, 1, suite.proof, clienttypes.Height{}, addr),
+		types.NewMsgTimeout(packet, 1, suite.proof, clienttypes.ZeroHeight(), addr),
 		types.NewMsgTimeout(packet, 1, suite.proof, height, emptyAddr),
 		types.NewMsgTimeout(packet, 1, emptyProof, height, addr),
 		types.NewMsgTimeout(invalidPacket, 1, suite.proof, height, addr),
@@ -473,7 +473,7 @@ func (suite *TypesTestSuite) TestMsgTimeoutOnClose() {
 		{"success", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, height, addr), true},
 		{"empty proof", types.NewMsgTimeoutOnClose(packet, 1, emptyProof, suite.proof, height, addr), false},
 		{"empty proof close", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, emptyProof, height, addr), false},
-		{"proof height is zero", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, clienttypes.Height{}, addr), false},
+		{"proof height is zero", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, clienttypes.ZeroHeight(), addr), false},
 		{"signer address is empty", types.NewMsgTimeoutOnClose(packet, 1, suite.proof, suite.proof, height, emptyAddr), false},
 		{"invalid packet", types.NewMsgTimeoutOnClose(invalidPacket, 1, suite.proof, suite.proof, height, addr), false},
 	}
@@ -497,7 +497,7 @@ func (suite *TypesTestSuite) TestMsgTimeoutOnClose() {
 func (suite *TypesTestSuite) TestMsgAcknowledgement() {
 	testMsgs := []*types.MsgAcknowledgement{
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, addr),
-		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, clienttypes.Height{}, addr),
+		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, clienttypes.ZeroHeight(), addr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), suite.proof, height, emptyAddr),
 		types.NewMsgAcknowledgement(packet, packet.GetData(), emptyProof, height, addr),
 		types.NewMsgAcknowledgement(invalidPacket, packet.GetData(), suite.proof, height, addr),

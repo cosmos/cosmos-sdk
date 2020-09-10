@@ -56,7 +56,7 @@ type (
 	}
 
 	// AminoMarshaler defines an interface where Amino marshalling can be
-	// overriden by custom marshalling.
+	// overridden by custom marshalling.
 	AminoMarshaler interface {
 		MarshalAmino() ([]byte, error)
 		UnmarshalAmino([]byte) error

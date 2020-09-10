@@ -1,12 +1,11 @@
 package cosmovisor
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -81,8 +80,7 @@ func (cfg *Config) CurrentBin() (string, error) {
 	}
 
 	// and return the binary
-	dest = filepath.Join(dest, "bin", cfg.Name)
-	return dest, nil
+	return filepath.Join(dest, "bin", cfg.Name), nil
 }
 
 // GetConfigFromEnv will read the environmental variables into a config
@@ -113,25 +111,25 @@ func GetConfigFromEnv() (*Config, error) {
 // and that Name is set
 func (cfg *Config) validate() error {
 	if cfg.Name == "" {
-		return fmt.Errorf("DAEMON_NAME is not set")
+		return errors.New("DAEMON_NAME is not set")
 	}
 
 	if cfg.Home == "" {
-		return fmt.Errorf("DAEMON_HOME is not set")
+		return errors.New("DAEMON_HOME is not set")
 	}
 
 	if !filepath.IsAbs(cfg.Home) {
-		return fmt.Errorf("DAEMON_HOME must be an absolute path")
+		return errors.New("DAEMON_HOME must be an absolute path")
 	}
 
 	// ensure the root directory exists
 	info, err := os.Stat(cfg.Root())
 	if err != nil {
-		return errors.Wrap(err, "cannot stat home dir")
+		return fmt.Errorf("cannot stat home dir: %w", err)
 	}
 
 	if !info.IsDir() {
-		return errors.Errorf("%s is not a directory", info.Name())
+		return fmt.Errorf("%s is not a directory", info.Name())
 	}
 
 	return nil

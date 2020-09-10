@@ -48,7 +48,7 @@ func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifi
 // ClientState returns a new solo machine ClientState instance. Default usage does not allow update
 // after governance proposal
 func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
-	return solomachinetypes.NewClientState(solo.ConsensusState(), false)
+	return solomachinetypes.NewClientState(solo.Sequence, solo.ConsensusState(), false)
 }
 
 // ConsensusState returns a new solo machine ConsensusState instance
@@ -57,7 +57,6 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
-		Sequence:    solo.Sequence,
 		PublicKey:   publicKey,
 		Diversifier: solo.Diversifier,
 		Timestamp:   solo.Time,

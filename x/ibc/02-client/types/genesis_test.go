@@ -105,7 +105,7 @@ func TestValidateGenesis(t *testing.T) {
 					types.NewIdentifiedClientState(
 						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 					),
-					types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", types.Height{})),
+					types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", types.ZeroHeight())),
 				},
 				nil,
 				true,
@@ -128,7 +128,7 @@ func TestValidateGenesis(t *testing.T) {
 						"(CLIENTID2)",
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.Height{}, header.Header.NextValidatorsHash,
+								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.ZeroHeight(), header.Header.NextValidatorsHash,
 							),
 						},
 					),
@@ -153,7 +153,7 @@ func TestValidateGenesis(t *testing.T) {
 						clientID,
 						[]exported.ConsensusState{
 							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.Height{}, header.Header.NextValidatorsHash,
+								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.ZeroHeight(), header.Header.NextValidatorsHash,
 							),
 						},
 					),

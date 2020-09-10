@@ -15,7 +15,7 @@ func (suite *TendermintTestSuite) TestGetHeight() {
 	suite.Require().NotEqual(uint64(0), header.GetHeight())
 
 	header.Header = nil
-	suite.Require().Equal(clienttypes.Height{}, header.GetHeight())
+	suite.Require().Equal(clienttypes.ZeroHeight(), header.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestGetTime() {

@@ -15,7 +15,7 @@ import (
 var (
 	validPacketData          = []byte("VALID PACKET DATA")
 	disabledTimeoutTimestamp = uint64(0)
-	disabledTimeoutHeight    = clienttypes.Height{}
+	disabledTimeoutHeight    = clienttypes.ZeroHeight()
 	timeoutHeight            = clienttypes.NewHeight(0, 100)
 
 	// for when the testing package cannot be used

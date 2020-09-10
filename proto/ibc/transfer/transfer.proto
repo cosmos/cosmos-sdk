@@ -23,10 +23,7 @@ message MsgTransfer {
   string receiver = 5;
   // Timeout height relative to the current block height.
   // The timeout is disabled when set to 0.
-  ibc.client.Height timeout_height = 6 [
-    (gogoproto.moretags) = "yaml:\"timeout_height\"",
-    (gogoproto.nullable) = false
-  ];
+  ibc.client.Height timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
@@ -46,35 +43,25 @@ message FungibleTokenPacketData {
   string receiver = 4;
 }
 
-// FungibleTokenPacketAcknowledgement contains a boolean success flag and an
-// optional error msg error msg is empty string on success See spec for
-// onAcknowledgePacket:
-// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#packet-relay
-message FungibleTokenPacketAcknowledgement {
-  bool success = 1;
-  string error = 2;
-}
-
-// DenomTrace contains the base denomination for ICS20 fungible tokens and the source tracing
-// information path.
+// DenomTrace contains the base denomination for ICS20 fungible tokens and the
+// source tracing information path.
 message DenomTrace {
-  // path defines the chain of port/channel identifiers used for tracing the source of the fungible
-  // token.
+  // path defines the chain of port/channel identifiers used for tracing the
+  // source of the fungible token.
   string path = 1;
   // base denomination of the relayed fungible token.
   string base_denom = 2;
 }
 
 // Params defines the set of IBC transfer parameters.
-// NOTE: To prevent a single token from being transferred, set the TransfersEnabled parameter to
-// true and then set the bank module's SendEnabled parameter for the denomination to false.
+// NOTE: To prevent a single token from being transferred, set the
+// TransfersEnabled parameter to true and then set the bank module's SendEnabled
+// parameter for the denomination to false.
 message Params {
-  // send_enabled enables or disables all cross-chain token transfers from this chain.
-  bool send_enabled = 1 [
-    (gogoproto.moretags) = "yaml:\"send_enabled\""
-  ];
-  // receive_enabled enables or disables all cross-chain token transfers to this chain.
-  bool receive_enabled = 2 [
-    (gogoproto.moretags) = "yaml:\"receive_enabled\""
-  ];
+  // send_enabled enables or disables all cross-chain token transfers from this
+  // chain.
+  bool send_enabled = 1 [(gogoproto.moretags) = "yaml:\"send_enabled\""];
+  // receive_enabled enables or disables all cross-chain token transfers to this
+  // chain.
+  bool receive_enabled = 2 [(gogoproto.moretags) = "yaml:\"receive_enabled\""];
 }

@@ -8,7 +8,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 

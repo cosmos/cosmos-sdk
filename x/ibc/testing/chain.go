@@ -11,7 +11,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -62,6 +61,7 @@ var (
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+	ClientHeight                          = clienttypes.NewHeight(0, Height)
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
@@ -286,6 +286,11 @@ func (chain *TestChain) GetConsensusState(clientID string, height exported.Heigh
 	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
 }
 
+// ConsensusStateFromCurrentHeader creates a new tendermint consensus state instance from the current chain header.
+func (chain *TestChain) ConsensusStateFromCurrentHeader() exported.ConsensusState {
+	return chain.CreateTMClientHeader().ConsensusState()
+}
+
 // GetValsAtHeight will return the validator set of the chain at a given height. It will return
 // a success boolean depending on if the validator set exists or not at that height.
 func (chain *TestChain) GetValsAtHeight(height int64) (*tmtypes.ValidatorSet, bool) {
@@ -473,21 +478,24 @@ func (chain *TestChain) ExpireClient(amount time.Duration) {
 
 // CreateTMClientHeader creates a TM header to update the TM client.
 func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
-	vsetHash := chain.Vals.Hash()
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
-		ChainID:            chain.ChainID,
-		Height:             chain.CurrentHeader.Height,
-		Time:               chain.CurrentHeader.Time,
-		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
-		LastCommitHash:     chain.App.LastCommitID().Hash,
-		DataHash:           tmhash.Sum([]byte("data_hash")),
-		ValidatorsHash:     vsetHash,
-		NextValidatorsHash: vsetHash,
-		ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
+		Version: chain.CurrentHeader.Version,
+		ChainID: chain.CurrentHeader.ChainID,
+		Height:  chain.CurrentHeader.Height,
+		Time:    chain.CurrentHeader.Time,
+		LastBlockID: MakeBlockID(
+			chain.CurrentHeader.LastBlockId.Hash,
+			chain.CurrentHeader.LastBlockId.PartSetHeader.Total,
+			chain.CurrentHeader.LastBlockId.PartSetHeader.Hash,
+		),
+		LastCommitHash:     chain.CurrentHeader.LastCommitHash,
+		DataHash:           chain.CurrentHeader.DataHash,
+		ValidatorsHash:     chain.CurrentHeader.ValidatorsHash,
+		NextValidatorsHash: chain.CurrentHeader.NextValidatorsHash,
+		ConsensusHash:      chain.CurrentHeader.ConsensusHash,
 		AppHash:            chain.CurrentHeader.AppHash,
-		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
-		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
+		LastResultsHash:    chain.CurrentHeader.LastResultsHash,
+		EvidenceHash:       chain.CurrentHeader.EvidenceHash,
 		ProposerAddress:    chain.Vals.Proposer.Address,
 	}
 	hhash := tmHeader.Hash()

@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
-			res, err := suite.queryClient.ClientState(ctx, req)
+			res, err := suite.chainA.QueryServer.ClientState(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -209,12 +209,10 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
-				)
+				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				cs := suite.chainA.ConsensusStateFromCurrentHeader()
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], suite.consensusState.GetHeight(), cs)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)
@@ -230,10 +228,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success with height",
 			func() {
-				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
-				)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.Height, cs)
+				cs := suite.chainA.ConsensusStateFromCurrentHeader()
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)
@@ -242,7 +238,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				req = &types.QueryConsensusStateRequest{
 					ClientId:    suite.chainA.ClientIDs[0],
 					EpochNumber: 0,
-					EpochHeight: height,
+					EpochHeight: 5,
 				}
 			},
 			true,
@@ -255,7 +251,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
-			res, err := suite.queryClient.ConsensusState(ctx, req)
+			res, err := suite.chainA.QueryServer.ConsensusState(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -313,15 +309,17 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 		{
 			"success",
 			func() {
-				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
-				)
+				cs := suite.chainA.ConsensusStateFromCurrentHeader()
+				clientHeight, ok := cs.GetHeight().(types.Height)
+				suite.Require().True(ok)
+				timestamp := time.Unix(0, int64(cs.GetTimestamp()))
+
 				cs2 := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), suite.consensusState.Height, nil,
+					timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), clientHeight, nil,
 				)
 
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], testClientHeight, cs)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], testClientHeight.Increment(), cs2)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight.Increment(), cs2)
 
 				any, err := types.PackConsensusState(cs)
 				suite.Require().NoError(err)
@@ -349,7 +347,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			res, err := suite.queryClient.ConsensusStates(ctx, req)
+			res, err := suite.chainA.QueryServer.ConsensusStates(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

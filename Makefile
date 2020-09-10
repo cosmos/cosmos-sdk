@@ -84,7 +84,7 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-	go build -mod=readonly ./...
+	go install -mod=readonly ./...
 
 build-simd: go.sum
 	mkdir -p $(BUILDDIR)
@@ -139,7 +139,7 @@ go.sum: go.mod
 ###############################################################################
 
 update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	$(BINDIR)/statik -src=client/grpc-gateway -dest=client/grpc-gateway -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\
@@ -312,14 +312,20 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-tools proto-gen proto-lint proto-check-breaking
+proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format
 
 proto-gen:
 	@./scripts/protocgen.sh
 
+proto-format:
+	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@./scripts/protocgen-any.sh
+
+proto-swagger-gen:
+	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
 	@buf check lint --error-format=json
@@ -335,7 +341,7 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc3/proto/tendermint
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/3359e0bf2f8414d9687f9eecda67b899d64a9cd1/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.2
@@ -392,15 +398,19 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-local-simapp:
-	docker build -t cosmos-sdk/simapp .
-
 # Run a 4-node testnet locally
 localnet-start: build-simd-linux localnet-stop
-	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/simd:Z cosmos-sdk/simappnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
+	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
+		--user $(shell id -u):$(shell id -g) \
+		-v $(BUILDDIR):/simd:Z \
+		-v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro \
+		-v /etc/shadow:/etc/shadow:ro \
+		cosmossdk/simd-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:
 	docker-compose down
 
-.PHONY: build-docker-local-simapp localnet-start localnet-stop
+.PHONY: localnet-start localnet-stop

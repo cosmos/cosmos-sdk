@@ -3,11 +3,12 @@ package types_test
 import (
 	ics23 "github.com/confio/ics23/go"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -31,52 +32,52 @@ func (suite *TendermintTestSuite) TestValidate() {
 	}{
 		{
 			name:        "valid client",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     true,
 		},
 		{
 			name:        "invalid chainID",
-			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trust level",
-			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.Fraction{Numerator: 0, Denominator: 1}, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid trusting period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, 0, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid unbonding period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, 0, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid max clock drift",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, 0, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "trusting period not less than unbonding period",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs is nil",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, nil, false, false),
 			expPass:     false,
 		},
 		{
 			name:        "proof specs contains nil",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, ubdPeriod, ubdPeriod, maxClockDrift, height, []*ics23.ProofSpec{ics23.TendermintSpec, nil}, false, false),
 			expPass:     false,
 		},
 	}
@@ -112,7 +113,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		// },
 		{
 			name:        "ApplyPrefix failed",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
@@ -121,7 +122,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "latest client height < height",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
@@ -130,7 +131,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: height - 1},
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-1)},
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},
@@ -139,7 +140,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "proof verification failed",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false),
 			consensusState: types.ConsensusState{
 				Root:               commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 				NextValidatorsHash: suite.valsHash,
@@ -171,7 +172,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -190,12 +191,12 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -212,7 +213,7 @@ func (suite *TendermintTestSuite) TestVerifyConnectionState() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, connB, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			connection := suite.chainB.GetConnection(connB)
 
 			var ok bool
@@ -249,7 +250,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -268,12 +269,12 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -290,7 +291,7 @@ func (suite *TendermintTestSuite) TestVerifyChannelState() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, _, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			channel := suite.chainB.GetChannel(channelB)
 
 			var ok bool
@@ -328,7 +329,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -347,12 +348,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -369,8 +370,8 @@ func (suite *TendermintTestSuite) TestVerifyPacketCommitment() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 100, 0)
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, clienttypes.NewHeight(0, 100), 0)
 			err := suite.coordinator.SendPacket(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
@@ -410,7 +411,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -429,12 +430,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -451,15 +452,15 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
 			// write ack
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -498,7 +499,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -517,12 +518,12 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -539,15 +540,15 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet, but no recv
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)
@@ -585,7 +586,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
-		proofHeight uint64
+		proofHeight exported.Height
 		prefix      commitmenttypes.MerklePrefix
 	)
 
@@ -604,12 +605,12 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"latest client height < height", func() {
-				proofHeight = clientState.LatestHeight + 1
+				proofHeight = clientState.LatestHeight.Increment()
 			}, false,
 		},
 		{
 			"client is frozen", func() {
-				clientState.FrozenHeight = 1
+				clientState.FrozenHeight = clienttypes.NewHeight(0, 1)
 			}, false,
 		},
 		{
@@ -626,19 +627,19 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			suite.SetupTest() // reset
 
 			// setup testing conditions
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 100, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet := channeltypes.NewPacket(ibctesting.TestHash, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			// send packet
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
 			// write ack, next seq recv incremented
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			// need to update chainA's client representing chainB
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			var ok bool
 			clientStateI := suite.chainA.GetClientState(clientA)

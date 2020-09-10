@@ -5,16 +5,16 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -65,7 +65,8 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 }
 
 func TestParseProposal(t *testing.T) {
-	cdc := codec.New()
+	encodingConfig := params.MakeEncodingConfig()
+
 	okJSON, cleanup := testutil.WriteToNewTempFile(t, `
 {
   "title": "Community Pool Spend",
@@ -77,7 +78,7 @@ func TestParseProposal(t *testing.T) {
 `)
 	t.Cleanup(cleanup)
 
-	proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, okJSON.Name())
+	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, okJSON.Name())
 	require.NoError(t, err)
 
 	addr, err := sdk.AccAddressFromBech32("cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq")

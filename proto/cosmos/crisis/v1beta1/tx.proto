@@ -9,7 +9,7 @@ import "gogoproto/gogo.proto";
 message MsgVerifyInvariant {
   option (gogoproto.equal) = true;
 
-  bytes  sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes  sender                = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string invariant_module_name = 2 [(gogoproto.moretags) = "yaml:\"invariant_module_name\""];
   string invariant_route       = 3 [(gogoproto.moretags) = "yaml:\"invariant_route\""];
 }

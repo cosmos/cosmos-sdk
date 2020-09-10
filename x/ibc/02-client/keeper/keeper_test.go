@@ -11,8 +11,11 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
+
+var testClientHeight = types.NewHeight(0, 5)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -61,57 +64,57 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	testCases := []struct {
 		name        string
-		clientState clientexported.ClientState
+		clientState exported.ClientState
 		expPass     bool
 	}{
 		{
 			"success",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			true,
 		},
 		{
 			"invalid client type",
-			localhosttypes.NewClientState(testChainID, ibctesting.Height),
+			localhosttypes.NewClientState(suite.chainA.ChainID, ibctesting.Height),
 			false,
 		},
 		{
 			"frozen client",
-			&ibctmtypes.ClientState{testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()},
+			&ibctmtypes.ClientState{suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false},
 			false,
 		},
 		{
 			"incorrect chainID",
-			ibctmtypes.NewClientState("gaiatestnet", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState("gaiatestnet", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{
-			"invalid client height",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height)+10, commitmenttypes.GetSDKSpecs()),
+			"invalid client ibctesting.Height",
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.NewHeight(0, testClientHeight.EpochHeight+10), commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{
 			"invalid proof specs",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), nil),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, nil, false, false),
 			false,
 		},
 		{
 			"invalid trust level",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.Fraction{0, 1}, trustingPeriod, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.Fraction{0, 1}, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{
 			"invalid unbonding period",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+10, maxClockDrift, uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+10, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{
 			"invalid trusting period",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, ubdPeriod+10, ubdPeriod, maxClockDrift, uint64(ibctesting.Height), commitmenttypes.GetSDKSpecs()),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.UnbondingPeriod+10, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 	}
 
-	ctx := suite.chainA.GetContext().WithChainID(testChainID)
+	ctx := suite.chainA.GetContext().WithChainID(suite.chainA.ChainID)
 	ctx = ctx.WithBlockHeight(ibctesting.Height)
 
 	for _, tc := range testCases {
@@ -129,9 +132,9 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 		suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0],
 	}
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
 	}
 
 	for i := range expClients {
@@ -153,9 +156,9 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 		suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0],
 	}
 	expClients := []exported.ClientState{
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
-		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, 0, commitmenttypes.GetSDKSpecs()),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
+		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
 	}
 
 	expGenClients := make([]types.IdentifiedClientState, len(expClients))
@@ -179,13 +182,13 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 	ctx := suite.chainA.GetContext().WithBlockHeight(10)
 	cases := []struct {
 		name    string
-		height  uint64
+		height  types.Height
 		expPass bool
 	}{
-		{"zero height", 0, false},
-		{"height > latest height", uint64(ctx.BlockHeight()) + 1, false},
-		{"latest height - 1", uint64(ctx.BlockHeight()) - 1, true},
-		{"latest height", uint64(ctx.BlockHeight()), true},
+		{"zero ibctesting.Height", types.ZeroHeight(), false},
+		{"ibctesting.Height > latest ibctesting.Height", types.NewHeight(0, uint64(suite.chainA.GetContext().BlockHeight())+1), false},
+		{"latest ibctesting.Height - 1", types.NewHeight(0, uint64(suite.chainA.GetContext().BlockHeight())-1), true},
+		{"latest ibctesting.Height", types.GetSelfHeight(suite.chainA.GetContext()), true},
 	}
 
 	for i, tc := range cases {
@@ -203,44 +206,44 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
-	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.Height, commitmenttypes.GetSDKSpecs())
+	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 
 	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
 	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.Height, suite.consensusState)
 
-	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), ibctesting.Height+5, suite.valSetHash)
+	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), types.NewHeight(0, ibctesting.Height+5), suite.valSetHash)
 
-	header := ibctmtypes.CreateTestHeader(suite.chainA.ClientIDs[0], ibctesting.Height+5, ibctesting.Height, suite.header.GetTime().Add(time.Minute),
+	header := ibctmtypes.CreateTestHeader(suite.chainA.ClientIDs[0], ibctesting.Height+5, ibctesting.Height, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality
-	clientState.LatestHeight = header.GetHeight()
-	suite.chainA.App.IBCKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.Height+5, nextState)
-	suite.chainA.App.IBCKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
+	clientState.LatestHeight = header.GetHeight().(types.Height)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], header.GetHeight(), nextState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
 
 	latest, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0])
 	suite.Require().True(ok)
 	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
 
-	// Should return existing consensusState at laibctesting.Height
-	lte, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusStateLTE(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.Height+3)
+	// Should return existing consensusState at latestClientHeight
+	lte, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusStateLTE(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], types.NewHeight(0, ibctesting.Height+3))
 	suite.Require().True(ok)
-	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below height: %d", ibctesting.Height+3)
+	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below ibctesting.Height: %d", ibctesting.Height+3)
 }
 
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	expConsensus := []exported.ConsensusState{
 		ibctmtypes.NewConsensusState(
-			suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.GetHeight(), nil,
+			suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.consensusState.Height, nil,
 		),
 		ibctmtypes.NewConsensusState(
-			suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.GetHeight()+1, nil,
+			suite.consensusState.Timestamp.Add(time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash")), suite.consensusState.Height.Increment(), nil,
 		),
 	}
 
 	expConsensus2 := []exported.ConsensusState{
 		ibctmtypes.NewConsensusState(
-			suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), suite.consensusState.GetHeight()+2, nil,
+			suite.consensusState.Timestamp.Add(2*time.Minute), commitmenttypes.NewMerkleRoot([]byte("app_hash_2")), types.NewHeight(0, suite.consensusState.GetHeight().GetEpochHeight()+2), nil,
 		),
 	}
 

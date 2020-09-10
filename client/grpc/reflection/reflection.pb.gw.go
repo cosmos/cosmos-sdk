@@ -106,6 +106,7 @@ func local_request_ReflectionService_ListImplementations_0(ctx context.Context, 
 // RegisterReflectionServiceHandlerServer registers the http handlers for service ReflectionService to "mux".
 // UnaryRPC     :call ReflectionServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterReflectionServiceHandlerFromEndpoint instead.
 func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ReflectionServiceServer) error {
 
 	mux.Handle("GET", pattern_ReflectionService_ListAllInterfaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -235,7 +236,7 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 var (
 	pattern_ReflectionService_ListAllInterfaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_ListImplementations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "implementations", "interface_name"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ReflectionService_ListImplementations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces", "interface_name", "implementations"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

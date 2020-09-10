@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,7 +20,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -126,7 +124,7 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 			return nil, fmt.Errorf("error in config file: %v", err)
 		}
 
-		conf.ProfListenAddress = "localhost:6060"
+		conf.RPC.PprofListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
@@ -189,24 +187,6 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		flags.LineBreak,
 		version.NewVersionCommand(),
 	)
-}
-
-// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
-// JSON message. An error is returned if any serialization operation fails.
-//
-// NOTE: The ordering of the keys returned as the resulting JSON message is
-// non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc codec.JSONMarshaler, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
-	var jsonMap map[string]json.RawMessage
-
-	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
-		return nil, err
-	}
-
-	jsonMap[key] = value
-	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
-
-	return json.RawMessage(bz), err
 }
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go

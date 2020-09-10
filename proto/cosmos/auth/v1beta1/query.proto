@@ -10,35 +10,35 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // Query defines the gRPC querier service.
-service Query{
-    // Account returns account details based on address.
-    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
-    }
+service Query {
+  // Account returns account details based on address.
+  rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+  }
 
-    // Params queries all parameters.
-    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/params";
-    }
+  // Params queries all parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+  }
 }
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
-message QueryAccountRequest{
+message QueryAccountRequest {
   // address defines the address to query for.
   bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // QueryAccountResponse is the response type for the Query/Account RPC method.
-message QueryAccountResponse{
+message QueryAccountResponse {
   // account defines the account of the corresponding address.
   google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest{ }
+message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse{
+message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
-} 
+}

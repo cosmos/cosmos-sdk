@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"time"
 
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/proto/tendermint/version"
@@ -22,7 +23,7 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) Header {
+func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *Header {
 	var (
 		valSet      *tmproto.ValidatorSet
 		trustedVals *tmproto.ValidatorSet
@@ -72,10 +73,10 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 		}
 	}
 
-	return Header{
-		SignedHeader:      signedHeader,
+	return &Header{
+		SignedHeader:      &signedHeader,
 		ValidatorSet:      valSet,
-		TrustedHeight:     uint64(trustedHeight),
+		TrustedHeight:     clienttypes.NewHeight(0, uint64(trustedHeight)),
 		TrustedValidators: trustedVals,
 	}
 }

@@ -156,6 +156,7 @@ func (cdc *LegacyAmino) MustMarshalJSON(o interface{}) []byte {
 }
 
 func (cdc *LegacyAmino) UnmarshalJSON(bz []byte, ptr interface{}) error {
+	fmt.Println(bz, ptr)
 	err := cdc.Amino.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		return err

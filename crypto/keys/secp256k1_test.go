@@ -3,6 +3,7 @@ package keys_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -143,6 +144,52 @@ func TestSignAndVerifySignature(t *testing.T) {
 			sig[7] ^= byte(0x01)
 
 			assert.False(t, pubKey.VerifySignature(msg, sig))
+		})
+	}
+
+}
+
+func TestMarshalAmino(t *testing.T) {
+	aminoCdc := codec.NewLegacyAmino()
+	privKey := secp256k1.GenPrivKey()
+
+	testCases := []struct {
+		desc      string
+		msg       codec.AminoMarshaler
+		expBinary []byte
+		expJSON   []byte
+	}{
+		{
+			"secp256k1 private key",
+			&keys.Secp256K1PrivKey{Key: privKey},
+			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
+			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Do a round trip of encoding/decoding binary.
+			bz, err := aminoCdc.MarshalBinaryBare(tc.msg)
+			require.NoError(t, err)
+			require.Equal(t, tc.expBinary, bz)
+
+			newMsg := new(keys.Secp256K1PrivKey)
+			err = aminoCdc.UnmarshalBinaryBare(bz, newMsg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.msg, newMsg)
+
+			// Do a round trip of encoding/decoding JSON.
+			bz, err = aminoCdc.MarshalJSON(tc.msg)
+			require.NoError(t, err)
+			require.Equal(t, tc.expJSON, bz)
+
+			newMsg = new(keys.Secp256K1PrivKey)
+			err = aminoCdc.UnmarshalJSON(bz, newMsg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.msg, newMsg)
 		})
 	}
 

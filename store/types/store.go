@@ -22,7 +22,6 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	// TODO: Deprecate after 0.38.5
 	SetPruning(PruningOptions)
 	GetPruning() PruningOptions
 }

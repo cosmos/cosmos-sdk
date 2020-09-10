@@ -1,12 +1,17 @@
 package staking
 
 import (
+	"encoding/json"
 	"fmt"
+	"runtime"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -238,4 +243,100 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 	}
 
 	return
+}
+
+// ValidateAccountParamsnGenesis checks that the provided account has a sufficient
+// balance in the set of genesis accounts. Used in gentx
+func ValidateAccountParamsInGenesis(
+	appGenesisState map[string]json.RawMessage, genBalIterator genutiltypes.GenesisBalancesIterator,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONMarshaler,
+) error {
+	genesisStakingData := appGenesisState[types.ModuleName]
+	var stakingData types.GenesisState
+	cdc.MustUnmarshalJSON(genesisStakingData, &stakingData)
+	bondDenom := stakingData.Params.BondDenom
+
+	var err error
+
+	accountIsInGenesis := false
+
+	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
+		func(bal bankexported.GenesisBalance) (stop bool) {
+			accAddress := bal.GetAddress()
+			accCoins := bal.GetCoins()
+
+			// ensure that account is in genesis
+			if accAddress.Equals(addr) {
+				// ensure account contains enough funds of default bond denom
+				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
+					err = fmt.Errorf(
+						"account %s has a balance in genesis, but it only has %v%s available to stake, not %v%s",
+						addr, accCoins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
+					)
+
+					return true
+				}
+
+				accountIsInGenesis = true
+				return true
+			}
+
+			return false
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if !accountIsInGenesis {
+		return fmt.Errorf("account %s does not have a balance in the genesis state", addr)
+	}
+	return nil
+}
+
+// ValidateMsgInGenesis is used in collect-gentx to verify a genesis message
+func ValidateMsgInGenesis(msg sdk.Msg, balancesMap map[string]bankexported.GenesisBalance, appGenTxs []sdk.Tx,
+	persistentPeers string, addressesIPs []string, nodeAddrIP string, moniker string,
+) (genTxs []sdk.Tx, perPeers string, ips []string, err error) {
+	createValMsg := msg.(*types.MsgCreateValidator)
+
+	// validate delegator and validator addresses and funds against the accounts in the state
+	delAddr := createValMsg.DelegatorAddress
+	valAddr, err := sdk.ValAddressFromBech32(createValMsg.ValidatorAddress)
+	if err != nil {
+		return appGenTxs, persistentPeers, addressesIPs, err
+	}
+
+	delBal, delOk := balancesMap[delAddr]
+	if !delOk {
+		_, file, no, ok := runtime.Caller(1)
+		if ok {
+			fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
+		}
+		return appGenTxs, persistentPeers, addressesIPs, fmt.Errorf("account %s balance not in genesis state: %+v", delAddr, balancesMap)
+	}
+
+	_, valOk := balancesMap[sdk.AccAddress(valAddr).String()]
+	if !valOk {
+		_, file, no, ok := runtime.Caller(1)
+		if ok {
+			fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(createValMsg.ValidatorAddress).String())
+		}
+		return appGenTxs, persistentPeers, addressesIPs, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
+	}
+
+	if delBal.GetCoins().AmountOf(createValMsg.Value.Denom).LT(createValMsg.Value.Amount) {
+		return appGenTxs, persistentPeers, addressesIPs, fmt.Errorf(
+			"insufficient fund for delegation %v: %v < %v",
+			delBal.GetAddress().String(), delBal.GetCoins().AmountOf(createValMsg.Value.Denom), createValMsg.Value.Amount,
+		)
+	}
+
+	// exclude itself from persistent peers
+	if createValMsg.Description.Moniker != moniker {
+		addressesIPs = append(addressesIPs, nodeAddrIP)
+	}
+
+	return appGenTxs, persistentPeers, addressesIPs, nil
 }

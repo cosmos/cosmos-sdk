@@ -651,7 +651,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	require.NotNil(t, res)
 	var ubDel types.UnbondingDelegation
 	require.NoError(t, cdc.UnmarshalJSON(res, &ubDel))
-	require.Equal(t, addrAcc1, ubDel.DelegatorAddress)
+	require.Equal(t, addrAcc1.String(), ubDel.DelegatorAddress)
 	require.Equal(t, val1.OperatorAddress, ubDel.ValidatorAddress)
 	require.Equal(t, 1, len(ubDel.Entries))
 
@@ -684,7 +684,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	var ubDels []types.UnbondingDelegation
 	require.NoError(t, cdc.UnmarshalJSON(res, &ubDels))
 	require.Equal(t, 1, len(ubDels))
-	require.Equal(t, addrAcc1, ubDels[0].DelegatorAddress)
+	require.Equal(t, addrAcc1.String(), ubDels[0].DelegatorAddress)
 	require.Equal(t, val1.OperatorAddress, ubDels[0].ValidatorAddress)
 
 	//

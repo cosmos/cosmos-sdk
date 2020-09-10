@@ -152,7 +152,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addr1)
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.OperatorAddress)
+	assert.Equal(t, addr1.String(), validator.OperatorAddress)
 	assert.Equal(t, pk1, validator.GetConsPubKey())
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
@@ -184,7 +184,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.OperatorAddress)
+	assert.Equal(t, addr2.String(), validator.OperatorAddress)
 	assert.Equal(t, pk2, validator.GetConsPubKey())
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))

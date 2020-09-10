@@ -30,7 +30,7 @@ func (msg MsgSend) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	to, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
 		return err
 	}

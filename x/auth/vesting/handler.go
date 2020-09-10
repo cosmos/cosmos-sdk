@@ -35,7 +35,7 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk 
 	if err != nil {
 		return nil, err
 	}
-	to, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
 		return nil, err
 	}

@@ -166,7 +166,7 @@ func TestSendToModuleAcc(t *testing.T) {
 
 			fromAddr, err := sdk.AccAddressFromBech32(test.msg.FromAddress)
 			require.NoError(t, err)
-			toAddr, err := sdk.AccAddressFromBech32(test.msg.FromAddress)
+			toAddr, err := sdk.AccAddressFromBech32(test.msg.ToAddress)
 			require.NoError(t, err)
 
 			err = app.BankKeeper.SetBalances(ctx, fromAddr, test.fromBalance)

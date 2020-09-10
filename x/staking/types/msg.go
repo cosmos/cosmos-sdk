@@ -87,7 +87,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	// note that unmarshaling from bech32 ensures either empty or valid
 	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	if delAddr.Empty() {
 		return ErrEmptyDelegatorAddr

@@ -38,7 +38,7 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 	if err != nil {
 		return nil, err
 	}
-	to, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
 		return nil, err
 	}

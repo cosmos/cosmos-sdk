@@ -79,7 +79,7 @@ func TestStakingMsgs(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
+	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 

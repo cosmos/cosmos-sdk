@@ -36,10 +36,11 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 	for i, tc := range cases {
 		tc := tc
 		i := i
+		consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 		if tc.expPanic {
 			suite.Require().Panics(func() {
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), tc.clientID, clientState, suite.consensusState)
+				suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), tc.clientID, clientState, consensusState)
 			}, "Msg %d didn't panic: %s", i, tc.msg)
 		} else {
 			clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
@@ -47,7 +48,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 				suite.Require().NotNil(clientState, "valid test case %d failed: %s", i, tc.msg)
 			}
 			// If we were able to NewClientState clientstate successfully, try persisting it to state
-			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), tc.clientID, clientState, suite.consensusState)
+			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), tc.clientID, clientState, consensusState)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.msg)
@@ -83,15 +84,16 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		expPass  bool
 	}{
 		{"valid update", func() error {
+			consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 			clientState = ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 			// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 			incrementedClientHeight := ibctesting.ClientHeight.Increment()
 			intermediateConsState := &ibctmtypes.ConsensusState{
 				Height:             incrementedClientHeight,
-				Timestamp:          suite.now.Add(time.Minute),
-				NextValidatorsHash: suite.valSetHash,
+				Timestamp:          suite.chainA.CurrentHeader.Time.Add(time.Minute),
+				NextValidatorsHash: suite.chainA.CurrentHeader.NextValidatorsHash,
 			}
 			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], incrementedClientHeight, intermediateConsState)
 
@@ -102,8 +104,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return err
 		}, true},
 		{"valid past update", func() error {
+			consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 			clientState = ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 			suite.Require().NoError(err)
 
 			height1 := types.NewHeight(0, 1)
@@ -111,8 +114,8 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			// store previous consensus state
 			prevConsState := &ibctmtypes.ConsensusState{
 				Height:             height1,
-				Timestamp:          suite.past,
-				NextValidatorsHash: suite.valSetHash,
+				Timestamp:          suite.chainA.CurrentHeader.Time.Add(-time.Hour),
+				NextValidatorsHash: suite.chainA.CurrentHeader.NextValidatorsHash,
 			}
 			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], height1, prevConsState)
 
@@ -121,8 +124,8 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			// store intermediate consensus state to check that trustedHeight does not need to be hightest consensus state before header height
 			intermediateConsState := &ibctmtypes.ConsensusState{
 				Height:             height2,
-				Timestamp:          suite.past.Add(time.Minute),
-				NextValidatorsHash: suite.valSetHash,
+				Timestamp:          suite.chainA.CurrentHeader.Time.Add(-time.Hour).Add(time.Minute),
+				NextValidatorsHash: suite.chainA.CurrentHeader.NextValidatorsHash,
 			}
 			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], height2, intermediateConsState)
 
@@ -165,9 +168,10 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, false},
 		{"valid past update before client was frozen", func() error {
+			consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 			clientState = ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 			clientState.FrozenHeight = types.NewHeight(0, ibctesting.ClientHeight.EpochHeight-1)
-			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 			suite.Require().NoError(err)
 
 			height1 := types.NewHeight(0, 1)
@@ -175,8 +179,8 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			// store previous consensus state
 			prevConsState := &ibctmtypes.ConsensusState{
 				Height:             height1,
-				Timestamp:          suite.past,
-				NextValidatorsHash: suite.valSetHash,
+				Timestamp:          suite.chainA.CurrentHeader.Time.Add(-time.Hour),
+				NextValidatorsHash: suite.chainA.CurrentHeader.NextValidatorsHash,
 			}
 			suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], height1, prevConsState)
 
@@ -186,8 +190,9 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			return nil
 		}, true},
 		{"invalid header", func() error {
-			clientState = ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.Height, commitmenttypes.GetSDKSpecs(), false, false)
-			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+			consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
+			clientState = ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+			_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 			suite.Require().NoError(err)
 			updateHeader = createPastUpdateFn(suite)
 
@@ -260,26 +265,25 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	suite.Require().NoError(err)
 	altVal := tmtypes.NewValidator(altPubKey, 4)
 
-	// Set valSet here with suite.valSet so it doesn't get reset on each testcase
-	valSet := suite.valSet
-	valsHash := valSet.Hash()
-
 	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	bothValSet := tmtypes.NewValidatorSet(append(suite.chainA.Vals.Validators, altVal))
 	bothValsHash := bothValSet.Hash()
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
 	// Create signer array and ensure it is in same order as bothValSet
-	_, suiteVal := suite.valSet.GetByIndex(0)
-	bothSigners := ibctmtypes.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
+	_, suiteVal := suite.chainA.Vals.GetByIndex(0)
+	bothSigners := ibctmtypes.CreateSortedSignerArray(altPrivVal, suite.chainA.Signers[0], altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
 	// Create valid Misbehaviour by making a duplicate header that signs over different block time
 	altTime := suite.chainA.GetContext().BlockTime().Add(time.Minute)
 
-	heightPlus3 := types.NewHeight(0, height+3)
+	heightPlus3 := types.NewHeight(0, ibctesting.Height+3)
+
+	consensusState, ok := suite.chainA.ConsensusStateFromCurrentHeader().(ibctmtypes.ConsensusState)
+	suite.Require().True(ok)
 
 	testCases := []struct {
 		name         string
@@ -296,9 +300,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = bothValsHash
+				consensusState.NextValidatorsHash = bothValsHash
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				return err
 			},
@@ -307,21 +311,21 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"misbehavior at later height should pass",
 			&ibctmtypes.Misbehaviour{
-				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, height+5, height, altTime, bothValSet, valSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, height+5, height, suite.chainA.GetContext().BlockTime(), bothValSet, valSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, altTime, bothValSet, suite.chainA.Vals, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, suite.chainA.GetContext().BlockTime(), bothValSet, suite.chainA.Vals, bothSigners),
 				ChainId:  suite.chainA.ChainID,
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = valsHash
+				consensusState.NextValidatorsHash = suite.chainA.Vals.Hash()
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				// store intermediate consensus state to check that trustedHeight does not need to be highest consensus state before header height
 				intermediateConsState := &ibctmtypes.ConsensusState{
 					Height:             heightPlus3,
-					Timestamp:          suite.now.Add(time.Minute),
-					NextValidatorsHash: suite.valSetHash,
+					Timestamp:          suite.chainA.CurrentHeader.Time.Add(time.Minute),
+					NextValidatorsHash: suite.chainA.CurrentHeader.NextValidatorsHash,
 				}
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], heightPlus3, intermediateConsState)
 
@@ -335,20 +339,20 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"misbehavior at later height with different trusted heights should pass",
 			&ibctmtypes.Misbehaviour{
-				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, altTime, bothValSet, valSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, altTime, bothValSet, suite.chainA.Vals, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height+3, suite.chainA.GetContext().BlockTime(), bothValSet, bothValSet, bothSigners),
 				ChainId:  suite.chainA.ChainID,
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = valsHash
+				consensusState.NextValidatorsHash = suite.chainA.Vals.Hash()
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				// store trusted consensus state for Header2
 				intermediateConsState := &ibctmtypes.ConsensusState{
 					Height:             heightPlus3,
-					Timestamp:          suite.now.Add(time.Minute),
+					Timestamp:          suite.chainA.CurrentHeader.Time.Add(time.Minute),
 					NextValidatorsHash: bothValsHash,
 				}
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], heightPlus3, intermediateConsState)
@@ -369,9 +373,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = bothValsHash
-				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.Height, commitmenttypes.GetSDKSpecs())
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				consensusState.NextValidatorsHash = bothValsHash
+				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				return err
 			},
@@ -381,14 +385,14 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			"trusted ConsensusState1 not found",
 			&ibctmtypes.Misbehaviour{
 				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height+3, altTime, bothValSet, bothValSet, bothSigners),
-				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, suite.chainA.GetContext().BlockTime(), bothValSet, valSet, bothSigners),
+				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, suite.chainA.GetContext().BlockTime(), bothValSet, suite.chainA.Vals, bothSigners),
 				ChainId:  suite.chainA.ChainID,
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = valsHash
+				consensusState.NextValidatorsHash = suite.chainA.Vals.Hash()
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 				// intermediate consensus state at height + 3 is not created
 				return err
 			},
@@ -397,15 +401,16 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"trusted ConsensusState2 not found",
 			&ibctmtypes.Misbehaviour{
-				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, altTime, bothValSet, valSet, bothSigners),
+				Header1:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height, altTime, bothValSet, suite.chainA.Vals, bothSigners),
 				Header2:  ibctmtypes.CreateTestHeader(suite.chainA.ChainID, ibctesting.Height+5, ibctesting.Height+3, suite.chainA.GetContext().BlockTime(), bothValSet, bothValSet, bothSigners),
 				ChainId:  suite.chainA.ChainID,
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = valsHash
+
+				consensusState.NextValidatorsHash = suite.chainA.Vals.Hash()
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 				// intermediate consensus state at height + 3 is not created
 				return err
 			},
@@ -426,9 +431,9 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientId: suite.chainA.ClientIDs[0],
 			},
 			func() error {
-				suite.consensusState.NextValidatorsHash = bothValsHash
+				consensusState.NextValidatorsHash = bothValsHash
 				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
-				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err := suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				clientState.FrozenHeight = types.NewHeight(0, 1)
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
@@ -450,7 +455,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				if err != nil {
 					return err
 				}
-				_, err = suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, suite.consensusState)
+				_, err = suite.chainA.App.IBCKeeper.ClientKeeper.CreateClient(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState, consensusState)
 
 				return err
 			},

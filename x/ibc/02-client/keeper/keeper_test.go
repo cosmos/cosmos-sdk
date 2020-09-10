@@ -4,9 +4,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
@@ -207,13 +205,13 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// initial setup
 	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 
+	consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, suite.consensusState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, consensusState)
 
-	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), types.NewHeight(0, ibctesting.Height+5), suite.valSetHash)
+	nextState := ibctmtypes.NewConsensusState(suite.chainA.CurrentHeader.Time, commitmenttypes.NewMerkleRoot([]byte("next")), types.NewHeight(0, ibctesting.Height+5), suite.chainA.Vals.Hash())
 
-	header := ibctmtypes.CreateTestHeader(suite.chainA.ClientIDs[0], ibctesting.Height+5, ibctesting.Height, suite.header.Header.Time.Add(time.Minute),
-		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	header := suite.chainA.CreateTMClientHeader()
 
 	// mock update functionality
 	clientState.LatestHeight = header.GetHeight().(types.Height)
@@ -227,7 +225,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 	// Should return existing consensusState at latestClientHeight
 	lte, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusStateLTE(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], types.NewHeight(0, ibctesting.Height+3))
 	suite.Require().True(ok)
-	suite.Require().Equal(suite.consensusState, lte, "LTE helper function did not return latest client state below ibctesting.Height: %d", ibctesting.Height+3)
+	suite.Require().Equal(consensusState, lte, "LTE helper function did not return latest client state below ibctesting.Height: %d", ibctesting.Height+3)
 }
 
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {

@@ -93,11 +93,41 @@ func (suite *TendermintTestSuite) TestCheckHeaderAndUpdateState() {
 			expPass: true,
 		},
 		{
+			name: "successful update for a previous epoch",
+			setup: func() {
+				clientState = types.NewClientState(chainIDEpoch1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), heightMinus3, suite.valsHash)
+				newHeader = types.CreateTestHeader(chainIDEpoch0, height, heightMinus3, suite.headerTime, bothValSet, suite.valSet, bothSigners)
+				currentTime = suite.now
+			},
+			expPass: true,
+		},
+		{
 			name: "unsuccessful update with incorrect header chain-id",
 			setup: func() {
 				clientState = types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false)
 				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
 				newHeader = types.CreateTestHeader("ethermint", heightPlus1, height, suite.headerTime, suite.valSet, suite.valSet, signers)
+				currentTime = suite.now
+			},
+			expPass: false,
+		},
+		{
+			name: "unsuccessful update to a future epoch",
+			setup: func() {
+				clientState = types.NewClientState(chainIDEpoch0, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), false, false)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
+				newHeader = types.CreateTestHeader(chainIDEpoch1, clienttypes.NewHeight(1, 1), height, suite.headerTime, suite.valSet, suite.valSet, signers)
+				currentTime = suite.now
+			},
+			expPass: false,
+		},
+		{
+			name: "unsuccessful update: header height epoch and trusted height epoch mismatch",
+			setup: func() {
+				clientState = types.NewClientState(chainIDEpoch1, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(1, 1), commitmenttypes.GetSDKSpecs(), false, false)
+				consensusState = types.NewConsensusState(suite.clientTime, commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()), height, suite.valsHash)
+				newHeader = types.CreateTestHeader(chainIDEpoch1, clienttypes.NewHeight(1, 3), height, suite.headerTime, suite.valSet, suite.valSet, signers)
 				currentTime = suite.now
 			},
 			expPass: false,

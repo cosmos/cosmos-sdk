@@ -101,6 +101,16 @@ func TestParseChainID(t *testing.T) {
 			require.Error(t, err, "invalid chainID passes ParseChainID")
 		}
 	}
+
+	// Test SetEpochNumber
+	chainID, err := types.SetEpochNumber("gaiamainnet", 3)
+	require.Error(t, err, "invalid epoch format passed SetEpochNumber")
+	require.Equal(t, "", chainID, "invalid epoch format returned non-empty string on SetEpochNumber")
+	chainID = "gaia-epoch-3"
+
+	chainID, err = types.SetEpochNumber(chainID, 4)
+	require.NoError(t, err, "valid epoch format failed SetEpochNumber")
+	require.Equal(t, "gaia-epoch-4", chainID, "valid epoch format returned incorrect string on SetEpochNumber")
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {

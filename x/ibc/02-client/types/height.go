@@ -127,6 +127,21 @@ func ParseHeight(heightStr string) (Height, error) {
 	return NewHeight(epochNumber, epochHeight), nil
 }
 
+// SetEpochNumber takes a chainID in valid epoch format and swaps the epoch number
+// with the given epoch number.
+func SetEpochNumber(chainID string, epoch uint64) (string, error) {
+	if !IsEpochFormat(chainID) {
+		return "", sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidChainID, "chainID is not in epoch format: %s", chainID,
+		)
+	}
+
+	splitStr := strings.Split(chainID, "-")
+	// swap out epoch number with given epoch
+	splitStr[len(splitStr)-1] = fmt.Sprintf("%d", epoch)
+	return strings.Join(splitStr, "-"), nil
+}
+
 // IsEpochFormat is a utility function that returns whether the given ChainID
 // is in the epoch format `{chainID}-epoch-{epochNumber}`
 func IsEpochFormat(chainID string) bool {

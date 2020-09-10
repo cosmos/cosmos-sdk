@@ -20,6 +20,8 @@ import (
 
 const (
 	chainID                      = "gaia"
+	chainIDEpoch0                = "gaia-epoch-0"
+	chainIDEpoch1                = "gaia-epoch-1"
 	clientID                     = "gaiamainnet"
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3

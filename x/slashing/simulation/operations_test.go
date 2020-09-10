@@ -78,10 +78,11 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	// setup self delegation
 	delTokens := sdk.TokensFromConsensusPower(2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
-	val0AccAddress := sdk.AccAddress(validator0.OperatorAddress)
-	selfDelegation := stakingtypes.NewDelegation(val0AccAddress, validator0.GetOperator(), issuedShares)
+	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
+	require.NoError(t, err)
+	selfDelegation := stakingtypes.NewDelegation(val0AccAddress.Bytes(), validator0.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
-	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})

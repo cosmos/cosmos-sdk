@@ -127,6 +127,20 @@ func ParseHeight(heightStr string) (Height, error) {
 	return NewHeight(epochNumber, epochHeight), nil
 }
 
+// IsEpochFormat is a utility function that returns whether the given ChainID
+// is in the epoch format `{chainID}-epoch-{epochNumber}`
+func IsEpochFormat(chainID string) bool {
+	splitStr := strings.Split(chainID, "-")
+	// check if second-to-last element is `epoch`
+	if len(splitStr) >= 3 && splitStr[len(splitStr)-2] == "epoch" {
+		_, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
+		if err != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // ParseChainID is a utility function that returns an epoch number from the given ChainID.
 // ParseChainID attempts to parse a chain id in the format: `{chainID}-epoch-{epochNumber}`
 // and return the epochnumber as a uint64. If the chainID is in the expected format but the parse fails,

@@ -81,6 +81,7 @@ func (suite *TypesTestSuite) TestSelfHeight() {
 	// Test default epoch
 	ctx = ctx.WithChainID("gaiamainnet")
 	ctx = ctx.WithBlockHeight(10)
+	suite.Require().False(types.IsEpochFormat("gaiamainnet"), "invalid epoch format returned true")
 	height := types.GetSelfHeight(ctx)
 	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
 

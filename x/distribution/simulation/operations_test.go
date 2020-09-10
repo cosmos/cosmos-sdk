@@ -121,7 +121,6 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().Equal(types.TypeMsgWithdrawDelegatorReward, msg.Type())
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
-
 }
 
 // TestSimulateMsgWithdrawValidatorCommission tests the normal scenario of a valid message

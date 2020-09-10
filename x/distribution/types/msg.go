@@ -29,7 +29,11 @@ func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddre
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.DelegatorAddress)}
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delAddr}
 }
 
 // get the bytes for the message signer to sign on
@@ -62,7 +66,11 @@ func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDel
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.DelegatorAddress)}
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delAddr}
 }
 
 // get the bytes for the message signer to sign on
@@ -93,7 +101,11 @@ func (msg MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdra
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddress)}
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr.Bytes()}
 }
 
 // get the bytes for the message signer to sign on

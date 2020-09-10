@@ -165,7 +165,7 @@ func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
 func EnsureBinary(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("cannot stat dir %s: %w", err)
+		return fmt.Errorf("cannot stat dir %s: %w", path, err)
 	}
 
 	if !info.Mode().IsRegular() {

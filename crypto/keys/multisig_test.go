@@ -19,7 +19,7 @@ func TestAddress(t *testing.T) {
 	pubKeys, _ := generatePubKeysAndSignatures(5, msg)
 	anyPubKeys, err := packPubKeys(pubKeys)
 	require.NoError(t, err)
-	multisigKey := &keys.MultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
+	multisigKey := &keys.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
 
 	require.Len(t, multisigKey.Address().Bytes(), 20)
 }
@@ -32,11 +32,11 @@ func TestEquals(t *testing.T) {
 	pbPubKey2 := &keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)}
 	anyPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, pbPubKey2})
 	require.NoError(t, err)
-	multisigKey := keys.MultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
+	multisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
 
 	otherPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, &multisigKey})
 	require.NoError(t, err)
-	otherMultisigKey := keys.MultisigThresholdPubKey{K: 1, PubKeys: otherPubKeys}
+	otherMultisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: otherPubKeys}
 
 	testCases := []struct {
 		msg      string
@@ -45,17 +45,17 @@ func TestEquals(t *testing.T) {
 	}{
 		{
 			"equals with proto pub key",
-			&keys.MultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys},
+			&keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys},
 			true,
 		},
 		{
 			"different threshold",
-			&keys.MultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys},
+			&keys.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys},
 			false,
 		},
 		{
 			"different pub keys length",
-			&keys.MultisigThresholdPubKey{K: 1, PubKeys: []*types.Any{anyPubKeys[0]}},
+			&keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: []*types.Any{anyPubKeys[0]}},
 			false,
 		},
 		{
@@ -112,7 +112,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
 				anyPubKeys, err := packPubKeys(pubKeys)
 				require.NoError(t, err)
-				pk = &keys.MultisigThresholdPubKey{K: 3, PubKeys: anyPubKeys}
+				pk = &keys.LegacyAminoMultisigThresholdPubKey{K: 3, PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(1)
 			},
 			false,
@@ -125,7 +125,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
 				anyPubKeys, err := packPubKeys(pubKeys)
 				require.NoError(t, err)
-				pk = &keys.MultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
+				pk = &keys.LegacyAminoMultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(len(pubKeys))
 				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
@@ -210,14 +210,14 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 		if err != nil {
 			return nil, nil, err
 		}
-		pubKeys[i] = &keys.MultisigThresholdPubKey{K: 5, PubKeys: anyNestedPks}
+		pubKeys[i] = &keys.LegacyAminoMultisigThresholdPubKey{K: 5, PubKeys: anyNestedPks}
 		bitArray.SetIndex(i, true)
 	}
 	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		return nil, nil, err
 	}
-	return &keys.MultisigThresholdPubKey{K: uint32(n), PubKeys: anyPubKeys}, &signing.MultiSignatureData{
+	return &keys.LegacyAminoMultisigThresholdPubKey{K: uint32(n), PubKeys: anyPubKeys}, &signing.MultiSignatureData{
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}, nil

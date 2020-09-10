@@ -15,7 +15,7 @@ func ProtoPubKeyToAminoPubKey(msg proto.Message) (crypto.PubKey, error) {
 	switch msg := msg.(type) {
 	case *Secp256K1PubKey:
 		return msg.GetKey(), nil
-	case *MultisigThresholdPubKey:
+	case *LegacyAminoMultisigThresholdPubKey:
 		keys := make([]crypto.PubKey, len(msg.PubKeys))
 		for i, any := range msg.PubKeys {
 			cachedKey, ok := any.GetCachedValue().(proto.Message)
@@ -52,7 +52,7 @@ func AminoPubKeyToProtoPubKey(key crypto.PubKey) (proto.Message, error) {
 			}
 			keys[i] = any
 		}
-		return &MultisigThresholdPubKey{K: uint32(key.K), PubKeys: keys}, nil
+		return &LegacyAminoMultisigThresholdPubKey{K: uint32(key.K), PubKeys: keys}, nil
 	default:
 		return nil, fmt.Errorf("unknown public key type: %v", key)
 	}

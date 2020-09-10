@@ -32,7 +32,7 @@ func TestProtoPubKeyToAminoPubKey(t *testing.T) {
 			true,
 		},
 		{
-			"MultisigThresholdPubKey",
+			"LegacyAminoMultisigThresholdPubKey",
 			func() {
 				pubKey1 := secp256k1.GenPrivKey().PubKey()
 				pubKey2 := secp256k1.GenPrivKey().PubKey()
@@ -42,7 +42,7 @@ func TestProtoPubKeyToAminoPubKey(t *testing.T) {
 				anyPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, pbPubKey2})
 				require.NoError(t, err)
 
-				pbPubKey = &keys.MultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
+				pbPubKey = &keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
 				aminoPubKey = multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{pubKey1, pubKey2})
 			},
 			true,
@@ -99,7 +99,7 @@ func TestAminoPubKeyToProtoPubKey(t *testing.T) {
 				anyPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, pbPubKey2})
 				require.NoError(t, err)
 
-				pbPubKey = &keys.MultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
+				pbPubKey = &keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
 				aminoPubKey = multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{pubKey1, pubKey2})
 			},
 			true,

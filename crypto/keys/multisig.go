@@ -15,20 +15,20 @@ import (
 
 var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
-var _ multisig.PubKey = &MultisigThresholdPubKey{}
+var _ multisig.PubKey = &LegacyAminoMultisigThresholdPubKey{}
 
 // Address implements crypto.PubKey Address method
-func (m *MultisigThresholdPubKey) Address() crypto.Address {
+func (m *LegacyAminoMultisigThresholdPubKey) Address() crypto.Address {
 	return tmcrypto.AddressHash(m.Bytes())
 }
 
-// Bytes returns the proto encoded version of the MultisigThresholdPubKey
-func (m *MultisigThresholdPubKey) Bytes() []byte {
+// Bytes returns the proto encoded version of the LegacyAminoMultisigThresholdPubKey
+func (m *LegacyAminoMultisigThresholdPubKey) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(m)
 }
 
 // VerifyMultisignature implements the multisig.PubKey VerifyMultisignature method
-func (m *MultisigThresholdPubKey) VerifyMultisignature(getSignBytes multisig.GetSignBytesFunc, sig *signing.MultiSignatureData) error {
+func (m *LegacyAminoMultisigThresholdPubKey) VerifyMultisignature(getSignBytes multisig.GetSignBytesFunc, sig *signing.MultiSignatureData) error {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
 	size := bitarray.Count()
@@ -79,12 +79,12 @@ func (m *MultisigThresholdPubKey) VerifyMultisignature(getSignBytes multisig.Get
 // VerifySignature implements crypto.PubKey VerifySignature method,
 // it panics because it can't handle MultiSignatureData
 // cf. https://github.com/cosmos/cosmos-sdk/issues/7109#issuecomment-686329936
-func (m *MultisigThresholdPubKey) VerifySignature(msg []byte, sig []byte) bool {
+func (m *LegacyAminoMultisigThresholdPubKey) VerifySignature(msg []byte, sig []byte) bool {
 	panic("not implemented")
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method
-func (m *MultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
+func (m *LegacyAminoMultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
 	if m != nil {
 		pubKeys := make([]crypto.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
@@ -98,7 +98,7 @@ func (m *MultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *MultisigThresholdPubKey) Equals(key crypto.PubKey) bool {
+func (m *LegacyAminoMultisigThresholdPubKey) Equals(key crypto.PubKey) bool {
 	otherKey, ok := key.(multisig.PubKey)
 	if !ok {
 		return false
@@ -118,11 +118,11 @@ func (m *MultisigThresholdPubKey) Equals(key crypto.PubKey) bool {
 }
 
 // GetThreshold implements the PubKey.GetThreshold method
-func (m *MultisigThresholdPubKey) GetThreshold() uint {
+func (m *LegacyAminoMultisigThresholdPubKey) GetThreshold() uint {
 	return uint(m.K)
 }
 
 // Type returns multisig type
-func (m *MultisigThresholdPubKey) Type() string {
+func (m *LegacyAminoMultisigThresholdPubKey) Type() string {
 	return "PubKeyMultisigThreshold"
 }

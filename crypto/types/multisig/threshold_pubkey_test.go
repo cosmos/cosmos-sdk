@@ -180,7 +180,7 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 					require.NoError(t, err)
 					anyPubKeys[i] = any
 				}
-				other = &keys.MultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
+				other = &keys.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
 			},
 			true,
 		},

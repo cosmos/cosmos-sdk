@@ -23,12 +23,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			consensusState, ok := consState.GetCachedValue().(exported.ConsensusState)
+			consensusState, ok := consState.ConsensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
 				panic("invalid consensus state")
 			}
 
-			k.SetClientConsensusState(ctx, cs.ClientId, consensusState.GetHeight(), consensusState)
+			k.SetClientConsensusState(ctx, cs.ClientId, consState.Height, consensusState)
 		}
 	}
 

@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, suite.consensusState.GetHeight(), cs)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)

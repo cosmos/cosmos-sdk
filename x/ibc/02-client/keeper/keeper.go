@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -99,7 +98,7 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 // IterateConsensusStates provides an iterator over all stored consensus states.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs exported.ConsensusState) bool) {
+func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs types.ConsensusStateWithHeight) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyClientStorePrefix)
 
@@ -111,9 +110,12 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
+		height := types.MustParseHeight(keySplit[3])
 		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
-		if cb(clientID, consensusState) {
+		consensusStateWithHeight := types.NewConsensusStateWithHeight(height, consensusState)
+
+		if cb(clientID, consensusStateWithHeight) {
 			break
 		}
 	}
@@ -133,18 +135,16 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 	clientConsStates := make(types.ClientsConsensusStates, 0)
 	mapClientIDToConsStateIdx := make(map[string]int)
 
-	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
-		anyConsensusState := types.MustPackConsensusState(cs)
-
+	k.IterateConsensusStates(ctx, func(clientID string, cs types.ConsensusStateWithHeight) bool {
 		idx, ok := mapClientIDToConsStateIdx[clientID]
 		if ok {
-			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyConsensusState)
+			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, cs)
 			return false
 		}
 
 		clientConsState := types.ClientConsensusStates{
 			ClientId:        clientID,
-			ConsensusStates: []*codectypes.Any{anyConsensusState},
+			ConsensusStates: []types.ConsensusStateWithHeight{cs},
 		}
 
 		clientConsStates = append(clientConsStates, clientConsState)

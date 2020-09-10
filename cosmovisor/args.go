@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -91,15 +92,19 @@ func GetConfigFromEnv() (*Config, error) {
 		Home: os.Getenv("DAEMON_HOME"),
 		Name: os.Getenv("DAEMON_NAME"),
 	}
+
 	if os.Getenv("DAEMON_ALLOW_DOWNLOAD_BINARIES") == "true" {
 		cfg.AllowDownloadBinaries = true
 	}
+
 	if os.Getenv("DAEMON_RESTART_AFTER_UPGRADE") == "true" {
 		cfg.RestartAfterUpgrade = true
 	}
+
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
+
 	return cfg, nil
 }
 
@@ -108,14 +113,15 @@ func GetConfigFromEnv() (*Config, error) {
 // and that Name is set
 func (cfg *Config) validate() error {
 	if cfg.Name == "" {
-		return errors.New("DAEMON_NAME is not set")
+		return fmt.Errorf("DAEMON_NAME is not set")
 	}
+
 	if cfg.Home == "" {
-		return errors.New("DAEMON_HOME is not set")
+		return fmt.Errorf("DAEMON_HOME is not set")
 	}
 
 	if !filepath.IsAbs(cfg.Home) {
-		return errors.New("DAEMON_HOME must be an absolute path")
+		return fmt.Errorf("DAEMON_HOME must be an absolute path")
 	}
 
 	// ensure the root directory exists
@@ -123,6 +129,7 @@ func (cfg *Config) validate() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot stat home dir")
 	}
+
 	if !info.IsDir() {
 		return errors.Errorf("%s is not a directory", info.Name())
 	}

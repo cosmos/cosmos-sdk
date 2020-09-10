@@ -34,12 +34,6 @@ func (cs ConsensusState) GetRoot() exported.Root {
 	return cs.Root
 }
 
-// GetHeight satisifes the ConsensusState interface
-// NOTE: this function will be deprecated.
-func (cs ConsensusState) GetHeight() exported.Height {
-	return clienttypes.Height{}
-}
-
 // GetTimestamp returns block time in nanoseconds at which the consensus state was stored
 func (cs ConsensusState) GetTimestamp() uint64 {
 	return uint64(cs.Timestamp.UnixNano())

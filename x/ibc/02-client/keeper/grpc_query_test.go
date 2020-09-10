@@ -272,7 +272,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 	var (
 		req                *types.QueryConsensusStatesRequest
-		expConsensusStates = []*codectypes.Any(nil)
+		expConsensusStates = []types.ConsensusStateWithHeight{}
 	)
 
 	testCases := []struct {
@@ -322,13 +322,11 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight.Increment(), cs2)
 
-				any, err := types.PackConsensusState(cs)
-				suite.Require().NoError(err)
-				any2, err := types.PackConsensusState(cs2)
-				suite.Require().NoError(err)
-
 				// order is swapped because the res is sorted by client id
-				expConsensusStates = []*codectypes.Any{any, any2}
+				expConsensusStates = []types.ConsensusStateWithHeight{
+					types.NewConsensusStateWithHeight(testClientHeight, cs),
+					types.NewConsensusStateWithHeight(testClientHeight.Increment(), cs2),
+				}
 				req = &types.QueryConsensusStatesRequest{
 					ClientId: testClientID,
 					Pagination: &query.PageRequest{
@@ -356,7 +354,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				suite.Require().Equal(len(expConsensusStates), len(res.ConsensusStates))
 				for i := range expConsensusStates {
 					suite.Require().NotNil(res.ConsensusStates[i])
-					expConsensusStates[i].ClearCachedValue()
+					expConsensusStates[i].ConsensusState.ClearCachedValue()
 					suite.Require().Equal(expConsensusStates[i], res.ConsensusStates[i])
 				}
 			} else {

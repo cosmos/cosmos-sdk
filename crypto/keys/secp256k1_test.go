@@ -1,6 +1,8 @@
 package keys_test
 
 import (
+	"encoding/base64"
+	"reflect"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -157,13 +159,19 @@ func TestMarshalAmino(t *testing.T) {
 		desc      string
 		msg       codec.AminoMarshaler
 		expBinary []byte
-		expJSON   []byte
+		expJSON   string
 	}{
 		{
 			"secp256k1 private key",
 			&keys.Secp256K1PrivKey{Key: privKey},
 			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
-			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
+			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
+		},
+		{
+			"secp256k1 public key",
+			&keys.Secp256K1PubKey{Key: privKey.PubKey().(secp256k1.PubKey)},
+			append([]byte{33}, privKey.PubKey().Bytes()...),
+			"\"" + base64.StdEncoding.EncodeToString(privKey.PubKey().Bytes()) + "\"",
 		},
 	}
 
@@ -174,7 +182,8 @@ func TestMarshalAmino(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.expBinary, bz)
 
-			newMsg := new(keys.Secp256K1PrivKey)
+			// Create a new empty value of the same type as `tc.msg`.
+			newMsg := reflect.New(reflect.TypeOf(tc.msg).Elem()).Interface().(codec.AminoMarshaler)
 			err = aminoCdc.UnmarshalBinaryBare(bz, newMsg)
 			require.NoError(t, err)
 
@@ -183,14 +192,14 @@ func TestMarshalAmino(t *testing.T) {
 			// Do a round trip of encoding/decoding JSON.
 			bz, err = aminoCdc.MarshalJSON(tc.msg)
 			require.NoError(t, err)
-			require.Equal(t, tc.expJSON, bz)
+			require.Equal(t, tc.expJSON, string(bz))
 
-			newMsg = new(keys.Secp256K1PrivKey)
+			// Create a new empty value of the same type as `tc.msg`.
+			newMsg = reflect.New(reflect.TypeOf(tc.msg).Elem()).Interface().(codec.AminoMarshaler)
 			err = aminoCdc.UnmarshalJSON(bz, newMsg)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.msg, newMsg)
 		})
 	}
-
 }

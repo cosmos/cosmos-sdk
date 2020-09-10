@@ -34,12 +34,12 @@ func (m *Secp256K1PubKey) Type() string {
 	return m.Key.Type()
 }
 
-// MarshalAminoJSON overrides Amino binary marshalling.
-func (m *Secp256K1PubKey) MarshalAmino() ([]byte, error) {
+// MarshalAmino overrides Amino binary marshalling.
+func (m Secp256K1PubKey) MarshalAmino() ([]byte, error) {
 	return m.Key.Bytes(), nil
 }
 
-// UnmarshalAminoJSON overrides Amino binary marshalling.
+// UnmarshalAmino overrides Amino binary marshalling.
 func (m *Secp256K1PubKey) UnmarshalAmino(bz []byte) error {
 	*m = Secp256K1PubKey{
 		Key: bz,
@@ -78,12 +78,12 @@ func (m *Secp256K1PrivKey) Type() string {
 	return m.Key.Type()
 }
 
-// MarshalAminoJSON overrides Amino binary marshalling.
+// MarshalAmino overrides Amino binary marshalling.
 func (m Secp256K1PrivKey) MarshalAmino() ([]byte, error) {
 	return m.Key.Bytes(), nil
 }
 
-// UnmarshalAminoJSON overrides Amino binary marshalling.
+// UnmarshalAmino overrides Amino binary marshalling.
 func (m *Secp256K1PrivKey) UnmarshalAmino(bz []byte) error {
 	*m = Secp256K1PrivKey{
 		Key: bz,

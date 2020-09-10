@@ -21,7 +21,7 @@ import (
 // It returns an error if:
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
-// - header height is less than or equal to the truested header height
+// - header height is less than or equal to the trusted header height
 // - header epoch is not equal to trusted header epoch
 // - header valset commit verification fails
 // - header timestamp is past the trusting period in relation to the consensus state
@@ -32,7 +32,7 @@ import (
 // - a past height that was skipped during bisection
 // If we are updating to a past height, a consensus state is created for that height to be persisted in client store
 // If we are updating to a future height, the consensus state is created and the client state is updated to reflect
-// the new latest height state
+// the new latest height
 // UpdateClient must only be used to update within a single epoch, thus header epoch number and trusted height's epoch
 // number must be the same. To update to a new epoch, use a separate upgrade path
 // Tendermint client validity checking uses the bisection algorithm described

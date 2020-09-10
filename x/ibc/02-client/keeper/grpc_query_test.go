@@ -26,16 +26,25 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		malleate func()
 		expPass  bool
 	}{
-		{"invalid clientID",
+		{
+			"nil request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
+			"invalid clientID",
 			func() {
 				req = &types.QueryClientStateRequest{}
 			},
 			false,
 		},
-		{"client not found",
+		{
+			"client not found",
 			func() {
 				req = &types.QueryClientStateRequest{
-					ClientId: suite.chainA.ClientIDs[0],
+					ClientId: "clientOne",
 				}
 			},
 			false,
@@ -43,15 +52,14 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 				var err error
-				expClientState, err = types.PackClientState(clientState)
+				expClientState, err = types.PackClientState(suite.chainA.GetClientState(clientA))
 				suite.Require().NoError(err)
 
 				req = &types.QueryClientStateRequest{
-					ClientId: suite.chainA.ClientIDs[0],
+					ClientId: clientA,
 				}
 			},
 			true,
@@ -69,8 +77,6 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expClientState.ClearCachedValue()
 				suite.Require().Equal(expClientState, res.ClientState)
 			} else {
 				suite.Require().Error(err)
@@ -90,6 +96,13 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 		malleate func()
 		expPass  bool
 	}{
+		{
+			"nil request",
+			func() {
+				req = nil
+			},
+			false,
+		},
 		{
 			"empty pagination",
 			func() {
@@ -178,6 +191,13 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		expPass  bool
 	}{
 		{
+			"nil request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
 			"invalid clientID",
 			func() {
 				req = &types.QueryConsensusStateRequest{}
@@ -188,7 +208,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"invalid height",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:     suite.chainA.ClientIDs[0],
+					ClientId:     "clientOne",
 					EpochNumber:  0,
 					EpochHeight:  0,
 					LatestHeight: false,
@@ -200,7 +220,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"consensus state not found",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:     suite.chainA.ClientIDs[0],
+					ClientId:     "clientOne",
 					LatestHeight: true,
 				}
 			},
@@ -209,17 +229,16 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				cs := suite.chainA.ConsensusStateFromCurrentHeader()
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, ibctesting.ClientHeight, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:     suite.chainA.ClientIDs[0],
+					ClientId:     clientA,
 					LatestHeight: true,
 				}
 			},
@@ -228,17 +247,18 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success with height",
 			func() {
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 				cs := suite.chainA.ConsensusStateFromCurrentHeader()
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, ibctesting.ClientHeight, cs)
 
 				var err error
 				expConsensusState, err = types.PackConsensusState(cs)
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:    suite.chainA.ClientIDs[0],
-					EpochNumber: 0,
-					EpochHeight: 5,
+					ClientId:    clientA,
+					EpochNumber: ibctesting.ClientHeight.EpochNumber,
+					EpochHeight: ibctesting.ClientHeight.EpochHeight,
 				}
 			},
 			true,
@@ -256,8 +276,6 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-
-				expConsensusState.ClearCachedValue()
 				suite.Require().Equal(expConsensusState, res.ConsensusState)
 			} else {
 				suite.Require().Error(err)
@@ -278,6 +296,13 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 		expPass  bool
 	}{
 		{
+			"nil request",
+			func() {
+				req = nil
+			},
+			false,
+		},
+		{
 			"invalid client identifier",
 			func() {
 				req = &types.QueryConsensusStatesRequest{}
@@ -288,7 +313,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 			"empty pagination",
 			func() {
 				req = &types.QueryConsensusStatesRequest{
-					ClientId: suite.chainA.ClientIDs[0],
+					ClientId: "clientOne",
 				}
 			},
 			true,
@@ -297,7 +322,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 			"success, no results",
 			func() {
 				req = &types.QueryConsensusStatesRequest{
-					ClientId: suite.chainA.ClientIDs[0],
+					ClientId: "clientOne",
 					Pagination: &query.PageRequest{
 						Limit:      3,
 						CountTotal: true,
@@ -318,8 +343,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 					timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), clientHeight, nil,
 				)
 
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, cs)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight.Increment(), cs2)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "clientOne", ibctesting.ClientHeight, cs)
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "clientOne", ibctesting.ClientHeight.Increment(), cs2)
 
 				any, err := types.PackConsensusState(cs)
 				suite.Require().NoError(err)
@@ -329,7 +354,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 				// order is swapped because the res is sorted by client id
 				expConsensusStates = []*codectypes.Any{any, any2}
 				req = &types.QueryConsensusStatesRequest{
-					ClientId: suite.chainA.ClientIDs[0],
+					ClientId: "clientOne",
 					Pagination: &query.PageRequest{
 						Limit:      3,
 						CountTotal: true,

@@ -154,9 +154,7 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 }
 
 func (suite KeeperTestSuite) TestGetAllGenesisClients() {
-	clientIDs := []string{
-		suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0], suite.chainA.ClientIDs[0],
-	}
+	clientIDs := []string{"client-1", "client-2", "client-3"}
 	expClients := []exported.ClientState{
 		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
 		ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false),
@@ -207,33 +205,37 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 }
 
 func (suite KeeperTestSuite) TestConsensusStateHelpers() {
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+
 	// initial setup
 	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, ibctesting.ClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 
 	consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], ibctesting.ClientHeight, consensusState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, clientState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, ibctesting.ClientHeight, consensusState)
 
-	nextState := ibctmtypes.NewConsensusState(suite.chainA.CurrentHeader.Time, commitmenttypes.NewMerkleRoot([]byte("next")), types.NewHeight(0, ibctesting.Height+5), suite.chainA.Vals.Hash())
+	nextState := ibctmtypes.NewConsensusState(suite.chainA.CurrentHeader.Time, consensusState.GetRoot().(commitmenttypes.MerkleRoot), ibctesting.ClientHeight, suite.chainA.Vals.Hash())
 
 	header := suite.chainA.CreateTMClientHeader()
 
 	// mock update functionality
 	clientState.LatestHeight = header.GetHeight().(types.Height)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], header.GetHeight(), nextState)
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], clientState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, header.GetHeight(), nextState)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, clientState)
 
-	latest, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0])
+	latest, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), clientA)
 	suite.Require().True(ok)
 	suite.Require().Equal(nextState, latest, "Latest client not returned correctly")
 
 	// Should return existing consensusState at latestClientHeight
-	lte, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusStateLTE(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], types.NewHeight(0, ibctesting.Height+3))
+	lte, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientConsensusStateLTE(suite.chainA.GetContext(), clientA, types.NewHeight(0, ibctesting.Height+3))
 	suite.Require().True(ok)
 	suite.Require().Equal(consensusState, lte, "LTE helper function did not return latest client state below ibctesting.Height: %d", ibctesting.Height+3)
 }
 
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+
 	consensusState := suite.chainA.ConsensusStateFromCurrentHeader()
 	clientHeight, ok := consensusState.GetHeight().(types.Height)
 	suite.Require().True(ok)
@@ -256,14 +258,15 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	}
 
 	expAnyConsensus := types.ClientsConsensusStates{
-		types.NewClientConsensusStates(suite.chainA.ClientIDs[0], expConsensus),
-		types.NewClientConsensusStates(suite.chainA.ClientIDs[0], expConsensus2),
+		types.NewClientConsensusStates(clientA, expConsensus),
+		types.NewClientConsensusStates(clientA, expConsensus2),
 	}.Sort()
 
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], expConsensus[0].GetHeight(), expConsensus[0])
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], expConsensus[1].GetHeight(), expConsensus[1])
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], expConsensus2[0].GetHeight(), expConsensus2[0])
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, expConsensus[0].GetHeight(), expConsensus[0])
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, expConsensus[1].GetHeight(), expConsensus[1])
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, expConsensus2[0].GetHeight(), expConsensus2[0])
 
 	consStates := suite.chainA.App.IBCKeeper.ClientKeeper.GetAllConsensusStates(suite.chainA.GetContext())
+	suite.Require().Equal(expAnyConsensus.Len(), consStates.Len())
 	suite.Require().Equal(expAnyConsensus, consStates, "%s \n\n%s", expAnyConsensus, consStates)
 }

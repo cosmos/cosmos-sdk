@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -478,24 +479,26 @@ func (chain *TestChain) ExpireClient(amount time.Duration) {
 
 // CreateTMClientHeader creates a TM header to update the TM client.
 func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
+	vsetHash := chain.Vals.Hash()
+
 	tmHeader := tmtypes.Header{
-		Version: chain.CurrentHeader.Version,
+		Version: version.Consensus{Block: 2, App: 2},
 		ChainID: chain.CurrentHeader.ChainID,
 		Height:  chain.CurrentHeader.Height,
 		Time:    chain.CurrentHeader.Time,
 		LastBlockID: MakeBlockID(
-			chain.CurrentHeader.LastBlockId.Hash,
-			chain.CurrentHeader.LastBlockId.PartSetHeader.Total,
-			chain.CurrentHeader.LastBlockId.PartSetHeader.Hash,
+			make([]byte, tmhash.Size),
+			10_000,
+			make([]byte, tmhash.Size),
 		),
-		LastCommitHash:     chain.CurrentHeader.LastCommitHash,
-		DataHash:           chain.CurrentHeader.DataHash,
-		ValidatorsHash:     chain.CurrentHeader.ValidatorsHash,
-		NextValidatorsHash: chain.CurrentHeader.NextValidatorsHash,
-		ConsensusHash:      chain.CurrentHeader.ConsensusHash,
+		LastCommitHash:     chain.App.LastCommitID().Hash,
+		DataHash:           tmhash.Sum([]byte("data_hash")),
+		ValidatorsHash:     vsetHash,
+		NextValidatorsHash: vsetHash,
+		ConsensusHash:      tmhash.Sum([]byte("consensus_hash")),
 		AppHash:            chain.CurrentHeader.AppHash,
-		LastResultsHash:    chain.CurrentHeader.LastResultsHash,
-		EvidenceHash:       chain.CurrentHeader.EvidenceHash,
+		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
+		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    chain.Vals.Proposer.Address,
 	}
 	hhash := tmHeader.Hash()

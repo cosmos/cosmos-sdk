@@ -20,7 +20,7 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestCreateClient() {
-	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientType(suite.chainA.GetContext(), suite.chainA.ClientIDs[0], exported.Tendermint)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientType(suite.chainA.GetContext(), "clientOne", exported.Tendermint)
 
 	cases := []struct {
 		msg      string
@@ -28,9 +28,9 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 		expPass  bool
 		expPanic bool
 	}{
-		{"success", suite.chainA.ClientIDs[0], true, false},
-		{"client ID exists", suite.chainA.ClientIDs[0], false, false},
-		{"client type exists", suite.chainA.ClientIDs[0], false, true},
+		{"success", "clientOne", true, false},
+		{"client ID exists", "clientOne", false, false},
+		{"client type exists", "clientOne", false, true},
 	}
 
 	for i, tc := range cases {
@@ -62,13 +62,13 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		header := suite.chainA.CreateTMClientHeader()
+		header := s.chainA.CreateTMClientHeader()
 		header.Header.Height = int64(header.GetHeight().GetEpochHeight() + 3)
 		header.Header.Time = header.GetTime().Add(time.Hour)
 		return header
 	}
 	createPastUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		header := suite.chainA.CreateTMClientHeader()
+		header := s.chainA.CreateTMClientHeader()
 		header.Header.Height = int64(header.GetHeight().GetEpochHeight() - 2)
 		header.TrustedHeight.EpochHeight = header.GetHeight().GetEpochHeight() - 4
 		return header

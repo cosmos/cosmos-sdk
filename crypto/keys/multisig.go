@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,6 +17,22 @@ import (
 var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 var _ multisig.PubKey = &LegacyAminoMultisigThresholdPubKey{}
+
+// NewLegacyAminoMultisigThresholdPubKey returns a new LegacyAminoMultisigThresholdPubKey.
+// Panics if len(pubKeys) < k or 0 >= k.
+func NewLegacyAminoMultisigThresholdPubKey(k int, pubKeys []tmcrypto.PubKey) LegacyAminoMultisigThresholdPubKey {
+	if k <= 0 {
+		panic("threshold k of n multisignature: k <= 0")
+	}
+	if len(pubKeys) < k {
+		panic("threshold k of n multisignature: len(pubKeys) < k")
+	}
+	anyPubKeys, err := PackPubKeys(pubKeys)
+	if err != nil {
+		panic(err)
+	}
+	return LegacyAminoMultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
+}
 
 // Address implements crypto.PubKey Address method
 func (m *LegacyAminoMultisigThresholdPubKey) Address() crypto.Address {
@@ -125,4 +142,29 @@ func (m *LegacyAminoMultisigThresholdPubKey) GetThreshold() uint {
 // Type returns multisig type
 func (m *LegacyAminoMultisigThresholdPubKey) Type() string {
 	return "PubKeyMultisigThreshold"
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m *LegacyAminoMultisigThresholdPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range m.PubKeys {
+		var pk crypto.PubKey
+		err := unpacker.UnpackAny(any, &pk)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func PackPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
+	anyPubKeys := make([]*types.Any, len(pubKeys))
+
+	for i := 0; i < len(pubKeys); i++ {
+		any, err := types.NewAnyWithValue(pubKeys[i].(proto.Message))
+		if err != nil {
+			return nil, err
+		}
+		anyPubKeys[i] = any
+	}
+	return anyPubKeys, nil
 }

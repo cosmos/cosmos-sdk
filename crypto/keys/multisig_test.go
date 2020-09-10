@@ -7,7 +7,6 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	proto "github.com/gogo/protobuf/proto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -18,7 +17,7 @@ import (
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubKeys, _ := generatePubKeysAndSignatures(5, msg)
-	anyPubKeys, err := packPubKeys(pubKeys)
+	anyPubKeys, err := keys.PackPubKeys(pubKeys)
 	require.NoError(t, err)
 	multisigKey := &keys.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
 
@@ -31,11 +30,11 @@ func TestEquals(t *testing.T) {
 
 	pbPubKey1 := &keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)}
 	pbPubKey2 := &keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)}
-	anyPubKeys, err := packPubKeys([]tmcrypto.PubKey{pbPubKey1, pbPubKey2})
+	anyPubKeys, err := keys.PackPubKeys([]tmcrypto.PubKey{pbPubKey1, pbPubKey2})
 	require.NoError(t, err)
 	multisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
 
-	otherPubKeys, err := packPubKeys([]tmcrypto.PubKey{pbPubKey1, &multisigKey})
+	otherPubKeys, err := keys.PackPubKeys([]tmcrypto.PubKey{pbPubKey1, &multisigKey})
 	require.NoError(t, err)
 	otherMultisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: otherPubKeys}
 
@@ -111,7 +110,7 @@ func TestVerifyMultisignature(t *testing.T) {
 			"wrong size for sig bit array",
 			func() {
 				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
-				anyPubKeys, err := packPubKeys(pubKeys)
+				anyPubKeys, err := keys.PackPubKeys(pubKeys)
 				require.NoError(t, err)
 				pk = &keys.LegacyAminoMultisigThresholdPubKey{K: 3, PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(1)
@@ -124,7 +123,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				k := 2
 				signingIndices := []int{0, 3, 1}
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
-				anyPubKeys, err := packPubKeys(pubKeys)
+				anyPubKeys, err := keys.PackPubKeys(pubKeys)
 				require.NoError(t, err)
 				pk = &keys.LegacyAminoMultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(len(pubKeys))
@@ -207,14 +206,14 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		anyNestedPks, err := packPubKeys(nestedPks)
+		anyNestedPks, err := keys.PackPubKeys(nestedPks)
 		if err != nil {
 			return nil, nil, err
 		}
 		pubKeys[i] = &keys.LegacyAminoMultisigThresholdPubKey{K: 5, PubKeys: anyNestedPks}
 		bitArray.SetIndex(i, true)
 	}
-	anyPubKeys, err := packPubKeys(pubKeys)
+	anyPubKeys, err := keys.PackPubKeys(pubKeys)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -222,17 +221,4 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}, nil
-}
-
-func packPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
-	anyPubKeys := make([]*types.Any, len(pubKeys))
-
-	for i := 0; i < len(pubKeys); i++ {
-		any, err := types.NewAnyWithValue(pubKeys[i].(proto.Message))
-		if err != nil {
-			return nil, err
-		}
-		anyPubKeys[i] = any
-	}
-	return anyPubKeys, nil
 }

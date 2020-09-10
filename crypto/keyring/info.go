@@ -5,8 +5,10 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -63,7 +65,7 @@ func (i localInfo) GetName() string {
 
 // GetType implements Info interface
 func (i localInfo) GetPubKey() crypto.PubKey {
-	return i.PubKey
+	return &keys.Secp256K1PubKey{Key: i.PubKey.(secp256k1.PubKey)}
 }
 
 // GetType implements Info interface
@@ -191,10 +193,10 @@ type multiInfo struct {
 
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(multisig.PubKeyMultisigThreshold)
+	multiPK := pub.(*keys.LegacyAminoMultisigThresholdPubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
-	for i, pk := range multiPK.PubKeys {
+	for i, pk := range multiPK.GetPubKeys() {
 		// TODO: Recursively check pk for total weight?
 		pubKeys[i] = multisigPubKeyInfo{pk, 1}
 	}
@@ -202,7 +204,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: multiPK.K,
+		Threshold: uint(multiPK.K),
 		PubKeys:   pubKeys,
 	}
 }
@@ -235,6 +237,16 @@ func (i multiInfo) GetAlgo() hd.PubKeyType {
 // GetPath implements Info interface
 func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	multiPK := i.PubKey.(*keys.LegacyAminoMultisigThresholdPubKey)
+	err := codectypes.UnpackInterfaces(multiPK, unpacker)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // encoding info

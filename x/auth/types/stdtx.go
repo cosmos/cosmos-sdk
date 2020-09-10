@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -116,13 +117,13 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(*keys.LegacyAminoMultisigThresholdPubKey)
 	if !ok {
 		return 1
 	}
 
 	numKeys := 0
-	for _, subkey := range v.PubKeys {
+	for _, subkey := range v.GetPubKeys() {
 		numKeys += CountSubKeys(subkey)
 	}
 

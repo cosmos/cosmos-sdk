@@ -51,3 +51,7 @@ func (m *Secp256K1PrivKey) Equals(key tmcrypto.PrivKey) bool {
 func (m *Secp256K1PrivKey) Type() string {
 	return m.Key.Type()
 }
+
+func GenPrivKey() crypto.PrivKey {
+	return &Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
+}

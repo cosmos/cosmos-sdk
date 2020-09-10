@@ -13,8 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -390,11 +390,12 @@ func TestInMemoryLanguage(t *testing.T) {
 func TestInMemoryCreateMultisig(t *testing.T) {
 	kb, err := New("keybasename", "memory", "", nil)
 	require.NoError(t, err)
-	multi := multisig.PubKeyMultisigThreshold{
-		K:       1,
-		PubKeys: []tmcrypto.PubKey{secp256k1.GenPrivKey().PubKey()},
-	}
-	_, err = kb.SaveMultisig("multi", multi)
+	multi := keys.NewLegacyAminoMultisigThresholdPubKey(
+		1, []tmcrypto.PubKey{&keys.Secp256K1PubKey{
+			Key: secp256k1.GenPrivKey().PubKey().(secp256k1.PubKey),
+		}},
+	)
+	_, err = kb.SaveMultisig("multi", &multi)
 	require.NoError(t, err)
 }
 
@@ -980,11 +981,17 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	require.NoError(t, err)
 
 	key := "multi"
-	pub := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{mnemonic1.GetPubKey(), mnemonic2.GetPubKey()})
+	pub := keys.NewLegacyAminoMultisigThresholdPubKey(
+		2,
+		[]tmcrypto.PubKey{
+			&keys.Secp256K1PubKey{Key: mnemonic1.GetPubKey().(secp256k1.PubKey)},
+			&keys.Secp256K1PubKey{Key: mnemonic2.GetPubKey().(secp256k1.PubKey)},
+		},
+	)
 
-	info, err := keyring.SaveMultisig(key, pub)
+	info, err := keyring.SaveMultisig(key, &pub)
 	require.Nil(t, err)
-	require.Equal(t, pub, info.GetPubKey())
+	require.Equal(t, &pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
 
 	list, err := keyring.List()

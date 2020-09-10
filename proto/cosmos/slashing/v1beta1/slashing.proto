@@ -14,7 +14,7 @@ message ValidatorSigningInfo {
   option (gogoproto.goproto_stringer) = false;
 
   bytes address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress" // validator consensus address
   ];
   // height at which validator was first a candidate OR was unjailed
   int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];

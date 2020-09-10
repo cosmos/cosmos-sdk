@@ -224,7 +224,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 
 			if tc.expPassUnfreeze {
 				suite.Require().NoError(err)
-				suite.Require().Equal(clienttypes.Height{}, cs.GetFrozenHeight())
+				suite.Require().Equal(clienttypes.ZeroHeight(), cs.GetFrozenHeight())
 				suite.Require().NotNil(consState)
 			} else {
 				suite.Require().Error(err)
@@ -236,7 +236,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			// and validators. Update chainB time so header won't be expired.
 			unexpireClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
 			suite.Require().NoError(err)
-			unexpireClientHeader.TrustedHeight = clienttypes.Height{}
+			unexpireClientHeader.TrustedHeight = clienttypes.ZeroHeight()
 			unexpireClientHeader.TrustedValidators = nil
 
 			clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
@@ -334,7 +334,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 			// and validators.
 			header, err = suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
 			suite.Require().NoError(err)
-			header.TrustedHeight = clienttypes.Height{}
+			header.TrustedHeight = clienttypes.ZeroHeight()
 			header.TrustedValidators = nil
 
 			tc.malleate()

@@ -10,12 +10,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 service Query {
   // CurrentPlan queries the current upgrade plan.
   rpc CurrentPlan(QueryCurrentPlanRequest) returns (QueryCurrentPlanResponse) {
-		option (google.api.http).get = "/cosmos/upgrade/v1beta1/current_plan";
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/current_plan";
   }
 
   // AppliedPlan queries a previously applied upgrade plan by its name.
   rpc AppliedPlan(QueryAppliedPlanRequest) returns (QueryAppliedPlanResponse) {
-		option (google.api.http).get = "/cosmos/upgrade/v1beta1/applied_plan/{name}";
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/applied_plan/{name}";
   }
 }
 

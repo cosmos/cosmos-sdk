@@ -10,7 +10,7 @@ message GenesisState {
   // gen_txs defines the genesis transactions.
   repeated bytes gen_txs = 1 [
     (gogoproto.casttype) = "encoding/json.RawMessage",
-    (gogoproto.jsontag) = "gentxs",
+    (gogoproto.jsontag)  = "gentxs",
     (gogoproto.moretags) = "yaml:\"gentxs\""
   ];
 }

@@ -100,7 +100,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", clienttypes.Height{}),
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
 						),
 					},
 					nil,

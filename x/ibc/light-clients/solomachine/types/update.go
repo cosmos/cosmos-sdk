@@ -34,10 +34,10 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 // checkHeader checks if the Solo Machine update signature is valid.
 func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *Header) error {
 	// assert update sequence is current sequence
-	if header.Sequence != clientState.ConsensusState.Sequence {
+	if header.Sequence != clientState.Sequence {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"sequence provided in the header does not match the client state sequence (%d != %d)", header.Sequence, clientState.ConsensusState.Sequence,
+			"sequence provided in the header does not match the client state sequence (%d != %d)", header.Sequence, clientState.Sequence,
 		)
 	}
 
@@ -57,13 +57,13 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 // update the consensus state to the new public key and an incremented sequence
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	consensusState := &ConsensusState{
-		// increment sequence number
-		Sequence:    clientState.ConsensusState.Sequence + 1,
 		PublicKey:   header.NewPublicKey,
 		Diversifier: header.NewDiversifier,
 		Timestamp:   header.Timestamp,
 	}
 
+	// increment sequence number
+	clientState.Sequence++
 	clientState.ConsensusState = consensusState
 	return clientState, consensusState
 }

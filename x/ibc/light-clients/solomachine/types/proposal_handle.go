@@ -42,10 +42,10 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	clientState := &cs
 
 	consensusState := &ConsensusState{
-		Sequence:  smHeader.Sequence,
 		PublicKey: smHeader.NewPublicKey,
 	}
 
+	clientState.Sequence = smHeader.Sequence
 	clientState.ConsensusState = consensusState
 	clientState.FrozenSequence = 0
 

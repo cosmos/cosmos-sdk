@@ -170,3 +170,5 @@ func TestValidateGenesis(t *testing.T) {
 		})
 	}
 }
+
+// TODO: TestValidateAccountInGenesis

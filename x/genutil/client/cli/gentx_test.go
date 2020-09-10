@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -54,7 +55,8 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 
 	cmd := cli.GenTxCmd(
 		simapp.ModuleBasics,
-		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)
+		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{},
+		val.ClientCtx.HomeDir, staking.AppModuleBasic{})
 
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx := val.ClientCtx.WithOutput(out)

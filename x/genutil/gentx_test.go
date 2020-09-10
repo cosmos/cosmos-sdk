@@ -16,7 +16,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -122,77 +121,6 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 			} else {
 				suite.Require().Error(err)
 			}
-		})
-	}
-}
-
-func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
-	var (
-		appGenesisState = make(map[string]json.RawMessage)
-		coins           sdk.Coins
-	)
-
-	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"no accounts",
-			func() {
-				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
-			},
-			false,
-		},
-		{
-			"account without balance in the genesis state",
-			func() {
-				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr2, 50)
-			},
-			false,
-		},
-		{
-			"account without enough funds of default bond denom",
-			func() {
-				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
-			},
-			false,
-		},
-		{
-			"account with enough funds of default bond denom",
-			func() {
-				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
-				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
-			},
-			true,
-		},
-	}
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest()
-			cdc := suite.encodingConfig.Marshaler
-
-			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
-			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
-			suite.Require().Equal(stakingGenesisState.Params, stakingtypes.DefaultParams())
-			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
-			suite.Require().NoError(err)
-			appGenesisState[stakingtypes.ModuleName] = stakingGenesis
-
-			tc.malleate()
-			err = genutil.ValidateAccountInGenesis(
-				appGenesisState, banktypes.GenesisBalancesIterator{},
-				addr1, coins, cdc,
-			)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-			} else {
-				suite.Require().Error(err)
-			}
-
 		})
 	}
 }

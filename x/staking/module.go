@@ -19,11 +19,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	flag "github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -97,6 +102,36 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+}
+
+/////////////////////////////
+// Genesis Message Helpers //
+/////////////////////////////
+
+// CreateValidatorMsgHelpers - used for gentx
+func (AppModuleBasic) CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
+	return cli.CreateValidatorMsgFlagSet(ipDefault)
+}
+
+// PrepareFlagsForTxCreateValidator - used for gentx
+func (AppModuleBasic) PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID,
+	chainID string, valPubKey crypto.PubKey) (interface{}, error) {
+	config, err := cli.PrepareConfigForTxCreateValidator(flagSet, moniker, nodeID, chainID, valPubKey)
+	return config, err
+}
+
+// BuildCreateValidatorMsg - used for gentx
+func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx client.Context, config interface{}, txBldr tx.Factory,
+	generateOnly bool) (tx.Factory, sdk.Msg, error) {
+	return cli.BuildCreateValidatorMsg(cliCtx, config.(cli.TxCreateValidatorConfig), txBldr, generateOnly)
+}
+
+// ValidateAccountInGenesis - used for gentx
+func (AppModuleBasic) ValidateAccountInGenesis(
+	appGenesisState map[string]json.RawMessage, genBalIterator genutiltypes.GenesisBalancesIterator,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONMarshaler,
+) error {
+	return ValidateAccountParamsInGenesis(appGenesisState, genBalIterator, addr, coins, cdc)
 }
 
 // NewAppModule creates a new AppModule object

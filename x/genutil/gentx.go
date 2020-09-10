@@ -2,16 +2,13 @@ package genutil
 
 import (
 	"encoding/json"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SetGenTxsInAppGenesisState - sets the genesis transactions in the app genesis state
@@ -33,57 +30,6 @@ func SetGenTxsInAppGenesisState(
 
 	genesisState.GenTxs = genTxsBz
 	return types.SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
-}
-
-// ValidateAccountInGenesis checks that the provided account has a sufficient
-// balance in the set of genesis accounts.
-func ValidateAccountInGenesis(
-	appGenesisState map[string]json.RawMessage, genBalIterator types.GenesisBalancesIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.JSONMarshaler,
-) error {
-
-	var stakingData stakingtypes.GenesisState
-	cdc.MustUnmarshalJSON(appGenesisState[stakingtypes.ModuleName], &stakingData)
-	bondDenom := stakingData.Params.BondDenom
-
-	var err error
-
-	accountIsInGenesis := false
-
-	genBalIterator.IterateGenesisBalances(cdc, appGenesisState,
-		func(bal bankexported.GenesisBalance) (stop bool) {
-			accAddress := bal.GetAddress()
-			accCoins := bal.GetCoins()
-
-			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
-				// ensure account contains enough funds of default bond denom
-				if coins.AmountOf(bondDenom).GT(accCoins.AmountOf(bondDenom)) {
-					err = fmt.Errorf(
-						"account %s has a balance in genesis, but it only has %v%s available to stake, not %v%s",
-						addr, accCoins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
-					)
-
-					return true
-				}
-
-				accountIsInGenesis = true
-				return true
-			}
-
-			return false
-		},
-	)
-
-	if err != nil {
-		return err
-	}
-
-	if !accountIsInGenesis {
-		return fmt.Errorf("account %s does not have a balance in the genesis state", addr)
-	}
-
-	return nil
 }
 
 type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx

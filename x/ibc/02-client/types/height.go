@@ -130,11 +130,15 @@ func ParseHeight(heightStr string) (Height, error) {
 // IsEpochFormat is a utility function that returns whether the given ChainID
 // is in the epoch format `{chainID}-epoch-{epochNumber}`
 func IsEpochFormat(chainID string) bool {
+	if !strings.Contains(chainID, "-epoch-") {
+		// chainID is not in epoch format, return 0 as default
+		return false
+	}
 	splitStr := strings.Split(chainID, "-")
 	// check if second-to-last element is `epoch`
 	if len(splitStr) >= 3 && splitStr[len(splitStr)-2] == "epoch" {
 		_, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
-		if err != nil {
+		if err == nil {
 			return true
 		}
 	}
@@ -146,6 +150,10 @@ func IsEpochFormat(chainID string) bool {
 // and return the epochnumber as a uint64. If the chainID is in the expected format but the parse fails,
 // an error is returned. If the chainID is not in the expected format, a default epoch value of 0 is returned.
 func ParseChainID(chainID string) (uint64, error) {
+	if !strings.Contains(chainID, "-epoch-") {
+		// chainID is not in epoch format, return 0 as default
+		return 0, nil
+	}
 	splitStr := strings.Split(chainID, "-")
 	// check if second-to-last element is `epoch`
 	if len(splitStr) >= 3 && splitStr[len(splitStr)-2] == "epoch" {
@@ -159,8 +167,10 @@ func ParseChainID(chainID string) (uint64, error) {
 		}
 		return epoch, nil
 	}
-	// chainID is not in epoch format, return 0 as default
-	return 0, nil
+	return 0, sdkerrors.Wrapf(
+		sdkerrors.ErrInvalidChainID,
+		"chainID contains an `epoch` element but is not in correct format. Expected format `{chainID}-epoch-{number}`, got %s", chainID,
+	)
 }
 
 // GetSelfHeight is a utility function that returns self height given context

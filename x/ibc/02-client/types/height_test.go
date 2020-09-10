@@ -75,13 +75,40 @@ func TestString(t *testing.T) {
 	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }
 
+func TestParseChainID(t *testing.T) {
+	cases := []struct {
+		chainID   string
+		epoch     uint64
+		formatted bool
+		expPass   bool
+	}{
+		{"gaia-epoch-3", 3, true, true},
+		{"gaia-epoch-3-3", 0, false, false},
+		{"gaia-epoch-3.4", 0, false, false},
+		{"gaia-epode-4", 0, false, true},
+		{"gaiamainnet", 0, false, true},
+		{"gaiaepoch-9", 0, false, true},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.formatted, types.IsEpochFormat(tc.chainID), "case %d does not match expected format", i)
+
+		epoch, err := types.ParseChainID(tc.chainID)
+		require.Equal(t, tc.epoch, epoch, "case %d returns incorrect epoch", i)
+		if tc.expPass {
+			require.NoError(t, err, "valid chainID returns parse error")
+		} else {
+			require.Error(t, err, "invalid chainID passes ParseChainID")
+		}
+	}
+}
+
 func (suite *TypesTestSuite) TestSelfHeight() {
 	ctx := suite.chain.GetContext()
 
 	// Test default epoch
 	ctx = ctx.WithChainID("gaiamainnet")
 	ctx = ctx.WithBlockHeight(10)
-	suite.Require().False(types.IsEpochFormat("gaiamainnet"), "invalid epoch format returned true")
 	height := types.GetSelfHeight(ctx)
 	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
 

@@ -201,7 +201,6 @@ func (s *IntegrationTestSuite) TestCLITxQueryCmd() {
 
 		var tx sdk.TxResponse
 		s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tx))
-		fmt.Println(tx)
 	})
 }
 

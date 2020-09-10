@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -27,6 +28,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {

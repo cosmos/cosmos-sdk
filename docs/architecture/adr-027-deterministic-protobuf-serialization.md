@@ -14,33 +14,24 @@ Proposed
 Fully deterministic structure serializaiton, which works across many languages / clients,
 is needed for structure signature use-case. We need to be sure that whenever we serialize
 and deserialize a data structure, no matter in which supported language, the raw bytes
-will stay the same. Protobufs are not deterministic.
+will stay the same.
+[Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
+serialization is not bijective (i.e. there exist a practically unlimited number of
+valid binary representations for a protobuf document)<sup>1</sup>.
 
-The major use-case for deterministic protobuf serialization is:
+Here we propose how to limit the protobufs in order to assure deterministic serializaiton.
 
-* Digital Signatures
-* Merkle Tree
+### Context
 
+For signature verification in Cosmos SDK, signer and verifier need to agree on
+the same serialization of a `SignDoc` as defined in
+[ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
+serialization.
 Currently, for Block signature we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
 instance (as explained in[adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
 by converting all Tx fields to bytes on the client side. This adds additional manual
 step when sending and signing transactions.
 
-Here we propose how to limit the protobufs in order to assure
-deterministic serializaiton.
-
-
-### Context
-
-[Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
-serialization is not bijective (i.e. there exist a practically unlimited number of
-valid binary representations for a protobuf document)<sup>1</sup>. For signature
-verification in Cosmos SDK, signer and verifier need to agree on the same
-serialization of a SignDoc as defined in
-[ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
-serialization. This document describes a bijective serialization scheme for
-a subset of protobuf documents, that covers this use case but can be reused in
-other cases as well.
 
 ### Background - Protobuf3 Encoding
 

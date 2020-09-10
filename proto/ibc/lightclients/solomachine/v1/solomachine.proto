@@ -1,0 +1,152 @@
+syntax = "proto3";
+package ibc.lightclients.solomachine.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
+
+import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "ibc/connection/connection.proto";
+import "ibc/channel/channel.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+// ClientState defines a solo machine client that tracks the current consensus
+// state and if the client is frozen.
+message ClientState {
+  option (gogoproto.goproto_getters) = false;
+  // latest sequence of the client state
+  uint64 sequence = 1;
+  // frozen sequence of the solo machine
+  uint64         frozen_sequence = 2 [(gogoproto.moretags) = "yaml:\"frozen_sequence\""];
+  ConsensusState consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // when set to true, will allow governance to update a solo machine client.
+  // The client will be unfrozen if it is frozen.
+  bool allow_update_after_proposal = 4 [(gogoproto.moretags) = "yaml:\"allow_update_after_proposal\""];
+}
+
+// ConsensusState defines a solo machine consensus state. The sequence of a consensus state
+// is contained in the "height" key used in storing the consensus state.
+message ConsensusState {
+  option (gogoproto.goproto_getters) = false;
+  // public key of the solo machine
+  cosmos.base.crypto.v1beta1.PublicKey public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  // diversifier allows the same public key to be re-used across different solo machine clients
+  // (potentially on different chains) without being considered misbehaviour.
+  string diversifier = 2;
+  uint64 timestamp   = 3;
+}
+
+// Header defines a solo machine consensus header
+message Header {
+  option (gogoproto.goproto_getters) = false;
+  // sequence to update solo machine public key at
+  uint64                               sequence        = 1;
+  uint64                               timestamp       = 2;
+  bytes                                signature       = 3;
+  cosmos.base.crypto.v1beta1.PublicKey new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  string                               new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
+}
+
+// Misbehaviour defines misbehaviour for a solo machine which consists
+// of a sequence and two signatures over different messages at that sequence.
+message Misbehaviour {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+  string           client_id          = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  uint64           sequence           = 2;
+  SignatureAndData signature_one      = 3 [(gogoproto.moretags) = "yaml:\"signature_one\""];
+  SignatureAndData signature_two      = 4 [(gogoproto.moretags) = "yaml:\"signature_two\""];
+}
+
+// SignatureAndData contains a signature and the data signed over to create that
+// signature.
+message SignatureAndData {
+  option (gogoproto.goproto_getters) = false;
+  bytes signature                    = 1;
+  bytes data                         = 2;
+}
+
+// TimestampedSignature contains the signature and the timestamp of the
+// signature.
+message TimestampedSignature {
+  option (gogoproto.goproto_getters) = false;
+  bytes  signature                   = 1;
+  uint64 timestamp                   = 2;
+}
+
+// SignBytes defines the signed bytes used for signature verification.
+message SignBytes {
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 sequence    = 1;
+  uint64 timestamp   = 2;
+  string diversifier = 3;
+  // marshaled data
+  bytes data = 4;
+}
+
+// HeaderData returns the SignBytes data for misbehaviour verification.
+message HeaderData {
+  option (gogoproto.goproto_getters) = false;
+
+  // header public key
+  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  // header diversifier
+  string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
+}
+
+// ClientStateData returns the SignBytes data for client state verification.
+message ClientStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes               path         = 1;
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+}
+
+// ConsensusStateSignBytes returns the SignBytes data for consensus state verification.
+message ConsensusStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes               path            = 1;
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+}
+
+// ConnectionStateSignBytes returns the SignBytes data for connection state verification.
+message ConnectionStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes                        path       = 1;
+  ibc.connection.ConnectionEnd connection = 2;
+}
+
+// ChannelStateSignBytes returns the SignBytes data for channel state verification.
+message ChannelStateData {
+  option (gogoproto.goproto_getters) = false;
+
+  bytes               path    = 1;
+  ibc.channel.Channel channel = 2;
+}
+
+// PacketCommitmentSignBytes returns the SignBytes data for packet commitment verification.
+message PacketCommitmentData {
+  bytes path       = 1;
+  bytes commitment = 2;
+}
+
+// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement verification.
+message PacketAcknowledgementData {
+  bytes path            = 1;
+  bytes acknowledgement = 2;
+}
+
+// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for acknowledgement absence
+// verification.
+message PacketAcknowledgementAbsenseData {
+  bytes path = 1;
+}
+
+// NextSequenceRecv returns the SignBytes data for verification of the next
+// sequence to be received.
+message NextSequenceRecvData {
+  bytes  path          = 1;
+  uint64 next_seq_recv = 2 [(gogoproto.moretags) = "yaml:\"next_seq_recv\""];
+}

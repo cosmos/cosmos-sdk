@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -11,8 +12,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,7 +25,20 @@ import (
 // InitChain implements the ABCI interface. It runs the initialization logic
 // directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
+	// On a new chain, we consider the init chain block height as 0, even though
+	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
+
+	// If req.InitialHeight is > 1, then we set the initial version in the
+	// stores.
+	if req.InitialHeight > 1 {
+		app.initialHeight = req.InitialHeight
+		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
+		err := app.cms.SetInitialVersion(req.InitialHeight)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	// initialize the deliver state and check state with a correct header
 	app.setDeliverState(initHeader)
@@ -58,13 +75,13 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
 		for i := range res.Validators {
-			if proto.Equal(&res.Validators[i], &req.Validators[i]) {
+			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
 				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}
 	}
 
-	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
+	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
 	// deliverState.
 	return res
 }
@@ -95,7 +112,7 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// FilterPeerByIDfilters peers by node ID.
+// FilterPeerByID filters peers by node ID.
 func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 	if app.idPeerFilter != nil {
 		return app.idPeerFilter(info)
@@ -143,6 +160,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
@@ -159,9 +177,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
-	return
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	return res
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -201,7 +224,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 
@@ -239,7 +262,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    result.Events,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
 }
 
@@ -289,6 +312,10 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		app.halt()
 	}
 
+	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
+		go app.snapshot(header.Height)
+	}
+
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
@@ -314,6 +341,27 @@ func (app *BaseApp) halt() {
 	// via SIGINT/SIGTERM signals.
 	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
 	os.Exit(0)
+}
+
+// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
+func (app *BaseApp) snapshot(height int64) {
+	app.logger.Info("Creating state snapshot", "height", height)
+	snapshot, err := app.snapshotManager.Create(uint64(height))
+	if err != nil {
+		app.logger.Error("Failed to create state snapshot", "height", height, "err", err)
+		return
+	}
+	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
+
+	if app.snapshotKeepRecent > 0 {
+		app.logger.Debug("Pruning state snapshots")
+		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
+		if err != nil {
+			app.logger.Error("Failed to prune state snapshots", "err", err)
+			return
+		}
+		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
+	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
@@ -350,6 +398,100 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
 }
 
+// ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
+	resp := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
+	if app.snapshotManager == nil {
+		return resp
+	}
+
+	snapshots, err := app.snapshotManager.List()
+	if err != nil {
+		app.logger.Error("Failed to list snapshots", "err", err)
+		return resp
+	}
+	for _, snapshot := range snapshots {
+		abciSnapshot, err := snapshot.ToABCI()
+		if err != nil {
+			app.logger.Error("Failed to list snapshots", "err", err)
+			return resp
+		}
+		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+	}
+
+	return resp
+}
+
+// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
+	if app.snapshotManager == nil {
+		return abci.ResponseLoadSnapshotChunk{}
+	}
+	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	if err != nil {
+		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
+			"chunk", req.Chunk, "err")
+		return abci.ResponseLoadSnapshotChunk{}
+	}
+	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
+}
+
+// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	if req.Snapshot == nil {
+		app.logger.Error("Received nil snapshot")
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+	}
+
+	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
+	if err != nil {
+		app.logger.Error("Failed to decode snapshot metadata", "err", err)
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+	}
+	err = app.snapshotManager.Restore(snapshot)
+	switch {
+	case err == nil:
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}
+
+	case errors.Is(err, snapshottypes.ErrUnknownFormat):
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
+
+	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
+		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err)
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+
+	default:
+		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err)
+		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
+		// so we ask Tendermint to abort all snapshot restoration.
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+	}
+}
+
+// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
+	switch {
+	case err == nil:
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
+
+	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
+		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
+			"chunk", req.Index, "sender", req.Sender, "err", err)
+		return abci.ResponseApplySnapshotChunk{
+			Result:        abci.ResponseApplySnapshotChunk_RETRY,
+			RefetchChunks: []uint32{req.Index},
+			RejectSenders: []string{req.Sender},
+		}
+
+	default:
+		app.logger.Error("Failed to restore snapshot", "err", err)
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+	}
+}
+
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
 	ctx, err := app.createQueryContext(req.Height, req.Prove)
 	if err != nil {
@@ -358,12 +500,32 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		res = sdkerrors.QueryResult(err)
+		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err))
 		res.Height = req.Height
 		return res
 	}
 
 	return res
+}
+
+func gRPCErrorToSDKError(err error) error {
+	status, ok := grpcstatus.FromError(err)
+	if !ok {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	switch status.Code() {
+	case codes.NotFound:
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, err.Error())
+	case codes.InvalidArgument:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.FailedPrecondition:
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	case codes.Unauthenticated:
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	default:
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
 }
 
 // createQueryContext creates a new sdk.Context for a query, taking as args
@@ -555,20 +717,4 @@ func splitPath(requestPath string) (path []string) {
 	}
 
 	return path
-}
-
-func (app *BaseApp) ListSnapshots(abci.RequestListSnapshots) abci.ResponseListSnapshots {
-	return abci.ResponseListSnapshots{}
-}
-
-func (app *BaseApp) OfferSnapshot(abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
-	return abci.ResponseOfferSnapshot{}
-}
-
-func (app *BaseApp) LoadSnapshotChunk(abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
-	return abci.ResponseLoadSnapshotChunk{}
-}
-
-func (app *BaseApp) ApplySnapshotChunk(abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	return abci.ResponseApplySnapshotChunk{}
 }

@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sim "github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -100,7 +99,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if !clientCtx.SkipConfirm {
-		out, err := clientCtx.JSONMarshaler.MarshalJSON(tx)
+		out, err := clientCtx.TxConfig.TxJSONEncoder()(tx.GetTx())
 		if err != nil {
 			return err
 		}
@@ -248,43 +247,51 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
 func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
-	tx, err := BuildUnsignedTx(txf, msgs...)
+	txb, err := BuildUnsignedTx(txf, msgs...)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
-	sig := signing.SignatureV2{}
+	sig := signing.SignatureV2{
+		Data: &signing.SingleSignatureData{
+			SignMode: txf.signMode,
+		},
+		Sequence: txf.Sequence(),
+	}
 
-	if err := tx.SetSignatures(sig); err != nil {
+	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	return txf.txConfig.TxEncoder()(tx.GetTx())
+	simReq := sim.SimulateRequest{Tx: txb.GetProtoTx()}
+
+	return simReq.Marshal()
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
 	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (sdk.SimulationResponse, uint64, error) {
+) (sim.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
+		return sim.SimulateResponse{}, 0, err
 	}
 
-	bz, _, err := queryFunc("/app/simulate", txBytes)
+	bz, _, err := queryFunc("/cosmos.base.simulate.v1beta1.SimulateService/Simulate", txBytes)
 	if err != nil {
-		return sdk.SimulationResponse{}, 0, err
+		return sim.SimulateResponse{}, 0, err
 	}
 
-	var simRes sdk.SimulationResponse
-	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
-		return sdk.SimulationResponse{}, 0, err
+	var simRes sim.SimulateResponse
+
+	if err := simRes.Unmarshal(bz); err != nil {
+		return sim.SimulateResponse{}, 0, err
 	}
 
-	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasUsed)), nil
+	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
 // PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and
@@ -322,6 +329,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 func SignWithPrivKey(
 	signMode signing.SignMode, signerData authsigning.SignerData,
 	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
+	accSeq uint64,
 ) (signing.SignatureV2, error) {
 	var sigV2 signing.SignatureV2
 
@@ -344,8 +352,9 @@ func SignWithPrivKey(
 	}
 
 	sigV2 = signing.SignatureV2{
-		PubKey: priv.PubKey(),
-		Data:   &sigData,
+		PubKey:   priv.PubKey(),
+		Data:     &sigData,
+		Sequence: accSeq,
 	}
 
 	return sigV2, nil
@@ -372,12 +381,12 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 
 	pubKey := key.GetPubKey()
 	signerData := authsigning.SignerData{
-		ChainID:         txf.chainID,
-		AccountNumber:   txf.accountNumber,
-		AccountSequence: txf.sequence,
+		ChainID:       txf.chainID,
+		AccountNumber: txf.accountNumber,
+		Sequence:      txf.sequence,
 	}
 
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls SetSignerInfos on
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
 	// TxBuilder under the hood, and SignerInfos is needed to generated the
 	// sign bytes. This is the reason for setting SetSignatures here, with a
 	// nil signature.
@@ -390,8 +399,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Signature: nil,
 	}
 	sig := signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
+		PubKey:   pubKey,
+		Data:     &sigData,
+		Sequence: txf.Sequence(),
 	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
@@ -415,8 +425,9 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Signature: sigBytes,
 	}
 	sig = signing.SignatureV2{
-		PubKey: pubKey,
-		Data:   &sigData,
+		PubKey:   pubKey,
+		Data:     &sigData,
+		Sequence: txf.Sequence(),
 	}
 
 	// And here the tx is populated with the signature

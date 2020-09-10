@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -49,12 +50,12 @@ func (k Keeper) SendTransfer(
 	token sdk.Coin,
 	sender sdk.AccAddress,
 	receiver string,
-	timeoutHeight,
+	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 ) error {
 
-	if !k.GetTransfersEnabled(ctx) {
-		return types.ErrTransfersDisabled
+	if !k.GetSendEnabled(ctx) {
+		return types.ErrSendDisabled
 	}
 
 	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
@@ -157,8 +158,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return err
 	}
 
-	if !k.GetTransfersEnabled(ctx) {
-		return types.ErrTransfersDisabled
+	if !k.GetReceiveEnabled(ctx) {
+		return types.ErrReceiveDisabled
 	}
 
 	// decode the receiver address
@@ -231,11 +232,15 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 // acknowledgement written on the receiving chain. If the acknowledgement
 // was a success then nothing occurs. If the acknowledgement failed, then
 // the sender is refunded their tokens using the refundPacketToken function.
-func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack types.FungibleTokenPacketAcknowledgement) error {
-	if !ack.Success {
+func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack channeltypes.Acknowledgement) error {
+	switch ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
+	default:
+		// the acknowledgement succeeded on the receiving chain so nothing
+		// needs to be executed and no error needs to be returned
+		return nil
 	}
-	return nil
 }
 
 // OnTimeoutPacket refunds the sender since the original packet sent was

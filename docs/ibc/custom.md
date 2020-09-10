@@ -340,7 +340,9 @@ receive acknowledegments with the IBC modules as byte strings.
 
 Thus, modules must agree on how to encode/decode acknowledgements. The process of creating an
 acknowledgement struct along with encoding and decoding it, is very similar to the packet data
-example above.
+example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope)
+specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
+[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/04-channel/types).
 
 #### Acknowledging Packets
 
@@ -371,8 +373,9 @@ OnAcknowledgementPacket(
 
 #### Timeout Packets
 
-If the timout for a packet is reached before the packet is successfully received, the receiving
-chain can no longer process it. Thus, the sending chain must process the timout using
+If the timeout for a packet is reached before the packet is successfully received or the 
+counterparty channel end is closed before the packet is successfully received, then the receiving
+chain can no longer process it. Thus, the sending chain must process the timeout using
 `OnTimeoutPacket` to handle this situation. Again the IBC module will verify that the timeout is
 indeed valid, so our module only needs to implement the state machine logic for what to do once a
 timeout is reached and the packet can no longer be received.

@@ -6,6 +6,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,10 +44,30 @@ func SetTrace(trace bool) func(*BaseApp) {
 	return func(app *BaseApp) { app.setTrace(trace) }
 }
 
+// SetIndexEvents provides a BaseApp option function that sets the events to index.
+func SetIndexEvents(ie []string) func(*BaseApp) {
+	return func(app *BaseApp) { app.setIndexEvents(ie) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
+}
+
+// SetSnapshotInterval sets the snapshot interval.
+func SetSnapshotInterval(interval uint64) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotInterval(interval) }
+}
+
+// SetSnapshotKeepRecent sets the recent snapshots to keep.
+func SetSnapshotKeepRecent(keepRecent uint32) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotKeepRecent(keepRecent) }
+}
+
+// SetSnapshotStore sets the snapshot store.
+func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -168,4 +189,28 @@ func (app *BaseApp) SetRouter(router sdk.Router) {
 		panic("SetRouter() on sealed BaseApp")
 	}
 	app.router = router
+}
+
+// SetSnapshotStore sets the snapshot store.
+func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
+	if app.sealed {
+		panic("SetSnapshotStore() on sealed BaseApp")
+	}
+	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
+}
+
+// SetSnapshotInterval sets the snapshot interval.
+func (app *BaseApp) SetSnapshotInterval(snapshotInterval uint64) {
+	if app.sealed {
+		panic("SetSnapshotInterval() on sealed BaseApp")
+	}
+	app.snapshotInterval = snapshotInterval
+}
+
+// SetSnapshotKeepRecent sets the number of recent snapshots to keep.
+func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
+	if app.sealed {
+		panic("SetSnapshotKeepRecent() on sealed BaseApp")
+	}
+	app.snapshotKeepRecent = snapshotKeepRecent
 }

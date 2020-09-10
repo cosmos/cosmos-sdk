@@ -5,17 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
 // This tests multisig functionality, but it expects the first k signatures to be valid
@@ -188,7 +187,7 @@ func TestMultiSigMigration(t *testing.T) {
 	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 

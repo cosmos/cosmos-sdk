@@ -9,7 +9,10 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,9 +20,9 @@ var protoCodec = encoding.GetCodec(proto.Name)
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes      map[string]GRPCQueryHandler
-	anyUnpacker types.AnyUnpacker
-	serviceData []serviceData
+	routes            map[string]GRPCQueryHandler
+	interfaceRegistry codectypes.InterfaceRegistry
+	serviceData       []serviceData
 }
 
 // serviceData represents a gRPC service, along with its handler.
@@ -28,7 +31,7 @@ type serviceData struct {
 	handler     interface{}
 }
 
-var _ gogogrpc.Server
+var _ gogogrpc.Server = &GRPCQueryRouter{}
 
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {
@@ -67,8 +70,8 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 				if err != nil {
 					return err
 				}
-				if qrt.anyUnpacker != nil {
-					return types.UnpackInterfaces(i, qrt.anyUnpacker)
+				if qrt.interfaceRegistry != nil {
+					return codectypes.UnpackInterfaces(i, qrt.interfaceRegistry)
 				}
 				return nil
 			}, nil)
@@ -96,12 +99,27 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
-// AnyUnpacker returns the AnyUnpacker for the router
-func (qrt *GRPCQueryRouter) AnyUnpacker() types.AnyUnpacker {
-	return qrt.anyUnpacker
+// SetInterfaceRegistry sets the interface registry for the router. This will
+// also register the interface reflection gRPC service.
+func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
+	qrt.interfaceRegistry = interfaceRegistry
+
+	// Once we have an interface registry, we can register the interface
+	// registry reflection gRPC service.
+	reflection.RegisterReflectionServiceServer(
+		qrt,
+		reflection.NewReflectionServiceServer(interfaceRegistry),
+	)
 }
 
-// SetAnyUnpacker sets the AnyUnpacker for the router
-func (qrt *GRPCQueryRouter) SetAnyUnpacker(anyUnpacker types.AnyUnpacker) {
-	qrt.anyUnpacker = anyUnpacker
+// RegisterSimulateService registers the simulate service on the gRPC router.
+func (qrt *GRPCQueryRouter) RegisterSimulateService(
+	simulateFn simulate.BaseAppSimulateFn,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	pubkeyCodec cryptotypes.PublicKeyCodec,
+) {
+	simulate.RegisterSimulateServiceServer(
+		qrt,
+		simulate.NewSimulateServer(simulateFn, interfaceRegistry, pubkeyCodec),
+	)
 }

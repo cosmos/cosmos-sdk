@@ -45,6 +45,10 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	IndexEvents []string `mapstructure:"index-events"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -87,6 +91,17 @@ type GRPCConfig struct {
 	Address string `mapstructure:"address"`
 }
 
+// StateSyncConfig defines the state sync snapshot configuration.
+type StateSyncConfig struct {
+	// SnapshotInterval sets the interval at which state sync snapshots are taken.
+	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
+	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
+
+	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.
+	// 0 keeps all snapshots.
+	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -95,6 +110,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -134,6 +150,7 @@ func DefaultConfig() *Config {
 			PruningKeepRecent: "0",
 			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
+			IndexEvents:       make([]string, 0),
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -150,6 +167,10 @@ func DefaultConfig() *Config {
 		GRPC: GRPCConfig{
 			Enable:  true,
 			Address: DefaultGRPCAddress,
+		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   0,
+			SnapshotKeepRecent: 2,
 		},
 	}
 }
@@ -175,6 +196,7 @@ func GetConfig(v *viper.Viper) Config {
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
+			IndexEvents:       v.GetStringSlice("index-events"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),
@@ -197,6 +219,10 @@ func GetConfig(v *viper.Viper) Config {
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
+		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),
+			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
 		},
 	}
 }

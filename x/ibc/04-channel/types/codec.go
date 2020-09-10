@@ -4,11 +4,36 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.channel.ChannelI",
+		(*exported.ChannelI)(nil),
+	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.channel.CounterpartyChannelI",
+		(*exported.CounterpartyChannelI)(nil),
+	)
+	registry.RegisterInterface(
+		"cosmos_sdk.ibc.v1.channel.PacketI",
+		(*exported.PacketI)(nil),
+	)
+	registry.RegisterImplementations(
+		(*exported.ChannelI)(nil),
+		&Channel{},
+	)
+	registry.RegisterImplementations(
+		(*exported.CounterpartyChannelI)(nil),
+		&Counterparty{},
+	)
+	registry.RegisterImplementations(
+		(*exported.PacketI)(nil),
+		&Packet{},
+	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgChannelOpenInit{},
@@ -20,6 +45,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgRecvPacket{},
 		&MsgAcknowledgement{},
 		&MsgTimeout{},
+		&MsgTimeoutOnClose{},
 	)
 }
 

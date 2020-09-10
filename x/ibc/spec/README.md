@@ -40,7 +40,7 @@ in the SDK's `x/ibc` module:
 * [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/x/ibc/03-connection)
 * [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/x/ibc/04-channel)
 * [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/x/ibc/05-port)
-* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/06-solomachine`](https://github.com/cosmos/x/ibc/06-solomachine)
+* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/light-clients/solomachine`](https://github.com/cosmos/x/ibc/solomachine)
 * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/07-tendermint`](https://github.com/cosmos/x/ibc/07-tendermint)
 * [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  Implemented in [`x/ibc/09-localhost`](https://github.com/cosmos/x/ibc/09-localhost)
 * [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
@@ -61,7 +61,8 @@ denomination trace path in order to support special characters and limit the max
 consensus states in order to verify their membership in the counterparty clients.
 * [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
 * [ADR 020 - Protocol Buffer Transaction Encoding](./../../docs/architecture/adr-020-protobuf-transaction-encoding.md): Client side migration to Protobuf.
-* [ADR 021 - Protocol Buffer Query Encoding](./../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 021 - Protocol Buffer Query Encoding](../../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 026 - IBC Client Recovery Mechanisms](../../../docs/architecture/adr-026-ibc-client-recovery-mechanisms.md): Allows IBC Clients to be recovered after freezing or expiry.
 
 ### SDK Modules
 
@@ -86,7 +87,8 @@ x/
 │  ├── 03-connection/
 │  ├── 04-channel/
 │  ├── 05-port/
-│  ├── 06-solo/
+│  ├── light-clients/
+│  │   └── solomachine/
 │  ├── 07-tendermint/
 │  ├── 09-localhost/
 │  ├── 23-commitment/

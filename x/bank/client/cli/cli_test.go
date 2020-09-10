@@ -6,13 +6,12 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -54,8 +53,8 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  fmt.Stringer
-		expected  fmt.Stringer
+		respType  proto.Message
+		expected  proto.Message
 	}{
 		{"no address provided", []string{}, true, nil, nil},
 		{
@@ -85,14 +84,18 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
+			NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
 		},
 		{
 			"total account balance of a bogus denom",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=foobar", cli.FlagDenom), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=foobar", cli.FlagDenom),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
 			false,
 			&sdk.Coin{},
-			sdk.NewCoin("foobar", sdk.ZeroInt()),
+			NewCoin("foobar", sdk.ZeroInt()),
 		},
 	}
 
@@ -101,22 +104,13 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetBalancesCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, tc.args)
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -173,17 +167,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryTotalSupply()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			err := cmd.ExecuteContext(ctx)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -232,7 +218,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{
@@ -295,16 +281,13 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
 			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
 			}
@@ -314,4 +297,9 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+	coin := sdk.NewCoin(denom, amount)
+	return &coin
 }

@@ -6,6 +6,7 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -24,11 +25,13 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// IdentifiedClientState defines a client state with additional client identifier field.
+// IdentifiedClientState defines a client state with additional client
+// identifier field.
 type IdentifiedClientState struct {
 	// client identifier
-	Id          string     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" yaml:"id"`
-	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// client state
+	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
 }
 
 func (m *IdentifiedClientState) Reset()         { *m = IdentifiedClientState{} }
@@ -64,30 +67,426 @@ func (m *IdentifiedClientState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_IdentifiedClientState proto.InternalMessageInfo
 
+func (m *IdentifiedClientState) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *IdentifiedClientState) GetClientState() *types.Any {
+	if m != nil {
+		return m.ClientState
+	}
+	return nil
+}
+
+// ClientConsensusStates defines all the stored consensus states for a given
+// client.
+type ClientConsensusStates struct {
+	// client identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// consensus states associated with the client
+	ConsensusStates []*types.Any `protobuf:"bytes,2,rep,name=consensus_states,json=consensusStates,proto3" json:"consensus_states,omitempty" yaml:"consensus_states"`
+}
+
+func (m *ClientConsensusStates) Reset()         { *m = ClientConsensusStates{} }
+func (m *ClientConsensusStates) String() string { return proto.CompactTextString(m) }
+func (*ClientConsensusStates) ProtoMessage()    {}
+func (*ClientConsensusStates) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{1}
+}
+func (m *ClientConsensusStates) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClientConsensusStates) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClientConsensusStates.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClientConsensusStates) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientConsensusStates.Merge(m, src)
+}
+func (m *ClientConsensusStates) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClientConsensusStates) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientConsensusStates.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientConsensusStates proto.InternalMessageInfo
+
+func (m *ClientConsensusStates) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *ClientConsensusStates) GetConsensusStates() []*types.Any {
+	if m != nil {
+		return m.ConsensusStates
+	}
+	return nil
+}
+
+// ClientUpdateProposal is a governance proposal. If it passes, the client is
+// updated with the provided header. The update may fail if the header is not
+// valid given certain conditions specified by the client implementation.
+type ClientUpdateProposal struct {
+	// the title of the update proposal
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// the description of the proposal
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// the client identifier for the client to be updated if the proposal passes
+	ClientId string `protobuf:"bytes,3,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// the header used to update the client if the proposal passes
+	Header *types.Any `protobuf:"bytes,4,opt,name=header,proto3" json:"header,omitempty"`
+}
+
+func (m *ClientUpdateProposal) Reset()         { *m = ClientUpdateProposal{} }
+func (m *ClientUpdateProposal) String() string { return proto.CompactTextString(m) }
+func (*ClientUpdateProposal) ProtoMessage()    {}
+func (*ClientUpdateProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{2}
+}
+func (m *ClientUpdateProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClientUpdateProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClientUpdateProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClientUpdateProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientUpdateProposal.Merge(m, src)
+}
+func (m *ClientUpdateProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClientUpdateProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientUpdateProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientUpdateProposal proto.InternalMessageInfo
+
+// MsgCreateClient defines a message to create an IBC client
+type MsgCreateClient struct {
+	// client unique identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// light client state
+	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
+	// consensus state associated with the client that corresponds to a given
+	// height.
+	ConsensusState *types.Any `protobuf:"bytes,3,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
+	// signer address
+	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+}
+
+func (m *MsgCreateClient) Reset()         { *m = MsgCreateClient{} }
+func (m *MsgCreateClient) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClient) ProtoMessage()    {}
+func (*MsgCreateClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{3}
+}
+func (m *MsgCreateClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClient.Merge(m, src)
+}
+func (m *MsgCreateClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClient proto.InternalMessageInfo
+
+func (m *MsgCreateClient) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *MsgCreateClient) GetClientState() *types.Any {
+	if m != nil {
+		return m.ClientState
+	}
+	return nil
+}
+
+func (m *MsgCreateClient) GetConsensusState() *types.Any {
+	if m != nil {
+		return m.ConsensusState
+	}
+	return nil
+}
+
+func (m *MsgCreateClient) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Signer
+	}
+	return nil
+}
+
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
+// the given header.
+type MsgUpdateClient struct {
+	// client unique identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// header to update the light client
+	Header *types.Any `protobuf:"bytes,2,opt,name=header,proto3" json:"header,omitempty"`
+	// signer address
+	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+}
+
+func (m *MsgUpdateClient) Reset()         { *m = MsgUpdateClient{} }
+func (m *MsgUpdateClient) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClient) ProtoMessage()    {}
+func (*MsgUpdateClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{4}
+}
+func (m *MsgUpdateClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClient.Merge(m, src)
+}
+func (m *MsgUpdateClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClient proto.InternalMessageInfo
+
+func (m *MsgUpdateClient) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *MsgUpdateClient) GetHeader() *types.Any {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *MsgUpdateClient) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Signer
+	}
+	return nil
+}
+
+// MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
+// light client misbehaviour.
+type MsgSubmitMisbehaviour struct {
+	// client unique identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// misbehaviour used for freezing the light client
+	Misbehaviour *types.Any `protobuf:"bytes,2,opt,name=misbehaviour,proto3" json:"misbehaviour,omitempty"`
+	// signer address
+	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+}
+
+func (m *MsgSubmitMisbehaviour) Reset()         { *m = MsgSubmitMisbehaviour{} }
+func (m *MsgSubmitMisbehaviour) String() string { return proto.CompactTextString(m) }
+func (*MsgSubmitMisbehaviour) ProtoMessage()    {}
+func (*MsgSubmitMisbehaviour) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{5}
+}
+func (m *MsgSubmitMisbehaviour) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubmitMisbehaviour) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubmitMisbehaviour.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubmitMisbehaviour) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubmitMisbehaviour.Merge(m, src)
+}
+func (m *MsgSubmitMisbehaviour) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubmitMisbehaviour) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubmitMisbehaviour.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubmitMisbehaviour proto.InternalMessageInfo
+
+func (m *MsgSubmitMisbehaviour) GetClientId() string {
+	if m != nil {
+		return m.ClientId
+	}
+	return ""
+}
+
+func (m *MsgSubmitMisbehaviour) GetMisbehaviour() *types.Any {
+	if m != nil {
+		return m.Misbehaviour
+	}
+	return nil
+}
+
+func (m *MsgSubmitMisbehaviour) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+	if m != nil {
+		return m.Signer
+	}
+	return nil
+}
+
+// Height is a monotonically increasing data type
+// that can be compared against another Height for the purposes of updating and
+// freezing clients
+//
+// Normally the EpochHeight is incremented at each height while keeping epoch
+// number the same However some consensus algorithms may choose to reset the
+// height in certain conditions e.g. hard forks, state-machine breaking changes
+// In these cases, the epoch number is incremented so that height continues to
+// be monitonically increasing even as the EpochHeight gets reset
+type Height struct {
+	// the epoch that the client is currently on
+	EpochNumber uint64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty" yaml:"epoch_number"`
+	// the height within the given epoch
+	EpochHeight uint64 `protobuf:"varint,2,opt,name=epoch_height,json=epochHeight,proto3" json:"epoch_height,omitempty" yaml:"epoch_height"`
+}
+
+func (m *Height) Reset()      { *m = Height{} }
+func (*Height) ProtoMessage() {}
+func (*Height) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{6}
+}
+func (m *Height) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Height) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Height.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Height) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Height.Merge(m, src)
+}
+func (m *Height) XXX_Size() int {
+	return m.Size()
+}
+func (m *Height) XXX_DiscardUnknown() {
+	xxx_messageInfo_Height.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Height proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*IdentifiedClientState)(nil), "ibc.client.IdentifiedClientState")
+	proto.RegisterType((*ClientConsensusStates)(nil), "ibc.client.ClientConsensusStates")
+	proto.RegisterType((*ClientUpdateProposal)(nil), "ibc.client.ClientUpdateProposal")
+	proto.RegisterType((*MsgCreateClient)(nil), "ibc.client.MsgCreateClient")
+	proto.RegisterType((*MsgUpdateClient)(nil), "ibc.client.MsgUpdateClient")
+	proto.RegisterType((*MsgSubmitMisbehaviour)(nil), "ibc.client.MsgSubmitMisbehaviour")
+	proto.RegisterType((*Height)(nil), "ibc.client.Height")
 }
 
 func init() { proto.RegisterFile("ibc/client/client.proto", fileDescriptor_226f80e576f20abd) }
 
 var fileDescriptor_226f80e576f20abd = []byte{
-	// 250 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcf, 0x4c, 0x4a, 0xd6,
-	0x4f, 0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0x81, 0x52, 0x7a, 0x05, 0x45, 0xf9, 0x25, 0xf9, 0x42, 0x5c,
-	0x99, 0x49, 0xc9, 0x7a, 0x10, 0x11, 0x29, 0x91, 0xf4, 0xfc, 0xf4, 0x7c, 0xb0, 0xb0, 0x3e, 0x88,
-	0x05, 0x51, 0x21, 0x25, 0x99, 0x9e, 0x9f, 0x9f, 0x9e, 0x93, 0xaa, 0x0f, 0xe6, 0x25, 0x95, 0xa6,
-	0xe9, 0x27, 0xe6, 0x55, 0x42, 0xa4, 0x94, 0x4a, 0xb9, 0x44, 0x3d, 0x53, 0x52, 0xf3, 0x4a, 0x32,
-	0xd3, 0x32, 0x53, 0x53, 0x9c, 0xc1, 0x86, 0x04, 0x97, 0x24, 0x96, 0xa4, 0x0a, 0xc9, 0x72, 0x31,
-	0x65, 0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x3a, 0xf1, 0x7e, 0xba, 0x27, 0xcf, 0x59, 0x99,
-	0x98, 0x9b, 0x63, 0xa5, 0x94, 0x99, 0xa2, 0x14, 0xc4, 0x94, 0x99, 0x22, 0x64, 0xce, 0xc5, 0x03,
-	0xb1, 0x32, 0xbe, 0x18, 0xa4, 0x5c, 0x82, 0x49, 0x81, 0x51, 0x83, 0xdb, 0x48, 0x44, 0x0f, 0x62,
-	0x93, 0x1e, 0xcc, 0x26, 0x3d, 0xc7, 0xbc, 0xca, 0x20, 0xee, 0x64, 0x84, 0xb9, 0x56, 0x2c, 0x1d,
-	0x0b, 0xe4, 0x19, 0x9c, 0x7c, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23,
-	0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0xca,
-	0x28, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f, 0x39, 0xbf, 0x38, 0x37,
-	0xbf, 0x18, 0x4a, 0xe9, 0x16, 0xa7, 0x64, 0xeb, 0x57, 0xe8, 0x83, 0x42, 0xc1, 0xc0, 0x48, 0x17,
-	0x1a, 0x10, 0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0x60, 0xeb, 0x8c, 0x01, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0x40, 0x46, 0x80, 0x22, 0x23, 0x01, 0x00, 0x00,
+	// 588 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x54, 0xb1, 0x8f, 0x12, 0x4f,
+	0x14, 0x66, 0x38, 0x7e, 0xe4, 0x18, 0xc8, 0x8f, 0xcb, 0x0a, 0x82, 0x98, 0xec, 0x92, 0xad, 0xae,
+	0x90, 0x5d, 0x0f, 0x1b, 0x43, 0x07, 0x34, 0x92, 0x88, 0xb9, 0xec, 0xc5, 0x42, 0x63, 0x72, 0xd9,
+	0x9d, 0x9d, 0xdb, 0x9d, 0xc8, 0xee, 0x6c, 0x76, 0x66, 0x8d, 0xfc, 0x07, 0xc6, 0xca, 0xd2, 0xc2,
+	0xe2, 0x4a, 0xff, 0x01, 0x3b, 0xed, 0xed, 0xbc, 0xd2, 0x8a, 0x18, 0xf8, 0x0f, 0x28, 0xad, 0x0c,
+	0x33, 0x8b, 0xc0, 0xe5, 0x38, 0x0d, 0x5a, 0x58, 0xed, 0xbc, 0xf7, 0xe6, 0x7d, 0xef, 0xfb, 0xbe,
+	0x07, 0x03, 0x6b, 0xc4, 0x41, 0x26, 0x1a, 0x11, 0x1c, 0xf2, 0xf4, 0x63, 0x44, 0x31, 0xe5, 0x54,
+	0x81, 0xc4, 0x41, 0x86, 0xcc, 0x34, 0x2a, 0x1e, 0xf5, 0xa8, 0x48, 0x9b, 0x8b, 0x93, 0xbc, 0xd1,
+	0xb8, 0xe5, 0x51, 0xea, 0x8d, 0xb0, 0x29, 0x22, 0x27, 0x39, 0x33, 0xed, 0x70, 0x2c, 0x4b, 0xfa,
+	0x3b, 0x00, 0xab, 0x03, 0x17, 0x87, 0x9c, 0x9c, 0x11, 0xec, 0xf6, 0x05, 0xca, 0x09, 0xb7, 0x39,
+	0x56, 0x8e, 0x60, 0x41, 0x82, 0x9e, 0x12, 0xb7, 0x0e, 0x9a, 0xe0, 0xb0, 0xd0, 0xab, 0xcc, 0x27,
+	0xda, 0xc1, 0xd8, 0x0e, 0x46, 0x1d, 0xfd, 0x67, 0x49, 0xb7, 0xf6, 0xe5, 0x79, 0xe0, 0x2a, 0xc7,
+	0xb0, 0x94, 0xe6, 0xd9, 0x02, 0xa2, 0x9e, 0x6d, 0x82, 0xc3, 0x62, 0xbb, 0x62, 0xc8, 0xf1, 0xc6,
+	0x72, 0xbc, 0xd1, 0x0d, 0xc7, 0xbd, 0xda, 0x7c, 0xa2, 0xdd, 0xd8, 0xc0, 0x12, 0x3d, 0xba, 0x55,
+	0x44, 0x2b, 0x12, 0xfa, 0x7b, 0x00, 0xab, 0x92, 0x54, 0x9f, 0x86, 0x0c, 0x87, 0x2c, 0x61, 0xa2,
+	0xc0, 0x76, 0xa1, 0xf7, 0x0c, 0x1e, 0xa0, 0x25, 0x8a, 0x9c, 0xc6, 0xea, 0xd9, 0xe6, 0xde, 0x56,
+	0x8a, 0xb7, 0xe7, 0x13, 0xad, 0x96, 0xe2, 0x5d, 0xea, 0xd3, 0xad, 0x32, 0xda, 0x24, 0xa4, 0x7f,
+	0x00, 0xb0, 0x22, 0xa9, 0x3e, 0x8e, 0x5c, 0x9b, 0xe3, 0xe3, 0x98, 0x46, 0x94, 0xd9, 0x23, 0xa5,
+	0x02, 0xff, 0xe3, 0x84, 0x8f, 0xb0, 0x64, 0x69, 0xc9, 0x40, 0x69, 0xc2, 0xa2, 0x8b, 0x19, 0x8a,
+	0x49, 0xc4, 0x09, 0x0d, 0x85, 0x55, 0x05, 0x6b, 0x3d, 0xb5, 0xa9, 0x70, 0xef, 0xb7, 0x14, 0xde,
+	0x81, 0x79, 0x1f, 0xdb, 0x2e, 0x8e, 0xeb, 0xb9, 0xed, 0xd6, 0x5b, 0xe9, 0x9d, 0x4e, 0xee, 0xd5,
+	0xb9, 0x96, 0xd1, 0x3f, 0x66, 0x61, 0x79, 0xc8, 0xbc, 0x7e, 0x8c, 0x6d, 0x8e, 0xa5, 0x80, 0x7f,
+	0x62, 0xf7, 0xca, 0x13, 0x58, 0xbe, 0x64, 0xbb, 0x70, 0x61, 0x1b, 0x68, 0x63, 0x3e, 0xd1, 0x6e,
+	0x5e, 0xb9, 0x2d, 0xdd, 0xfa, 0x7f, 0x73, 0x59, 0xca, 0x00, 0xe6, 0x19, 0xf1, 0xc2, 0xd4, 0xa7,
+	0x52, 0xef, 0xe8, 0xfb, 0x44, 0x6b, 0x79, 0x84, 0xfb, 0x89, 0x63, 0x20, 0x1a, 0x98, 0x88, 0xb2,
+	0x80, 0xb2, 0xf4, 0xd3, 0x62, 0xee, 0x73, 0x93, 0x8f, 0x23, 0xcc, 0x8c, 0x2e, 0x42, 0x5d, 0xd7,
+	0x8d, 0x31, 0x63, 0x56, 0x0a, 0xa0, 0x7f, 0x02, 0xc2, 0x3e, 0xb9, 0xf3, 0xdd, 0xed, 0x5b, 0x6d,
+	0x2e, 0xfb, 0xeb, 0xcd, 0xad, 0xf1, 0xdf, 0xfb, 0x53, 0xfe, 0x5f, 0x00, 0xac, 0x0e, 0x99, 0x77,
+	0x92, 0x38, 0x01, 0xe1, 0x43, 0xc2, 0x1c, 0xec, 0xdb, 0x2f, 0x08, 0x4d, 0xe2, 0x5d, 0x54, 0xdc,
+	0x87, 0xa5, 0x60, 0x0d, 0xe2, 0x5a, 0x2d, 0x1b, 0x37, 0xff, 0xa6, 0xa2, 0xd7, 0x00, 0xe6, 0x1f,
+	0x60, 0xe2, 0xf9, 0x5c, 0xe9, 0xc0, 0x12, 0x8e, 0x28, 0xf2, 0x4f, 0xc3, 0x24, 0x70, 0x70, 0x2c,
+	0x54, 0xe4, 0xd6, 0x7f, 0x7e, 0xeb, 0x55, 0xdd, 0x2a, 0x8a, 0xf0, 0x91, 0x88, 0x56, 0xbd, 0xbe,
+	0xc0, 0x12, 0x5a, 0xae, 0xe8, 0x95, 0xd5, 0x65, 0xaf, 0x9c, 0xdb, 0xd9, 0x5f, 0xfc, 0xb3, 0xde,
+	0x9e, 0x6b, 0x99, 0xde, 0xc3, 0xcf, 0x53, 0x15, 0x5c, 0x4c, 0x55, 0xf0, 0x6d, 0xaa, 0x82, 0x37,
+	0x33, 0x35, 0x73, 0x31, 0x53, 0x33, 0x5f, 0x67, 0x6a, 0xe6, 0x69, 0xfb, 0x5a, 0x75, 0x2f, 0xcd,
+	0xc5, 0x73, 0x7f, 0xb7, 0xdd, 0x4a, 0x5f, 0x7c, 0xa1, 0xd6, 0xc9, 0x0b, 0x07, 0xef, 0xfd, 0x08,
+	0x00, 0x00, 0xff, 0xff, 0x57, 0xd4, 0xed, 0x68, 0x0c, 0x06, 0x00, 0x00,
 }
 
 func (m *IdentifiedClientState) Marshal() (dAtA []byte, err error) {
@@ -122,12 +521,304 @@ func (m *IdentifiedClientState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Id) > 0 {
-		i -= len(m.Id)
-		copy(dAtA[i:], m.Id)
-		i = encodeVarintClient(dAtA, i, uint64(len(m.Id)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClientConsensusStates) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClientConsensusStates) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClientConsensusStates) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ConsensusStates) > 0 {
+		for iNdEx := len(m.ConsensusStates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ConsensusStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintClient(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClientUpdateProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClientUpdateProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClientUpdateProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Header != nil {
+		{
+			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateClient) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClient) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.ConsensusState != nil {
+		{
+			size, err := m.ConsensusState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ClientState != nil {
+		{
+			size, err := m.ClientState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateClient) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClient) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Header != nil {
+		{
+			size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSubmitMisbehaviour) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubmitMisbehaviour) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubmitMisbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Misbehaviour != nil {
+		{
+			size, err := m.Misbehaviour.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Height) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Height) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Height) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.EpochHeight != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.EpochHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.EpochNumber != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.EpochNumber))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -149,13 +840,139 @@ func (m *IdentifiedClientState) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Id)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovClient(uint64(l))
 	}
 	if m.ClientState != nil {
 		l = m.ClientState.Size()
 		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
+func (m *ClientConsensusStates) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if len(m.ConsensusStates) > 0 {
+		for _, e := range m.ConsensusStates {
+			l = e.Size()
+			n += 1 + l + sovClient(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ClientUpdateProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.Header != nil {
+		l = m.Header.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.ClientState != nil {
+		l = m.ClientState.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.ConsensusState != nil {
+		l = m.ConsensusState.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.Header != nil {
+		l = m.Header.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSubmitMisbehaviour) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.Misbehaviour != nil {
+		l = m.Misbehaviour.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
+func (m *Height) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.EpochNumber != 0 {
+		n += 1 + sovClient(uint64(m.EpochNumber))
+	}
+	if m.EpochHeight != 0 {
+		n += 1 + sovClient(uint64(m.EpochHeight))
 	}
 	return n
 }
@@ -197,7 +1014,7 @@ func (m *IdentifiedClientState) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -225,7 +1042,7 @@ func (m *IdentifiedClientState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Id = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -263,6 +1080,902 @@ func (m *IdentifiedClientState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClientConsensusStates) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClientConsensusStates: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClientConsensusStates: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusStates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConsensusStates = append(m.ConsensusStates, &types.Any{})
+			if err := m.ConsensusStates[len(m.ConsensusStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClientUpdateProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClientUpdateProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClientUpdateProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Header", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Header == nil {
+				m.Header = &types.Any{}
+			}
+			if err := m.Header.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateClient) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClient: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClient: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientState == nil {
+				m.ClientState = &types.Any{}
+			}
+			if err := m.ClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ConsensusState == nil {
+				m.ConsensusState = &types.Any{}
+			}
+			if err := m.ConsensusState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signer == nil {
+				m.Signer = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateClient) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClient: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClient: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Header", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Header == nil {
+				m.Header = &types.Any{}
+			}
+			if err := m.Header.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signer == nil {
+				m.Signer = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubmitMisbehaviour) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubmitMisbehaviour: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubmitMisbehaviour: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Misbehaviour", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Misbehaviour == nil {
+				m.Misbehaviour = &types.Any{}
+			}
+			if err := m.Misbehaviour.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signer == nil {
+				m.Signer = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Height) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Height: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Height: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochNumber", wireType)
+			}
+			m.EpochNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpochHeight", wireType)
+			}
+			m.EpochHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EpochHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClient(dAtA[iNdEx:])

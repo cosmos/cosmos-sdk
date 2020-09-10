@@ -66,23 +66,24 @@ type Config struct {
 	Codec             codec.Marshaler
 	LegacyAmino       *codec.LegacyAmino // TODO: Remove!
 	InterfaceRegistry codectypes.InterfaceRegistry
-	TxConfig          client.TxConfig
-	AccountRetriever  client.AccountRetriever
-	AppConstructor    AppConstructor             // the ABCI application constructor
-	GenesisState      map[string]json.RawMessage // custom gensis state to provide
-	TimeoutCommit     time.Duration              // the consensus commitment timeout
-	ChainID           string                     // the network chain-id
-	NumValidators     int                        // the total number of validators to create and bond
-	BondDenom         string                     // the staking bond denomination
-	MinGasPrices      string                     // the minimum gas prices each validator will accept
-	AccountTokens     sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens     sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens      sdk.Int                    // the amount of tokens each validator stakes
-	PruningStrategy   string                     // the pruning strategy each validator will have
-	EnableLogging     bool                       // enable Tendermint logging to STDOUT
-	CleanupDir        bool                       // remove base temporary directory during cleanup
-	SigningAlgo       string                     // signing algorithm for keys
-	KeyringOptions    []keyring.Option
+
+	TxConfig         client.TxConfig
+	AccountRetriever client.AccountRetriever
+	AppConstructor   AppConstructor             // the ABCI application constructor
+	GenesisState     map[string]json.RawMessage // custom gensis state to provide
+	TimeoutCommit    time.Duration              // the consensus commitment timeout
+	ChainID          string                     // the network chain-id
+	NumValidators    int                        // the total number of validators to create and bond
+	BondDenom        string                     // the staking bond denomination
+	MinGasPrices     string                     // the minimum gas prices each validator will accept
+	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
+	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
+	PruningStrategy  string                     // the pruning strategy each validator will have
+	EnableLogging    bool                       // enable Tendermint logging to STDOUT
+	CleanupDir       bool                       // remove base temporary directory during cleanup
+	SigningAlgo      string                     // signing algorithm for keys
+	KeyringOptions   []keyring.Option
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -300,8 +301,11 @@ func New(t *testing.T, cfg Config) *Network {
 		require.NoError(t, err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		require.NoError(t, txBuilder.SetMsgs(createValMsg))
+		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
+		txBuilder.SetGasLimit(1000000) // Need at least 100386
 		txBuilder.SetMemo(memo)
 
 		txFactory := tx.Factory{}
@@ -324,11 +328,11 @@ func New(t *testing.T, cfg Config) *Network {
 			WithKeyring(kb).
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
+			WithInterfaceRegistry(cfg.InterfaceRegistry).
 			WithJSONMarshaler(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever).
-			WithInterfaceRegistry(cfg.InterfaceRegistry)
+			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
 			AppConfig:  appCfg,

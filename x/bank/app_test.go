@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,6 +22,7 @@ type (
 	}
 
 	appTestCase struct {
+		desc             string
 		expSimPass       bool
 		expPass          bool
 		msgs             []sdk.Msg
@@ -109,7 +110,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	txGen := simapp.MakeEncodingConfig().TxConfig
-	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
@@ -177,7 +178,7 @@ func TestSendToModuleAcc(t *testing.T) {
 
 			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 			txGen := simapp.MakeEncodingConfig().TxConfig
-			_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{test.msg}, []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
+			_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{test.msg}, "", []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
 			if test.expPass {
 				require.NoError(t, err)
 			} else {
@@ -216,6 +217,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
+			desc:       "make a valid tx",
 			msgs:       []sdk.Msg{multiSendMsg1},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
@@ -228,17 +230,19 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			},
 		},
 		{
+			desc:       "wrong accNum should pass Simulate, but not Deliver",
 			msgs:       []sdk.Msg{multiSendMsg1, multiSendMsg2},
-			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
+			accNums:    []uint64{1}, // wrong account number
+			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
 		},
 		{
+			desc:       "wrong accSeq should not pass Simulate",
 			msgs:       []sdk.Msg{multiSendMsg5},
 			accNums:    []uint64{0},
-			accSeqs:    []uint64{0},
+			accSeqs:    []uint64{0}, // wrong account sequence
 			expSimPass: false,
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
@@ -248,7 +252,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txGen := simapp.MakeEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		if tc.expPass {
 			require.NoError(t, err)
 		} else {
@@ -300,7 +304,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txGen := simapp.MakeEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
@@ -355,7 +359,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txGen := simapp.MakeEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {
@@ -408,7 +412,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	for _, tc := range testCases {
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 		txGen := simapp.MakeEncodingConfig().TxConfig
-		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		_, _, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
 
 		for _, eb := range tc.expectedBalances {

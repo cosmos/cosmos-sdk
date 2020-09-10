@@ -47,6 +47,13 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
+# IndexEvents defines the set of events in the form {eventType}.{attributeKey},
+# which informs Tendermint what to index. If empty, all events will be indexed.
+#
+# Example:
+# ["message.sender", "message.recipient"]
+index-events = {{ .BaseConfig.IndexEvents }}
+
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################
@@ -123,6 +130,21 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
+
+###############################################################################
+###                        State Sync Configuration                         ###
+###############################################################################
+
+# State sync snapshots allow other nodes to rapidly join the network without replaying historical
+# blocks, instead downloading and applying a snapshot of the application state at a given height.
+[state-sync]
+
+# snapshot-interval specifies the block interval at which local state sync snapshots are
+# taken (0 to disable). Must be a multiple of pruning-keep-every.
+snapshot-interval = {{ .StateSync.SnapshotInterval }}
+
+# snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
+snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 `
 
 var configTemplate *template.Template

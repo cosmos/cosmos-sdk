@@ -47,6 +47,16 @@ callbacks to IBC applications.
 | message             | sender           | {senderAddress}     |
 | submit_evidence     | evidence_hash    | {evidenceHash}      |
 
+### UpdateClientProposal
+
+| Type                   | Attribute Key    | Attribute Value   |
+|------------------------|------------------|-------------------|
+| update_client_proposal | client_id        | {clientId}        |
+| update_client_proposal | client_type      | {clientType}      |
+| update_client_proposal | consensus_height | {consensusHeight} |
+
+
+
 ## ICS 03 - Connection
 
 ### MsgConnectionOpenInit
@@ -183,7 +193,7 @@ callbacks to IBC applications.
 | message     | action                   | application-module-defined-field |
 | message     | module                   | ibc-channel                      |
 
-### RecvPacket 
+### MsgRecvPacket 
 
 | Type        | Attribute Key            | Attribute Value      |
 |-------------|--------------------------|----------------------|
@@ -200,7 +210,7 @@ callbacks to IBC applications.
 | message     | action                   | recv_packet          |
 | message     | module                   | ibc-channel          |
 
-### AcknowledgePacket 
+### MsgAcknowledgePacket 
 
 | Type               | Attribute Key            | Attribute Value      |
 |--------------------|--------------------------|----------------------|
@@ -215,7 +225,7 @@ callbacks to IBC applications.
 | message            | action                   | acknowledge_packet   |
 | message            | module                   | ibc-channel          |
 
-### TimeoutPacket & TimeoutOnClose 
+### MsgTimeoutPacket & MsgTimeoutOnClose 
 
 | Type           | Attribute Key            | Attribute Value      |
 |----------------|--------------------------|----------------------|

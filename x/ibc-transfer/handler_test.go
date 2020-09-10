@@ -7,11 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	exported "github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-type HandlerTestSuite struct {
+type TransferTestSuite struct {
 	suite.Suite
 
 	coordinator *ibctesting.Coordinator
@@ -21,7 +23,7 @@ type HandlerTestSuite struct {
 	chainB *ibctesting.TestChain
 }
 
-func (suite *HandlerTestSuite) SetupTest() {
+func (suite *TransferTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
@@ -29,22 +31,24 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 // constructs a send from chainA to chainB on the established channel/connection
 // and sends the same coin back from chainB to chainA.
-func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
-	clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+func (suite *TransferTestSuite) TestHandleMsgTransfer() {
+	clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
+	channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
 	originalBalance := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
+	timeoutHeight := clienttypes.NewHeight(0, 110)
 
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
 	// send from chainA to chainB
-	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), 110, 0)
+	msg := types.NewMsgTransfer(channelA.PortID, channelA.ID, coinToSendToB, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), timeoutHeight, 0)
 
-	err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msg)
+	err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
 	fungibleTokenPacket := types.NewFungibleTokenPacketData(coinToSendToB.Denom, coinToSendToB.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
-	packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, 110, 0)
-	ack := types.FungibleTokenPacketAcknowledgement{Success: true}
+	packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 	err = suite.coordinator.RelayPacket(suite.chainA, suite.chainB, clientA, clientB, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
 
@@ -56,16 +60,16 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Equal(coinToSendBackToA, balance)
 
 	// send from chainB back to chainA
-	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), 110, 0)
+	msg = types.NewMsgTransfer(channelB.PortID, channelB.ID, coinToSendBackToA, suite.chainB.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(), timeoutHeight, 0)
 
-	err = suite.coordinator.SendMsgs(suite.chainB, suite.chainA, clientA, msg)
+	err = suite.coordinator.SendMsg(suite.chainB, suite.chainA, clientA, msg)
 	suite.Require().NoError(err) // message committed
 
 	// relay send
 	// NOTE: fungible token is prefixed with the full trace in order to verify the packet commitment
 	voucherDenom := voucherDenomTrace.GetPrefix() + voucherDenomTrace.BaseDenom
 	fungibleTokenPacket = types.NewFungibleTokenPacketData(voucherDenom, coinToSendBackToA.Amount.Uint64(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
-	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
+	packet = channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, timeoutHeight, 0)
 	err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
 	suite.Require().NoError(err) // relay committed
 
@@ -84,6 +88,6 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.Require().Zero(balance.Amount.Int64())
 }
 
-func TestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
+func TestTransferTestSuite(t *testing.T) {
+	suite.Run(t, new(TransferTestSuite))
 }

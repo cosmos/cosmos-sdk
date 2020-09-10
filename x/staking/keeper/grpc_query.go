@@ -26,12 +26,11 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Status == "" {
-		return nil, status.Error(codes.InvalidArgument, "status cannot be empty")
-	}
-	if !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
+	// validate the provided status, return all the validators if the status is empty
+	if req.Status != "" && !(req.Status == sdk.Bonded.String() || req.Status == sdk.Unbonded.String() || req.Status == sdk.Unbonding.String()) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
+
 	var validators types.Validators
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -51,6 +50,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 		if accumulate {
 			validators = append(validators, val)
 		}
+
 		return true, nil
 	})
 
@@ -133,9 +133,13 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))
+	srcValPrefix := types.GetUBDsByValIndexKey(req.ValidatorAddr)
+	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
-		ubd, err := types.UnmarshalUBD(k.cdc, value)
+		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
+		storeValue := store.Get(storeKey)
+
+		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
 		if err != nil {
 			return err
 		}

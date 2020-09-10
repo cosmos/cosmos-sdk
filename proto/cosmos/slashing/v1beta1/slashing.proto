@@ -8,13 +8,13 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-// ValidatorSigningInfo defines the signing info for a validator
+// ValidatorSigningInfo defines a validator's signing info for monitoring their liveness activity.
 message ValidatorSigningInfo {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   bytes address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress"  // validator consensus address
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ConsAddress" // validator consensus address
   ];
   // height at which validator was first a candidate OR was unjailed
   int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];
@@ -29,7 +29,7 @@ message ValidatorSigningInfo {
   int64 missed_blocks_counter = 6 [(gogoproto.moretags) = "yaml:\"missed_blocks_counter\""];
 }
 
-// Params - used for initializing default parameter for slashing at genesis
+// Params represents the parameters used for by the slashing module.
 message Params {
   int64 signed_blocks_window  = 1 [(gogoproto.moretags) = "yaml:\"signed_blocks_window\""];
   bytes min_signed_per_window = 2 [

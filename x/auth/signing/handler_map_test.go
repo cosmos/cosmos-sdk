@@ -5,8 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -61,9 +60,9 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	aminoJSONHandler := authtypes.NewStdTxSignModeHandler()
 
 	signingData := signing.SignerData{
-		ChainID:         chainId,
-		AccountNumber:   accNum,
-		AccountSequence: seqNum,
+		ChainID:       chainId,
+		AccountNumber: accNum,
+		Sequence:      seqNum,
 	}
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)

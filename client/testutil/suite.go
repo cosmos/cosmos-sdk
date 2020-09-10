@@ -100,13 +100,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Contains(signModeHandler.Modes(), signModeHandler.DefaultMode())
 
 	// set SignatureV2 without actual signature bytes
+	seq1 := uint64(2) // Arbitrary account sequence
 	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
+	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
 
+	mseq := uint64(4) // Arbitrary account sequence
 	msigData := multisig.NewMultisig(2)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
-	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 
 	// fail validation without required signers
 	err = txBuilder.SetSignatures(sig1)
@@ -117,7 +119,6 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
-	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err := sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Len(sigsV2, 2)
@@ -128,9 +129,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// sign transaction
 	signerData := signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   1,
-		AccountSequence: 2,
+		ChainID:       "test",
+		AccountNumber: 1,
+		Sequence:      seq1,
 	}
 	signBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -138,9 +139,9 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 
 	signerData = signing.SignerData{
-		ChainID:         "test",
-		AccountNumber:   3,
-		AccountSequence: 4,
+		ChainID:       "test",
+		AccountNumber: 3,
+		Sequence:      mseq,
 	}
 	mSignBytes, err := signModeHandler.GetSignBytes(signModeHandler.DefaultMode(), signerData, sigTx)
 	s.Require().NoError(err)
@@ -156,12 +157,11 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set signature
 	sigData1.Signature = sigBz
-	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1}
-	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData}
+	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
+	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
-	s.Require().Len(sigTx.GetSignatures(), 2)
 	sigsV2, err = sigTx.GetSignaturesV2()
 	s.Require().NoError(err)
 	s.Require().Len(sigsV2, 2)
@@ -239,6 +239,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: dummySig,
 		},
+		SkipSequenceCheck: s.TxConfig.SignModeHandler().DefaultMode() == signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}
 
 	txBuilder := s.TxConfig.NewTxBuilder()
@@ -265,7 +266,9 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(feeAmount, tx3.GetFee())
 	s.Require().Equal(gasLimit, tx3.GetGas())
 	s.Require().Equal(memo, tx3.GetMemo())
-	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
+	tx3Sigs, err := tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
 	s.T().Log("JSON encode transaction")
@@ -282,7 +285,9 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(feeAmount, tx3.GetFee())
 	s.Require().Equal(gasLimit, tx3.GetGas())
 	s.Require().Equal(memo, tx3.GetMemo())
-	s.Require().Equal([][]byte{dummySig}, tx3.GetSignatures())
+	tx3Sigs, err = tx3.GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 }
 

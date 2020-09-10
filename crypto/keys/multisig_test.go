@@ -8,6 +8,7 @@ import (
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	proto "github.com/gogo/protobuf/proto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -30,17 +31,17 @@ func TestEquals(t *testing.T) {
 
 	pbPubKey1 := &keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)}
 	pbPubKey2 := &keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)}
-	anyPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, pbPubKey2})
+	anyPubKeys, err := packPubKeys([]tmcrypto.PubKey{pbPubKey1, pbPubKey2})
 	require.NoError(t, err)
 	multisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: anyPubKeys}
 
-	otherPubKeys, err := packPubKeys([]crypto.PubKey{pbPubKey1, &multisigKey})
+	otherPubKeys, err := packPubKeys([]tmcrypto.PubKey{pbPubKey1, &multisigKey})
 	require.NoError(t, err)
 	otherMultisigKey := keys.LegacyAminoMultisigThresholdPubKey{K: 1, PubKeys: otherPubKeys}
 
 	testCases := []struct {
 		msg      string
-		other    crypto.PubKey
+		other    tmcrypto.PubKey
 		expectEq bool
 	}{
 		{
@@ -70,7 +71,7 @@ func TestEquals(t *testing.T) {
 		},
 		{
 			"equals with amino pub key",
-			multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{pubKey1, pubKey2}),
+			multisig.NewPubKeyMultisigThreshold(1, []tmcrypto.PubKey{pubKey1, pubKey2}),
 			true,
 		},
 	}
@@ -177,8 +178,8 @@ func TestVerifyMultisignature(t *testing.T) {
 	}
 }
 
-func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []crypto.PubKey, signatures []signing.SignatureData) {
-	pubKeys = make([]crypto.PubKey, n)
+func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []tmcrypto.PubKey, signatures []signing.SignatureData) {
+	pubKeys = make([]tmcrypto.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
 
 	for i := 0; i < n; i++ {
@@ -192,7 +193,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []crypto.PubKey, s
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData, error) {
-	pubKeys := make([]crypto.PubKey, n)
+	pubKeys := make([]tmcrypto.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
 	bitArray := crypto.NewCompactBitArray(n)
 	for i := 0; i < n; i++ {
@@ -223,7 +224,7 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 	}, nil
 }
 
-func packPubKeys(pubKeys []crypto.PubKey) ([]*types.Any, error) {
+func packPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {

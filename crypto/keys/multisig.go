@@ -84,11 +84,11 @@ func (m *LegacyAminoMultisigThresholdPubKey) VerifySignature(msg []byte, sig []b
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method
-func (m *LegacyAminoMultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
+func (m *LegacyAminoMultisigThresholdPubKey) GetPubKeys() []tmcrypto.PubKey {
 	if m != nil {
-		pubKeys := make([]crypto.PubKey, len(m.PubKeys))
+		pubKeys := make([]tmcrypto.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
-			pubKeys[i] = m.PubKeys[i].GetCachedValue().(crypto.PubKey)
+			pubKeys[i] = m.PubKeys[i].GetCachedValue().(tmcrypto.PubKey)
 		}
 		return pubKeys
 	}
@@ -98,7 +98,7 @@ func (m *LegacyAminoMultisigThresholdPubKey) GetPubKeys() []crypto.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *LegacyAminoMultisigThresholdPubKey) Equals(key crypto.PubKey) bool {
+func (m *LegacyAminoMultisigThresholdPubKey) Equals(key tmcrypto.PubKey) bool {
 	otherKey, ok := key.(multisig.PubKey)
 	if !ok {
 		return false

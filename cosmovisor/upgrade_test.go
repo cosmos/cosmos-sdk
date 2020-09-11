@@ -12,7 +12,6 @@ import (
 
 	copy2 "github.com/otiai10/copy"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -270,7 +269,7 @@ func TestDownloadBinary(t *testing.T) {
 func copyTestData(subdir string) (string, error) {
 	tmpdir, err := ioutil.TempDir("", "upgrade-manager-test")
 	if err != nil {
-		return "", errors.Wrap(err, "create temp dir")
+		return "", fmt.Errorf("couldn't create temporary directory: %w", err)
 	}
 
 	src := filepath.Join("testdata", subdir)
@@ -278,7 +277,8 @@ func copyTestData(subdir string) (string, error) {
 	err = copy2.Copy(src, tmpdir)
 	if err != nil {
 		os.RemoveAll(tmpdir)
-		return "", errors.Wrap(err, "copying files")
+		return "", fmt.Errorf("couldn't copy files: %w", err)
 	}
+
 	return tmpdir, nil
 }

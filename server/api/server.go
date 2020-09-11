@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/rakyll/statik/fs"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 
@@ -84,7 +83,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	if cfg.API.Swagger {
-		s.registerSwaggerUI()
+		//s.registerSwaggerUI()
 	}
 
 	if cfg.Telemetry.Enabled {
@@ -125,16 +124,6 @@ func (s *Server) Start(cfg config.Config) error {
 // Close closes the API server.
 func (s *Server) Close() error {
 	return s.listener.Close()
-}
-
-func (s *Server) registerSwaggerUI() {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-
-	staticServer := http.FileServer(statikFS)
-	s.Router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 }
 
 func (s *Server) registerGRPCRoutes() {

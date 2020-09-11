@@ -1,8 +1,6 @@
 package tx
 
 import (
-	fmt "fmt"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -50,7 +48,6 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	fmt.Println("SignerInfo UnpackInterfaces m.PublicKey=", m.PublicKey)
 	var pubKey crypto.PubKey
 	err := unpacker.UnpackAny(m.PublicKey, &pubKey)
 	if err != nil {

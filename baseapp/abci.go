@@ -277,7 +277,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
-	retainHeight := app.GetBlockRentionHeight(header.Height)
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
@@ -563,7 +563,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	return ctx, nil
 }
 
-// GetBlockRentionHeight returns the height for which all blocks below this height
+// GetBlockRetentionHeight returns the height for which all blocks below this height
 // are pruned from Tendermint. Given a commitment height and a non-zero local
 // minRetainBlocks configuration, the retentionHeight is the smallest height that
 // satisfies:
@@ -590,11 +590,17 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 		return 0
 	}
 
-	min := func(x, y int64) int64 {
-		if x < y {
+	minNonZero := func(x, y int64) int64 {
+		switch {
+		case x == 0:
+			return y
+		case y == 0:
 			return x
+		case x < y:
+			return x
+		default:
+			return y
 		}
-		return y
 	}
 
 	// Define retentionHeight as the minimum value that satisfies all non-zero
@@ -617,28 +623,16 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	statePruningInterval := int64(app.cms.GetPruning().Interval)
 	if statePruningInterval > 0 {
 		v := commitHeight - statePruningInterval
-		if retentionHeight == 0 {
-			retentionHeight = v
-		} else {
-			retentionHeight = min(retentionHeight, v)
-		}
+		retentionHeight = minNonZero(retentionHeight, v)
 	}
 
 	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
 		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
-		if retentionHeight == 0 {
-			retentionHeight = v
-		} else {
-			retentionHeight = min(retentionHeight, v)
-		}
+		retentionHeight = minNonZero(retentionHeight, v)
 	}
 
 	v := commitHeight - int64(app.minRetainBlocks)
-	if retentionHeight == 0 {
-		retentionHeight = v
-	} else {
-		retentionHeight = min(retentionHeight, v)
-	}
+	retentionHeight = minNonZero(retentionHeight, v)
 
 	if retentionHeight <= 0 {
 		// prune nothing in the case of a non-positive height

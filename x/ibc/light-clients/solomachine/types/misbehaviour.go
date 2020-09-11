@@ -5,24 +5,19 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var (
-	_ evidenceexported.Evidence   = (*Misbehaviour)(nil)
-	_ clientexported.Misbehaviour = (*Misbehaviour)(nil)
+	_ exported.Misbehaviour = (*Misbehaviour)(nil)
 )
 
 // ClientType is a Solo Machine light client.
-func (misbehaviour Misbehaviour) ClientType() clientexported.ClientType {
-	return clientexported.SoloMachine
+func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
+	return exported.SoloMachine
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.
@@ -30,14 +25,9 @@ func (misbehaviour Misbehaviour) GetClientID() string {
 	return misbehaviour.ClientId
 }
 
-// Route implements Evidence interface.
-func (misbehaviour Misbehaviour) Route() string {
-	return clienttypes.SubModuleName
-}
-
 // Type implements Evidence interface.
 func (misbehaviour Misbehaviour) Type() string {
-	return clientexported.TypeEvidenceClientMisbehaviour
+	return exported.TypeClientMisbehaviour
 }
 
 // String implements Evidence interface.
@@ -46,15 +36,11 @@ func (misbehaviour Misbehaviour) String() string {
 	return string(out)
 }
 
-// Hash implements Evidence interface
-func (misbehaviour Misbehaviour) Hash() tmbytes.HexBytes {
-	bz := SubModuleCdc.MustMarshalBinaryBare(&misbehaviour)
-	return tmhash.Sum(bz)
-}
-
 // GetHeight returns the sequence at which misbehaviour occurred.
-func (misbehaviour Misbehaviour) GetHeight() int64 {
-	return int64(misbehaviour.Sequence)
+// Return exported.Height to satisfy interface
+// Epoch number is always 0 for a solo-machine
+func (misbehaviour Misbehaviour) GetHeight() exported.Height {
+	return clienttypes.NewHeight(0, misbehaviour.Sequence)
 }
 
 // ValidateBasic implements Evidence interface.

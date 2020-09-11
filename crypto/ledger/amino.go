@@ -5,7 +5,7 @@ import (
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
-var cdc = codec.New()
+var cdc = codec.NewLegacyAmino()
 
 func init() {
 	RegisterAmino(cdc)

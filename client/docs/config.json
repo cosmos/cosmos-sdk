@@ -1,11 +1,10 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Cosmos SDK - Legacy Rest and gRPC Gateway docs",
+    "title": "Cosmos SDK - Legacy REST and gRPC Gateway docs",
     "description": "A REST interface for state queries, legacy transactions",
     "version": "1.0.0"
   },
-
   "apis": [
     {
       "url": "./client/docs/swagger_legacy.yaml",

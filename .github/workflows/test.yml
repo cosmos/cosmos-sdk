@@ -23,13 +23,13 @@ jobs:
         id: git_diff
         with:
           PREFIX_FILTER: |
-              cosmovisor
+            cosmovisor
           SUFFIX_FILTER: |
             .go
             .mod
             .sum
       - name: Run cosmovisor tests
-        run: cd cosmovisor; go test .
+        run: cd cosmovisor; make
         if: "env.GIT_DIFF != ''"
   split-test-files:
     runs-on: ubuntu-latest
@@ -204,6 +204,7 @@ jobs:
         with:
           file: ./coverage.txt
         if: "env.GIT_DIFF != ''"
+
   liveness-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -216,9 +217,6 @@ jobs:
             .go
             .mod
             .sum
-      - name: build image
-        run: |
-          make build-docker-local-simapp
       - name: start localnet
         run: |
           make clean localnet-start

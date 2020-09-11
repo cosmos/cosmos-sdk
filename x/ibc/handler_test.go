@@ -5,18 +5,17 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-const (
-	timeoutHeight = uint64(10000)
-	totalPackets  = uint64(10)
+var (
+	timeoutHeight = clienttypes.NewHeight(0, 10000)
+	maxSequence   = uint64(10)
 )
 
 type HandlerTestSuite struct {
@@ -42,7 +41,7 @@ func TestHandlerTestSuite(t *testing.T) {
 // tests the IBC handler receiving a packet on ordered and unordered channels.
 // It verifies that the storing of an acknowledgement on success occurs. It
 // tests high level properties like ordering and basic sanity checks. More
-// rigorous testing of 'RecvPacket' and 'PacketExecuted' can be found in the
+// rigorous testing of 'RecvPacket' and 'ReceiveExecuted' can be found in the
 // 04-channel/keeper/packet_test.go.
 func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	var (
@@ -55,39 +54,37 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 		expPass  bool
 	}{
 		{"success: ORDERED", func() {
-			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED out of order packet", func() {
 			// setup uses an UNORDERED channel
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			// attempts to receive packet with sequence 10 without receiving packet with sequence 1
 			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 			}
 		}, true},
 		{"failure: ORDERED out of order packet", func() {
-			_, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
 
 			// attempts to receive packet with sequence 10 without receiving packet with sequence 1
 			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
@@ -98,29 +95,28 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 			suite.Require().NotNil(packet)
 		}, false},
 		{"packet not sent", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 		}, false},
 		{"ORDERED: packet already received (replay)", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, false},
 	}
@@ -178,54 +174,52 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 		expPass  bool
 	}{
 		{"success: ORDERED", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED acknowledge out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 			// attempts to acknowledge ack with sequence 10 without acknowledging ack with sequence 1 (removing packet commitment)
 			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 
 			}
 		}, true},
 		{"failure: ORDERED acknowledge out of order packet", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
 
 			// attempts to acknowledge ack with sequence 10 without acknowledging ack with sequence 1 (removing packet commitment
 			for i := uint64(1); i < 10; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
 
-				err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 			}
 		}, false},
@@ -234,35 +228,34 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NotNil(packet)
 		}, false},
 		{"packet not received", func() {
-			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 		}, false},
 		{"ORDERED: packet already acknowledged (replay)", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 		}, false},
 		{"UNORDERED: packet already received (replay)", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.PacketExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)
@@ -275,7 +268,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
-			ibctesting.TestHash = ibctransfertypes.FungibleTokenPacketAcknowledgement{true, ""}.GetBytes()
+			ibctesting.TestHash = ibctesting.MockAcknowledgement
 
 			handler := ibc.NewHandler(*suite.chainA.App.IBCKeeper)
 
@@ -284,9 +277,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			packetKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetKey)
 
-			ack := ibctesting.TestHash
-
-			msg := channeltypes.NewMsgAcknowledgement(packet, ack, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
+			msg := channeltypes.NewMsgAcknowledgement(packet, ibctesting.MockAcknowledgement, proof, proofHeight, suite.chainA.SenderAccount.GetAddress())
 
 			_, err := handler(suite.chainA.GetContext(), msg)
 
@@ -297,8 +288,8 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 				_, err := handler(suite.chainA.GetContext(), msg)
 				suite.Require().Error(err)
 
-				// verify packet commitment was deleted
-				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+				// verify packet commitment was deleted on source chain
+				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 				suite.Require().False(has)
 
 			} else {
@@ -325,73 +316,63 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 		expPass  bool
 	}{
 		{"success: ORDERED", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
-			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
-			suite.Require().NoError(err) // message committed
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 
-			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
-			suite.Require().NoError(err) // message committed
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
-			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
 			// packet sequences begin at 1
-			for i := uint64(0); i < totalPackets; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
-				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			for i := uint64(1); i < maxSequence; i++ {
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), 0)
+
+				// create packet commitment
+				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+				suite.Require().NoError(err)
 			}
 
-			// send from chainA to chainB
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
-			suite.Require().NoError(err) // message committed
-
-			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
 
-			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
 			// packet sequences begin at 1
-			for i := uint64(0); i < totalPackets; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), 0)
-				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			for i := uint64(1); i < maxSequence; i++ {
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), 0)
+
+				// create packet commitment
+				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+				suite.Require().NoError(err)
 			}
 
-			// send from chainA to chainB
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
-			suite.Require().NoError(err) // message committed
-
-			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
 		}, true},
@@ -402,8 +383,8 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
-			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, false},
 	}
@@ -431,8 +412,8 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 				_, err := handler(suite.chainA.GetContext(), msg)
 				suite.Require().Error(err)
 
-				// verify packet commitment was deleted
-				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+				// verify packet commitment was deleted on source chain
+				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 				suite.Require().False(has)
 
 			} else {
@@ -460,22 +441,20 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 		expPass  bool
 	}{
 		{"success: ORDERED", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
 				CounterpartyClientID: clientA,
 			}
 
-			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
-			suite.Require().NoError(err) // message committed
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
@@ -484,21 +463,20 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 		}, true},
 		{"success: UNORDERED", func() {
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
 				CounterpartyClientID: clientA,
 			}
 
-			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
-			suite.Require().NoError(err) // message committed
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
@@ -508,27 +486,25 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
 				CounterpartyClientID: clientA,
 			}
 
-			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
 			// packet sequences begin at 1
-			for i := uint64(0); i < totalPackets; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			for i := uint64(1); i < maxSequence; i++ {
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+
+				// create packet commitment
+				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+				suite.Require().NoError(err)
+
 			}
 
-			// send from chainA to chainB
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
-			suite.Require().NoError(err) // message committed
-
-			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
@@ -536,28 +512,24 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
 				CounterpartyClientID: clientA,
 			}
 
-			msgs := make([]sdk.Msg, totalPackets)
 			// attempts to timeout the last packet sent without timing out the first packet
 			// packet sequences begin at 1
-			for i := uint64(0); i < totalPackets; i++ {
-				packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), i+1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-				msgs[i] = ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
+			for i := uint64(1); i < maxSequence; i++ {
+				packet = channeltypes.NewPacket(ibctesting.MockCommitment, i, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+
+				// create packet commitment
+				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+				suite.Require().NoError(err)
 			}
 
-			// send from chainA to chainB
-			err := suite.coordinator.SendMsgs(suite.chainA, suite.chainB, clientB, msgs)
-			suite.Require().NoError(err) // message committed
-
-			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
 			// close counterparty channel
@@ -571,8 +543,8 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, false},
 		{"UNORDERED: packet not sent", func() {
-			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
@@ -585,22 +557,20 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 		}, false},
 		{"ORDERED: channel not closed", func() {
-			clientA, clientB, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, clientexported.Tendermint)
-			channelA, channelB := suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.ORDERED)
-			packet = channeltypes.NewPacket(suite.chainA.GetPacketData(suite.chainB), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
+			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
 			counterpartyChannel = ibctesting.TestChannel{
 				PortID:               channelB.PortID,
 				ID:                   channelB.ID,
 				CounterpartyClientID: clientA,
 			}
 
-			// send from chainA to chainB
-			msg := ibctransfertypes.NewMsgTransfer(channelA.PortID, channelA.ID, ibctesting.TestCoin, suite.chainA.SenderAccount.GetAddress(), suite.chainB.SenderAccount.GetAddress().String(), packet.GetTimeoutHeight(), packet.GetTimeoutTimestamp())
-			err := suite.coordinator.SendMsg(suite.chainA, suite.chainB, clientB, msg)
-			suite.Require().NoError(err) // message committed
+			// create packet commitment
+			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, clientexported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
@@ -633,8 +603,8 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 				_, err := handler(suite.chainA.GetContext(), msg)
 				suite.Require().Error(err)
 
-				// verify packet commitment was deleted
-				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+				// verify packet commitment was deleted on source chain
+				has := suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketCommitment(suite.chainA.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 				suite.Require().False(has)
 
 			} else {

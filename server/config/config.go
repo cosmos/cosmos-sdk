@@ -91,6 +91,17 @@ type GRPCConfig struct {
 	Address string `mapstructure:"address"`
 }
 
+// StateSyncConfig defines the state sync snapshot configuration.
+type StateSyncConfig struct {
+	// SnapshotInterval sets the interval at which state sync snapshots are taken.
+	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
+	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
+
+	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.
+	// 0 keeps all snapshots.
+	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -99,6 +110,7 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -156,6 +168,10 @@ func DefaultConfig() *Config {
 			Enable:  true,
 			Address: DefaultGRPCAddress,
 		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   0,
+			SnapshotKeepRecent: 2,
+		},
 	}
 }
 
@@ -204,6 +220,10 @@ func GetConfig(v *viper.Viper) Config {
 		GRPC: GRPCConfig{
 			Enable:  v.GetBool("grpc.enable"),
 			Address: v.GetString("grpc.address"),
+		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),
+			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
 		},
 	}
 }

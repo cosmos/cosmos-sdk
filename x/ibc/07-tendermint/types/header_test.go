@@ -3,8 +3,11 @@ package types_test
 import (
 	"time"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestGetHeight() {
@@ -12,7 +15,7 @@ func (suite *TendermintTestSuite) TestGetHeight() {
 	suite.Require().NotEqual(uint64(0), header.GetHeight())
 
 	header.Header = nil
-	suite.Require().Equal(uint64(0), header.GetHeight())
+	suite.Require().Equal(clienttypes.ZeroHeight(), header.GetHeight())
 }
 
 func (suite *TendermintTestSuite) TestGetTime() {
@@ -25,8 +28,7 @@ func (suite *TendermintTestSuite) TestGetTime() {
 
 func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 	var (
-		header  *types.Header
-		chainID string
+		header *types.Header
 	)
 	testCases := []struct {
 		name     string
@@ -40,15 +42,21 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		{"signed header is nil", func() {
 			header.SignedHeader = nil
 		}, false},
+		{"SignedHeaderFromProto failed", func() {
+			header.SignedHeader.Commit.Height = -1
+		}, false},
 		{"signed header failed tendermint ValidateBasic", func() {
 			header = suite.chainA.LastHeader
-			chainID = "chainid"
+			header.SignedHeader.Commit = nil
 		}, false},
 		{"trusted height is greater than header height", func() {
-			header.TrustedHeight = header.GetHeight() + 1
+			header.TrustedHeight = header.GetHeight().(clienttypes.Height).Increment()
 		}, false},
 		{"validator set nil", func() {
 			header.ValidatorSet = nil
+		}, false},
+		{"ValidatorSetFromProto failed", func() {
+			header.ValidatorSet.Validators[0].PubKey = tmprotocrypto.PublicKey{}
 		}, false},
 		{"header validator hash does not equal hash of validator set", func() {
 			// use chainB's randomly generated validator set
@@ -56,7 +64,7 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		}, false},
 	}
 
-	suite.Require().Equal(clientexported.Tendermint, suite.header.ClientType())
+	suite.Require().Equal(exported.Tendermint, suite.header.ClientType())
 
 	for _, tc := range testCases {
 		tc := tc
@@ -64,12 +72,11 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			chainID = suite.chainA.ChainID   // must be explicitly changed in malleate
 			header = suite.chainA.LastHeader // must be explicitly changed in malleate
 
 			tc.malleate()
 
-			err := header.ValidateBasic(chainID)
+			err := header.ValidateBasic()
 
 			if tc.expPass {
 				suite.Require().NoError(err)

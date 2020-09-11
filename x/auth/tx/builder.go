@@ -1,8 +1,6 @@
 package tx
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
 
@@ -10,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -44,6 +41,7 @@ var (
 	_ client.TxBuilder           = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ codectypes.IntoAny         = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -67,71 +65,11 @@ func newBuilder(pubkeyCodec types.PublicKeyCodec) *wrapper {
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
-	if w.tx == nil || w.tx.Body == nil {
-		return nil
-	}
-
-	anys := w.tx.Body.Messages
-	res := make([]sdk.Msg, len(anys))
-	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
-		res[i] = msg
-	}
-	return res
+	return w.tx.GetMsgs()
 }
 
-// MaxGasWanted defines the max gas allowed.
-const MaxGasWanted = uint64((1 << 63) - 1)
-
 func (w *wrapper) ValidateBasic() error {
-	theTx := w.tx
-	if theTx == nil {
-		return fmt.Errorf("bad Tx")
-	}
-
-	body := w.tx.Body
-	if body == nil {
-		return fmt.Errorf("missing TxBody")
-	}
-
-	authInfo := w.tx.AuthInfo
-	if authInfo == nil {
-		return fmt.Errorf("missing AuthInfo")
-	}
-
-	fee := authInfo.Fee
-	if fee == nil {
-		return fmt.Errorf("missing fee")
-	}
-
-	if fee.GasLimit > MaxGasWanted {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"invalid gas supplied; %d > %d", fee.GasLimit, MaxGasWanted,
-		)
-	}
-
-	if fee.Amount.IsAnyNegative() {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrInsufficientFee,
-			"invalid fee provided: %s", fee.Amount,
-		)
-	}
-
-	sigs := theTx.Signatures
-
-	if len(sigs) == 0 {
-		return sdkerrors.ErrNoSignatures
-	}
-
-	if len(sigs) != len(w.GetSigners()) {
-		return sdkerrors.Wrapf(
-			sdkerrors.ErrUnauthorized,
-			"wrong number of signers; expected %d, got %d", w.GetSigners(), len(sigs),
-		)
-	}
-
-	return nil
+	return w.tx.ValidateBasic()
 }
 
 func (w *wrapper) getBodyBytes() []byte {
@@ -167,19 +105,7 @@ func (w *wrapper) getAuthInfoBytes() []byte {
 }
 
 func (w *wrapper) GetSigners() []sdk.AccAddress {
-	var signers []sdk.AccAddress
-	seen := map[string]bool{}
-
-	for _, msg := range w.GetMsgs() {
-		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
-			}
-		}
-	}
-
-	return signers
+	return w.tx.GetSigners()
 }
 
 func (w *wrapper) GetPubKeys() []crypto.PubKey {
@@ -358,8 +284,10 @@ func (w *wrapper) GetTx() authsigning.Tx {
 }
 
 // GetProtoTx returns the tx as a proto.Message.
-func (w *wrapper) GetProtoTx() *tx.Tx {
-	return w.tx
+func (w *wrapper) AsAny() *codectypes.Any {
+	// We're sure here that w.tx is a proto.Message, so this will call
+	// codectypes.NewAnyWithValue under the hood.
+	return codectypes.UnsafePackAny(w.tx)
 }
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.

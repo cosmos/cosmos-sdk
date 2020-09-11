@@ -93,7 +93,10 @@ build-simd: go.sum
 build-simd-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
 
-.PHONY: build build-simd build-simd-linux
+cosmovisor:
+	$(MAKE) -C cosmovisor cosmovisor
+
+.PHONY: build build-simd build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

@@ -3,13 +3,13 @@ package std
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/sr25519"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-
-	"github.com/tendermint/tendermint/crypto"
-	ed255192 "github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
 // DefaultPublicKeyCodec implements the standard PublicKeyCodec for the SDK which
@@ -39,11 +39,11 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 		return res, nil
 	case *types.PublicKey_Ed25519:
 		n := len(key.Ed25519)
-		if n != ed255192.PubKeySize {
+		if n != ed25519.PubKeySize {
 			return nil, fmt.Errorf("wrong length %d for ed25519 public key", n)
 		}
 
-		res := make(ed255192.PubKey, ed255192.PubKeySize)
+		res := make(ed25519.PubKey, ed25519.PubKeySize)
 		copy(res, key.Ed25519)
 		return res, nil
 	case *types.PublicKey_Sr25519:
@@ -81,7 +81,7 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 	switch key := key.(type) {
 	case secp256k1.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
-	case ed255192.PubKey:
+	case ed25519.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
 	case sr25519.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil

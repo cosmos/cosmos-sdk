@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -334,7 +335,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{

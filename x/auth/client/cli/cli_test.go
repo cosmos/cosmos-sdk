@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -18,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codec2 "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -165,6 +164,46 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
+func (s *IntegrationTestSuite) TestCLITxQueryCmd() {
+	val := s.network.Validators[0]
+	var txHash string
+
+	s.Run("bank send tx", func() {
+		clientCtx := val.ClientCtx
+
+		bz, err := bankcli.MsgSendExec(clientCtx, val.Address, val.Address, sdk.NewCoins(
+			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+		), []string{
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		}...)
+
+		var txRes sdk.TxResponse
+		s.Require().NoError(err)
+		s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), &txRes), bz.String())
+
+		txHash = txRes.TxHash
+		s.Require().Equal(uint32(0), txRes.Code)
+	})
+
+	s.network.WaitForNextBlock()
+
+	s.Run("test QueryTxCmd", func() {
+		cmd := authcli.QueryTxCmd()
+		args := []string{
+			txHash,
+		}
+
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+		s.Require().NoError(err)
+
+		var tx sdk.TxResponse
+		s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tx))
+	})
+}
+
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 
@@ -193,7 +232,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err := txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
 	// Test generate sendTx with --gas=$amount
 	limitedGasGeneratedTx, err := bankcli.MsgSendExec(
@@ -215,7 +256,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
@@ -274,7 +317,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
 	s.Require().NoError(err)
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(1, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(sigs))
 	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
 
 	// Write the output to disk
@@ -328,9 +373,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
@@ -439,9 +484,9 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
@@ -540,9 +585,9 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
 	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.

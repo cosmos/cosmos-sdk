@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *KeeperTestSuite) TestQueryClientState() {
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs())
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -110,19 +111,20 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs())
-				clientState2 := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, 0, commitmenttypes.GetSDKSpecs())
-				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
-				suite.keeper.SetClientState(suite.ctx, testClientID2, clientState2)
+				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
 
-				idcs := types.NewIdentifiedClientState(testClientID, clientState)
-				idcs2 := types.NewIdentifiedClientState(testClientID2, clientState2)
+				clientStateA1 := suite.chainA.GetClientState(clientA1)
+				clientStateA2 := suite.chainA.GetClientState(clientA2)
 
-				// order is swapped because the res is sorted by client id
-				expClientStates = []*types.IdentifiedClientState{&idcs2, &idcs}
+				idcs := types.NewIdentifiedClientState(clientA1, clientStateA1)
+				idcs2 := types.NewIdentifiedClientState(clientA2, clientStateA2)
+
+				// order is sorted by client id, localhost is last
+				expClientStates = []*types.IdentifiedClientState{&idcs, &idcs2}
 				req = &types.QueryClientStatesRequest{
 					Pagination: &query.PageRequest{
-						Limit:      3,
+						Limit:      7,
 						CountTotal: true,
 					},
 				}
@@ -134,11 +136,18 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
+			expClientStates = nil
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.ClientStates(ctx, req)
+			// always add localhost which is created by default in init genesis
+			localhostClientState := suite.chainA.GetClientState(exported.Localhost.String())
+			identifiedLocalhost := types.NewIdentifiedClientState(exported.Localhost.String(), localhostClientState)
+			expClientStates = append(expClientStates, &identifiedLocalhost)
+
+			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			res, err := suite.chainA.QueryServer.ClientStates(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -147,7 +156,6 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 				for i := range expClientStates {
 					suite.Require().Equal(expClientStates[i].ClientId, res.ClientStates[i].ClientId)
 					suite.Require().NotNil(res.ClientStates[i].ClientState)
-					expClientStates[i].ClientState.ClearCachedValue()
 					suite.Require().Equal(expClientStates[i].ClientState, res.ClientStates[i].ClientState)
 				}
 			} else {
@@ -180,7 +188,8 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			func() {
 				req = &types.QueryConsensusStateRequest{
 					ClientId:     testClientID,
-					Height:       0,
+					EpochNumber:  0,
+					EpochHeight:  0,
 					LatestHeight: false,
 				}
 			},
@@ -199,9 +208,9 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs())
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.GetHeight(), nil,
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
 				)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, suite.consensusState.GetHeight(), cs)
@@ -221,7 +230,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"success with height",
 			func() {
 				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.GetHeight(), nil,
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
 				)
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
 
@@ -230,8 +239,9 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId: testClientID,
-					Height:   testClientHeight,
+					ClientId:    testClientID,
+					EpochNumber: 0,
+					EpochHeight: height,
 				}
 			},
 			true,
@@ -303,14 +313,14 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 			"success",
 			func() {
 				cs := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.GetHeight(), nil,
+					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), suite.consensusState.Height, nil,
 				)
 				cs2 := ibctmtypes.NewConsensusState(
-					suite.consensusState.Timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), suite.consensusState.GetHeight(), nil,
+					suite.consensusState.Timestamp.Add(time.Second), commitmenttypes.NewMerkleRoot([]byte("hash2")), suite.consensusState.Height, nil,
 				)
 
 				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight, cs)
-				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight+1, cs2)
+				suite.keeper.SetClientConsensusState(suite.ctx, testClientID, testClientHeight.Increment(), cs2)
 
 				any, err := types.PackConsensusState(cs)
 				suite.Require().NoError(err)

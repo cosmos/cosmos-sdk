@@ -3,20 +3,21 @@ package utils
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-// QueryClientState returns a client state.
-// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
-// it uses the gRPC query client.
+// QueryClientState returns a client state. If prove is true, it performs an ABCI store query
+// in order to retrieve the merkle proof. Otherwise, it uses the gRPC query client.
 func QueryClientState(
 	clientCtx client.Context, clientID string, prove bool,
 ) (*types.QueryClientStateResponse, error) {
@@ -36,19 +37,17 @@ func QueryClientState(
 func QueryClientStateABCI(
 	clientCtx client.Context, clientID string,
 ) (*types.QueryClientStateResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.FullKeyClientPath(clientID, host.KeyClientState()),
-		Prove: true,
-	}
+	key := host.FullKeyClientPath(clientID, host.KeyClientState())
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	var clientState exported.ClientState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &clientState); err != nil {
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	clientState, err := types.UnmarshalClientState(cdc, value)
+	if err != nil {
 		return nil, err
 	}
 
@@ -57,20 +56,14 @@ func QueryClientStateABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, res.Height)
+	clientStateRes := types.NewQueryClientStateResponse(clientID, anyClientState, proofBz, proofHeight)
 	return clientStateRes, nil
 }
 
-// QueryConsensusState returns a consensus state.
-// If prove is true, it performs an ABCI store query in order to retrieve the merkle proof. Otherwise,
-// it uses the gRPC query client.
+// QueryConsensusState returns a consensus state. If prove is true, it performs an ABCI store
+// query in order to retrieve the merkle proof. Otherwise, it uses the gRPC query client.
 func QueryConsensusState(
-	clientCtx client.Context, clientID string, height uint64, prove, latestHeight bool,
+	clientCtx client.Context, clientID string, height exported.Height, prove, latestHeight bool,
 ) (*types.QueryConsensusStateResponse, error) {
 	if prove {
 		return QueryConsensusStateABCI(clientCtx, clientID, height)
@@ -79,7 +72,8 @@ func QueryConsensusState(
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConsensusStateRequest{
 		ClientId:     clientID,
-		Height:       height,
+		EpochNumber:  height.GetEpochNumber(),
+		EpochHeight:  height.GetEpochHeight(),
 		LatestHeight: latestHeight,
 	}
 
@@ -89,21 +83,19 @@ func QueryConsensusState(
 // QueryConsensusStateABCI queries the store to get the consensus state of a light client and a
 // merkle proof of its existence or non-existence.
 func QueryConsensusStateABCI(
-	clientCtx client.Context, clientID string, height uint64,
+	clientCtx client.Context, clientID string, height exported.Height,
 ) (*types.QueryConsensusStateResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.FullKeyClientPath(clientID, host.KeyConsensusState(height)),
-		Prove: true,
-	}
+	key := host.FullKeyClientPath(clientID, host.KeyConsensusState(height))
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	var cs exported.ConsensusState
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &cs); err != nil {
+	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+	cs, err := types.UnmarshalConsensusState(cdc, value)
+	if err != nil {
 		return nil, err
 	}
 
@@ -112,12 +104,8 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	proofBz, err := clientCtx.LegacyAmino.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, res.Height), nil
+	// TODO: retrieve epoch-number from chain-id
+	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate
@@ -155,7 +143,7 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 	}
 
 	header := ibctmtypes.Header{
-		SignedHeader: *protoCommit,
+		SignedHeader: protoCommit,
 		ValidatorSet: protoValset,
 	}
 

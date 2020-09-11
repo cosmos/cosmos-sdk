@@ -206,6 +206,20 @@ var checks = [...]map[descriptor.FieldDescriptorProto_Type]bool{
 		descriptor.FieldDescriptorProto_TYPE_STRING:  true,
 		descriptor.FieldDescriptorProto_TYPE_BYTES:   true,
 		descriptor.FieldDescriptorProto_TYPE_MESSAGE: true,
+		// The following types can be packed repeated.
+		// ref: "Only repeated fields of primitive numeric types (types which use the varint, 32-bit, or 64-bit wire types) can be declared "packed"."
+		// ref: https://developers.google.com/protocol-buffers/docs/encoding#packed
+		descriptor.FieldDescriptorProto_TYPE_INT32:    true,
+		descriptor.FieldDescriptorProto_TYPE_INT64:    true,
+		descriptor.FieldDescriptorProto_TYPE_UINT32:   true,
+		descriptor.FieldDescriptorProto_TYPE_UINT64:   true,
+		descriptor.FieldDescriptorProto_TYPE_SINT32:   true,
+		descriptor.FieldDescriptorProto_TYPE_SINT64:   true,
+		descriptor.FieldDescriptorProto_TYPE_BOOL:     true,
+		descriptor.FieldDescriptorProto_TYPE_ENUM:     true,
+		descriptor.FieldDescriptorProto_TYPE_FIXED64:  true,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64: true,
+		descriptor.FieldDescriptorProto_TYPE_DOUBLE:   true,
 	},
 
 	// "3	Start group:	groups (deprecated)"

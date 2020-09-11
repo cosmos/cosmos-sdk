@@ -6,14 +6,15 @@ package types
 import (
 	fmt "fmt"
 	_go "github.com/confio/ics23/go"
-	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	types "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
 	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
+	types2 "github.com/tendermint/tendermint/proto/tendermint/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -45,11 +46,17 @@ type ClientState struct {
 	// defines how much new (untrusted) header's Time can drift into the future.
 	MaxClockDrift time.Duration `protobuf:"bytes,5,opt,name=max_clock_drift,json=maxClockDrift,proto3,stdduration" json:"max_clock_drift" yaml:"max_clock_drift"`
 	// Block height when the client was frozen due to a misbehaviour
-	FrozenHeight uint64 `protobuf:"varint,6,opt,name=frozen_height,json=frozenHeight,proto3" json:"frozen_height,omitempty" yaml:"frozen_height"`
+	FrozenHeight types.Height `protobuf:"bytes,6,opt,name=frozen_height,json=frozenHeight,proto3" json:"frozen_height" yaml:"frozen_height"`
 	// Latest height the client was updated to
-	LatestHeight uint64 `protobuf:"varint,7,opt,name=latest_height,json=latestHeight,proto3" json:"latest_height,omitempty" yaml:"latest_height"`
+	LatestHeight types.Height `protobuf:"bytes,7,opt,name=latest_height,json=latestHeight,proto3" json:"latest_height" yaml:"latest_height"`
 	// Proof specifications used in verifying counterparty state
 	ProofSpecs []*_go.ProofSpec `protobuf:"bytes,8,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
+	// This flag, when set to true, will allow governance to recover a client
+	// which has expired
+	AllowUpdateAfterExpiry bool `protobuf:"varint,9,opt,name=allow_update_after_expiry,json=allowUpdateAfterExpiry,proto3" json:"allow_update_after_expiry,omitempty" yaml:"allow_update_after_expiry"`
+	// This flag, when set to true, will allow governance to unfreeze a client
+	// whose chain has experienced a misbehaviour event
+	AllowUpdateAfterMisbehaviour bool `protobuf:"varint,10,opt,name=allow_update_after_misbehaviour,json=allowUpdateAfterMisbehaviour,proto3" json:"allow_update_after_misbehaviour,omitempty" yaml:"allow_update_after_misbehaviour"`
 }
 
 func (m *ClientState) Reset()         { *m = ClientState{} }
@@ -91,9 +98,9 @@ type ConsensusState struct {
 	// was stored.
 	Timestamp time.Time `protobuf:"bytes,1,opt,name=timestamp,proto3,stdtime" json:"timestamp"`
 	// commitment root (i.e app hash)
-	Root types.MerkleRoot `protobuf:"bytes,2,opt,name=root,proto3" json:"root"`
+	Root types1.MerkleRoot `protobuf:"bytes,2,opt,name=root,proto3" json:"root"`
 	// height at which the consensus state was stored.
-	Height             uint64                                               `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	Height             types.Height                                         `protobuf:"bytes,3,opt,name=height,proto3" json:"height"`
 	NextValidatorsHash github_com_tendermint_tendermint_libs_bytes.HexBytes `protobuf:"bytes,4,opt,name=next_validators_hash,json=nextValidatorsHash,proto3,casttype=github.com/tendermint/tendermint/libs/bytes.HexBytes" json:"next_validators_hash,omitempty" yaml:"next_validators_hash"`
 }
 
@@ -130,6 +137,47 @@ func (m *ConsensusState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConsensusState proto.InternalMessageInfo
 
+// Misbehaviour is a wrapper over two conflicting Headers
+// that implements Misbehaviour interface expected by ICS-02
+type Misbehaviour struct {
+	ClientId string  `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ChainId  string  `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
+	Header1  *Header `protobuf:"bytes,3,opt,name=header_1,json=header1,proto3" json:"header_1,omitempty" yaml:"header_1"`
+	Header2  *Header `protobuf:"bytes,4,opt,name=header_2,json=header2,proto3" json:"header_2,omitempty" yaml:"header_2"`
+}
+
+func (m *Misbehaviour) Reset()      { *m = Misbehaviour{} }
+func (*Misbehaviour) ProtoMessage() {}
+func (*Misbehaviour) Descriptor() ([]byte, []int) {
+	return fileDescriptor_76a953d5a747dd66, []int{2}
+}
+func (m *Misbehaviour) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Misbehaviour) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Misbehaviour.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Misbehaviour) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Misbehaviour.Merge(m, src)
+}
+func (m *Misbehaviour) XXX_Size() int {
+	return m.Size()
+}
+func (m *Misbehaviour) XXX_DiscardUnknown() {
+	xxx_messageInfo_Misbehaviour.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Misbehaviour proto.InternalMessageInfo
+
 // Header defines the Tendermint client consensus Header.
 // It encapsulates all the information necessary to update from a trusted
 // Tendermint ConsensusState. The inclusion of TrustedHeight and
@@ -143,17 +191,17 @@ var xxx_messageInfo_ConsensusState proto.InternalMessageInfo
 // hash to TrustedConsensusState.NextValidatorsHash since that is the last
 // trusted validator set at the TrustedHeight.
 type Header struct {
-	types1.SignedHeader `protobuf:"bytes,1,opt,name=signed_header,json=signedHeader,proto3,embedded=signed_header" json:"signed_header" yaml:"signed_header"`
-	ValidatorSet        *types1.ValidatorSet `protobuf:"bytes,2,opt,name=validator_set,json=validatorSet,proto3" json:"validator_set,omitempty" yaml:"validator_set"`
-	TrustedHeight       uint64               `protobuf:"varint,3,opt,name=trusted_height,json=trustedHeight,proto3" json:"trusted_height,omitempty" yaml:"trusted_height"`
-	TrustedValidators   *types1.ValidatorSet `protobuf:"bytes,4,opt,name=trusted_validators,json=trustedValidators,proto3" json:"trusted_validators,omitempty" yaml:"trusted_validators"`
+	*types2.SignedHeader `protobuf:"bytes,1,opt,name=signed_header,json=signedHeader,proto3,embedded=signed_header" json:"signed_header,omitempty" yaml:"signed_header"`
+	ValidatorSet         *types2.ValidatorSet `protobuf:"bytes,2,opt,name=validator_set,json=validatorSet,proto3" json:"validator_set,omitempty" yaml:"validator_set"`
+	TrustedHeight        types.Height         `protobuf:"bytes,3,opt,name=trusted_height,json=trustedHeight,proto3" json:"trusted_height" yaml:"trusted_height"`
+	TrustedValidators    *types2.ValidatorSet `protobuf:"bytes,4,opt,name=trusted_validators,json=trustedValidators,proto3" json:"trusted_validators,omitempty" yaml:"trusted_validators"`
 }
 
 func (m *Header) Reset()         { *m = Header{} }
 func (m *Header) String() string { return proto.CompactTextString(m) }
 func (*Header) ProtoMessage()    {}
 func (*Header) Descriptor() ([]byte, []int) {
-	return fileDescriptor_76a953d5a747dd66, []int{2}
+	return fileDescriptor_76a953d5a747dd66, []int{3}
 }
 func (m *Header) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -182,21 +230,21 @@ func (m *Header) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Header proto.InternalMessageInfo
 
-func (m *Header) GetValidatorSet() *types1.ValidatorSet {
+func (m *Header) GetValidatorSet() *types2.ValidatorSet {
 	if m != nil {
 		return m.ValidatorSet
 	}
 	return nil
 }
 
-func (m *Header) GetTrustedHeight() uint64 {
+func (m *Header) GetTrustedHeight() types.Height {
 	if m != nil {
 		return m.TrustedHeight
 	}
-	return 0
+	return types.Height{}
 }
 
-func (m *Header) GetTrustedValidators() *types1.ValidatorSet {
+func (m *Header) GetTrustedValidators() *types2.ValidatorSet {
 	if m != nil {
 		return m.TrustedValidators
 	}
@@ -213,7 +261,7 @@ func (m *Fraction) Reset()         { *m = Fraction{} }
 func (m *Fraction) String() string { return proto.CompactTextString(m) }
 func (*Fraction) ProtoMessage()    {}
 func (*Fraction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_76a953d5a747dd66, []int{3}
+	return fileDescriptor_76a953d5a747dd66, []int{4}
 }
 func (m *Fraction) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -259,6 +307,7 @@ func (m *Fraction) GetDenominator() int64 {
 func init() {
 	proto.RegisterType((*ClientState)(nil), "ibc.tendermint.ClientState")
 	proto.RegisterType((*ConsensusState)(nil), "ibc.tendermint.ConsensusState")
+	proto.RegisterType((*Misbehaviour)(nil), "ibc.tendermint.Misbehaviour")
 	proto.RegisterType((*Header)(nil), "ibc.tendermint.Header")
 	proto.RegisterType((*Fraction)(nil), "ibc.tendermint.Fraction")
 }
@@ -266,60 +315,72 @@ func init() {
 func init() { proto.RegisterFile("ibc/tendermint/tendermint.proto", fileDescriptor_76a953d5a747dd66) }
 
 var fileDescriptor_76a953d5a747dd66 = []byte{
-	// 845 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xcd, 0x6e, 0xe4, 0x44,
-	0x10, 0x1e, 0x27, 0xb3, 0xd9, 0xa4, 0x67, 0x26, 0x59, 0x9a, 0x10, 0x9c, 0x61, 0xb1, 0x47, 0xe6,
-	0x92, 0xcb, 0xda, 0x28, 0xbb, 0x02, 0x69, 0x25, 0x24, 0xe4, 0xac, 0x50, 0x16, 0x81, 0x14, 0x79,
-	0xf8, 0x91, 0x90, 0x90, 0xe5, 0x9f, 0x1e, 0xbb, 0x15, 0xbb, 0xdb, 0x72, 0xf7, 0x44, 0x13, 0x9e,
-	0x60, 0xb9, 0xed, 0x91, 0x23, 0x0f, 0xc1, 0x43, 0xec, 0x31, 0x47, 0x4e, 0x06, 0x25, 0x6f, 0x30,
-	0x47, 0x0e, 0x08, 0x75, 0xbb, 0x3d, 0xf6, 0xcc, 0x46, 0x5a, 0x71, 0x49, 0xba, 0xbe, 0xfa, 0xaa,
-	0xca, 0x55, 0xfd, 0x55, 0x0f, 0x30, 0x71, 0x18, 0x39, 0x1c, 0x91, 0x18, 0x95, 0x39, 0x26, 0xbc,
-	0x73, 0xb4, 0x8b, 0x92, 0x72, 0x0a, 0xf7, 0x71, 0x18, 0xd9, 0x2d, 0x3a, 0x9e, 0x74, 0xc9, 0xd7,
-	0x05, 0x62, 0xce, 0x55, 0x90, 0xe1, 0x38, 0xe0, 0xb4, 0xac, 0x23, 0xc6, 0x8f, 0xdf, 0x62, 0xc8,
-	0xbf, 0xca, 0xfb, 0x7e, 0x44, 0xc9, 0x0c, 0x53, 0xa7, 0x28, 0x29, 0x9d, 0x35, 0xa0, 0x91, 0x50,
-	0x9a, 0x64, 0xc8, 0x91, 0x56, 0x38, 0x9f, 0x39, 0xf1, 0xbc, 0x0c, 0x38, 0xa6, 0x44, 0xf9, 0xcd,
-	0x4d, 0x3f, 0xc7, 0x39, 0x62, 0x3c, 0xc8, 0x8b, 0x86, 0x20, 0xda, 0x88, 0x68, 0x9e, 0x63, 0x9e,
-	0x23, 0xc2, 0x3b, 0x47, 0x45, 0x38, 0x4c, 0x68, 0x42, 0xe5, 0xd1, 0x11, 0xa7, 0x1a, 0xb5, 0x5e,
-	0x3d, 0x00, 0x83, 0xb3, 0x0c, 0x23, 0xc2, 0xa7, 0x3c, 0xe0, 0x08, 0x1e, 0x83, 0xdd, 0x28, 0x0d,
-	0x30, 0xf1, 0x71, 0xac, 0x6b, 0x13, 0xed, 0x64, 0xcf, 0x7b, 0x28, 0xed, 0x97, 0x31, 0xfc, 0x1e,
-	0x0c, 0x78, 0x39, 0x67, 0xdc, 0xcf, 0xd0, 0x15, 0xca, 0xf4, 0xad, 0x89, 0x76, 0x32, 0x38, 0xd5,
-	0xed, 0xf5, 0xe9, 0xd8, 0x5f, 0x95, 0x41, 0x24, 0xbe, 0xdb, 0x1d, 0xbf, 0xa9, 0xcc, 0xde, 0xb2,
-	0x32, 0xe1, 0x75, 0x90, 0x67, 0xcf, 0xad, 0x4e, 0xa8, 0xe5, 0x01, 0x69, 0x7d, 0x23, 0x0c, 0x38,
-	0x03, 0x07, 0xd2, 0xc2, 0x24, 0xf1, 0x0b, 0x54, 0x62, 0x1a, 0xeb, 0xdb, 0x32, 0xf5, 0xb1, 0x5d,
-	0xf7, 0x6c, 0x37, 0x3d, 0xdb, 0x2f, 0xd4, 0x4c, 0x5c, 0x4b, 0xe5, 0x3e, 0xea, 0xe4, 0x6e, 0xe3,
-	0xad, 0xdf, 0xfe, 0x32, 0x35, 0x6f, 0xbf, 0x41, 0x2f, 0x24, 0x08, 0x31, 0x78, 0x34, 0x27, 0x21,
-	0x25, 0x71, 0xa7, 0x50, 0xff, 0x5d, 0x85, 0x3e, 0x51, 0x85, 0x3e, 0xac, 0x0b, 0x6d, 0x26, 0xa8,
-	0x2b, 0x1d, 0xac, 0x60, 0x55, 0x0a, 0x81, 0x83, 0x3c, 0x58, 0xf8, 0x51, 0x46, 0xa3, 0x4b, 0x3f,
-	0x2e, 0xf1, 0x8c, 0xeb, 0x0f, 0xfe, 0x67, 0x4b, 0x1b, 0xf1, 0x75, 0xa1, 0x51, 0x1e, 0x2c, 0xce,
-	0x04, 0xf8, 0x42, 0x60, 0xf0, 0x0b, 0x30, 0x9a, 0x95, 0xf4, 0x17, 0x44, 0xfc, 0x14, 0xe1, 0x24,
-	0xe5, 0xfa, 0xce, 0x44, 0x3b, 0xe9, 0xbb, 0xfa, 0xb2, 0x32, 0x0f, 0xeb, 0x2c, 0x6b, 0x6e, 0xcb,
-	0x1b, 0xd6, 0xf6, 0xb9, 0x34, 0x45, 0x78, 0x16, 0x70, 0xc4, 0x78, 0x13, 0xfe, 0x70, 0x33, 0x7c,
-	0xcd, 0x6d, 0x79, 0xc3, 0xda, 0x56, 0xe1, 0x2f, 0xc1, 0x40, 0x2a, 0xd8, 0x67, 0x05, 0x8a, 0x98,
-	0xbe, 0x3b, 0xd9, 0x3e, 0x19, 0x9c, 0x3e, 0xb2, 0x71, 0xc4, 0x4e, 0x9f, 0xda, 0x17, 0xc2, 0x33,
-	0x2d, 0x50, 0xe4, 0x1e, 0xb5, 0x12, 0xe8, 0xd0, 0x2d, 0x0f, 0x14, 0x0d, 0x85, 0x3d, 0xef, 0xbf,
-	0xfa, 0xdd, 0xec, 0x59, 0x7f, 0x6c, 0x81, 0xfd, 0x33, 0x4a, 0x18, 0x22, 0x6c, 0xce, 0x6a, 0x35,
-	0xba, 0x60, 0x6f, 0xa5, 0x73, 0x29, 0xc7, 0xc1, 0xe9, 0xf8, 0xad, 0x11, 0x7e, 0xd7, 0x30, 0xdc,
-	0x5d, 0x31, 0xc3, 0xd7, 0x62, 0x52, 0x6d, 0x18, 0x7c, 0x06, 0xfa, 0x25, 0xa5, 0x5c, 0xe9, 0x75,
-	0x2c, 0xf5, 0xda, 0x59, 0x8e, 0x6f, 0x51, 0x79, 0x99, 0x21, 0x8f, 0x52, 0xee, 0xf6, 0x45, 0xb8,
-	0x27, 0xd9, 0xf0, 0x08, 0xec, 0xa8, 0xa9, 0x08, 0x31, 0xf6, 0x3d, 0x65, 0xc1, 0x5f, 0x35, 0x70,
-	0x48, 0xd0, 0x82, 0xfb, 0xab, 0x9d, 0x67, 0x7e, 0x1a, 0xb0, 0x54, 0x4a, 0x69, 0xe8, 0xfe, 0xb8,
-	0xac, 0xcc, 0x8f, 0xea, 0x6e, 0xef, 0x63, 0x59, 0xff, 0x54, 0xe6, 0xb3, 0x04, 0xf3, 0x74, 0x1e,
-	0x8a, 0x6f, 0xb8, 0xff, 0xd9, 0x71, 0x32, 0x1c, 0x32, 0x27, 0xbc, 0xe6, 0x88, 0xd9, 0xe7, 0x68,
-	0xe1, 0x8a, 0x83, 0x07, 0x45, 0xba, 0x1f, 0x56, 0xd9, 0xce, 0x03, 0x96, 0xaa, 0xb1, 0xfd, 0xbb,
-	0x05, 0x76, 0xce, 0x51, 0x10, 0xa3, 0x12, 0x22, 0x30, 0x62, 0x38, 0x21, 0x28, 0xf6, 0x53, 0x09,
-	0xa8, 0x91, 0x19, 0xdd, 0xfd, 0xac, 0x5f, 0xa2, 0xa9, 0xa4, 0xd5, 0x61, 0xee, 0x44, 0xf4, 0x7d,
-	0x53, 0x99, 0x5a, 0x7b, 0xf3, 0x6b, 0x69, 0x2c, 0x6f, 0xc8, 0x3a, 0x7c, 0xf8, 0x33, 0x18, 0xad,
-	0xfa, 0xf2, 0x19, 0x6a, 0x46, 0x7b, 0x4f, 0x99, 0xd5, 0x07, 0x4f, 0x11, 0xef, 0x0a, 0x6b, 0x2d,
-	0xdc, 0xf2, 0x86, 0x57, 0x1d, 0x1e, 0xfc, 0x12, 0xd4, 0xab, 0x2b, 0xeb, 0xb7, 0x57, 0xe0, 0x1e,
-	0x2f, 0x2b, 0xf3, 0x83, 0xce, 0xc2, 0xaf, 0xfc, 0x96, 0x37, 0x52, 0x80, 0x92, 0x66, 0x06, 0x60,
-	0xc3, 0x68, 0x2f, 0x40, 0x2d, 0xfb, 0xbb, 0xbe, 0xf2, 0xe3, 0x65, 0x65, 0x1e, 0xaf, 0x57, 0x69,
-	0x73, 0x58, 0xde, 0x7b, 0x0a, 0x6c, 0xaf, 0xc2, 0xfa, 0x1a, 0xec, 0x36, 0x8f, 0x1e, 0x7c, 0x0c,
-	0xf6, 0xc8, 0x3c, 0x47, 0xa5, 0xf0, 0xc8, 0xe9, 0x6f, 0x7b, 0x2d, 0x00, 0x27, 0x60, 0x10, 0x23,
-	0x42, 0x73, 0x4c, 0xa4, 0x7f, 0x4b, 0xfa, 0xbb, 0x90, 0x7b, 0xf1, 0xe6, 0xd6, 0xd0, 0x6e, 0x6e,
-	0x0d, 0xed, 0xef, 0x5b, 0x43, 0x7b, 0x7d, 0x67, 0xf4, 0x6e, 0xee, 0x8c, 0xde, 0x9f, 0x77, 0x46,
-	0xef, 0xa7, 0xcf, 0x3a, 0xb2, 0x89, 0x28, 0xcb, 0x29, 0x53, 0xff, 0x9e, 0xb0, 0xf8, 0xd2, 0x59,
-	0x38, 0xe2, 0xf9, 0xff, 0xf4, 0xf3, 0x27, 0x9b, 0xbf, 0x3c, 0xe1, 0x8e, 0xdc, 0x93, 0xa7, 0xff,
-	0x05, 0x00, 0x00, 0xff, 0xff, 0xa1, 0x78, 0x14, 0xd9, 0xe7, 0x06, 0x00, 0x00,
+	// 1039 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0x6f, 0xda, 0xd2, 0xa6, 0x93, 0xf4, 0x0f, 0xb3, 0xa5, 0xeb, 0x96, 0x6c, 0x1c, 0x0d, 0x08,
+	0x55, 0x48, 0x6b, 0x6f, 0xb3, 0x2b, 0x90, 0x7a, 0xc3, 0x5d, 0x50, 0x8b, 0x58, 0xa9, 0xb8, 0x14,
+	0x10, 0x12, 0xb2, 0x1c, 0x7b, 0x92, 0x8c, 0x6a, 0x7b, 0x8c, 0x67, 0x52, 0x52, 0x3e, 0x01, 0x48,
+	0x1c, 0x56, 0x9c, 0xf6, 0x08, 0xdf, 0x66, 0x4f, 0xa8, 0x47, 0x4e, 0x06, 0xb5, 0xdf, 0x20, 0x47,
+	0x4e, 0xc8, 0x33, 0xe3, 0x3f, 0x49, 0x5b, 0x75, 0xb9, 0xb4, 0x33, 0xef, 0xf7, 0xe7, 0xd9, 0x6f,
+	0xde, 0x3c, 0x07, 0xe8, 0xa4, 0xe7, 0x99, 0x1c, 0x47, 0x3e, 0x4e, 0x42, 0x12, 0xf1, 0xca, 0xd2,
+	0x88, 0x13, 0xca, 0x29, 0x5c, 0x23, 0x3d, 0xcf, 0x28, 0xa3, 0x3b, 0x9d, 0x2a, 0xf9, 0x22, 0xc6,
+	0xcc, 0x3c, 0x77, 0x03, 0xe2, 0xbb, 0x9c, 0x26, 0x52, 0xb1, 0xd3, 0xba, 0xc1, 0x10, 0x7f, 0x15,
+	0xfa, 0xc0, 0xa3, 0x51, 0x9f, 0x50, 0x33, 0x4e, 0x28, 0xed, 0xe7, 0xc1, 0xf6, 0x80, 0xd2, 0x41,
+	0x80, 0x4d, 0xb1, 0xeb, 0x8d, 0xfa, 0xa6, 0x3f, 0x4a, 0x5c, 0x4e, 0x68, 0xa4, 0x70, 0x7d, 0x16,
+	0xe7, 0x24, 0xc4, 0x8c, 0xbb, 0x61, 0xac, 0x08, 0x0f, 0xb3, 0xd7, 0xf0, 0x02, 0x82, 0x23, 0xae,
+	0xfe, 0xe5, 0x4a, 0x01, 0xd0, 0x30, 0x24, 0x3c, 0x14, 0x60, 0xb1, 0x54, 0x84, 0xcd, 0x01, 0x1d,
+	0x50, 0xb1, 0x34, 0xb3, 0x95, 0x8c, 0xa2, 0x5f, 0x97, 0x41, 0xe3, 0x40, 0xf8, 0x9c, 0x70, 0x97,
+	0x63, 0xb8, 0x0d, 0xea, 0xde, 0xd0, 0x25, 0x91, 0x43, 0x7c, 0xad, 0xd6, 0xa9, 0xed, 0xae, 0xd8,
+	0xcb, 0x62, 0x7f, 0xe4, 0xc3, 0x53, 0xd0, 0xe0, 0xc9, 0x88, 0x71, 0x27, 0xc0, 0xe7, 0x38, 0xd0,
+	0xe6, 0x3b, 0xb5, 0xdd, 0x46, 0x57, 0x33, 0xa6, 0xcb, 0x66, 0x7c, 0x96, 0xb8, 0x5e, 0xf6, 0x42,
+	0xd6, 0xce, 0xeb, 0x54, 0x9f, 0x9b, 0xa4, 0x3a, 0xbc, 0x70, 0xc3, 0x60, 0x1f, 0x55, 0xa4, 0xc8,
+	0x06, 0x62, 0xf7, 0x45, 0xb6, 0x81, 0x7d, 0xb0, 0x2e, 0x76, 0x24, 0x1a, 0x38, 0x31, 0x4e, 0x08,
+	0xf5, 0xb5, 0x05, 0x61, 0xbd, 0x6d, 0xc8, 0x62, 0x18, 0x79, 0x31, 0x8c, 0xe7, 0xaa, 0x58, 0x16,
+	0x52, 0xde, 0x5b, 0x15, 0xef, 0x52, 0x8f, 0x5e, 0xfd, 0xad, 0xd7, 0xec, 0xb5, 0x3c, 0x7a, 0x2c,
+	0x82, 0x90, 0x80, 0x8d, 0x51, 0xd4, 0xa3, 0x91, 0x5f, 0x49, 0xb4, 0x78, 0x5f, 0xa2, 0xf7, 0x54,
+	0xa2, 0x87, 0x32, 0xd1, 0xac, 0x81, 0xcc, 0xb4, 0x5e, 0x84, 0x55, 0x2a, 0x0c, 0xd6, 0x43, 0x77,
+	0xec, 0x78, 0x01, 0xf5, 0xce, 0x1c, 0x3f, 0x21, 0x7d, 0xae, 0xbd, 0xf5, 0x3f, 0x5f, 0x69, 0x46,
+	0x2f, 0x13, 0xad, 0x86, 0xee, 0xf8, 0x20, 0x0b, 0x3e, 0xcf, 0x62, 0xf0, 0x14, 0xac, 0xf6, 0x13,
+	0xfa, 0x13, 0x8e, 0x9c, 0x21, 0x26, 0x83, 0x21, 0xd7, 0x96, 0x44, 0x12, 0x28, 0x8e, 0x44, 0x35,
+	0xc7, 0xa1, 0x40, 0xac, 0x96, 0x72, 0xdf, 0x94, 0xee, 0x53, 0x32, 0x64, 0x37, 0xe5, 0x5e, 0x72,
+	0x33, 0xdb, 0xc0, 0xe5, 0x98, 0xf1, 0xdc, 0x76, 0xf9, 0x4d, 0x6d, 0xa7, 0x64, 0xc8, 0x6e, 0xca,
+	0xbd, 0xb2, 0x3d, 0x02, 0x0d, 0x71, 0x15, 0x1c, 0x16, 0x63, 0x8f, 0x69, 0xf5, 0xce, 0xc2, 0x6e,
+	0xa3, 0xbb, 0x61, 0x10, 0x8f, 0x75, 0x9f, 0x1a, 0xc7, 0x19, 0x72, 0x12, 0x63, 0xcf, 0xda, 0x2a,
+	0x5b, 0xa6, 0x42, 0x47, 0x36, 0x88, 0x73, 0x0a, 0x83, 0x0e, 0xd8, 0x76, 0x83, 0x80, 0xfe, 0xe8,
+	0x8c, 0x62, 0xdf, 0xe5, 0xd8, 0x71, 0xfb, 0x1c, 0x27, 0x0e, 0x1e, 0xc7, 0x24, 0xb9, 0xd0, 0x56,
+	0x3a, 0xb5, 0xdd, 0xba, 0xf5, 0xfe, 0x24, 0xd5, 0x3b, 0xd2, 0xe6, 0x4e, 0x2a, 0xb2, 0xb7, 0x04,
+	0x76, 0x2a, 0xa0, 0x4f, 0x32, 0xe4, 0x53, 0x01, 0xc0, 0x1f, 0x80, 0x7e, 0x8b, 0x2a, 0x24, 0xac,
+	0x87, 0x87, 0xee, 0x39, 0xa1, 0xa3, 0x44, 0x03, 0x22, 0xcd, 0x87, 0x93, 0x54, 0xff, 0xe0, 0xce,
+	0x34, 0x55, 0x01, 0xb2, 0x5b, 0xb3, 0xc9, 0x5e, 0x54, 0xe0, 0xfd, 0xc5, 0x9f, 0x7f, 0xd7, 0xe7,
+	0xd0, 0x9f, 0xf3, 0x60, 0xed, 0x80, 0x46, 0x0c, 0x47, 0x6c, 0xc4, 0xe4, 0x8d, 0xb4, 0xc0, 0x4a,
+	0x31, 0x04, 0xc4, 0x95, 0x6c, 0x74, 0x77, 0x6e, 0xb4, 0xd1, 0x57, 0x39, 0xc3, 0xaa, 0x67, 0x47,
+	0xf2, 0x32, 0xeb, 0x96, 0x52, 0x06, 0x9f, 0x81, 0xc5, 0x84, 0x52, 0xae, 0xee, 0xec, 0x8e, 0x3c,
+	0xc9, 0x72, 0x40, 0xbc, 0xc0, 0xc9, 0x59, 0x80, 0x6d, 0x4a, 0xb9, 0xb5, 0x98, 0xc9, 0x6d, 0xc1,
+	0x86, 0x4f, 0xc0, 0x92, 0xea, 0x80, 0x85, 0x3b, 0x3b, 0x40, 0xf2, 0x15, 0x0f, 0xfe, 0x52, 0x03,
+	0x9b, 0x11, 0x1e, 0x73, 0xa7, 0x18, 0x95, 0xcc, 0x19, 0xba, 0x6c, 0x28, 0x2e, 0x5a, 0xd3, 0xfa,
+	0x66, 0x92, 0xea, 0xef, 0xca, 0x6a, 0xdd, 0xc6, 0x42, 0xff, 0xa6, 0xfa, 0xb3, 0x01, 0xe1, 0xc3,
+	0x51, 0x2f, 0x7b, 0xba, 0xdb, 0xa7, 0xb5, 0x19, 0x90, 0x1e, 0x33, 0x7b, 0x17, 0x1c, 0x33, 0xe3,
+	0x10, 0x8f, 0xad, 0x6c, 0x61, 0xc3, 0xcc, 0xee, 0xeb, 0xc2, 0xed, 0xd0, 0x65, 0x43, 0x55, 0xd0,
+	0x3f, 0xe6, 0x41, 0xb3, 0x5a, 0x67, 0xb8, 0x07, 0x56, 0xe4, 0x1b, 0x14, 0x13, 0xce, 0xda, 0x9c,
+	0xa4, 0xfa, 0x86, 0x7c, 0xac, 0x02, 0x42, 0x76, 0x5d, 0xae, 0x8f, 0x7c, 0x68, 0x54, 0x66, 0xe2,
+	0xbc, 0x50, 0x3c, 0x98, 0xa4, 0xfa, 0xba, 0x52, 0x28, 0x04, 0x95, 0x83, 0xf2, 0x4b, 0x50, 0x1f,
+	0x62, 0xd7, 0xc7, 0x89, 0xb3, 0xa7, 0x2a, 0xb7, 0x35, 0x3b, 0x25, 0x0f, 0x05, 0x6e, 0xb5, 0xaf,
+	0x52, 0x7d, 0x59, 0xae, 0xf7, 0x4a, 0xcb, 0x5c, 0x8c, 0xec, 0x65, 0xb9, 0xdc, 0xab, 0x58, 0x76,
+	0xd5, 0xd0, 0x7a, 0x03, 0xcb, 0xee, 0x0d, 0xcb, 0x6e, 0x61, 0xd9, 0xdd, 0xaf, 0x67, 0xf5, 0x79,
+	0x95, 0xd5, 0xe8, 0xb7, 0x05, 0xb0, 0x24, 0x15, 0xd0, 0x05, 0xab, 0x8c, 0x0c, 0x22, 0xec, 0x3b,
+	0x92, 0xa6, 0x1a, 0xae, 0x5d, 0x4d, 0x24, 0x3f, 0x72, 0x27, 0x82, 0xa6, 0x92, 0xb6, 0x2e, 0x53,
+	0xbd, 0x56, 0xce, 0x81, 0x29, 0x0b, 0x64, 0x37, 0x59, 0x85, 0x0b, 0xbf, 0x07, 0xab, 0xc5, 0xb9,
+	0x3b, 0x0c, 0xe7, 0x4d, 0x79, 0x4b, 0x8a, 0xe2, 0x40, 0x4f, 0x30, 0xb7, 0xb4, 0xd2, 0x7e, 0x4a,
+	0x8e, 0xec, 0xe6, 0x79, 0x85, 0x07, 0xbf, 0x05, 0x72, 0xf0, 0x8b, 0xfc, 0xf7, 0x34, 0xef, 0x23,
+	0x35, 0xbe, 0xde, 0xa9, 0x7c, 0x46, 0x0a, 0x1d, 0xb2, 0x57, 0x55, 0x40, 0x0d, 0xb0, 0x00, 0xc0,
+	0x9c, 0x51, 0x36, 0xae, 0x3a, 0x8d, 0xfb, 0x9e, 0xfe, 0xd1, 0x24, 0xd5, 0xb7, 0xa7, 0xb3, 0x94,
+	0x1e, 0xc8, 0x7e, 0x5b, 0x05, 0xcb, 0x16, 0x46, 0x9f, 0x83, 0x7a, 0xfe, 0x29, 0x85, 0x2d, 0xb0,
+	0x12, 0x8d, 0x42, 0x9c, 0x64, 0x88, 0x38, 0x91, 0x05, 0xbb, 0x0c, 0xc0, 0x0e, 0x68, 0xf8, 0x38,
+	0xa2, 0x21, 0x89, 0x04, 0x3e, 0x2f, 0xf0, 0x6a, 0xc8, 0x3a, 0x7e, 0x7d, 0xd5, 0xae, 0x5d, 0x5e,
+	0xb5, 0x6b, 0xff, 0x5c, 0xb5, 0x6b, 0x2f, 0xaf, 0xdb, 0x73, 0x97, 0xd7, 0xed, 0xb9, 0xbf, 0xae,
+	0xdb, 0x73, 0xdf, 0x7d, 0x54, 0xb9, 0x6e, 0x1e, 0x65, 0x21, 0x65, 0xea, 0xdf, 0x63, 0xe6, 0x9f,
+	0x99, 0x63, 0x33, 0xfb, 0x51, 0xf1, 0xe4, 0xe3, 0xc7, 0xb3, 0x3f, 0x74, 0x7a, 0x4b, 0x62, 0xf2,
+	0x3c, 0xfd, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x00, 0xae, 0xae, 0x92, 0x56, 0x09, 0x00, 0x00,
 }
 
 func (m *ClientState) Marshal() (dAtA []byte, err error) {
@@ -342,6 +403,26 @@ func (m *ClientState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.AllowUpdateAfterMisbehaviour {
+		i--
+		if m.AllowUpdateAfterMisbehaviour {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.AllowUpdateAfterExpiry {
+		i--
+		if m.AllowUpdateAfterExpiry {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
 	if len(m.ProofSpecs) > 0 {
 		for iNdEx := len(m.ProofSpecs) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -356,38 +437,48 @@ func (m *ClientState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x42
 		}
 	}
-	if m.LatestHeight != 0 {
-		i = encodeVarintTendermint(dAtA, i, uint64(m.LatestHeight))
-		i--
-		dAtA[i] = 0x38
+	{
+		size, err := m.LatestHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTendermint(dAtA, i, uint64(size))
 	}
-	if m.FrozenHeight != 0 {
-		i = encodeVarintTendermint(dAtA, i, uint64(m.FrozenHeight))
-		i--
-		dAtA[i] = 0x30
-	}
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MaxClockDrift, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxClockDrift):])
-	if err1 != nil {
-		return 0, err1
-	}
-	i -= n1
-	i = encodeVarintTendermint(dAtA, i, uint64(n1))
 	i--
-	dAtA[i] = 0x2a
-	n2, err2 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.UnbondingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.UnbondingPeriod):])
-	if err2 != nil {
-		return 0, err2
+	dAtA[i] = 0x3a
+	{
+		size, err := m.FrozenHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTendermint(dAtA, i, uint64(size))
 	}
-	i -= n2
-	i = encodeVarintTendermint(dAtA, i, uint64(n2))
 	i--
-	dAtA[i] = 0x22
-	n3, err3 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.TrustingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.TrustingPeriod):])
+	dAtA[i] = 0x32
+	n3, err3 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MaxClockDrift, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxClockDrift):])
 	if err3 != nil {
 		return 0, err3
 	}
 	i -= n3
 	i = encodeVarintTendermint(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x2a
+	n4, err4 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.UnbondingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.UnbondingPeriod):])
+	if err4 != nil {
+		return 0, err4
+	}
+	i -= n4
+	i = encodeVarintTendermint(dAtA, i, uint64(n4))
+	i--
+	dAtA[i] = 0x22
+	n5, err5 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.TrustingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.TrustingPeriod):])
+	if err5 != nil {
+		return 0, err5
+	}
+	i -= n5
+	i = encodeVarintTendermint(dAtA, i, uint64(n5))
 	i--
 	dAtA[i] = 0x1a
 	{
@@ -437,11 +528,16 @@ func (m *ConsensusState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.Height != 0 {
-		i = encodeVarintTendermint(dAtA, i, uint64(m.Height))
-		i--
-		dAtA[i] = 0x18
+	{
+		size, err := m.Height.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTendermint(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	{
 		size, err := m.Root.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -452,14 +548,75 @@ func (m *ConsensusState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x12
-	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Timestamp, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp):])
-	if err6 != nil {
-		return 0, err6
+	n9, err9 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Timestamp, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Timestamp):])
+	if err9 != nil {
+		return 0, err9
 	}
-	i -= n6
-	i = encodeVarintTendermint(dAtA, i, uint64(n6))
+	i -= n9
+	i = encodeVarintTendermint(dAtA, i, uint64(n9))
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *Misbehaviour) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Misbehaviour) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Misbehaviour) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Header2 != nil {
+		{
+			size, err := m.Header2.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTendermint(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Header1 != nil {
+		{
+			size, err := m.Header1.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTendermint(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintTendermint(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintTendermint(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -495,11 +652,16 @@ func (m *Header) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.TrustedHeight != 0 {
-		i = encodeVarintTendermint(dAtA, i, uint64(m.TrustedHeight))
-		i--
-		dAtA[i] = 0x18
+	{
+		size, err := m.TrustedHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTendermint(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if m.ValidatorSet != nil {
 		{
 			size, err := m.ValidatorSet.MarshalToSizedBuffer(dAtA[:i])
@@ -512,16 +674,18 @@ func (m *Header) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	{
-		size, err := m.SignedHeader.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if m.SignedHeader != nil {
+		{
+			size, err := m.SignedHeader.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTendermint(dAtA, i, uint64(size))
 		}
-		i -= size
-		i = encodeVarintTendermint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -587,17 +751,21 @@ func (m *ClientState) Size() (n int) {
 	n += 1 + l + sovTendermint(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxClockDrift)
 	n += 1 + l + sovTendermint(uint64(l))
-	if m.FrozenHeight != 0 {
-		n += 1 + sovTendermint(uint64(m.FrozenHeight))
-	}
-	if m.LatestHeight != 0 {
-		n += 1 + sovTendermint(uint64(m.LatestHeight))
-	}
+	l = m.FrozenHeight.Size()
+	n += 1 + l + sovTendermint(uint64(l))
+	l = m.LatestHeight.Size()
+	n += 1 + l + sovTendermint(uint64(l))
 	if len(m.ProofSpecs) > 0 {
 		for _, e := range m.ProofSpecs {
 			l = e.Size()
 			n += 1 + l + sovTendermint(uint64(l))
 		}
+	}
+	if m.AllowUpdateAfterExpiry {
+		n += 2
+	}
+	if m.AllowUpdateAfterMisbehaviour {
+		n += 2
 	}
 	return n
 }
@@ -612,11 +780,35 @@ func (m *ConsensusState) Size() (n int) {
 	n += 1 + l + sovTendermint(uint64(l))
 	l = m.Root.Size()
 	n += 1 + l + sovTendermint(uint64(l))
-	if m.Height != 0 {
-		n += 1 + sovTendermint(uint64(m.Height))
-	}
+	l = m.Height.Size()
+	n += 1 + l + sovTendermint(uint64(l))
 	l = len(m.NextValidatorsHash)
 	if l > 0 {
+		n += 1 + l + sovTendermint(uint64(l))
+	}
+	return n
+}
+
+func (m *Misbehaviour) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovTendermint(uint64(l))
+	}
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovTendermint(uint64(l))
+	}
+	if m.Header1 != nil {
+		l = m.Header1.Size()
+		n += 1 + l + sovTendermint(uint64(l))
+	}
+	if m.Header2 != nil {
+		l = m.Header2.Size()
 		n += 1 + l + sovTendermint(uint64(l))
 	}
 	return n
@@ -628,15 +820,16 @@ func (m *Header) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.SignedHeader.Size()
-	n += 1 + l + sovTendermint(uint64(l))
+	if m.SignedHeader != nil {
+		l = m.SignedHeader.Size()
+		n += 1 + l + sovTendermint(uint64(l))
+	}
 	if m.ValidatorSet != nil {
 		l = m.ValidatorSet.Size()
 		n += 1 + l + sovTendermint(uint64(l))
 	}
-	if m.TrustedHeight != 0 {
-		n += 1 + sovTendermint(uint64(m.TrustedHeight))
-	}
+	l = m.TrustedHeight.Size()
+	n += 1 + l + sovTendermint(uint64(l))
 	if m.TrustedValidators != nil {
 		l = m.TrustedValidators.Size()
 		n += 1 + l + sovTendermint(uint64(l))
@@ -859,10 +1052,10 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 6:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field FrozenHeight", wireType)
 			}
-			m.FrozenHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTendermint
@@ -872,16 +1065,30 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.FrozenHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FrozenHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 7:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LatestHeight", wireType)
 			}
-			m.LatestHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTendermint
@@ -891,11 +1098,25 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LatestHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LatestHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofSpecs", wireType)
@@ -930,6 +1151,46 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowUpdateAfterExpiry", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AllowUpdateAfterExpiry = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowUpdateAfterMisbehaviour", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AllowUpdateAfterMisbehaviour = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTendermint(dAtA[iNdEx:])
@@ -1050,10 +1311,10 @@ func (m *ConsensusState) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
 			}
-			m.Height = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTendermint
@@ -1063,11 +1324,25 @@ func (m *ConsensusState) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Height |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Height.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NextValidatorsHash", wireType)
@@ -1100,6 +1375,195 @@ func (m *ConsensusState) Unmarshal(dAtA []byte) error {
 			m.NextValidatorsHash = append(m.NextValidatorsHash[:0], dAtA[iNdEx:postIndex]...)
 			if m.NextValidatorsHash == nil {
 				m.NextValidatorsHash = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTendermint(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Misbehaviour) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTendermint
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Misbehaviour: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Misbehaviour: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Header1", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Header1 == nil {
+				m.Header1 = &Header{}
+			}
+			if err := m.Header1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Header2", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTendermint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Header2 == nil {
+				m.Header2 = &Header{}
+			}
+			if err := m.Header2.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:
@@ -1184,6 +1648,9 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+			if m.SignedHeader == nil {
+				m.SignedHeader = &types2.SignedHeader{}
+			}
 			if err := m.SignedHeader.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1218,17 +1685,17 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.ValidatorSet == nil {
-				m.ValidatorSet = &types1.ValidatorSet{}
+				m.ValidatorSet = &types2.ValidatorSet{}
 			}
 			if err := m.ValidatorSet.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TrustedHeight", wireType)
 			}
-			m.TrustedHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTendermint
@@ -1238,11 +1705,25 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TrustedHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTendermint
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TrustedHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TrustedValidators", wireType)
@@ -1273,7 +1754,7 @@ func (m *Header) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.TrustedValidators == nil {
-				m.TrustedValidators = &types1.ValidatorSet{}
+				m.TrustedValidators = &types2.ValidatorSet{}
 			}
 			if err := m.TrustedValidators.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

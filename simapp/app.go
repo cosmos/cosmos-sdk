@@ -535,7 +535,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server) {
 	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCRoutes(apiSvr.ClientCtx, apiSvr.GRPCRouter)
 
-	// register swagger API from root so that other application developers can override easily
+	// register swagger API from root so that other applications can override easily
 	RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 }
 

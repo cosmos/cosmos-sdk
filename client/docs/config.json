@@ -5,14 +5,14 @@
     "description": "A REST interface for state queries, legacy transactions",
     "version": "1.0.0"
   },
+
   "apis": [
-// TODO to merge old routes
-//    {
-//      "url": "./client/docs/swagger-ui/swagger_legacy.yaml",
-//      "dereference": {
-//        "circular": "ignore"
-//      }
-//    },
+    {
+      "url": "./client/docs/swagger_legacy.yaml",
+      "dereference": {
+        "circular": "ignore"
+      }
+    },
     {
       "url": "./cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {

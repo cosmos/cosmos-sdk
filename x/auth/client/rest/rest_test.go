@@ -2,6 +2,10 @@ package rest_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,6 +105,47 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
 	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
 	s.Require().NotEmpty(txRes.TxHash)
+}
+
+func (s *IntegrationTestSuite) TestMultipleSignedBroadcastTxRequests() {
+
+	// Set up TxConfig.
+	aminoCdc := codec.NewLegacyAmino()
+	// We're using TestMsg amino encoding in some tests, so register it here.
+	txConfig := authtypes.StdTxConfig{Cdc: aminoCdc}
+	txBuilder := txConfig.NewTxBuilder()
+
+	val0 := s.network.Validators[0]
+	val1 := s.network.Validators[0]
+	msg := types.MsgSend{FromAddress: val0.Address, ToAddress: val1.Address, Amount: sdk.Coins{sdk.NewInt64Coin("foo", 100)}}
+
+	feeAmount := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	txBuilder.SetMsgs(&msg)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+
+	txFactory := tx.Factory{}
+	txFactory = txFactory.
+		WithChainID(val0.ClientCtx.ChainID).
+		WithKeybase(val0.ClientCtx.Keyring).
+		WithTxConfig(val0.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+
+	err := tx.Sign(txFactory, val0.Moniker, txBuilder)
+	s.Require().NoError(err)
+
+	stdTx := txBuilder.GetTx().(authtypes.StdTx)
+
+	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
+	res, err := s.broadcastReq(stdTx, "sync")
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	// NOTE: this uses amino explicitly, don't migrate it!
+	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
+	s.Require().Equal(txRes, sdk.TxResponse{})
+
 }
 
 func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) ([]byte, error) {

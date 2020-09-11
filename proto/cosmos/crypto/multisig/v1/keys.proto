@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crypto.v1;
+package cosmos.crypto.multisig.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";

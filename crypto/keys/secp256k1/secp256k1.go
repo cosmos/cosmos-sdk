@@ -26,7 +26,7 @@ const (
 
 // Bytes returns the byte representation of the Private Key.
 func (privKey *PrivKey) Bytes() []byte {
-	return []byte(privKey.Key)
+	return privKey.Key
 }
 
 // PubKey performs the point-scalar multiplication from the privKey on the
@@ -131,11 +131,11 @@ func (pubKey *PubKey) Address() crypto.Address {
 
 // Bytes returns the pubkey byte format.
 func (pubKey *PubKey) Bytes() []byte {
-	return []byte(pubKey.Key)
+	return pubKey.Key
 }
 
 func (pubKey *PubKey) String() string {
-	return fmt.Sprintf("PubKeySecp256k1{%X}", []byte(pubKey.Key))
+	return fmt.Sprintf("PubKeySecp256k1{%X}", pubKey.Key)
 }
 
 func (pubKey *PubKey) Type() string {

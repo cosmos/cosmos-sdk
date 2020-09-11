@@ -19,7 +19,7 @@ var secp256k1halfN = new(big.Int).Rsh(secp256k1.S256().N, 1)
 // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
 // The returned signature will be of the form R || S (in lower-S form).
 func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
-	priv, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key[:])
+	priv, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
 	sig, err := priv.Sign(crypto.Sha256(msg))
 	if err != nil {
 		return nil, err

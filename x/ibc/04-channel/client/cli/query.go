@@ -161,7 +161,7 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(res.IdentifiedClientState)
+			return clientCtx.PrintOutput(res.IdentifiedClientState)
 		},
 	}
 

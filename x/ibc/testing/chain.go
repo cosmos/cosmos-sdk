@@ -105,7 +105,7 @@ type TestChain struct {
 // Each update of any chain increments the block header time for all chains by 5 seconds.
 func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate validator private/public key
-	privVal := tmtypes.NewMockPV()
+	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
@@ -203,11 +203,9 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
 func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clienttypes.Height) {
-	// retrieve consensus state to provide proof for
-	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
-	require.True(chain.t, found)
+	clientState := chain.GetClientState(clientID)
 
-	consensusHeight := consState.GetHeight().(clienttypes.Height)
+	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
 	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
@@ -372,6 +370,7 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
+// NOTE: a solo machine client will be created with an empty diversifier.
 func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
 	var (
 		clientState    exported.ClientState
@@ -388,7 +387,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case exported.ClientTypeSoloMachine:
-		solo := NewSolomachine(chain.t, clientID)
+		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:

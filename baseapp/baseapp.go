@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,7 +13,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -59,6 +62,11 @@ type BaseApp struct { // nolint: maligned
 	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+
+	// manages snapshots, i.e. dumps of app state at certain intervals
+	snapshotManager    *snapshots.Manager
+	snapshotInterval   uint64 // block interval between state sync snapshots
+	snapshotKeepRecent uint32 // recent state sync snapshots to keep
 
 	// volatile states:
 	//
@@ -260,6 +268,20 @@ func (app *BaseApp) init() error {
 	// needed for the export command which inits from store but never calls initchain
 	app.setCheckState(tmproto.Header{})
 	app.Seal()
+
+	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
+	if app.snapshotManager != nil && app.snapshotInterval > 0 {
+		rms, ok := app.cms.(*rootmulti.Store)
+		if !ok {
+			return errors.New("state sync snapshots require a rootmulti store")
+		}
+		pruningOpts := rms.GetPruning()
+		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
+			return fmt.Errorf(
+				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
+				app.snapshotInterval, pruningOpts.KeepEvery)
+		}
+	}
 
 	return nil
 }

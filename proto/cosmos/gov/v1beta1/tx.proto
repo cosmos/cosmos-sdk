@@ -17,7 +17,7 @@ option (gogoproto.goproto_getters_all)  = false;
 message MsgSubmitProposal {
   option (gogoproto.equal) = true;
 
-  google.protobuf.Any content          = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -30,23 +30,17 @@ message MsgSubmitProposal {
 message MsgVote {
   option (gogoproto.equal) = true;
 
-  uint64 proposal_id = 1 [
-    (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\""
-  ];
-  bytes      voter  = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  VoteOption option = 3;
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes      voter       = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  VoteOption option      = 3;
 }
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 message MsgDeposit {
   option (gogoproto.equal) = true;
 
-  uint64 proposal_id = 1 [
-    (gogoproto.jsontag)    = "proposal_id",
-    (gogoproto.moretags)   = "yaml:\"proposal_id\""
-  ];
-  bytes    depositor          = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  bytes    depositor   = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"crypto/sha256"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -15,6 +17,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -79,9 +82,25 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
+	// In the case of a new chain, AppHash will be the hash of an empty string.
+	// During an upgrade, it'll be the hash of the last committed block.
+	var appHash []byte
+	if !app.LastCommitID().IsZero() {
+		appHash = app.LastCommitID().Hash
+	} else {
+		// $ echo -n '' | sha256sum
+		// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+		emptyHash := sha256.Sum256([]byte{})
+		appHash = emptyHash[:]
+	}
+
 	// NOTE: We don't commit, but BeginBlock for block `initial_height` starts from this
 	// deliverState.
-	return res
+	return abci.ResponseInitChain{
+		ConsensusParams: res.ConsensusParams,
+		Validators:      res.Validators,
+		AppHash:         appHash,
+	}
 }
 
 // Info implements the ABCI interface.
@@ -310,6 +329,10 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 		app.halt()
 	}
 
+	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
+		go app.snapshot(header.Height)
+	}
+
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
@@ -335,6 +358,27 @@ func (app *BaseApp) halt() {
 	// via SIGINT/SIGTERM signals.
 	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
 	os.Exit(0)
+}
+
+// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
+func (app *BaseApp) snapshot(height int64) {
+	app.logger.Info("Creating state snapshot", "height", height)
+	snapshot, err := app.snapshotManager.Create(uint64(height))
+	if err != nil {
+		app.logger.Error("Failed to create state snapshot", "height", height, "err", err)
+		return
+	}
+	app.logger.Info("Completed state snapshot", "height", height, "format", snapshot.Format)
+
+	if app.snapshotKeepRecent > 0 {
+		app.logger.Debug("Pruning state snapshots")
+		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
+		if err != nil {
+			app.logger.Error("Failed to prune state snapshots", "err", err)
+			return
+		}
+		app.logger.Debug("Pruned state snapshots", "pruned", pruned)
+	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
@@ -369,6 +413,100 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown query path"))
+}
+
+// ListSnapshots implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ListSnapshots(req abci.RequestListSnapshots) abci.ResponseListSnapshots {
+	resp := abci.ResponseListSnapshots{Snapshots: []*abci.Snapshot{}}
+	if app.snapshotManager == nil {
+		return resp
+	}
+
+	snapshots, err := app.snapshotManager.List()
+	if err != nil {
+		app.logger.Error("Failed to list snapshots", "err", err)
+		return resp
+	}
+	for _, snapshot := range snapshots {
+		abciSnapshot, err := snapshot.ToABCI()
+		if err != nil {
+			app.logger.Error("Failed to list snapshots", "err", err)
+			return resp
+		}
+		resp.Snapshots = append(resp.Snapshots, &abciSnapshot)
+	}
+
+	return resp
+}
+
+// LoadSnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) LoadSnapshotChunk(req abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
+	if app.snapshotManager == nil {
+		return abci.ResponseLoadSnapshotChunk{}
+	}
+	chunk, err := app.snapshotManager.LoadChunk(req.Height, req.Format, req.Chunk)
+	if err != nil {
+		app.logger.Error("Failed to load snapshot chunk", "height", req.Height, "format", req.Format,
+			"chunk", req.Chunk, "err")
+		return abci.ResponseLoadSnapshotChunk{}
+	}
+	return abci.ResponseLoadSnapshotChunk{Chunk: chunk}
+}
+
+// OfferSnapshot implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
+	if req.Snapshot == nil {
+		app.logger.Error("Received nil snapshot")
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+	}
+
+	snapshot, err := snapshottypes.SnapshotFromABCI(req.Snapshot)
+	if err != nil {
+		app.logger.Error("Failed to decode snapshot metadata", "err", err)
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+	}
+	err = app.snapshotManager.Restore(snapshot)
+	switch {
+	case err == nil:
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}
+
+	case errors.Is(err, snapshottypes.ErrUnknownFormat):
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT_FORMAT}
+
+	case errors.Is(err, snapshottypes.ErrInvalidMetadata):
+		app.logger.Error("Rejecting invalid snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err)
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_REJECT}
+
+	default:
+		app.logger.Error("Failed to restore snapshot", "height", req.Snapshot.Height,
+			"format", req.Snapshot.Format, "err", err)
+		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
+		// so we ask Tendermint to abort all snapshot restoration.
+		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
+	}
+}
+
+// ApplySnapshotChunk implements the ABCI interface. It delegates to app.snapshotManager if set.
+func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
+	_, err := app.snapshotManager.RestoreChunk(req.Chunk)
+	switch {
+	case err == nil:
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ACCEPT}
+
+	case errors.Is(err, snapshottypes.ErrChunkHashMismatch):
+		app.logger.Error("Chunk checksum mismatch, rejecting sender and requesting refetch",
+			"chunk", req.Index, "sender", req.Sender, "err", err)
+		return abci.ResponseApplySnapshotChunk{
+			Result:        abci.ResponseApplySnapshotChunk_RETRY,
+			RefetchChunks: []uint32{req.Index},
+			RejectSenders: []string{req.Sender},
+		}
+
+	default:
+		app.logger.Error("Failed to restore snapshot", "err", err)
+		return abci.ResponseApplySnapshotChunk{Result: abci.ResponseApplySnapshotChunk_ABORT}
+	}
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
@@ -596,20 +734,4 @@ func splitPath(requestPath string) (path []string) {
 	}
 
 	return path
-}
-
-func (app *BaseApp) ListSnapshots(abci.RequestListSnapshots) abci.ResponseListSnapshots {
-	return abci.ResponseListSnapshots{}
-}
-
-func (app *BaseApp) OfferSnapshot(abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
-	return abci.ResponseOfferSnapshot{}
-}
-
-func (app *BaseApp) LoadSnapshotChunk(abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
-	return abci.ResponseLoadSnapshotChunk{}
-}
-
-func (app *BaseApp) ApplySnapshotChunk(abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	return abci.ResponseApplySnapshotChunk{}
 }

@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				// relay send packet
 				fungibleTokenPacket := types.NewFungibleTokenPacketData(coinFromBToA, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String())
 				packet := channeltypes.NewPacket(fungibleTokenPacket.GetBytes(), 1, channelB.PortID, channelB.ID, channelA.PortID, channelA.ID, 110, 0)
-				ack := types.FungibleTokenPacketAcknowledgement{Success: true}
+				ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 				err = suite.coordinator.RelayPacket(suite.chainB, suite.chainA, clientB, clientA, packet, ack.GetBytes())
 				suite.Require().NoError(err) // relay committed
 
@@ -229,13 +229,8 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 // to chainB.
 func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 	var (
-		successAck = types.FungibleTokenPacketAcknowledgement{
-			Success: true,
-		}
-		failedAck = types.FungibleTokenPacketAcknowledgement{
-			Success: false,
-			Error:   "failed packet transfer",
-		}
+		successAck = channeltypes.NewResultAcknowledgement([]byte{byte(1)})
+		failedAck = channeltypes.NewErrorAcknowledgement("failed packet transfer")
 
 		channelA, channelB ibctesting.TestChannel
 		coins              sdk.Coins
@@ -243,7 +238,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 
 	testCases := []struct {
 		msg      string
-		ack      types.FungibleTokenPacketAcknowledgement
+		ack      channeltypes.Acknowledgement
 		malleate func()
 		source   bool
 		success  bool // success of ack

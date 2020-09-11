@@ -9,7 +9,7 @@ import (
 var KeysCdc *codec.LegacyAmino
 
 func init() {
-	KeysCdc = codec.New()
+	KeysCdc = codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(KeysCdc)
 	KeysCdc.Seal()
 }

@@ -1,11 +1,13 @@
 package staking_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -14,6 +16,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
 func bootstrapGenesisTest(t *testing.T, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
@@ -171,4 +177,112 @@ func TestValidateGenesis(t *testing.T) {
 	}
 }
 
-// TODO: TestValidateAccountInGenesis
+// ValidateGeneisTestSuite is a test suite to be used to test the ValidateAccountParamsInGenesis function
+type ValidateGenesisTestSuite struct {
+	suite.Suite
+
+	ctx            sdk.Context
+	app            *simapp.SimApp
+	encodingConfig simappparams.EncodingConfig
+}
+
+func (suite *ValidateGenesisTestSuite) SetupTest() {
+	checkTx := false
+	app := simapp.Setup(checkTx)
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.app = app
+
+	suite.encodingConfig = simapp.MakeEncodingConfig()
+}
+
+func (suite *ValidateGenesisTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64) json.RawMessage {
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+
+	err := suite.app.BankKeeper.SetBalances(
+		suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)},
+	)
+	suite.Require().NoError(err)
+
+	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
+	bankGenesis, err := suite.encodingConfig.Amino.MarshalJSON(bankGenesisState) // TODO switch this to use Marshaler
+	suite.Require().NoError(err)
+
+	return bankGenesis
+}
+
+func (suite *ValidateGenesisTestSuite) TestValidateAccountParamsInGenesis() {
+	var (
+		appGenesisState = make(map[string]json.RawMessage)
+		coins           sdk.Coins
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"no accounts",
+			func() {
+				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
+			},
+			false,
+		},
+		{
+			"account without balance in the genesis state",
+			func() {
+				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr2, 50)
+			},
+			false,
+		},
+		{
+			"account without enough funds of default bond denom",
+			func() {
+				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
+			},
+			false,
+		},
+		{
+			"account with enough funds of default bond denom",
+			func() {
+				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
+				appGenesisState[banktypes.ModuleName] = suite.setAccountBalance(addr1, 25)
+			},
+			true,
+		},
+	}
+	for _, tc := range testCases {
+
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest()
+			cdc := suite.encodingConfig.Marshaler
+
+			suite.app.StakingKeeper.SetParams(suite.ctx, types.DefaultParams())
+			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)
+			suite.Require().Equal(stakingGenesisState.Params, types.DefaultParams())
+			stakingGenesis, err := cdc.MarshalJSON(stakingGenesisState) // TODO switch this to use Marshaler
+			suite.Require().NoError(err)
+			appGenesisState[types.ModuleName] = stakingGenesis
+
+			tc.malleate()
+			err = staking.ValidateAccountParamsInGenesis(
+				appGenesisState, banktypes.GenesisBalancesIterator{},
+				addr1, coins, cdc,
+			)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+		})
+	}
+}
+
+func TestValidateGenesisTestSuite(t *testing.T) {
+	suite.Run(t, new(ValidateGenesisTestSuite))
+}

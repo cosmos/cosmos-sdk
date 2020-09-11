@@ -164,6 +164,73 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
+func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	// Send coins.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with invalid hash",
+			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"with valid and not existing hash",
+			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"happy case",
+			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var result sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result.Height)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 
@@ -761,73 +828,6 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 				var authParams authtypes.Params
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &authParams))
 				s.Require().NotNil(authParams.MaxMemoCharacters)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestQueryTxCmd() {
-	val := s.network.Validators[0]
-
-	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
-	s.Require().NoError(err)
-
-	// Send coins.
-	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
-	out, err := bankcli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		account2.GetAddress(),
-		sdk.NewCoins(sendTokens),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-	)
-	s.Require().NoError(err)
-
-	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"with invalid hash",
-			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-		},
-		{
-			"with valid and not existing hash",
-			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-		},
-		{
-			"happy case",
-			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := authcli.QueryTxCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				var result sdk.TxResponse
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-				s.Require().NotNil(result.Height)
 			}
 		})
 	}

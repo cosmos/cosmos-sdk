@@ -146,15 +146,15 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 		malleate func()
 		expectEq bool
 	}{
-		// {
-		// 	"equals",
-		// 	func() {
-		// 		var otherPubKey multisig.PubKeyMultisigThreshold
-		// 		multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
-		// 		other = otherPubKey
-		// 	},
-		// 	true,
-		// },
+		{
+			"equals",
+			func() {
+				var otherPubKey multisig.PubKeyMultisigThreshold
+				multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
+				other = otherPubKey
+			},
+			true,
+		},
 		{
 			"ensure that reordering pubkeys is treated as a different pubkey",
 			func() {

@@ -170,6 +170,22 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 	}
 }
 
+func ContainsSignModeDirect(sigData signing.SignatureData) bool {
+	switch v := sigData.(type) {
+	case *signing.SingleSignatureData:
+		return v.SignMode == signing.SignMode_SIGN_MODE_DIRECT
+	case *signing.MultiSignatureData:
+		for _, s := range v.Signatures {
+			if ContainsSignModeDirect(s) {
+				return true
+			}
+		}
+		return false
+	default:
+		panic("Type Mismatch")
+	}
+}
+
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
@@ -211,6 +227,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
 		// cannot check sequence directly, and must do it via signature
 		// verification.
+		// if ContainsSignModeDirect(sig.Data) {
 		if !sig.SkipSequenceCheck {
 			if sig.Sequence != acc.GetSequence() {
 				return ctx, sdkerrors.Wrapf(

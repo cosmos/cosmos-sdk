@@ -50,7 +50,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns an uninitialized IBC Height.
 func (cs ClientState) GetFrozenHeight() exported.Height {
-	return clienttypes.Height{}
+	return clienttypes.ZeroHeight()
 }
 
 // Validate performs a basic validation of the client state fields.

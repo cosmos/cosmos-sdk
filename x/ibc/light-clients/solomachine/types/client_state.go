@@ -15,8 +15,9 @@ import (
 var _ exported.ClientState = (*ClientState)(nil)
 
 // NewClientState creates a new ClientState instance.
-func NewClientState(consensusState *ConsensusState, allowUpdateAfterProposal bool) *ClientState {
+func NewClientState(latestSequence uint64, consensusState *ConsensusState, allowUpdateAfterProposal bool) *ClientState {
 	return &ClientState{
+		Sequence:                 latestSequence,
 		FrozenSequence:           0,
 		ConsensusState:           consensusState,
 		AllowUpdateAfterProposal: allowUpdateAfterProposal,
@@ -29,10 +30,10 @@ func (cs ClientState) ClientType() exported.ClientType {
 }
 
 // GetLatestHeight returns the latest sequence number.
-// Return exported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Return exported.Height to satisfy ClientState interface
+// Epoch number is always 0 for a solo-machine.
 func (cs ClientState) GetLatestHeight() exported.Height {
-	return clienttypes.NewHeight(0, cs.ConsensusState.Sequence)
+	return clienttypes.NewHeight(0, cs.Sequence)
 }
 
 // IsFrozen returns true if the client is frozen.
@@ -54,6 +55,9 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 
 // Validate performs basic validation of the client state fields.
 func (cs ClientState) Validate() error {
+	if cs.Sequence == 0 {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "sequence cannot be 0")
+	}
 	if cs.ConsensusState == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be nil")
 	}
@@ -92,7 +96,7 @@ func (cs ClientState) VerifyClientState(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -131,7 +135,7 @@ func (cs ClientState) VerifyClientConsensusState(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -167,7 +171,7 @@ func (cs ClientState) VerifyConnectionState(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -204,7 +208,7 @@ func (cs ClientState) VerifyChannelState(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -242,7 +246,7 @@ func (cs ClientState) VerifyPacketCommitment(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -280,7 +284,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -318,7 +322,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil
@@ -355,7 +359,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 		return err
 	}
 
-	cs.ConsensusState.Sequence++
+	cs.Sequence++
 	cs.ConsensusState.Timestamp = signature.Timestamp
 	setClientState(store, cdc, &cs)
 	return nil

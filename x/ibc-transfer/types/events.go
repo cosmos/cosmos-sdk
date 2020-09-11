@@ -15,6 +15,7 @@ const (
 	AttributeKeyRefundDenom    = "refund_denom"
 	AttributeKeyRefundAmount   = "refund_amount"
 	AttributeKeyAckSuccess     = "success"
+	AttributeKeyAck            = "acknowledgement"
 	AttributeKeyAckError       = "error"
 	AttributeKeyTraceHash      = "trace_hash"
 )

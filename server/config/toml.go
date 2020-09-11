@@ -54,8 +54,10 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: This configuration can and should be used in conjunction with other
-# parameters to determine the correct minimum value of ResponseCommit.RetainHeight.
+# Note: Tendermint block pruning is dependant on this parameter in conunction
+# with the unbonding (safety threshold) period, state pruning and state sync
+# snapshot parameters to determine the correct minimum value of
+# ResponseCommit.RetainHeight.
 min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
 
 # InterBlockCache enables inter-block caching.

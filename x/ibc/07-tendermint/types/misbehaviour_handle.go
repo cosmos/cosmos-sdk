@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CheckMisbehaviourAndUpdateState determines whether or not two conflicting
@@ -23,40 +23,51 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ctx sdk.Context,
 	cdc codec.BinaryMarshaler,
 	clientStore sdk.KVStore,
-	misbehaviour clientexported.Misbehaviour,
-) (clientexported.ClientState, error) {
+	misbehaviour exported.Misbehaviour,
+) (exported.ClientState, error) {
 	tmMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected type %T, got %T", misbehaviour, &Misbehaviour{})
 	}
 
 	// If client is already frozen at earlier height than misbehaviour, return with error
-	height := clienttypes.NewHeight(0, misbehaviour.GetHeight())
-	if cs.IsFrozen() && cs.FrozenHeight.LTE(height) {
+	if cs.IsFrozen() && cs.FrozenHeight.LTE(misbehaviour.GetHeight()) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
-			"client is already frozen at earlier height %d than misbehaviour height %d", cs.FrozenHeight, misbehaviour.GetHeight())
+			"client is already frozen at earlier height %s than misbehaviour height %s", cs.FrozenHeight, misbehaviour.GetHeight())
 	}
 
 	// Retrieve trusted consensus states for each Header in misbehaviour
 	// and unmarshal from clientStore
 
 	// Get consensus bytes from clientStore
-	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight.EpochHeight)
+	tmConsensusState1, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header1.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %d", tmMisbehaviour.Header1.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header1 at TrustedHeight: %s", tmMisbehaviour.Header1)
 	}
 
 	// Get consensus bytes from clientStore
-	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight.EpochHeight)
+	tmConsensusState2, err := GetConsensusState(clientStore, cdc, tmMisbehaviour.Header2.TrustedHeight)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %d", tmMisbehaviour.Header2.TrustedHeight)
+		return nil, sdkerrors.Wrapf(err, "could not get trusted consensus state from clientStore for Header2 at TrustedHeight: %s", tmMisbehaviour.Header2)
 	}
 
 	// calculate the age of the misbehaviour
-	infractionHeight := tmMisbehaviour.GetHeight()
 	infractionTime := tmMisbehaviour.GetTime()
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
-	ageBlocks := int64(cs.LatestHeight.EpochHeight - infractionHeight)
+
+	var ageBlocks int64
+	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.EpochNumber {
+		// if the misbehaviour is in the same epoch as the client then
+		// perform expiry check using block height in addition to time
+		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
+		ageBlocks = int64(cs.LatestHeight.EpochHeight - infractionHeight)
+	} else {
+		// if the misbehaviour is from a previous epoch, then the epoch-height
+		// of misbehaviour has no correlation with the current epoch-height
+		// so we disable the block check by setting ageBlocks to 0 and only
+		// rely on the time expiry check with ageDuration
+		ageBlocks = 0
+	}
 
 	// TODO: Retrieve consensusparams from client state and not context
 	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
@@ -96,8 +107,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrap(err, "verifying Header2 in Misbehaviour failed")
 	}
 
-	frozenHeight := clienttypes.NewHeight(0, tmMisbehaviour.GetHeight())
-	cs.FrozenHeight = frozenHeight
+	cs.FrozenHeight = tmMisbehaviour.GetHeight().(clienttypes.Height)
 	return &cs, nil
 }
 

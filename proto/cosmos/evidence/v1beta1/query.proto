@@ -24,7 +24,7 @@ service Query {
 // QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
 message QueryEvidenceRequest {
   // evidence_hash defines the hash of the requested evidence.
-  bytes evidence_hash = 1  [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
+  bytes evidence_hash = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
 }
 
 // QueryEvidenceResponse is the response type for the Query/Evidence RPC method.

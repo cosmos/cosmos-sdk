@@ -23,8 +23,10 @@ import (
 )
 
 const (
-	flagTrustLevel = "trust-level"
-	flagProofSpecs = "proof-specs"
+	flagTrustLevel                   = "trust-level"
+	flagProofSpecs                   = "proof-specs"
+	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
+	flagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC Client as defined
@@ -48,7 +50,7 @@ func NewCreateClientCmd() *cobra.Command {
 			clientID := args[0]
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
-			legacyAmino := codec.New()
+			legacyAmino := codec.NewLegacyAmino()
 
 			var header *types.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
@@ -111,13 +113,18 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
+			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
+			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
+
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
 				return err
 			}
 
+			height := header.GetHeight().(clienttypes.Height)
 			clientState := types.NewClientState(
-				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, header.GetHeight()), specs,
+				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
+				height, specs, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
 
 			consensusState := header.ConsensusState()
@@ -139,6 +146,8 @@ func NewCreateClientCmd() *cobra.Command {
 
 	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
 	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
+	cmd.Flags().Bool(flagAllowUpdateAfterExpiry, false, "allow governance proposal to update client after expiry")
+	cmd.Flags().Bool(flagAllowUpdateAfterMisbehaviour, false, "allow governance proposal to update client after misbehaviour")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -16,7 +15,9 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-const flagLatestHeight = "latest-height"
+const (
+	flagLatestHeight = "latest-height"
+)
 
 // GetCmdQueryClientStates defines the command to query all the light clients
 // that this chain mantains.
@@ -158,16 +159,16 @@ If the '--latest' flag is included, the query returns the latest consensus state
 
 			queryLatestHeight, _ := cmd.Flags().GetBool(flagLatestHeight)
 
-			var height uint64
+			var height types.Height
 
 			if !queryLatestHeight {
 				if len(args) != 2 {
 					return errors.New("must include a second 'height' argument when '--latest-height' flag is not provided")
 				}
 
-				height, err = strconv.ParseUint(args[1], 10, 64)
+				height, err = types.ParseHeight(args[1])
 				if err != nil {
-					return fmt.Errorf("expected integer height, got: %s", args[1])
+					return err
 				}
 			}
 
@@ -210,7 +211,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutputLegacy(header)
+			return clientCtx.PrintOutput(&header)
 		},
 	}
 

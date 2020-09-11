@@ -3,12 +3,14 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -16,14 +18,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
+const (
+	flagAllowUpdateAfterProposal = "allow_update_after_proposal"
+)
+
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:     "create [client-id] [path/to/consensus_state.json]",
+	cmd := &cobra.Command{
+		Use:     "create [client-id] [sequence] [path/to/consensus_state.json]",
 		Short:   "create new solo machine client",
 		Long:    "create a new solo machine client with the specified identifier and consensus state",
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
-		Args:    cobra.ExactArgs(2),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -33,10 +39,15 @@ func NewCreateClientCmd() *cobra.Command {
 
 			clientID := args[0]
 
+			sequence, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var consensusState *types.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
+			if err := cdc.UnmarshalJSON([]byte(args[2]), consensusState); err != nil {
 				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
@@ -47,7 +58,9 @@ func NewCreateClientCmd() *cobra.Command {
 				}
 			}
 
-			clientState := types.NewClientState(consensusState)
+			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)
+
+			clientState := types.NewClientState(sequence, consensusState, allowUpdateAfterProposal)
 			msg, err := clienttypes.NewMsgCreateClient(clientID, clientState, consensusState, clientCtx.GetFromAddress())
 			if err != nil {
 				return err
@@ -60,6 +73,11 @@ func NewCreateClientCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	cmd.Flags().Bool(flagAllowUpdateAfterProposal, false, "allow governance proposal to update client")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewUpdateClientCmd defines the command to update a solo machine client.

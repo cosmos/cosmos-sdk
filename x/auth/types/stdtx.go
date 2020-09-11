@@ -133,7 +133,10 @@ func CountSubKeys(pub crypto.PubKey) int {
 // DEPRECATED
 // ---------------------------------------------------------------------------
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx             = (*StdTx)(nil)
+	_ codectypes.IntoAny = (*StdTx)(nil)
+)
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
@@ -187,6 +190,11 @@ func (tx StdTx) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// AsAny implements IntoAny.AsAny.
+func (tx *StdTx) AsAny() *codectypes.Any {
+	return codectypes.UnsafePackAny(tx)
 }
 
 // GetSigners returns the addresses that must sign the transaction.
@@ -387,8 +395,9 @@ func StdSignatureToSignatureV2(cdc *codec.LegacyAmino, sig StdSignature) (signin
 	}
 
 	return signing.SignatureV2{
-		PubKey: pk,
-		Data:   data,
+		PubKey:            pk,
+		Data:              data,
+		SkipSequenceCheck: true,
 	}, nil
 }
 

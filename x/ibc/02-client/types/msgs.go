@@ -1,10 +1,11 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // message types for the IBC client
@@ -18,6 +19,10 @@ var (
 	_ sdk.Msg = &MsgCreateClient{}
 	_ sdk.Msg = &MsgUpdateClient{}
 	_ sdk.Msg = &MsgSubmitMisbehaviour{}
+
+	_ codectypes.UnpackInterfacesMessage = MsgCreateClient{}
+	_ codectypes.UnpackInterfacesMessage = MsgUpdateClient{}
+	_ codectypes.UnpackInterfacesMessage = MsgSubmitMisbehaviour{}
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -88,6 +93,23 @@ func (msg MsgCreateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgCreateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	var consensusState exported.ConsensusState
+	err = unpacker.UnpackAny(msg.ConsensusState, &consensusState)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
 func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress) (*MsgUpdateClient, error) {
 	anyHeader, err := PackHeader(header)
@@ -138,6 +160,17 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var header exported.Header
+	err := unpacker.UnpackAny(msg.Header, &header)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance.
@@ -194,4 +227,15 @@ func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
 // GetSigners returns the single expected signer for a MsgSubmitMisbehaviour.
 func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgSubmitMisbehaviour) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var misbehaviour exported.Misbehaviour
+	err := unpacker.UnpackAny(msg.Misbehaviour, &misbehaviour)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

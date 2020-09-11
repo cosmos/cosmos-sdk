@@ -351,8 +351,14 @@ message VoteInfo {
   bool      signed_last_block = 2;
 }
 
+enum EvidenceType {
+  UNKNOWN               = 0;
+  DUPLICATE_VOTE        = 1;
+  LIGHT_CLIENT_ATTACK   = 2;
+}
+
 message Evidence {
-  string                    type      = 1;
+  EvidenceType              type      = 1;
   // The offending validator
   Validator                 validator = 2 [(gogoproto.nullable) = false];
   // The height when the offense occurred 

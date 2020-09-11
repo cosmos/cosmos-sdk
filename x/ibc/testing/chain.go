@@ -24,21 +24,20 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Default params constants used to create a TM client
 const (
+	// Default params constants used to create a TM client
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
@@ -51,6 +50,10 @@ const (
 
 	TransferPort = ibctransfertypes.ModuleName
 	MockPort     = mock.ModuleName
+
+	// used for testing UpdateClientProposal
+	Title       = "title"
+	Description = "description"
 )
 
 // Default params variables used to create a TM client
@@ -102,7 +105,7 @@ type TestChain struct {
 // Each update of any chain increments the block header time for all chains by 5 seconds.
 func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate validator private/public key
-	privVal := tmtypes.NewMockPV()
+	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
@@ -163,7 +166,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
 // for the query and the height at which the proof will succeed on a tendermint verifier.
-func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
+func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
 		Height: chain.App.LastBlockHeight() - 1,
@@ -181,12 +184,12 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, uint64) {
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, uint64(res.Height) + 1
+	return proof, clienttypes.NewHeight(0, uint64(res.Height)+1)
 }
 
 // QueryClientStateProof performs and abci query for a client state
 // stored with a given clientID and returns the ClientState along with the proof
-func (chain *TestChain) QueryClientStateProof(clientID string) (clientexported.ClientState, []byte) {
+func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientState, []byte) {
 	// retrieve client state to provide proof for
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
@@ -199,12 +202,10 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (clientexported.C
 
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
-func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, uint64) {
-	// retrieve consensus state to provide proof for
-	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
-	require.True(chain.t, found)
+func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clienttypes.Height) {
+	clientState := chain.GetClientState(clientID)
 
-	consensusHeight := consState.GetHeight()
+	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
 	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 
@@ -271,7 +272,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 
 // GetClientState retrieves the client state for the provided clientID. The client is
 // expected to exist otherwise testing will fail.
-func (chain *TestChain) GetClientState(clientID string) clientexported.ClientState {
+func (chain *TestChain) GetClientState(clientID string) exported.ClientState {
 	clientState, found := chain.App.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(chain.t, found)
 
@@ -280,7 +281,7 @@ func (chain *TestChain) GetClientState(clientID string) clientexported.ClientSta
 
 // GetConsensusState retrieves the consensus state for the provided clientID and height.
 // It will return a success boolean depending on if consensus state exists or not.
-func (chain *TestChain) GetConsensusState(clientID string, height uint64) (clientexported.ConsensusState, bool) {
+func (chain *TestChain) GetConsensusState(clientID string, height exported.Height) (exported.ConsensusState, bool) {
 	return chain.App.IBCKeeper.ClientKeeper.GetClientConsensusState(chain.GetContext(), clientID, height)
 }
 
@@ -316,7 +317,7 @@ func (chain *TestChain) GetChannel(testChannel TestChannel) channeltypes.Channel
 
 // GetAcknowledgement retrieves an acknowledgement for the provided packet. If the
 // acknowledgement does not exist then testing will fail.
-func (chain *TestChain) GetAcknowledgement(packet channelexported.PacketI) []byte {
+func (chain *TestChain) GetAcknowledgement(packet exported.PacketI) []byte {
 	ack, found := chain.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(chain.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	require.True(chain.t, found)
 
@@ -369,21 +370,24 @@ func (chain *TestChain) GetFirstTestConnection(clientID, counterpartyClientID st
 }
 
 // ConstructMsgCreateClient constructs a message to create a new client state (tendermint or solomachine).
+// NOTE: a solo machine client will be created with an empty diversifier.
 func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, clientID string, clientType string) *clienttypes.MsgCreateClient {
 	var (
-		clientState    clientexported.ClientState
-		consensusState clientexported.ConsensusState
+		clientState    exported.ClientState
+		consensusState exported.ConsensusState
 	)
 
 	switch clientType {
-	case clientexported.ClientTypeTendermint:
+	case exported.ClientTypeTendermint:
+		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-			clienttypes.NewHeight(0, counterparty.LastHeader.GetHeight()), commitmenttypes.GetSDKSpecs(),
+			height, commitmenttypes.GetSDKSpecs(),
+			false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
-	case clientexported.ClientTypeSoloMachine:
-		solo := NewSolomachine(chain.t, clientID)
+	case exported.ClientTypeSoloMachine:
+		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:
@@ -401,17 +405,32 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID, clientexported.ClientTypeTendermint)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, exported.ClientTypeTendermint)
 	return chain.sendMsgs(msg)
 }
 
 // UpdateTMClient will construct and execute a 07-tendermint MsgUpdateClient. The counterparty
-// client will be updated on the (target) chain.
-// UpdateTMClient mocks the relayer flow necessary for updating a Tendermint client
+// client will be updated on the (target) chain. UpdateTMClient mocks the relayer flow
+// necessary for updating a Tendermint client.
 func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string) error {
+	header, err := chain.ConstructUpdateTMClientHeader(counterparty, clientID)
+	require.NoError(chain.t, err)
+
+	msg, err := clienttypes.NewMsgUpdateClient(
+		clientID, header,
+		chain.SenderAccount.GetAddress(),
+	)
+	require.NoError(chain.t, err)
+
+	return chain.sendMsgs(msg)
+}
+
+// ConstructUpdateTMClientHeader will construct a valid 07-tendermint Header to update the
+// light client on the source chain.
+func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, clientID string) (*ibctmtypes.Header, error) {
 	header := counterparty.LastHeader
 	// Relayer must query for LatestHeight on client to get TrustedHeight
-	trustedHeight := chain.GetClientState(clientID).GetLatestHeight()
+	trustedHeight := chain.GetClientState(clientID).GetLatestHeight().(clienttypes.Height)
 	var (
 		tmTrustedVals *tmtypes.ValidatorSet
 		ok            bool
@@ -426,29 +445,29 @@ func (chain *TestChain) UpdateTMClient(counterparty *TestChain, clientID string)
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.EpochHeight + 1))
 		if !ok {
-			return sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
+			return nil, sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
 	// for now assume epoch number is 0
-	// TODO: use clienttypes.Height once Header.GetHeight is updated
-	header.TrustedHeight = clienttypes.NewHeight(0, trustedHeight)
+	header.TrustedHeight = trustedHeight
 
 	trustedVals, err := tmTrustedVals.ToProto()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	header.TrustedValidators = trustedVals
 
-	msg, err := clienttypes.NewMsgUpdateClient(
-		clientID, header,
-		chain.SenderAccount.GetAddress(),
-	)
-	require.NoError(chain.t, err)
+	return header, nil
 
-	return chain.sendMsgs(msg)
+}
+
+// ExpireClient fast forwards the chain's block time by the provided amount of time which will
+// expire any clients with a trusting period less than or equal to this amount of time.
+func (chain *TestChain) ExpireClient(amount time.Duration) {
+	chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(amount)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client.
@@ -746,7 +765,7 @@ func (chain *TestChain) GetPacketData(counterparty *TestChain) []byte {
 // SendPacket simulates sending a packet through the channel keeper. No message needs to be
 // passed since this call is made from a module.
 func (chain *TestChain) SendPacket(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 
@@ -765,7 +784,7 @@ func (chain *TestChain) SendPacket(
 
 // ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
 func (chain *TestChain) ReceiveExecuted(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
@@ -785,7 +804,7 @@ func (chain *TestChain) ReceiveExecuted(
 // AcknowledgementExecuted simulates deleting a packet commitment with the
 // given packet sequence.
 func (chain *TestChain) AcknowledgementExecuted(
-	packet channelexported.PacketI,
+	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetSourcePort(), packet.GetSourceChannel())
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -131,6 +132,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
+	snapshottypes.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
@@ -165,6 +167,10 @@ type CommitMultiStore interface {
 	// Set an inter-block (persistent) cache that maintains a mapping from
 	// StoreKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
+
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64) error
 }
 
 //---------subsp-------------------------------
@@ -393,4 +399,12 @@ type MultiStorePersistentCache interface {
 
 	// Reset the entire set of internal caches.
 	Reset()
+}
+
+// StoreWithInitialVersion is a store that can have an arbitrary initial
+// version.
+type StoreWithInitialVersion interface {
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64)
 }

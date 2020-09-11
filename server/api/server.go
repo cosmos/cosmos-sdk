@@ -82,10 +82,6 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
-	if cfg.API.Swagger {
-		//s.registerSwaggerUI()
-	}
-
 	if cfg.Telemetry.Enabled {
 		m, err := telemetry.New(cfg.Telemetry)
 		if err != nil {

@@ -519,10 +519,13 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server) {
 
 	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCRoutes(apiSvr.ClientCtx, apiSvr.GRPCRouter)
-	RegisterSwaggerUI(clientCtx, apiSvr.Router)
+
+	// register swagger API from root so that other application developers can override easily
+	RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 }
 
-func RegisterSwaggerUI(ctx client.Context, rtr *mux.Router) {
+// RegisterSwaggerAPI registers swagger route with API Server
+func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

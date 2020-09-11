@@ -35,7 +35,7 @@ func (suite *LocalhostTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState("chainID", clienttypes.Height{}),
+			clientState: types.NewClientState("chainID", clienttypes.ZeroHeight()),
 			expPass:     false,
 		},
 	}
@@ -98,7 +98,7 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyClientState(
-				suite.store, suite.cdc, nil, 10, nil, "", []byte{}, tc.counterparty,
+				suite.store, suite.cdc, nil, clienttypes.NewHeight(0, 10), nil, "", []byte{}, tc.counterparty,
 			)
 
 			if tc.expPass {
@@ -114,16 +114,33 @@ func (suite *LocalhostTestSuite) TestVerifyClientState() {
 func (suite *LocalhostTestSuite) TestVerifyClientConsensusState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	err := clientState.VerifyClientConsensusState(
-		nil, nil, nil, 0, "", 0, nil, nil, nil,
+		nil, nil, nil, nil, "", nil, nil, nil, nil,
 	)
 	suite.Require().NoError(err)
 }
+
 func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetEpochNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetEpochHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
+}
+
+func (suite *LocalhostTestSuite) TestMisbehaviourAndUpdateState() {
+	clientState := types.NewClientState("chainID", clientHeight)
+	cs, err := clientState.CheckMisbehaviourAndUpdateState(suite.ctx, nil, nil, nil)
+	suite.Require().Error(err)
+	suite.Require().Nil(cs)
+}
+
+func (suite *LocalhostTestSuite) TestProposedHeaderAndUpdateState() {
+	clientState := types.NewClientState("chainID", clientHeight)
+	cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.ctx, nil, nil, nil)
+	suite.Require().Error(err)
+	suite.Require().Nil(cs)
+	suite.Require().Nil(consState)
 }
 
 func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
@@ -186,7 +203,7 @@ func (suite *LocalhostTestSuite) TestVerifyConnectionState() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyConnectionState(
-				suite.store, suite.cdc, height, nil, []byte{}, testConnectionID, &tc.connection,
+				suite.store, suite.cdc, clientHeight, nil, []byte{}, testConnectionID, &tc.connection,
 			)
 
 			if tc.expPass {
@@ -260,7 +277,7 @@ func (suite *LocalhostTestSuite) TestVerifyChannelState() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyChannelState(
-				suite.store, suite.cdc, height, nil, []byte{}, testPortID, testChannelID, &tc.channel,
+				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, &tc.channel,
 			)
 
 			if tc.expPass {
@@ -319,7 +336,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketCommitment() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketCommitment(
-				suite.store, suite.cdc, height, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
+				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.commitment,
 			)
 
 			if tc.expPass {
@@ -378,7 +395,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyPacketAcknowledgement(
-				suite.store, suite.cdc, height, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
+				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, testSequence, tc.ack,
 			)
 
 			if tc.expPass {
@@ -394,7 +411,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	clientState := types.NewClientState("chainID", clientHeight)
 
 	err := clientState.VerifyPacketAcknowledgementAbsence(
-		suite.store, suite.cdc, height, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
 
 	suite.Require().NoError(err, "ack absence failed")
@@ -402,7 +419,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	suite.store.Set(host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("ack"))
 
 	err = clientState.VerifyPacketAcknowledgementAbsence(
-		suite.store, suite.cdc, height, nil, nil, testPortID, testChannelID, testSequence,
+		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
 	suite.Require().Error(err, "ack exists in store")
 }
@@ -458,7 +475,7 @@ func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {
 			tc.malleate()
 
 			err := tc.clientState.VerifyNextSequenceRecv(
-				suite.store, suite.cdc, height, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
+				suite.store, suite.cdc, clientHeight, nil, []byte{}, testPortID, testChannelID, nextSeqRecv,
 			)
 
 			if tc.expPass {

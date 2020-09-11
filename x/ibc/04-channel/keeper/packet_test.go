@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -14,8 +15,8 @@ import (
 var (
 	validPacketData          = []byte("VALID PACKET DATA")
 	disabledTimeoutTimestamp = uint64(0)
-	disabledTimeoutHeight    = uint64(0)
-	timeoutHeight            = uint64(100)
+	disabledTimeoutHeight    = clienttypes.ZeroHeight()
+	timeoutHeight            = clienttypes.NewHeight(0, 100)
 
 	// for when the testing package cannot be used
 	clientIDA  = "clientA"
@@ -132,7 +133,7 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			clientA, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			// use client state latest height for timeout
 			clientState := suite.chainA.GetClientState(clientA)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clientState.GetLatestHeight(), disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clientState.GetLatestHeight().(clienttypes.Height), disabledTimeoutTimestamp)
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"timeout timestamp passed", func() {
@@ -292,7 +293,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 		}, false},
 		{"timeout height passed", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, uint64(suite.chainB.GetContext().BlockHeight()), disabledTimeoutTimestamp)
+			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.GetSelfHeight(suite.chainB.GetContext()), disabledTimeoutTimestamp)
 		}, false},
 		{"timeout timestamp passed", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)

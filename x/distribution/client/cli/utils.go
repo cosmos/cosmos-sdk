@@ -4,24 +4,12 @@ import (
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-type (
-	// CommunityPoolSpendProposalJSON defines a CommunityPoolSpendProposal with a deposit
-	CommunityPoolSpendProposalJSON struct {
-		Title       string         `json:"title" yaml:"title"`
-		Description string         `json:"description" yaml:"description"`
-		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
-		Amount      string         `json:"amount" yaml:"amount"`
-		Deposit     string         `json:"deposit" yaml:"deposit"`
-	}
-)
-
-// ParseCommunityPoolSpendProposalJSON reads and parses a CommunityPoolSpendProposalJSON from a file.
-// TODO: migrate this to protobuf
-func ParseCommunityPoolSpendProposalJSON(cdc *codec.LegacyAmino, proposalFile string) (CommunityPoolSpendProposalJSON, error) {
-	proposal := CommunityPoolSpendProposalJSON{}
+// ParseCommunityPoolSpendProposalWithDeposit reads and parses a CommunityPoolSpendProposalWithDeposit from a file.
+func ParseCommunityPoolSpendProposalWithDeposit(cdc codec.JSONMarshaler, proposalFile string) (types.CommunityPoolSpendProposalWithDeposit, error) {
+	proposal := types.CommunityPoolSpendProposalWithDeposit{}
 
 	contents, err := ioutil.ReadFile(proposalFile)
 	if err != nil {

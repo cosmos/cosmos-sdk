@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestZeroHeight(t *testing.T) {
+	require.Equal(t, types.Height{}, types.ZeroHeight())
+}
+
 func TestCompareHeights(t *testing.T) {
 	testCases := []struct {
 		name        string
@@ -50,6 +54,27 @@ func TestDecrement(t *testing.T) {
 	invalidDecrement := types.NewHeight(3, 0)
 	actual, success = invalidDecrement.Decrement()
 
-	require.Equal(t, types.Height{}, actual, "invalid decrement returned non-zero height: %s", actual)
+	require.Equal(t, types.ZeroHeight(), actual, "invalid decrement returned non-zero height: %s", actual)
 	require.False(t, success, "invalid decrement passed")
+}
+
+func TestString(t *testing.T) {
+	_, err := types.ParseHeight("height")
+	require.Error(t, err, "invalid height string passed")
+
+	_, err = types.ParseHeight("epoch-10")
+	require.Error(t, err, "invalid epoch string passed")
+
+	_, err = types.ParseHeight("3-height")
+	require.Error(t, err, "invalid epoch-height string passed")
+
+	height := types.NewHeight(3, 4)
+	recovered, err := types.ParseHeight(height.String())
+
+	require.NoError(t, err, "valid height string could not be parsed")
+	require.Equal(t, height, recovered, "recovered height not equal to original height")
+
+	parse, err := types.ParseHeight("3-10")
+	require.NoError(t, err, "parse err")
+	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -63,7 +64,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		clientA            string
 		clientB            string
 		versions           []string
-		consensusHeight    uint64
+		consensusHeight    exported.Height
 		counterpartyClient exported.ClientState
 	)
 
@@ -103,7 +104,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 
-			consensusHeight = uint64(suite.chainB.GetContext().BlockHeight())
+			consensusHeight = clienttypes.GetSelfHeight(suite.chainB.GetContext())
 		}, false},
 		{"self consensus state not found", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -113,7 +114,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 
-			consensusHeight = 1
+			consensusHeight = clienttypes.NewHeight(0, 1)
 		}, false},
 		{"counterparty versions is empty", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
@@ -197,7 +198,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                               // reset
-			consensusHeight = 0                             // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()      // must be explicitly changed in malleate
 			versions = types.GetCompatibleEncodedVersions() // must be explicitly changed in malleate
 
 			tc.malleate()
@@ -213,7 +214,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			consState, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainA.GetContext(), clientA)
 			suite.Require().True(found)
 
-			if consensusHeight == 0 {
+			if consensusHeight.IsZero() {
 				consensusHeight = consState.GetHeight()
 			}
 			consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
@@ -244,7 +245,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	var (
 		clientA            string
 		clientB            string
-		consensusHeight    uint64
+		consensusHeight    exported.Height
 		version            string
 		counterpartyClient exported.ClientState
 	)
@@ -315,7 +316,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeight = uint64(suite.chainA.GetContext().BlockHeight())
+			consensusHeight = clienttypes.GetSelfHeight(suite.chainA.GetContext())
 		}, false},
 		{"connection not found", func() {
 			// connections are never created
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			consensusHeight = 1
+			consensusHeight = clienttypes.NewHeight(0, 1)
 		}, false},
 		{"connection state verification failed", func() {
 			// chainB connection is not in INIT
@@ -446,7 +447,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()                                 // reset
 			version = types.GetCompatibleEncodedVersions()[0] // must be explicitly changed in malleate
-			consensusHeight = 0                               // must be explicitly changed in malleate
+			consensusHeight = clienttypes.ZeroHeight()        // must be explicitly changed in malleate
 
 			tc.malleate()
 
@@ -460,7 +461,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
 			suite.Require().True(found)
 
-			if consensusHeight == 0 {
+			if consensusHeight.IsZero() {
 				consensusHeight = consState.GetHeight()
 			}
 			consensusKey := host.FullKeyClientPath(clientB, host.KeyConsensusState(consensusHeight))

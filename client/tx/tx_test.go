@@ -15,13 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func NewTestTxConfig() client.TxConfig {
-	_, cdc := simapp.MakeCodecs()
-	return types.StdTxConfig{Cdc: cdc}
+	cfg := simapp.MakeEncodingConfig()
+	return cfg.TxConfig
 }
 
 func TestCalculateGas(t *testing.T) {

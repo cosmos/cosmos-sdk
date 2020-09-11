@@ -61,9 +61,9 @@ func NewConsensusStateWithHeight(height Height, consensusState exported.Consensu
 }
 
 // UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
-func (ics ConsensusStateWithHeight) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (cswh ConsensusStateWithHeight) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var consensusState exported.ConsensusState
-	err := unpacker.UnpackAny(ics.ConsensusState, &consensusState)
+	err := unpacker.UnpackAny(cswh.ConsensusState, &consensusState)
 	if err != nil {
 		return err
 	}

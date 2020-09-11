@@ -20,5 +20,5 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 }
 
 func (pubKey *PrivKey) VerifySignature(msg []byte, sig []byte) bool {
-	return secp256k1.VerifySignature(pubKey.Key[:], crypto.Sha256(msg), sig)
+	return secp256k1.VerifySignature(pubKey.Key, crypto.Sha256(msg), sig)
 }

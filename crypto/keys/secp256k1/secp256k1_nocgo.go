@@ -34,7 +34,7 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
 	if len(sigStr) != 64 {
 		return false
 	}
-	pub, err := secp256k1.ParsePubKey(pubKey.Key[:], secp256k1.S256())
+	pub, err := secp256k1.ParsePubKey(pubKey.Key, secp256k1.S256())
 	if err != nil {
 		return false
 	}

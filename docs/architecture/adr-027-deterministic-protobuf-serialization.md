@@ -33,6 +33,21 @@ instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.c
 by converting all Tx fields to bytes on the client side. This adds additional manual
 step when sending and signing transactions.
 
+### Decision
+
+The following encoding scheme is proposed to be used by other ADRs.
+Currently we are using the this ADR to for `SignDoc` serialization.
+
+## Specification
+
+### Scope
+
+This ADR defines a protobuf3 serializer. The output is a valid protobuf
+serialization, such that every protobuf parser can parse it.
+
+No maps are supported in version 1 due to the complexity of defining a
+deterministic serialization. This might change in future. Implementations must
+reject documents containing maps as invalid input.
 
 ### Background - Protobuf3 Encoding
 
@@ -53,18 +68,6 @@ malleability.
 Among other sources of non-determinism, this ADR eliminates the possibility of
 encoding malleability.
 
-## Decision
-
-The following encoding scheme is proposed to be used by other ADRs.
-
-### Scope
-
-This ADR defines a protobuf3 serializer. The output is a valid protobuf
-serialization, such that every protobuf parser can parse it.
-
-No maps are supported in version 1 due to the complexity of defining a
-deterministic serialization. This might change in future. Implementations must
-reject documents containing maps as invalid input.
 
 ### Serialization rules
 
@@ -263,8 +266,19 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - When implementing transaction signing, the encoding rules above must be
   understood and implemented.
 - The need for rule number 3. adds some complexity to implementations.
+- Some data structures may require custom code for serialization. Thus
+  the code is not very portable - it will require additional work for each
+  client implementing serialization for not compatible data structures.
 
 ### Neutral
+
+
+### Usage in SDK
+
+For the reasons mentioned above (negative section) we prefer to keep workarounds
+for shared data structure. Example: aforementioned `TxRaw` is using a raw bytes
+as a workaround. This frees them from a risk of wrongly implementing this
+standard on top of their favorite protobuf library.
 
 ## References
 

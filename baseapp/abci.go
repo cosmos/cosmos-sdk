@@ -619,9 +619,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	}
 
 	// Define the state pruning offset, i.e. the block offset at which the
-	// underlying logical database is persisted to disk. Note, we only consider
-	// this case when the offset is greater than the current height, otherwise it
-	// would yield 0 and
+	// underlying logical database is persisted to disk.
 	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
 	if statePruningOffset > 0 {
 		if commitHeight > statePruningOffset {

@@ -101,7 +101,7 @@ type BaseApp struct { // nolint: maligned
 	// minimum block time (in Unix seconds) at which to halt the chain and gracefully shutdown
 	haltTime uint64
 
-	// minRetainBlocksdefines the minimum block height offset from the current
+	// minRetainBlocks defines the minimum block height offset from the current
 	// block being committed, such that all blocks past this offset are pruned
 	// from Tendermint. It is used as part of the process of determining the
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates

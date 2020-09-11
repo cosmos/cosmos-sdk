@@ -6,13 +6,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // DefaultTxEncoder returns a default protobuf TxEncoder using the provided Marshaler
-func DefaultTxEncoder() types.TxEncoder {
-	return func(tx types.Tx) ([]byte, error) {
+func DefaultTxEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
 		txWrapper, ok := tx.(*wrapper)
 		if !ok {
 			return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
@@ -28,14 +28,20 @@ func DefaultTxEncoder() types.TxEncoder {
 	}
 }
 
-// DefaultTxEncoder returns a default protobuf JSON TxEncoder using the provided Marshaler
-func DefaultJSONTxEncoder() types.TxEncoder {
-	return func(tx types.Tx) ([]byte, error) {
+// DefaultJSONTxEncoder returns a default protobuf JSON TxEncoder using the provided Marshaler.
+func DefaultJSONTxEncoder() sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
 		txWrapper, ok := tx.(*wrapper)
-		if !ok {
-			return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
+		if ok {
+			return codec.ProtoMarshalJSON(txWrapper.tx)
 		}
 
-		return codec.ProtoMarshalJSON(txWrapper.tx)
+		protoTx, ok := tx.(*txtypes.Tx)
+		if ok {
+			return codec.ProtoMarshalJSON(protoTx)
+		}
+
+		return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, tx)
+
 	}
 }

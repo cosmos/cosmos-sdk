@@ -4,7 +4,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -136,7 +136,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
 			// number of signers.
-			if _, ok := pubkey.(*keys.LegacyAminoMultisigThresholdPubKey); ok {
+			if _, ok := pubkey.(*multisig.LegacyAminoMultisigThresholdPubKey); ok {
 				cost *= params.TxSigLimit
 			}
 

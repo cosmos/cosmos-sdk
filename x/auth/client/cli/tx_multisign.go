@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -98,7 +98,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(*keys.LegacyAminoMultisigThresholdPubKey)
+		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoMultisigThresholdPubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())

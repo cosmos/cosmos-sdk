@@ -1,4 +1,4 @@
-package keys
+package multisig
 
 import (
 	fmt "fmt"
@@ -27,7 +27,7 @@ func NewLegacyAminoMultisigThresholdPubKey(k int, pubKeys []tmcrypto.PubKey) Leg
 	if len(pubKeys) < k {
 		panic("threshold k of n multisignature: len(pubKeys) < k")
 	}
-	anyPubKeys, err := PackPubKeys(pubKeys)
+	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +156,7 @@ func (m *LegacyAminoMultisigThresholdPubKey) UnpackInterfaces(unpacker types.Any
 	return nil
 }
 
-func PackPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
+func packPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {

@@ -7,8 +7,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -65,7 +64,7 @@ func (i localInfo) GetName() string {
 
 // GetType implements Info interface
 func (i localInfo) GetPubKey() crypto.PubKey {
-	return &keys.Secp256K1PubKey{Key: i.PubKey.(secp256k1.PubKey)}
+	return i.PubKey
 }
 
 // GetType implements Info interface
@@ -193,7 +192,7 @@ type multiInfo struct {
 
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(*keys.LegacyAminoMultisigThresholdPubKey)
+	multiPK := pub.(*multisig.LegacyAminoMultisigThresholdPubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
 	for i, pk := range multiPK.GetPubKeys() {
@@ -241,7 +240,7 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	multiPK := i.PubKey.(*keys.LegacyAminoMultisigThresholdPubKey)
+	multiPK := i.PubKey.(*multisig.LegacyAminoMultisigThresholdPubKey)
 	err := codectypes.UnpackInterfaces(multiPK, unpacker)
 	if err != nil {
 		return err

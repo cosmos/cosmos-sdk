@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	cosmovisor "github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor"
 )
 
 func main() {
-	err := Run(os.Args[1:])
-	if err != nil {
-		fmt.Printf("%+v\n", err)
+	if err := Run(os.Args[1:]); err != nil {
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
 }
@@ -21,8 +20,8 @@ func Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
 
+	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)

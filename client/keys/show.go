@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -83,7 +83,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multikey := keys.NewLegacyAminoMultisigThresholdPubKey(multisigThreshold, pks)
+		multikey := multisig.NewLegacyAminoMultisigThresholdPubKey(multisigThreshold, pks)
 		info = keyring.NewMultiInfo(defaultMultiSigKeyName, &multikey)
 	}
 

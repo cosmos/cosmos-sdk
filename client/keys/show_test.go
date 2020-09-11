@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,16 +19,16 @@ import (
 
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
-	pk := keys.NewLegacyAminoMultisigThresholdPubKey(
+	pk := multisig.NewLegacyAminoMultisigThresholdPubKey(
 		1,
-		[]crypto.PubKey{&keys.Secp256K1PubKey{Key: tmpKey1.PubKey().(secp256k1.PubKey)}},
+		[]crypto.PubKey{tmpKey1.PubKey()},
 	)
 	tmp := keyring.NewMultiInfo("myMultisig", &pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())
-	require.Equal(t, "CCEA75F6A6E0D232C9708BF4EA9787B4731FDE9D", tmp.GetPubKey().Address().String())
-	require.Equal(t, "cosmos1en48ta4xurfr9jts306w49u8k3e3lh5a94e0vl", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
+	require.Equal(t, "15C3EB7FAF7021D4FD21AEA021FEDFCB7304F184", tmp.GetPubKey().Address().String())
+	require.Equal(t, "cosmos1zhp7kla0wqsaflfp46szrlkledesfuvyz3l5d0", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
 }
 
 func Test_showKeysCmd(t *testing.T) {

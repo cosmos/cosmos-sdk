@@ -107,8 +107,10 @@ type BaseApp struct { // nolint: maligned
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: This configuration can and should be used in conjunction with other
-	// parameters to determine the correct minimum value of ResponseCommit.RetainHeight.
+	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// with the unbonding (safety threshold) period, state pruning and state sync
+	// snapshot parameters to determine the correct minimum value of
+	// ResponseCommit.RetainHeight.
 	minRetainBlocks uint64
 
 	// application's version string

@@ -10,10 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type keyData struct {
@@ -37,13 +39,13 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKey = privB
+		var priv secp256k1.PrivKey = secp256k1.PrivKey{Key: privB}
 
 		pubKey := priv.PubKey()
-		pubT, _ := pubKey.(secp256k1.PubKey)
+		pubT, _ := pubKey.(*secp256k1.PubKey)
 
 		addr := pubKey.Address()
-		assert.Equal(t, pubT, secp256k1.PubKey(pubB), "Expected pub keys to match")
+		assert.Equal(t, pubT, &secp256k1.PubKey{Key: pubB}, "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")
 	}
 }
@@ -108,9 +110,87 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)
 			// interpret as a big.Int and make sure it is a valid field element:
-			fe := new(big.Int).SetBytes(gotPrivKey[:])
+			fe := new(big.Int).SetBytes(gotPrivKey.Key[:])
 			require.True(t, fe.Cmp(N) < 0)
 			require.True(t, fe.Sign() > 0)
+		})
+	}
+}
+
+func TestPubKeyEquals(t *testing.T) {
+	secp256K1PubKey := secp256k1.GenPrivKey().PubKey().(*secp256k1.PubKey)
+
+	testCases := []struct {
+		msg      string
+		pubKey   cryptotypes.PubKey
+		other    crypto.PubKey
+		expectEq bool
+	}{
+		{
+			"different bytes",
+			secp256K1PubKey,
+			secp256k1.GenPrivKey().PubKey(),
+			false,
+		},
+		{
+			"equals",
+			secp256K1PubKey,
+			&secp256k1.PubKey{
+				Key: secp256K1PubKey.Key,
+			},
+			true,
+		},
+		{
+			"different types",
+			secp256K1PubKey,
+			sr25519.GenPrivKey().PubKey(),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			eq := tc.pubKey.Equals(tc.other)
+			require.Equal(t, eq, tc.expectEq)
+		})
+	}
+}
+
+func TestPrivKeyEquals(t *testing.T) {
+	secp256K1PrivKey := secp256k1.GenPrivKey()
+
+	testCases := []struct {
+		msg      string
+		privKey  cryptotypes.PrivKey
+		other    crypto.PrivKey
+		expectEq bool
+	}{
+		{
+			"different bytes",
+			secp256K1PrivKey,
+			secp256k1.GenPrivKey(),
+			false,
+		},
+		{
+			"equals",
+			secp256K1PrivKey,
+			&secp256k1.PrivKey{
+				Key: secp256K1PrivKey.Key,
+			},
+			true,
+		},
+		{
+			"different types",
+			secp256K1PrivKey,
+			sr25519.GenPrivKey(),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.msg, func(t *testing.T) {
+			eq := tc.privKey.Equals(tc.other)
+			require.Equal(t, eq, tc.expectEq)
 		})
 	}
 }

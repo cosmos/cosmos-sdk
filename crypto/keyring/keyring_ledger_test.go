@@ -31,7 +31,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	pubKey := ledger.GetPubKey()
 	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, "cosmospub1addwnpc2yypkqtqvknvvqzqlaeu5hh5ku7u4lgt09dfg8dmy4srstppj0vk8yqss26rwu", pk)
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := kb.Key("some_account")
@@ -42,7 +42,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	pubKey = restoredKey.GetPubKey()
 	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, "cosmospub1addwnpc2yypkqtqvknvvqzqlaeu5hh5ku7u4lgt09dfg8dmy4srstppj0vk8yqss26rwu", pk)
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	pubKey := ledger.GetPubKey()
 	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, "cosmospub1addwnpc2yypkqtqvknvvqzqlaeu5hh5ku7u4lgt09dfg8dmy4srstppj0vk8yqss26rwu", pk)
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := keyring.Key("some_account")
@@ -121,7 +121,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	pubKey = restoredKey.GetPubKey()
 	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, "cosmospub1addwnpc2yypkqtqvknvvqzqlaeu5hh5ku7u4lgt09dfg8dmy4srstppj0vk8yqss26rwu", pk)
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)

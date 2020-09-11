@@ -9,12 +9,13 @@ import (
 	"math/big"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
 
 	"github.com/tendermint/tendermint/crypto"
 )
 
-var _ crypto.PrivKey = PrivKey{}
+var _ cryptotypes.PrivKey = &PrivKey{}
 
 const (
 	PrivKeySize = 32
@@ -23,39 +24,37 @@ const (
 	PubKeyName  = "tendermint/PubKeySecp256k1"
 )
 
-// PrivKey implements PrivKey.
-type PrivKey []byte
-
 // Bytes returns the byte representation of the Private Key.
-func (privKey PrivKey) Bytes() []byte {
-	return []byte(privKey)
+func (privKey *PrivKey) Bytes() []byte {
+	return []byte(privKey.Key)
 }
 
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
-func (privKey PrivKey) PubKey() crypto.PubKey {
-	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey)
-	return PubKey(pubkeyObject.SerializeCompressed())
+func (privKey *PrivKey) PubKey() crypto.PubKey {
+	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
+	pk := pubkeyObject.SerializeCompressed()
+	return &PubKey{Key: pk}
 }
 
 // Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
-func (privKey PrivKey) Equals(other crypto.PrivKey) bool {
+// Runs in constant time based on length of the
+func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
 	return privKey.Type() == other.Type() && subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
-func (privKey PrivKey) Type() string {
+func (privKey *PrivKey) Type() string {
 	return keyType
 }
 
 // GenPrivKey generates a new ECDSA private key on curve secp256k1 private key.
 // It uses OS randomness to generate the private key.
-func GenPrivKey() PrivKey {
-	return genPrivKey(crypto.CReader())
+func GenPrivKey() *PrivKey {
+	return &PrivKey{Key: genPrivKey(crypto.CReader())}
 }
 
 // genPrivKey generates a new secp256k1 private key using the provided reader.
-func genPrivKey(rand io.Reader) PrivKey {
+func genPrivKey(rand io.Reader) []byte {
 	var privKeyBytes [PrivKeySize]byte
 	d := new(big.Int)
 	for {
@@ -73,7 +72,7 @@ func genPrivKey(rand io.Reader) PrivKey {
 		}
 	}
 
-	return PrivKey(privKeyBytes[:])
+	return privKeyBytes[:]
 }
 
 var one = new(big.Int).SetInt64(1)
@@ -88,7 +87,7 @@ var one = new(big.Int).SetInt64(1)
 //
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
-func GenPrivKeyFromSecret(secret []byte) PrivKey {
+func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	secHash := sha256.Sum256(secret)
 	// to guarantee that we have a valid field element, we use the approach of:
 	// "Suite B Implementer’s Guide to FIPS 186-3", A.2.1
@@ -104,32 +103,25 @@ func GenPrivKeyFromSecret(secret []byte) PrivKey {
 	// copy feB over to fixed 32 byte privKey32 and pad (if necessary)
 	copy(privKey32[32-len(feB):32], feB)
 
-	return PrivKey(privKey32)
+	return &PrivKey{Key: privKey32}
 }
 
 //-------------------------------------
 
-var _ crypto.PubKey = PubKey{}
+var _ cryptotypes.PubKey = &PubKey{}
 
 // PubKeySize is comprised of 32 bytes for one field element
 // (the x-coordinate), plus one byte for the parity of the y-coordinate.
 const PubKeySize = 33
 
-// PubKey implements crypto.PubKey.
-// It is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-// if the y-coordinate is the lexicographically largest of the two associated with
-// the x-coordinate. Otherwise the first byte is a 0x03.
-// This prefix is followed with the x-coordinate.
-type PubKey []byte
-
 // Address returns a Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
-func (pubKey PubKey) Address() crypto.Address {
-	if len(pubKey) != PubKeySize {
+func (pubKey *PubKey) Address() crypto.Address {
+	if len(pubKey.Key) != PubKeySize {
 		panic("length of pubkey is incorrect")
 	}
 
 	hasherSHA256 := sha256.New()
-	hasherSHA256.Write(pubKey) // does not error
+	hasherSHA256.Write(pubKey.Key) // does not error
 	sha := hasherSHA256.Sum(nil)
 
 	hasherRIPEMD160 := ripemd160.New()
@@ -138,18 +130,18 @@ func (pubKey PubKey) Address() crypto.Address {
 }
 
 // Bytes returns the pubkey byte format.
-func (pubKey PubKey) Bytes() []byte {
-	return []byte(pubKey)
+func (pubKey *PubKey) Bytes() []byte {
+	return []byte(pubKey.Key)
 }
 
-func (pubKey PubKey) String() string {
-	return fmt.Sprintf("PubKeySecp256k1{%X}", []byte(pubKey))
+func (pubKey *PubKey) String() string {
+	return fmt.Sprintf("PubKeySecp256k1{%X}", []byte(pubKey.Key))
 }
 
-func (pubKey PubKey) Type() string {
+func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey PubKey) Equals(other crypto.PubKey) bool {
+func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }

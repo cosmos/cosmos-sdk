@@ -1,4 +1,4 @@
-package keys
+package multisig
 
 import (
 	fmt "fmt"

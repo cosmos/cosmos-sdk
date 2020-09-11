@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -146,15 +146,15 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 		malleate func()
 		expectEq bool
 	}{
-		{
-			"equals",
-			func() {
-				var otherPubKey multisig.PubKeyMultisigThreshold
-				multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
-				other = otherPubKey
-			},
-			true,
-		},
+		// {
+		// 	"equals",
+		// 	func() {
+		// 		var otherPubKey multisig.PubKeyMultisigThreshold
+		// 		multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
+		// 		other = otherPubKey
+		// 	},
+		// 	true,
+		// },
 		{
 			"ensure that reordering pubkeys is treated as a different pubkey",
 			func() {
@@ -169,18 +169,14 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 		{
 			"equals with proto pub key",
 			func() {
-				pbPubkeys := []crypto.PubKey{
-					&keys.Secp256K1PubKey{Key: pubKey1.(secp256k1.PubKey)},
-					&keys.Secp256K1PubKey{Key: pubKey2.(secp256k1.PubKey)},
-				}
-				anyPubKeys := make([]*codectypes.Any, len(pbPubkeys))
+				anyPubKeys := make([]*codectypes.Any, len(pubkeys))
 
 				for i := 0; i < len(pubkeys); i++ {
-					any, err := codectypes.NewAnyWithValue(pbPubkeys[i].(proto.Message))
+					any, err := codectypes.NewAnyWithValue(pubkeys[i].(proto.Message))
 					require.NoError(t, err)
 					anyPubKeys[i] = any
 				}
-				other = &keys.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
+				other = &kmultisig.LegacyAminoMultisigThresholdPubKey{K: 2, PubKeys: anyPubKeys}
 			},
 			true,
 		},

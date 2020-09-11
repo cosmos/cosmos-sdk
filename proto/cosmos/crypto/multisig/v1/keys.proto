@@ -4,7 +4,7 @@ package cosmos.crypto.v1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys";
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/multisig";
 
 // LegacyAminoMultisigThresholdPubKey specifies a public key type 
 // which nests multiple public keys and a threshold,
@@ -14,14 +14,4 @@ message LegacyAminoMultisigThresholdPubKey {
 
     uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
     repeated google.protobuf.Any public_keys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
-}
-
-// Secp256K1PubKey defines a secp256k1 public key
-message Secp256K1PubKey {
-    bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1.PubKey"];
-}
-
-// Secp256K1PrivKey defines a secp256k1 private key
-message Secp256K1PrivKey {
-    bytes key = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1.PrivKey"];
 }

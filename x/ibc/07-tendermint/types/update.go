@@ -107,7 +107,7 @@ func checkValidity(
 	if header.GetHeight().GetEpochNumber() != consState.Height.EpochNumber {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
-			"Header height epoch %d does not match trusted header epoch %d",
+			"header height epoch %d does not match trusted header epoch %d",
 			header.GetHeight().GetEpochNumber(), consState.Height.EpochNumber,
 		)
 	}

@@ -96,7 +96,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"trusted height is 0 in Header1",
 			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, clienttypes.Height{}, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header1:  types.CreateTestHeader(chainID, height, clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				Header2:  suite.header,
 				ChainId:  chainID,
 				ClientId: clientID,
@@ -108,7 +108,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"trusted height is 0 in Header2",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, clienttypes.Height{}, suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, clienttypes.ZeroHeight(), suite.now.Add(time.Minute), suite.valSet, suite.valSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},

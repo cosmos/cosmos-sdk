@@ -164,46 +164,6 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCLITxQueryCmd() {
-	val := s.network.Validators[0]
-	var txHash string
-
-	s.Run("bank send tx", func() {
-		clientCtx := val.ClientCtx
-
-		bz, err := bankcli.MsgSendExec(clientCtx, val.Address, val.Address, sdk.NewCoins(
-			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		), []string{
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		}...)
-
-		var txRes sdk.TxResponse
-		s.Require().NoError(err)
-		s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), &txRes), bz.String())
-
-		txHash = txRes.TxHash
-		s.Require().Equal(uint32(0), txRes.Code)
-	})
-
-	s.network.WaitForNextBlock()
-
-	s.Run("test QueryTxCmd", func() {
-		cmd := authcli.QueryTxCmd()
-		args := []string{
-			txHash,
-		}
-
-		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-		s.Require().NoError(err)
-
-		var tx sdk.TxResponse
-		s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tx))
-	})
-}
-
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 

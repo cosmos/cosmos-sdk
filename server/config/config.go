@@ -44,7 +44,7 @@ type BaseConfig struct {
 	HaltTime uint64 `mapstructure:"halt-time"`
 
 	// MinRetainBlocks defines the minimum block height offset from the current
-	// block being committed, such that all blocks past this offset are pruned
+	// block being committed, such that blocks past this offset may be pruned
 	// from Tendermint. It is used as part of the process of determining the
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.

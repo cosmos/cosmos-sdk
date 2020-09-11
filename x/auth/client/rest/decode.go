@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp authtypes.StdTx
+	DecodeResp legacytx.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -54,7 +54,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		tx, ok := txI.(signing.Tx)
 		if !ok {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, legacytx.StdTx{}))
 			return
 		}
 

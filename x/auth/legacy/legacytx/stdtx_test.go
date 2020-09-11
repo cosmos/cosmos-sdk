@@ -1,4 +1,4 @@
-package types
+package legacytx
 
 import (
 	"fmt"
@@ -156,7 +156,6 @@ func TestTxValidateBasic(t *testing.T) {
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
-	RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	encoder := DefaultTxEncoder(cdc)
 
@@ -207,7 +206,6 @@ func TestSignatureV2Conversions(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
-	RegisterLegacyAminoCodec(cdc)
 	dummy := []byte("dummySig")
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 
@@ -265,7 +263,6 @@ func TestGetSignaturesV2(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
-	RegisterLegacyAminoCodec(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}

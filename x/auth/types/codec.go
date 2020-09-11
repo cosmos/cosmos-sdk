@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
@@ -14,7 +15,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*AccountI)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
-	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
+	cdc.RegisterConcrete(legacytx.StdTx{}, "cosmos-sdk/StdTx", nil)
 }
 
 // RegisterInterface associates protoName with AccountI interface
@@ -42,8 +43,7 @@ func RegisterKeyTypeCodec(o interface{}, name string) {
 }
 
 var (
-	amino = codec.NewLegacyAmino()
-
+	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 

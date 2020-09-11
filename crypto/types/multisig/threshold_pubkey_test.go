@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // This tests multisig functionality, but it expects the first k signatures to be valid
@@ -192,8 +192,8 @@ func TestMultiSigMigration(t *testing.T) {
 	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := authtypes.StdSignature{PubKey: pkSet[1], Signature: msg}
-	sigV2, err := authtypes.StdSignatureToSignatureV2(cdc, sig)
+	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: msg}
+	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 
 	require.NoError(t, err)

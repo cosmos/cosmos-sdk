@@ -3,11 +3,10 @@ package tx
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -48,9 +47,9 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	// nolint: staticcheck
-	return types.StdSignBytes(
+	return legacytx.StdSignBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
-		types.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
+		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil
 }

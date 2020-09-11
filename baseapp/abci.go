@@ -584,7 +584,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 // all blocks, e.g. via a local config option min-retain-blocks. There may also
 // be a need to vary retention for other nodes, e.g. sentry nodes which do not
 // need historical blocks.
-func (app *BaseApp) GetBlockRentionHeight(commitHeight int64) int64 {
+func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
 	if app.minRetainBlocks == 0 {
 		return 0

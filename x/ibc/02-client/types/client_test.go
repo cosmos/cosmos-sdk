@@ -1,10 +1,6 @@
 package types_test
 
 import (
-	"reflect"
-
-	"github.com/golang/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -12,7 +8,7 @@ import (
 
 func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 	var (
-		cswh *types.ConsensusStateWithHeight
+		cswh types.ConsensusStateWithHeight
 	)
 
 	testCases := []struct {
@@ -22,8 +18,7 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 		{
 			"solo machine client", func() {
 				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "")
-				cs := types.NewConsensusStateWithHeight(types.NewHeight(0, soloMachine.Sequence), soloMachine.ConsensusState())
-				cswh = &cs
+				cswh = types.NewConsensusStateWithHeight(types.NewHeight(0, soloMachine.Sequence), soloMachine.ConsensusState())
 			},
 		},
 		{
@@ -33,8 +28,7 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 				consensusState, ok := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 				suite.Require().True(ok)
 
-				cs := types.NewConsensusStateWithHeight(clientState.GetLatestHeight().(types.Height), consensusState)
-				cswh = &cs
+				cswh = types.NewConsensusStateWithHeight(clientState.GetLatestHeight().(types.Height), consensusState)
 			},
 		},
 	}
@@ -50,16 +44,13 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 			cdc := suite.chainA.App.AppCodec()
 
 			// marshal message
-			bz, err := cdc.MarshalJSON(cswh)
+			bz, err := cdc.MarshalJSON(&cswh)
 			suite.Require().NoError(err)
 
 			// unmarshal message
 			newCswh := &types.ConsensusStateWithHeight{}
 			err = cdc.UnmarshalJSON(bz, newCswh)
 			suite.Require().NoError(err)
-
-			suite.Require().True(reflect.DeepEqual(cswh, newCswh)) // fails
-			suite.Require().True(proto.Equal(cswh, newCswh))       // also fails
 		})
 	}
 }

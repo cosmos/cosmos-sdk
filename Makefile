@@ -116,7 +116,10 @@ build-simd-linux: go.sum
 	mkdir -p $(BUILDDIR)
 	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 
-.PHONY: build build-simd build-simd-linux simd
+cosmovisor:
+	$(MAKE) -C cosmovisor cosmovisor
+
+.PHONY: build build-simd build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

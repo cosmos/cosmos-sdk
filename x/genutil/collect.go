@@ -91,7 +91,6 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 	genBalIterator.IterateGenesisBalances(
 		cdc, appState,
 		func(balance bankexported.GenesisBalance) (stop bool) {
-			fmt.Println(balance.GetAddress().String(), "inside hey:::")
 			balancesMap[balance.GetAddress().String()] = balance
 			return false
 		},

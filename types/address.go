@@ -185,8 +185,6 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
 
-	fmt.Println(s, "s")
-
 	if err != nil {
 		return err
 	}

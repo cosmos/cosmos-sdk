@@ -38,9 +38,9 @@ func TestMsgSendValidation(t *testing.T) {
 		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"Invalid sender address (incorrect address length (expected: 20, actual: 0)): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
 		{"Invalid sender address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addrTooLong, addr2, atom123)},
-		{"Invalid recipient address (incorrect address length (expected: 20, actual: 0)): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
 		{"Invalid recipient address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addr1, addrTooLong, atom123)},
 	}
 
@@ -66,10 +66,10 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgSendGetSigners(t *testing.T) {
-	var msg = NewMsgSend(sdk.AccAddress([]byte("input1")), sdk.AccAddress{}, sdk.NewCoins())
+	var msg = NewMsgSend(sdk.AccAddress([]byte("input111111111111111")), sdk.AccAddress{}, sdk.NewCoins())
 	res := msg.GetSigners()
 	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431]")
+	require.Equal(t, fmt.Sprintf("%v", res), "[696E707574313131313131313131313131313131]")
 }
 
 func TestMsgMultiSendRoute(t *testing.T) {
@@ -110,8 +110,8 @@ func TestInputValidation(t *testing.T) {
 		{"", NewInput(addr2, someCoins)},
 		{"", NewInput(addr2, multiCoins)},
 
-		{"Invalid input address (incorrect address length (expected: 20, actual: 0)): invalid address", NewInput(addrEmpty, someCoins)},
-		{"Invalid input address (incorrect address length (expected: 20, actual: 33)): invalid address", NewInput(addrTooLong, someCoins)},
+		{"empty address string is not allowed", NewInput(addrEmpty, someCoins)},
+		{"incorrect address length (expected: 20, actual: 33)", NewInput(addrTooLong, someCoins)},
 		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
@@ -151,7 +151,7 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr2, someCoins)},
 		{"", NewOutput(addr2, multiCoins)},
 
-		{"Invalid output address (incorrect address length (expected: 20, actual: 0)): invalid address", NewOutput(addrEmpty, someCoins)},
+		{"Invalid output address (empty address string is not allowed): invalid address", NewOutput(addrEmpty, someCoins)},
 		{"Invalid output address (incorrect address length (expected: 20, actual: 33)): invalid address", NewOutput(addrTooLong, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
@@ -240,14 +240,15 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 func TestMsgMultiSendGetSigners(t *testing.T) {
 	var msg = MsgMultiSend{
 		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input1")), nil),
-			NewInput(sdk.AccAddress([]byte("input2")), nil),
-			NewInput(sdk.AccAddress([]byte("input3")), nil),
+			NewInput(sdk.AccAddress([]byte("input111111111111111")), nil),
+			NewInput(sdk.AccAddress([]byte("input222222222222222")), nil),
+			NewInput(sdk.AccAddress([]byte("input333333333333333")), nil),
 		},
 	}
+
 	res := msg.GetSigners()
 	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
+	require.Equal(t, "[696E707574313131313131313131313131313131 696E707574323232323232323232323232323232 696E707574333333333333333333333333333333]", fmt.Sprintf("%v", res))
 }
 
 /*

@@ -1,7 +1,6 @@
 package rest_test
 
 import (
-	"encoding/base64"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -102,10 +101,6 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	accAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name     string
 		url      string
@@ -114,7 +109,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"gRPC total account balance",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, accAddrBase64),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.Address),
 			&types.QueryAllBalancesResponse{},
 			&types.QueryAllBalancesResponse{
 				Balances: sdk.NewCoins(
@@ -128,7 +123,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, accAddrBase64, s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/%s", baseURL, val.Address.String(), s.cfg.BondDenom),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -139,7 +134,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, accAddrBase64),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/foobar", baseURL, val.Address.String()),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{

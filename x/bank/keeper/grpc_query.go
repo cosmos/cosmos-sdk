@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,9 +46,9 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr := req.Address
-	if addr == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "address cannot be empty")
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -70,6 +71,8 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	if err != nil {
 		return &types.QueryAllBalancesResponse{}, err
 	}
+
+	fmt.Println("balances::", addr, balances, pageRes)
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }

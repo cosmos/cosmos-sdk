@@ -69,7 +69,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 	pk := ed25519.GenPrivKey()
-	s := sdk.AccAddress("test")
+	s := sdk.AccAddress("test________________")
 
 	testCases := []struct {
 		msg       sdk.Msg

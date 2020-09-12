@@ -21,7 +21,7 @@ func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) 
 
 func TestMsgSubmitEvidence(t *testing.T) {
 	pk := ed25519.GenPrivKey()
-	submitter := sdk.AccAddress("test")
+	submitter := sdk.AccAddress("test________________")
 
 	testCases := []struct {
 		msg       sdk.Msg

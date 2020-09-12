@@ -24,8 +24,8 @@ func Test_multiSigKey_Properties(t *testing.T) {
 
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())
-	require.Equal(t, "15C3EB7FAF7021D4FD21AEA021FEDFCB7304F184", tmp.GetPubKey().Address().String())
-	require.Equal(t, "cosmos1zhp7kla0wqsaflfp46szrlkledesfuvyz3l5d0", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
+	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
+	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", sdk.MustBech32ifyAddressBytes("cosmos", tmp.GetAddress()))
 }
 
 func Test_showKeysCmd(t *testing.T) {

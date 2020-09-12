@@ -189,14 +189,18 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-// TODO: Replace height with *clienttypes.Height once interfaces change
+// For now, can only retrieve self consensus states for the current epoch
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
-	// TODO: check self chain-id against epoch number
 	selfHeight, ok := height.(types.Height)
 	if !ok {
 		return nil, false
 	}
-	if selfHeight.EpochNumber != 0 {
+	// check that height epoch matches chainID epoch
+	epoch, err := types.ParseChainID(ctx.ChainID())
+	if err != nil {
+		return nil, false
+	}
+	if epoch != height.GetEpochNumber() {
 		return nil, false
 	}
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.EpochHeight))
@@ -215,6 +219,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 
 // ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
+// Client must be in same epoch as the executing chain
 func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
@@ -231,9 +236,19 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
+	epoch, err := types.ParseChainID(ctx.ChainID())
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid self chain-id is in invalid epoch format. got: %s", ctx.ChainID())
+	}
+
+	// client must be in the same epoch as executing chain
+	if tmClient.LatestHeight.EpochNumber != epoch {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same epoch as the chain. expected epoch: %d, got: %d",
+			tmClient.LatestHeight.EpochNumber, epoch)
+	}
+
 	// For now, assume epoch number is zero
-	// TODO: Retrieve epoch number from chain-id
-	selfHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
+	selfHeight := types.NewHeight(epoch, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())

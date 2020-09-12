@@ -12,6 +12,11 @@ import (
 
 var _ exported.Height = (*Height)(nil)
 
+// ZeroHeight is a helper function which returns an uninitialized height.
+func ZeroHeight() Height {
+	return Height{}
+}
+
 // NewHeight is a constructor for the IBC height type
 func NewHeight(epochNumber, epochHeight uint64) Height {
 	return Height{

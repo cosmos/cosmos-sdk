@@ -35,7 +35,7 @@ func (h Header) ConsensusState() *ConsensusState {
 // TODO: return clienttypes.Height once interface changes
 func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
-		return clienttypes.Height{}
+		return clienttypes.ZeroHeight()
 	}
 	epoch, err := clienttypes.ParseChainID(h.Header.ChainID)
 	if err != nil {

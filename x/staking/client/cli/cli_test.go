@@ -232,7 +232,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 			} else {
 				var result types.Validator
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
-				s.Require().Equal(val.ValAddress, result.OperatorAddress)
+				s.Require().Equal(val.ValAddress.String(), result.OperatorAddress)
 			}
 		})
 	}
@@ -315,8 +315,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			&types.DelegationResponse{},
 			&types.DelegationResponse{
 				Delegation: types.Delegation{
-					DelegatorAddress: val.Address,
-					ValidatorAddress: val2.ValAddress,
+					DelegatorAddress: val.Address.String(),
+					ValidatorAddress: val2.ValAddress.String(),
 					Shares:           sdk.NewDec(10),
 				},
 				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
@@ -496,7 +496,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
 			}
 		})
 	}
@@ -554,8 +554,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubd)
 				s.Require().NoError(err)
-				s.Require().Equal(ubd.DelegatorAddress, val.Address)
-				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress)
+				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
+				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
 				s.Require().Len(ubd.Entries, 1)
 			}
 		})
@@ -604,7 +604,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
 			}
 		})
 	}
@@ -654,9 +654,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -730,9 +730,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -782,9 +782,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}

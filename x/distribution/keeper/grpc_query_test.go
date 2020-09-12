@@ -534,7 +534,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 				}
 				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
 					Validators: func() []string {
-						addrs := make([]string, 2)
+						var addrs []string
 						addrs = append(addrs, valAddrs[0].String(), valAddrs[1].String())
 						return addrs
 					}(),
@@ -552,7 +552,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(validators, expDelegatorValidatorsRes)
+				suite.Require().Equal(expDelegatorValidatorsRes, validators)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(validators)
@@ -598,7 +598,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1])
+				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1].String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(withdrawAddress)

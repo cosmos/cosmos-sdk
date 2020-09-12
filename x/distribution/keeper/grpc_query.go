@@ -141,7 +141,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := sdk.AccAddressFromBech32(req.ValidatorAddress)
+	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

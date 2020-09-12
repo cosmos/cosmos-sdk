@@ -30,10 +30,11 @@ func NewTestGasLimit() uint64 {
 // NewTestMsg creates a message for testing with the given signers.
 func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 	var accAddresses []string
-	i := 0
+
 	for _, addr := range addrs {
-		accAddresses[i]=addr.String()
+		accAddresses = append(accAddresses, addr.String())
 	}
+
 	return &TestMsg{
 		Signers: accAddresses,
 	}

@@ -1,9 +1,11 @@
 package rest_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"testing"
+
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -12,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
@@ -71,10 +71,6 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
-
 	rewards, err := sdk.ParseDecCoins("19.6stake")
 	s.Require().NoError(err)
 
@@ -90,13 +86,13 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 			"gRPC request params with wrong validator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, "wrongAddress"),
 			map[string]string{},
-			false,
+			true,
 			&types.QueryValidatorOutstandingRewardsResponse{},
 			&types.QueryValidatorOutstandingRewardsResponse{},
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, valAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards", baseURL, val.ValAddress.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -129,10 +125,6 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
-
 	commission, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
 
@@ -154,7 +146,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 		},
 		{
 			"gRPC request params valid address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, valAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/commission", baseURL, val.Address.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -187,10 +179,6 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name     string
 		url      string
@@ -207,21 +195,21 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 		},
 		{
 			"invalid start height",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "-1", "3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.Address.String(), "-1", "3"),
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
 		},
 		{
 			"invalid start height",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "1", "-3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.Address.String(), "1", "-3"),
 			true,
 			&types.QueryValidatorSlashesResponse{},
 			nil,
 		},
 		{
 			"valid request get slashes",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, valAddressBase64, "1", "3"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s/slashes?starting_height=%s&ending_height=%s", baseURL, val.Address.String(), "1", "3"),
 			false,
 			&types.QueryValidatorSlashesResponse{},
 			&types.QueryValidatorSlashesResponse{
@@ -250,11 +238,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
-	valAddrBase64 := base64.URLEncoding.EncodeToString(val.ValAddress)
-
 	rewards, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
 
@@ -276,7 +259,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, delAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, val.Address.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -291,7 +274,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"wrong validator address(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, delAddrBase64, "wrongValAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, val.Address.String(), "wrongValAddress"),
 			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
@@ -299,7 +282,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, delAddrBase64, valAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, val.Address.String(), val.ValAddress.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -331,10 +314,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name     string
 		url      string
@@ -358,7 +337,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseUrl, delAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseUrl, val.Address.String()),
 			false,
 			&types.QueryDelegatorValidatorsResponse{},
 			&types.QueryDelegatorValidatorsResponse{
@@ -387,10 +366,6 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 	val := s.network.Validators[0]
 	baseUrl := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name     string
 		url      string
@@ -414,7 +389,7 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseUrl, delAddrBase64),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseUrl, val.Address.String()),
 			false,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			&types.QueryDelegatorWithdrawAddressResponse{

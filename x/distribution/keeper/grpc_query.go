@@ -109,7 +109,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 	})
 
 	if err != nil {
-		return &types.QueryValidatorSlashesResponse{}, err
+		return nil, err
 	}
 
 	return &types.QueryValidatorSlashesResponse{Slashes: events, Pagination: pageRes}, nil

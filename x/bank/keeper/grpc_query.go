@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,7 +55,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balances := sdk.NewCoins()
 	store := sdkCtx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, []byte(addr))
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin
@@ -71,8 +70,6 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	if err != nil {
 		return &types.QueryAllBalancesResponse{}, err
 	}
-
-	fmt.Println("balances::", addr, balances, pageRes)
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
 }

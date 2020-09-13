@@ -109,7 +109,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"gRPC total account balance",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.Address),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.Address.String()),
 			&types.QueryAllBalancesResponse{},
 			&types.QueryAllBalancesResponse{
 				Balances: sdk.NewCoins(

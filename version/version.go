@@ -23,7 +23,7 @@ import (
 
 var (
 	// application's name
-	Name = "xxx"
+	Name = ""
 	// application binary name
 	AppName = "<appd>"
 	// application's version string

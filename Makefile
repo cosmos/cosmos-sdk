@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell echo $(shell git describe) | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -86,12 +86,35 @@ include contrib/devtools/Makefile
 build: go.sum
 	go install -mod=readonly ./...
 
-build-simd: go.sum
+simd:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
+build-simd-all: go.sum
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='darwin linux windows' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+
 build-simd-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='linux' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=false \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+	mkdir -p $(BUILDDIR)
+	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
@@ -119,7 +142,9 @@ distclean: clean
     .gitian-builder-cache/
 
 clean:
-	rm -rf $(BUILDDIR)/
+	rm -rf \
+    $(BUILDDIR)/ \
+    artifacts/
 
 .PHONY: distclean clean
 

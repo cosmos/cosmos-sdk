@@ -179,24 +179,22 @@ sync-docs:
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
-test-ledger-mock:
-	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+TEST_PACKAGES=./...
+TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
-test-ledger: test-ledger-mock
-	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
+test-unit: ARGS=-tags='cgo ledger test_ledger_mock'
+test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino'
+test-ledger: ARGS=-tags='cgo ledger'
+test-ledger-mock: ARGS=-tags='ledger test_ledger_mock'
+test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
+test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 
-test-unit: test-unit-proto
+$(TEST_TARGETS): run-tests
 
-test-unit-proto:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
+run-tests:
+	VERSION=$(VERSION) go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
 
-test-unit-amino:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_amino'
-
-test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
-
-.PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
+.PHONY: run-tests test test-all $(TEST_TARGETS)
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."

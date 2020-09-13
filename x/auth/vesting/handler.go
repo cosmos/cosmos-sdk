@@ -44,7 +44,7 @@ func handleMsgCreateVestingAccount(ctx sdk.Context, ak keeper.AccountKeeper, bk 
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := ak.GetAccount(ctx, from); acc != nil {
+	if acc := ak.GetAccount(ctx, to); acc != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 

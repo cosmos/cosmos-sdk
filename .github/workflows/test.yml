@@ -210,6 +210,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
       - name: start localnet
         run: |
           make clean localnet-start

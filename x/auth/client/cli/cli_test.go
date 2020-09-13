@@ -164,44 +164,71 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCLITxQueryCmd() {
+func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	val := s.network.Validators[0]
-	var txHash string
 
-	s.Run("bank send tx", func() {
-		clientCtx := val.ClientCtx
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
 
-		bz, err := bankcli.MsgSendExec(clientCtx, val.Address, val.Address, sdk.NewCoins(
-			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		), []string{
-			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		}...)
+	// Send coins.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
 
-		var txRes sdk.TxResponse
-		s.Require().NoError(err)
-		s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), &txRes), bz.String())
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
 
-		txHash = txRes.TxHash
-		s.Require().Equal(uint32(0), txRes.Code)
-	})
+	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.network.WaitForNextBlock()
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with invalid hash",
+			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"with valid and not existing hash",
+			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"happy case",
+			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
 
-	s.Run("test QueryTxCmd", func() {
-		cmd := authcli.QueryTxCmd()
-		args := []string{
-			txHash,
-		}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxCmd()
+			clientCtx := val.ClientCtx
 
-		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-		s.Require().NoError(err)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
-		var tx sdk.TxResponse
-		s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &tx))
-	})
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var result sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result.Height)
+			}
+		})
+	}
 }
 
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
@@ -765,6 +792,45 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	cmd.SetArgs([]string{txFileName})
 	require.Error(t, cmd.ExecuteContext(ctx))
 	require.Contains(t, out.String(), "unsupported return type ; supported types: sync, async, block")
+}
+
+func (s *IntegrationTestSuite) TestQueryParamsCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"happy case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"with specific height",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryParamsCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var authParams authtypes.Params
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &authParams))
+				s.Require().NotNil(authParams.MaxMemoCharacters)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -23,7 +23,7 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address fmt.Stringer, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
+func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address.String(),
 		AccountNumber: accountNumber,

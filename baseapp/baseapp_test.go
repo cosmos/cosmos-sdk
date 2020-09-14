@@ -124,6 +124,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	}
 
 	snapshotInterval := uint64(2)
+	snapshotTimeout := 1 * time.Minute
 	snapshotDir, err := ioutil.TempDir("", "baseapp")
 	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
@@ -164,7 +165,11 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 		// Wait for snapshot to be taken, since it happens asynchronously.
 		if uint64(height)%snapshotInterval == 0 {
+			start := time.Now()
 			for {
+				if time.Since(start) > snapshotTimeout {
+					t.Errorf("timed out waiting for snapshot after %v", snapshotTimeout)
+				}
 				snapshot, err := snapshotStore.Get(uint64(height), snapshottypes.CurrentFormat)
 				require.NoError(t, err)
 				if snapshot != nil {

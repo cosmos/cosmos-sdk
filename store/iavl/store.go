@@ -125,6 +125,12 @@ func (st *Store) SetPruning(_ types.PruningOptions) {
 	panic("cannot set pruning options on an initialized IAVL store")
 }
 
+// SetPruning panics as pruning options should be provided at initialization
+// since IAVl accepts pruning options directly.
+func (st *Store) GetPruning() types.PruningOptions {
+	panic("cannot get pruning options on an initialized IAVL store")
+}
+
 // VersionExists returns whether or not a given version is stored.
 func (st *Store) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)

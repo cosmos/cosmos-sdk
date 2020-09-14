@@ -238,7 +238,8 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		failedAck  = channeltypes.NewErrorAcknowledgement("failed packet transfer")
 
 		channelA, channelB ibctesting.TestChannel
-		coin               sdk.Coin
+		trace              types.DenomTrace
+		amount             sdk.Int
 	)
 
 	testCases := []struct {
@@ -249,24 +250,26 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		expPass  bool
 	}{
 		{"success ack causes no-op", successAck, func() {
-			coin = types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
+			trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelB.PortID, channelB.ID, sdk.DefaultBondDenom))
 		}, true, true},
-		{"successful refund from source chain", failedAck,
-			func() {
-				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))))
-				suite.Require().NoError(err)
+		{"successful refund from source chain", failedAck, func() {
+			escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
+			trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
+			coin := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 
-				coin = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-			}, false, true},
-		{"unsuccessful refund from with coin from external chain", failedAck,
+			_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+			suite.Require().NoError(err)
+		}, false, true},
+		{"unsuccessful refund from source", failedAck,
 			func() {
-				coin = types.GetTransferCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 100)
+				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 			}, false, false},
 		{"successful refund from with coin from external chain", failedAck,
 			func() {
 				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
-				coin = types.GetTransferCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 100)
+				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
+				coin := sdk.NewCoin(trace.IBCDenom(), amount)
+
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
 				suite.Require().NoError(err)
 			}, false, true},
@@ -278,24 +281,25 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			_, _, _, _, channelA, channelB = suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
+			amount = sdk.NewInt(100) // must be explicitly changed
 
 			tc.malleate()
 
-			data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+			data := types.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
-			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), coin.Denom)
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), trace.IBCDenom())
 
 			err := suite.chainA.App.TransferKeeper.OnAcknowledgementPacket(suite.chainA.GetContext(), packet, data, tc.ack)
 			if tc.expPass {
 				suite.Require().NoError(err)
-				postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), coin.Denom)
+				postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), trace.IBCDenom())
 				deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
 
 				if tc.success {
 					suite.Require().Equal(int64(0), deltaAmount.Int64(), "successful ack changed balance")
 				} else {
-					suite.Require().Equal(coin.Amount, deltaAmount, "failed ack did not trigger refund")
+					suite.Require().Equal(amount, deltaAmount, "failed ack did not trigger refund")
 				}
 
 			} else {
@@ -305,7 +309,6 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 	}
 }
 
-/*
 // TestOnTimeoutPacket test private refundPacket function since it is a simple
 // wrapper over it. The actual timeout does not matter since IBC core logic
 // is not being tested. The test is timing out a send from chainA to chainB
@@ -313,39 +316,46 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	var (
 		channelA, channelB ibctesting.TestChannel
-		coin               sdk.Coin
+		trace              types.DenomTrace
+		amount             sdk.Int
 	)
 
 	testCases := []struct {
 		msg      string
 		malleate func()
-		source   bool
 		expPass  bool
 	}{
-		{"successful timeout from source chain",
+		{"successful timeout from sender as source chain",
 			func() {
 				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))))
-				suite.Require().NoError(err)
+				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
+				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				coin = types.GetPrefixedCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
-			}, true, true},
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				suite.Require().NoError(err)
+			}, true},
 		{"successful timeout from external chain",
 			func() {
-				coin = types.GetPrefixedCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 100)
-			}, false, true},
-		{"no source prefix on coin denom",
+				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
+				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
+				coin := sdk.NewCoin(trace.IBCDenom(), amount)
+
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				suite.Require().NoError(err)
+			}, true},
+		{"no balance for coin denom",
 			func() {
-				coin = sdk.NewCoin("bitcoin", sdk.NewInt(100))
-			}, false, false},
+				trace = types.ParseDenomTrace("bitcoin")
+			}, false},
 		{"unescrow failed",
 			func() {
-				coin = types.GetPrefixedCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
-			}, true, false},
+				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
+			}, false},
 		{"mint failed",
 			func() {
-				coin = types.GetPrefixedCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 0)
-			}, true, false},
+				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
+				amount = sdk.ZeroInt()
+			}, false},
 	}
 
 	for _, tc := range testCases {
@@ -353,35 +363,29 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-			_, _, connA, connB := suite.coordinator.SetupClientsConnections(suite.chainA, suite.chainB, exported.Tendermint)
+
+			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
+			amount = sdk.NewInt(100) // must be explicitly changed
 
 			tc.malleate()
 
-			data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+			data := types.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
-			var denom string
-			if tc.source {
-				denom = sdk.DefaultBondDenom
-			} else {
-				denom = coin.Denom
-			}
-
-			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), trace.IBCDenom())
 
 			err := suite.chainA.App.TransferKeeper.OnTimeoutPacket(suite.chainA.GetContext(), packet, data)
 
-			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), trace.IBCDenom())
 			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(coin.Amount.Int64(), deltaAmount.Int64(), "successful timeout did not trigger refund")
+				suite.Require().Equal(amount.Int64(), deltaAmount.Int64(), "successful timeout did not trigger refund")
 			} else {
 				suite.Require().Error(err)
 			}
 		})
 	}
 }
-*/

@@ -220,7 +220,7 @@ func TestMarshalAmino(t *testing.T) {
 			"secp256k1 public key",
 			pubKey,
 			&secp256k1.PubKey{},
-			append([]byte{0xa, 0x21}, pubKey.Bytes()...), // Length-prefixed.
+			append([]byte{33}, pubKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},
 	}

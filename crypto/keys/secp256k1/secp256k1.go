@@ -174,7 +174,7 @@ func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
 }
 
 // MarshalAmino overrides Amino binary marshalling.
-func (pubKey *PubKey) MarshalAmino() ([]byte, error) {
+func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 	return pubKey.Key, nil
 }
 
@@ -188,7 +188,7 @@ func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 }
 
 // MarshalAminoJSON overrides Amino JSON marshalling.
-func (pubKey *PubKey) MarshalAminoJSON() ([]byte, error) {
+func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
 	return pubKey.MarshalAmino()
 }
 

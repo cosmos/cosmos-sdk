@@ -313,8 +313,6 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	createValidators(ctx, app, []int64{25, 6, 7})
-
 	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -354,6 +352,8 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	createValidators(ctx, app, []int64{25, 6, 7})
 
 	addrs, vals := createValidators(ctx, app, []int64{5, 6, 7})
 

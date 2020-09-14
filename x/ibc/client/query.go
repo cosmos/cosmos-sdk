@@ -3,12 +3,13 @@ package client
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // QueryTendermintProof performs an ABCI query with the given key and returns the value

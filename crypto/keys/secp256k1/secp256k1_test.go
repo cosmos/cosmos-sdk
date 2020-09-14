@@ -200,18 +200,28 @@ func TestPrivKeyEquals(t *testing.T) {
 func TestMarshalAmino(t *testing.T) {
 	aminoCdc := codec.NewLegacyAmino()
 	privKey := secp256k1.GenPrivKey()
+	pubKey := privKey.PubKey().(*secp256k1.PubKey)
 
 	testCases := []struct {
 		desc      string
 		msg       codec.AminoMarshaler
+		typ       interface{}
 		expBinary []byte
 		expJSON   string
 	}{
 		{
 			"secp256k1 private key",
 			privKey,
+			&secp256k1.PrivKey{},
 			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
+		},
+		{
+			"secp256k1 public key",
+			pubKey,
+			&secp256k1.PubKey{},
+			append([]byte{0xa, 0x21}, pubKey.Bytes()...), // Length-prefixed.
+			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},
 	}
 
@@ -222,22 +232,20 @@ func TestMarshalAmino(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.expBinary, bz)
 
-			newMsg := new(secp256k1.PrivKey)
-			err = aminoCdc.UnmarshalBinaryBare(bz, newMsg)
+			err = aminoCdc.UnmarshalBinaryBare(bz, tc.typ)
 			require.NoError(t, err)
 
-			require.Equal(t, tc.msg, newMsg)
+			require.Equal(t, tc.msg, tc.typ)
 
 			// Do a round trip of encoding/decoding JSON.
 			bz, err = aminoCdc.MarshalJSON(tc.msg)
 			require.NoError(t, err)
 			require.Equal(t, tc.expJSON, string(bz))
 
-			newMsg = new(secp256k1.PrivKey)
-			err = aminoCdc.UnmarshalJSON(bz, newMsg)
+			err = aminoCdc.UnmarshalJSON(bz, tc.typ)
 			require.NoError(t, err)
 
-			require.Equal(t, tc.msg, newMsg)
+			require.Equal(t, tc.msg, tc.typ)
 		})
 	}
 }

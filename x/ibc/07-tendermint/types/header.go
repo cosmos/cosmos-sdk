@@ -30,8 +30,6 @@ func (h Header) ConsensusState() *ConsensusState {
 
 // GetHeight returns the current height. It returns 0 if the tendermint
 // header is nil.
-//
-// TODO: return clienttypes.Height once interface changes
 func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
 		return clienttypes.ZeroHeight()

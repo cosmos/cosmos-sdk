@@ -28,7 +28,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // State defines if a connection is in one of the following states:
-// INIT, TRYOPEN, or OPEN.
+// INIT, TRYOPEN, OPEN or UNINITIALIZED.
 type State int32
 
 const (

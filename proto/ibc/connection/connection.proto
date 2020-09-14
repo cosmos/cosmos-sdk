@@ -104,7 +104,7 @@ message IdentifiedConnection {
 }
 
 // State defines if a connection is in one of the following states:
-// INIT, TRYOPEN, or OPEN.
+// INIT, TRYOPEN, OPEN or UNINITIALIZED.
 enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 

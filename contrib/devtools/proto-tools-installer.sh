@@ -55,21 +55,21 @@ f_install_protoc() {
   f_needs_install "${DESTDIR}/${PREFIX}/bin/protoc" || return 0
 
   pushd "${TEMPDIR}" >/dev/null
-	curl -sOL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
-	unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} bin/protoc; \
-	unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} 'include/*'; \
-	rm -f ${PROTOC_ZIP}
-	popd >/dev/null
-	f_print_done
+  curl -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
+  unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} bin/protoc; \
+  unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} 'include/*'; \
+  rm -f ${PROTOC_ZIP}
+  popd >/dev/null
+  f_print_done
 }
 
 f_install_buf() {
   f_print_installing_with_padding buf
   f_needs_install "${DESTDIR}/${PREFIX}/bin/buf" || return 0
 
-	curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" -o "${DESTDIR}/${PREFIX}/bin/buf"
-	chmod +x "${DESTDIR}/${PREFIX}/bin/buf"
-	f_print_done
+  curl -sSL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" -o "${DESTDIR}/${PREFIX}/bin/buf"
+  chmod +x "${DESTDIR}/${PREFIX}/bin/buf"
+  f_print_done
 }
 
 f_install_protoc_gen_gocosmos() {
@@ -100,8 +100,8 @@ f_install_protoc_gen_swagger() {
   pushd "${TEMPDIR}" >/dev/null
   go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
   go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-	npm install -g swagger-combine
-	popd
+  npm install -g swagger-combine
+  popd >/dev/null
   f_print_done
 }
 

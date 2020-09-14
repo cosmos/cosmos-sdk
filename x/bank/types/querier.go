@@ -1,7 +1,8 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -14,12 +15,12 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
+func NewQueryBalanceRequest(addr fmt.Stringer, denom string) *QueryBalanceRequest {
 	return &QueryBalanceRequest{Address: addr.String(), Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
+func NewQueryAllBalancesRequest(addr fmt.Stringer, req *query.PageRequest) *QueryAllBalancesRequest {
 	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req}
 }
 

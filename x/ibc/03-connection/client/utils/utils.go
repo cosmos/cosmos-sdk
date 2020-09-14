@@ -81,7 +81,7 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 	}
 
 	var paths []string
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(value, paths); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(value, &paths); err != nil {
 		return nil, err
 	}
 

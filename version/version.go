@@ -34,6 +34,10 @@ var (
 	BuildTags = ""
 )
 
+func init() {
+	fmt.Println("Hello!")
+}
+
 // Info defines the application version information.
 type Info struct {
 	Name      string `json:"name" yaml:"name"`

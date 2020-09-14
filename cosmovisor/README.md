@@ -122,6 +122,7 @@ as JSON under the `"binaries"` key, eg:
   }
 }
 ```
+The `"any"` key, if it exists, will be used as a default if there is not a specific os/architecture key.
 2. Store a link to a file that contains all information in the above format (eg. if you want
 to specify lots of binaries, changelog info, etc without filling up the blockchain).
 

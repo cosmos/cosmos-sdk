@@ -217,7 +217,11 @@ test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
 
 run-tests:
-	VERSION=$(VERSION) go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
+ifneq (,$(shell which tparse 2>/dev/null))
+	go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) | tparse
+else
+	go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
+endif
 
 .PHONY: run-tests test test-all $(TEST_TARGETS)
 

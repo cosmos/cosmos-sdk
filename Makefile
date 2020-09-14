@@ -2,7 +2,7 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell echo $(shell git describe) | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -86,14 +86,40 @@ include contrib/devtools/Makefile
 build: go.sum
 	go install -mod=readonly ./...
 
-build-simd: go.sum
+simd:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
-build-simd-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build-simd
+build-simd-all: go.sum
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='darwin linux windows' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
-.PHONY: build build-simd build-simd-linux
+build-simd-linux: go.sum
+	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker rm latest-build || true
+	docker run --volume=$(CURDIR):/sources:ro \
+        --env TARGET_OS='linux' \
+        --env APP=simd \
+        --env VERSION=$(VERSION) \
+        --env COMMIT=$(COMMIT) \
+        --env LEDGER_ENABLED=false \
+        --name latest-build cosmossdk/rbuilder:latest
+	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+	mkdir -p $(BUILDDIR)
+	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
+
+cosmovisor:
+	$(MAKE) -C cosmovisor cosmovisor
+
+.PHONY: build build-simd build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -116,7 +142,9 @@ distclean: clean
     .gitian-builder-cache/
 
 clean:
-	rm -rf $(BUILDDIR)/
+	rm -rf \
+    $(BUILDDIR)/ \
+    artifacts/
 
 .PHONY: distclean clean
 
@@ -176,24 +204,30 @@ sync-docs:
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
-test-ledger-mock:
-	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+TEST_PACKAGES=./...
+TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
-test-ledger: test-ledger-mock
-	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
+# Test runs-specific rules. To add a new test target, just add
+# a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
+# append the new rule to the TEST_TARGETS list.
 
-test-unit: test-unit-proto
+test-unit: ARGS=-tags='cgo ledger test_ledger_mock'
+test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino'
+test-ledger: ARGS=-tags='cgo ledger'
+test-ledger-mock: ARGS=-tags='ledger test_ledger_mock'
+test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
+test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 
-test-unit-proto:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock'
+$(TEST_TARGETS): run-tests
 
-test-unit-amino:
-	@VERSION=$(VERSION) go test -mod=readonly ./... -tags='ledger test_ledger_mock test_amino'
+run-tests:
+ifneq (,$(shell which tparse 2>/dev/null))
+	go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) | tparse
+else
+	go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
+endif
 
-test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
-
-.PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
+.PHONY: run-tests test test-all $(TEST_TARGETS)
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."

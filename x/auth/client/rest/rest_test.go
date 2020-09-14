@@ -2,6 +2,7 @@ package rest_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,11 +20,14 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	s.lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -37,12 +41,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer s.lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestEncodeDecode() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	// NOTE: this uses StdTx explicitly, don't migrate it!
 	stdTx := authtypes.StdTx{
@@ -104,7 +110,7 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 }
 
 func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) ([]byte, error) {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino

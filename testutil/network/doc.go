@@ -50,7 +50,7 @@ A typical testing flow might look like the following:
 	}
 
 	func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
-		val := s.network.Validators[0]
+		val := s.network.Validators()[0]
 		baseURL := val.APIAddress
 
 		// Use baseURL to make API HTTP requests or use val.RPCClient to make direct

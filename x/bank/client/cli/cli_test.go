@@ -22,23 +22,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -53,15 +47,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGetBalancesCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name      string
@@ -132,7 +125,7 @@ func (s *IntegrationTestSuite) TestGetBalancesCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name      string
@@ -196,7 +189,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	clientCtx := val.ClientCtx
 
@@ -224,7 +217,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string
@@ -310,7 +303,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func NewCoin(denom string, amount sdk.Int) *sdk.Coin {

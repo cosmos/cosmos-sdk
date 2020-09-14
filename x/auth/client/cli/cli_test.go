@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,6 +34,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -41,6 +44,8 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -49,7 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = cfg
 	s.network = network.New(s.T(), cfg)
 
-	kb := s.network.Validators[0].ClientCtx.Keyring
+	kb := s.network.Validators()[0].ClientCtx.Keyring
 	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
@@ -68,12 +73,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	res, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -116,7 +123,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 }
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -165,7 +172,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 }
 
 func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
@@ -232,7 +239,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 }
 
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.Validators()[0]
 
 	account, err := val1.ClientCtx.Keyring.Key("newAccount")
 	s.Require().NoError(err)
@@ -398,7 +405,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.Validators()[0]
 
 	codec := codec2.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(codec)
@@ -470,7 +477,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 }
 
 func (s *IntegrationTestSuite) TestCLIEncode() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.Validators()[0]
 
 	sendTokens := sdk.NewCoin(s.cfg.BondDenom, sdk.TokensFromConsensusPower(10))
 
@@ -509,7 +516,7 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.Validators()[0]
 
 	codec := codec2.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(codec)
@@ -610,7 +617,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
-	val1 := s.network.Validators[0]
+	val1 := s.network.Validators()[0]
 
 	codec := codec2.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(codec)
@@ -707,7 +714,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 }
 
 func (s *IntegrationTestSuite) TestGetAccountCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
@@ -795,7 +802,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) TestQueryParamsCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name      string

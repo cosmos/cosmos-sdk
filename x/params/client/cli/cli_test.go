@@ -14,23 +14,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -45,15 +39,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -95,5 +88,5 @@ value: "100"`,
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

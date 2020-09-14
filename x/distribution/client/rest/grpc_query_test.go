@@ -3,6 +3,7 @@ package rest_test
 import (
 	"encoding/base64"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -17,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -25,6 +28,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -37,8 +41,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
+// TearDownTest cleans up the curret test network after _each_ test.
+func (s *IntegrationTestSuite) TearDownTest() {
+	defer lock.Unlock()
+
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
 func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -69,7 +81,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -127,7 +139,7 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -185,7 +197,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -248,7 +260,7 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseUrl := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -329,7 +341,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseUrl := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -385,7 +397,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseUrl := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string
@@ -441,7 +453,7 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorCommunityPoolGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	communityPool, err := sdk.ParseDecCoins("0.4stake")

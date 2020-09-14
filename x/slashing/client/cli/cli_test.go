@@ -3,6 +3,7 @@ package cli_test
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -16,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -26,6 +29,7 @@ type IntegrationTestSuite struct {
 // SetupSuite executes bootstrapping logic before all the tests, i.e. once before
 // the entire suite, start executing.
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -41,12 +45,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 // TearDownSuite performs cleanup logic after all the tests, i.e. once after the
 // entire suite, has finished executing.
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	valConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey)
 	s.Require().NoError(err)
@@ -104,7 +109,7 @@ tombstoned: false`, sdk.ConsAddress(val.PubKey.Address())),
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -142,7 +147,7 @@ slash_fraction_downtime: "0.010000000000000000"`,
 }
 
 func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string

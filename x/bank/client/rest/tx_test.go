@@ -18,9 +18,9 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 	encodingConfig := simapp.MakeEncodingConfig()
 	authclient.Codec = encodingConfig.Marshaler
 
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
-	account, err := getAccountInfo(val)
+	account, err := getAccountInfo(&val)
 	s.Require().NoError(err)
 
 	sendReq := generateSendReq(
@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 		types.Coins{types.NewCoin(s.cfg.BondDenom, types.TokensFromConsensusPower(1))},
 	)
 
-	stdTx, err := submitSendReq(val, sendReq)
+	stdTx, err := submitSendReq(&val, sendReq)
 	s.Require().NoError(err)
 
 	s.Require().Nil(stdTx.Signatures)

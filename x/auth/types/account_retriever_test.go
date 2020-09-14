@@ -19,7 +19,7 @@ func TestAccountRetriever(t *testing.T) {
 	_, err := network.WaitForHeight(3)
 	require.NoError(t, err)
 
-	val := network.Validators[0]
+	val := network.Validators()[0]
 	clientCtx := val.ClientCtx
 	ar := types.AccountRetriever{}
 

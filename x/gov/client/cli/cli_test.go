@@ -18,23 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -49,15 +43,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_text_proposal.*.json")
 	s.Require().NoError(err)
@@ -164,5 +157,5 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

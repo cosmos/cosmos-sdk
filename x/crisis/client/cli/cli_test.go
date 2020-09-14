@@ -31,7 +31,6 @@ func NewIntegrationTestSuite() *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.lock.Lock()
-	defer s.lock.Unlock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -46,7 +45,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
@@ -54,7 +52,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string

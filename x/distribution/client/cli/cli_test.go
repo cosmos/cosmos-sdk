@@ -24,27 +24,21 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     testnet.Config
 	network *testnet.Network
-}
-
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
 }
 
 // SetupTest creates a new network for _each_ integration test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
 // these state changes to be present in other tests.
-func (s *IntegrationTestSuite) SetupTest() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -74,15 +68,14 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 // TearDownTest cleans up the curret test network after _each_ test.
 func (s *IntegrationTestSuite) TearDownTest() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -119,7 +112,7 @@ withdraw_addr_enabled: true`,
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
@@ -182,7 +175,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
@@ -245,7 +238,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
@@ -324,7 +317,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorSlashes() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	addr := val.Address
 	valAddr := sdk.ValAddress(addr)
 
@@ -425,7 +418,7 @@ total:
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	_, err := s.network.WaitForHeight(4)
 	s.Require().NoError(err)
@@ -464,7 +457,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryCommunityPool() {
 }
 
 func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string
@@ -534,7 +527,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string
@@ -587,7 +580,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string
@@ -642,7 +635,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 }
 
 func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name         string
@@ -697,7 +690,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_community_spend_proposal.*.json")
 	s.Require().NoError(err)
@@ -783,5 +776,5 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

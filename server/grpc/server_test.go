@@ -34,7 +34,6 @@ func NewIntegrationTestSuite() *IntegrationTestSuite {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.lock.Lock()
-	defer s.lock.Unlock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -46,7 +45,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
@@ -54,7 +52,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer() {
-	val0 := s.network.Validators[0]
+	val0 := s.network.Validators()[0]
 	conn, err := grpc.Dial(
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), // Or else we get "no transport security set"

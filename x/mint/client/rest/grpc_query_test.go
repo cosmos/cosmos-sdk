@@ -2,6 +2,7 @@ package rest_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -15,13 +16,18 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
+
 	cfg     network.Config
 	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -50,12 +56,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestQueryGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
 		name     string

@@ -17,23 +17,17 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     testnet.Config
 	network *testnet.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -62,15 +56,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -109,7 +102,7 @@ mint_denom: stake`,
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -143,7 +136,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name           string
@@ -177,5 +170,5 @@ func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -3,6 +3,7 @@ package rest_test
 import (
 	"encoding/base64"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,11 +21,14 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	s.lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -38,12 +42,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer s.lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGRPCQueries() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string

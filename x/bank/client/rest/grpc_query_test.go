@@ -15,7 +15,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 }
 
 func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.

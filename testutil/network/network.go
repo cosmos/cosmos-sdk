@@ -128,7 +128,7 @@ type (
 	Network struct {
 		T          *testing.T
 		BaseDir    string
-		Validators []*Validator
+		validators []*Validator
 
 		Config Config
 	}
@@ -157,6 +157,8 @@ type (
 	}
 )
 
+var lockNode sync.RWMutex
+
 func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	lock.Lock()
@@ -168,7 +170,7 @@ func New(t *testing.T, cfg Config) *Network {
 	network := &Network{
 		T:          t,
 		BaseDir:    baseDir,
-		Validators: make([]*Validator, cfg.NumValidators),
+		validators: make([]*Validator, cfg.NumValidators),
 		Config:     cfg,
 	}
 
@@ -333,7 +335,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)
 
-		network.Validators[i] = &Validator{
+		network.validators[i] = &Validator{
 			AppConfig:  appCfg,
 			ClientCtx:  clientCtx,
 			Ctx:        ctx,
@@ -350,10 +352,12 @@ func New(t *testing.T, cfg Config) *Network {
 	}
 
 	require.NoError(t, initGenFiles(cfg, genAccounts, genBalances, genFiles))
-	require.NoError(t, collectGenFiles(cfg, network.Validators, network.BaseDir))
+	require.NoError(t, collectGenFiles(cfg, network.validators, network.BaseDir))
 
 	t.Log("starting test network...")
-	for _, v := range network.Validators {
+	lockNode.Lock()
+	defer lockNode.Unlock()
+	for _, v := range network.validators {
 		require.NoError(t, startInProcess(cfg, v))
 	}
 
@@ -368,14 +372,24 @@ func New(t *testing.T, cfg Config) *Network {
 
 //func (n *Network) Validators() []Validators
 
+func (n *Network) Validators() []Validator {
+	vals := make([]Validator, len(n.validators))
+	for i := range n.validators {
+		vals[i] = *n.validators[i]
+	}
+
+	return vals
+}
+
 // LatestHeight returns the latest height of the network or an error if the
 // query fails or no validators exist.
 func (n *Network) LatestHeight() (int64, error) {
-	if len(n.Validators) == 0 {
+	vals := n.Validators()
+	if len(vals) == 0 {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status()
+	status, err := vals[0].RPCClient.Status()
 	if err != nil {
 		return 0, err
 	}
@@ -396,12 +410,23 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 	ticker := time.NewTicker(time.Second)
 	timeout := time.After(t)
 
-	if len(n.Validators) == 0 {
+	vals := n.validators
+	if len(vals) == 0 {
 		return 0, errors.New("no validators available")
 	}
 
 	var latestHeight int64
-	val := n.Validators[0]
+
+	val := vals[0]
+	for _, v := range vals {
+		if v.RPCClient != nil {
+			val = v
+		}
+	}
+
+	if val.RPCClient == nil {
+		panic("client is nil")
+	}
 
 	for {
 		select {
@@ -448,7 +473,7 @@ func (n *Network) Cleanup() {
 
 	n.T.Log("cleaning up test network...")
 
-	for _, v := range n.Validators {
+	for _, v := range n.Validators() {
 		if v.tmNode != nil && v.tmNode.IsRunning() {
 			_ = v.tmNode.Stop()
 		}

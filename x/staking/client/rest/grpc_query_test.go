@@ -3,6 +3,7 @@ package rest_test
 import (
 	"encoding/base64"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -18,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -26,6 +29,7 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -40,8 +44,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	unbond, err := sdk.ParseCoin("10stake")
 	s.Require().NoError(err)
 
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	// redelegate
 	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
@@ -57,12 +61,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -103,14 +108,14 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(valRes.Validators)
-				s.Require().Equal(len(s.network.Validators), len(valRes.Validators))
+				s.Require().Equal(len(s.network.Validators()), len(valRes.Validators))
 			}
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -153,14 +158,14 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(validator.Validator)
-				s.Require().Equal(s.network.Validators[0].ValAddress, validator.Validator.OperatorAddress)
+				s.Require().Equal(s.network.Validators()[0].ValAddress, validator.Validator.OperatorAddress)
 			}
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -227,7 +232,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -278,8 +283,8 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -362,7 +367,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -428,7 +433,7 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -495,7 +500,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -549,8 +554,8 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -626,7 +631,7 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -669,15 +674,15 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(validators.Validators, len(s.network.Validators))
-				s.Require().Equal(int(validators.Pagination.Total), len(s.network.Validators))
+				s.Require().Len(validators.Validators, len(s.network.Validators()))
+				s.Require().Equal(int(validators.Pagination.Total), len(s.network.Validators()))
 			}
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	// TODO: need to pass bech32 string instead of base64 encoding string.
@@ -741,7 +746,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -787,7 +792,7 @@ func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -818,7 +823,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 }
 
 func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {

@@ -17,22 +17,16 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	network *network.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -44,15 +38,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestGRPCQuery() {
-	val0 := s.network.Validators[0]
+	val0 := s.network.Validators()[0]
 
 	// gRPC query to test service should work
 	testClient := testdata.NewTestServiceClient(val0.ClientCtx)
@@ -90,5 +83,5 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -25,23 +25,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite() *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-		lock: sync.RWMutex{},
-	}
-}
-
 func (s *IntegrationTestSuite) SetupSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	lock.Lock()
 
 	s.T().Log("setting up integration test suite")
 
@@ -57,8 +51,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	unbond, err := sdk.ParseCoin("10stake")
 	s.Require().NoError(err)
 
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	// redelegate
 	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
@@ -74,15 +68,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	defer lock.Unlock()
 
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	consPrivKey := ed25519.GenPrivKey()
 	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
@@ -212,7 +205,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	testCases := []struct {
 		name      string
 		args      []string
@@ -253,7 +246,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name              string
@@ -268,7 +261,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 		{
 			"multi validator case",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			len(s.network.Validators),
+			len(s.network.Validators()),
 		},
 	}
 
@@ -284,14 +277,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 
 			var result []types.Validator
 			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
-			s.Require().Equal(len(s.network.Validators), len(result))
+			s.Require().Equal(len(s.network.Validators()), len(result))
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	testCases := []struct {
 		name     string
@@ -357,7 +350,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name     string
@@ -413,7 +406,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name     string
@@ -469,7 +462,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name   string
@@ -517,7 +510,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name   string
@@ -577,7 +570,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name   string
@@ -625,8 +618,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	testCases := []struct {
 		name   string
@@ -677,8 +670,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	testCases := []struct {
 		name   string
@@ -753,8 +746,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
+	val := s.network.Validators()[0]
+	val2 := s.network.Validators()[1]
 
 	testCases := []struct {
 		name   string
@@ -805,7 +798,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 
 	testCases := []struct {
 		name  string
@@ -851,7 +844,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	testCases := []struct {
 		name           string
 		args           []string
@@ -885,7 +878,7 @@ unbonding_time: 1814400s`,
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	testCases := []struct {
 		name           string
 		args           []string
@@ -922,5 +915,5 @@ not_bonded_tokens: "0"`,
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, NewIntegrationTestSuite())
+	suite.Run(t, new(IntegrationTestSuite))
 }

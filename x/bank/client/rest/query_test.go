@@ -2,6 +2,7 @@ package rest_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -11,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -19,6 +22,8 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -32,12 +37,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
 func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -84,7 +91,7 @@ func (s *IntegrationTestSuite) TestQueryBalancesRequestHandlerFn() {
 }
 
 func (s *IntegrationTestSuite) TestTotalSupplyHandlerFn() {
-	val := s.network.Validators[0]
+	val := s.network.Validators()[0]
 	baseURL := val.APIAddress
 
 	testCases := []struct {

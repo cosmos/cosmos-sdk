@@ -1,6 +1,7 @@
 package network_test
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
+var lock sync.RWMutex
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -16,6 +19,8 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	lock.Lock()
+
 	s.T().Log("setting up integration test suite")
 
 	s.network = network.New(s.T(), network.DefaultConfig())
@@ -26,6 +31,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	defer lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }

@@ -55,10 +55,8 @@ message ConsensusState {
   // was stored.
   google.protobuf.Timestamp timestamp = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // commitment root (i.e app hash)
-  ibc.commitment.MerkleRoot root = 2 [(gogoproto.nullable) = false];
-  // height at which the consensus state was stored.
-  ibc.client.Height height               = 3 [(gogoproto.nullable) = false];
-  bytes             next_validators_hash = 4 [
+  ibc.commitment.MerkleRoot root                 = 2 [(gogoproto.nullable) = false];
+  bytes                     next_validators_hash = 3 [
     (gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes",
     (gogoproto.moretags) = "yaml:\"next_validators_hash\""
   ];

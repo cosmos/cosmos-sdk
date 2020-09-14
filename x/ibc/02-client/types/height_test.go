@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 func TestZeroHeight(t *testing.T) {

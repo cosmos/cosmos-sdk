@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {
@@ -67,7 +68,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&types.QuerySigningInfosResponse{},
 			&types.QuerySigningInfosResponse{
 				Info: []types.ValidatorSigningInfo{
-					types.ValidatorSigningInfo{
+					{
 						Address:     sdk.ConsAddress(val.PubKey.Address()),
 						JailedUntil: time.Unix(0, 0),
 					},

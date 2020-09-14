@@ -5,17 +5,16 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyTestPubAddr generates a new secp256k1 keypair.
 func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := keys.Secp256K1PrivKey{Key: secp256k1.GenPrivKey()}
+	key := secp256k1.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
-	return &key, pub, addr
+	return key, pub, addr
 }
 
 // NewTestFeeAmount is a test fee amount.

@@ -140,7 +140,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		delAddrs[0],
 		valAddrs[0],
 		0,
-		time.Unix(0, 0),
+		time.Unix(0, 0).UTC(),
 		sdk.NewInt(5),
 	)
 
@@ -148,7 +148,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	require.Equal(t, ubd, resUnbond)
+	require.Equal(t, ubd.String(), resUnbond.String())
 
 	// modify a records, save, and retrieve
 	ubd.Entries[0].Balance = sdk.NewInt(21)

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"strings"
 	"testing"
 
@@ -21,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Test that simulate transaction accurately estimates gas cost
@@ -402,139 +399,6 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 			false,
 			false,
 			sdkerrors.ErrWrongSequence,
-		},
-		{
-			"fix the sequence and it passes",
-			func() {
-				accSeqs = []uint64{1}
-			},
-			false,
-			true,
-			nil,
-		},
-		{
-			"fix the sequence and it passes",
-			func() {
-				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
-				msgs = []sdk.Msg{msg}
-
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv}, []uint64{0, 1}, []uint64{3, 2}
-			},
-			false,
-			true,
-			nil,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-			tc.malleate()
-
-			suite.RunTestCase(privs, msgs, feeAmount, gasLimit, accNums, accSeqs, suite.ctx.ChainID(), tc)
-		})
-	}
-}
-
-// This test is exactly like the one above, but we set the codec explicitly to
-// Amino.
-// Once https://github.com/cosmos/cosmos-sdk/issues/6190 is in, we can remove
-// this, since it'll be handled by the test matrix.
-// In the meantime, we want to make double-sure amino compatibility works.
-// ref: https://github.com/cosmos/cosmos-sdk/issues/7229
-func (suite *AnteTestSuite) TestAnteHandlerSequences_ExplicitAmino() {
-	suite.app, suite.ctx = createTestApp(true)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
-
-	// Set up TxConfig.
-	aminoCdc := codec.NewLegacyAmino()
-	// We're using TestMsg amino encoding in some tests, so register it here.
-	txConfig := authtypes.StdTxConfig{Cdc: aminoCdc}
-
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(txConfig)
-
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, txConfig.SignModeHandler())
-
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// make block height non-zero to ensure account numbers part of signBytes
-	suite.ctx = suite.ctx.WithBlockHeight(1)
-
-	// Same data for every test cases
-	accounts := suite.CreateTestAccounts(3)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-
-	// Variable data per test case
-	var (
-		accNums []uint64
-		msgs    []sdk.Msg
-		privs   []crypto.PrivKey
-		accSeqs []uint64
-	)
-
-	testCases := []TestCase{
-		{
-			"good tx from one signer",
-			func() {
-				msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
-				msgs = []sdk.Msg{msg}
-
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-			},
-			false,
-			true,
-			nil,
-		},
-		{
-			"test sending it again fails (replay protection)",
-			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
-			},
-			false,
-			false,
-			sdkerrors.ErrUnauthorized,
-		},
-		{
-			"fix sequence, should pass",
-			func() {
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{1}
-			},
-			false,
-			true,
-			nil,
-		},
-		{
-			"new tx with another signer and correct sequences",
-			func() {
-				msg1 := testdata.NewTestMsg(accounts[0].acc.GetAddress(), accounts[1].acc.GetAddress())
-				msg2 := testdata.NewTestMsg(accounts[2].acc.GetAddress(), accounts[0].acc.GetAddress())
-				msgs = []sdk.Msg{msg1, msg2}
-
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[0].priv, accounts[1].priv, accounts[2].priv}, []uint64{0, 1, 2}, []uint64{2, 0, 0}
-			},
-			false,
-			true,
-			nil,
-		},
-		{
-			"replay fails",
-			func() {},
-			false,
-			false,
-			sdkerrors.ErrUnauthorized,
-		},
-		{
-			"tx from just second signer with incorrect sequence fails",
-			func() {
-				msg := testdata.NewTestMsg(accounts[1].acc.GetAddress())
-				msgs = []sdk.Msg{msg}
-				privs, accNums, accSeqs = []crypto.PrivKey{accounts[1].priv}, []uint64{1}, []uint64{0}
-			},
-			false,
-			false,
-			sdkerrors.ErrUnauthorized,
 		},
 		{
 			"fix the sequence and it passes",

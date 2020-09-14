@@ -123,6 +123,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		}))
 	}
 
+	snapshotInterval := uint64(2)
 	snapshotDir, err := ioutil.TempDir("", "baseapp")
 	require.NoError(t, err)
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), snapshotDir)
@@ -133,7 +134,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 
 	app := setupBaseApp(t, append(options,
 		SetSnapshotStore(snapshotStore),
-		SetSnapshotInterval(2),
+		SetSnapshotInterval(snapshotInterval),
 		SetPruning(sdk.PruningOptions{KeepEvery: 1}),
 		routerOpt)...)
 
@@ -161,9 +162,17 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 		app.EndBlock(abci.RequestEndBlock{Height: height})
 		app.Commit()
 
-		// Wait for snapshot to be taken, since it happens asynchronously. This
-		// heuristic is likely to be flaky on low-IO machines.
-		time.Sleep(time.Duration(int(height)*blockTxs) * 200 * time.Millisecond)
+		// Wait for snapshot to be taken, since it happens asynchronously.
+		if uint64(height)%snapshotInterval == 0 {
+			for {
+				snapshot, err := snapshotStore.Get(uint64(height), snapshottypes.CurrentFormat)
+				require.NoError(t, err)
+				if snapshot != nil {
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
 	}
 
 	return app, teardown

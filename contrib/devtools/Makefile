@@ -87,6 +87,6 @@ $(RUNSIM):
 
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
-	rm -f proto-tools-stamp
+	rm -f proto-tools-stamp tools-stamp
 
 .PHONY: tools-clean statik runsim

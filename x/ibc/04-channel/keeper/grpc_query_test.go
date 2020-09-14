@@ -518,8 +518,8 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 				req = &types.QueryChannelConsensusStateRequest{
 					PortId:      channelA.PortID,
 					ChannelId:   channelA.ID,
-					EpochNumber: expConsensusState.GetHeight().GetEpochNumber(),
-					EpochHeight: expConsensusState.GetHeight().GetEpochHeight(),
+					EpochNumber: clientState.GetLatestHeight().GetEpochNumber(),
+					EpochHeight: clientState.GetLatestHeight().GetEpochHeight(),
 				}
 			},
 			true,

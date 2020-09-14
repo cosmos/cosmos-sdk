@@ -22,7 +22,7 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) PubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
-	if len(pubkeys) < int(k) {
+	if len(pubkeys) < k {
 		panic("threshold k of n multisignature: len(pubkeys) < k")
 	}
 	for _, pubkey := range pubkeys {

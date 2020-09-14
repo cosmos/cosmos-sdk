@@ -91,7 +91,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	for _, val := range valSet.Validators {
 		validator := stakingtypes.Validator{
-			OperatorAddress:   val.Address.String(),
+			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
 			Jailed:            false,
 			Status:            sdk.Bonded,

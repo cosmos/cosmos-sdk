@@ -416,8 +416,9 @@ func (suite *TypesTestSuite) TestMsgRecvPacketGetSignBytes() {
 	res := msg.GetSignBytes()
 
 	expected := fmt.Sprintf(
-		`{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":{"epoch_height":"100","epoch_number":"0"},"timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":{"epoch_height":"1","epoch_number":"0"},"signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`,
+		`{"packet":{"data":%s,"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout_height":{"epoch_height":"100","epoch_number":"0"},"timeout_timestamp":"100"},"proof":"Co0BCi4KCmljczIzOmlhdmwSA0tFWRobChkKA0tFWRIFVkFMVUUaCwgBGAEgASoDAAICClsKDGljczIzOnNpbXBsZRIMaWF2bFN0b3JlS2V5Gj0KOwoMaWF2bFN0b3JlS2V5EiAcIiDXSHQRSvh/Wa07MYpTK0B4XtbaXtzxBED76xk0WhoJCAEYASABKgEA","proof_height":{"epoch_height":"1","epoch_number":"0"},"signer":"%s"}`,
 		string(msg.GetDataSignBytes()),
+		addr1.String(),
 	)
 	suite.Equal(expected, string(res))
 }

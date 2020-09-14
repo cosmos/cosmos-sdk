@@ -228,10 +228,10 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	}
 }
 
-/*
 // TestOnAcknowledgementPacket tests that successful acknowledgement is a no-op
 // and failure acknowledment leads to refund when attempting to send from chainA
-// to chainB.
+// to chainB. If sender is source than the denomination being refunded has no
+// trace.
 func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 	var (
 		successAck = channeltypes.NewResultAcknowledgement([]byte{byte(1)})
@@ -245,11 +245,11 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		msg      string
 		ack      channeltypes.Acknowledgement
 		malleate func()
-		source   bool
 		success  bool // success of ack
+		expPass  bool
 	}{
 		{"success ack causes no-op", successAck, func() {
-			coin = types.GetPrefixedCoin(channelB.PortID, channelB.ID, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+			coin = types.GetTransferCoin(channelB.PortID, channelB.ID, sdk.DefaultBondDenom, 100)
 		}, true, true},
 		{"successful refund from source chain", failedAck,
 			func() {
@@ -257,12 +257,19 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))))
 				suite.Require().NoError(err)
 
-				coin = types.GetPrefixedCoin(channelB.PortID, channelB.ID, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-			}, true, false},
-		{"successful refund from external chain", failedAck,
+				coin = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+			}, false, true},
+		{"unsuccessful refund from with coin from external chain", failedAck,
 			func() {
-				coin = types.GetPrefixedCoin(channelA.PortID, channelA.ID, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
+				coin = types.GetTransferCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 100)
 			}, false, false},
+		{"successful refund from with coin from external chain", failedAck,
+			func() {
+				escrow := types.GetEscrowAddress(channelA.PortID, channelA.ID)
+				coin = types.GetTransferCoin(channelA.PortID, channelA.ID, sdk.DefaultBondDenom, 100)
+				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				suite.Require().NoError(err)
+			}, false, true},
 	}
 
 	for _, tc := range testCases {
@@ -277,31 +284,28 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			data := types.NewFungibleTokenPacketData(coin.Denom, coin.Amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
 			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
-			var denom string
-			if tc.source {
-				// peel off ibc denom if returning back to original chain
-				denom = sdk.DefaultBondDenom
-			} else {
-				denom = coin.Denom
-			}
-
-			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
+			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), coin.Denom)
 
 			err := suite.chainA.App.TransferKeeper.OnAcknowledgementPacket(suite.chainA.GetContext(), packet, data, tc.ack)
-			suite.Require().NoError(err)
+			if tc.expPass {
+				suite.Require().NoError(err)
+				postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), coin.Denom)
+				deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
 
-			postCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), denom)
-			deltaAmount := postCoin.Amount.Sub(preCoin.Amount)
+				if tc.success {
+					suite.Require().Equal(int64(0), deltaAmount.Int64(), "successful ack changed balance")
+				} else {
+					suite.Require().Equal(coin.Amount, deltaAmount, "failed ack did not trigger refund")
+				}
 
-			if tc.success {
-				suite.Require().Equal(int64(0), deltaAmount.Int64(), "successful ack changed balance")
 			} else {
-				suite.Require().Equal(coin.Amount, deltaAmount, "failed ack did not trigger refund")
+				suite.Require().Error(err)
 			}
 		})
 	}
 }
 
+/*
 // TestOnTimeoutPacket test private refundPacket function since it is a simple
 // wrapper over it. The actual timeout does not matter since IBC core logic
 // is not being tested. The test is timing out a send from chainA to chainB

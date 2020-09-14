@@ -38,12 +38,12 @@ func (m *LegacyAminoMultisigThresholdPubKey) VerifyMultisignature(getSignBytes m
 		return fmt.Errorf("bit array size is incorrect %d", len(pubKeys))
 	}
 	// ensure size of signature list
-	if len(sigs) < int(m.K) || len(sigs) > size {
+	if len(sigs) < int(m.Threshold) || len(sigs) > size {
 		return fmt.Errorf("signature size is incorrect %d", len(sigs))
 	}
 	// ensure at least k signatures are set
-	if bitarray.NumTrueBitsBefore(size) < int(m.K) {
-		return fmt.Errorf("minimum number of signatures not set, have %d, expected %d", bitarray.NumTrueBitsBefore(size), int(m.K))
+	if bitarray.NumTrueBitsBefore(size) < int(m.Threshold) {
+		return fmt.Errorf("minimum number of signatures not set, have %d, expected %d", bitarray.NumTrueBitsBefore(size), int(m.Threshold))
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0
@@ -119,7 +119,7 @@ func (m *LegacyAminoMultisigThresholdPubKey) Equals(key tmcrypto.PubKey) bool {
 
 // GetThreshold implements the PubKey.GetThreshold method
 func (m *LegacyAminoMultisigThresholdPubKey) GetThreshold() uint {
-	return uint(m.K)
+	return uint(m.Threshold)
 }
 
 // Type returns multisig type

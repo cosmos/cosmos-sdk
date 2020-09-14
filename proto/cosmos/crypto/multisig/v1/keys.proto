@@ -12,6 +12,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/multisig";
 message LegacyAminoMultisigThresholdPubKey {
     option (gogoproto.goproto_getters) = false;
 
-    uint32 threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+    uint32 threshold = 1 [(gogoproto.moretags) = "yaml:\"threshold\""];
     repeated google.protobuf.Any public_keys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }

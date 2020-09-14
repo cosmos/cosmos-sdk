@@ -65,6 +65,8 @@ func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 
 // MarshalAminoJSON overrides Amino JSON marshalling.
 func (privKey PrivKey) MarshalAminoJSON() ([]byte, error) {
+	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
+	// just its contents (i.e. the key bytes).
 	return privKey.MarshalAmino()
 }
 
@@ -189,6 +191,8 @@ func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
 
 // MarshalAminoJSON overrides Amino JSON marshalling.
 func (pubKey PubKey) MarshalAminoJSON() ([]byte, error) {
+	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
+	// just its contents (i.e. the key bytes).
 	return pubKey.MarshalAmino()
 }
 

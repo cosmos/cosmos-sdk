@@ -1,9 +1,10 @@
 package utils_test
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/rpc/client/mock"

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -137,7 +138,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr fmt.Stringer, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
@@ -191,7 +192,7 @@ func (msg MsgEditValidator) ValidateBasic() error {
 }
 
 // NewMsgDelegate creates a new MsgDelegate instance.
-func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
+func NewMsgDelegate(delAddr, valAddr fmt.Stringer, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: valAddr.String(),

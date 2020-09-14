@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +15,7 @@ const (
 var _ sdk.Msg = &MsgUnjail{}
 
 // NewMsgUnjail creates a new MsgUnjail instance
-func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
+func NewMsgUnjail(validatorAddr fmt.Stringer) *MsgUnjail {
 	return &MsgUnjail{
 		ValidatorAddr: validatorAddr.String(),
 	}

@@ -29,7 +29,7 @@ func (dvv DVVTriplet) String() string {
 }
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
+func NewDelegation(delegatorAddr fmt.Stringer, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
@@ -114,7 +114,7 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 
 // NewUnbondingDelegation - create a new unbonding delegation object
 func NewUnbondingDelegation(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	delegatorAddr, validatorAddr fmt.Stringer,
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) UnbondingDelegation {
 	return UnbondingDelegation{
@@ -207,7 +207,7 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 }
 
 func NewRedelegation(
-	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
+	delegatorAddr, validatorSrcAddr, validatorDstAddr fmt.Stringer,
 	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec,
 ) Redelegation {
 	return Redelegation{
@@ -333,7 +333,7 @@ func (d DelegationResponses) String() (out string) {
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
 func NewRedelegationResponse(
-	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
+	delegatorAddr, validatorSrc, validatorDst fmt.Stringer, entries []RedelegationEntryResponse,
 ) RedelegationResponse {
 	return RedelegationResponse{
 		Redelegation: Redelegation{

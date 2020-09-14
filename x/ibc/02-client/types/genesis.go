@@ -105,7 +105,7 @@ func (gs GenesisState) Validate() error {
 
 		clientState, ok := client.ClientState.GetCachedValue().(exported.ClientState)
 		if !ok {
-			return fmt.Errorf("invalid client state")
+			return fmt.Errorf("invalid client state with ID %s", client.ClientId)
 		}
 		if err := clientState.Validate(); err != nil {
 			return fmt.Errorf("invalid client %v index %d: %w", client, i, err)
@@ -124,7 +124,7 @@ func (gs GenesisState) Validate() error {
 
 			cs, ok := consensusState.ConsensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
-				return fmt.Errorf("invalid consensus state")
+				return fmt.Errorf("invalid consensus state with client ID %s at height %s", cc.ClientId, consensusState.Height)
 			}
 
 			if err := cs.ValidateBasic(); err != nil {

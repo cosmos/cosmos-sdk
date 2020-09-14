@@ -124,5 +124,5 @@ func (m *LegacyAminoMultisigThresholdPubKey) GetThreshold() uint {
 
 // Type returns multisig type
 func (m *LegacyAminoMultisigThresholdPubKey) Type() string {
-	return "PubKeyMultisigThreshold"
+	return "cosmos/LegacyAminoMultisigThresholdPubKey"
 }

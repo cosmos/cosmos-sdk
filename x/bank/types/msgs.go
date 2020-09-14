@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -14,7 +16,7 @@ const (
 var _ sdk.Msg = &MsgSend{}
 
 // NewMsgSend - construct a msg to send coins from one account to another.
-func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
+func NewMsgSend(fromAddr, toAddr fmt.Stringer, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
 }
 
@@ -124,7 +126,7 @@ func (in Input) ValidateBasic() error {
 }
 
 // NewInput - create a transaction input, used with MsgMultiSend
-func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
+func NewInput(addr fmt.Stringer, coins sdk.Coins) Input {
 	return Input{
 		Address: addr.String(),
 		Coins:   coins,
@@ -150,7 +152,7 @@ func (out Output) ValidateBasic() error {
 }
 
 // NewOutput - create a transaction output, used with MsgMultiSend
-func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
+func NewOutput(addr fmt.Stringer, coins sdk.Coins) Output {
 	return Output{
 		Address: addr.String(),
 		Coins:   coins,

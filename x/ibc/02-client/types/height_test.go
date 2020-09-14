@@ -84,37 +84,35 @@ func TestParseChainID(t *testing.T) {
 		chainID   string
 		epoch     uint64
 		formatted bool
-		expPass   bool
 	}{
-		{"gaia-epoch-3", 3, true, true},
-		{"gaia-epoch-3-3", 0, false, false},
-		{"gaia-epoch-3.4", 0, false, false},
-		{"gaia-epode-4", 0, false, true},
-		{"gaiamainnet", 0, false, true},
-		{"gaiaepoch-9", 0, false, true},
+		{"gaiamainnet-3", 3, true},
+		{"gaia-mainnet-40", 40, true},
+		{"gaiamainnet-3-3", 0, false},
+		{"gaiamainnet--", 0, false},
+		{"gaiamainnet--4", 0, false},
+		{"gaiamainnet-3.4", 0, false},
+		{"gaiamainnet", 0, false},
 	}
 
 	for i, tc := range cases {
 		require.Equal(t, tc.formatted, types.IsEpochFormat(tc.chainID), "case %d does not match expected format", i)
 
-		epoch, err := types.ParseChainID(tc.chainID)
+		epoch := types.ParseChainID(tc.chainID)
 		require.Equal(t, tc.epoch, epoch, "case %d returns incorrect epoch", i)
-		if tc.expPass {
-			require.NoError(t, err, "valid chainID returns parse error")
-		} else {
-			require.Error(t, err, "invalid chainID passes ParseChainID")
-		}
 	}
 
+}
+
+func TestSetEpochNumber(t *testing.T) {
 	// Test SetEpochNumber
 	chainID, err := types.SetEpochNumber("gaiamainnet", 3)
 	require.Error(t, err, "invalid epoch format passed SetEpochNumber")
 	require.Equal(t, "", chainID, "invalid epoch format returned non-empty string on SetEpochNumber")
-	chainID = "gaia-epoch-3"
+	chainID = "gaiamainnet-3"
 
 	chainID, err = types.SetEpochNumber(chainID, 4)
 	require.NoError(t, err, "valid epoch format failed SetEpochNumber")
-	require.Equal(t, "gaia-epoch-4", chainID, "valid epoch format returned incorrect string on SetEpochNumber")
+	require.Equal(t, "gaiamainnet-4", chainID, "valid epoch format returned incorrect string on SetEpochNumber")
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {
@@ -127,15 +125,8 @@ func (suite *TypesTestSuite) TestSelfHeight() {
 	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
 
 	// Test successful epoch format
-	ctx = ctx.WithChainID("gaia-epoch-3")
+	ctx = ctx.WithChainID("gaiamainnet-3")
 	ctx = ctx.WithBlockHeight(18)
 	height = types.GetSelfHeight(ctx)
 	suite.Require().Equal(types.NewHeight(3, 18), height, "valid self height failed")
-
-	// Test unsuccessful epoch-format
-	ctx = ctx.WithChainID("gaia-epoch-9.2")
-	ctx = ctx.WithBlockHeight(12)
-	_, err := types.ParseChainID("gaia-epoch-9.2")
-	suite.Require().Error(err, "invalid epoch format passed parsing")
-	suite.Require().Panics(func() { types.GetSelfHeight(ctx) })
 }

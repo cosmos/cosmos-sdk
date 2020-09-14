@@ -181,8 +181,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
-	epoch, err := clienttypes.ParseChainID(chain.ChainID)
-	require.NoError(chain.t, err)
+	epoch := clienttypes.ParseChainID(chain.ChainID)
 
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it

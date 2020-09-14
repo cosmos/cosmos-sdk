@@ -37,10 +37,7 @@ func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
 		return clienttypes.ZeroHeight()
 	}
-	epoch, err := clienttypes.ParseChainID(h.Header.ChainID)
-	if err != nil {
-		return clienttypes.Height{}
-	}
+	epoch := clienttypes.ParseChainID(h.Header.ChainID)
 	return clienttypes.NewHeight(epoch, uint64(h.Header.Height))
 }
 

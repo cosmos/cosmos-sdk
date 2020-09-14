@@ -39,12 +39,12 @@ and resets its block-height, it is responsible for updating its chain-id to incr
 IBC Tendermint clients then verifies the epoch number against their `ChainId` and treat the `EpochHeight` as the Tendermint block-height.
 
 Tendermint chains wishing to use epochs to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
-in the following manner: `{chainID}-epoch-{EpochNumber}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher epoch number
+in the following manner: `{chainID}-{EpochNumber}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher epoch number
 than the previous value.
 
 Ex:
-Before upgrade ChainID: `gaia-epoch-3`
-After upgrade ChainID: `gaia-epoch-4`
+Before upgrade ChainID: `gaiamainnet-3`
+After upgrade ChainID: `gaiamainnet-4`
 
 Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they 
 need to return an IBC height when implementing IBC interfaces and use the `EpochHeight` exclusively.

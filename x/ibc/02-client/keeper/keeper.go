@@ -196,10 +196,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 		return nil, false
 	}
 	// check that height epoch matches chainID epoch
-	epoch, err := types.ParseChainID(ctx.ChainID())
-	if err != nil {
-		return nil, false
-	}
+	epoch := types.ParseChainID(ctx.ChainID())
 	if epoch != height.GetEpochNumber() {
 		return nil, false
 	}
@@ -236,10 +233,7 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	epoch, err := types.ParseChainID(ctx.ChainID())
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid self chain-id is in invalid epoch format. got: %s", ctx.ChainID())
-	}
+	epoch := types.ParseChainID(ctx.ChainID())
 
 	// client must be in the same epoch as executing chain
 	if tmClient.LatestHeight.EpochNumber != epoch {

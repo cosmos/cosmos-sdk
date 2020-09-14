@@ -170,7 +170,7 @@ func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusSta
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	page := 0
+	page := 1
 	count := 10_000
 
 	nextHeight := height + 1

@@ -1,6 +1,7 @@
 package secp256k1_test
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"math/big"
 	"testing"
@@ -14,6 +15,7 @@ import (
 
 	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -191,6 +193,51 @@ func TestPrivKeyEquals(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) {
 			eq := tc.privKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
+		})
+	}
+}
+
+func TestMarshalAmino(t *testing.T) {
+	aminoCdc := codec.NewLegacyAmino()
+	privKey := secp256k1.GenPrivKey()
+
+	testCases := []struct {
+		desc      string
+		msg       codec.AminoMarshaler
+		expBinary []byte
+		expJSON   string
+	}{
+		{
+			"secp256k1 private key",
+			privKey,
+			append([]byte{32}, privKey.Bytes()...), // Length-prefixed.
+			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Do a round trip of encoding/decoding binary.
+			bz, err := aminoCdc.MarshalBinaryBare(tc.msg)
+			require.NoError(t, err)
+			require.Equal(t, tc.expBinary, bz)
+
+			newMsg := new(secp256k1.PrivKey)
+			err = aminoCdc.UnmarshalBinaryBare(bz, newMsg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.msg, newMsg)
+
+			// Do a round trip of encoding/decoding JSON.
+			bz, err = aminoCdc.MarshalJSON(tc.msg)
+			require.NoError(t, err)
+			require.Equal(t, tc.expJSON, string(bz))
+
+			newMsg = new(secp256k1.PrivKey)
+			err = aminoCdc.UnmarshalJSON(bz, newMsg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.msg, newMsg)
 		})
 	}
 }

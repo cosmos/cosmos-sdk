@@ -294,6 +294,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
 	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
@@ -334,7 +335,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 
 	return abci.ResponseCommit{
-		Data: commitID.Hash,
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
 	}
 }
 
@@ -576,6 +578,93 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	).WithMinGasPrices(app.minGasPrices)
 
 	return ctx, nil
+}
+
+// GetBlockRetentionHeight returns the height for which all blocks below this height
+// are pruned from Tendermint. Given a commitment height and a non-zero local
+// minRetainBlocks configuration, the retentionHeight is the smallest height that
+// satisfies:
+//
+// - Unbonding (safety threshold) time: The block interval in which validators
+// can be economically punished for misbehavior. Blocks in this interval must be
+// auditable e.g. by the light client.
+//
+// - Logical store snapshot interval: The block interval at which the underlying
+// logical store database is persisted to disk, e.g. every 10000 heights. Blocks
+// since the last IAVL snapshot must be available for replay on application restart.
+//
+// - State sync snapshots: Blocks since the oldest available snapshot must be
+// available for state sync nodes to catch up (oldest because a node may be
+// restoring an old snapshot while a new snapshot was taken).
+//
+// - Local (minRetainBlocks) config: Archive nodes may want to retain more or
+// all blocks, e.g. via a local config option min-retain-blocks. There may also
+// be a need to vary retention for other nodes, e.g. sentry nodes which do not
+// need historical blocks.
+func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
+	// pruning is disabled if minRetainBlocks is zero
+	if app.minRetainBlocks == 0 {
+		return 0
+	}
+
+	minNonZero := func(x, y int64) int64 {
+		switch {
+		case x == 0:
+			return y
+		case y == 0:
+			return x
+		case x < y:
+			return x
+		default:
+			return y
+		}
+	}
+
+	// Define retentionHeight as the minimum value that satisfies all non-zero
+	// constraints. All blocks below (commitHeight-retentionHeight) are pruned
+	// from Tendermint.
+	var retentionHeight int64
+
+	// Define the number of blocks needed to protect against misbehaving validators
+	// which allows light clients to operate safely. Note, we piggy back of the
+	// evidence parameters instead of computing an estimated nubmer of blocks based
+	// on the unbonding period and block commitment time as the two should be
+	// equivalent.
+	cp := app.GetConsensusParams(app.deliverState.ctx)
+	if cp != nil && cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
+		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
+	}
+
+	// Define the state pruning offset, i.e. the block offset at which the
+	// underlying logical database is persisted to disk.
+	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
+	if statePruningOffset > 0 {
+		if commitHeight > statePruningOffset {
+			v := commitHeight - (commitHeight % statePruningOffset)
+			retentionHeight = minNonZero(retentionHeight, v)
+		} else {
+			// Hitting this case means we have persisting enabled but have yet to reach
+			// a height in which we persist state, so we return zero regardless of other
+			// conditions. Otherwise, we could end up pruning blocks without having
+			// any state committed to disk.
+			return 0
+		}
+	}
+
+	if app.snapshotInterval > 0 && app.snapshotKeepRecent > 0 {
+		v := commitHeight - int64((app.snapshotInterval * uint64(app.snapshotKeepRecent)))
+		retentionHeight = minNonZero(retentionHeight, v)
+	}
+
+	v := commitHeight - int64(app.minRetainBlocks)
+	retentionHeight = minNonZero(retentionHeight, v)
+
+	if retentionHeight <= 0 {
+		// prune nothing in the case of a non-positive height
+		return 0
+	}
+
+	return retentionHeight
 }
 
 func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

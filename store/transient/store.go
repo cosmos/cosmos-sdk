@@ -27,9 +27,11 @@ func (ts *Store) Commit() (id types.CommitID) {
 	return
 }
 
-// Implements CommitStore
-func (ts *Store) SetPruning(pruning types.PruningOptions) {
-}
+func (ts *Store) SetPruning(_ types.PruningOptions) {}
+
+// GetPruning is a no-op as pruning options cannot be directly set on this store.
+// They must be set on the root commit multi-store.
+func (ts *Store) GetPruning() types.PruningOptions { return types.PruningOptions{} }
 
 // Implements CommitStore
 func (ts *Store) LastCommitID() (id types.CommitID) {

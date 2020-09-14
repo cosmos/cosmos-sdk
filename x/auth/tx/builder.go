@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -307,7 +306,7 @@ func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 func PubKeyToAny(key crypto.PubKey) (*codectypes.Any, error) {
 	protoMsg, ok := key.(proto.Message)
 	if !ok {
-		return nil, errors.Wrap(sdkerrors.ErrInvalidPubKey, fmt.Sprintf("can't proto encode %T", protoMsg))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, fmt.Sprintf("can't proto encode %T", protoMsg))
 	}
 	return codectypes.NewAnyWithValue(protoMsg)
 }

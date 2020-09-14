@@ -3,7 +3,6 @@ package types
 import (
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,7 +35,7 @@ func (cs ConsensusState) GetRoot() exported.Root {
 
 // GetPubKey unmarshals the public key into a tmcrypto.PubKey type.
 func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
-	publicKey, ok := cs.PublicKey.GetCachedValue().(crypto.PubKey)
+	publicKey, ok := cs.PublicKey.GetCachedValue().(tmcrypto.PubKey)
 	if !ok {
 		panic("ConsensusState PublicKey is not crypto.PubKey")
 	}

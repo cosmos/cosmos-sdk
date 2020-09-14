@@ -19,7 +19,7 @@ func TestGRPCRouter(t *testing.T) {
 	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
 	helper := &QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
-		ctx:             sdk.Context{},
+		ctx:             sdk.Context{}.WithContext(context.Background()),
 	}
 	client := testdata.NewTestServiceClient(helper)
 

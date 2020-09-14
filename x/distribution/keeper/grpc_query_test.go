@@ -533,11 +533,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 					DelegatorAddress: addrs[0].String(),
 				}
 				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
-					Validators: func() []string {
-						var addrs []string
-						addrs = append(addrs, valAddrs[0].String(), valAddrs[1].String())
-						return addrs
-					}(),
+					Validators: []string{valAddrs[0].String()},
 				}
 			},
 			true,

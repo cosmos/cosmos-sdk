@@ -19,9 +19,7 @@ message MsgCreateValidator {
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.nullable)   = false
   ];
-  string delegator_address = 4 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
+  string delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string validator_address = 5 [
 
     (gogoproto.moretags) = "yaml:\"validator_address\""
@@ -62,13 +60,9 @@ message MsgDelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
-  string validator_address = 2 [
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgBeginRedelegate defines an SDK message for performing a redelegation
@@ -77,16 +71,10 @@ message MsgBeginRedelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
-  string validator_src_address = 2 [
-    (gogoproto.moretags) = "yaml:\"validator_src_address\""
-  ];
-  string validator_dst_address = 3 [
-    (gogoproto.moretags) = "yaml:\"validator_dst_address\""
-  ];
-  cosmos.base.v1beta1.Coin amount = 4 [(gogoproto.nullable) = false];
+  string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string                   validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false];
 }
 
 // MsgUndelegate defines an SDK message for performing an undelegation from a
@@ -95,11 +83,7 @@ message MsgUndelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
-  string validator_address = 2 [
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
 }

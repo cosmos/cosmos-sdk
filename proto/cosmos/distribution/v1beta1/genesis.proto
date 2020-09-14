@@ -16,14 +16,10 @@ message DelegatorWithdrawInfo {
   option (gogoproto.goproto_getters) = false;
 
   // delegator_address is the address of the delegator.
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
 
   // withdraw_address is the address to withdraw the delegation rewards to.
-  string withdraw_address = 2 [
-    (gogoproto.moretags) = "yaml:\"withdraw_address\""
-  ];
+  string withdraw_address = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
 }
 
 // ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
@@ -99,9 +95,7 @@ message DelegatorStartingInfoRecord {
   option (gogoproto.goproto_getters) = false;
 
   // delegator_address is the address of the delegator.
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
 
   // validator_address is the address of the validator.
   string validator_address = 2 [

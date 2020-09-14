@@ -13,12 +13,8 @@ message MsgSetWithdrawAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
-  string withdraw_address = 2 [
-    (gogoproto.moretags) = "yaml:\"withdraw_address\""
-  ];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
 }
 
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
@@ -27,12 +23,8 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [
-    (gogoproto.moretags) = "yaml:\"delegator_address\""
-  ];
-  string validator_address = 2 [
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 }
 
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator

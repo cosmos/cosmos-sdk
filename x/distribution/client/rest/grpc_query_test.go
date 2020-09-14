@@ -165,8 +165,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				fmt.Println(err, string(resp))
-				s.Require().Error(err)
+				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))

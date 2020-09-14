@@ -148,18 +148,16 @@ message IdentifiedChannel {
 enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  // Default State
-  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
   // A channel has just started the opening handshake.
-  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  STATE_INIT = 0 [(gogoproto.enumvalue_customname) = "INIT"];
   // A channel has acknowledged the handshake step on the counterparty chain.
-  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  STATE_TRYOPEN = 1 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
   // A channel has completed the handshake. Open channels are
   // ready to send and receive packets.
-  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+  STATE_OPEN = 2 [(gogoproto.enumvalue_customname) = "OPEN"];
   // A channel has been closed and can no longer be used to send or receive
   // packets.
-  STATE_CLOSED = 4 [(gogoproto.enumvalue_customname) = "CLOSED"];
+  STATE_CLOSED = 3 [(gogoproto.enumvalue_customname) = "CLOSED"];
 }
 
 // Order defines if a channel is ORDERED or UNORDERED

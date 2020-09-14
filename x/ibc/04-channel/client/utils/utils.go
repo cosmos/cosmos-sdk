@@ -46,6 +46,11 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
+	// check if packet commitment exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrPacketCommitmentNotFound, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
+	}
+
 	// TODO: retrieve epoch number from chain-id
 	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
 }
@@ -221,6 +226,11 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if next sequence receive exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, "portID (%s), channelID (%s)", portID, channelID)
 	}
 
 	sequence := binary.BigEndian.Uint64(value)

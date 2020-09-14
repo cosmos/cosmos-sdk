@@ -76,7 +76,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xaa.txt | xargs go test -mod=readonly -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xaa.txt | xargs go test -mod=readonly -race -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -113,7 +113,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xab.txt | xargs go test -mod=readonly -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xab.txt | xargs go test -mod=readonly -race -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -150,7 +150,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xac.txt | xargs go test -mod=readonly -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xac.txt | xargs go test -mod=readonly -race -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |
@@ -187,7 +187,7 @@ jobs:
         if: "env.GIT_DIFF != ''"
       - name: test & coverage report creation
         run: |
-          cat xad.txt | xargs go test -mod=readonly -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+          cat xad.txt | xargs go test -mod=readonly -race -timeout 15m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
         if: "env.GIT_DIFF != ''"
       - name: filter out DONTCOVER
         run: |

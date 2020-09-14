@@ -22,8 +22,8 @@ var _ codec.AminoMarshaler = &PrivKey{}
 const (
 	PrivKeySize = 32
 	keyType     = "secp256k1"
-	PrivKeyName = "cosmos/Secp256k1PrivKey"
-	PubKeyName  = "cosmos/Secp256k1PubKey"
+	PrivKeyName = "tendermint/PrivKeySecp256k1"
+	PubKeyName  = "tendermint/PubKeySecp256k1"
 )
 
 // Bytes returns the byte representation of the Private Key.

@@ -1,9 +1,10 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.

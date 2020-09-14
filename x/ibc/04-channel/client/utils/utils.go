@@ -142,13 +142,8 @@ func QueryChannelConsensusState(
 		return nil, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
-		return nil, err
-	}
-
 	if prove {
-		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, height)
 		if err != nil {
 			return nil, err
 		}
@@ -163,32 +158,32 @@ func QueryChannelConsensusState(
 // latest ConsensusState given the source port ID and source channel ID.
 func QueryLatestConsensusState(
 	clientCtx client.Context, portID, channelID string,
-) (exported.ConsensusState, clienttypes.Height, error) {
+) (exported.ConsensusState, clienttypes.Height, clienttypes.Height, error) {
 	clientRes, err := QueryChannelClientState(clientCtx, portID, channelID, false)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	clientHeight, ok := clientState.GetLatestHeight().(clienttypes.Height)
 	if !ok {
-		return nil, clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
+		return nil, clienttypes.Height{}, clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
 			clienttypes.Height{}, clientHeight)
 	}
 	res, err := QueryChannelConsensusState(clientCtx, portID, channelID, clientHeight, false)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
-	return consensusState, res.ProofHeight, nil
+	return consensusState, clientHeight, res.ProofHeight, nil
 }
 
 // QueryNextSequenceReceive returns the next sequence receive.

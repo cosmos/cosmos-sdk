@@ -380,8 +380,8 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 
 				req = &types.QueryConnectionConsensusStateRequest{
 					ConnectionId: connA.ID,
-					EpochNumber:  expConsensusState.GetHeight().GetEpochNumber(),
-					EpochHeight:  expConsensusState.GetHeight().GetEpochHeight(),
+					EpochNumber:  clientState.GetLatestHeight().GetEpochNumber(),
+					EpochHeight:  clientState.GetLatestHeight().GetEpochHeight(),
 				}
 			},
 			true,

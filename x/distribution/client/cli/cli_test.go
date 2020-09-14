@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,8 +27,15 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	lock    sync.RWMutex
 	cfg     testnet.Config
 	network *testnet.Network
+}
+
+func NewIntegrationTestSuite() *IntegrationTestSuite {
+	return &IntegrationTestSuite{
+		lock: sync.RWMutex{},
+	}
 }
 
 // SetupTest creates a new network for _each_ integration test. We create a new
@@ -35,6 +43,9 @@ type IntegrationTestSuite struct {
 // needed to be made in order to make useful queries. However, we don't want
 // these state changes to be present in other tests.
 func (s *IntegrationTestSuite) SetupTest() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := testnet.DefaultConfig()
@@ -63,6 +74,9 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 // TearDownTest cleans up the curret test network after _each_ test.
 func (s *IntegrationTestSuite) TearDownTest() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
@@ -769,5 +783,5 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, NewIntegrationTestSuite())
 }

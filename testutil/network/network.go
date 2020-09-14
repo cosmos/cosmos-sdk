@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -37,6 +36,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -159,11 +159,10 @@ type (
 
 func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
-	t.Log("acquiring test network lock")
 	lock.Lock()
+	t.Log("test network lock acquired")
 
-	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
-	require.NoError(t, err)
+	baseDir, _ := testutil.NewTestCaseDir(t)
 	t.Logf("created temporary directory: %s", baseDir)
 
 	network := &Network{
@@ -367,6 +366,8 @@ func New(t *testing.T, cfg Config) *Network {
 	return network
 }
 
+//func (n *Network) Validators() []Validators
+
 // LatestHeight returns the latest height of the network or an error if the
 // query fails or no validators exist.
 func (n *Network) LatestHeight() (int64, error) {
@@ -441,8 +442,8 @@ func (n *Network) WaitForNextBlock() error {
 // in a defer.
 func (n *Network) Cleanup() {
 	defer func() {
+		n.T.Log("releasing test network lock")
 		lock.Unlock()
-		n.T.Log("released test network lock")
 	}()
 
 	n.T.Log("cleaning up test network...")

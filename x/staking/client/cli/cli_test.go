@@ -4,6 +4,7 @@ import (
 	json "encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -27,11 +28,21 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	lock    sync.RWMutex
 	cfg     network.Config
 	network *network.Network
 }
 
+func NewIntegrationTestSuite() *IntegrationTestSuite {
+	return &IntegrationTestSuite{
+		lock: sync.RWMutex{},
+	}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -63,6 +74,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
@@ -908,5 +922,5 @@ not_bonded_tokens: "0"`,
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, NewIntegrationTestSuite())
 }

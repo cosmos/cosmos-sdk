@@ -55,7 +55,7 @@ f_install_protoc() {
   f_needs_install "${DESTDIR}/${PREFIX}/bin/protoc" || return 0
 
   pushd "${TEMPDIR}" >/dev/null
-  curl -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
+  curl -o "${PROTOC_ZIP}" -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"
   unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} bin/protoc; \
   unzip -q -o ${PROTOC_ZIP} -d ${DESTDIR}/${PREFIX} 'include/*'; \
   rm -f ${PROTOC_ZIP}

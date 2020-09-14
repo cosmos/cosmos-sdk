@@ -14,7 +14,7 @@ import (
 var _ exported.Height = (*Height)(nil)
 
 // IsEpochFormat checks if a chainID is in the format required for parsing epochs
-// The chainID must be in the form: `{chainID}-{epochNumber}
+// The chainID must be in the form: `{chainID}-{version}
 // 24-host may enforce stricter checks on chainID
 var IsEpochFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
 
@@ -165,7 +165,7 @@ func SetEpochNumber(chainID string, epoch uint64) (string, error) {
 }
 
 // ParseChainID is a utility function that returns an epoch number from the given ChainID.
-// ParseChainID attempts to parse a chain id in the format: `{chainID}-{epochNumber}`
+// ParseChainID attempts to parse a chain id in the format: `{chainID}-{version}`
 // and return the epochnumber as a uint64.
 // If the chainID is not in the expected format, a default epoch value of 0 is returned.
 func ParseChainID(chainID string) uint64 {

@@ -148,7 +148,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	resUnbond, found := app.StakingKeeper.GetUnbondingDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	require.Equal(t, ubd.String(), resUnbond.String())
+	require.Equal(t, ubd, resUnbond)
 
 	// modify a records, save, and retrieve
 	ubd.Entries[0].Balance = sdk.NewInt(21)
@@ -661,7 +661,7 @@ func TestRedelegation(t *testing.T) {
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt(5),
+		time.Unix(0, 0).UTC(), sdk.NewInt(5),
 		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations

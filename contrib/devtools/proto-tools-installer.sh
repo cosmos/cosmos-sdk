@@ -10,6 +10,14 @@ BUF_VERSION=0.11.0
 PROTOC_VERSION=3.13.0
 PROTOC_GRPC_GATEWAY_VERSION=1.14.7
 
+f_abort() {
+  local l_rc=$1
+  shift
+
+  echo $@ >&2
+  exit ${l_rc}
+}
+
 case "${UNAME_S}" in
 Linux)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
@@ -20,8 +28,7 @@ Darwin)
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-darwin-x86_64"
   ;;
 *)
-  echo "Unknown kernel name. Exiting." >&2
-  exit 1
+  f_abort 1 "Unknown kernel name. Exiting."
 esac
 
 TEMPDIR="$(mktemp -d)"
@@ -34,6 +41,10 @@ f_print_installing_with_padding() {
 
 f_print_done() {
   echo -e "\tDONE" >&2
+}
+
+f_ensure_tools() {
+  ! which curl &>/dev/null && f_abort 2 "couldn't find curl, aborting" || true
 }
 
 f_ensure_dirs() {
@@ -130,6 +141,7 @@ f_install_clang_format() {
   esac
 }
 
+f_ensure_tools
 f_ensure_dirs
 f_install_protoc
 f_install_buf

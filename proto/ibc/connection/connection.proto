@@ -108,13 +108,15 @@ message IdentifiedConnection {
 enum State {
   option (gogoproto.goproto_enum_prefix) = false;
 
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
   // A connection end has just started the opening handshake.
-  STATE_INIT = 0 [(gogoproto.enumvalue_customname) = "INIT"];
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
   // A connection end has acknowledged the handshake step on the counterparty
   // chain.
-  STATE_TRYOPEN = 1 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
   // A connection end has completed the handshake.
-  STATE_OPEN = 2 [(gogoproto.enumvalue_customname) = "OPEN"];
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
 }
 
 // Counterparty defines the counterparty chain associated with a connection end.

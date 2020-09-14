@@ -66,14 +66,6 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 
 // checkTrustedHeader checks that consensus state matches trusted fields of Header
 func checkTrustedHeader(header *Header, consState *ConsensusState) error {
-	if !header.TrustedHeight.EQ(consState.Height) {
-		return sdkerrors.Wrapf(
-			ErrInvalidHeaderHeight,
-			"trusted header height %d does not match consensus state height %d",
-			header.TrustedHeight, consState.Height,
-		)
-	}
-
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
 		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
@@ -128,17 +120,17 @@ func checkValidity(
 	}
 
 	// assert header height is newer than consensus state
-	if header.GetHeight().LTE(consState.Height) {
+	if header.GetHeight().LTE(header.TrustedHeight) {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), consState.Height,
+			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), header.TrustedHeight,
 		)
 	}
 
 	// Construct a trusted header using the fields in consensus state
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
 	trustedHeader := tmtypes.Header{
-		Height:             int64(consState.Height.EpochHeight),
+		Height:             int64(header.TrustedHeight.EpochHeight),
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}
@@ -179,7 +171,6 @@ func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusS
 		clientState.LatestHeight = height
 	}
 	consensusState := &ConsensusState{
-		Height:             height,
 		Timestamp:          header.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()),
 		NextValidatorsHash: header.Header.NextValidatorsHash,

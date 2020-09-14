@@ -15,7 +15,8 @@ var _ exported.Height = (*Height)(nil)
 
 // IsEpochFormat checks if a chainID is in the format required for parsing epochs
 // The chainID must be in the form: `{chainID}-{epochNumber}
-var IsEpochFormat = regexp.MustCompile(`^.+-{1}[1-9][0-9]*$`).MatchString
+// 24-host may enforce stricter checks on chainID
+var IsEpochFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
 
 // ZeroHeight is a helper function which returns an uninitialized height.
 func ZeroHeight() Height {
@@ -40,7 +41,7 @@ func (h Height) GetEpochHeight() uint64 {
 	return h.EpochHeight
 }
 
-/// Compare implements a method to compare two heights. When comparing two heights a, b
+// Compare implements a method to compare two heights. When comparing two heights a, b
 // we can call a.Compare(b) which will return
 // -1 if a < b
 // 0  if a = b
@@ -117,6 +118,17 @@ func (h Height) Increment() Height {
 // IsZero returns true if height epoch and epoch-height are both 0
 func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
+}
+
+// MustParseHeight will attempt to parse a string representation of a height and panic if
+// parsing fails.
+func MustParseHeight(heightStr string) Height {
+	height, err := ParseHeight(heightStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return height
 }
 
 // ParseHeight is a utility function that takes a string representation of the height

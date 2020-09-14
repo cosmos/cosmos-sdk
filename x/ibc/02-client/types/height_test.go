@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 func TestZeroHeight(t *testing.T) {
@@ -79,6 +80,20 @@ func TestString(t *testing.T) {
 	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }
 
+func (suite *TypesTestSuite) TestMustParseHeight() {
+	suite.Require().Panics(func() {
+		types.MustParseHeight("height")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("111-1")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("0-0")
+	})
+}
+
 func TestParseChainID(t *testing.T) {
 	cases := []struct {
 		chainID   string
@@ -87,8 +102,9 @@ func TestParseChainID(t *testing.T) {
 	}{
 		{"gaiamainnet-3", 3, true},
 		{"gaia-mainnet-40", 40, true},
-		{"gaiamainnet-3-3", 0, false},
+		{"gaiamainnet-3-39", 39, true},
 		{"gaiamainnet--", 0, false},
+		{"gaiamainnet-03", 0, false},
 		{"gaiamainnet--4", 0, false},
 		{"gaiamainnet-3.4", 0, false},
 		{"gaiamainnet", 0, false},
@@ -116,7 +132,7 @@ func TestSetEpochNumber(t *testing.T) {
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {
-	ctx := suite.chain.GetContext()
+	ctx := suite.chainA.GetContext()
 
 	// Test default epoch
 	ctx = ctx.WithChainID("gaiamainnet")

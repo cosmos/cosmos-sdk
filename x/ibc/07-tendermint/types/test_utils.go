@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"time"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // MakeBlockID is a copied unimported test function from tmtypes to use here

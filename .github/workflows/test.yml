@@ -29,7 +29,7 @@ jobs:
             .mod
             .sum
       - name: Run cosmovisor tests
-        run: cd cosmovisor; go test .
+        run: cd cosmovisor; make
         if: "env.GIT_DIFF != ''"
   split-test-files:
     runs-on: ubuntu-latest

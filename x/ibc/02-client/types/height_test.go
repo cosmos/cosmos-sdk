@@ -79,3 +79,17 @@ func TestString(t *testing.T) {
 	require.NoError(t, err, "parse err")
 	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }
+
+func (suite *TypesTestSuite) TestMustParseHeight() {
+	suite.Require().Panics(func() {
+		types.MustParseHeight("height")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("111-1")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("0-0")
+	})
+}

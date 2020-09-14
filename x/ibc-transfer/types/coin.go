@@ -41,8 +41,13 @@ func GetPrefixedDenom(portID, channelID, baseDenom string) string {
 }
 
 // GetPrefixedCoin creates a copy of the given coin with the prefixed denom
+// NOTE: this function is unsafe to use because it does not do sdk.Coin
+// validation checks. It should only be used for client and testing code.
 func GetPrefixedCoin(portID, channelID string, coin sdk.Coin) sdk.Coin {
-	return sdk.NewCoin(GetPrefixedDenom(portID, channelID, coin.Denom), coin.Amount)
+	return sdk.Coin{
+		Denom:  GetPrefixedDenom(portID, channelID, coin.Denom),
+		Amount: coin.Amount,
+	}
 }
 
 // GetTransferCoin creates a transfer coin with the port ID and channel ID

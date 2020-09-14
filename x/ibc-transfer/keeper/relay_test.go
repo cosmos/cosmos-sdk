@@ -351,11 +351,14 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			func() {
 				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 			}, false},
-		{"mint failed",
-			func() {
-				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
-				amount = sdk.ZeroInt()
-			}, false},
+		/*
+			TODO: uncomment when zero int coins are considered invalid
+			{"mint failed",
+					func() {
+						trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
+						amount = sdk.ZeroInt()
+					}, false},
+		*/
 	}
 
 	for _, tc := range testCases {

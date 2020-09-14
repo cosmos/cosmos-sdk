@@ -175,5 +175,5 @@ func (q Keeper) ConnectionConsensusState(c context.Context, req *types.QueryConn
 	}
 
 	proofHeight := clienttypes.GetSelfHeight(ctx)
-	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight().(clienttypes.Height), nil, proofHeight), nil
+	return types.NewQueryConnectionConsensusStateResponse(connection.ClientId, anyConsensusState, height, nil, proofHeight), nil
 }

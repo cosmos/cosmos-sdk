@@ -14,9 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sim "github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -265,7 +267,17 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	simReq := sim.SimulateRequest{Tx: txb.GetProtoTx()}
+	any, ok := txb.(codectypes.IntoAny)
+	if !ok {
+		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
+	}
+	cached := any.AsAny().GetCachedValue()
+	protoTx, ok := cached.(*tx.Tx)
+	if !ok {
+		return nil, fmt.Errorf("cannot simulate amino tx")
+	}
+
+	simReq := sim.SimulateRequest{Tx: protoTx}
 
 	return simReq.Marshal()
 }

@@ -29,7 +29,7 @@ func (dvv DVVTriplet) String() string {
 }
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr fmt.Stringer, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),

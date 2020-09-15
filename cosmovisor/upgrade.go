@@ -121,7 +121,10 @@ func GetDownloadURL(info *UpgradeInfo) (string, error) {
 	if err := json.Unmarshal([]byte(doc), &config); err == nil {
 		url, ok := config.Binaries[osArch()]
 		if !ok {
-			return "", fmt.Errorf("cannot find binary for os/arch: %s", osArch())
+			url, ok = config.Binaries["any"]
+		}
+		if !ok {
+			return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", osArch())
 		}
 
 		return url, nil

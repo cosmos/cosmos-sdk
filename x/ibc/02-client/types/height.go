@@ -114,6 +114,17 @@ func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
 }
 
+// MustParseHeight will attempt to parse a string representation of a height and panic if
+// parsing fails.
+func MustParseHeight(heightStr string) Height {
+	height, err := ParseHeight(heightStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return height
+}
+
 // ParseHeight is a utility function that takes a string representation of the height
 // and returns a Height struct
 func ParseHeight(heightStr string) (Height, error) {

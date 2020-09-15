@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {

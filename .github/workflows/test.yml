@@ -352,7 +352,7 @@ jobs:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary
         if: "env.GIT_DIFF != ''"
-      - name: Run tests with race detector
+      - name: Generate test report (go test -race)
         run: cat xa*-race-output.txt | ~/go/bin/tparse
         if: "env.GIT_DIFF != ''"
 

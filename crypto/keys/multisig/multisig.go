@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
+// In the refactor in https://github.com/cosmos/cosmos-sdk/pull/7284, make sure
+// to use AminoCdc here.
 var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 var _ multisig.PubKey = &LegacyAminoPubKey{}

@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	cmd := cli.GenTxCmd(
 		simapp.ModuleBasics,
 		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{},
-		val.ClientCtx.HomeDir, staking.AppModuleBasic{})
+		val.ClientCtx.HomeDir, staking.ValidatorMsgBuildingHelpers{})
 
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx := val.ClientCtx.WithOutput(out)

@@ -14,6 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	flag "github.com/spf13/pflag"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper.  For each
@@ -319,4 +325,36 @@ func ValidateMsgInGenesis(msg sdk.Msg, balancesMap map[string]bankexported.Genes
 	}
 
 	return appGenTxs, persistentPeers, addressesIPs, nil
+}
+
+/////////////////////////////
+// Genesis Message Helpers //
+/////////////////////////////
+
+type ValidatorMsgBuildingHelpers struct{}
+
+// CreateValidatorMsgHelpers - used for gentx
+func (ValidatorMsgBuildingHelpers) CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
+	return cli.CreateValidatorMsgFlagSet(ipDefault)
+}
+
+// PrepareFlagsForTxCreateValidator - used for gentx
+func (ValidatorMsgBuildingHelpers) PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID,
+	chainID string, valPubKey crypto.PubKey) (interface{}, error) {
+	config, err := cli.PrepareConfigForTxCreateValidator(flagSet, moniker, nodeID, chainID, valPubKey)
+	return config, err
+}
+
+// BuildCreateValidatorMsg - used for gentx
+func (ValidatorMsgBuildingHelpers) BuildCreateValidatorMsg(cliCtx client.Context, config interface{}, txBldr tx.Factory,
+	generateOnly bool) (tx.Factory, sdk.Msg, error) {
+	return cli.BuildCreateValidatorMsg(cliCtx, config.(cli.TxCreateValidatorConfig), txBldr, generateOnly)
+}
+
+// ValidateAccountInGenesis - used for gentx
+func (ValidatorMsgBuildingHelpers) ValidateAccountInGenesis(
+	appGenesisState map[string]json.RawMessage, genBalIterator genutiltypes.GenesisBalancesIterator,
+	addr sdk.Address, coins sdk.Coins, cdc codec.JSONMarshaler,
+) error {
+	return ValidateAccountParamsInGenesis(appGenesisState, genBalIterator, addr, coins, cdc)
 }

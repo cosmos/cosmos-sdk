@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
@@ -31,7 +32,7 @@ type Solomachine struct {
 // NewSolomachine returns a new solomachine instance with a generated private/public
 // key pair and a sequence starting at 1.
 func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string) *Solomachine {
-	privKey := ed25519.GenPrivKey()
+	privKey := secp256k1.GenPrivKey()
 
 	return &Solomachine{
 		t:           t,

@@ -182,7 +182,7 @@ func (m *MsgWithdrawValidatorCommission) GetValidatorAddress() github_com_cosmos
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 type MsgFundCommunityPool struct {
-	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Amount    []types.Coin                                  `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount"`
 	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
 }
 
@@ -219,7 +219,7 @@ func (m *MsgFundCommunityPool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgFundCommunityPool proto.InternalMessageInfo
 
-func (m *MsgFundCommunityPool) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgFundCommunityPool) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}

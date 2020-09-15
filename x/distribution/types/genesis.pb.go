@@ -87,7 +87,7 @@ type ValidatorOutstandingRewardsRecord struct {
 	// validator_address is the address of the validator.
 	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
 	// outstanding_rewards represents the oustanding rewards of a validator.
-	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards" yaml:"outstanding_rewards"`
+	OutstandingRewards []types.DecCoin `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
 }
 
 func (m *ValidatorOutstandingRewardsRecord) Reset()         { *m = ValidatorOutstandingRewardsRecord{} }
@@ -130,7 +130,7 @@ func (m *ValidatorOutstandingRewardsRecord) GetValidatorAddress() github_com_cos
 	return nil
 }
 
-func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
+func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() []types.DecCoin {
 	if m != nil {
 		return m.OutstandingRewards
 	}

@@ -28,7 +28,7 @@ type GenesisState struct {
 	// client states with their corresponding identifiers
 	Clients []IdentifiedClientState `protobuf:"bytes,1,rep,name=clients,proto3" json:"clients"`
 	// consensus states from each client
-	ClientsConsensus ClientsConsensusStates `protobuf:"bytes,2,rep,name=clients_consensus,json=clientsConsensus,proto3,castrepeated=ClientsConsensusStates" json:"clients_consensus" yaml:"clients_consensus"`
+	ClientsConsensus []ClientConsensusStates `protobuf:"bytes,2,rep,name=clients_consensus,json=clientsConsensus,proto3" json:"clients_consensus" yaml:"clients_consensus"`
 	// create localhost on initialization
 	CreateLocalhost bool `protobuf:"varint,3,opt,name=create_localhost,json=createLocalhost,proto3" json:"create_localhost,omitempty" yaml:"create_localhost"`
 }
@@ -73,7 +73,7 @@ func (m *GenesisState) GetClients() []IdentifiedClientState {
 	return nil
 }
 
-func (m *GenesisState) GetClientsConsensus() ClientsConsensusStates {
+func (m *GenesisState) GetClientsConsensus() []ClientConsensusStates {
 	if m != nil {
 		return m.ClientsConsensus
 	}

@@ -8,7 +8,6 @@ import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/types"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -185,10 +184,10 @@ type SimulateServiceClient interface {
 }
 
 type simulateServiceClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewSimulateServiceClient(cc grpc1.ClientConn) SimulateServiceClient {
+func NewSimulateServiceClient(cc *grpc.ClientConn) SimulateServiceClient {
 	return &simulateServiceClient{cc}
 }
 
@@ -215,7 +214,7 @@ func (*UnimplementedSimulateServiceServer) Simulate(ctx context.Context, req *Si
 	return nil, status.Errorf(codes.Unimplemented, "method Simulate not implemented")
 }
 
-func RegisterSimulateServiceServer(s grpc1.Server, srv SimulateServiceServer) {
+func RegisterSimulateServiceServer(s *grpc.Server, srv SimulateServiceServer) {
 	s.RegisterService(&_SimulateService_serviceDesc, srv)
 }
 

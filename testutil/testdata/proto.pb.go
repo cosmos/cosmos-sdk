@@ -11,7 +11,6 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -3582,10 +3581,10 @@ type TestServiceClient interface {
 }
 
 type testServiceClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewTestServiceClient(cc grpc1.ClientConn) TestServiceClient {
+func NewTestServiceClient(cc *grpc.ClientConn) TestServiceClient {
 	return &testServiceClient{cc}
 }
 
@@ -3637,7 +3636,7 @@ func (*UnimplementedTestServiceServer) TestAny(ctx context.Context, req *TestAny
 	return nil, status.Errorf(codes.Unimplemented, "method TestAny not implemented")
 }
 
-func RegisterTestServiceServer(s grpc1.Server, srv TestServiceServer) {
+func RegisterTestServiceServer(s *grpc.Server, srv TestServiceServer) {
 	s.RegisterService(&_TestService_serviceDesc, srv)
 }
 

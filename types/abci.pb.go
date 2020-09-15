@@ -43,7 +43,7 @@ type TxResponse struct {
 	// The output of the application's logger (raw string). May be non-deterministic.
 	RawLog string `protobuf:"bytes,6,opt,name=raw_log,json=rawLog,proto3" json:"raw_log,omitempty"`
 	// The output of the application's logger (typed). May be non-deterministic.
-	Logs ABCIMessageLogs `protobuf:"bytes,7,rep,name=logs,proto3,castrepeated=ABCIMessageLogs" json:"logs"`
+	Logs []ABCIMessageLog `protobuf:"bytes,7,rep,name=logs,proto3" json:"logs"`
 	// Additional information. May be non-deterministic.
 	Info string `protobuf:"bytes,8,opt,name=info,proto3" json:"info,omitempty"`
 	// Amount of gas requested for transaction.
@@ -95,7 +95,7 @@ type ABCIMessageLog struct {
 	Log      string `protobuf:"bytes,2,opt,name=log,proto3" json:"log,omitempty"`
 	// Events contains a slice of Event objects that were emitted during some
 	// execution.
-	Events StringEvents `protobuf:"bytes,3,rep,name=events,proto3,castrepeated=StringEvents" json:"events"`
+	Events []StringEvent `protobuf:"bytes,3,rep,name=events,proto3" json:"events"`
 }
 
 func (m *ABCIMessageLog) Reset()      { *m = ABCIMessageLog{} }
@@ -144,7 +144,7 @@ func (m *ABCIMessageLog) GetLog() string {
 	return ""
 }
 
-func (m *ABCIMessageLog) GetEvents() StringEvents {
+func (m *ABCIMessageLog) GetEvents() []StringEvent {
 	if m != nil {
 		return m.Events
 	}

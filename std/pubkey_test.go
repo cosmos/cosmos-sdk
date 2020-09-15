@@ -5,11 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/std"
 )
 
@@ -31,14 +29,8 @@ func TestDefaultPublicKeyCodec(t *testing.T) {
 	pubKeySecp256k1 := secp256k1.GenPrivKey().PubKey()
 	roundTripTest(t, pubKeySecp256k1)
 
-	pubKeyEd25519 := ed25519.GenPrivKey().PubKey()
-	roundTripTest(t, pubKeyEd25519)
-
-	pubKeySr25519 := sr25519.GenPrivKey().PubKey()
-	roundTripTest(t, pubKeySr25519)
-
-	pubKeyMultisig := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
-		pubKeySecp256k1, pubKeyEd25519, pubKeySr25519,
+	pubKeyMultisig := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{
+		pubKeySecp256k1, secp256k1.GenPrivKey().PubKey(), secp256k1.GenPrivKey().PubKey(),
 	})
 	roundTripTest(t, pubKeyMultisig)
 }

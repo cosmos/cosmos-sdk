@@ -395,7 +395,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 			secp256k1.GenPrivKey().PubKey(),
 		},
 	)
-	_, err = kb.SaveMultisig("multi", &multi)
+	_, err = kb.SaveMultisig("multi", multi)
 	require.NoError(t, err)
 }
 
@@ -989,7 +989,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 		},
 	)
 
-	info, err := keyring.SaveMultisig(key, &pub)
+	info, err := keyring.SaveMultisig(key, pub)
 	require.Nil(t, err)
 	require.Equal(t, &pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())

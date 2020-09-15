@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
 var amino *codec.LegacyAmino
@@ -17,6 +16,12 @@ func init() {
 	amino = codec.NewLegacyAmino()
 	RegisterCrypto(amino)
 }
+
+// TODO: Figure out API for others to either add their own pubkey types, or
+// to make verify / marshal accept a Cdc.
+const (
+	PubKeyAminoRoute = "tendermint/PubKeyMultisigThreshold"
+)
 
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
@@ -28,13 +33,8 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		sr25519.PubKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
-	// TODO Follow-up in https://github.com/cosmos/cosmos-sdk/pull/7284
-	// Remove `multisig.PubKeyMultisigThreshold{}`, and register instead
-	// kmultisig.LegacyAminoPubKey{} on `PubKeyAminoRoute`.
-	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
-		multisig.PubKeyAminoRoute, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
-		"cosmos-sdk/LegacyAminoPubKey", nil)
+		PubKeyAminoRoute, nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PrivKey{},

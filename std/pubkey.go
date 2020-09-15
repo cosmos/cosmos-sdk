@@ -7,9 +7,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 )
 
 // DefaultPublicKeyCodec implements the standard PublicKeyCodec for the SDK which
@@ -19,6 +19,7 @@ type DefaultPublicKeyCodec struct{}
 var _ types.PublicKeyCodec = DefaultPublicKeyCodec{}
 
 // Decode implements the PublicKeyCodec.Decode method
+// TODO To be removed in https://github.com/cosmos/cosmos-sdk/pull/7276
 func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, error) {
 	// key being nil is allowed as all fields in proto are optional
 	if key == nil {
@@ -67,13 +68,15 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 			resKeys[i] = dk
 		}
 
-		return multisig.NewPubKeyMultisigThreshold(int(key.Multisig.K), resKeys), nil
+		return kmultisig.NewLegacyAminoPubKey(int(key.Multisig.K), resKeys), nil
 	default:
 		return nil, fmt.Errorf("can't decode PubKey of type %T. Use a custom PublicKeyCodec instead", key)
 	}
 }
 
 // Encode implements the PublicKeyCodec.Encode method
+// TODO To be removed in https://github.com/cosmos/cosmos-sdk/pull/7276
+
 func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, error) {
 	if key == nil {
 		return &types.PublicKey{}, nil
@@ -85,10 +88,11 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
 	case sr25519.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Sr25519{Sr25519: key}}, nil
-	case multisig.PubKeyMultisigThreshold:
+	case *kmultisig.LegacyAminoPubKey:
 		pubKeys := key.PubKeys
 		resKeys := make([]*types.PublicKey, len(pubKeys))
-		for i, k := range pubKeys {
+		for i, any := range pubKeys {
+			k := any.GetCachedValue().(crypto.PubKey)
 			dk, err := cdc.Encode(k)
 			if err != nil {
 				return nil, err
@@ -96,7 +100,7 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 			resKeys[i] = dk
 		}
 		return &types.PublicKey{Sum: &types.PublicKey_Multisig{Multisig: &types.PubKeyMultisigThreshold{
-			K:       uint32(key.K),
+			K:       uint32(key.Threshold),
 			PubKeys: resKeys,
 		}}}, nil
 	default:

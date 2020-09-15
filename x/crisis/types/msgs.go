@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -10,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgVerifyInvariant{}
 
 // NewMsgVerifyInvariant creates a new MsgVerifyInvariant object
-func NewMsgVerifyInvariant(sender fmt.Stringer, invModeName, invRoute string) *MsgVerifyInvariant {
+func NewMsgVerifyInvariant(sender sdk.AccAddress, invModeName, invRoute string) *MsgVerifyInvariant {
 	return &MsgVerifyInvariant{
 		Sender:              sender.String(),
 		InvariantModuleName: invModeName,

@@ -5,11 +5,12 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewValidatorSigningInfo creates a new ValidatorSigningInfo instance
 func NewValidatorSigningInfo(
-	condAddr fmt.Stringer, startHeight, indexOffset int64,
+	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
 	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,
 ) ValidatorSigningInfo {
 

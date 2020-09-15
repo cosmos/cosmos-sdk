@@ -84,6 +84,3 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
-
-// Unmarshaler is a generic type for Unmarshal function
-type Unmarshaler func(bytes []byte, ptr interface{}) error

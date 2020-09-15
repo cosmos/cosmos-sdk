@@ -38,7 +38,7 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
 	var err error
 	for i, sig := range signatures {
-		sigs[i], err = SignatureV2ToStdSignature(s.cdc, sig) // sig.ToStdSignature(cdc)
+		sigs[i], err = SignatureV2ToStdSignature(s.cdc, sig)
 		if err != nil {
 			return err
 		}
@@ -166,7 +166,10 @@ func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) 
 	}, nil
 }
 
-func mkDecoder(unmarshaler sdk.Unmarshaler) sdk.TxDecoder {
+// Unmarshaler is a generic type for Unmarshal functions
+type Unmarshaler func(bytes []byte, ptr interface{}) error
+
+func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		if len(txBytes) == 0 {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")

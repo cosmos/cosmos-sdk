@@ -26,6 +26,11 @@ var (
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
+func init() {
+	var amino = codec.NewLegacyAmino()
+	RegisterLegacyAminoCodec(amino)
+}
+
 // Deprecated, use fee amount and gas limit separately on TxBuilder.
 func NewTestStdFee() StdFee {
 	return NewStdFee(100000,

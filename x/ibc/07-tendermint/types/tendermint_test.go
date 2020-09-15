@@ -20,6 +20,8 @@ import (
 
 const (
 	chainID                      = "gaia"
+	chainIDEpoch0                = "gaia-epoch-0"
+	chainIDEpoch1                = "gaia-epoch-1"
 	clientID                     = "gaiamainnet"
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -72,12 +74,12 @@ func (suite *TendermintTestSuite) SetupTest() {
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	epochHeight := int64(height.EpochHeight)
+	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
 
 	val := tmtypes.NewValidator(pubKey, 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(chainID, epochHeight, epochHeight-1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 

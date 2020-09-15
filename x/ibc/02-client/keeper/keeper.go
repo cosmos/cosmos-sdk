@@ -240,7 +240,6 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			tmClient.LatestHeight.EpochNumber, epoch)
 	}
 
-	// For now, assume epoch number is zero
 	selfHeight := types.NewHeight(epoch, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",

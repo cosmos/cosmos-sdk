@@ -150,7 +150,7 @@ func ParseHeight(heightStr string) (Height, error) {
 }
 
 // SetEpochNumber takes a chainID in valid epoch format and swaps the epoch number
-// with the given epoch number.
+// in the chainID with the given epoch number.
 func SetEpochNumber(chainID string, epoch uint64) (string, error) {
 	if !IsEpochFormat(chainID) {
 		return "", sdkerrors.Wrapf(

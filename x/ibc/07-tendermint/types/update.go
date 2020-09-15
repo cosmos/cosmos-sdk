@@ -141,9 +141,10 @@ func checkValidity(
 	chainID := clientState.GetChainID()
 	// If chainID is in epoch format, then set epoch number of chainID with the epoch number
 	// of the header we are verifying
-	// This is useful if the update is for a previous epoch then the latest epoch of the client,
-	// then the chainID can be set correctly for the previous epoch before verifying
-	// Updates for previous epochs are not supported if the chainID is not in epoch format
+	// This is useful if the update is at a previous epoch rather than an update to the latest epoch
+	// of the client.
+	// The chainID must be set correctly for the previous epoch before attempting verification.
+	// Updates for previous epochs are not supported if the chainID is not in epoch format.
 	if clienttypes.IsEpochFormat(chainID) {
 		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
 	}

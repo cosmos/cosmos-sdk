@@ -183,7 +183,7 @@ func ParseChainID(chainID string) uint64 {
 }
 
 // GetSelfHeight is a utility function that returns self height given context
-// Context must have chainID in valid format, otherwise this function panics
+// Epoch number is retrieved from ctx.ChainID()
 func GetSelfHeight(ctx sdk.Context) Height {
 	epoch := ParseChainID(ctx.ChainID())
 	return NewHeight(epoch, uint64(ctx.BlockHeight()))

@@ -58,12 +58,20 @@ service Query {
     option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}";
   }
 
-  // UnrelayedPackets returns all the unrelayed IBC packets associated with a
+  // UnreceivedPackets returns all the unrelayed IBC packets associated with a
   // channel and sequences.
-  rpc UnrelayedPackets(QueryUnrelayedPacketsRequest) returns (QueryUnrelayedPacketsResponse) {
+  rpc UnreceivedPackets(QueryUnreceivedPacketsRequest) returns (QueryUnreceivedPacketsResponse) {
     option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/"
-                                   "{packet_commitment_sequences}/packet_acks/{acknowledgements}/unrelayed_packets";
+                                   "{packet_commitment_sequences}/unrelayed_packets";
   }
+
+  // UnreceivedAcks returns all the unrelayed IBC acknowledgements associated with a
+  // channel and sequences.
+  rpc UnreceivedAcks(QueryUnreceivedAcksRequest) returns (QueryUnreceivedAcksResponse) {
+    option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/acks/"
+                                   "{packet_ack_sequences}/unrelayed_acks";
+  }
+
 
   // NextSequenceReceive returns the next receive sequence for a given channel.
   rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
@@ -250,24 +258,41 @@ message QueryPacketAcknowledgementResponse {
   ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
-// QueryUnrelayedPacketsRequest is the request type for the
-// Query/UnrelayedPackets RPC method
-message QueryUnrelayedPacketsRequest {
+// QueryUnreceivedPacketsRequest is the request type for the
+// Query/UnreceivedPackets RPC method
+message QueryUnreceivedPacketsRequest {
   // port unique identifier
   string port_id = 1;
   // channel unique identifier
   string channel_id = 2;
   // list of packet sequences
   repeated uint64 packet_commitment_sequences = 3;
-  // flag indicating if the return value is packet commitments or
-  // acknowledgements
-  bool acknowledgements = 4;
 }
 
-// QueryUnrelayedPacketsResponse is the request type for the
-// Query/UnrelayedPacketCommitments RPC method
-message QueryUnrelayedPacketsResponse {
-  // list of unrelayed packet sequences
+// QueryUnreceivedPacketsResponse is the response type for the
+// Query/UnreceivedPacketCommitments RPC method
+message QueryUnreceivedPacketsResponse {
+  // list of unreceived packet sequences
+  repeated uint64 sequences = 1;
+  // query block height
+  ibc.client.Height height = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryUnreceivedAcksRequest is the request type for the
+// Query/UnreceivedAcks RPC method
+message QueryUnreceivedAcksRequest {
+  // port unique identifier
+  string port_id = 1;
+  // channel unique identifier
+  string channel_id = 2;
+  // list of acknowledgement sequences
+  repeated uint64 packet_ack_sequences = 3;
+}
+
+// QueryUnreceivedAcksResponse is the response type for the
+// Query/UnreceivedAcks RPC method
+message QueryUnreceivedAcksResponse {
+  // list of unreceived acknowledgement sequences
   repeated uint64 sequences = 1;
   // query block height
   ibc.client.Height height = 2 [(gogoproto.nullable) = false];

@@ -67,7 +67,7 @@ func (q Keeper) DenomTraces(c context.Context, req *types.QueryDenomTracesReques
 	}
 
 	return &types.QueryDenomTracesResponse{
-		DenomTraces: traces,
+		DenomTraces: traces.Sort(),
 		Pagination:  pageRes,
 	}, nil
 }

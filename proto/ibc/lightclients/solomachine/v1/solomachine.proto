@@ -28,7 +28,7 @@ message ClientState {
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
   // public key of the solo machine
-  cosmos.base.crypto.v1beta1.PublicKey public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+   google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
   // diversifier allows the same public key to be re-used across different solo machine clients
   // (potentially on different chains) without being considered misbehaviour.
   string diversifier = 2;
@@ -42,7 +42,7 @@ message Header {
   uint64                               sequence        = 1;
   uint64                               timestamp       = 2;
   bytes                                signature       = 3;
-  cosmos.base.crypto.v1beta1.PublicKey new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  google.protobuf.Any new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
   string                               new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }
 
@@ -89,7 +89,7 @@ message HeaderData {
   option (gogoproto.goproto_getters) = false;
 
   // header public key
-  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  google.protobuf.Any new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
   // header diversifier
   string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }

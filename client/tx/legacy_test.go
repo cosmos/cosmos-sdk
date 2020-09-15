@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -60,7 +59,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupSuite() {
 	encCfg := simapp.MakeEncodingConfig()
 	s.encCfg = encCfg
-	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
+	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
 	s.aminoCfg = types3.StdTxConfig{Cdc: encCfg.Amino}
 }
 

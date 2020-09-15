@@ -13,7 +13,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -103,7 +103,7 @@ message AuthInfo {
 message SignerInfo {
     // The public key is optional for accounts that already exist in state. If unset, the
     // verifier can use the required signer address for this position and lookup the public key.
-    PublicKey public_key = 1;
+    google.protobuf.Any public_key = 1;
     // ModeInfo describes the signing mode of the signer and is a nested
     // structure to support nested multisig pubkey's
     ModeInfo mode_info = 2;

@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.tx.signing.v1beta1;
 
 import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
@@ -33,43 +34,43 @@ message SignatureDescriptors {
 // signature including the public key of the signer, signing modes and the signature
 // itself. It is primarily used for coordinating signatures between clients.
 message SignatureDescriptor {
-  // public_key is the public key of the signer
-  cosmos.base.crypto.v1beta1.PublicKey public_key = 1;
+    // public_key is the public key of the signer
+    google.protobuf.Any public_key = 1;
 
-  Data data = 2;
+    Data data = 2;
 
-  // sequence is the sequence of the account, which describes the
-  // number of committed transactions signed by a given address. It is used to prevent
-  // replay attacks.
-  uint64 sequence = 3;
+    // sequence is the sequence of the account, which describes the
+    // number of committed transactions signed by a given address. It is used to prevent
+    // replay attacks.
+    uint64 sequence = 3;
 
-  // Data represents signature data
-  message Data {
-    // sum is the oneof that specifies whether this represents single or multi-signature data
-    oneof sum {
-      // single represents a single signer
-      Single single = 1;
+    // Data represents signature data
+    message Data {
+        // sum is the oneof that specifies whether this represents single or multi-signature data
+        oneof sum {
+            // single represents a single signer
+            Single single = 1;
 
-      // multi represents a multisig signer
-      Multi multi = 2;
+            // multi represents a multisig signer
+            Multi multi = 2;
+        }
+
+        // Single is the signature data for a single signer
+        message Single {
+            // mode is the signing mode of the single signer
+            SignMode mode = 1;
+
+            // signature is the raw signature bytes
+            bytes signature = 2;
+        }
+
+        // Multi is the signature data for a multisig public key
+        message Multi {
+            // bitarray specifies which keys within the multisig are signing
+            cosmos.base.crypto.v1beta1.CompactBitArray bitarray = 1;
+
+            // signatures is the signatures of the multi-signature
+            repeated Data signatures  = 2;
+        }
     }
-
-    // Single is the signature data for a single signer
-    message Single {
-      // mode is the signing mode of the single signer
-      SignMode mode = 1;
-
-      // signature is the raw signature bytes
-      bytes signature = 2;
-    }
-
-    // Multi is the signature data for a multisig public key
-    message Multi {
-      // bitarray specifies which keys within the multisig are signing
-      cosmos.base.crypto.v1beta1.CompactBitArray bitarray = 1;
-
-      // signatures is the signatures of the multi-signature
-      repeated Data signatures = 2;
-    }
-  }
 }

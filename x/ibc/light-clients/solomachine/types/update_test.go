@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
@@ -70,7 +70,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				cs := suite.solomachine.ClientState()
 				h := suite.solomachine.CreateHeader()
 
-				publicKey, err := std.DefaultPublicKeyCodec{}.Encode(suite.solomachine.PublicKey)
+				publicKey, err := tx.PubKeyToAny(suite.solomachine.PublicKey)
 				suite.NoError(err)
 
 				data := &types.HeaderData{

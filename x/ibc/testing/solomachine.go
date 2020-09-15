@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -73,7 +72,7 @@ func (solo *Solomachine) GetHeight() exported.Height {
 // necessary signature to construct a valid solo machine header.
 func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
-	newPrivKey := ed25519.GenPrivKey()
+	newPrivKey := secp256k1.GenPrivKey()
 
 	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)

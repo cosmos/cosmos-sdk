@@ -98,7 +98,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%q must be of type %s: %s", args[1], keyring.TypeMulti, multisigInfo.GetType())
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoMultisigThresholdPubKey)
+		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())

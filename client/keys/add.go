@@ -174,7 +174,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 				})
 			}
 
-			pk := multisig.NewLegacyAminoMultisigThresholdPubKey(multisigThreshold, pks)
+			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 			if _, err := kb.SaveMultisig(name, &pk); err != nil {
 				return err
 			}

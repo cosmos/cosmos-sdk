@@ -19,7 +19,7 @@ import (
 
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
-	pk := multisig.NewLegacyAminoMultisigThresholdPubKey(
+	pk := multisig.NewLegacyAminoPubKey(
 		1,
 		[]crypto.PubKey{tmpKey1.PubKey()},
 	)

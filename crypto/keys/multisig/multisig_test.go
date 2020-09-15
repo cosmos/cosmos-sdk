@@ -102,7 +102,7 @@ func TestVerifyMultisignature(t *testing.T) {
 			"wrong size for sig bit array",
 			func() {
 				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
-				anyPubKeys, err := keys.packPubKeys(pubKeys)
+				anyPubKeys, err := packPubKeys(pubKeys)
 				require.NoError(t, err)
 				pk = &LegacyAminoPubKey{Threshold: 3, PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(1)
@@ -115,7 +115,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				k := 2
 				signingIndices := []int{0, 3, 1}
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
-				anyPubKeys, err := keys.packPubKeys(pubKeys)
+				anyPubKeys, err := packPubKeys(pubKeys)
 				require.NoError(t, err)
 				pk = &LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
 				sig = multisig.NewMultisig(len(pubKeys))
@@ -198,14 +198,14 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		anyNestedPks, err := keys.packPubKeys(nestedPks)
+		anyNestedPks, err := packPubKeys(nestedPks)
 		if err != nil {
 			return nil, nil, err
 		}
 		pubKeys[i] = &LegacyAminoPubKey{Threshold: 5, PubKeys: anyNestedPks}
 		bitArray.SetIndex(i, true)
 	}
-	anyPubKeys, err := keys.packPubKeys(pubKeys)
+	anyPubKeys, err := packPubKeys(pubKeys)
 	if err != nil {
 		return nil, nil, err
 	}

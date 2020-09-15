@@ -192,7 +192,7 @@ type multiInfo struct {
 
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(*multisig.LegacyAminoMultisigThresholdPubKey)
+	multiPK := pub.(*multisig.LegacyAminoPubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
 	for i, pk := range multiPK.GetPubKeys() {
@@ -203,7 +203,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: uint(multiPK.K),
+		Threshold: uint(multiPK.Threshold),
 		PubKeys:   pubKeys,
 	}
 }
@@ -240,7 +240,7 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	multiPK := i.PubKey.(*multisig.LegacyAminoMultisigThresholdPubKey)
+	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
 	err := codectypes.UnpackInterfaces(multiPK, unpacker)
 	if err != nil {
 		return err

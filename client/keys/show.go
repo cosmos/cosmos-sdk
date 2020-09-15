@@ -83,7 +83,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multikey := multisig.NewLegacyAminoMultisigThresholdPubKey(multisigThreshold, pks)
+		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 		info = keyring.NewMultiInfo(defaultMultiSigKeyName, &multikey)
 	}
 

@@ -390,7 +390,7 @@ func TestInMemoryLanguage(t *testing.T) {
 func TestInMemoryCreateMultisig(t *testing.T) {
 	kb, err := New("keybasename", "memory", "", nil)
 	require.NoError(t, err)
-	multi := multisig.NewLegacyAminoMultisigThresholdPubKey(
+	multi := multisig.NewLegacyAminoPubKey(
 		1, []tmcrypto.PubKey{
 			secp256k1.GenPrivKey().PubKey(),
 		},
@@ -981,11 +981,11 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	require.NoError(t, err)
 
 	key := "multi"
-	pub := multisig.NewLegacyAminoMultisigThresholdPubKey(
+	pub := multisig.NewLegacyAminoPubKey(
 		2,
 		[]tmcrypto.PubKey{
-			&secp256k1.PubKey{Key: mnemonic1.GetPubKey()},
-			&secp256k1.PubKey{Key: mnemonic2.GetPubKey()},
+			&secp256k1.PubKey{Key: mnemonic1.GetPubKey().Bytes()},
+			&secp256k1.PubKey{Key: mnemonic2.GetPubKey().Bytes()},
 		},
 	)
 

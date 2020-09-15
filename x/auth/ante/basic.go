@@ -136,7 +136,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
 			// number of signers.
-			if _, ok := pubkey.(*multisig.LegacyAminoMultisigThresholdPubKey); ok {
+			if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
 				cost *= params.TxSigLimit
 			}
 

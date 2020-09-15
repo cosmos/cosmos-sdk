@@ -17,10 +17,11 @@ import (
 var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 var _ multisig.PubKey = &LegacyAminoPubKey{}
+var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 
-// NewLegacyAminoMultisigThresholdPubKey returns a new LegacyAminoMultisigThresholdPubKey.
+// NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoMultisigThresholdPubKey(k int, pubKeys []tmcrypto.PubKey) LegacyAminoMultisigThresholdPubKey {
+func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) LegacyAminoPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -31,7 +32,7 @@ func NewLegacyAminoMultisigThresholdPubKey(k int, pubKeys []tmcrypto.PubKey) Leg
 	if err != nil {
 		panic(err)
 	}
-	return LegacyAminoMultisigThresholdPubKey{K: uint32(k), PubKeys: anyPubKeys}
+	return LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
 }
 
 // Address implements crypto.PubKey Address method
@@ -145,7 +146,7 @@ func (m *LegacyAminoPubKey) Type() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m *LegacyAminoMultisigThresholdPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
 		var pk crypto.PubKey
 		err := unpacker.UnpackAny(any, &pk)

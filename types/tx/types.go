@@ -9,12 +9,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
-
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}
+var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 var _ sdk.Tx = &Tx{}
 
 // GetMsgs implements the GetMsgs method on sdk.Tx.

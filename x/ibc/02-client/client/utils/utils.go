@@ -115,7 +115,6 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	// TODO: retrieve epoch-number from chain-id
 	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
 }
 
@@ -181,7 +180,7 @@ func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusSta
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	page := 0
+	page := 1
 	count := 10_000
 
 	nextHeight := height + 1

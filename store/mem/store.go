@@ -49,4 +49,9 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 func (s *Store) Commit() (id types.CommitID) { return }
 
 func (s *Store) SetPruning(pruning types.PruningOptions) {}
-func (s Store) LastCommitID() (id types.CommitID)        { return }
+
+// GetPruning is a no-op as pruning options cannot be directly set on this store.
+// They must be set on the root commit multi-store.
+func (s *Store) GetPruning() types.PruningOptions { return types.PruningOptions{} }
+
+func (s Store) LastCommitID() (id types.CommitID) { return }

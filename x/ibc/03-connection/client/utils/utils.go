@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -42,6 +43,11 @@ func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if connection exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -78,6 +84,11 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if connection paths exist
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, clientID)
 	}
 
 	var paths []string
@@ -142,19 +153,13 @@ func QueryConnectionConsensusState(
 		return nil, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
-		return nil, err
-	}
-
 	if prove {
-		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, height)
 		if err != nil {
 			return nil, err
 		}
 
-		consHeight := consensusState.GetHeight().(clienttypes.Height)
-		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consHeight, consensusStateRes.Proof, consensusStateRes.ProofHeight)
+		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, height, consensusStateRes.Proof, consensusStateRes.ProofHeight)
 	}
 
 	return res, nil

@@ -170,6 +170,11 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 	}
 }
 
+// OnlyLegacyAminoSigners checks SignatureData to see if all
+// signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
+// then the corresponding SignatureV2 struct will not have account sequence
+// explicitly set, and we should skip the explicit verification of sig.Sequence
+// in the SigVerificationDecorator's AnteHanlde function.
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
@@ -226,8 +231,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		// When using Amino StdSignatures, we actually don't have the Sequence in
 		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
 		// cannot check sequence directly, and must do it via signature
-		// verification.
-		if !OnlyLegacyAminoSigners(sig.Data) {
+		// verification (in the VerifySignature call below).
+		onlyAminoSigners := OnlyLegacyAminoSigners(sig.Data)
+		if !onlyAminoSigners {
 			if sig.Sequence != acc.GetSequence() {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrWrongSequence,
@@ -253,9 +259,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
-				if OnlyLegacyAminoSigners(sig.Data) {
+				if onlyAminoSigners {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
-					// and therefore communicate sequence number as a potential cause of error
+					// and therefore communicate sequence number as a potential cause of error.
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
 				} else {
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)

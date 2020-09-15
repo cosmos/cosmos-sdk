@@ -1,0 +1,11 @@
+App: simd
+Version: goz-phase-1-630-gb59b68153
+Commit: b59b681531d8cae9368a67c53bc89fd322e250dc
+Files:
+ f97cf4b5bdbfdeeeba0480323d445459  simd-goz-phase-1-630-gb59b68153-linux-amd64
+ c20e410deae38cebc4653f5cc6e7b119  simd-goz-phase-1-630-gb59b68153-linux-arm64
+ 2bb63e6871d8d82c52379534a63ca9f4  simd-goz-phase-1-630-gb59b68153.tar.gz
+Checksums-Sha256:
+ b53350c6df6f50072cb03ce45f120ea2e7d15c61165e92eb95ec35ab90c798ac  simd-goz-phase-1-630-gb59b68153-linux-amd64
+ aabebee725a9d7a9799de324cb451b2fe275c231795dcc284fca8bbd2744f76a  simd-goz-phase-1-630-gb59b68153-linux-arm64
+ 2dd4c38ca785f7e83110f35a9c99de27207163d446694ce0b3beedf7860ff52b  simd-goz-phase-1-630-gb59b68153.tar.gz

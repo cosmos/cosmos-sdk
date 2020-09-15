@@ -170,19 +170,19 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 	}
 }
 
-func ContainsSignModeDirect(sigData signing.SignatureData) bool {
+func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_DIRECT
+		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case *signing.MultiSignatureData:
 		for _, s := range v.Signatures {
-			if ContainsSignModeDirect(s) {
-				return true
+			if !OnlyLegacyAminoSigners(s) {
+				return false
 			}
 		}
-		return false
+		return true
 	default:
-		panic("Type Mismatch")
+		return false
 	}
 }
 
@@ -227,8 +227,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		// the SignatureV2 struct (it's only in the SignDoc). In this case, we
 		// cannot check sequence directly, and must do it via signature
 		// verification.
-		// if ContainsSignModeDirect(sig.Data) {
-		if !sig.SkipSequenceCheck {
+		if !OnlyLegacyAminoSigners(sig.Data) {
 			if sig.Sequence != acc.GetSequence() {
 				return ctx, sdkerrors.Wrapf(
 					sdkerrors.ErrWrongSequence,
@@ -254,7 +253,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
 			if err != nil {
 				var errMsg string
-				if sig.SkipSequenceCheck {
+				if OnlyLegacyAminoSigners(sig.Data) {
+					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+					// and therefore communicate sequence number as a potential cause of error
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
 				} else {
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)

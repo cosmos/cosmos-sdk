@@ -3,9 +3,9 @@ package rest_test
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,44 +107,67 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	s.Require().NotEmpty(txRes.TxHash)
 }
 
-func (s *IntegrationTestSuite) TestMultipleSignedBroadcastTxRequests() {
-
-	// Set up TxConfig.
-	aminoCdc := codec.NewLegacyAmino()
-	// We're using TestMsg amino encoding in some tests, so register it here.
-	txConfig := authtypes.StdTxConfig{Cdc: aminoCdc}
-	txBuilder := txConfig.NewTxBuilder()
+func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 
 	val0 := s.network.Validators[0]
-	val1 := s.network.Validators[0]
-	msg := types.MsgSend{FromAddress: val0.Address, ToAddress: val1.Address, Amount: sdk.Coins{sdk.NewInt64Coin("foo", 100)}}
+	txConfig := authtypes.StdTxConfig{Cdc: s.cfg.LegacyAmino}
 
-	feeAmount := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	txBuilder.SetMsgs(&msg)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
+	// First test transaction from validator should have sequence=1 (non-genesis tx)
+	testCases := []struct {
+		desc     string
+		sequence uint64
+	}{
+		{
+			"First tx",
+			1,
+		},
+		{
+			"Second tx",
+			2,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 
-	txFactory := tx.Factory{}
-	txFactory = txFactory.
-		WithChainID(val0.ClientCtx.ChainID).
-		WithKeybase(val0.ClientCtx.Keyring).
-		WithTxConfig(val0.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			msg := &types.MsgSend{
+				val0.Address,
+				val0.Address,
+				sdk.Coins{sdk.NewInt64Coin("foo", 100)},
+			}
 
-	err := tx.Sign(txFactory, val0.Moniker, txBuilder)
-	s.Require().NoError(err)
+			// prepare txBuilder with msg
+			txBuilder := txConfig.NewTxBuilder()
+			feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+			gasLimit := testdata.NewTestGasLimit()
+			txBuilder.SetMsgs(msg)
+			txBuilder.SetFeeAmount(feeAmount)
+			txBuilder.SetGasLimit(gasLimit)
 
-	stdTx := txBuilder.GetTx().(authtypes.StdTx)
+			// setup txFactory
+			txFactory := tx.Factory{}
+			txFactory = txFactory.
+				WithChainID(val0.ClientCtx.ChainID).
+				WithKeybase(val0.ClientCtx.Keyring).
+				WithTxConfig(txConfig).
+				WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
+				WithSequence(tc.sequence)
 
-	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
-	res, err := s.broadcastReq(stdTx, "sync")
-	s.Require().NoError(err)
-	var txRes sdk.TxResponse
-	// NOTE: this uses amino explicitly, don't migrate it!
-	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
-	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
-	s.Require().Equal(txRes, sdk.TxResponse{})
+			// sign Tx (offline mode so we can manually set sequence number)
+			err := authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, true)
+			s.Require().NoError(err)
+
+			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
+			stdTx := txBuilder.GetTx().(authtypes.StdTx)
+			res, err := s.broadcastReq(stdTx, "sync")
+			s.Require().NoError(err)
+
+			var txRes sdk.TxResponse
+			// NOTE: this uses amino explicitly, don't migrate it!
+			s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+			// we check for a exitCode=0, indicating a successful broadcast
+			s.Require().Equal(uint32(0), txRes.Code)
+		})
+	}
 
 }
 

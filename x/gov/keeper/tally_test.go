@@ -297,7 +297,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
 	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)

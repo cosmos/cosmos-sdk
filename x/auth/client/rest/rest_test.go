@@ -114,16 +114,24 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 
 	// First test transaction from validator should have sequence=1 (non-genesis tx)
 	testCases := []struct {
-		desc     string
-		sequence uint64
+		desc      string
+		sequence  uint64
+		shouldErr bool
 	}{
 		{
-			"First tx",
+			"First tx (correct sequence)",
 			1,
+			false,
 		},
 		{
-			"Second tx",
+			"Second tx (correct sequence)",
 			2,
+			false,
+		},
+		{
+			"Third tx (incorrect sequence)",
+			9,
+			true,
 		},
 	}
 	for _, tc := range testCases {
@@ -165,7 +173,19 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 			// NOTE: this uses amino explicitly, don't migrate it!
 			s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
 			// we check for a exitCode=0, indicating a successful broadcast
-			s.Require().Equal(uint32(0), txRes.Code)
+			if tc.shouldErr {
+				var sigVerifyFailureCode uint32 = 4
+				s.Require().Equal(sigVerifyFailureCode, txRes.Code,
+					"Testcase '%s': Expected signature verification failure {Code: %d} from TxResponse. "+
+						"Found {Code: %d, RawLog: '%v'}",
+					tc.desc, sigVerifyFailureCode, txRes.Code, txRes.RawLog,
+				)
+			} else {
+				s.Require().Equal(uint32(0), txRes.Code,
+					"Testcase '%s': TxResponse errored unexpectedly. Err: {Code: %d, RawLog: '%v'}",
+					tc.desc, txRes.Code, txRes.RawLog,
+				)
+			}
 		})
 	}
 

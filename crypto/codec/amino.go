@@ -17,12 +17,6 @@ func init() {
 	RegisterCrypto(amino)
 }
 
-// TODO: Figure out API for others to either add their own pubkey types, or
-// to make verify / marshal accept a Cdc.
-const (
-	PubKeyAminoRoute = "tendermint/PubKeyMultisigThreshold"
-)
-
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
 func RegisterCrypto(cdc *codec.LegacyAmino) {
@@ -34,7 +28,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
-		PubKeyAminoRoute, nil)
+		kmultisig.PubKeyAminoRoute, nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PrivKey{},

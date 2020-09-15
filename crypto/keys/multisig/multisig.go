@@ -4,20 +4,19 @@ import (
 	fmt "fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
+	proto "github.com/gogo/protobuf/proto"
 
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
-
-var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 var _ multisigtypes.PubKey = &LegacyAminoPubKey{}
 var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+
+var _ codec.AminoMarshaler = &LegacyAminoPubKey{}
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
@@ -42,7 +41,7 @@ func (m *LegacyAminoPubKey) Address() tmcrypto.Address {
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey
 func (m *LegacyAminoPubKey) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(m)
+	return AminoCdc.MustMarshalBinaryBare(m)
 }
 
 // VerifyMultisignature implements the multisigtypes.PubKey VerifyMultisignature method
@@ -154,6 +153,72 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// pubKeyMultisigThreshold represents the old PubKeyMultisigThreshold. Now, we
+// convert the new one (LegacyAminoPubKey) to this one, and marshal this one.
+type pubKeyMultisigThreshold struct {
+	K       uint            `json:"threshold"`
+	PubKeys []crypto.PubKey `json:"pubkeys"`
+}
+
+func toProto(old pubKeyMultisigThreshold) LegacyAminoPubKey {
+	anys := make([]*types.Any, len(old.PubKeys))
+	for i, pk := range old.PubKeys {
+		anys[i] = types.UnsafePackAny(pk)
+
+	}
+	return LegacyAminoPubKey{
+		Threshold: uint32(old.K),
+		PubKeys:   anys,
+	}
+}
+
+func fromProto(pubKey LegacyAminoPubKey) pubKeyMultisigThreshold {
+	pks := make([]crypto.PubKey, len(pubKey.PubKeys))
+	for i, any := range pubKey.PubKeys {
+		pks[i] = any.GetCachedValue().(crypto.PubKey)
+	}
+	return pubKeyMultisigThreshold{
+		K:       uint(pubKey.Threshold),
+		PubKeys: pks,
+	}
+}
+
+// MarshalAmino overrides Amino binary marshalling.
+func (m LegacyAminoPubKey) MarshalAmino() ([]byte, error) {
+	old := fromProto(m)
+	return AminoCdc.MustMarshalBinaryBare(old), nil
+}
+
+// UnmarshalAmino overrides Amino binary marshalling.
+func (m *LegacyAminoPubKey) UnmarshalAmino(bz []byte) error {
+	old := pubKeyMultisigThreshold{}
+	err := AminoCdc.UnmarshalBinaryBare(bz, &old)
+	if err != nil {
+		return err
+	}
+
+	*m = toProto(old)
+	return nil
+}
+
+// MarshalAminoJSON overrides Amino binary marshalling.
+func (m LegacyAminoPubKey) MarshalAminoJSON() ([]byte, error) {
+	old := fromProto(m)
+	return AminoCdc.MustMarshalJSON(old), nil
+}
+
+// UnmarshalAminoJSON overrides Amino binary marshalling.
+func (m *LegacyAminoPubKey) UnmarshalAminoJSON(bz []byte) error {
+	old := pubKeyMultisigThreshold{}
+	err := AminoCdc.UnmarshalJSON(bz, &old)
+	if err != nil {
+		return err
+	}
+
+	*m = toProto(old)
 	return nil
 }
 

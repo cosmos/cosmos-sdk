@@ -71,45 +71,45 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now try single key
-	// cmd.SetArgs([]string{
-	// 	fakeKeyName1,
-	// 	fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-	// 	fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	// 	fmt.Sprintf("--%s=", FlagBechPrefix),
-	// })
-	// require.EqualError(t, cmd.Execute(), "invalid Bech32 prefix encoding provided: ")
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=", FlagBechPrefix),
+	})
+	require.EqualError(t, cmd.Execute(), "invalid Bech32 prefix encoding provided: ")
 
-	// cmd.SetArgs([]string{
-	// 	fakeKeyName1,
-	// 	fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-	// 	fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	// 	fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
-	// })
+	cmd.SetArgs([]string{
+		fakeKeyName1,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+	})
 
-	// // try fetch by name
-	// require.NoError(t, cmd.Execute())
+	// try fetch by name
+	require.NoError(t, cmd.Execute())
 
-	// // try fetch by addr
-	// info, err := kb.Key(fakeKeyName1)
-	// cmd.SetArgs([]string{
-	// 	info.GetAddress().String(),
-	// 	fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-	// 	fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	// 	fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
-	// })
+	// try fetch by addr
+	info, err := kb.Key(fakeKeyName1)
+	cmd.SetArgs([]string{
+		info.GetAddress().String(),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+	})
 
-	// require.NoError(t, err)
-	// require.NoError(t, cmd.Execute())
+	require.NoError(t, err)
+	require.NoError(t, cmd.Execute())
 
-	// // Now try multisig key - set bech to acc
-	// cmd.SetArgs([]string{
-	// 	fakeKeyName1, fakeKeyName2,
-	// 	fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-	// 	fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	// 	fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
-	// 	fmt.Sprintf("--%s=0", flagMultiSigThreshold),
-	// })
-	// require.EqualError(t, cmd.Execute(), "threshold must be a positive integer")
+	// Now try multisig key - set bech to acc
+	cmd.SetArgs([]string{
+		fakeKeyName1, fakeKeyName2,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=0", flagMultiSigThreshold),
+	})
+	require.EqualError(t, cmd.Execute(), "threshold must be a positive integer")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,

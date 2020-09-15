@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	testChainID = "gaiahub"
+	testChainID       = "gaiahub-0"
+	testChainIDEpoch1 = "gaiahub-1"
 
 	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
@@ -40,6 +41,7 @@ const (
 )
 
 var testClientHeight = types.NewHeight(0, 5)
+var testClientHeightEpoch1 = types.NewHeight(1, 5)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -170,6 +172,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		{
 			"invalid client height",
 			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.NewHeight(0, testClientHeight.EpochHeight+10), commitmenttypes.GetSDKSpecs(), false, false),
+			false,
+		},
+		{
+			"invalid client epoch",
+			ibctmtypes.NewClientState(testChainIDEpoch1, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightEpoch1, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{

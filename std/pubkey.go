@@ -100,7 +100,7 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 			resKeys[i] = dk
 		}
 		return &types.PublicKey{Sum: &types.PublicKey_Multisig{Multisig: &types.PubKeyMultisigThreshold{
-			K:       uint32(key.Threshold),
+			K:       key.Threshold,
 			PubKeys: resKeys,
 		}}}, nil
 	default:

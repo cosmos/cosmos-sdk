@@ -74,7 +74,7 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
 	newPrivKey := secp256k1.GenPrivKey()
 
-	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
+	publicKey, err := tx.PubKeyToAny(newPrivKey.PubKey())
 	require.NoError(solo.t, err)
 
 	data := &solomachinetypes.HeaderData{

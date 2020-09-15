@@ -25,7 +25,7 @@ func (suite *TypesTestSuite) TestPackClientState() {
 	}{
 		{
 			"solo machine client",
-			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").ClientState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ClientState(),
 			true,
 		},
 		{
@@ -77,12 +77,12 @@ func (suite *TypesTestSuite) TestPackConsensusState() {
 	}{
 		{
 			"solo machine consensus",
-			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").ConsensusState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ConsensusState(),
 			true,
 		},
 		{
 			"tendermint consensus",
-			suite.chain.LastHeader.ConsensusState(),
+			suite.chainA.LastHeader.ConsensusState(),
 			true,
 		},
 		{
@@ -123,12 +123,12 @@ func (suite *TypesTestSuite) TestPackHeader() {
 	}{
 		{
 			"solo machine header",
-			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").CreateHeader(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateHeader(),
 			true,
 		},
 		{
 			"tendermint header",
-			suite.chain.LastHeader,
+			suite.chainA.LastHeader,
 			true,
 		},
 		{
@@ -170,12 +170,12 @@ func (suite *TypesTestSuite) TestPackMisbehaviour() {
 	}{
 		{
 			"solo machine misbehaviour",
-			ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, "solomachine", "").CreateMisbehaviour(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateMisbehaviour(),
 			true,
 		},
 		{
 			"tendermint misbehaviour",
-			ibctmtypes.NewMisbehaviour("tendermint", suite.chain.ChainID, suite.chain.LastHeader, suite.chain.LastHeader),
+			ibctmtypes.NewMisbehaviour("tendermint", suite.chainA.ChainID, suite.chainA.LastHeader, suite.chainA.LastHeader),
 			true,
 		},
 		{

@@ -27,7 +27,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 		k.SetDelegatorWithdrawAddr(ctx, delegatorAddress, withdrawAddress)
 	}
 
-	k.SetPreviousProposerConsAddr(ctx, sdk.ConsAddress(data.PreviousProposer))
+	var previousProposer sdk.ConsAddress
+	if data.PreviousProposer != "" {
+		var err error
+		previousProposer, err = sdk.ConsAddressFromBech32(data.PreviousProposer)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	k.SetPreviousProposerConsAddr(ctx, previousProposer)
 
 	for _, rew := range data.OutstandingRewards {
 		valAddr, err := sdk.ValAddressFromBech32(rew.ValidatorAddress)

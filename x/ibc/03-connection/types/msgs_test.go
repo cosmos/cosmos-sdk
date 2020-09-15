@@ -112,7 +112,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 
 	// Pack consensus state into any to test unpacking error
 	consState := ibctmtypes.NewConsensusState(
-		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), clientHeight, []byte("nextValsHash"),
+		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), []byte("nextValsHash"),
 	)
 	invalidAny := clienttypes.MustPackConsensusState(consState)
 	counterparty := types.NewCounterparty("connectiontotest", "clienttotest", prefix)
@@ -184,7 +184,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	// Pack consensus state into any to test unpacking error
 	consState := ibctmtypes.NewConsensusState(
-		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), clientHeight, []byte("nextValsHash"),
+		time.Now(), commitmenttypes.NewMerkleRoot([]byte("root")), []byte("nextValsHash"),
 	)
 	invalidAny := clienttypes.MustPackConsensusState(consState)
 

@@ -45,18 +45,6 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 			suite.Require().NotNil(connA)
 			suite.Require().NotNil(connB)
 		}, false},
-		{"connection is UNINITIALIZED", func() {
-			// any non-nil values of connA and connB are acceptable
-			suite.Require().NotNil(connA)
-			suite.Require().NotNil(connB)
-
-			// set connection as UNINITIALIZED
-			counterparty := connectiontypes.NewCounterparty(clientIDB, connIDA, suite.chainB.GetPrefix())
-			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, counterparty, []string{ibctesting.ConnectionVersion})
-			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connA.ID, connection)
-
-			portCap = nil
-		}, false},
 		{"capability is incorrect", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			features = []string{"ORDER_ORDERED", "ORDER_UNORDERED"}

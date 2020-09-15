@@ -1,3 +1,5 @@
+// +build norace
+
 package keeper_test
 
 import (

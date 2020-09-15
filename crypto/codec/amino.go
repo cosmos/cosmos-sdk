@@ -28,10 +28,13 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		sr25519.PubKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
+	// TODO Follow-up in https://github.com/cosmos/cosmos-sdk/pull/7284
+	// Remove `multisig.PubKeyMultisigThreshold{}`, and register instead
+	// kmultisig.LegacyAminoPubKey{} on `PubKeyAminoRoute`.
 	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
 		multisig.PubKeyAminoRoute, nil)
-	cdc.RegisterConcrete(&kmultisig.LegacyAminoMultisigThresholdPubKey{},
-		"cosmos-sdk/LegacyAminoMultisigThresholdPubKey", nil)
+	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
+		"cosmos-sdk/LegacyAminoPubKey", nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PrivKey{},

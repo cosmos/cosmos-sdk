@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crypto.secp256k1.v1;
+package cosmos.crypto.secp256k1;
 
 import "gogoproto/gogo.proto";
 
@@ -16,7 +16,7 @@ message PubKey {
     bytes key = 1;
 }
 
-// PrivKey defines a secp256k1 private key
+// PrivKey defines a secp256k1 private key.
 message PrivKey {
     bytes key = 1;
 }

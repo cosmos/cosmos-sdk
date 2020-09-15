@@ -23,7 +23,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "44'/118'/5'/0/1", path.String())
 	assert.Equal(t,
-		"cosmospub1addwnpc2yyp4445ppfrlqu648les6t7v0cxnk8qtwjmp5x42ykprgsphz50pgws4pntz5",
+		"cosmospub1addwnpepqddddqg2glc8x4fl7vxjlnr7p5a3czm5kcdp4239sg6yqdc4rc2r5wmxv8p",
 		sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, lInfo.GetPubKey()))
 
 	// Serialize and restore

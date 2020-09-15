@@ -83,7 +83,6 @@ func TestChunkWriter(t *testing.T) {
 }
 
 func TestChunkReader(t *testing.T) {
-
 	ch := makeChunks([][]byte{
 		{1, 2, 3},
 		{4},
@@ -150,9 +149,9 @@ func TestChunkReader(t *testing.T) {
 	close(pch)
 
 	go func() {
-		chunkReader = snapshots.NewChunkReader(pch)
-		buf = []byte{0, 0, 0, 0}
-		_, err = chunkReader.Read(buf)
+		chunkReader := snapshots.NewChunkReader(pch)
+		buf := []byte{0, 0, 0, 0}
+		_, err := chunkReader.Read(buf)
 		require.NoError(t, err)
 		assert.Equal(t, []byte{1, 2, 3, 0}, buf)
 

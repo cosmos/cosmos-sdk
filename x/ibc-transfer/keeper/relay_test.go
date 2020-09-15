@@ -318,6 +318,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 		channelA, channelB ibctesting.TestChannel
 		trace              types.DenomTrace
 		amount             sdk.Int
+		sender             string
 	)
 
 	testCases := []struct {
@@ -351,14 +352,12 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			func() {
 				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 			}, false},
-		/*
-			TODO: uncomment when zero int coins are considered invalid
-			{"mint failed",
-					func() {
-						trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
-						amount = sdk.ZeroInt()
-					}, false},
-		*/
+		{"mint failed",
+			func() {
+				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
+				amount = sdk.OneInt()
+				sender = "invalid address"
+			}, false},
 	}
 
 	for _, tc := range testCases {
@@ -370,10 +369,11 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			channelA, channelB = suite.coordinator.CreateTransferChannels(suite.chainA, suite.chainB, connA, connB, channeltypes.UNORDERED)
 			amount = sdk.NewInt(100) // must be explicitly changed
+			sender = suite.chainA.SenderAccount.GetAddress().String()
 
 			tc.malleate()
 
-			data := types.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.Uint64(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String())
+			data := types.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.Uint64(), sender, suite.chainB.SenderAccount.GetAddress().String())
 			packet := channeltypes.NewPacket(data.GetBytes(), 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, clienttypes.NewHeight(0, 100), 0)
 
 			preCoin := suite.chainA.App.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), trace.IBCDenom())

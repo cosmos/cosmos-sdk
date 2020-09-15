@@ -5,7 +5,6 @@ import (
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
@@ -88,24 +87,6 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, false},
 		{"connection not found", func() {
-			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}
-			channelB := ibctesting.TestChannel{PortID: portID, ID: channelIDB}
-			// pass channel check
-			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(
-				suite.chainA.GetContext(),
-				channelA.PortID, channelA.ID,
-				types.NewChannel(types.OPEN, types.ORDERED, types.NewCounterparty(channelB.PortID, channelB.ID), []string{connIDA}, channelA.Version),
-			)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
-			suite.chainA.CreateChannelCapability(channelA.PortID, channelA.ID)
-			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
-		}, false},
-		{"connection is UNINITIALIZED", func() {
-			// set connection as UNINITIALIZED
-			counterparty := connectiontypes.NewCounterparty(clientIDB, connIDA, suite.chainB.GetPrefix())
-			connection := connectiontypes.NewConnectionEnd(connectiontypes.UNINITIALIZED, clientIDA, counterparty, []string{ibctesting.ConnectionVersion})
-			suite.chainA.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainA.GetContext(), connIDA, connection)
-
 			channelA := ibctesting.TestChannel{PortID: portID, ID: channelIDA}
 			channelB := ibctesting.TestChannel{PortID: portID, ID: channelIDB}
 			// pass channel check

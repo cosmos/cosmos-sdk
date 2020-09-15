@@ -27,7 +27,6 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	consState := &ibctmtypes.ConsensusState{
-		Height:    height,
 		Timestamp: time.Now().UTC(),
 	}
 

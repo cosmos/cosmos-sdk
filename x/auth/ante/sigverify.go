@@ -176,7 +176,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 // signers are using SIGN_MODE_LEGACY_AMINO_JSON. If this is the case
 // then the corresponding SignatureV2 struct will not have account sequence
 // explicitly set, and we should skip the explicit verification of sig.Sequence
-// in the SigVerificationDecorator's AnteHanlde function.
+in the SigVerificationDecorator's AnteHandler function
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:

@@ -279,8 +279,8 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 
 For the reasons mentioned above ("Negative" section) we prefer to keep workarounds
 for shared data structure. Example: the aforementioned `TxRaw` is using raw bytes
-as a workaround. This frees them from a risk of wrongly implementing this
-standard on top of their favorite protobuf library.
+as a workaround. This allows them to use any valid Protobuf library without
+a need of implementing this standard (and related risks of bugs).
 
 ## References
 

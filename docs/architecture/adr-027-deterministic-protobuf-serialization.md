@@ -11,7 +11,7 @@ Proposed
 
 ## Abstract
 
-Fully deterministic structure serializaiton, which works across many languages / clients,
+Fully deterministic structure serialization, which works across many languages and clients,
 is needed for structure signature use-case. We need to be sure that whenever we serialize
 and deserialize a data structure, no matter in which supported language, the raw bytes
 will stay the same.

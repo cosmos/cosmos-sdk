@@ -136,6 +136,27 @@ func GetCompatibleEncodedVersions() []string {
 	return versions
 }
 
+// IsSupportedVersion returns true if the proposed version has a matching version
+// identifier and its entire feature set is supported or the version identifier
+// supports an empty feature set.
+func IsSupportedVersion(encodedProposedVersion string) bool {
+	proposedVersion, err := DecodeVersion(encodedProposedVersion)
+	if err != nil {
+		return false
+	}
+
+	supportedVersion, found := FindSupportedVersion(proposedVersion, GetCompatibleVersions())
+	if !found {
+		return false
+	}
+
+	if err := supportedVersion.VerifyProposedVersion(proposedVersion); err != nil {
+		return false
+	}
+
+	return true
+}
+
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.

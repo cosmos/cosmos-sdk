@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -132,7 +131,6 @@ func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 }
 
 func TestMultiSigPubKeyEquality(t *testing.T) {
-	aminoCdc := createAmino()
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
 	pubkeys := []crypto.PubKey{pubKey1, pubKey2}
@@ -148,7 +146,7 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 			"equals",
 			func() {
 				var otherPubKey kmultisig.LegacyAminoPubKey
-				aminoCdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
+				kmultisig.AminoCdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
 				other = &otherPubKey
 			},
 			true,
@@ -197,17 +195,16 @@ func TestAddress(t *testing.T) {
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
-	aminoCdc := createAmino()
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
-	ab, err := aminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other crypto.Pubkey implementations (e.g. ed25519.PubKeyMultisigThreshold),
 	// PubKeyMultisigThreshold should be deserializable into a crypto.PubKeyMultisigThreshold:
 	var pubKey crypto.PubKey
-	err = aminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey, pubKey)
@@ -263,13 +260,6 @@ func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 	//verify error is returned when multisignature value is nil
 	err = multisig.AddSignatureFromPubKey(nil, sigs[0], pkSet[0], pkSet)
 	require.Error(t, err)
-}
-
-func createAmino() *codec.LegacyAmino {
-	aminoCdc := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(aminoCdc)
-
-	return aminoCdc
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, signatures []signing.SignatureData) {

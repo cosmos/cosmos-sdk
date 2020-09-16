@@ -6,6 +6,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	proto "github.com/gogo/protobuf/proto"
@@ -143,7 +144,7 @@ func (m *LegacyAminoPubKey) Type() string {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
-		var pk tmcrypto.PubKey
+		var pk crypto.PubKey
 		err := unpacker.UnpackAny(any, &pk)
 		if err != nil {
 			return err

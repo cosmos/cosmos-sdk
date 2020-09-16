@@ -75,9 +75,8 @@ func (cs *ClientState) CheckHeaderAndUpdateState(
 ) (exported.ClientState, exported.ConsensusState, error) {
 	// use the chain ID from context since the localhost client is from the running chain (i.e self).
 	cs.ChainId = ctx.ChainID()
-	// Hardcode 0 for epoch number for now
-	// TODO: Retrieve epoch number from chain-id
-	cs.Height = clienttypes.NewHeight(0, uint64(ctx.BlockHeight()))
+	epoch := clienttypes.ParseChainID(cs.ChainId)
+	cs.Height = clienttypes.NewHeight(epoch, uint64(ctx.BlockHeight()))
 	return cs, nil, nil
 }
 

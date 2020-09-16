@@ -17,12 +17,6 @@ func (ConsensusState) ClientType() exported.ClientType {
 	return exported.SoloMachine
 }
 
-// GetHeight satisfies the ConsensusState interface
-// NOTE: this function will be deprecated.
-func (cs ConsensusState) GetHeight() exported.Height {
-	return clienttypes.Height{}
-}
-
 // GetTimestamp returns zero.
 func (cs ConsensusState) GetTimestamp() uint64 {
 	return cs.Timestamp

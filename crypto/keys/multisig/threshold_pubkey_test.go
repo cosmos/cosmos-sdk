@@ -1,18 +1,14 @@
 package multisig_test
 
 import (
-	"math/rand"
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -44,7 +40,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 		},
 	}
 	for tcIndex, tc := range cases {
-		multisigKey := multisig.NewPubKeyMultisigThreshold(tc.k, tc.pubkeys)
+		multisigKey := kmultisig.NewLegacyAminoPubKey(tc.k, tc.pubkeys)
 		multisignature := multisig.NewMultisig(len(tc.pubkeys))
 		signBytesFn := func(mode signing.SignMode) ([]byte, error) { return tc.msg, nil }
 
@@ -123,7 +119,7 @@ func TestThresholdMultisigValidCases(t *testing.T) {
 func TestThresholdMultisigDuplicateSignatures(t *testing.T) {
 	msg := []byte{1, 2, 3, 4, 5}
 	pubkeys, sigs := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	multisignature := multisig.NewMultisig(5)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
@@ -138,7 +134,7 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
 	pubkeys := []crypto.PubKey{pubKey1, pubKey2}
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	var other multisig.PubKey
 
 	testCases := []struct {
@@ -149,9 +145,9 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 		{
 			"equals",
 			func() {
-				var otherPubKey multisig.PubKeyMultisigThreshold
-				multisig.Cdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
-				other = otherPubKey
+				var otherPubKey kmultisig.LegacyAminoPubKey
+				kmultisig.AminoCdc.MustUnmarshalBinaryBare(multisigKey.Bytes(), &otherPubKey)
+				other = &otherPubKey
 			},
 			true,
 		},
@@ -162,7 +158,7 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 				copy(pubkeysCpy, pubkeys)
 				pubkeysCpy[0] = pubkeys[1]
 				pubkeysCpy[1] = pubkeys[0]
-				other = multisig.NewPubKeyMultisigThreshold(2, pubkeysCpy)
+				other = kmultisig.NewLegacyAminoPubKey(2, pubkeysCpy)
 			},
 			false,
 		},
@@ -194,21 +190,21 @@ func TestMultiSigPubKeyEquality(t *testing.T) {
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	require.Len(t, multisigKey.Address().Bytes(), 20)
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pubkeys)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
-	ab, err := multisig.Cdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other crypto.Pubkey implementations (e.g. ed25519.PubKeyMultisigThreshold),
-	// PubKeyMultisigThreshold should be deserializable into a crypto.PubKeyMultisigThreshold:
+	// LegacyAminoPubKey should be deserializable into a crypto.LegacyAminoPubKey:
 	var pubKey crypto.PubKey
-	err = multisig.Cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey, pubKey)
@@ -227,7 +223,7 @@ func TestMultiSigMigration(t *testing.T) {
 	pkSet, sigs := generatePubKeysAndSignatures(2, msg)
 	multisignature := multisig.NewMultisig(2)
 
-	multisigKey := multisig.NewPubKeyMultisigThreshold(2, pkSet)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
 	signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
 	cdc := codec.NewLegacyAmino()
@@ -270,15 +266,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubkeys []crypto.PubKey, s
 	pubkeys = make([]crypto.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
 	for i := 0; i < n; i++ {
-		var privkey crypto.PrivKey
-		switch rand.Int63() % 3 {
-		case 0:
-			privkey = ed25519.GenPrivKey()
-		case 1:
-			privkey = secp256k1.GenPrivKey()
-		case 2:
-			privkey = sr25519.GenPrivKey()
-		}
+		privkey := secp256k1.GenPrivKey()
 		pubkeys[i] = privkey.PubKey()
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
@@ -301,10 +289,10 @@ func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.
 			Signatures: nestedSigs,
 		}
 		signatures[i] = nestedSig
-		pubkeys[i] = multisig.NewPubKeyMultisigThreshold(5, nestedPks)
+		pubkeys[i] = kmultisig.NewLegacyAminoPubKey(5, nestedPks)
 		bitArray.SetIndex(i, true)
 	}
-	return multisig.NewPubKeyMultisigThreshold(n, pubkeys), &signing.MultiSignatureData{
+	return kmultisig.NewLegacyAminoPubKey(n, pubkeys), &signing.MultiSignatureData{
 		BitArray:   bitArray,
 		Signatures: signatures,
 	}

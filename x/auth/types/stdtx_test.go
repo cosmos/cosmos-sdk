@@ -13,8 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -225,7 +225,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 
 	// multisigs
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
-	multiPK := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{
+	multiPK := kmultisig.NewLegacyAminoPubKey(1, []crypto.PubKey{
 		pubKey, pubKey2,
 	})
 	dummy2 := []byte("dummySig2")

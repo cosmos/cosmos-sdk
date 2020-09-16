@@ -53,10 +53,6 @@ func (k Keeper) ChanOpenInit(
 		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return nil, connectiontypes.ErrInvalidConnectionState
-	}
-
 	if len(connectionEnd.GetVersions()) != 1 {
 		return nil, sdkerrors.Wrapf(
 			connectiontypes.ErrInvalidVersion,

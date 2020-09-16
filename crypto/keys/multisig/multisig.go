@@ -3,25 +3,20 @@ package multisig
 import (
 	fmt "fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	proto "github.com/gogo/protobuf/proto"
 )
 
-var cdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
-
-var _ multisig.PubKey = &LegacyAminoPubKey{}
+var _ multisigtypes.PubKey = &LegacyAminoPubKey{}
 var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) LegacyAminoPubKey {
+func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) *LegacyAminoPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -32,21 +27,21 @@ func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) LegacyAminoPubKey {
 	if err != nil {
 		panic(err)
 	}
-	return LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
+	return &LegacyAminoPubKey{Threshold: uint32(k), PubKeys: anyPubKeys}
 }
 
 // Address implements crypto.PubKey Address method
-func (m *LegacyAminoPubKey) Address() crypto.Address {
+func (m *LegacyAminoPubKey) Address() tmcrypto.Address {
 	return tmcrypto.AddressHash(m.Bytes())
 }
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey
 func (m *LegacyAminoPubKey) Bytes() []byte {
-	return cdc.MustMarshalBinaryBare(m)
+	return AminoCdc.MustMarshalBinaryBare(m)
 }
 
-// VerifyMultisignature implements the multisig.PubKey VerifyMultisignature method
-func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisig.GetSignBytesFunc, sig *signing.MultiSignatureData) error {
+// VerifyMultisignature implements the multisigtypes.PubKey VerifyMultisignature method
+func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetSignBytesFunc, sig *signing.MultiSignatureData) error {
 	bitarray := sig.BitArray
 	sigs := sig.Signatures
 	size := bitarray.Count()
@@ -78,7 +73,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisig.GetSignBy
 					return err
 				}
 			case *signing.MultiSignatureData:
-				nestedMultisigPk, ok := pubKeys[i].(multisig.PubKey)
+				nestedMultisigPk, ok := pubKeys[i].(multisigtypes.PubKey)
 				if !ok {
 					return fmt.Errorf("unable to parse pubkey of index %d", i)
 				}
@@ -117,7 +112,7 @@ func (m *LegacyAminoPubKey) GetPubKeys() []tmcrypto.PubKey {
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
 func (m *LegacyAminoPubKey) Equals(key tmcrypto.PubKey) bool {
-	otherKey, ok := key.(multisig.PubKey)
+	otherKey, ok := key.(multisigtypes.PubKey)
 	if !ok {
 		return false
 	}
@@ -148,7 +143,7 @@ func (m *LegacyAminoPubKey) Type() string {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
-		var pk crypto.PubKey
+		var pk tmcrypto.PubKey
 		err := unpacker.UnpackAny(any, &pk)
 		if err != nil {
 			return err

@@ -256,7 +256,10 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
 	// NOTE: packet data type already checked in handler.go
 
-	token := sdk.NewCoin(data.Denom, sdk.NewIntFromUint64(data.Amount))
+	// parse the denomination from the full denom path
+	trace := types.ParseDenomTrace(data.Denom)
+
+	token := sdk.NewCoin(trace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
 
 	// decode the sender address
 	sender, err := sdk.AccAddressFromBech32(data.Sender)
@@ -264,7 +267,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		return err
 	}
 
-	if types.SenderChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), token.Denom) {
+	if types.SenderChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
 		// unescrow tokens back to sender
 		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, sender, sdk.NewCoins(token))

@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -19,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -59,7 +61,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multi := kmultisig.NewLegacyAminoPubKey(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 

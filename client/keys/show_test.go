@@ -23,7 +23,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 		1,
 		[]crypto.PubKey{tmpKey1.PubKey()},
 	)
-	tmp := keyring.NewMultiInfo("myMultisig", &pk)
+	tmp := keyring.NewMultiInfo("myMultisig", pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())

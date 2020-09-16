@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 var amino *codec.LegacyAmino
@@ -21,18 +21,17 @@ func init() {
 // RegisterCrypto registers all crypto dependency types with the provided Amino
 // codec.
 func RegisterCrypto(cdc *codec.LegacyAmino) {
+	// TODO We now register both Tendermint's PubKey and our own PubKey. In the
+	// long-term, we should move away from Tendermint's PubKey, and delete this
+	// first line.
 	cdc.RegisterInterface((*crypto.PubKey)(nil), nil)
+	cdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PubKey{},
 		ed25519.PubKeyName, nil)
 	cdc.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
-	// TODO Follow-up in https://github.com/cosmos/cosmos-sdk/pull/7284
-	// Remove `multisig.PubKeyMultisigThreshold{}`, and register instead
-	// kmultisig.LegacyAminoPubKey{} on `PubKeyAminoRoute`.
-	cdc.RegisterConcrete(multisig.PubKeyMultisigThreshold{},
-		multisig.PubKeyAminoRoute, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		"cosmos-sdk/LegacyAminoPubKey", nil)
 

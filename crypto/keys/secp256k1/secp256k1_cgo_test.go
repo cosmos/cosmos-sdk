@@ -15,12 +15,12 @@ func TestPrivKeySecp256k1SignVerify(t *testing.T) {
 	priv := GenPrivKey()
 	tests := []struct {
 		name             string
-		privKey          PrivKey
+		privKey          *PrivKey
 		wantSignErr      bool
 		wantVerifyPasses bool
 	}{
 		{name: "valid sign-verify round", privKey: priv, wantSignErr: false, wantVerifyPasses: true},
-		{name: "invalid private key", privKey: [32]byte{}, wantSignErr: true, wantVerifyPasses: false},
+		{name: "invalid private key", privKey: &*PrivKey{Key: [32]byte{}}, wantSignErr: true, wantVerifyPasses: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

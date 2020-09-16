@@ -991,7 +991,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 
 	info, err := keyring.SaveMultisig(key, pub)
 	require.Nil(t, err)
-	require.Equal(t, &pub, info.GetPubKey())
+	require.Equal(t, pub, info.GetPubKey())
 	require.Equal(t, key, info.GetName())
 
 	list, err := keyring.List()

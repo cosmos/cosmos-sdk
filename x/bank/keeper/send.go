@@ -90,7 +90,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		err := k.SubtractCoins(ctx, inAddress, in.Coins)
+		err = k.SubtractCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}

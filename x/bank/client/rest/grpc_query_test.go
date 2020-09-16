@@ -90,7 +90,6 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-			fmt.Println("err", err)
 			s.Require().NoError(err)
 
 			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))

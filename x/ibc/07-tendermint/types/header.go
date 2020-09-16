@@ -22,7 +22,6 @@ func (h Header) ClientType() exported.ClientType {
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
-		Height:             h.GetHeight().(clienttypes.Height),
 		Timestamp:          h.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
@@ -31,16 +30,12 @@ func (h Header) ConsensusState() *ConsensusState {
 
 // GetHeight returns the current height. It returns 0 if the tendermint
 // header is nil.
-//
-// TODO: return clienttypes.Height once interface changes
 func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
 		return clienttypes.ZeroHeight()
 	}
-
-	// Enforce clienttypes.Height to use 0 epoch number
-	// TODO: Retrieve epoch number from chain-id
-	return clienttypes.NewHeight(0, uint64(h.Header.Height))
+	epoch := clienttypes.ParseChainID(h.Header.ChainID)
+	return clienttypes.NewHeight(epoch, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if

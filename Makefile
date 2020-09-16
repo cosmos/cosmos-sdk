@@ -211,10 +211,10 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 
-test-unit: ARGS=-tags='cgo ledger test_ledger_mock'
-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino'
-test-ledger: ARGS=-tags='cgo ledger'
-test-ledger-mock: ARGS=-tags='ledger test_ledger_mock'
+test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
+test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
+test-ledger: ARGS=-tags='cgo ledger norace'
+test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
 test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 

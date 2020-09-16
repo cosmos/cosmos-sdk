@@ -33,7 +33,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
-		kmultisig.PubKeyAminoRoute, nil)
+		"cosmos-sdk/LegacyAminoPubKey", nil)
 
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(ed25519.PrivKey{},

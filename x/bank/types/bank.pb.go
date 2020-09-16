@@ -134,7 +134,7 @@ func (m *SendEnabled) GetEnabled() bool {
 // Input models transaction input.
 type Input struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Coins   []types.Coin                                  `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
+	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *Input) Reset()         { *m = Input{} }
@@ -177,7 +177,7 @@ func (m *Input) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-func (m *Input) GetCoins() []types.Coin {
+func (m *Input) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Coins
 	}
@@ -187,7 +187,7 @@ func (m *Input) GetCoins() []types.Coin {
 // Output models transaction outputs.
 type Output struct {
 	Address github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"address,omitempty"`
-	Coins   []types.Coin                                  `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
+	Coins   github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *Output) Reset()         { *m = Output{} }
@@ -230,7 +230,7 @@ func (m *Output) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
 	return nil
 }
 
-func (m *Output) GetCoins() []types.Coin {
+func (m *Output) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Coins
 	}
@@ -240,7 +240,7 @@ func (m *Output) GetCoins() []types.Coin {
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 type Supply struct {
-	Total []types.Coin `protobuf:"bytes,1,rep,name=total,proto3" json:"total"`
+	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
 }
 
 func (m *Supply) Reset()      { *m = Supply{} }

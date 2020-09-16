@@ -383,22 +383,6 @@ func (va ValAddress) Bytes() []byte {
 	return va
 }
 
-// GetAddress implements the Stringer interface.
-func (va ValAddress) GetAddress() string {
-	if va.Empty() {
-		return ""
-	}
-
-	bech32PrefixValAddr := GetConfig().GetBech32AccountAddrPrefix()
-
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
-	if err != nil {
-		panic(err)
-	}
-
-	return bech32Addr
-}
-
 // String implements the Stringer interface.
 func (va ValAddress) String() string {
 	if va.Empty() {

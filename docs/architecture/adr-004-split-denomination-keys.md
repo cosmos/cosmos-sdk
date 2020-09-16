@@ -7,6 +7,12 @@
 - 2020-01-14: Updates from review feedback
 - 2020-01-30: Updates from implementation
 
+
+### Glossary
+
+* denom / denomination key -- unique token identifier.
+
+
 ## Context
 
 With permissionless IBC, anyone will be able to send arbitrary denominations to any other account. Currently, all non-zero balances are stored along with the account in an `sdk.Coins` struct, which creates a potential denial-of-service concern, as too many denominations will become expensive to load & store each time the account is modified. See issues [5467](https://github.com/cosmos/cosmos-sdk/issues/5467) and [4982](https://github.com/cosmos/cosmos-sdk/issues/4982) for additional context.

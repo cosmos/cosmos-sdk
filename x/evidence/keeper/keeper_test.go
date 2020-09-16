@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	suite.app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	for _, addr := range valAddresses {
-		_, err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+		err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
 		suite.NoError(err)
 	}
 }

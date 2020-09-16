@@ -197,52 +197,51 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 	}
 }
 
-// needs debug
-// func (s *IntegrationTestSuite) TestCmdProposer() {
-// 	val := s.network.Validators[0]
+func (s *IntegrationTestSuite) TestCmdProposer() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name           string
-// 		args           []string
-// 		expectErr      bool
-// 		expectedOutput string
-// 	}{
-// 		{
-// 			"without proposal id",
-// 			[]string{
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			true,
-// 			``,
-// 		},
-// 		{
-// 			"json output",
-// 			[]string{
-// 				"1",
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			false,
-// 			``,
-// 		},
-// 	}
+	testCases := []struct {
+		name           string
+		args           []string
+		expectErr      bool
+		expectedOutput string
+	}{
+		{
+			"without proposal id",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+			``,
+		},
+		{
+			"json output",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			fmt.Sprintf("{\"proposal_id\":\"%s\",\"proposer\":\"%s\"}", "1", val.Address.String()),
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdQueryProposer()
-// 			clientCtx := val.ClientCtx
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposer()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err)
-// 				s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
-// 			}
-// 		})
-// 	}
-// }
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(out.String()))
+			}
+		})
+	}
+}
 
 func (s *IntegrationTestSuite) TestCmdTally() {
 	val := s.network.Validators[0]
@@ -601,7 +600,6 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
 		expectedCode uint32
 	}{
 		{
@@ -613,7 +611,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, nil, 0,
+			true, 0,
 		},
 		{
 			"without deposit amount",
@@ -624,7 +622,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			true, nil, 0,
+			true, 0,
 		},
 		{
 			"deposit on non existing proposal",
@@ -636,7 +634,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, 2,
 		},
 		{
 			"deposit on non existing proposal",
@@ -648,12 +646,13 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, 0,
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
+		var resp sdk.TxResponse
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdDeposit()
@@ -665,9 +664,8 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 			} else {
 				s.Require().NoError(err)
 
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().Equal(tc.expectedCode, resp.Code, out.String())
 			}
 		})
 	}
@@ -787,13 +785,12 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
 		expectedCode uint32
 	}{
 		{
 			"invalid vote",
 			[]string{},
-			true, nil, 0,
+			true, 0,
 		},
 		{
 			"vote for invalid proposal",
@@ -805,7 +802,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 2,
+			false, 2,
 		},
 		{
 			"valid vote",
@@ -817,7 +814,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			false, 0,
 		},
 	}
 
@@ -826,6 +823,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdVote()
 			clientCtx := val.ClientCtx
+			var txResp sdk.TxResponse
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 
@@ -833,8 +831,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})

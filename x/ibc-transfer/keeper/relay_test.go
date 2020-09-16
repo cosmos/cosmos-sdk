@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 			coin := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 
-			_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+			err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
 			suite.Require().NoError(err)
 		}, false, true},
 		{"unsuccessful refund from source", failedAck,
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
 				suite.Require().NoError(err)
 			}, false, true},
 	}
@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				trace = types.ParseDenomTrace(sdk.DefaultBondDenom)
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
 				suite.Require().NoError(err)
 			}, true},
 		{"successful timeout from external chain",
@@ -341,7 +341,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				trace = types.ParseDenomTrace(types.GetPrefixedDenom(channelA.PortID, channelA.ID, sdk.DefaultBondDenom))
 				coin := sdk.NewCoin(trace.IBCDenom(), amount)
 
-				_, err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
+				err := suite.chainA.App.BankKeeper.AddCoins(suite.chainA.GetContext(), escrow, sdk.NewCoins(coin))
 				suite.Require().NoError(err)
 			}, true},
 		{"no balance for coin denom",

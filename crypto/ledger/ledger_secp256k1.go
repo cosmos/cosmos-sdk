@@ -246,10 +246,10 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	compressedPublicKey := make(secp256k1.PubKey, secp256k1.PubKeySize)
+	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
 	copy(compressedPublicKey, cmp.SerializeCompressed())
 
-	return compressedPublicKey, nil
+	return &secp256k1.PubKey{Key: compressedPublicKey}, nil
 }
 
 // getPubKeyAddr reads the pubkey and the address from a ledger device.
@@ -270,8 +270,8 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (tmcry
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
-	compressedPublicKey := make(secp256k1.PubKey, secp256k1.PubKeySize)
+	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
 	copy(compressedPublicKey, cmp.SerializeCompressed())
 
-	return compressedPublicKey, addr, nil
+	return &secp256k1.PubKey{Key: compressedPublicKey}, addr, nil
 }

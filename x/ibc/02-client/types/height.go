@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -11,6 +12,11 @@ import (
 )
 
 var _ exported.Height = (*Height)(nil)
+
+// IsEpochFormat checks if a chainID is in the format required for parsing epochs
+// The chainID must be in the form: `{chainID}-{version}
+// 24-host may enforce stricter checks on chainID
+var IsEpochFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
 
 // ZeroHeight is a helper function which returns an uninitialized height.
 func ZeroHeight() Height {
@@ -35,7 +41,7 @@ func (h Height) GetEpochHeight() uint64 {
 	return h.EpochHeight
 }
 
-/// Compare implements a method to compare two heights. When comparing two heights a, b
+// Compare implements a method to compare two heights. When comparing two heights a, b
 // we can call a.Compare(b) which will return
 // -1 if a < b
 // 0  if a = b
@@ -143,8 +149,42 @@ func ParseHeight(heightStr string) (Height, error) {
 	return NewHeight(epochNumber, epochHeight), nil
 }
 
+// SetEpochNumber takes a chainID in valid epoch format and swaps the epoch number
+// in the chainID with the given epoch number.
+func SetEpochNumber(chainID string, epoch uint64) (string, error) {
+	if !IsEpochFormat(chainID) {
+		return "", sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidChainID, "chainID is not in epoch format: %s", chainID,
+		)
+	}
+
+	splitStr := strings.Split(chainID, "-")
+	// swap out epoch number with given epoch
+	splitStr[len(splitStr)-1] = strconv.Itoa(int(epoch))
+	return strings.Join(splitStr, "-"), nil
+}
+
+// ParseChainID is a utility function that returns an epoch number from the given ChainID.
+// ParseChainID attempts to parse a chain id in the format: `{chainID}-{version}`
+// and return the epochnumber as a uint64.
+// If the chainID is not in the expected format, a default epoch value of 0 is returned.
+func ParseChainID(chainID string) uint64 {
+	if !IsEpochFormat(chainID) {
+		// chainID is not in epoch format, return 0 as default
+		return 0
+	}
+	splitStr := strings.Split(chainID, "-")
+	epoch, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
+	// sanity check: error should always be nil since regex only allows numbers in last element
+	if err != nil {
+		panic(fmt.Sprintf("regex allowed non-number value as last split element for chainID: %s", chainID))
+	}
+	return epoch
+}
+
 // GetSelfHeight is a utility function that returns self height given context
-// TODO: Retrieve epoch-number from chain-id
+// Epoch number is retrieved from ctx.ChainID()
 func GetSelfHeight(ctx sdk.Context) Height {
-	return NewHeight(0, uint64(ctx.BlockHeight()))
+	epoch := ParseChainID(ctx.ChainID())
+	return NewHeight(epoch, uint64(ctx.BlockHeight()))
 }

@@ -269,7 +269,7 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+	err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
 	if err != nil {
 		panic(err)
 	}

@@ -54,4 +54,13 @@ type (
 		Size() int
 		Unmarshal(data []byte) error
 	}
+
+	// AminoMarshaler defines an interface where Amino marshalling can be
+	// overridden by custom marshalling.
+	AminoMarshaler interface {
+		MarshalAmino() ([]byte, error)
+		UnmarshalAmino([]byte) error
+		MarshalAminoJSON() ([]byte, error)
+		UnmarshalAminoJSON([]byte) error
+	}
 )

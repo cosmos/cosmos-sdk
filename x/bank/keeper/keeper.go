@@ -113,7 +113,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
 
-	_, err := k.AddCoins(ctx, moduleAccAddr, amt)
+	err := k.AddCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	_, err := k.SubtractCoins(ctx, moduleAccAddr, amt)
+	err := k.SubtractCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(err, "failed to track undelegation")
 	}
 
-	_, err = k.AddCoins(ctx, delegatorAddr, amt)
+	err = k.AddCoins(ctx, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	_, err := k.AddCoins(ctx, acc.GetAddress(), amt)
+	err := k.AddCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}
@@ -359,7 +359,7 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	_, err := k.SubtractCoins(ctx, acc.GetAddress(), amt)
+	err := k.SubtractCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}

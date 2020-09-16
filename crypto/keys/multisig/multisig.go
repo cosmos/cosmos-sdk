@@ -3,13 +3,12 @@ package multisig
 import (
 	fmt "fmt"
 
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
+	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	proto "github.com/gogo/protobuf/proto"
-
-	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
 var _ multisigtypes.PubKey = &LegacyAminoPubKey{}
@@ -144,7 +143,7 @@ func (m *LegacyAminoPubKey) Type() string {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range m.PubKeys {
-		var pk crypto.PubKey
+		var pk tmcrypto.PubKey
 		err := unpacker.UnpackAny(any, &pk)
 		if err != nil {
 			return err

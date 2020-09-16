@@ -1,6 +1,7 @@
 package multisig
 
 import (
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
@@ -18,6 +19,10 @@ const (
 var AminoCdc = codec.NewLegacyAmino()
 
 func init() {
+	// TODO We now register both Tendermint's PubKey and our own PubKey. In the
+	// long-term, we should move away from Tendermint's PubKey, and delete this
+	// first line.
+	AminoCdc.RegisterInterface((*crypto.PubKey)(nil), nil)
 	AminoCdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
 	AminoCdc.RegisterConcrete(ed25519.PubKey{},
 		ed25519.PubKeyName, nil)

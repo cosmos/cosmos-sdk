@@ -180,8 +180,23 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		{"invalid previous connection is in TRYOPEN", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
+			// open init chainA
+			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+			suite.Require().NoError(err)
+
+			// open try chainB
+			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
+			suite.Require().NoError(err)
+
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
+
+		}, false},
+		{"invalid previous connection has invalid versions", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 			// open init chainA
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
@@ -190,6 +205,21 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// open try chainB
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
+
+			// modify connB to be in INIT with incorrect versions
+			connection, found := suite.chainB.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainB.GetContext(), connB.ID)
+			suite.Require().True(found)
+
+			connection.State = types.INIT
+			connection.Versions = []string{"invalid version"}
+
+			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainB.GetContext(), connB.ID, connection)
+
+			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
+			suite.Require().NoError(err)
+
+			// retrieve client state of chainA to pass as counterpartyClient
+			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, false},
 	}
 
@@ -212,8 +242,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			if consensusHeight.IsZero() {
 				// retrieve consensus state height to provide proof for
-				clientState := suite.chainA.GetClientState(clientA)
-				consensusHeight = clientState.GetLatestHeight()
+				consensusHeight = counterpartyClient.GetLatestHeight()
 			}
 			consensusKey := host.FullKeyClientPath(clientA, host.KeyConsensusState(consensusHeight))
 			proofConsensus, _ := suite.chainA.QueryProof(consensusKey)

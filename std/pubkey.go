@@ -34,9 +34,9 @@ func (cdc DefaultPublicKeyCodec) Decode(key *types.PublicKey) (crypto.PubKey, er
 			return nil, fmt.Errorf("wrong length %d for secp256k1 public key", n)
 		}
 
-		res := make(secp256k1.PubKey, secp256k1.PubKeySize)
+		res := make([]byte, secp256k1.PubKeySize)
 		copy(res, key.Secp256K1)
-		return res, nil
+		return &secp256k1.PubKey{Key: res}, nil
 	case *types.PublicKey_Ed25519:
 		n := len(key.Ed25519)
 		if n != ed25519.PubKeySize {
@@ -79,8 +79,8 @@ func (cdc DefaultPublicKeyCodec) Encode(key crypto.PubKey) (*types.PublicKey, er
 		return &types.PublicKey{}, nil
 	}
 	switch key := key.(type) {
-	case secp256k1.PubKey:
-		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key}}, nil
+	case *secp256k1.PubKey:
+		return &types.PublicKey{Sum: &types.PublicKey_Secp256K1{Secp256K1: key.Key}}, nil
 	case ed25519.PubKey:
 		return &types.PublicKey{Sum: &types.PublicKey_Ed25519{Ed25519: key}}, nil
 	case sr25519.PubKey:

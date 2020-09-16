@@ -19,7 +19,9 @@ will stay the same.
 serialization is not bijective (i.e. there exist a practically unlimited number of
 valid binary representations for a protobuf document)<sup>1</sup>.
 
-Here we propose how to limit the protobufs in order to assure deterministic serializaiton.
+This document describes a deterministic serialization scheme for
+a subset of protobuf documents, that covers this use case but can be reused in
+other cases as well.
 
 ### Context
 

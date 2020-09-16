@@ -352,13 +352,13 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedP
 }
 
 // UnreceivedAcks implements the Query/UnreceivedAcks gRPC method. Given
-// a list of counterparty packet commitments, the querier checks if the packet
-// has already been received by checking if an acknowledgement exists on this
-// chain for the packet sequence. All packets that haven't been received yet
-// are returned in the response
+// a list of counterparty packet acknowledgements, the querier checks if the packet
+// has already been received by checking if the packet commitment still exists on this
+// chain (original sender) for the packet sequence.
+// All acknowledgmeents that haven't been received yet are returned in the response.
 //
 // NOTE: The querier makes the assumption that the provided list of packet
-// commitments is correct and will not function properly if the list
+// acknowledgements is correct and will not function properly if the list
 // is not up to date. Ideally the query height should equal the latest height
 // on the counterparty's client which represents this chain.
 func (q Keeper) UnreceivedAcks(c context.Context, req *types.QueryUnreceivedAcksRequest) (*types.QueryUnreceivedAcksResponse, error) {

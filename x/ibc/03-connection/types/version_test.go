@@ -59,6 +59,40 @@ func TestDecodeVersion(t *testing.T) {
 	}
 }
 
+func TestIsSupportedVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version types.Version
+		expPass bool
+	}{
+		{
+			"version is supported",
+			types.GetCompatibleVersions()[0],
+			true,
+		},
+		{
+			"version is not supported",
+			types.Version{},
+			false,
+		},
+		{
+			"version feature is not supported",
+			types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_DAG"}),
+			false,
+		},
+	}
+
+	// test that a version that cannot be decoded does not pass
+	require.False(t, types.IsSupportedVersion("1.0"))
+
+	for _, tc := range testCases {
+		encodedVersion, err := tc.version.Encode()
+		require.NoError(t, err)
+
+		require.Equal(t, tc.expPass, types.IsSupportedVersion(encodedVersion))
+	}
+}
+
 func TestFindSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name              string

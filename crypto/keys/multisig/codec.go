@@ -19,7 +19,7 @@ var AminoCdc = codec.NewLegacyAmino()
 
 func init() {
 	AminoCdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
-	AminoCdc.RegisterConcrete(&LegacyAminoPubKey{},
+	AminoCdc.RegisterConcrete(LegacyAminoPubKey{},
 		PubKeyAminoRoute, nil)
 	AminoCdc.RegisterConcrete(ed25519.PubKey{},
 		ed25519.PubKeyName, nil)

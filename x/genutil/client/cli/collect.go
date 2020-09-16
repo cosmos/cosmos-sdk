@@ -13,12 +13,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, validateMsgInGenesisFn types.ValidateMsgInGenesis) *cobra.Command {
+func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+	return CollectGenTxsCustomCmd(genBalIterator, defaultNodeHome, staking.ValidateMsgInGenesis)
+}
+
+// CollectGenTxsCustomCmd - return the cobra command to collect genesis transactions with optional genesis msg validation params
+func CollectGenTxsCustomCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, validateMsgInGenesisFn types.ValidateMsgInGenesis) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",

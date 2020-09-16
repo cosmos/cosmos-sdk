@@ -30,6 +30,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -42,7 +43,12 @@ type ValidatorMsgBuildingHelpers interface {
 }
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, vmbh ValidatorMsgBuildingHelpers) *cobra.Command {
+func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string) *cobra.Command {
+	return GenTxCustomCmd(mbm, txEncCfg, genBalIterator, defaultNodeHome, staking.ValidatorMsgBuildingHelpers{})
+}
+
+// GenTxCmd builds the application's gentx command and allows custom validations for consensus
+func GenTxCustomCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, vmbh ValidatorMsgBuildingHelpers) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := vmbh.CreateValidatorMsgFlagSet(ipDefault)
 

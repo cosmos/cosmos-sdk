@@ -262,7 +262,7 @@ func GetCmdQueryUnreceivedPackets() *cobra.Command {
 		Long: `Determine if a packet, given a list of packet commitment sequences, is unreceived.
 
 The return value represents:
-- Unrelayed packet commitments: no acknowledgement exists for the given packet commitment sequence.
+- Unrelayed packet commitments: no acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
 `,
 		Example: fmt.Sprintf("%s query %s %s unreceived-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),
@@ -305,17 +305,17 @@ The return value represents:
 	return cmd
 }
 
-// GetCmdQueryUnreceivedAcks defines the command to query all the unreceived acks on the original sending chain
-func GetCmdQueryUnreceivedAcks() *cobra.Command {
+// GetCmdQueryUnrelayedAcks defines the command to query all the unrelayed acks on the original sending chain
+func GetCmdQueryUnrelayedAcks() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unreceived-acks [port-id] [channel-id]",
-		Short: "Query all the unreceived acks associated with a channel",
-		Long: `Determine if an ack, given a list of packet commitment sequences, is unreceived.
+		Use:   "unrelayed-acks [port-id] [channel-id]",
+		Short: "Query all the unrelayed acks associated with a channel",
+		Long: `Given a list of packet commitment sequences from counterpary, determine if an ack on executing chain has not been relayed to counterparty.
 
 The return value represents:
-- Unrelayed packet acknowledgement: packet commitment still exists on original sending chain.
+- Unrelayed packet acknowledgement: packet commitment exists on original sending chain and ack exists on receiving (executing) chain.
 `,
-		Example: fmt.Sprintf("%s query %s %s unreceived-acks [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
+		Example: fmt.Sprintf("%s query %s %s unrelayed-acks [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -335,13 +335,13 @@ The return value represents:
 				seqs[i] = uint64(seqSlice[i])
 			}
 
-			req := &types.QueryUnreceivedAcksRequest{
-				PortId:             args[0],
-				ChannelId:          args[1],
-				PacketAckSequences: seqs,
+			req := &types.QueryUnrelayedAcksRequest{
+				PortId:                    args[0],
+				ChannelId:                 args[1],
+				PacketCommitmentSequences: seqs,
 			}
 
-			res, err := queryClient.UnreceivedAcks(context.Background(), req)
+			res, err := queryClient.UnrelayedAcks(context.Background(), req)
 			if err != nil {
 				return err
 			}

@@ -967,9 +967,9 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
+func (suite *KeeperTestSuite) TestQueryUnrelayedAcks() {
 	var (
-		req    *types.QueryUnreceivedAcksRequest
+		req    *types.QueryUnrelayedAcksRequest
 		expSeq = []uint64{}
 	)
 
@@ -988,7 +988,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 		{
 			"invalid port ID",
 			func() {
-				req = &types.QueryUnreceivedAcksRequest{
+				req = &types.QueryUnrelayedAcksRequest{
 					PortId:    "",
 					ChannelId: "test-channel-id",
 				}
@@ -998,7 +998,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 		{
 			"invalid channel ID",
 			func() {
-				req = &types.QueryUnreceivedAcksRequest{
+				req = &types.QueryUnrelayedAcksRequest{
 					PortId:    "test-port-id",
 					ChannelId: "",
 				}
@@ -1008,10 +1008,10 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 		{
 			"invalid seq",
 			func() {
-				req = &types.QueryUnreceivedAcksRequest{
-					PortId:             "test-port-id",
-					ChannelId:          "test-channel-id",
-					PacketAckSequences: []uint64{0},
+				req = &types.QueryUnrelayedAcksRequest{
+					PortId:                    "test-port-id",
+					ChannelId:                 "test-channel-id",
+					PacketCommitmentSequences: []uint64{0},
 				}
 			},
 			false,
@@ -1021,14 +1021,15 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				// commitment exists
-				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, []byte("packet_hash"))
+				// ack exists
+				ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, 1, []byte("hash"))
+				suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 1, ack.Hash)
 
 				expSeq = []uint64{1}
-				req = &types.QueryUnreceivedAcksRequest{
-					PortId:             channelA.PortID,
-					ChannelId:          channelA.ID,
-					PacketAckSequences: []uint64{1},
+				req = &types.QueryUnrelayedAcksRequest{
+					PortId:                    channelA.PortID,
+					ChannelId:                 channelA.ID,
+					PacketCommitmentSequences: []uint64{1},
 				}
 			},
 			true,
@@ -1038,13 +1039,13 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 
-				// no packet commitment exists, sequence ack already processed
+				// no ack exists
 
 				expSeq = []uint64{}
-				req = &types.QueryUnreceivedAcksRequest{
-					PortId:             channelA.PortID,
-					ChannelId:          channelA.ID,
-					PacketAckSequences: []uint64{1},
+				req = &types.QueryUnrelayedAcksRequest{
+					PortId:                    channelA.PortID,
+					ChannelId:                 channelA.ID,
+					PacketCommitmentSequences: []uint64{1},
 				}
 			},
 			true,
@@ -1054,23 +1055,23 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 			func() {
 				_, _, _, _, channelA, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 				expSeq = []uint64{} // reset
-				packetAcknowledgements := []uint64{}
+				packetCommitments := []uint64{}
 
-				// set commitments for every other sequence
+				// set ack for every other sequence
 				for seq := uint64(1); seq < 10; seq++ {
-					packetAcknowledgements = append(packetAcknowledgements, seq)
+					packetCommitments = append(packetCommitments, seq)
 
 					if seq%2 == 0 {
-						// packet commitment still exists, ack has not been processed
-						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, []byte("hash"))
+						ack := types.NewPacketAckCommitment(channelA.PortID, channelA.ID, seq, []byte("hash"))
+						suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainA.GetContext(), channelA.PortID, channelA.ID, seq, ack.Hash)
 						expSeq = append(expSeq, seq)
 					}
 				}
 
-				req = &types.QueryUnreceivedAcksRequest{
-					PortId:             channelA.PortID,
-					ChannelId:          channelA.ID,
-					PacketAckSequences: packetAcknowledgements,
+				req = &types.QueryUnrelayedAcksRequest{
+					PortId:                    channelA.PortID,
+					ChannelId:                 channelA.ID,
+					PacketCommitmentSequences: packetCommitments,
 				}
 			},
 			true,
@@ -1084,7 +1085,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			res, err := suite.chainA.QueryServer.UnreceivedAcks(ctx, req)
+			res, err := suite.chainA.QueryServer.UnrelayedAcks(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

@@ -18,8 +18,8 @@ type SendKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error)
+	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
+	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
 
 	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
 	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
@@ -85,7 +85,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	}
 
 	for _, in := range inputs {
-		_, err := k.SubtractCoins(ctx, in.Address, in.Coins)
+		err := k.SubtractCoins(ctx, in.Address, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 	}
 
 	for _, out := range outputs {
-		_, err := k.AddCoins(ctx, out.Address, out.Coins)
+		err := k.AddCoins(ctx, out.Address, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -142,12 +142,12 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 	})
 
-	_, err := k.SubtractCoins(ctx, fromAddr, amt)
+	err := k.SubtractCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	_, err = k.AddCoins(ctx, toAddr, amt)
+	err = k.AddCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -167,12 +167,11 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 
 // SubtractCoins removes amt coins the account by the given address. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
-func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error) {
+func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	resultCoins := sdk.NewCoins()
 	lockedCoins := k.LockedCoins(ctx, addr)
 
 	for _, coin := range amt {
@@ -182,43 +181,39 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(sdk.Coins{coin})
 		if hasNeg {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
 
 		newBalance := balance.Sub(coin)
-		resultCoins = resultCoins.Add(newBalance)
 
 		err := k.SetBalance(ctx, addr, newBalance)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return resultCoins, nil
+	return nil
 }
 
 // AddCoins adds amt to the account balance given by the provided address. An
 // error is returned if the initial amount is invalid or if any resulting new
 // balance is negative.
-func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, error) {
+func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
-
-	var resultCoins sdk.Coins
 
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
-		resultCoins = resultCoins.Add(newBalance)
 
 		err := k.SetBalance(ctx, addr, newBalance)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return resultCoins, nil
+	return nil
 }
 
 // ClearBalances removes all balances for a given account by address.

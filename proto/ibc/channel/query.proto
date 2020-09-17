@@ -292,7 +292,7 @@ message QueryUnrelayedAcksRequest {
 // QueryUnrelayedAcksResponse is the response type for the
 // Query/UnrelayedAcks RPC method
 message QueryUnrelayedAcksResponse {
-  // list of unreceived acknowledgement sequences
+  // list of unrelayed acknowledgement sequences
   repeated uint64 sequences = 1;
   // query block height
   ibc.client.Height height = 2 [(gogoproto.nullable) = false];

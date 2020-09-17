@@ -370,7 +370,7 @@ jobs:
             .sum
       - name: start localnet
         run: |
-          make clean localnet-start
+          make clean build-simd-linux localnet-start
         if: "env.GIT_DIFF != ''"
       - name: test liveness
         run: |

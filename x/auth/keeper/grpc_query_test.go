@@ -77,7 +77,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			fmt.Println("req::", req)
 			res, err := suite.queryClient.Account(ctx, req)
 
 			if tc.expPass {

@@ -6,7 +6,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-// IdentifiedClientState defines a client state with additional client
+// IdentifiedClientState defines a client state with an additional client
 // identifier field.
 message IdentifiedClientState {
   // client identifier
@@ -15,13 +15,22 @@ message IdentifiedClientState {
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
+// ConsensusStateWithHeight defines a consensus state with an additional height field.
+message ConsensusStateWithHeight {
+  // consensus state height
+  Height height = 1 [(gogoproto.nullable) = false];
+  // consensus state
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml\"consensus_state\""];
+}
+
 // ClientConsensusStates defines all the stored consensus states for a given
 // client.
 message ClientConsensusStates {
   // client identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  // consensus states associated with the client
-  repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
+  // consensus states and their heights associated with the client
+  repeated ConsensusStateWithHeight consensus_states = 2
+      [(gogoproto.moretags) = "yaml:\"consensus_states\"", (gogoproto.nullable) = false];
 }
 
 // ClientUpdateProposal is a governance proposal. If it passes, the client is

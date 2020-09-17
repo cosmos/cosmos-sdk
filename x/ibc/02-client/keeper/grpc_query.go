@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -151,21 +150,21 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consensusStates := []*codectypes.Any{}
+	consensusStates := []types.ConsensusStateWithHeight{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullKeyClientPath(req.ClientId, []byte("consensusState/")))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+		height, err := types.ParseHeight(string(key))
+		if err != nil {
+			return err
+		}
+
 		consensusState, err := q.UnmarshalConsensusState(value)
 		if err != nil {
 			return err
 		}
 
-		any, err := types.PackConsensusState(consensusState)
-		if err != nil {
-			return err
-		}
-
-		consensusStates = append(consensusStates, any)
+		consensusStates = append(consensusStates, types.NewConsensusStateWithHeight(height, consensusState))
 		return nil
 	})
 

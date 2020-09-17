@@ -62,7 +62,7 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
 		ageBlocks = int64(cs.LatestHeight.EpochHeight - infractionHeight)
 	} else {
-		// if the misbehaviour is from a previous epoch, then the epoch-height
+		// if the misbehaviour is from a different epoch, then the epoch-height
 		// of misbehaviour has no correlation with the current epoch-height
 		// so we disable the block check by setting ageBlocks to 0 and only
 		// rely on the time expiry check with ageDuration
@@ -136,15 +136,22 @@ func checkMisbehaviourHeader(
 	if currentTimestamp.Sub(consState.Timestamp) >= clientState.UnbondingPeriod {
 		return sdkerrors.Wrapf(
 			ErrUnbondingPeriodExpired,
-			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%s >= %s)",
+			"current timestamp minus the latest consensus state timestamp is greater than or equal to the unbonding period (%d >= %d)",
 			currentTimestamp.Sub(consState.Timestamp), clientState.UnbondingPeriod,
 		)
+	}
+
+	chainID := clientState.GetChainID()
+	// If chainID is in epoch format, then set epoch number of chainID with the epoch number
+	// of the misbehaviour header
+	if clienttypes.IsEpochFormat(chainID) {
+		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
 	}
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet
 	// - ValidatorSets on both headers are valid given the last trusted ValidatorSet
 	if err := tmTrustedValset.VerifyCommitLightTrusting(
-		clientState.GetChainID(), tmCommit, clientState.TrustLevel.ToTendermint(),
+		chainID, tmCommit, clientState.TrustLevel.ToTendermint(),
 	); err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "validator set in header has too much change from trusted validator set: %v", err)
 	}

@@ -116,9 +116,6 @@ type ClientState interface {
 type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
 
-	// GetHeight returns the height of the consensus state
-	GetHeight() Height
-
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
 	GetRoot() Root

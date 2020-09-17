@@ -25,6 +25,6 @@ func init() {
 		ed25519.PubKeyName, nil)
 	Cdc.RegisterConcrete(sr25519.PubKey{},
 		sr25519.PubKeyName, nil)
-	Cdc.RegisterConcrete(secp256k1.PubKey{},
+	Cdc.RegisterConcrete(&secp256k1.PubKey{},
 		secp256k1.PubKeyName, nil)
 }

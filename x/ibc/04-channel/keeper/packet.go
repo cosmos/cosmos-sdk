@@ -62,14 +62,6 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return sdkerrors.Wrap(
-			connectiontypes.ErrInvalidConnectionState,
-			"connection is UNINITIALIZED",
-		)
-	}
-
 	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound

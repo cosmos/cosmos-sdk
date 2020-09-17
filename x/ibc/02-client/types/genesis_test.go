@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -25,6 +27,22 @@ const (
 
 var clientHeight = types.NewHeight(0, 10)
 
+func (suite *TypesTestSuite) TestMarshalGenesisState() {
+	cdc := suite.chainA.App.AppCodec()
+	clientA, _, _, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
+	suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+
+	genesis := client.ExportGenesis(suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper)
+
+	bz, err := cdc.MarshalJSON(&genesis)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(bz)
+
+	var gs types.GenesisState
+	err = cdc.UnmarshalJSON(bz, &gs)
+	suite.Require().NoError(err)
+}
+
 func TestValidateGenesis(t *testing.T) {
 	privVal := ibctestingmock.NewPV()
 	pubKey, err := privVal.GetPubKey()
@@ -35,7 +53,8 @@ func TestValidateGenesis(t *testing.T) {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	header := ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
+	heightMinus1 := types.NewHeight(0, height-1)
+	header := ibctmtypes.CreateTestHeader(chainID, clientHeight, heightMinus1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	testCases := []struct {
 		name     string
@@ -61,9 +80,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
 						clientID,
-						[]exported.ConsensusState{
-							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.GetHeight().(types.Height), header.Header.NextValidatorsHash,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
 							),
 						},
 					),
@@ -86,9 +108,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
 						clientID,
-						[]exported.ConsensusState{
-							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.GetHeight().(types.Height), header.Header.NextValidatorsHash,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								header.GetHeight().(types.Height),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
 							),
 						},
 					),
@@ -125,9 +150,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
 						"(CLIENTID2)",
-						[]exported.ConsensusState{
-							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.ZeroHeight(), header.Header.NextValidatorsHash,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								types.ZeroHeight(),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
 							),
 						},
 					),
@@ -150,9 +178,12 @@ func TestValidateGenesis(t *testing.T) {
 				[]types.ClientConsensusStates{
 					types.NewClientConsensusStates(
 						clientID,
-						[]exported.ConsensusState{
-							ibctmtypes.NewConsensusState(
-								header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), types.ZeroHeight(), header.Header.NextValidatorsHash,
+						[]types.ConsensusStateWithHeight{
+							types.NewConsensusStateWithHeight(
+								types.ZeroHeight(),
+								ibctmtypes.NewConsensusState(
+									header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.GetAppHash()), header.Header.NextValidatorsHash,
+								),
 							),
 						},
 					),

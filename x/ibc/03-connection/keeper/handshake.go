@@ -89,7 +89,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.TRYOPEN, clientID, counterparty, []string{version})
 
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
@@ -124,8 +124,7 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
 	}
 
-	// Set connection state to TRYOPEN and store in chainB state
-	connection.State = types.TRYOPEN
+	// store connection in chainB state
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}

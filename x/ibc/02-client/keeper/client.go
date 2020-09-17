@@ -21,17 +21,11 @@ func (k Keeper) CreateClient(
 		return nil, sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
-	_, found = k.GetClientType(ctx, clientID)
-	if found {
-		panic(fmt.Sprintf("client type is already defined for client %s", clientID))
-	}
-
 	if consensusState != nil {
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
 	k.SetClientState(ctx, clientID, clientState)
-	k.SetClientType(ctx, clientID, clientState.ClientType())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetLatestHeight()))
 
 	return clientState, nil
@@ -39,17 +33,6 @@ func (k Keeper) CreateClient(
 
 // UpdateClient updates the consensus state and the state root from a provided header.
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) (exported.ClientState, error) {
-	clientType, found := k.GetClientType(ctx, clientID)
-	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
-	}
-
-	// check that the header consensus matches the client one
-	// NOTE: not checked for localhost client
-	if header != nil && clientType != exported.Localhost && header.ClientType() != clientType {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidHeader, "header client type (%s) does not match expected client type (%s) for client with ID %s", header.ClientType(), clientType, clientID)
-	}
-
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
@@ -75,7 +58,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	k.SetClientState(ctx, clientID, clientState)
 
 	// we don't set consensus state for localhost client
-	if header != nil && clientType != exported.Localhost {
+	if header != nil && clientID != exported.Localhost {
 		k.SetClientConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 		consensusHeight = header.GetHeight()
 	} else {
@@ -89,7 +72,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		sdk.NewEvent(
 			types.EventTypeUpdateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
 		),
 	)
@@ -99,19 +82,19 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 // CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
 // client if so.
-func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour exported.Misbehaviour) error {
+func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour exported.Misbehaviour) (exported.ClientState, error) {
 	clientState, found := k.GetClientState(ctx, misbehaviour.GetClientID())
 	if !found {
-		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
+		return nil, sdkerrors.Wrapf(types.ErrClientNotFound, "cannot check misbehaviour for client with ID %s", misbehaviour.GetClientID())
 	}
 
 	clientState, err := clientState.CheckMisbehaviourAndUpdateState(ctx, k.cdc, k.ClientStore(ctx, misbehaviour.GetClientID()), misbehaviour)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.GetClientID()))
 
-	return nil
+	return clientState, nil
 }

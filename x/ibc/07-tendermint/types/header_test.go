@@ -7,7 +7,6 @@ import (
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestGetHeight() {
@@ -63,8 +62,6 @@ func (suite *TendermintTestSuite) TestHeaderValidateBasic() {
 			header.ValidatorSet = suite.chainB.LastHeader.ValidatorSet
 		}, false},
 	}
-
-	suite.Require().Equal(exported.Tendermint, suite.header.ClientType())
 
 	for _, tc := range testCases {
 		tc := tc

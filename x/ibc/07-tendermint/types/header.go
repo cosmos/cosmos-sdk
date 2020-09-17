@@ -14,11 +14,6 @@ import (
 
 var _ exported.Header = Header{}
 
-// ClientType defines that the Header is a Tendermint consensus algorithm
-func (h Header) ClientType() exported.ClientType {
-	return exported.Tendermint
-}
-
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{

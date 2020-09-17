@@ -9,7 +9,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -324,7 +323,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 		}, true},
@@ -337,7 +336,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
@@ -355,7 +354,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 				suite.Require().NoError(err)
 			}
 
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 		}, true},
@@ -372,7 +371,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 				suite.Require().NoError(err)
 			}
 
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
 		}, true},
@@ -454,7 +453,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
@@ -476,7 +475,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
@@ -504,7 +503,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			}
 
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
@@ -529,7 +528,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 				suite.Require().NoError(err)
 			}
 
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 
 			// close counterparty channel
@@ -570,7 +569,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			suite.Require().NoError(err)
 
 			// need to update chainA client to prove missing ack
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
 

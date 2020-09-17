@@ -15,13 +15,7 @@ import (
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
-const (
-	invalidClientType exported.ClientType = 0
-)
-
 func (suite *KeeperTestSuite) TestCreateClient() {
-	suite.keeper.SetClientType(suite.ctx, testClientID2, exported.Tendermint)
-
 	cases := []struct {
 		msg      string
 		clientID string
@@ -30,7 +24,6 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 	}{
 		{"success", testClientID, true, false},
 		{"client ID exists", testClientID, false, false},
-		{"client type exists", testClientID2, false, true},
 	}
 
 	for i, tc := range cases {
@@ -130,19 +123,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 			updateHeader = createPastUpdateFn(suite)
 			return nil
 		}, true},
-		{"client type not found", func() error {
-			updateHeader = createFutureUpdateFn(suite)
-
-			return nil
-		}, false},
-		{"client type and header type mismatch", func() error {
-			suite.keeper.SetClientType(suite.ctx, testClientID, invalidClientType)
-			updateHeader = createFutureUpdateFn(suite)
-
-			return nil
-		}, false},
 		{"client state not found", func() error {
-			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createFutureUpdateFn(suite)
 
 			return nil
@@ -150,7 +131,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		{"consensus state not found", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
 			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
-			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createFutureUpdateFn(suite)
 
 			return nil
@@ -158,7 +138,6 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		{"frozen client before update", func() error {
 			clientState = &ibctmtypes.ClientState{FrozenHeight: types.NewHeight(0, 1), LatestHeight: testClientHeight}
 			suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
-			suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 			updateHeader = createFutureUpdateFn(suite)
 
 			return nil
@@ -246,7 +225,7 @@ func (suite *KeeperTestSuite) TestUpdateClientLocalhost() {
 
 	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
 
-	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.ClientTypeLocalHost, nil)
+	updatedClientState, err := suite.keeper.UpdateClient(suite.ctx, exported.Localhost, nil)
 	suite.Require().NoError(err, err)
 	suite.Require().Equal(localhostClient.GetLatestHeight().(types.Height).Increment(), updatedClientState.GetLatestHeight())
 }
@@ -446,18 +425,19 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			err := tc.malleate()
 			suite.Require().NoError(err)
 
-			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.misbehaviour)
+			clientState, err := suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, tc.misbehaviour)
 
 			if tc.expPass {
 				suite.Require().NoError(err, "valid test case %d failed: %s", i, tc.name)
 
-				clientState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
+				_, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 				suite.Require().True(found, "valid test case %d failed: %s", i, tc.name)
 				suite.Require().True(clientState.IsFrozen(), "valid test case %d failed: %s", i, tc.name)
 				suite.Require().Equal(tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight(),
 					"valid test case %d failed: %s. Expected FrozenHeight %s got %s", tc.misbehaviour.GetHeight(), clientState.GetFrozenHeight())
 			} else {
 				suite.Require().Error(err, "invalid test case %d passed: %s", i, tc.name)
+				suite.Require().Nil(clientState)
 			}
 		})
 	}

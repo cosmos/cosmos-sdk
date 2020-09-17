@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -31,7 +29,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 		sdk.NewEvent(
 			types.EventTypeCreateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType().String()),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),
 		sdk.NewEvent(
@@ -77,7 +75,8 @@ func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 		return nil, err
 	}
 
-	if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
+	clientState, err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
+	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
 	}
 
@@ -85,8 +84,8 @@ func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 		sdk.NewEvent(
 			types.EventTypeSubmitMisbehaviour,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", misbehaviour.GetHeight())),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, misbehaviour.GetHeight().String()),
 		),
 	)
 

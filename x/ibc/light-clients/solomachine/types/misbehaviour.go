@@ -15,11 +15,6 @@ var (
 	_ exported.Misbehaviour = (*Misbehaviour)(nil)
 )
 
-// ClientType is a Solo Machine light client.
-func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
-	return exported.SoloMachine
-}
-
 // GetClientID returns the ID of the client that committed a misbehaviour.
 func (misbehaviour Misbehaviour) GetClientID() string {
 	return misbehaviour.ClientId

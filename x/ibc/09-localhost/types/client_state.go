@@ -50,7 +50,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns an uninitialized IBC Height.
 func (cs ClientState) GetFrozenHeight() exported.Height {
-	return clienttypes.Height{}
+	return clienttypes.ZeroHeight()
 }
 
 // Validate performs a basic validation of the client state fields.
@@ -75,9 +75,8 @@ func (cs *ClientState) CheckHeaderAndUpdateState(
 ) (exported.ClientState, exported.ConsensusState, error) {
 	// use the chain ID from context since the localhost client is from the running chain (i.e self).
 	cs.ChainId = ctx.ChainID()
-	// Hardcode 0 for epoch number for now
-	// TODO: Retrieve epoch number from chain-id
-	cs.Height = clienttypes.NewHeight(0, uint64(ctx.BlockHeight()))
+	epoch := clienttypes.ParseChainID(cs.ChainId)
+	cs.Height = clienttypes.NewHeight(epoch, uint64(ctx.BlockHeight()))
 	return cs, nil, nil
 }
 

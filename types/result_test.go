@@ -11,7 +11,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,7 +40,7 @@ func TestABCIMessageLog(t *testing.T) {
 func TestNewSearchTxsResult(t *testing.T) {
 	t.Parallel()
 	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []*sdk.TxResponse{})
-	require.Equal(t, sdk.SearchTxsResult{
+	require.Equal(t, &sdk.SearchTxsResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,
@@ -93,12 +92,12 @@ func TestResponseResultTx(t *testing.T) {
 		Info:      "info",
 		GasWanted: 100,
 		GasUsed:   90,
-		Tx:        &types.Any{},
+		Tx:        nil,
 		Timestamp: "timestamp",
 	}
 
-	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp"))
-	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, sdk.Tx(nil), "timestamp"))
+	require.Equal(t, want, sdk.NewResponseResultTx(resultTx, nil, "timestamp"))
+	require.Equal(t, (*sdk.TxResponse)(nil), sdk.NewResponseResultTx(nil, nil, "timestamp"))
 	require.Equal(t, `Response:
   Height: 10
   TxHash: 74657374
@@ -110,7 +109,7 @@ func TestResponseResultTx(t *testing.T) {
   GasWanted: 100
   GasUsed: 90
   Codespace: codespace
-  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, sdk.Tx(nil), "timestamp").String())
+  Timestamp: timestamp`, sdk.NewResponseResultTx(resultTx, nil, "timestamp").String())
 	require.True(t, sdk.TxResponse{}.Empty())
 	require.False(t, want.Empty())
 

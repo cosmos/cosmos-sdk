@@ -5,8 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -191,10 +192,10 @@ type multiInfo struct {
 
 // NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
-	multiPK := pub.(multisig.PubKeyMultisigThreshold)
+	multiPK := pub.(*multisig.LegacyAminoPubKey)
 
 	pubKeys := make([]multisigPubKeyInfo, len(multiPK.PubKeys))
-	for i, pk := range multiPK.PubKeys {
+	for i, pk := range multiPK.GetPubKeys() {
 		// TODO: Recursively check pk for total weight?
 		pubKeys[i] = multisigPubKeyInfo{pk, 1}
 	}
@@ -202,7 +203,7 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	return &multiInfo{
 		Name:      name,
 		PubKey:    pub,
-		Threshold: multiPK.K,
+		Threshold: uint(multiPK.Threshold),
 		PubKeys:   pubKeys,
 	}
 }
@@ -237,6 +238,13 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
+
+	return codectypes.UnpackInterfaces(multiPK, unpacker)
+}
+
 // encoding info
 func marshalInfo(i Info) []byte {
 	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
@@ -244,6 +252,16 @@ func marshalInfo(i Info) []byte {
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
+	// We first try to unmarshal into a multiInfo. This allows the unmarshal
+	// functions to unmarshal Anys correctly too.
+	var multi multiInfo
+	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+	if err == nil {
+		return multi, nil
+	}
+
+	// The above might fail, e.g. when Info is a local, offline or ledger info.
+	// In this case, we just unmarshal into the interface.
 	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }

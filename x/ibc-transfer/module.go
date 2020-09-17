@@ -305,16 +305,11 @@ func (am AppModule) OnRecvPacket(
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 
-	acknowledgement := types.FungibleTokenPacketAcknowledgement{
-		Success: true,
-		Error:   "",
-	}
+	acknowledgement := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	if err := am.keeper.OnRecvPacket(ctx, packet, data); err != nil {
-		acknowledgement = types.FungibleTokenPacketAcknowledgement{
-			Success: false,
-			Error:   err.Error(),
-		}
+	err := am.keeper.OnRecvPacket(ctx, packet, data)
+	if err != nil {
+		acknowledgement = channeltypes.NewErrorAcknowledgement(err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -324,6 +319,7 @@ func (am AppModule) OnRecvPacket(
 			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
 			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
 			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
+			sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", err != nil)),
 		),
 	)
 
@@ -338,7 +334,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 ) (*sdk.Result, error) {
-	var ack types.FungibleTokenPacketAcknowledgement
+	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
@@ -358,15 +354,23 @@ func (am AppModule) OnAcknowledgementPacket(
 			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
 			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
 			sdk.NewAttribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
-			sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success)),
+			sdk.NewAttribute(types.AttributeKeyAck, fmt.Sprintf("%v", ack)),
 		),
 	)
 
-	if !ack.Success {
+	switch resp := ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Result:
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypePacket,
-				sdk.NewAttribute(types.AttributeKeyAckError, ack.Error),
+				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
+			),
+		)
+	case *channeltypes.Acknowledgement_Error:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
 			),
 		)
 	}

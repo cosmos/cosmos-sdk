@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -24,12 +23,6 @@ var _ client.TxBuilder = &StdTxBuilder{}
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() authsigning.Tx {
 	return s.StdTx
-}
-
-// GetProtoTx implements TxBuilder.GetProtoTx
-func (s *StdTxBuilder) GetProtoTx() *txtypes.Tx {
-	// Stdtx isn't a proto.Message
-	return nil
 }
 
 // SetMsgs implements TxBuilder.SetMsgs

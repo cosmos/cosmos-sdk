@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -23,12 +25,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			consensusState, ok := consState.GetCachedValue().(exported.ConsensusState)
+			consensusState, ok := consState.ConsensusState.GetCachedValue().(exported.ConsensusState)
 			if !ok {
-				panic("invalid consensus state")
+				panic(fmt.Sprintf("invalid consensus state with client ID %s at height %s", cs.ClientId, consState.Height))
 			}
 
-			k.SetClientConsensusState(ctx, cs.ClientId, consensusState.GetHeight(), consensusState)
+			k.SetClientConsensusState(ctx, cs.ClientId, consState.Height, consensusState)
 		}
 	}
 
@@ -43,10 +45,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	// Hardcode 0 as epoch number for now
-	// TODO: Retrieve epoch from chain-id
+	epoch := types.ParseChainID(ctx.ChainID())
 	clientState := localhosttypes.NewClientState(
-		ctx.ChainID(), types.NewHeight(0, uint64(ctx.BlockHeight())),
+		ctx.ChainID(), types.NewHeight(epoch, uint64(ctx.BlockHeight())),
 	)
 
 	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)

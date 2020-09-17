@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -116,13 +117,13 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
 func CountSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(*kmultisig.LegacyAminoPubKey)
 	if !ok {
 		return 1
 	}
 
 	numKeys := 0
-	for _, subkey := range v.PubKeys {
+	for _, subkey := range v.GetPubKeys() {
 		numKeys += CountSubKeys(subkey)
 	}
 
@@ -133,7 +134,10 @@ func CountSubKeys(pub crypto.PubKey) int {
 // DEPRECATED
 // ---------------------------------------------------------------------------
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx             = (*StdTx)(nil)
+	_ codectypes.IntoAny = (*StdTx)(nil)
+)
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
@@ -187,6 +191,11 @@ func (tx StdTx) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// AsAny implements IntoAny.AsAny.
+func (tx *StdTx) AsAny() *codectypes.Any {
+	return codectypes.UnsafePackAny(tx)
 }
 
 // GetSigners returns the addresses that must sign the transaction.

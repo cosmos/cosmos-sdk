@@ -35,7 +35,7 @@ func (suite *LocalhostTestSuite) TestValidate() {
 		},
 		{
 			name:        "invalid height",
-			clientState: types.NewClientState("chainID", clienttypes.Height{}),
+			clientState: types.NewClientState("chainID", clienttypes.ZeroHeight()),
 			expPass:     false,
 		},
 	}

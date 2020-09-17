@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-08-07: Initial Draft
+- 2020-09-01: Further clarify rules
 
 ## Status
 
@@ -11,14 +12,33 @@ Proposed
 ## Context
 
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
-seralization is not unique (i.e. there exist a practically unlimited number of
+serialization is not bijective (i.e. there exist a practically unlimited number of
 valid binary representations for a protobuf document)<sup>1</sup>. For signature
 verification in Cosmos SDK, signer and verifier need to agree on the same
 serialization of a SignDoc as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
-serialization. This document describes a deterministic serialization scheme for
+serialization. This document describes a bijective serialization scheme for
 a subset of protobuf documents, that covers this use case but can be reused in
 other cases as well.
+
+### Background - Protobuf3 Encoding
+
+Most numeric types in protobuf3 are encoded as
+[varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
+Varints are at most 10 bytes, and since each varint byte has 7 bits of data,
+varints are a representation of `uint70` (70-bit unsigned integer). When
+encoding, numeric values are casted from their base type to `uint70`, and when
+decoding, the parsed `uint70` is casted to the appropriate numeric type.
+
+The maximum valid value for a varint that complies with protobuf3 is
+`FF FF FF FF FF FF FF FF FF 7F` (i.e. `2**70 -1`). If the field type is
+`{,u,s}int64`, the highest 6 bits of the 70 are dropped during decoding,
+introducing 6 bits of malleability. If the field type is `{,u,s}int32`, the
+highest 38 bits of the 70 are dropped during decoding, introducing 38 bits of
+malleability.
+
+Among other sources of non-determinism, this ADR eliminates the possibility of
+encoding malleability.
 
 ## Decision
 
@@ -30,13 +50,13 @@ This ADR defines a protobuf3 serializer. The output is a valid protobuf
 serialization, such that every protobuf parser can parse it.
 
 No maps are supported in version 1 due to the complexity of defining a
-derterministic serialization. This might change in future. Implementations must
+deterministic serialization. This might change in future. Implementations must
 reject documents containing maps as invalid input.
 
 ### Serialization rules
 
 The serialization is based on the
-[protobuf 3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
+[protobuf3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
 with the following additions:
 
 1. Fields must be serialized only once in ascending order
@@ -45,24 +65,38 @@ with the following additions:
    must be omitted
 4. `repeated` fields of scalar numeric types must use
    [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
-   by default.
-5. Variant encoding of integers must not be longer than needed.
+5. Varint encoding must not be longer than needed:
+    * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
+      endian). Per rule 3 above, the default value of `0` must be omitted, so
+      this rule does not apply in such cases.
+    * The maximum value for a varint must be `FF FF FF FF FF FF FF FF FF 01`.
+      In other words, when decoded, the highest 6 bits of the 70-bit unsigned
+      integer must be `0`. (10-byte varints are 10 groups of 7 bits, i.e.
+      70 bits, of which only the lowest 70-6=64 are useful.)
+    * The maximum value for 32-bit values in varint encoding must be `FF FF FF FF 0F`
+      with one exception (below). In other words, when decoded, the highest 38
+      bits of the 70-bit unsigned integer must be `0`.
+        * The one exception to the above is _negative_ `int32`, which must be
+          encoded using the full 10 bytes for sign extension<sup>2</sup>.
+    * The maximum value for Boolean values in varint encoding must be `01` (i.e.
+      it must be `0` or `1`). Per rule 3 above, the default value of `0` must
+      be omitted, so if a Boolean is included it must have a value of `1`.
 
 While rule number 1. and 2. should be pretty straight forward and describe the
-default behaviour of all protobuf encoders the author is aware of, the 3rd rule
-is more interesting. After a protobuf 3 deserialization you cannot differentiate
-between unset fields and fields set to the default value<sup>2</sup>. At
+default behavior of all protobuf encoders the author is aware of, the 3rd rule
+is more interesting. After a protobuf3 deserialization you cannot differentiate
+between unset fields and fields set to the default value<sup>3</sup>. At
 serialization level however, it is possible to set the fields with an empty
 value or omitting them entirely. This is a significant difference to e.g. JSON
 where a property can be empty (`""`, `0`), `null` or undefined, leading to 3
 different documents.
 
 Omitting fields set to default values is valid because the parser must assign
-the default value to fields missing in the serialization<sup>3</sup>. For scalar
-types, omitting defaults is required by the spec<sup>4</sup>. For `repeated`
+the default value to fields missing in the serialization<sup>4</sup>. For scalar
+types, omitting defaults is required by the spec<sup>5</sup>. For `repeated`
 fields, not serializing them is the only way to express empty lists. Enums must
-have a first element of numeric value 0, which is the default<sup>5</sup>. And
-message fields default to unset<sup>6</sup>.
+have a first element of numeric value 0, which is the default<sup>6</sup>. And
+message fields default to unset<sup>7</sup>.
 
 Omitting defaults allows for some amount of forward compatibility: users of
 newer versions of a protobuf schema produce the same serialization as users of
@@ -227,24 +261,25 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
   https://developers.google.com/protocol-buffers/docs/encoding#order
-- <sup>2</sup> _Note that for scalar message fields, once a message is parsed
+- <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
+- <sup>3</sup> _Note that for scalar message fields, once a message is parsed
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
-  don't have a boolean that switches on some behaviour when set to false if you
-  don't want that behaviour to also happen by default._ from
+  don't have a boolean that switches on some behavior when set to false if you
+  don't want that behavior to also happen by default._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>3</sup> _When a message is parsed, if the encoded message does not
+- <sup>4</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>4</sup> _Also note that if a scalar message field is set to its default,
+- <sup>5</sup> _Also note that if a scalar message field is set to its default,
   the value will not be serialized on the wire._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>5</sup> _For enums, the default value is the first defined enum value,
+- <sup>6</sup> _For enums, the default value is the first defined enum value,
   which must be 0._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
-- <sup>6</sup> _For message fields, the field is not set. Its exact value is
+- <sup>7</sup> _For message fields, the field is not set. Its exact value is
   language-dependent._ from
   https://developers.google.com/protocol-buffers/docs/proto3#default
 - Encoding rules and parts of the reasoning taken from

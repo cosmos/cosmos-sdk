@@ -12,7 +12,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var cdc = codec.NewLegacyAmino()
@@ -60,7 +60,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
-func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) *TxResponse {
+func NewResponseResultTx(res *ctypes.ResultTx, anyTx *codectypes.Any, timestamp string) *TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -78,7 +78,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) *TxRespo
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
-		Tx:        types.UnsafePackAny(tx),
+		Tx:        anyTx,
 		Timestamp: timestamp,
 	}
 }
@@ -213,22 +213,12 @@ func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
 }
 
-// SearchTxsResult defines a structure for querying txs pageable
-type SearchTxsResult struct {
-	TotalCount int           `json:"total_count"` // Count of all txs
-	Count      int           `json:"count"`       // Count of txs in current page
-	PageNumber int           `json:"page_number"` // Index of current page, start from 1
-	PageTotal  int           `json:"page_total"`  // Count of total pages
-	Limit      int           `json:"limit"`       // Max count txs per page
-	Txs        []*TxResponse `json:"txs"`         // List of txs in current page
-}
-
-func NewSearchTxsResult(totalCount, count, page, limit int, txs []*TxResponse) SearchTxsResult {
-	return SearchTxsResult{
+func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
+	return &SearchTxsResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Txs:        txs,
 	}
@@ -241,15 +231,15 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ types.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
 // there are generally interfaces to unpack in Tx's
-func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, tx := range s.Txs {
-		err := types.UnpackInterfaces(tx, unpacker)
+		err := codectypes.UnpackInterfaces(tx, unpacker)
 		if err != nil {
 			return err
 		}
@@ -258,7 +248,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (r TxResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
 		var tx Tx
 		return unpacker.UnpackAny(r.Tx, &tx)

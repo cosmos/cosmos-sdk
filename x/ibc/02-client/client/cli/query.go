@@ -211,7 +211,7 @@ func GetCmdQueryHeader() *cobra.Command {
 			}
 
 			clientCtx = clientCtx.WithHeight(height)
-			return clientCtx.PrintOutputLegacy(header)
+			return clientCtx.PrintOutput(&header)
 		},
 	}
 

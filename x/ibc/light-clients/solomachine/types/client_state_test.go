@@ -19,7 +19,7 @@ const (
 
 var (
 	prefix          = commitmenttypes.NewMerklePrefix([]byte("ibc"))
-	consensusHeight = clienttypes.Height{}
+	consensusHeight = clienttypes.ZeroHeight()
 )
 
 func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
@@ -40,22 +40,22 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 		},
 		{
 			"sequence is zero",
-			types.NewClientState(&types.ConsensusState{0, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
+			types.NewClientState(0, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
 			false,
 		},
 		{
 			"timestamp is zero",
-			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, 0}, false),
+			types.NewClientState(1, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, suite.solomachine.Diversifier, 0}, false),
 			false,
 		},
 		{
 			"diversifier is blank",
-			types.NewClientState(&types.ConsensusState{1, suite.solomachine.ConsensusState().PublicKey, "  ", 1}, false),
+			types.NewClientState(1, &types.ConsensusState{suite.solomachine.ConsensusState().PublicKey, "  ", 1}, false),
 			false,
 		},
 		{
 			"pubkey is empty",
-			types.NewClientState(&types.ConsensusState{suite.solomachine.Sequence, nil, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
+			types.NewClientState(1, &types.ConsensusState{nil, suite.solomachine.Diversifier, suite.solomachine.Time}, false),
 			false,
 		},
 	}
@@ -122,23 +122,27 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState(nil, false),
+			types.NewClientState(1, nil, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence-1,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
 				}, false),
@@ -148,9 +152,8 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
 				}, false),
@@ -182,7 +185,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 			var expSeq uint64
 			if tc.clientState.ConsensusState != nil {
-				expSeq = tc.clientState.ConsensusState.Sequence + 1
+				expSeq = tc.clientState.Sequence + 1
 			}
 
 			err := tc.clientState.VerifyClientState(
@@ -247,23 +250,27 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"consensus state in client state is nil",
-			types.NewClientState(nil, false),
+			types.NewClientState(1, nil, false),
 			prefix,
 			proof,
 			false,
 		},
 		{
 			"client state latest height is less than sequence",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence-1,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence - 1,
 					Timestamp: suite.solomachine.Time,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
 				}, false),
@@ -273,9 +280,8 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			"consensus state timestamp is greater than signature",
-			types.NewClientState(
+			types.NewClientState(suite.solomachine.Sequence,
 				&types.ConsensusState{
-					Sequence:  suite.solomachine.Sequence,
 					Timestamp: suite.solomachine.Time + 1,
 					PublicKey: suite.solomachine.ConsensusState().PublicKey,
 				}, false),
@@ -307,7 +313,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 			var expSeq uint64
 			if tc.clientState.ConsensusState != nil {
-				expSeq = tc.clientState.ConsensusState.Sequence + 1
+				expSeq = tc.clientState.Sequence + 1
 			}
 
 			err := tc.clientState.VerifyClientConsensusState(
@@ -368,7 +374,12 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -392,7 +403,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyConnectionState(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testConnectionID, conn,
@@ -451,7 +462,12 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -475,7 +491,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyChannelState(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, ch,
@@ -532,7 +548,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -556,7 +577,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketCommitment(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, commitmentBytes,
@@ -613,7 +634,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -637,7 +663,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgement(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence, ack,
@@ -693,7 +719,12 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -717,7 +748,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
@@ -774,7 +805,12 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		},
 		{
 			"client is frozen",
-			&types.ClientState{1, suite.solomachine.ConsensusState(), false},
+			&types.ClientState{
+				Sequence:                 1,
+				FrozenSequence:           1,
+				ConsensusState:           suite.solomachine.ConsensusState(),
+				AllowUpdateAfterProposal: false,
+			},
 			prefix,
 			proof,
 			false,
@@ -798,7 +834,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	for i, tc := range testCases {
 		tc := tc
 
-		expSeq := tc.clientState.ConsensusState.Sequence + 1
+		expSeq := tc.clientState.Sequence + 1
 
 		err := tc.clientState.VerifyNextSequenceRecv(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, nextSeqRecv,

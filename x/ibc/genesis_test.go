@@ -46,9 +46,12 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
 							clientID,
-							[]exported.ConsensusState{
-								ibctmtypes.NewConsensusState(
-									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight().(clienttypes.Height), suite.header.Header.NextValidatorsHash,
+							[]clienttypes.ConsensusStateWithHeight{
+								clienttypes.NewConsensusStateWithHeight(
+									suite.header.GetHeight().(clienttypes.Height),
+									ibctmtypes.NewConsensusState(
+										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+									),
 								),
 							},
 						),
@@ -100,7 +103,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
-							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", clienttypes.Height{}),
+							exported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
 						),
 					},
 					nil,
@@ -175,9 +178,12 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
 							clientID,
-							[]exported.ConsensusState{
-								ibctmtypes.NewConsensusState(
-									suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.GetHeight().(clienttypes.Height), suite.header.Header.NextValidatorsHash,
+							[]clienttypes.ConsensusStateWithHeight{
+								clienttypes.NewConsensusStateWithHeight(
+									suite.header.GetHeight().(clienttypes.Height),
+									ibctmtypes.NewConsensusState(
+										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+									),
 								),
 							},
 						),

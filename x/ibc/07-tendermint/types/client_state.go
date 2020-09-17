@@ -34,7 +34,7 @@ func NewClientState(
 		UnbondingPeriod:              ubdPeriod,
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
-		FrozenHeight:                 clienttypes.Height{},
+		FrozenHeight:                 clienttypes.ZeroHeight(),
 		ProofSpecs:                   specs,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
 		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,

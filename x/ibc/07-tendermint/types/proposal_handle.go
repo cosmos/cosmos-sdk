@@ -48,7 +48,7 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 		}
 
 		// unfreeze the client
-		cs.FrozenHeight = clienttypes.Height{}
+		cs.FrozenHeight = clienttypes.ZeroHeight()
 
 		// if the client is expired we unexpire the client using softer validation, otherwise
 		// full validation on the header is performed.

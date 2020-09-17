@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // RegisterLegacyAminoCodec registers the sdk message type.

@@ -50,7 +50,7 @@ func (any *Any) UnmarshalAmino(bz []byte) error {
 	return nil
 }
 
-func (any Any) MarshalJSON() ([]byte, error) {
+func (any *Any) MarshalJSON() ([]byte, error) {
 	ac := any.compat
 	if ac == nil {
 		return nil, anyCompatError("JSON marshal", any)

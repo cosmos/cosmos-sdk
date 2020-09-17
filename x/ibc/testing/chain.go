@@ -181,10 +181,12 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
+	epoch := clienttypes.ParseChainID(chain.ChainID)
+
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, clienttypes.NewHeight(0, uint64(res.Height)+1)
+	return proof, clienttypes.NewHeight(epoch, uint64(res.Height)+1)
 }
 
 // QueryClientStateProof performs and abci query for a client state
@@ -203,11 +205,9 @@ func (chain *TestChain) QueryClientStateProof(clientID string) (exported.ClientS
 // QueryConsensusStateProof performs an abci query for a consensus state
 // stored on the given clientID. The proof and consensusHeight are returned.
 func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clienttypes.Height) {
-	// retrieve consensus state to provide proof for
-	consState, found := chain.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(chain.GetContext(), clientID)
-	require.True(chain.t, found)
+	clientState := chain.GetClientState(clientID)
 
-	consensusHeight := consState.GetHeight().(clienttypes.Height)
+	consensusHeight := clientState.GetLatestHeight().(clienttypes.Height)
 	consensusKey := host.FullKeyClientPath(clientID, host.KeyConsensusState(consensusHeight))
 	proofConsensus, _ := chain.QueryProof(consensusKey)
 

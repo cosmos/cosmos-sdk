@@ -241,11 +241,8 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
-	err := codectypes.UnpackInterfaces(multiPK, unpacker)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return codectypes.UnpackInterfaces(multiPK, unpacker)
 }
 
 // encoding info
@@ -255,6 +252,16 @@ func marshalInfo(i Info) []byte {
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
+	// We first try to unmarshal into a multiInfo. This allows the unmarshal
+	// functions to unmarshal Anys correctly too.
+	var multi multiInfo
+	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+	if err == nil {
+		return multi, nil
+	}
+
+	// The above might fail, e.g. when Info is a local, offline or ledger info.
+	// In this case, we just unmarshal into the interface.
 	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }

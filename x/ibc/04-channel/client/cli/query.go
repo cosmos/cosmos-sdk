@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	flagSequences        = "sequences"
-	flagAcknowledgements = "acknowledgements"
+	flagSequences = "sequences"
 )
 
 // GetCmdQueryChannels defines the command to query all the channels ends
@@ -310,7 +309,7 @@ func GetCmdQueryUnrelayedAcks() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unrelayed-acks [port-id] [channel-id]",
 		Short: "Query all the unrelayed acks associated with a channel",
-		Long: `Given a list of packet commitment sequences from counterpary, determine if an ack on executing chain has not been relayed to counterparty.
+		Long: `Given a list of packet commitment sequences from counterparty, determine if an ack on executing chain has not been relayed to counterparty.
 
 The return value represents:
 - Unrelayed packet acknowledgement: packet commitment exists on original sending chain and ack exists on receiving (executing) chain.

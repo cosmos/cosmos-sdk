@@ -370,7 +370,7 @@ func (q Keeper) UnreceivedPackets(c context.Context, req *types.QueryUnreceivedP
 // Then input the returned sequences into the QueryUnrelayedPacketsRequest
 // and send the request to this Query/UnrelayedPackets on the **receiving**
 // chain. This gRPC method will then return the list of packet sequences whose
-// acknowledgements are already written on the receving chain but haven't yet
+// acknowledgements are already written on the receiving chain but haven't yet
 // been relayed back to the sending chain.
 //
 // NOTE: The querier makes the assumption that the provided list of packet

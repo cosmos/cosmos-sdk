@@ -456,42 +456,43 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 	}
 }
 
-// func (s *IntegrationTestSuite) TestCmdGetProposals() {
-// 	val := s.network.Validators[0]
+func (s *IntegrationTestSuite) TestCmdGetProposals() {
+	val := s.network.Validators[0]
 
-// 	testCases := []struct {
-// 		name      string
-// 		args      []string
-// 		expectErr bool
-// 	}{
-// 		{
-// 			"get proposals as json repsonse",
-// 			[]string{
-// 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-// 			},
-// 			false,
-// 		},
-// 	}
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"get proposals as json repsonse",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.GetCmdQueryProposals()
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryProposals()
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err)
-// 				var proposals types.Proposals
-// 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposals), out.String())
-// 				s.Require().Len(proposals, 1)
-// 			}
-// 		})
-// 	}
-// }
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				var proposals types.QueryProposalsResponse
+
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &proposals), out.String())
+				s.Require().Len(proposals.Proposals, 2)
+			}
+		})
+	}
+}
 
 func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 	val := s.network.Validators[0]

@@ -1,4 +1,4 @@
-package keys
+package codec
 
 import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"

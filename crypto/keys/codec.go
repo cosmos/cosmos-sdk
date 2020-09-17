@@ -1,16 +1,15 @@
 package keys
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // RegisterInterfaces registers the sdk.Tx interface.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterInterface("crypto.Pubkey", (*crypto.PubKey)(nil))
-	registry.RegisterImplementations((*crypto.PubKey)(nil), &secp256k1.PubKey{})
-	registry.RegisterImplementations((*crypto.PubKey)(nil), &multisig.LegacyAminoPubKey{})
+	registry.RegisterInterface("crypto.Pubkey", (*cryptotypes.PubKey)(nil))
+	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &multisig.LegacyAminoPubKey{})
 }

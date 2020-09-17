@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
@@ -14,7 +15,8 @@ import (
 
 func TestGenerator(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	suite.Run(t, testutil.NewTxConfigTestSuite(NewTxConfig(marshaler, DefaultSignModes)))
+	protoCodec := codec.NewProtoCodec(interfaceRegistry)
+	suite.Run(t, testutil.NewTxConfigTestSuite(NewTxConfig(protoCodec, DefaultSignModes)))
 }

@@ -4,6 +4,10 @@ package rest_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,6 +107,90 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
 	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
 	s.Require().NotEmpty(txRes.TxHash)
+}
+
+func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
+
+	val0 := s.network.Validators[0]
+	txConfig := authtypes.StdTxConfig{Cdc: s.cfg.LegacyAmino}
+
+	// First test transaction from validator should have sequence=1 (non-genesis tx)
+	testCases := []struct {
+		desc      string
+		sequence  uint64
+		shouldErr bool
+	}{
+		{
+			"First tx (correct sequence)",
+			1,
+			false,
+		},
+		{
+			"Second tx (correct sequence)",
+			2,
+			false,
+		},
+		{
+			"Third tx (incorrect sequence)",
+			9,
+			true,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
+			msg := &types.MsgSend{
+				val0.Address,
+				val0.Address,
+				sdk.Coins{sdk.NewInt64Coin("foo", 100)},
+			}
+
+			// prepare txBuilder with msg
+			txBuilder := txConfig.NewTxBuilder()
+			feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+			gasLimit := testdata.NewTestGasLimit()
+			txBuilder.SetMsgs(msg)
+			txBuilder.SetFeeAmount(feeAmount)
+			txBuilder.SetGasLimit(gasLimit)
+
+			// setup txFactory
+			txFactory := tx.Factory{}
+			txFactory = txFactory.
+				WithChainID(val0.ClientCtx.ChainID).
+				WithKeybase(val0.ClientCtx.Keyring).
+				WithTxConfig(txConfig).
+				WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
+				WithSequence(tc.sequence)
+
+			// sign Tx (offline mode so we can manually set sequence number)
+			err := authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, true)
+			s.Require().NoError(err)
+
+			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
+			stdTx := txBuilder.GetTx().(authtypes.StdTx)
+			res, err := s.broadcastReq(stdTx, "sync")
+			s.Require().NoError(err)
+
+			var txRes sdk.TxResponse
+			// NOTE: this uses amino explicitly, don't migrate it!
+			s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &txRes))
+			// we check for a exitCode=0, indicating a successful broadcast
+			if tc.shouldErr {
+				var sigVerifyFailureCode uint32 = 4
+				s.Require().Equal(sigVerifyFailureCode, txRes.Code,
+					"Testcase '%s': Expected signature verification failure {Code: %d} from TxResponse. "+
+						"Found {Code: %d, RawLog: '%v'}",
+					tc.desc, sigVerifyFailureCode, txRes.Code, txRes.RawLog,
+				)
+			} else {
+				s.Require().Equal(uint32(0), txRes.Code,
+					"Testcase '%s': TxResponse errored unexpectedly. Err: {Code: %d, RawLog: '%v'}",
+					tc.desc, txRes.Code, txRes.RawLog,
+				)
+			}
+		})
+	}
+
 }
 
 func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) ([]byte, error) {

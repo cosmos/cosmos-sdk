@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -99,7 +98,7 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 // IterateConsensusStates provides an iterator over all stored consensus states.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs exported.ConsensusState) bool) {
+func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs types.ConsensusStateWithHeight) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyClientStorePrefix)
 
@@ -111,9 +110,12 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
+		height := types.MustParseHeight(keySplit[3])
 		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
-		if cb(clientID, consensusState) {
+		consensusStateWithHeight := types.NewConsensusStateWithHeight(height, consensusState)
+
+		if cb(clientID, consensusStateWithHeight) {
 			break
 		}
 	}
@@ -133,18 +135,16 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 	clientConsStates := make(types.ClientsConsensusStates, 0)
 	mapClientIDToConsStateIdx := make(map[string]int)
 
-	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
-		anyConsensusState := types.MustPackConsensusState(cs)
-
+	k.IterateConsensusStates(ctx, func(clientID string, cs types.ConsensusStateWithHeight) bool {
 		idx, ok := mapClientIDToConsStateIdx[clientID]
 		if ok {
-			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyConsensusState)
+			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, cs)
 			return false
 		}
 
 		clientConsState := types.ClientConsensusStates{
 			ClientId:        clientID,
-			ConsensusStates: []*codectypes.Any{anyConsensusState},
+			ConsensusStates: []types.ConsensusStateWithHeight{cs},
 		}
 
 		clientConsStates = append(clientConsStates, clientConsState)
@@ -189,14 +189,15 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-// TODO: Replace height with *clienttypes.Height once interfaces change
+// For now, can only retrieve self consensus states for the current epoch
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
-	// TODO: check self chain-id against epoch number
 	selfHeight, ok := height.(types.Height)
 	if !ok {
 		return nil, false
 	}
-	if selfHeight.EpochNumber != 0 {
+	// check that height epoch matches chainID epoch
+	epoch := types.ParseChainID(ctx.ChainID())
+	if epoch != height.GetEpochNumber() {
 		return nil, false
 	}
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.EpochHeight))
@@ -205,7 +206,6 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	}
 
 	consensusState := &ibctmtypes.ConsensusState{
-		Height:             selfHeight,
 		Timestamp:          histInfo.Header.Time,
 		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.GetAppHash()),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
@@ -215,6 +215,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 
 // ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
+// Client must be in same epoch as the executing chain
 func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
@@ -231,9 +232,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	// For now, assume epoch number is zero
-	// TODO: Retrieve epoch number from chain-id
-	selfHeight := types.NewHeight(0, uint64(ctx.BlockHeight()))
+	epoch := types.ParseChainID(ctx.ChainID())
+
+	// client must be in the same epoch as executing chain
+	if tmClient.LatestHeight.EpochNumber != epoch {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same epoch as the chain. expected epoch: %d, got: %d",
+			tmClient.LatestHeight.EpochNumber, epoch)
+	}
+
+	selfHeight := types.NewHeight(epoch, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())

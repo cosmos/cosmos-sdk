@@ -90,6 +90,9 @@ simd:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
 
+simd-linux: go.sum
+	$(MAKE) simd GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false
+
 build-simd-all: go.sum
 	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
@@ -211,10 +214,10 @@ TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 
-test-unit: ARGS=-tags='cgo ledger test_ledger_mock'
-test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino'
-test-ledger: ARGS=-tags='cgo ledger'
-test-ledger-mock: ARGS=-tags='ledger test_ledger_mock'
+test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
+test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
+test-ledger: ARGS=-tags='cgo ledger norace'
+test-ledger-mock: ARGS=-tags='ledger test_ledger_mock norace'
 test-race: ARGS=-race -tags='cgo ledger test_ledger_mock'
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 
@@ -433,7 +436,7 @@ proto-update-deps:
 ###############################################################################
 
 # Run a 4-node testnet locally
-localnet-start: build-simd-linux localnet-stop
+localnet-start: $(BUILDDIR)/simd localnet-stop
 	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
 	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
 		--user $(shell id -u):$(shell id -g) \

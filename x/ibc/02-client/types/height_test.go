@@ -79,3 +79,70 @@ func TestString(t *testing.T) {
 	require.NoError(t, err, "parse err")
 	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
 }
+
+func (suite *TypesTestSuite) TestMustParseHeight() {
+	suite.Require().Panics(func() {
+		types.MustParseHeight("height")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("111-1")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("0-0")
+	})
+}
+
+func TestParseChainID(t *testing.T) {
+	cases := []struct {
+		chainID   string
+		epoch     uint64
+		formatted bool
+	}{
+		{"gaiamainnet-3", 3, true},
+		{"gaia-mainnet-40", 40, true},
+		{"gaiamainnet-3-39", 39, true},
+		{"gaiamainnet--", 0, false},
+		{"gaiamainnet-03", 0, false},
+		{"gaiamainnet--4", 0, false},
+		{"gaiamainnet-3.4", 0, false},
+		{"gaiamainnet", 0, false},
+	}
+
+	for i, tc := range cases {
+		require.Equal(t, tc.formatted, types.IsEpochFormat(tc.chainID), "case %d does not match expected format", i)
+
+		epoch := types.ParseChainID(tc.chainID)
+		require.Equal(t, tc.epoch, epoch, "case %d returns incorrect epoch", i)
+	}
+
+}
+
+func TestSetEpochNumber(t *testing.T) {
+	// Test SetEpochNumber
+	chainID, err := types.SetEpochNumber("gaiamainnet", 3)
+	require.Error(t, err, "invalid epoch format passed SetEpochNumber")
+	require.Equal(t, "", chainID, "invalid epoch format returned non-empty string on SetEpochNumber")
+	chainID = "gaiamainnet-3"
+
+	chainID, err = types.SetEpochNumber(chainID, 4)
+	require.NoError(t, err, "valid epoch format failed SetEpochNumber")
+	require.Equal(t, "gaiamainnet-4", chainID, "valid epoch format returned incorrect string on SetEpochNumber")
+}
+
+func (suite *TypesTestSuite) TestSelfHeight() {
+	ctx := suite.chainA.GetContext()
+
+	// Test default epoch
+	ctx = ctx.WithChainID("gaiamainnet")
+	ctx = ctx.WithBlockHeight(10)
+	height := types.GetSelfHeight(ctx)
+	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
+
+	// Test successful epoch format
+	ctx = ctx.WithChainID("gaiamainnet-3")
+	ctx = ctx.WithBlockHeight(18)
+	height = types.GetSelfHeight(ctx)
+	suite.Require().Equal(types.NewHeight(3, 18), height, "valid self height failed")
+}

@@ -101,6 +101,18 @@ type BaseApp struct { // nolint: maligned
 	// minimum block time (in Unix seconds) at which to halt the chain and gracefully shutdown
 	haltTime uint64
 
+	// minRetainBlocks defines the minimum block height offset from the current
+	// block being committed, such that all blocks past this offset are pruned
+	// from Tendermint. It is used as part of the process of determining the
+	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+	// that no blocks should be pruned.
+	//
+	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// with the unbonding (safety threshold) period, state pruning and state sync
+	// snapshot parameters to determine the correct minimum value of
+	// ResponseCommit.RetainHeight.
+	minRetainBlocks uint64
+
 	// application's version string
 	appVersion string
 
@@ -296,6 +308,10 @@ func (app *BaseApp) setHaltHeight(haltHeight uint64) {
 
 func (app *BaseApp) setHaltTime(haltTime uint64) {
 	app.haltTime = haltTime
+}
+
+func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
+	app.minRetainBlocks = minRetainBlocks
 }
 
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {

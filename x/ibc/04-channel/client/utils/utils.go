@@ -46,7 +46,11 @@ func queryPacketCommitmentABCI(
 		return nil, err
 	}
 
-	// TODO: retrieve epoch number from chain-id
+	// check if packet commitment exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrPacketCommitmentNotFound, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
+	}
+
 	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
 }
 
@@ -75,6 +79,11 @@ func queryChannelABCI(clientCtx client.Context, portID, channelID string) (*type
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if channel exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, "portID (%s), channelID (%s)", portID, channelID)
 	}
 
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -142,13 +151,8 @@ func QueryChannelConsensusState(
 		return nil, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
-		return nil, err
-	}
-
 	if prove {
-		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, height)
 		if err != nil {
 			return nil, err
 		}
@@ -163,32 +167,32 @@ func QueryChannelConsensusState(
 // latest ConsensusState given the source port ID and source channel ID.
 func QueryLatestConsensusState(
 	clientCtx client.Context, portID, channelID string,
-) (exported.ConsensusState, clienttypes.Height, error) {
+) (exported.ConsensusState, clienttypes.Height, clienttypes.Height, error) {
 	clientRes, err := QueryChannelClientState(clientCtx, portID, channelID, false)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 	clientState, err := clienttypes.UnpackClientState(clientRes.IdentifiedClientState.ClientState)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	clientHeight, ok := clientState.GetLatestHeight().(clienttypes.Height)
 	if !ok {
-		return nil, clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
+		return nil, clienttypes.Height{}, clienttypes.Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected type: %T, got: %T",
 			clienttypes.Height{}, clientHeight)
 	}
 	res, err := QueryChannelConsensusState(clientCtx, portID, channelID, clientHeight, false)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
 	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
 	if err != nil {
-		return nil, clienttypes.Height{}, err
+		return nil, clienttypes.Height{}, clienttypes.Height{}, err
 	}
 
-	return consensusState, res.ProofHeight, nil
+	return consensusState, clientHeight, res.ProofHeight, nil
 }
 
 // QueryNextSequenceReceive returns the next sequence receive.
@@ -218,8 +222,12 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 		return nil, err
 	}
 
+	// check if next sequence receive exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, "portID (%s), channelID (%s)", portID, channelID)
+	}
+
 	sequence := binary.BigEndian.Uint64(value)
 
-	// TODO: retrieve epoch number from chain-id
 	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, proofHeight), nil
 }

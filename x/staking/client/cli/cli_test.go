@@ -927,6 +927,16 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 		{
 			"with no edit flag (since all are optional)",
 			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "with wrong from address"),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"with no edit flag (since all are optional)",
+			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1153,6 +1163,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 				val2.ValAddress.String(),                               // dst-validator-addr
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

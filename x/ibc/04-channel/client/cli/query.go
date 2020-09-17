@@ -261,7 +261,7 @@ func GetCmdQueryUnreceivedPackets() *cobra.Command {
 		Long: `Determine if a packet, given a list of packet commitment sequences, is unreceived.
 
 The return value represents:
-- Unrelayed packet commitments: no acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
+- Unreceived packet commitments: no acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
 `,
 		Example: fmt.Sprintf("%s query %s %s unreceived-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),

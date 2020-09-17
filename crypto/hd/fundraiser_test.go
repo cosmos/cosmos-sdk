@@ -65,7 +65,8 @@ func TestFundraiserCompatibility(t *testing.T) {
 		master, ch := hd.ComputeMastersFromSeed(seed)
 		priv, err := hd.DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
 		require.NoError(t, err)
-		pub := secp256k1.PrivKey(priv).PubKey()
+		privKey := &secp256k1.PrivKey{Key: priv}
+		pub := privKey.PubKey()
 
 		t.Log("\tNODEJS GOLANG\n")
 		t.Logf("SEED \t%X %X\n", seedB, seed)
@@ -78,7 +79,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		require.Equal(t, priv[:], privB, "Expected priv keys to match")
 		pubBFixed := make([]byte, secp256k1.PubKeySize)
 		copy(pubBFixed, pubB)
-		require.Equal(t, pub, secp256k1.PubKey(pubBFixed), fmt.Sprintf("Expected pub keys to match for %d", i))
+		require.Equal(t, pub, &secp256k1.PubKey{Key: pubBFixed}, fmt.Sprintf("Expected pub keys to match for %d", i))
 
 		addr := pub.Address()
 		t.Logf("ADDR  \t%X %X\n", addrB, addr)

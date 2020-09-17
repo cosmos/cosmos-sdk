@@ -2,8 +2,7 @@ package types
 
 import (
 	"encoding/hex"
-	"errors"
-	fmt "fmt"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -62,13 +61,17 @@ func (dt DenomTrace) IBCDenom() string {
 
 // GetFullDenomPath returns the full denomination according to the ICS20 specification:
 // tracePath + "/" + baseDenom
+// If there exists no trace then the base denomination is returned.
 func (dt DenomTrace) GetFullDenomPath() string {
+	if dt.Path == "" {
+		return dt.BaseDenom
+	}
 	return dt.GetPrefix() + dt.BaseDenom
 }
 
 func validateTraceIdentifiers(identifiers []string) error {
 	if len(identifiers) == 0 || len(identifiers)%2 != 0 {
-		return errors.New("trace info must come in pairs of port and channel identifiers '{portID}/{channelID}'")
+		return fmt.Errorf("trace info must come in pairs of port and channel identifiers '{portID}/{channelID}', got the identifiers: %s", identifiers)
 	}
 
 	// validate correctness of port and channel identifiers

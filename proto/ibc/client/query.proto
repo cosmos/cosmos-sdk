@@ -107,7 +107,7 @@ message QueryConsensusStatesRequest {
 // QueryConsensusStatesResponse is the response type for the Query/ConsensusStates RPC method
 message QueryConsensusStatesResponse {
   // consensus states associated with the identifier
-  repeated google.protobuf.Any consensus_states = 1;
+  repeated ConsensusStateWithHeight consensus_states = 1 [(gogoproto.nullable) = false];
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

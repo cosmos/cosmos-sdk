@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: Cosmos SDK - Legacy Rest and gRPC Gateway docs
+  title: Cosmos SDK - Legacy REST and gRPC Gateway docs
   description: 'A REST interface for state queries, legacy transactions'
   version: 1.0.0
 paths:
@@ -11965,9 +11965,9 @@ paths:
                         type: string
                       title: >-
                         list of connection identifiers, in order, along which
-                        packets sent on this
+                        packets sent on
 
-                        channel will travel
+                        this channel will travel
                     version:
                       type: string
                       title: >-
@@ -12014,9 +12014,31 @@ paths:
                            PageResponse page = 2;
                    }
               height:
-                type: string
-                format: int64
                 title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             description: >-
               QueryChannelsResponse is the response type for the Query/Channels
               RPC method.
@@ -12325,9 +12347,9 @@ paths:
                       type: string
                     title: >-
                       list of connection identifiers, in order, along which
-                      packets sent on this
+                      packets sent on
 
-                      channel will travel
+                      this channel will travel
                   version:
                     type: string
                     title: >-
@@ -12349,9 +12371,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             description: >-
               QueryChannelResponse is the response type for the Query/Channel
               RPC method.
@@ -12760,8 +12804,10 @@ paths:
                             "value": "1.212s"
                           }
                 description: >-
-                  IdentifiedClientState defines a client state with additional
-                  client identifier field.
+                  IdentifiedClientState defines a client state with an
+                  additional client
+
+                  identifier field.
               proof:
                 type: string
                 format: byte
@@ -12770,9 +12816,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryChannelClientStateResponse is the Response type for the
               Query/QueryChannelClientState RPC method
@@ -12978,7 +13046,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/{height}':
+  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/epoch/{epoch_number}/height/{epoch_height}':
     get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
@@ -13173,9 +13241,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryChannelClientStateResponse is the Response type for the
               Query/QueryChannelClientState RPC method
@@ -13379,8 +13469,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: height
-          description: height of the consensus state
+        - name: epoch_number
+          description: epoch number of the consensus state
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: epoch_height
+          description: epoch height of the consensus state
           in: path
           required: true
           type: string
@@ -13411,9 +13507,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QuerySequenceResponse is the request type for the
               Query/QueryNextSequenceReceiveResponse RPC method
@@ -13641,9 +13759,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: >-
               QueryPacketAcknowledgementResponse defines the client query
               response for a
@@ -13927,9 +14067,31 @@ paths:
                            PageResponse page = 2;
                    }
               height:
-                type: string
-                format: int64
                 title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryPacketCommitmentsResponse is the request type for the
               Query/QueryPacketCommitments RPC method
@@ -14180,12 +14342,14 @@ paths:
           format: boolean
       tags:
         - Query
-  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/packet_acks/{acknowledgements}/unrelayed_packets':
+  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets':
     get:
-      summary: |-
-        UnrelayedPackets returns all the unrelayed IBC packets associated with a
+      summary: >-
+        UnreceivedPackets returns all the unrelayed IBC packets associated with
+        a
+
         channel and sequences.
-      operationId: UnrelayedPackets
+      operationId: UnreceivedPackets
       responses:
         '200':
           description: A successful response.
@@ -14197,14 +14361,36 @@ paths:
                 items:
                   type: string
                   format: uint64
-                title: list of unrelayed packet sequences
+                title: list of unreceived packet sequences
               height:
-                type: string
-                format: int64
                 title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
-              QueryUnrelayedPacketsResponse is the request type for the
-              Query/UnrelayedPacketCommitments RPC method
+              QueryUnreceivedPacketsResponse is the response type for the
+              Query/UnreceivedPacketCommitments RPC method
         default:
           description: An unexpected error response
           schema:
@@ -14415,14 +14601,267 @@ paths:
             format: uint64
           collectionFormat: csv
           minItems: 1
-        - name: acknowledgements
-          description: |-
-            flag indicating if the return value is packet commitments or
-            acknowledgements
+      tags:
+        - Query
+  '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unrelayed_acks':
+    get:
+      summary: >-
+        UnrelayedAcks returns all the unrelayed IBC acknowledgements associated
+        with a
+
+        channel and sequences.
+      operationId: UnrelayedAcks
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              sequences:
+                type: array
+                items:
+                  type: string
+                  format: uint64
+                title: list of unrelayed acknowledgement sequences
+              height:
+                title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
+            title: |-
+              QueryUnrelayedAcksResponse is the response type for the
+              Query/UnrelayedAcks RPC method
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: channel_id
+          description: channel unique identifier
           in: path
           required: true
-          type: boolean
-          format: boolean
+          type: string
+        - name: port_id
+          description: port unique identifier
+          in: path
+          required: true
+          type: string
+        - name: packet_commitment_sequences
+          description: list of commitment sequences
+          in: path
+          required: true
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: csv
+          minItems: 1
       tags:
         - Query
   '/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}':
@@ -14447,9 +14886,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: >-
               QueryPacketCommitmentResponse defines the client query response
               for a packet
@@ -14738,9 +15199,9 @@ paths:
                         type: string
                       title: >-
                         list of connection identifiers, in order, along which
-                        packets sent on this
+                        packets sent on
 
-                        channel will travel
+                        this channel will travel
                     version:
                       type: string
                       title: >-
@@ -14787,9 +15248,31 @@ paths:
                            PageResponse page = 2;
                    }
               height:
-                type: string
-                format: int64
                 title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryConnectionChannelsResponse is the Response type for the
               Query/QueryConnectionChannels RPC method
@@ -15232,8 +15715,10 @@ paths:
                               "value": "1.212s"
                             }
                   description: >-
-                    IdentifiedClientState defines a client state with additional
-                    client identifier field.
+                    IdentifiedClientState defines a client state with an
+                    additional client
+
+                    identifier field.
                 description: list of stored ClientStates of the chain.
               pagination:
                 title: pagination response
@@ -15695,9 +16180,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             description: >-
               QueryClientStateResponse is the response type for the
               Query/ClientState RPC
@@ -15920,178 +16427,214 @@ paths:
                 items:
                   type: object
                   properties:
-                    type_url:
-                      type: string
+                    height:
+                      title: consensus state height
+                      type: object
+                      properties:
+                        epoch_number:
+                          type: string
+                          format: uint64
+                          title: the epoch that the client is currently on
+                        epoch_height:
+                          type: string
+                          format: uint64
+                          title: the height within the given epoch
                       description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
+                        Normally the EpochHeight is incremented at each height
+                        while keeping epoch
 
-                        protocol buffer message. This string must contain at
-                        least
+                        number the same However some consensus algorithms may
+                        choose to reset the
 
-                        one "/" character. The last segment of the URL's path
-                        must represent
+                        height in certain conditions e.g. hard forks,
+                        state-machine breaking changes
 
-                        the fully qualified name of the type (as in
+                        In these cases, the epoch number is incremented so that
+                        height continues to
 
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
+                        be monitonically increasing even as the EpochHeight gets
+                        reset
+                    consensus_state:
+                      title: consensus state
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                          description: >-
+                            A URL/resource name that uniquely identifies the
+                            type of the serialized
 
-                        (e.g., leading "." is not accepted).
+                            protocol buffer message. This string must contain at
+                            least
 
+                            one "/" character. The last segment of the URL's
+                            path must represent
 
-                        In practice, teams usually precompile into the binary
-                        all types that they
+                            the fully qualified name of the type (as in
 
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
+                            `path/google.protobuf.Duration`). The name should be
+                            in a canonical form
 
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com.
+                            (e.g., leading "." is not accepted).
 
 
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
+                            In practice, teams usually precompile into the
+                            binary all types that they
 
-                        used with implementation specific semantics.
-                    value:
-                      type: string
-                      format: byte
+                            expect it to use in the context of Any. However, for
+                            URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can
+                            optionally set up a type
+
+                            server that maps type URLs to message definitions as
+                            follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a
+                            [google.protobuf.Type][]
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results
+                            based on the
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available
+                            in the official
+
+                            protobuf release, and it is not used for type URLs
+                            beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty
+                            scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
+                          type: string
+                          format: byte
+                          description: >-
+                            Must be a valid serialized protocol buffer of the
+                            above specified type.
                       description: >-
-                        Must be a valid serialized protocol buffer of the above
-                        specified type.
+                        `Any` contains an arbitrary serialized protocol buffer
+                        message along with a
+
+                        URL that describes the type of the serialized message.
+
+
+                        Protobuf library provides support to pack/unpack Any
+                        values in the form
+
+                        of utility functions or additional generated methods of
+                        the Any type.
+
+
+                        Example 1: Pack and unpack a message in C++.
+
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by
+                        default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and
+                        the unpack
+
+                        methods only use the fully qualified type name after the
+                        last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will
+                        yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the
+                        regular
+
+                        representation of the deserialized, embedded message,
+                        with an
+
+                        additional field `@type` which contains the type URL.
+                        Example:
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a
+                        custom JSON
+
+                        representation, that representation will be embedded
+                        adding a field
+
+                        `value` which holds the custom JSON in addition to the
+                        `@type`
+
+                        field. Example (for message
+                        [google.protobuf.Duration][]):
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
                   description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := ptypes.MarshalAny(foo)
-                         ...
-                         foo := &pb.Foo{}
-                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
+                    ConsensusStateWithHeight defines a consensus state with an
+                    additional height field.
                 title: consensus states associated with the identifier
               pagination:
                 title: pagination response
@@ -16366,7 +16909,7 @@ paths:
           format: boolean
       tags:
         - Query
-  '/ibc/client/v1beta1/consensus_states/{client_id}/{height}':
+  '/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/height/{epoch_height}':
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -16560,9 +17103,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: >-
               QueryConsensusStateResponse is the response type for the
               Query/ConsensusState RPC method
@@ -16761,8 +17326,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: height
-          description: consensus state height
+        - name: epoch_number
+          description: consensus state epoch number
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: epoch_height
+          description: consensus state epoch height
           in: path
           required: true
           type: string
@@ -16802,9 +17373,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was generated
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryClientConnectionsResponse is the response type for the
               Query/ClientConnections RPC method
@@ -17104,9 +17697,31 @@ paths:
                            PageResponse page = 2;
                    }
               height:
-                type: string
-                format: int64
                 title: query block height
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             description: >-
               QueryConnectionsResponse is the response type for the
               Query/Connections RPC
@@ -17425,9 +18040,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             description: >-
               QueryConnectionResponse is the response type for the
               Query/Connection RPC
@@ -17829,8 +18466,10 @@ paths:
                             "value": "1.212s"
                           }
                 description: >-
-                  IdentifiedClientState defines a client state with additional
-                  client identifier field.
+                  IdentifiedClientState defines a client state with an
+                  additional client
+
+                  identifier field.
               proof:
                 type: string
                 format: byte
@@ -17839,9 +18478,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryConnectionClientStateResponse is the response type for the
               Query/ConnectionClientState RPC method
@@ -18042,7 +18703,7 @@ paths:
           type: string
       tags:
         - Query
-  '/ibc/connection/v1beta1/connections/{connection_id}/consensus_state':
+  '/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/epoch/{epoch_number}/height/{epoch_height}':
     get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
@@ -18237,9 +18898,31 @@ paths:
                 type: string
                 title: merkle proof path
               proof_height:
-                type: string
-                format: uint64
                 title: height at which the proof was retrieved
+                type: object
+                properties:
+                  epoch_number:
+                    type: string
+                    format: uint64
+                    title: the epoch that the client is currently on
+                  epoch_height:
+                    type: string
+                    format: uint64
+                    title: the height within the given epoch
+                description: >-
+                  Normally the EpochHeight is incremented at each height while
+                  keeping epoch
+
+                  number the same However some consensus algorithms may choose
+                  to reset the
+
+                  height in certain conditions e.g. hard forks, state-machine
+                  breaking changes
+
+                  In these cases, the epoch number is incremented so that height
+                  continues to
+
+                  be monitonically increasing even as the EpochHeight gets reset
             title: |-
               QueryConnectionConsensusStateResponse is the response type for the
               Query/ConnectionConsensusState RPC method
@@ -18438,9 +19121,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: height
-          in: query
-          required: false
+        - name: epoch_number
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: epoch_height
+          in: path
+          required: true
           type: string
           format: uint64
       tags:
@@ -18464,17 +19152,17 @@ paths:
                       type: string
                       description: >-
                         path defines the chain of port/channel identifiers used
-                        for tracing the source of the fungible
+                        for tracing the
 
-                        token.
+                        source of the fungible token.
                     base_denom:
                       type: string
                       description: base denomination of the relayed fungible token.
                   description: >-
                     DenomTrace contains the base denomination for ICS20 fungible
-                    tokens and the source tracing
+                    tokens and the
 
-                    information path.
+                    source tracing information path.
                 description: denom_traces returns all denominations trace information.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -18516,9 +19204,176 @@ paths:
                   properties:
                     type_url:
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       parameters:
         - name: pagination.key
           description: |-
@@ -18587,9 +19442,9 @@ paths:
                     type: string
                     description: >-
                       path defines the chain of port/channel identifiers used
-                      for tracing the source of the fungible
+                      for tracing the
 
-                      token.
+                      source of the fungible token.
                   base_denom:
                     type: string
                     description: base denomination of the relayed fungible token.
@@ -18615,9 +19470,176 @@ paths:
                   properties:
                     type_url:
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       parameters:
         - name: hash
           description: hash (in hex format) of the denomination trace information.
@@ -18645,13 +19667,17 @@ paths:
                     format: boolean
                     description: >-
                       send_enabled enables or disables all cross-chain token
-                      transfers from this chain.
+                      transfers from this
+
+                      chain.
                   receive_enabled:
                     type: boolean
                     format: boolean
                     description: >-
                       receive_enabled enables or disables all cross-chain token
-                      transfers to this chain.
+                      transfers to this
+
+                      chain.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -18674,9 +19700,176 @@ paths:
                   properties:
                     type_url:
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                     value:
                       type: string
                       format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := ptypes.MarshalAny(foo)
+                         ...
+                         foo := &pb.Foo{}
+                         if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
 securityDefinitions:
@@ -24460,11 +25653,9 @@ definitions:
         type: array
         items:
           type: string
-        title: >-
+        title: |-
           list of connection identifiers, in order, along which packets sent on
-          this
-
-          channel will travel
+          this channel will travel
       version:
         type: string
         title: 'opaque channel version, which is agreed upon during the handshake'
@@ -24537,11 +25728,9 @@ definitions:
         type: array
         items:
           type: string
-        title: >-
+        title: |-
           list of connection identifiers, in order, along which packets sent on
-          this
-
-          channel will travel
+          this channel will travel
       version:
         type: string
         title: 'opaque channel version, which is agreed upon during the handshake'
@@ -24765,8 +25954,8 @@ definitions:
                     "@type": "type.googleapis.com/google.protobuf.Duration",
                     "value": "1.212s"
                   }
-        description: >-
-          IdentifiedClientState defines a client state with additional client
+        description: |-
+          IdentifiedClientState defines a client state with an additional client
           identifier field.
       proof:
         type: string
@@ -24776,9 +25965,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryChannelClientStateResponse is the Response type for the
       Query/QueryChannelClientState RPC method
@@ -24956,9 +26167,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryChannelClientStateResponse is the Response type for the
       Query/QueryChannelClientState RPC method
@@ -25021,9 +26254,9 @@ definitions:
               type: string
             title: >-
               list of connection identifiers, in order, along which packets sent
-              on this
+              on
 
-              channel will travel
+              this channel will travel
           version:
             type: string
             title: 'opaque channel version, which is agreed upon during the handshake'
@@ -25042,9 +26275,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     description: >-
       QueryChannelResponse is the response type for the Query/Channel RPC
       method.
@@ -25112,9 +26367,9 @@ definitions:
                 type: string
               title: >-
                 list of connection identifiers, in order, along which packets
-                sent on this
+                sent on
 
-                channel will travel
+                this channel will travel
             version:
               type: string
               title: >-
@@ -25159,9 +26414,31 @@ definitions:
                    PageResponse page = 2;
            }
       height:
-        type: string
-        format: int64
         title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     description: >-
       QueryChannelsResponse is the response type for the Query/Channels RPC
       method.
@@ -25225,9 +26502,9 @@ definitions:
                 type: string
               title: >-
                 list of connection identifiers, in order, along which packets
-                sent on this
+                sent on
 
-                channel will travel
+                this channel will travel
             version:
               type: string
               title: >-
@@ -25272,9 +26549,31 @@ definitions:
                    PageResponse page = 2;
            }
       height:
-        type: string
-        format: int64
         title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryConnectionChannelsResponse is the Response type for the
       Query/QueryConnectionChannels RPC method
@@ -25293,9 +26592,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QuerySequenceResponse is the request type for the
       Query/QueryNextSequenceReceiveResponse RPC method
@@ -25314,9 +26635,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryPacketAcknowledgementResponse defines the client query response for a
       packet which also includes a proof, its path and the height form which the
@@ -25336,9 +26679,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: >-
       QueryPacketCommitmentResponse defines the client query response for a
       packet
@@ -25403,13 +26768,35 @@ definitions:
                    PageResponse page = 2;
            }
       height:
-        type: string
-        format: int64
         title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryPacketCommitmentsResponse is the request type for the
       Query/QueryPacketCommitments RPC method
-  ibc.channel.QueryUnrelayedPacketsResponse:
+  ibc.channel.QueryUnreceivedPacketsResponse:
     type: object
     properties:
       sequences:
@@ -25417,14 +26804,74 @@ definitions:
         items:
           type: string
           format: uint64
-        title: list of unrelayed packet sequences
+        title: list of unreceived packet sequences
       height:
-        type: string
-        format: int64
         title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
-      QueryUnrelayedPacketsResponse is the request type for the
-      Query/UnrelayedPacketCommitments RPC method
+      QueryUnreceivedPacketsResponse is the response type for the
+      Query/UnreceivedPacketCommitments RPC method
+  ibc.channel.QueryUnrelayedAcksResponse:
+    type: object
+    properties:
+      sequences:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: list of unrelayed acknowledgement sequences
+      height:
+        title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
+    title: |-
+      QueryUnrelayedAcksResponse is the response type for the
+      Query/UnrelayedAcks RPC method
   ibc.channel.State:
     type: string
     enum:
@@ -25445,6 +26892,36 @@ definitions:
       ready to send and receive packets.
        - STATE_CLOSED: A channel has been closed and can no longer be used to send or receive
       packets.
+  ibc.client.Height:
+    type: object
+    properties:
+      epoch_number:
+        type: string
+        format: uint64
+        title: the epoch that the client is currently on
+      epoch_height:
+        type: string
+        format: uint64
+        title: the height within the given epoch
+    description: >-
+      Normally the EpochHeight is incremented at each height while keeping epoch
+
+      number the same However some consensus algorithms may choose to reset the
+
+      height in certain conditions e.g. hard forks, state-machine breaking
+      changes
+
+      In these cases, the epoch number is incremented so that height continues
+      to
+
+      be monitonically increasing even as the EpochHeight gets reset
+    title: >-
+      Height is a monotonically increasing data type
+
+      that can be compared against another Height for the purposes of updating
+      and
+
+      freezing clients
   ibc.client.IdentifiedClientState:
     type: object
     properties:
@@ -25611,9 +27088,201 @@ definitions:
                 "@type": "type.googleapis.com/google.protobuf.Duration",
                 "value": "1.212s"
               }
-    description: >-
-      IdentifiedClientState defines a client state with additional client
+    description: |-
+      IdentifiedClientState defines a client state with an additional client
       identifier field.
+  ibc.client.ConsensusStateWithHeight:
+    type: object
+    properties:
+      height:
+        title: consensus state height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
+      consensus_state:
+        title: consensus state
+        type: object
+        properties:
+          type_url:
+            type: string
+            description: >-
+              A URL/resource name that uniquely identifies the type of the
+              serialized
+
+              protocol buffer message. This string must contain at least
+
+              one "/" character. The last segment of the URL's path must
+              represent
+
+              the fully qualified name of the type (as in
+
+              `path/google.protobuf.Duration`). The name should be in a
+              canonical form
+
+              (e.g., leading "." is not accepted).
+
+
+              In practice, teams usually precompile into the binary all types
+              that they
+
+              expect it to use in the context of Any. However, for URLs which
+              use the
+
+              scheme `http`, `https`, or no scheme, one can optionally set up a
+              type
+
+              server that maps type URLs to message definitions as follows:
+
+
+              * If no scheme is provided, `https` is assumed.
+
+              * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                value in binary format, or produce an error.
+              * Applications are allowed to cache lookup results based on the
+                URL, or have them precompiled into a binary to avoid any
+                lookup. Therefore, binary compatibility needs to be preserved
+                on changes to types. (Use versioned type names to manage
+                breaking changes.)
+
+              Note: this functionality is not currently available in the
+              official
+
+              protobuf release, and it is not used for type URLs beginning with
+
+              type.googleapis.com.
+
+
+              Schemes other than `http`, `https` (or the empty scheme) might be
+
+              used with implementation specific semantics.
+          value:
+            type: string
+            format: byte
+            description: >-
+              Must be a valid serialized protocol buffer of the above specified
+              type.
+        description: >-
+          `Any` contains an arbitrary serialized protocol buffer message along
+          with a
+
+          URL that describes the type of the serialized message.
+
+
+          Protobuf library provides support to pack/unpack Any values in the
+          form
+
+          of utility functions or additional generated methods of the Any type.
+
+
+          Example 1: Pack and unpack a message in C++.
+
+              Foo foo = ...;
+              Any any;
+              any.PackFrom(foo);
+              ...
+              if (any.UnpackTo(&foo)) {
+                ...
+              }
+
+          Example 2: Pack and unpack a message in Java.
+
+              Foo foo = ...;
+              Any any = Any.pack(foo);
+              ...
+              if (any.is(Foo.class)) {
+                foo = any.unpack(Foo.class);
+              }
+
+           Example 3: Pack and unpack a message in Python.
+
+              foo = Foo(...)
+              any = Any()
+              any.Pack(foo)
+              ...
+              if any.Is(Foo.DESCRIPTOR):
+                any.Unpack(foo)
+                ...
+
+           Example 4: Pack and unpack a message in Go
+
+               foo := &pb.Foo{...}
+               any, err := ptypes.MarshalAny(foo)
+               ...
+               foo := &pb.Foo{}
+               if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                 ...
+               }
+
+          The pack methods provided by protobuf library will by default use
+
+          'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+          methods only use the fully qualified type name after the last '/'
+
+          in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+          name "y.z".
+
+
+
+          JSON
+
+          ====
+
+          The JSON representation of an `Any` value uses the regular
+
+          representation of the deserialized, embedded message, with an
+
+          additional field `@type` which contains the type URL. Example:
+
+              package google.profile;
+              message Person {
+                string first_name = 1;
+                string last_name = 2;
+              }
+
+              {
+                "@type": "type.googleapis.com/google.profile.Person",
+                "firstName": <string>,
+                "lastName": <string>
+              }
+
+          If the embedded message type is well-known and has a custom JSON
+
+          representation, that representation will be embedded adding a field
+
+          `value` which holds the custom JSON in addition to the `@type`
+
+          field. Example (for message [google.protobuf.Duration][]):
+
+              {
+                "@type": "type.googleapis.com/google.protobuf.Duration",
+                "value": "1.212s"
+              }
+    description: >-
+      ConsensusStateWithHeight defines a consensus state with an additional
+      height field.
   ibc.client.QueryClientStateResponse:
     type: object
     properties:
@@ -25785,9 +27454,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     description: >-
       QueryClientStateResponse is the response type for the Query/ClientState
       RPC
@@ -25977,7 +27668,9 @@ definitions:
                       "value": "1.212s"
                     }
           description: >-
-            IdentifiedClientState defines a client state with additional client
+            IdentifiedClientState defines a client state with an additional
+            client
+
             identifier field.
         description: list of stored ClientStates of the chain.
       pagination:
@@ -26186,9 +27879,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: >-
       QueryConsensusStateResponse is the response type for the
       Query/ConsensusState RPC method
@@ -26200,165 +27915,205 @@ definitions:
         items:
           type: object
           properties:
-            type_url:
-              type: string
+            height:
+              title: consensus state height
+              type: object
+              properties:
+                epoch_number:
+                  type: string
+                  format: uint64
+                  title: the epoch that the client is currently on
+                epoch_height:
+                  type: string
+                  format: uint64
+                  title: the height within the given epoch
               description: >-
-                A URL/resource name that uniquely identifies the type of the
-                serialized
+                Normally the EpochHeight is incremented at each height while
+                keeping epoch
 
-                protocol buffer message. This string must contain at least
+                number the same However some consensus algorithms may choose to
+                reset the
 
-                one "/" character. The last segment of the URL's path must
-                represent
+                height in certain conditions e.g. hard forks, state-machine
+                breaking changes
 
-                the fully qualified name of the type (as in
+                In these cases, the epoch number is incremented so that height
+                continues to
 
-                `path/google.protobuf.Duration`). The name should be in a
-                canonical form
+                be monitonically increasing even as the EpochHeight gets reset
+            consensus_state:
+              title: consensus state
+              type: object
+              properties:
+                type_url:
+                  type: string
+                  description: >-
+                    A URL/resource name that uniquely identifies the type of the
+                    serialized
 
-                (e.g., leading "." is not accepted).
+                    protocol buffer message. This string must contain at least
 
+                    one "/" character. The last segment of the URL's path must
+                    represent
 
-                In practice, teams usually precompile into the binary all types
-                that they
+                    the fully qualified name of the type (as in
 
-                expect it to use in the context of Any. However, for URLs which
-                use the
+                    `path/google.protobuf.Duration`). The name should be in a
+                    canonical form
 
-                scheme `http`, `https`, or no scheme, one can optionally set up
-                a type
-
-                server that maps type URLs to message definitions as follows:
-
-
-                * If no scheme is provided, `https` is assumed.
-
-                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                  value in binary format, or produce an error.
-                * Applications are allowed to cache lookup results based on the
-                  URL, or have them precompiled into a binary to avoid any
-                  lookup. Therefore, binary compatibility needs to be preserved
-                  on changes to types. (Use versioned type names to manage
-                  breaking changes.)
-
-                Note: this functionality is not currently available in the
-                official
-
-                protobuf release, and it is not used for type URLs beginning
-                with
-
-                type.googleapis.com.
+                    (e.g., leading "." is not accepted).
 
 
-                Schemes other than `http`, `https` (or the empty scheme) might
-                be
+                    In practice, teams usually precompile into the binary all
+                    types that they
 
-                used with implementation specific semantics.
-            value:
-              type: string
-              format: byte
+                    expect it to use in the context of Any. However, for URLs
+                    which use the
+
+                    scheme `http`, `https`, or no scheme, one can optionally set
+                    up a type
+
+                    server that maps type URLs to message definitions as
+                    follows:
+
+
+                    * If no scheme is provided, `https` is assumed.
+
+                    * An HTTP GET on the URL must yield a
+                    [google.protobuf.Type][]
+                      value in binary format, or produce an error.
+                    * Applications are allowed to cache lookup results based on
+                    the
+                      URL, or have them precompiled into a binary to avoid any
+                      lookup. Therefore, binary compatibility needs to be preserved
+                      on changes to types. (Use versioned type names to manage
+                      breaking changes.)
+
+                    Note: this functionality is not currently available in the
+                    official
+
+                    protobuf release, and it is not used for type URLs beginning
+                    with
+
+                    type.googleapis.com.
+
+
+                    Schemes other than `http`, `https` (or the empty scheme)
+                    might be
+
+                    used with implementation specific semantics.
+                value:
+                  type: string
+                  format: byte
+                  description: >-
+                    Must be a valid serialized protocol buffer of the above
+                    specified type.
               description: >-
-                Must be a valid serialized protocol buffer of the above
-                specified type.
+                `Any` contains an arbitrary serialized protocol buffer message
+                along with a
+
+                URL that describes the type of the serialized message.
+
+
+                Protobuf library provides support to pack/unpack Any values in
+                the form
+
+                of utility functions or additional generated methods of the Any
+                type.
+
+
+                Example 1: Pack and unpack a message in C++.
+
+                    Foo foo = ...;
+                    Any any;
+                    any.PackFrom(foo);
+                    ...
+                    if (any.UnpackTo(&foo)) {
+                      ...
+                    }
+
+                Example 2: Pack and unpack a message in Java.
+
+                    Foo foo = ...;
+                    Any any = Any.pack(foo);
+                    ...
+                    if (any.is(Foo.class)) {
+                      foo = any.unpack(Foo.class);
+                    }
+
+                 Example 3: Pack and unpack a message in Python.
+
+                    foo = Foo(...)
+                    any = Any()
+                    any.Pack(foo)
+                    ...
+                    if any.Is(Foo.DESCRIPTOR):
+                      any.Unpack(foo)
+                      ...
+
+                 Example 4: Pack and unpack a message in Go
+
+                     foo := &pb.Foo{...}
+                     any, err := ptypes.MarshalAny(foo)
+                     ...
+                     foo := &pb.Foo{}
+                     if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                       ...
+                     }
+
+                The pack methods provided by protobuf library will by default
+                use
+
+                'type.googleapis.com/full.type.name' as the type URL and the
+                unpack
+
+                methods only use the fully qualified type name after the last
+                '/'
+
+                in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                name "y.z".
+
+
+
+                JSON
+
+                ====
+
+                The JSON representation of an `Any` value uses the regular
+
+                representation of the deserialized, embedded message, with an
+
+                additional field `@type` which contains the type URL. Example:
+
+                    package google.profile;
+                    message Person {
+                      string first_name = 1;
+                      string last_name = 2;
+                    }
+
+                    {
+                      "@type": "type.googleapis.com/google.profile.Person",
+                      "firstName": <string>,
+                      "lastName": <string>
+                    }
+
+                If the embedded message type is well-known and has a custom JSON
+
+                representation, that representation will be embedded adding a
+                field
+
+                `value` which holds the custom JSON in addition to the `@type`
+
+                field. Example (for message [google.protobuf.Duration][]):
+
+                    {
+                      "@type": "type.googleapis.com/google.protobuf.Duration",
+                      "value": "1.212s"
+                    }
           description: >-
-            `Any` contains an arbitrary serialized protocol buffer message along
-            with a
-
-            URL that describes the type of the serialized message.
-
-
-            Protobuf library provides support to pack/unpack Any values in the
-            form
-
-            of utility functions or additional generated methods of the Any
-            type.
-
-
-            Example 1: Pack and unpack a message in C++.
-
-                Foo foo = ...;
-                Any any;
-                any.PackFrom(foo);
-                ...
-                if (any.UnpackTo(&foo)) {
-                  ...
-                }
-
-            Example 2: Pack and unpack a message in Java.
-
-                Foo foo = ...;
-                Any any = Any.pack(foo);
-                ...
-                if (any.is(Foo.class)) {
-                  foo = any.unpack(Foo.class);
-                }
-
-             Example 3: Pack and unpack a message in Python.
-
-                foo = Foo(...)
-                any = Any()
-                any.Pack(foo)
-                ...
-                if any.Is(Foo.DESCRIPTOR):
-                  any.Unpack(foo)
-                  ...
-
-             Example 4: Pack and unpack a message in Go
-
-                 foo := &pb.Foo{...}
-                 any, err := ptypes.MarshalAny(foo)
-                 ...
-                 foo := &pb.Foo{}
-                 if err := ptypes.UnmarshalAny(any, foo); err != nil {
-                   ...
-                 }
-
-            The pack methods provided by protobuf library will by default use
-
-            'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-            methods only use the fully qualified type name after the last '/'
-
-            in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-            name "y.z".
-
-
-
-            JSON
-
-            ====
-
-            The JSON representation of an `Any` value uses the regular
-
-            representation of the deserialized, embedded message, with an
-
-            additional field `@type` which contains the type URL. Example:
-
-                package google.profile;
-                message Person {
-                  string first_name = 1;
-                  string last_name = 2;
-                }
-
-                {
-                  "@type": "type.googleapis.com/google.profile.Person",
-                  "firstName": <string>,
-                  "lastName": <string>
-                }
-
-            If the embedded message type is well-known and has a custom JSON
-
-            representation, that representation will be embedded adding a field
-
-            `value` which holds the custom JSON in addition to the `@type`
-
-            field. Example (for message [google.protobuf.Duration][]):
-
-                {
-                  "@type": "type.googleapis.com/google.protobuf.Duration",
-                  "value": "1.212s"
-                }
+            ConsensusStateWithHeight defines a consensus state with an
+            additional height field.
         title: consensus states associated with the identifier
       pagination:
         title: pagination response
@@ -26556,9 +28311,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was generated
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryClientConnectionsResponse is the response type for the
       Query/ClientConnections RPC method
@@ -26738,8 +28515,8 @@ definitions:
                     "@type": "type.googleapis.com/google.protobuf.Duration",
                     "value": "1.212s"
                   }
-        description: >-
-          IdentifiedClientState defines a client state with additional client
+        description: |-
+          IdentifiedClientState defines a client state with an additional client
           identifier field.
       proof:
         type: string
@@ -26749,9 +28526,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryConnectionClientStateResponse is the response type for the
       Query/ConnectionClientState RPC method
@@ -26929,9 +28728,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     title: |-
       QueryConnectionConsensusStateResponse is the response type for the
       Query/ConnectionConsensusState RPC method
@@ -27004,9 +28825,31 @@ definitions:
         type: string
         title: merkle proof path
       proof_height:
-        type: string
-        format: uint64
         title: height at which the proof was retrieved
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     description: >-
       QueryConnectionResponse is the response type for the Query/Connection RPC
 
@@ -27104,9 +28947,31 @@ definitions:
                    PageResponse page = 2;
            }
       height:
-        type: string
-        format: int64
         title: query block height
+        type: object
+        properties:
+          epoch_number:
+            type: string
+            format: uint64
+            title: the epoch that the client is currently on
+          epoch_height:
+            type: string
+            format: uint64
+            title: the height within the given epoch
+        description: >-
+          Normally the EpochHeight is incremented at each height while keeping
+          epoch
+
+          number the same However some consensus algorithms may choose to reset
+          the
+
+          height in certain conditions e.g. hard forks, state-machine breaking
+          changes
+
+          In these cases, the epoch number is incremented so that height
+          continues to
+
+          be monitonically increasing even as the EpochHeight gets reset
     description: >-
       QueryConnectionsResponse is the response type for the Query/Connections
       RPC
@@ -27136,17 +29001,17 @@ definitions:
         type: string
         description: >-
           path defines the chain of port/channel identifiers used for tracing
-          the source of the fungible
+          the
 
-          token.
+          source of the fungible token.
       base_denom:
         type: string
         description: base denomination of the relayed fungible token.
     description: >-
       DenomTrace contains the base denomination for ICS20 fungible tokens and
-      the source tracing
+      the
 
-      information path.
+      source tracing information path.
   ibc.transfer.Params:
     type: object
     properties:
@@ -27155,21 +29020,26 @@ definitions:
         format: boolean
         description: >-
           send_enabled enables or disables all cross-chain token transfers from
-          this chain.
+          this
+
+          chain.
       receive_enabled:
         type: boolean
         format: boolean
         description: >-
           receive_enabled enables or disables all cross-chain token transfers to
-          this chain.
+          this
+
+          chain.
     description: >-
       Params defines the set of IBC transfer parameters.
 
       NOTE: To prevent a single token from being transferred, set the
-      TransfersEnabled parameter to
 
-      true and then set the bank module's SendEnabled parameter for the
-      denomination to false.
+      TransfersEnabled parameter to true and then set the bank module's
+      SendEnabled
+
+      parameter for the denomination to false.
   ibc.transfer.QueryDenomTraceResponse:
     type: object
     properties:
@@ -27181,9 +29051,9 @@ definitions:
             type: string
             description: >-
               path defines the chain of port/channel identifiers used for
-              tracing the source of the fungible
+              tracing the
 
-              token.
+              source of the fungible token.
           base_denom:
             type: string
             description: base denomination of the relayed fungible token.
@@ -27202,17 +29072,17 @@ definitions:
               type: string
               description: >-
                 path defines the chain of port/channel identifiers used for
-                tracing the source of the fungible
+                tracing the
 
-                token.
+                source of the fungible token.
             base_denom:
               type: string
               description: base denomination of the relayed fungible token.
           description: >-
             DenomTrace contains the base denomination for ICS20 fungible tokens
-            and the source tracing
+            and the
 
-            information path.
+            source tracing information path.
         description: denom_traces returns all denominations trace information.
       pagination:
         description: pagination defines the pagination in the response.
@@ -27247,11 +29117,15 @@ definitions:
             format: boolean
             description: >-
               send_enabled enables or disables all cross-chain token transfers
-              from this chain.
+              from this
+
+              chain.
           receive_enabled:
             type: boolean
             format: boolean
             description: >-
               receive_enabled enables or disables all cross-chain token
-              transfers to this chain.
+              transfers to this
+
+              chain.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.

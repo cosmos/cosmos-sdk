@@ -76,6 +76,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - name: Install go
+        uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Test go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:

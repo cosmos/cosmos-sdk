@@ -29,11 +29,10 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
+	s.cfg = network.DefaultConfig()
+	s.cfg.NumValidators = 1
 
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)

@@ -2,7 +2,9 @@ package ibc_test
 
 import (
 	"fmt"
+	"testing"
 
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -282,4 +284,8 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 			})
 		})
 	}
+}
+
+func TestIBCTestSuite2(t *testing.T) {
+	suite.Run(t, new(IBCTestSuite))
 }

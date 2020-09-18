@@ -108,7 +108,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			}
 
 			cmd.Println("Address:", edPK.Address())
-			cmd.Printf("Hex: %X\n", edPK.Key[:])
+			cmd.Printf("Hex: %X\n", edPK.Key)
 			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
 			cmd.Println("Bech32 Acc:", accPub)
 			cmd.Println("Bech32 Validator Operator:", valPub)

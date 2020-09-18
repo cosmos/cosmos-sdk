@@ -317,7 +317,7 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		expected[i] = tmtypes.NewValidator(pk, val.ConsensusPower())
+		expected[i] = tmtypes.NewValidator(pk.(ed25519.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
 	}
 
 	require.Equal(t, expected, vals.ToTmValidators())

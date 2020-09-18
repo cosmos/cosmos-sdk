@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - name: install tparse
         run: |
           export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
@@ -31,6 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v1
         id: git_diff
         with:
@@ -48,6 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -76,6 +90,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -113,6 +132,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -150,6 +174,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -187,6 +216,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -224,6 +258,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -249,6 +288,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -274,6 +318,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:
@@ -299,6 +348,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.2
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
       - uses: technote-space/get-diff-action@v3
         id: git_diff
         with:

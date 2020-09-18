@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
@@ -41,60 +42,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-
-	commonFlags := []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
-	// Create proposal 1
-	args := []string{
-		fmt.Sprintf("--%s=Text Proposal 1", cli.FlagTitle),
-		fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-		fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
-	}
-	args = append(args, commonFlags...)
-
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewCmdSubmitProposal(), args)
+	// create a proposal with deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	depositArgs := []string{
-		"1",
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
-	}
-
-	depositArgs = append(depositArgs, commonFlags...)
-
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewCmdDeposit(), depositArgs)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
+	// vote for proposal
+	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
 	s.Require().NoError(err)
 
-	// Create a proposal 2 with deposit(proposal status will be votingperiod)
-	args2 := []string{
-		fmt.Sprintf("--%s=Text Proposal 2", cli.FlagTitle),
-		fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-		fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()),
-	}
-	args2 = append(args2, commonFlags...)
-
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewCmdSubmitProposal(), args2)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	voteArgs := []string{
-		"2",
-		fmt.Sprintf("%s", "yes"),
-	}
-	voteArgs = append(voteArgs, commonFlags...)
-
-	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cli.NewCmdVote(), voteArgs)
+	// create a proposal without deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -265,7 +227,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 		{
 			"json output",
 			[]string{
-				"1",
+				"2",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -274,7 +236,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 		{
 			"json output",
 			[]string{
-				"2",
+				"1",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -542,7 +504,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 
 func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
 	val := s.network.Validators[0]
-	depositAmount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
 
 	testCases := []struct {
 		name      string
@@ -697,7 +659,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 		{
 			"vote for invalid proposal",
 			[]string{
-				"2",
+				"1",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
@@ -752,7 +714,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 		{
 			"vote for valid proposal",
 			[]string{
-				"2",
+				"1",
 				val.Address.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
@@ -810,7 +772,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 		{
 			"valid vote",
 			[]string{
-				"2",
+				"1",
 				fmt.Sprintf("%s", "yes"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

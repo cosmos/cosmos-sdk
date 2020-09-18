@@ -93,9 +93,14 @@ func (q Keeper) PacketAcknowledgement(c context.Context, req *channeltypes.Query
 	return q.ChannelKeeper.PacketAcknowledgement(c, req)
 }
 
-// UnrelayedPackets implements the IBC QueryServer interface
-func (q Keeper) UnrelayedPackets(c context.Context, req *channeltypes.QueryUnrelayedPacketsRequest) (*channeltypes.QueryUnrelayedPacketsResponse, error) {
-	return q.ChannelKeeper.UnrelayedPackets(c, req)
+// UnreceivedPackets implements the IBC QueryServer interface
+func (q Keeper) UnreceivedPackets(c context.Context, req *channeltypes.QueryUnreceivedPacketsRequest) (*channeltypes.QueryUnreceivedPacketsResponse, error) {
+	return q.ChannelKeeper.UnreceivedPackets(c, req)
+}
+
+// UnrelayedAcks implements the IBC QueryServer interface
+func (q Keeper) UnrelayedAcks(c context.Context, req *channeltypes.QueryUnrelayedAcksRequest) (*channeltypes.QueryUnrelayedAcksResponse, error) {
+	return q.ChannelKeeper.UnrelayedAcks(c, req)
 }
 
 // NextSequenceReceive implements the IBC QueryServer interface

@@ -108,9 +108,13 @@ func (w *wrapper) GetPubKeys() []crypto.PubKey {
 	pks := make([]crypto.PubKey, len(signerInfos))
 
 	for i, si := range signerInfos {
-		pk, ok := si.PublicKey.GetCachedValue().(crypto.PubKey)
 		// NOTE: it is okay to leave this nil if there is no PubKey in the SignerInfo.
 		// PubKey's can be left unset in SignerInfo.
+		if si.PublicKey == nil {
+			continue
+		}
+
+		pk, ok := si.PublicKey.GetCachedValue().(crypto.PubKey)
 		if ok {
 			pks[i] = pk
 		}

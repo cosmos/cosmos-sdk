@@ -44,8 +44,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 
-	pubkey := make(ed25519.PubKey, ed25519.PubKeySize)
-	copy(pubkey, pkBytes)
+	pubkey := &ed25519.PubKey{Key: pkBytes}
 
 	return pubkey
 }

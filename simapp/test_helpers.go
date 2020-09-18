@@ -420,7 +420,7 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	pkEd := make(ed25519.PubKey, ed25519.PubKeySize)
+	pkEd := make([]byte, ed25519.PubKeySize)
 	copy(pkEd, pkBytes)
-	return pkEd
+	return &ed25519.PubKey{Key: pkEd}
 }

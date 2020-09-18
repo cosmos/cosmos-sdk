@@ -39,13 +39,13 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
 		copy(pubKey[:], bz)
-		return pubKey, nil
+		return &ed25519.PubKey{Key: pubKey}, nil
 	}
 
 	bz, err = base64.StdEncoding.DecodeString(pkstr)
 	if err == nil {
 		copy(pubKey[:], bz)
-		return pubKey, nil
+		return &ed25519.PubKey{Key: pubKey}, nil
 	}
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pkstr)
@@ -85,7 +85,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				return err
 			}
 
-			edPK, ok := pk.(ed25519.PubKey)
+			edPK, ok := pk.(*ed25519.PubKey)
 			if !ok {
 				return fmt.Errorf("invalid pubkey type; expected ED25519")
 			}
@@ -108,7 +108,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			}
 
 			cmd.Println("Address:", edPK.Address())
-			cmd.Printf("Hex: %X\n", edPK[:])
+			cmd.Printf("Hex: %X\n", edPK.Key[:])
 			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
 			cmd.Println("Bech32 Acc:", accPub)
 			cmd.Println("Bech32 Validator Operator:", valPub)

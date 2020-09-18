@@ -13,7 +13,7 @@ import (
 
 //-------------------------------------
 
-var _ crypto.PrivKey = PrivKey{}
+var _ crypto.PrivKey = &PrivKey{}
 
 const (
 	PrivKeyName = "tendermint/PrivKeyEd25519"
@@ -33,7 +33,7 @@ const (
 )
 
 // Bytes returns the privkey byte format.
-func (privKey PrivKey) Bytes() []byte {
+func (privKey *PrivKey) Bytes() []byte {
 	return privKey.Key
 }
 
@@ -44,7 +44,7 @@ func (privKey PrivKey) Bytes() []byte {
 // The latter 32 bytes should be the compressed public key.
 // If these conditions aren't met, Sign will panic or produce an
 // incorrect signature.
-func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
+func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	signatureBytes := ed25519.Sign(ed25519.PrivateKey(privKey.Key), msg)
 	return signatureBytes, nil
 }
@@ -52,7 +52,7 @@ func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
 // PubKey gets the corresponding public key from the private key.
 //
 // Panics if the private key is not initialized.
-func (privKey PrivKey) PubKey() crypto.PubKey {
+func (privKey *PrivKey) PubKey() crypto.PubKey {
 	// If the latter 32 bytes of the privkey are all zero, privkey is not
 	// initialized.
 	initialized := false
@@ -69,12 +69,12 @@ func (privKey PrivKey) PubKey() crypto.PubKey {
 
 	pubkeyBytes := make([]byte, PubKeySize)
 	copy(pubkeyBytes, privKey.Key[32:])
-	return PubKey{Key: pubkeyBytes}
+	return &PubKey{Key: pubkeyBytes}
 }
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey PrivKey) Equals(other crypto.PrivKey) bool {
+func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
@@ -82,19 +82,19 @@ func (privKey PrivKey) Equals(other crypto.PrivKey) bool {
 	return subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
-func (privKey PrivKey) Type() string {
+func (privKey *PrivKey) Type() string {
 	return PrivKeyName
 }
 
 // GenPrivKey generates a new ed25519 private key.
 // It uses OS randomness in conjunction with the current global random seed
 // in tendermint/libs/common to generate the private key.
-func GenPrivKey() PrivKey {
+func GenPrivKey() *PrivKey {
 	return genPrivKey(crypto.CReader())
 }
 
 // genPrivKey generates a new ed25519 private key using the provided reader.
-func genPrivKey(rand io.Reader) PrivKey {
+func genPrivKey(rand io.Reader) *PrivKey {
 	seed := make([]byte, SeedSize)
 
 	_, err := io.ReadFull(rand, seed)
@@ -102,25 +102,25 @@ func genPrivKey(rand io.Reader) PrivKey {
 		panic(err)
 	}
 
-	return PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
+	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
 }
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
 // that 32 byte output to create the private key.
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
-func GenPrivKeyFromSecret(secret []byte) PrivKey {
+func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 	seed := crypto.Sha256(secret) // Not Ripemd160 because we want 32 bytes.
 
-	return PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
+	return &PrivKey{Key: ed25519.NewKeyFromSeed(seed)}
 }
 
 //-------------------------------------
 
-var _ crypto.PubKey = PubKey{}
+var _ crypto.PubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
-func (pubKey PubKey) Address() crypto.Address {
+func (pubKey *PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != PubKeySize {
 		panic("pubkey is incorrect size")
 	}
@@ -128,11 +128,11 @@ func (pubKey PubKey) Address() crypto.Address {
 }
 
 // Bytes returns the PubKey byte format.
-func (pubKey PubKey) Bytes() []byte {
+func (pubKey *PubKey) Bytes() []byte {
 	return pubKey.Key
 }
 
-func (pubKey PubKey) VerifySignature(msg []byte, sig []byte) bool {
+func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	// make sure we use the same algorithm to sign
 	if len(sig) != SignatureSize {
 		return false
@@ -141,15 +141,15 @@ func (pubKey PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	return ed25519.Verify(ed25519.PublicKey(pubKey.Key), msg, sig)
 }
 
-func (pubKey PubKey) String() string {
+func (pubKey *PubKey) String() string {
 	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey.Key)
 }
 
-func (pubKey PubKey) Type() string {
+func (pubKey *PubKey) Type() string {
 	return PubKeyName
 }
 
-func (pubKey PubKey) Equals(other crypto.PubKey) bool {
+func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}

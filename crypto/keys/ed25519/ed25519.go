@@ -20,8 +20,8 @@ var _ cryptotypes.PrivKey = &PrivKey{}
 var _ codec.AminoMarshaler = &PubKey{}
 
 const (
-	PrivKeyName = "tendermint/PrivKeyEd25519"
-	PubKeyName  = "tendermint/PubKeyEd25519"
+	PrivKeyName = "cosmos/PrivKeyEd25519"
+	PubKeyName  = "cosmos/PubKeyEd25519"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivateKeySize is the size, in bytes, of private keys as used in this package.

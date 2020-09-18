@@ -5,12 +5,13 @@ package cli_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
+
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -19,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -266,9 +266,8 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
 
-	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_text_proposal.*.json")
+	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_text_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(invalidPropFile.Name())
 
 	invalidProp := `{
   "title": "",
@@ -280,9 +279,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	_, err = invalidPropFile.WriteString(invalidProp)
 	s.Require().NoError(err)
 
-	validPropFile, err := ioutil.TempFile(os.TempDir(), "valid_text_proposal.*.json")
+	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_text_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(validPropFile.Name())
 
 	validProp := fmt.Sprintf(`{
   "title": "Text Proposal",
@@ -427,7 +425,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 		expectErr bool
 	}{
 		{
-			"get proposals as json repsonse",
+			"get proposals as json response",
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},

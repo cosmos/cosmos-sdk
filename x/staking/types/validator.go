@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -224,7 +225,7 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(v.GetConsPubKey().(ed25519.IntoTmPubKey).AsTmPubKey())
 	if err != nil {
 		panic(err)
 	}
@@ -238,7 +239,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(v.GetConsPubKey().(ed25519.IntoTmPubKey).AsTmPubKey())
 	if err != nil {
 		panic(err)
 	}

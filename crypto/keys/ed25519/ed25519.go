@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/ed25519"
 
 	"github.com/tendermint/tendermint/crypto"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
@@ -83,7 +84,7 @@ func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
 }
 
 func (privKey *PrivKey) Type() string {
-	return PrivKeyName
+	return keyType
 }
 
 // GenPrivKey generates a new ed25519 private key.
@@ -117,7 +118,14 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 //-------------------------------------
 
+// IntoTmPubKey allows our own PubKey types be converted into Tendermint's
+// pubkey types.
+type IntoTmPubKey interface {
+	AsTmPubKey() crypto.PubKey
+}
+
 var _ crypto.PubKey = &PubKey{}
+var _ IntoTmPubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey *PubKey) Address() crypto.Address {
@@ -146,7 +154,7 @@ func (pubKey *PubKey) String() string {
 }
 
 func (pubKey *PubKey) Type() string {
-	return PubKeyName
+	return keyType
 }
 
 func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
@@ -155,4 +163,20 @@ func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
 	}
 
 	return subtle.ConstantTimeCompare(pubKey.Bytes(), other.Bytes()) == 1
+}
+
+// AsTmPubKey converts our own PubKey into a Tendermint ED25519 pubkey.
+func (pubKey *PubKey) AsTmPubKey() crypto.PubKey {
+	return tmed25519.PubKey(pubKey.Key)
+}
+
+// FromTmEd25519 converts a Tendermint ED25519 pubkey into our own ED25519
+// PubKey.
+func FromTmEd25519(pubKey crypto.PubKey) (*PubKey, error) {
+	tmPk, ok := pubKey.(tmed25519.PubKey)
+	if !ok {
+		return nil, fmt.Errorf("expected %T, got %T", tmed25519.PubKey{}, pubKey)
+	}
+
+	return &PubKey{Key: []byte(tmPk)}, nil
 }

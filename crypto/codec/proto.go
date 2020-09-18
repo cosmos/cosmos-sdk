@@ -17,7 +17,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	// these lines.
 	registry.RegisterInterface("tendermint.crypto.Pubkey", (*tmcrypto.PubKey)(nil))
 	registry.RegisterImplementations((*tmcrypto.PubKey)(nil), &ed25519.PubKey{})
-	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	registry.RegisterImplementations((*tmcrypto.PubKey)(nil), &secp256k1.PubKey{})
 	registry.RegisterImplementations((*tmcrypto.PubKey)(nil), &multisig.LegacyAminoPubKey{})
 
 	registry.RegisterInterface("cosmos.crypto.Pubkey", (*cryptotypes.PubKey)(nil))

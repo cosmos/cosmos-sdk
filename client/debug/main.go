@@ -38,13 +38,13 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey[:], bz)
+		copy(pubKey, bz)
 		return &ed25519.PubKey{Key: pubKey}, nil
 	}
 
 	bz, err = base64.StdEncoding.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey[:], bz)
+		copy(pubKey, bz)
 		return &ed25519.PubKey{Key: pubKey}, nil
 	}
 

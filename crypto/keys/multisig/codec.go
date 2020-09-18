@@ -1,8 +1,8 @@
 package multisig
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -5,8 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"

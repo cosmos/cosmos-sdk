@@ -5,20 +5,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

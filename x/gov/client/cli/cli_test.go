@@ -5,7 +5,6 @@ package cli_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
@@ -267,9 +266,8 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
 
-	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_text_proposal.*.json")
+	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_text_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(invalidPropFile.Name())
 
 	invalidProp := `{
   "title": "",
@@ -281,9 +279,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	_, err = invalidPropFile.WriteString(invalidProp)
 	s.Require().NoError(err)
 
-	validPropFile, err := ioutil.TempFile(os.TempDir(), "valid_text_proposal.*.json")
+	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_text_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(validPropFile.Name())
 
 	validProp := fmt.Sprintf(`{
   "title": "Text Proposal",

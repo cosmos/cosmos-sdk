@@ -11,10 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -98,9 +100,14 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	)
 	txBuilder.SetSignatures(sigV2)
 
+	any, ok := txBuilder.(codectypes.IntoAny)
+	s.Require().True(ok)
+	cached := any.AsAny().GetCachedValue()
+	txTx, ok := cached.(*txtypes.Tx)
+	s.Require().True(ok)
 	res, err := s.queryClient.Simulate(
 		context.Background(),
-		&simulate.SimulateRequest{Tx: txBuilder.GetProtoTx()},
+		&simulate.SimulateRequest{Tx: txTx},
 	)
 	s.Require().NoError(err)
 

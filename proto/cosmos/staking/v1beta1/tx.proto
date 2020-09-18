@@ -7,7 +7,6 @@ import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
-
 // MsgCreateValidator defines an SDK message for creating a new validator.
 message MsgCreateValidator {
   option (gogoproto.equal) = true;
@@ -27,7 +26,7 @@ message MsgCreateValidator {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
     (gogoproto.moretags) = "yaml:\"validator_address\""
   ];
-  string             pubkey = 6;
+  string                   pubkey = 6;
   cosmos.base.v1beta1.Coin value  = 7 [(gogoproto.nullable) = false];
 }
 
@@ -56,7 +55,7 @@ message MsgEditValidator {
   ];
 }
 
-// MsgDelegate defines an SDK message for performing a delegation of coins 
+// MsgDelegate defines an SDK message for performing a delegation of coins
 // from a delegator to a validator.
 message MsgDelegate {
   option (gogoproto.equal) = true;
@@ -72,7 +71,7 @@ message MsgDelegate {
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgBeginRedelegate defines an SDK message for performing a redelegation 
+// MsgBeginRedelegate defines an SDK message for performing a redelegation
 // of coins from a delegator and source validator to a destination validator.
 message MsgBeginRedelegate {
   option (gogoproto.equal) = true;

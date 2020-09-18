@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func BenchmarkBech32ifyPubKey(b *testing.B) {

@@ -11,7 +11,7 @@ import (
 
 // MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.
 func MakeEncodingConfig() EncodingConfig {
-	amino := codec.New()
+	amino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txCfg := tx.NewTxConfig(marshaler, std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)

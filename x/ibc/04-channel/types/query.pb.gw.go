@@ -324,15 +324,26 @@ func request_Query_ChannelConsensusState_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["height"]
+	val, ok = pathParams["epoch_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_number")
 	}
 
-	protoReq.Height, err = runtime.Uint64(val)
+	protoReq.EpochNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_number", err)
+	}
+
+	val, ok = pathParams["epoch_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_height")
+	}
+
+	protoReq.EpochHeight, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_height", err)
 	}
 
 	msg, err := client.ChannelConsensusState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -373,15 +384,26 @@ func local_request_Query_ChannelConsensusState_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "port_id", err)
 	}
 
-	val, ok = pathParams["height"]
+	val, ok = pathParams["epoch_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_number")
 	}
 
-	protoReq.Height, err = runtime.Uint64(val)
+	protoReq.EpochNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_number", err)
+	}
+
+	val, ok = pathParams["epoch_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_height")
+	}
+
+	protoReq.EpochHeight, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_height", err)
 	}
 
 	msg, err := server.ChannelConsensusState(ctx, &protoReq)
@@ -878,6 +900,7 @@ func local_request_Query_NextSequenceReceive_0(ctx context.Context, marshaler ru
 // RegisterQueryHandlerServer registers the http handlers for service Query to "mux".
 // UnaryRPC     :call QueryServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterQueryHandlerFromEndpoint instead.
 func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, server QueryServer) error {
 
 	mux.Handle("GET", pattern_Query_Channel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -1333,7 +1356,7 @@ var (
 
 	pattern_Query_ChannelClientState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "client_state"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ChannelConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10, 1, 0, 4, 1, 5, 11}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "consensus_state", "epoch", "epoch_number", "height", "epoch_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_PacketCommitment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "channel", "v1beta1", "channels", "channel_id", "ports", "port_id", "packet_commitments", "sequence"}, "", runtime.AssumeColonVerbOpt(true)))
 

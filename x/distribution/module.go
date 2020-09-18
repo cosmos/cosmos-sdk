@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -42,9 +43,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the distribution module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the distribution
@@ -69,7 +70,9 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.R
 }
 
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the distribution module.
-func (AppModuleBasic) RegisterGRPCRoutes(_ sdkclient.Context, _ *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+}
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

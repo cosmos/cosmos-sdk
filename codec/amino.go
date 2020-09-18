@@ -23,7 +23,7 @@ func (cdc *LegacyAmino) Seal() {
 	cdc.Amino.Seal()
 }
 
-func New() *LegacyAmino {
+func NewLegacyAmino() *LegacyAmino {
 	return &LegacyAmino{amino.NewCodec()}
 }
 
@@ -32,10 +32,6 @@ func New() *LegacyAmino {
 func RegisterEvidences(cdc *LegacyAmino) {
 	cdc.Amino.RegisterInterface((*tmtypes.Evidence)(nil), nil)
 	cdc.Amino.RegisterConcrete(&tmtypes.DuplicateVoteEvidence{}, "tendermint/DuplicateVoteEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.ConflictingHeadersEvidence{}, "tendermint/ConflictingHeadersEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.LunaticValidatorEvidence{}, "tendermint/LunaticValidatorEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.PotentialAmnesiaEvidence{}, "tendermint/PotentialAmnesiaEvidence", nil)
-	cdc.Amino.RegisterConcrete(&tmtypes.AmnesiaEvidence{}, "tendermint/AmnesiaEvidence", nil)
 }
 
 // MarshalJSONIndent provides a utility for indented JSON encoding of an object

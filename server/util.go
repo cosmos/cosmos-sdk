@@ -124,7 +124,7 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 			return nil, fmt.Errorf("error in config file: %v", err)
 		}
 
-		conf.ProfListenAddress = "localhost:6060"
+		conf.RPC.PprofListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second

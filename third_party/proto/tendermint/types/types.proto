@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "tendermint/libs/bits/types.proto";
 import "tendermint/crypto/proof.proto";
 import "tendermint/version/types.proto";
+import "tendermint/types/validator.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
@@ -139,6 +140,11 @@ message Proposal {
 message SignedHeader {
   Header header = 1;
   Commit commit = 2;
+}
+
+message LightBlock {
+  SignedHeader                  signed_header = 1;
+  tendermint.types.ValidatorSet validator_set = 2; 
 }
 
 message BlockMeta {

@@ -21,17 +21,18 @@ order: 5
 | fungible_token_packet | receiver      | {receiver}      |
 | fungible_token_packet | denom         | {denom}         |
 | fungible_token_packet | amount        | {amount}        |
+| fungible_token_packet | success       | {ackSuccess}    |
 | denomination_trace    | trace_hash    | {hex_hash}      |
 
 ## OnAcknowledgePacket callback
 
-| Type                  | Attribute Key | Attribute Value |
-|-----------------------|---------------|-----------------|
-| fungible_token_packet | module        | transfer        |
-| fungible_token_packet | receiver      | {receiver}      |
-| fungible_token_packet | denom         | {denom}         |
-| fungible_token_packet | amount        | {amount}        |
-| fungible_token_packet | success       | {ackSuccess}    |
+| Type                  | Attribute Key   | Attribute Value   |
+|-----------------------|-----------------|-------------------|
+| fungible_token_packet | module          | transfer          |
+| fungible_token_packet | receiver        | {receiver}        |
+| fungible_token_packet | denom           | {denom}           |
+| fungible_token_packet | amount          | {amount}          |
+| fungible_token_packet | success | error | {ack.Response}    |
 
 ## OnTimeoutPacket callback
 

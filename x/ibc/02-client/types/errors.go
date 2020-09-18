@@ -26,4 +26,6 @@ var (
 	ErrFailedPacketAckAbsenceVerification     = sdkerrors.Register(SubModuleName, 19, "packet acknowledgement absence verification failed")
 	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 20, "next sequence receive verification failed")
 	ErrSelfConsensusStateNotFound             = sdkerrors.Register(SubModuleName, 21, "self consensus state not found")
+	ErrUpdateClientFailed                     = sdkerrors.Register(SubModuleName, 22, "unable to update light client")
+	ErrInvalidUpdateClientProposal            = sdkerrors.Register(SubModuleName, 23, "invalid update client proposal")
 )

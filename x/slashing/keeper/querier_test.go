@@ -31,7 +31,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	legacyQuerierCdc := codec.NewAminoCodec(cdc)
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

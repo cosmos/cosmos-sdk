@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				suite.Equal(tc.numVals, len(valsResp.Validators))
 				suite.Equal(uint64(len(vals)), valsResp.Pagination.Total)
 
-				if (tc.hasNext) {
+				if tc.hasNext {
 					suite.NotNil(valsResp.Pagination.NextKey)
 				} else {
 					suite.Nil(valsResp.Pagination.NextKey)
@@ -706,6 +706,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 				suite.NoError(err)
 				suite.Equal(uint64(1), res.Pagination.Total)
 				suite.Equal(1, len(res.UnbondingResponses))
+				suite.Equal(res.UnbondingResponses[0].ValidatorAddress, val1.GetOperator())
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

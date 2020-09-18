@@ -39,7 +39,8 @@ func (q Keeper) Channel(c context.Context, req *types.QueryChannelRequest) (*typ
 		)
 	}
 
-	return types.NewQueryChannelResponse(req.PortId, req.ChannelId, channel, nil, ctx.BlockHeight()), nil
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryChannelResponse(req.PortId, req.ChannelId, channel, nil, selfHeight), nil
 }
 
 // Channels implements the Query/Channels gRPC method
@@ -73,10 +74,11 @@ func (q Keeper) Channels(c context.Context, req *types.QueryChannelsRequest) (*t
 		return nil, err
 	}
 
+	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return &types.QueryChannelsResponse{
 		Channels:   channels,
 		Pagination: pageRes,
-		Height:     ctx.BlockHeight(),
+		Height:     selfHeight,
 	}, nil
 }
 
@@ -121,10 +123,11 @@ func (q Keeper) ConnectionChannels(c context.Context, req *types.QueryConnection
 		return nil, err
 	}
 
+	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return &types.QueryConnectionChannelsResponse{
 		Channels:   channels,
 		Pagination: pageRes,
-		Height:     ctx.BlockHeight(),
+		Height:     selfHeight,
 	}, nil
 }
 
@@ -166,8 +169,8 @@ func (q Keeper) ChannelClientState(c context.Context, req *types.QueryChannelCli
 
 	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientId, clientState)
 
-	return types.NewQueryChannelClientStateResponse(identifiedClientState, nil, ctx.BlockHeight()), nil
-
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryChannelClientStateResponse(identifiedClientState, nil, selfHeight), nil
 }
 
 // ChannelConsensusState implements the Query/ChannelConsensusState gRPC method
@@ -198,7 +201,8 @@ func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannel
 		)
 	}
 
-	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, req.Height)
+	consHeight := clienttypes.NewHeight(req.EpochNumber, req.EpochHeight)
+	consensusState, found := q.clientKeeper.GetClientConsensusState(ctx, connection.ClientId, consHeight)
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
@@ -211,7 +215,8 @@ func (q Keeper) ChannelConsensusState(c context.Context, req *types.QueryChannel
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return types.NewQueryChannelConsensusStateResponse(connection.ClientId, anyConsensusState, consensusState.GetHeight(), nil, ctx.BlockHeight()), nil
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryChannelConsensusStateResponse(connection.ClientId, anyConsensusState, consHeight, nil, selfHeight), nil
 }
 
 // PacketCommitment implements the Query/PacketCommitment gRPC method
@@ -235,7 +240,8 @@ func (q Keeper) PacketCommitment(c context.Context, req *types.QueryPacketCommit
 		return nil, status.Error(codes.NotFound, "packet commitment hash not found")
 	}
 
-	return types.NewQueryPacketCommitmentResponse(req.PortId, req.ChannelId, req.Sequence, commitmentBz, nil, ctx.BlockHeight()), nil
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryPacketCommitmentResponse(req.PortId, req.ChannelId, req.Sequence, commitmentBz, nil, selfHeight), nil
 }
 
 // PacketCommitments implements the Query/PacketCommitments gRPC method
@@ -270,10 +276,11 @@ func (q Keeper) PacketCommitments(c context.Context, req *types.QueryPacketCommi
 		return nil, err
 	}
 
+	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return &types.QueryPacketCommitmentsResponse{
 		Commitments: commitments,
 		Pagination:  pageRes,
-		Height:      ctx.BlockHeight(),
+		Height:      selfHeight,
 	}, nil
 }
 
@@ -298,7 +305,8 @@ func (q Keeper) PacketAcknowledgement(c context.Context, req *types.QueryPacketA
 		return nil, status.Error(codes.NotFound, "packet acknowledgement hash not found")
 	}
 
-	return types.NewQueryPacketAcknowledgementResponse(req.PortId, req.ChannelId, req.Sequence, acknowledgementBz, nil, ctx.BlockHeight()), nil
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryPacketAcknowledgementResponse(req.PortId, req.ChannelId, req.Sequence, acknowledgementBz, nil, selfHeight), nil
 }
 
 // UnrelayedPackets implements the Query/UnrelayedPackets gRPC method. Given
@@ -336,9 +344,11 @@ func (q Keeper) UnrelayedPackets(c context.Context, req *types.QueryUnrelayedPac
 		}
 
 	}
+
+	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return &types.QueryUnrelayedPacketsResponse{
 		Sequences: unrelayedSequences,
-		Height:    ctx.BlockHeight(),
+		Height:    selfHeight,
 	}, nil
 }
 
@@ -361,7 +371,8 @@ func (q Keeper) NextSequenceReceive(c context.Context, req *types.QueryNextSeque
 		)
 	}
 
-	return types.NewQueryNextSequenceReceiveResponse(req.PortId, req.ChannelId, sequence, nil, ctx.BlockHeight()), nil
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	return types.NewQueryNextSequenceReceiveResponse(req.PortId, req.ChannelId, sequence, nil, selfHeight), nil
 }
 
 func validategRPCRequest(portID, channelID string) error {

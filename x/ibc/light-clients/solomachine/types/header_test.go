@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -21,33 +21,61 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		{
 			"sequence is zero",
 			&types.Header{
-				Sequence:     0,
-				Signature:    header.Signature,
-				NewPublicKey: header.NewPublicKey,
+				Sequence:       0,
+				Timestamp:      header.Timestamp,
+				Signature:      header.Signature,
+				NewPublicKey:   header.NewPublicKey,
+				NewDiversifier: header.NewDiversifier,
+			},
+			false,
+		},
+		{
+			"timestamp is zero",
+			&types.Header{
+				Sequence:       header.Sequence,
+				Timestamp:      0,
+				Signature:      header.Signature,
+				NewPublicKey:   header.NewPublicKey,
+				NewDiversifier: header.NewDiversifier,
 			},
 			false,
 		},
 		{
 			"signature is empty",
 			&types.Header{
-				Sequence:     header.Sequence,
-				Signature:    []byte{},
-				NewPublicKey: header.NewPublicKey,
+				Sequence:       header.Sequence,
+				Timestamp:      header.Timestamp,
+				Signature:      []byte{},
+				NewPublicKey:   header.NewPublicKey,
+				NewDiversifier: header.NewDiversifier,
+			},
+			false,
+		},
+		{
+			"diversifier contains only spaces",
+			&types.Header{
+				Sequence:       header.Sequence,
+				Timestamp:      header.Timestamp,
+				Signature:      header.Signature,
+				NewPublicKey:   header.NewPublicKey,
+				NewDiversifier: " ",
 			},
 			false,
 		},
 		{
 			"public key is nil",
 			&types.Header{
-				Sequence:     header.Sequence,
-				Signature:    header.Signature,
-				NewPublicKey: nil,
+				Sequence:       header.Sequence,
+				Timestamp:      header.Timestamp,
+				Signature:      header.Signature,
+				NewPublicKey:   nil,
+				NewDiversifier: header.NewDiversifier,
 			},
 			false,
 		},
 	}
 
-	suite.Require().Equal(clientexported.SoloMachine, header.ClientType())
+	suite.Require().Equal(exported.SoloMachine, header.ClientType())
 
 	for _, tc := range cases {
 		tc := tc

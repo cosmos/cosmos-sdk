@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -16,7 +17,7 @@ var (
 	clientID      = "clientidone"
 	connectionID2 = "connectionidtwo"
 	clientID2     = "clientidtwo"
-	clientHeight  = uint64(6)
+	clientHeight  = clienttypes.NewHeight(0, 6)
 )
 
 func TestConnectionValidateBasic(t *testing.T) {

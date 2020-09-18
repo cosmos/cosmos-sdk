@@ -15,7 +15,7 @@ type MsgTransfer struct {
   Token             sdk.Coin
   Sender            sdk.AccAddress
   Receiver          string
-  TimeoutHeight     uint64
+  TimeoutHeight     ibcexported.Height
   TimeoutTimestamp  uint64
 }
 ```

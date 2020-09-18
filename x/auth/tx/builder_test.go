@@ -201,10 +201,10 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	// gas limit too high
-	txBuilder.SetGasLimit(MaxGasWanted + 1)
+	txBuilder.SetGasLimit(txtypes.MaxGasWanted + 1)
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	txBuilder.SetGasLimit(MaxGasWanted - 1)
+	txBuilder.SetGasLimit(txtypes.MaxGasWanted - 1)
 	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 

@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
@@ -27,12 +27,12 @@ type SoloMachineTestSuite struct {
 }
 
 func (suite *SoloMachineTestSuite) SetupTest() {
-	suite.solomachine = ibctesting.NewSolomachine(suite.T(), "testingsolomachine")
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientexported.ClientTypeSoloMachine)
+	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "testingsolomachine", "testing")
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), exported.ClientTypeSoloMachine)
 
 	bz, err := codec.MarshalAny(suite.chainA.Codec, suite.solomachine.ClientState())
 	suite.Require().NoError(err)
@@ -47,10 +47,10 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	bz := suite.store.Get(host.KeyClientState())
 	suite.Require().NotNil(bz)
 
-	var clientState clientexported.ClientState
+	var clientState exported.ClientState
 	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight()
+	return clientState.GetLatestHeight().GetEpochHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {

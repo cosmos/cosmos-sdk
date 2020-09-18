@@ -4,12 +4,13 @@ package secp256k1
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1/internal/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 )
 
 // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.
-func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
-	rsv, err := secp256k1.Sign(crypto.Sha256(msg), privKey[:])
+func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
+	rsv, err := secp256k1.Sign(crypto.Sha256(msg), privKey.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -18,6 +19,6 @@ func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
 	return rs, nil
 }
 
-func (pubKey PubKey) VerifySignature(msg []byte, sig []byte) bool {
-	return secp256k1.VerifySignature(pubKey[:], crypto.Sha256(msg), sig)
+func (pubKey *PrivKey) VerifySignature(msg []byte, sig []byte) bool {
+	return secp256k1.VerifySignature(pubKey.Key, crypto.Sha256(msg), sig)
 }

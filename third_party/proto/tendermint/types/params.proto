@@ -53,11 +53,6 @@ message EvidenceParams {
   // each evidence (See MaxEvidenceBytes). The maximum number is MaxEvidencePerBlock.
   // Default is 50
   uint32 max_num = 3;
-
-  // Proof trial period dictates the time given for nodes accused of amnesia evidence, incorrectly
-  // voting twice in two different rounds to respond with their respective proofs.
-  // Default is half the max age in blocks: 50,000
-  int64 proof_trial_period = 4;
 }
 
 // ValidatorParams restrict the public key types validators can use.

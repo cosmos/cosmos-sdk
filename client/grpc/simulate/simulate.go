@@ -43,7 +43,6 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 		return nil, err
 	}
 	txBuilder := authtx.WrapTx(req.Tx, s.pubkeyCodec)
-
 	txBytes, err := req.Tx.Marshal()
 	if err != nil {
 		return nil, err

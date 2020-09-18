@@ -14,9 +14,9 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -72,15 +72,15 @@ func (k Keeper) GetTransferAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// PacketExecuted defines a wrapper function for the channel Keeper's function
+// ReceiveExecuted defines a wrapper function for the channel Keeper's function
 // in order to expose it to the ICS20 transfer handler.
 // Keeper retrieves channel capability and passes it into channel keeper for authentication
-func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement []byte) error {
+func (k Keeper) ReceiveExecuted(ctx sdk.Context, packet ibcexported.PacketI, acknowledgement []byte) error {
 	chanCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel()))
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
-	return k.channelKeeper.PacketExecuted(ctx, chanCap, packet, acknowledgement)
+	return k.channelKeeper.ReceiveExecuted(ctx, chanCap, packet, acknowledgement)
 }
 
 // ChanCloseInit defines a wrapper function for the channel Keeper's function

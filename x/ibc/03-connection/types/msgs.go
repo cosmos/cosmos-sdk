@@ -1,12 +1,13 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ sdk.Msg = &MsgConnectionOpenInit{}
@@ -65,10 +66,10 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyClient clientexported.ClientState,
+	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
+	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -132,16 +133,27 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return msg.Counterparty.ValidateBasic()
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetSignBytes implements sdk.Msg
@@ -158,9 +170,9 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, counterpartyClient clientexported.ClientState,
+	connectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, version string,
+	proofHeight, consensusHeight clienttypes.Height, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
@@ -175,6 +187,17 @@ func NewMsgConnectionOpenAck(
 		Version:         version,
 		Signer:          signer,
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Route implements sdk.Msg
@@ -214,11 +237,11 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -240,7 +263,7 @@ var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck []byte, proofHeight uint64,
+	connectionID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{
@@ -269,8 +292,8 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

@@ -133,9 +133,13 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	ubdStore := prefix.NewStore(store, types.GetUBDsByValIndexKey(req.ValidatorAddr))
+	srcValPrefix := types.GetUBDsByValIndexKey(req.ValidatorAddr)
+	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
-		ubd, err := types.UnmarshalUBD(k.cdc, value)
+		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
+		storeValue := store.Get(storeKey)
+
+		ubd, err := types.UnmarshalUBD(k.cdc, storeValue)
 		if err != nil {
 			return err
 		}

@@ -44,6 +44,22 @@ halt-height = {{ .BaseConfig.HaltHeight }}
 # Note: Commitment of state will be attempted on the corresponding block.
 halt-time = {{ .BaseConfig.HaltTime }}
 
+# MinRetainBlocks defines the minimum block height offset from the current
+# block being committed, such that all blocks past this offset are pruned
+# from Tendermint. It is used as part of the process of determining the
+# ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+# that no blocks should be pruned.
+#
+# This configuration value is only responsible for pruning Tendermint blocks.
+# It has no bearing on application state pruning which is determined by the
+# "pruning-*" configurations.
+#
+# Note: Tendermint block pruning is dependant on this parameter in conunction
+# with the unbonding (safety threshold) period, state pruning and state sync
+# snapshot parameters to determine the correct minimum value of
+# ResponseCommit.RetainHeight.
+min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
+
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 
@@ -130,6 +146,21 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
+
+###############################################################################
+###                        State Sync Configuration                         ###
+###############################################################################
+
+# State sync snapshots allow other nodes to rapidly join the network without replaying historical
+# blocks, instead downloading and applying a snapshot of the application state at a given height.
+[state-sync]
+
+# snapshot-interval specifies the block interval at which local state sync snapshots are
+# taken (0 to disable). Must be a multiple of pruning-keep-every.
+snapshot-interval = {{ .StateSync.SnapshotInterval }}
+
+# snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
+snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 `
 
 var configTemplate *template.Template

@@ -1,15 +1,15 @@
 package types_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	var (
-		clientState  clientexported.ClientState
-		misbehaviour clientexported.Misbehaviour
+		clientState  exported.ClientState
+		misbehaviour exported.Misbehaviour
 	)
 
 	testCases := []struct {
@@ -38,7 +38,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 		{
 			"wrong client state type",
 			func() {
-				clientState = ibctmtypes.ClientState{}
+				clientState = &ibctmtypes.ClientState{}
 				misbehaviour = suite.solomachine.CreateMisbehaviour()
 			},
 			false,
@@ -60,7 +60,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA ONE")
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				signBytes := &types.SignBytes{
+					Sequence: suite.solomachine.Sequence + 1,
+					Data:     msg,
+				}
+
+				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
+				suite.Require().NoError(err)
+
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
@@ -79,7 +86,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				m := suite.solomachine.CreateMisbehaviour()
 
 				msg := []byte("DATA TWO")
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				signBytes := &types.SignBytes{
+					Sequence: suite.solomachine.Sequence + 1,
+					Data:     msg,
+				}
+
+				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
+				suite.Require().NoError(err)
+
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
@@ -100,7 +114,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				// Signature One
 				msg := []byte("DATA ONE")
 				// sequence used is plus 1
-				data := append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence+1), msg...)
+				signBytes := &types.SignBytes{
+					Sequence: suite.solomachine.Sequence + 1,
+					Data:     msg,
+				}
+
+				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
+				suite.Require().NoError(err)
+
 				sig, err := suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 
@@ -110,7 +131,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				// Signature Two
 				msg = []byte("DATA TWO")
 				// sequence used is minus 1
-				data = append(sdk.Uint64ToBigEndian(suite.solomachine.Sequence-1), msg...)
+
+				signBytes = &types.SignBytes{
+					Sequence: suite.solomachine.Sequence - 1,
+					Data:     msg,
+				}
+				data, err = suite.chainA.Codec.MarshalBinaryBare(signBytes)
+				suite.Require().NoError(err)
+
 				sig, err = suite.solomachine.PrivateKey.Sign(data)
 				suite.Require().NoError(err)
 

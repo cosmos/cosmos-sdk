@@ -10,8 +10,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 const (
@@ -38,6 +40,8 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 )
 
+var clientHeight = clienttypes.NewHeight(0, 10)
+
 type IBCTestSuite struct {
 	suite.Suite
 
@@ -50,7 +54,7 @@ func (suite *IBCTestSuite) SetupTest() {
 	isCheckTx := false
 	suite.app = simapp.Setup(isCheckTx)
 
-	privVal := tmtypes.NewMockPV()
+	privVal := ibctestingmock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	suite.Require().NoError(err)
 
@@ -59,7 +63,9 @@ func (suite *IBCTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey, 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
+	clientHeightMinus1 := clienttypes.NewHeight(0, height-1)
+
+	suite.header = ibctmtypes.CreateTestHeader(chainID, clientHeight, clientHeightMinus1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }

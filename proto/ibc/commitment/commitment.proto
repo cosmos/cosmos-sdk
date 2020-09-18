@@ -25,10 +25,7 @@ message MerklePrefix {
 message MerklePath {
   option (gogoproto.goproto_stringer) = false;
 
-  KeyPath key_path = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"key_path\""
-  ];
+  KeyPath key_path = 1 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"key_path\""];
 }
 
 // MerkleProof is a wrapper type that contains a merkle proof.

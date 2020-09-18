@@ -142,7 +142,7 @@ func TestUnpackInterfaces(t *testing.T) {
 		},
 		{
 			"error",
-			codec.New(),
+			codec.NewLegacyAmino(),
 			false,
 		},
 	}

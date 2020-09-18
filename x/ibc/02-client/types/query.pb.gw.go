@@ -122,7 +122,7 @@ func local_request_Query_ClientStates_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
-	filter_Query_ConsensusState_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0, "height": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Query_ConsensusState_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0, "epoch_number": 1, "epoch_height": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
 
 func request_Query_ConsensusState_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -147,15 +147,26 @@ func request_Query_ConsensusState_0(ctx context.Context, marshaler runtime.Marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
 	}
 
-	val, ok = pathParams["height"]
+	val, ok = pathParams["epoch_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_number")
 	}
 
-	protoReq.Height, err = runtime.Uint64(val)
+	protoReq.EpochNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_number", err)
+	}
+
+	val, ok = pathParams["epoch_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_height")
+	}
+
+	protoReq.EpochHeight, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -192,15 +203,26 @@ func local_request_Query_ConsensusState_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
 	}
 
-	val, ok = pathParams["height"]
+	val, ok = pathParams["epoch_number"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "height")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_number")
 	}
 
-	protoReq.Height, err = runtime.Uint64(val)
+	protoReq.EpochNumber, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "height", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_number", err)
+	}
+
+	val, ok = pathParams["epoch_height"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "epoch_height")
+	}
+
+	protoReq.EpochHeight, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "epoch_height", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -290,6 +312,7 @@ func local_request_Query_ConsensusStates_0(ctx context.Context, marshaler runtim
 // RegisterQueryHandlerServer registers the http handlers for service Query to "mux".
 // UnaryRPC     :call QueryServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterQueryHandlerFromEndpoint instead.
 func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, server QueryServer) error {
 
 	mux.Handle("GET", pattern_Query_ClientState_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
@@ -501,7 +524,7 @@ var (
 
 	pattern_Query_ClientStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibc", "client", "v1beta1", "client_states"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "client", "v1beta1", "consensus_states", "client_id", "height"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConsensusState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"ibc", "client", "v1beta1", "consensus_states", "client_id", "epoch", "epoch_number", "height", "epoch_height"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ConsensusStates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"ibc", "client", "v1beta1", "consensus_states", "client_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )

@@ -40,26 +40,23 @@ message QueryDenomTraceResponse {
 
 // QueryConnectionsRequest is the request type for the Query/DenomTraces RPC method
 message QueryDenomTracesRequest {
-   // pagination defines an optional pagination for the request.
+  // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryConnectionsResponse is the response type for the Query/DenomTraces RPC method.
 message QueryDenomTracesResponse {
   // denom_traces returns all denominations trace information.
-  repeated DenomTrace denom_traces = 1 [
-    (gogoproto.castrepeated) = "Traces",
-    (gogoproto.nullable) = false
-  ];
+  repeated DenomTrace denom_traces = 1 [(gogoproto.castrepeated) = "Traces", (gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest{}
+message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse{
+message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1;
-} 
+}

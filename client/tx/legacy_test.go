@@ -3,26 +3,21 @@ package tx_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/stretchr/testify/require"
-
+	"github.com/cosmos/cosmos-sdk/client"
 	tx2 "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	types3 "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
+	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	types3 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

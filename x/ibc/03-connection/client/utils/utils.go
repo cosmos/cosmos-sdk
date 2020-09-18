@@ -7,16 +7,16 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // QueryConnection returns a connection end.
@@ -38,30 +38,26 @@ func QueryConnection(
 }
 
 func queryConnectionABCI(clientCtx client.Context, connectionID string) (*types.QueryConnectionResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyConnection(connectionID),
-		Prove: true,
-	}
+	key := host.KeyConnection(connectionID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if connection exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 	var connection types.ConnectionEnd
-	if err := cdc.UnmarshalBinaryBare(res.Value, &connection); err != nil {
+	if err := cdc.UnmarshalBinaryBare(value, &connection); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, res.Height), nil
+	return types.NewQueryConnectionResponse(connectionID, connection, proofBz, proofHeight), nil
 }
 
 // QueryClientConnections queries the connection paths registered for a particular client.
@@ -83,30 +79,24 @@ func QueryClientConnections(
 }
 
 func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*types.QueryClientConnectionsResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  host.KeyClientConnections(clientID),
-		Prove: true,
-	}
+	key := host.KeyClientConnections(clientID)
 
-	res, err := clientCtx.QueryABCI(req)
+	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+	// check if connection paths exist
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, clientID)
+	}
 
 	var paths []string
-	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(res.Value, &paths); err != nil {
+	if err := clientCtx.LegacyAmino.UnmarshalBinaryBare(value, &paths); err != nil {
 		return nil, err
 	}
 
-	proofBz, err := cdc.MarshalBinaryBare(res.ProofOps)
-	if err != nil {
-		return nil, err
-	}
-
-	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, res.Height), nil
+	return types.NewQueryClientConnectionsResponse(clientID, paths, proofBz, proofHeight), nil
 }
 
 // QueryConnectionClientState returns the ClientState of a connection end. If
@@ -138,7 +128,7 @@ func QueryConnectionClientState(
 			ClientState: clientStateRes.ClientState,
 		}
 
-		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, clientStateRes.Proof, int64(clientStateRes.ProofHeight))
+		res = types.NewQueryConnectionClientStateResponse(identifiedClientState, clientStateRes.Proof, clientStateRes.ProofHeight)
 	}
 
 	return res, nil
@@ -148,13 +138,14 @@ func QueryConnectionClientState(
 // prove is true, it performs an ABCI store query in order to retrieve the
 // merkle proof. Otherwise, it uses the gRPC query client.
 func QueryConnectionConsensusState(
-	clientCtx client.Context, connectionID string, height uint64, prove bool,
+	clientCtx client.Context, connectionID string, height clienttypes.Height, prove bool,
 ) (*types.QueryConnectionConsensusStateResponse, error) {
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
 		ConnectionId: connectionID,
-		Height:       height,
+		EpochNumber:  height.EpochNumber,
+		EpochHeight:  height.EpochHeight,
 	}
 
 	res, err := queryClient.ConnectionConsensusState(context.Background(), req)
@@ -162,18 +153,13 @@ func QueryConnectionConsensusState(
 		return nil, err
 	}
 
-	consensusState, err := clienttypes.UnpackConsensusState(res.ConsensusState)
-	if err != nil {
-		return nil, err
-	}
-
 	if prove {
-		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, consensusState.GetHeight())
+		consensusStateRes, err := clientutils.QueryConsensusStateABCI(clientCtx, res.ClientId, height)
 		if err != nil {
 			return nil, err
 		}
 
-		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, consensusState.GetHeight(), consensusStateRes.Proof, int64(consensusStateRes.ProofHeight))
+		res = types.NewQueryConnectionConsensusStateResponse(res.ClientId, consensusStateRes.ConsensusState, height, consensusStateRes.Proof, consensusStateRes.ProofHeight)
 	}
 
 	return res, nil
@@ -181,8 +167,8 @@ func QueryConnectionConsensusState(
 
 // ParseClientState unmarshals a cmd input argument from a JSON string to a client state
 // If the input is not a JSON, it looks for a path to the JSON file
-func ParseClientState(cdc *codec.LegacyAmino, arg string) (clientexported.ClientState, error) {
-	var clientState clientexported.ClientState
+func ParseClientState(cdc *codec.LegacyAmino, arg string) (exported.ClientState, error) {
+	var clientState exported.ClientState
 	if err := cdc.UnmarshalJSON([]byte(arg), &clientState); err != nil {
 		// check for file path if JSON input is not provided
 		contents, err := ioutil.ReadFile(arg)

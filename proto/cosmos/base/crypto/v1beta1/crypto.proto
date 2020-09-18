@@ -18,14 +18,14 @@ message PublicKey {
 
     // any_pubkey can be used for any pubkey that an app may use which is
     // not explicitly defined in the oneof
-    google.protobuf.Any any_pubkey = 15;  // 15 is largest field that occupies one byte
+    google.protobuf.Any any_pubkey = 15; // 15 is largest field that occupies one byte
   }
 }
 
 // PubKeyMultisigThreshold specifies a public key type which nests multiple public
 // keys and a threshold
 message PubKeyMultisigThreshold {
-  uint32             threshold = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
+  uint32   threshold             = 1 [(gogoproto.customname) = "K", (gogoproto.moretags) = "yaml:\"threshold\""];
   repeated PublicKey public_keys = 2 [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }
 
@@ -34,7 +34,7 @@ message PubKeyMultisigThreshold {
 // with which modes.
 message MultiSignature {
   option (gogoproto.goproto_unrecognized) = true;
-  repeated bytes signatures = 1;
+  repeated bytes signatures               = 1;
 }
 
 // CompactBitArray is an implementation of a space efficient bit array.

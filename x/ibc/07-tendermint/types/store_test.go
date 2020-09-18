@@ -1,13 +1,16 @@
 package types_test
 
 import (
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestGetConsensusState() {
 	var (
-		height  uint64
+		height  exported.Height
 		clientA string
 	)
 
@@ -22,7 +25,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 		{
 			"consensus state not found", func() {
 				// use height with no consensus state set
-				height = height + 1
+				height = height.(clienttypes.Height).Increment()
 			}, false,
 		},
 		{
@@ -50,7 +53,7 @@ func (suite *TendermintTestSuite) TestGetConsensusState() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			clientA, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB)
+			clientA, _, _, _, _, _ = suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			clientState := suite.chainA.GetClientState(clientA)
 			height = clientState.GetLatestHeight()
 

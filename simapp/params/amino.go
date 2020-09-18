@@ -10,7 +10,7 @@ import (
 
 // MakeEncodingConfig creates an EncodingConfig for an amino based test configuration.
 func MakeEncodingConfig() EncodingConfig {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewAminoCodec(cdc)
 

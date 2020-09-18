@@ -301,8 +301,11 @@ func New(t *testing.T, cfg Config) *Network {
 		require.NoError(t, err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		require.NoError(t, txBuilder.SetMsgs(createValMsg))
+		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
+		txBuilder.SetGasLimit(1000000) // Need at least 100386
 		txBuilder.SetMemo(memo)
 
 		txFactory := tx.Factory{}

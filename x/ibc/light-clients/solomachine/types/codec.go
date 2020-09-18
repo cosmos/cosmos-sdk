@@ -3,26 +3,27 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // RegisterInterfaces register the ibc channel submodule interfaces to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgCreateClient{},
-		&MsgUpdateClient{},
-		&MsgSubmitClientMisbehaviour{},
-	)
-	registry.RegisterImplementations(
-		(*clientexported.ClientState)(nil),
+		(*exported.ClientState)(nil),
 		&ClientState{},
 	)
 	registry.RegisterImplementations(
-		(*clientexported.ConsensusState)(nil),
+		(*exported.ConsensusState)(nil),
 		&ConsensusState{},
+	)
+	registry.RegisterImplementations(
+		(*exported.Header)(nil),
+		&Header{},
+	)
+	registry.RegisterImplementations(
+		(*exported.Misbehaviour)(nil),
+		&Misbehaviour{},
 	)
 }
 

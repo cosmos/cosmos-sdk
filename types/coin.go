@@ -664,13 +664,5 @@ func ParseCoins(coinsStr string) (Coins, error) {
 		coins[i] = coin
 	}
 
-	// sort coins for determinism
-	coins.Sort()
-
-	// validate coins before returning
-	if err := coins.Validate(); err != nil {
-		return nil, err
-	}
-
-	return coins, nil
+	return NewCoins(coins...), nil
 }

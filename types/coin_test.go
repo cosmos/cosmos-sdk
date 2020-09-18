@@ -612,7 +612,7 @@ func TestCoinsLTE(t *testing.T) {
 	assert.True(t, Coins{}.IsAllLTE(Coins{{testDenom1, one}}))
 }
 
-func TestParse(t *testing.T) {
+func TestParseCoins(t *testing.T) {
 	one := OneInt()
 
 	cases := []struct {
@@ -621,6 +621,8 @@ func TestParse(t *testing.T) {
 		expected Coins // if valid is true, make sure this is returned
 	}{
 		{"", true, nil},
+		{"0stake", true, Coins{}},
+		{"0stake,1foo,99bar", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
 		{"1foo", true, Coins{{"foo", one}}},
 		{"10bar", true, Coins{{"bar", NewInt(10)}}},
 		{"99bar,1foo", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},

@@ -21,7 +21,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -54,9 +53,7 @@ func TestInitCmd(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			home, cleanup := testutil.NewTestCaseDir(t)
-			defer cleanup()
-
+			home := t.TempDir()
 			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
@@ -89,17 +86,8 @@ func TestInitCmd(t *testing.T) {
 
 }
 
-func setupClientHome(t *testing.T) func() {
-	_, cleanup := testutil.NewTestCaseDir(t)
-	return cleanup
-}
-
 func TestEmptyState(t *testing.T) {
-	t.Cleanup(setupClientHome(t))
-
-	home, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-
+	home := t.TempDir()
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
@@ -148,10 +136,7 @@ func TestEmptyState(t *testing.T) {
 }
 
 func TestStartStandAlone(t *testing.T) {
-	home, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	t.Cleanup(setupClientHome(t))
-
+	home := t.TempDir()
 	logger := log.NewNopLogger()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
@@ -180,10 +165,10 @@ func TestStartStandAlone(t *testing.T) {
 }
 
 func TestInitNodeValidatorFiles(t *testing.T) {
-	home, cleanup := testutil.NewTestCaseDir(t)
+	home := t.TempDir()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
-	t.Cleanup(cleanup)
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
+
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))

@@ -3,17 +3,19 @@ package multisig_test
 import (
 	"testing"
 
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAddress(t *testing.T) {

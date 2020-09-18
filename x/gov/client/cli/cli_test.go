@@ -12,6 +12,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -427,7 +428,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 		expectErr bool
 	}{
 		{
-			"get proposals as json repsonse",
+			"get proposals as json response",
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},

@@ -4,11 +4,12 @@ package rest_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"

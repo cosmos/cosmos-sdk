@@ -19,7 +19,7 @@ func (suite *TypesTestSuite) TestNewUpdateClientProposal() {
 
 func (suite *TypesTestSuite) TestValidateBasic() {
 	// use solo machine header for testing
-	solomachine := ibctesting.NewSolomachine(suite.T(), suite.chain.Codec, clientID, "")
+	solomachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, clientID, "")
 	smHeader := solomachine.CreateHeader()
 	header, err := types.PackHeader(smHeader)
 	suite.Require().NoError(err)

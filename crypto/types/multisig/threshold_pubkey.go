@@ -33,14 +33,14 @@ func NewPubKeyMultisigThreshold(k int, pubkeys []crypto.PubKey) PubKey {
 	return PubKeyMultisigThreshold{uint(k), pubkeys}
 }
 
-// VerifyBytes expects sig to be an amino encoded version of a MultiSignature.
+// VerifySignature expects sig to be an amino encoded version of a MultiSignature.
 // Returns true iff the multisignature contains k or more signatures
 // for the correct corresponding keys,
 // and all signatures are valid. (Not just k of the signatures)
 // The multisig uses a bitarray, so multiple signatures for the same key is not
 // a concern.
 //
-// NOTE: VerifyMultisignature should preferred to VerifyBytes which only works
+// NOTE: VerifyMultisignature should preferred to VerifySignature which only works
 // with amino multisignatures.
 func (pk PubKeyMultisigThreshold) VerifySignature(msg []byte, marshalledSig []byte) bool {
 	var sig AminoMultisignature
@@ -140,15 +140,16 @@ func (pk PubKeyMultisigThreshold) Address() crypto.Address {
 // Equals returns true iff pk and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
 func (pk PubKeyMultisigThreshold) Equals(other crypto.PubKey) bool {
-	otherKey, sameType := other.(PubKeyMultisigThreshold)
+	otherKey, sameType := other.(PubKey)
 	if !sameType {
 		return false
 	}
-	if pk.K != otherKey.K || len(pk.PubKeys) != len(otherKey.PubKeys) {
+	otherPubKeys := otherKey.GetPubKeys()
+	if pk.GetThreshold() != otherKey.GetThreshold() || len(pk.PubKeys) != len(otherPubKeys) {
 		return false
 	}
 	for i := 0; i < len(pk.PubKeys); i++ {
-		if !pk.PubKeys[i].Equals(otherKey.PubKeys[i]) {
+		if !pk.PubKeys[i].Equals(otherPubKeys[i]) {
 			return false
 		}
 	}

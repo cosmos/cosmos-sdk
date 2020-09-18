@@ -181,10 +181,12 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
+	epoch := clienttypes.ParseChainID(chain.ChainID)
+
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, clienttypes.NewHeight(0, uint64(res.Height)+1)
+	return proof, clienttypes.NewHeight(epoch, uint64(res.Height)+1)
 }
 
 // QueryClientStateProof performs and abci query for a client state

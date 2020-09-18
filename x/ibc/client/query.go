@@ -3,12 +3,13 @@ package client
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // QueryTendermintProof performs an ABCI query with the given key and returns the value
@@ -39,6 +40,6 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 		return nil, nil, clienttypes.Height{}, err
 	}
 
-	// TODO: retrieve epoch number from chain-id
-	return res.Value, proofBz, clienttypes.NewHeight(0, uint64(res.Height)+1), nil
+	epoch := clienttypes.ParseChainID(clientCtx.ChainID)
+	return res.Value, proofBz, clienttypes.NewHeight(epoch, uint64(res.Height)+1), nil
 }

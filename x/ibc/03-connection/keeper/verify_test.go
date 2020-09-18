@@ -97,6 +97,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 		{"verification failed", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 			clientB := connB.ClientID
+			clientState := suite.chainB.GetClientState(clientB)
 
 			// give chainB wrong consensus state for chainA
 			consState, found := suite.chainB.App.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(suite.chainB.GetContext(), clientB)
@@ -106,7 +107,7 @@ func (suite *KeeperTestSuite) TestVerifyClientConsensusState() {
 			suite.Require().True(ok)
 
 			tmConsState.Timestamp = time.Now()
-			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, tmConsState.GetHeight(), tmConsState)
+			suite.chainB.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainB.GetContext(), clientB, clientState.GetLatestHeight(), tmConsState)
 
 			suite.coordinator.CommitBlock(suite.chainB)
 		}, false},

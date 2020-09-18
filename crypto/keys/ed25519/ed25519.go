@@ -16,9 +16,6 @@ import (
 
 //-------------------------------------
 
-var _ cryptotypes.PrivKey = &PrivKey{}
-var _ codec.AminoMarshaler = &PubKey{}
-
 const (
 	PrivKeyName = "cosmos/PrivKeyEd25519"
 	PubKeyName  = "cosmos/PubKeyEd25519"
@@ -35,6 +32,9 @@ const (
 
 	keyType = "ed25519"
 )
+
+var _ cryptotypes.PrivKey = &PrivKey{}
+var _ codec.AminoMarshaler = &PrivKey{}
 
 // Bytes returns the privkey byte format.
 func (privKey *PrivKey) Bytes() []byte {
@@ -149,8 +149,6 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
-
-var _ crypto.PubKey = &PubKey{}
 var _ cryptotypes.IntoTmPubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.

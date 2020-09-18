@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -429,7 +429,7 @@ func (v Validator) GetConsPubKey() crypto.PubKey {
 	// pubkey will be passed into TM.
 	pk := sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, v.ConsensusPubkey)
 
-	if intoTmPk, ok := pk.(ed25519.IntoTmPubKey); ok {
+	if intoTmPk, ok := pk.(cryptotypes.IntoTmPubKey); ok {
 		return intoTmPk.AsTmPubKey()
 	}
 

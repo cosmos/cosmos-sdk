@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"io"
 
-	"golang.org/x/crypto/ed25519"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tendermint/tendermint/crypto"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	"golang.org/x/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -151,14 +150,8 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
 
-// IntoTmPubKey allows our own PubKey types be converted into Tendermint's
-// pubkey types.
-type IntoTmPubKey interface {
-	AsTmPubKey() crypto.PubKey
-}
-
 var _ crypto.PubKey = &PubKey{}
-var _ IntoTmPubKey = &PubKey{}
+var _ cryptotypes.IntoTmPubKey = &PubKey{}
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey *PubKey) Address() crypto.Address {

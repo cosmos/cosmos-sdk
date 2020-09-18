@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -935,10 +935,10 @@ func TestCountSubkeys(t *testing.T) {
 		return ret
 	}
 	singleKey := secp256k1.GenPrivKey().PubKey()
-	singleLevelMultiKey := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelSubKey1 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelSubKey2 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
-	multiLevelMultiKey := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
+	singleLevelMultiKey := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{
 		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
 	type args struct {
 		pub crypto.PubKey

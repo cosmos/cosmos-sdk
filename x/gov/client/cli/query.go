@@ -114,23 +114,32 @@ $ %s query gov proposals --page=2 --limit=100
 			bechVoterAddr, _ := cmd.Flags().GetString(flagVoter)
 			strProposalStatus, _ := cmd.Flags().GetString(flagStatus)
 
-			_, err := sdk.AccAddressFromBech32(bechDepositorAddr)
-			if err != nil {
-				return err
+			var proposalStatus types.ProposalStatus
+
+			if len(bechDepositorAddr) != 0 {
+				_, err := sdk.AccAddressFromBech32(bechDepositorAddr)
+				if err != nil {
+					return err
+				}
 			}
 
-			_, err = sdk.AccAddressFromBech32(bechVoterAddr)
-			if err != nil {
-				return err
+			if len(bechVoterAddr) != 0 {
+				_, err := sdk.AccAddressFromBech32(bechVoterAddr)
+				if err != nil {
+					return err
+				}
 			}
 
-			proposalStatus, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
-			if err != nil {
-				return err
+			if len(strProposalStatus) != 0 {
+				proposalStatus1, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus = proposalStatus1
+				if err != nil {
+					return err
+				}
 			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err = client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}

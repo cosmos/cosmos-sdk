@@ -7,13 +7,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct
@@ -82,7 +81,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	privKey2, pubkey2, _ := testdata.KeyTestPubAddr()
-	multisigPk := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{pubkey, pubkey2})
+	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{pubkey, pubkey2})
 
 	txBuilder := s.TxConfig.NewTxBuilder()
 

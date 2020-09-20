@@ -19,7 +19,8 @@ done
 # combine swagger files
 # uses nodejs package `swagger-combine`.
 # all the individual swagger files need to be configured in `config.json` for merging
-swagger-combine ./client/grpc-gateway/config.json -o ./client/grpc-gateway/swagger.json --continueOnConflictingPaths true --includeDefinitions true
+swagger-combine ./client/docs/config.json -o ./client/docs/swagger-ui/swagger.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
 
 # clean swagger files
-find ./ -name 'query.swagger.json' -exec rm {} \;
+rm -rf cosmos
+rm -rf ibc

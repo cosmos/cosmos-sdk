@@ -141,8 +141,8 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 
 			msg := &types.MsgSend{
-				val0.Address,
-				val0.Address,
+				val0.Address.String(),
+				val0.Address.String(),
 				sdk.Coins{sdk.NewInt64Coin("foo", 100)},
 			}
 

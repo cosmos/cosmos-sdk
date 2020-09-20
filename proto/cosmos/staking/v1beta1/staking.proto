@@ -72,10 +72,7 @@ message Validator {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string operator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"operator_address\""
-  ];
+  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
   string consensus_pubkey = 2 [(gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
   bool   jailed           = 3;
   int32  status           = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];

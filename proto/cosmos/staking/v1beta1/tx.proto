@@ -19,13 +19,10 @@ message MsgCreateValidator {
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.nullable)   = false
   ];
-  string delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 5 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
-  string                   pubkey = 6;
-  cosmos.base.v1beta1.Coin value  = 7 [(gogoproto.nullable) = false];
+  string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string                   pubkey            = 6;
+  cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
 }
 
 // MsgEditValidator defines an SDK message for editing an existing validator.
@@ -34,10 +31,7 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false];
-  string      validator_address = 2 [
-
-    (gogoproto.moretags) = "yaml:\"address\""
-  ];
+  string      validator_address = 2 [(gogoproto.moretags) = "yaml:\"address\""];
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be

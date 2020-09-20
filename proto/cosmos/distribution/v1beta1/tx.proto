@@ -33,10 +33,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 }
 
 // MsgFundCommunityPool allows an account to directly

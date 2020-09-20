@@ -28,10 +28,7 @@ message ValidatorOutstandingRewardsRecord {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address is the address of the validator.
-  string validator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
   // outstanding_rewards represents the oustanding rewards of a validator.
   repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 2 [
@@ -48,10 +45,7 @@ message ValidatorAccumulatedCommissionRecord {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address is the address of the validator.
-  string validator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
   // accumulated is the accumulated commission of a validator.
   ValidatorAccumulatedCommission accumulated = 2
@@ -65,10 +59,7 @@ message ValidatorHistoricalRewardsRecord {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address is the address of the validator.
-  string validator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
   // period defines the period the historical rewards apply to.
   uint64 period = 2;
@@ -98,10 +89,7 @@ message DelegatorStartingInfoRecord {
   string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
 
   // validator_address is the address of the validator.
-  string validator_address = 2 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
 
   // starting_info defines the starting info of a delegator.
   DelegatorStartingInfo starting_info = 3
@@ -114,10 +102,7 @@ message ValidatorSlashEventRecord {
   option (gogoproto.goproto_getters) = false;
 
   // validator_address is the address of the validator.
-  string validator_address = 1 [
-
-    (gogoproto.moretags) = "yaml:\"validator_address\""
-  ];
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // height defines the block height at which the slash event occured.
   uint64 height = 2;
   // period is the period of the slash event.

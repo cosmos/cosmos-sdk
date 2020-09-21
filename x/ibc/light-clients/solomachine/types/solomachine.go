@@ -16,15 +16,15 @@ func (cs *ClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (cs *ConsensusState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(cs.PublicKey, new(crypto.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (h *Header) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(h.NewPublicKey, new(crypto.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (hd *HeaderData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(hd.NewPubKey, new(crypto.PubKey))
 }

@@ -139,7 +139,7 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
+	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

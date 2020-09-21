@@ -633,9 +633,8 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 	// TM's ed25519 bech32 encoding, we explicitly say to bech32-encode our own
 	// ed25519 the same way as TM's ed25519.
 	pkToMarshal := pubkey
-	switch pubkey.(type) {
-	case *ed25519.PubKey:
-		pkToMarshal = pubkey.(*ed25519.PubKey).AsTmPubKey()
+	if ed25519Pk, ok := pubkey.(*ed25519.PubKey); ok {
+		pkToMarshal = ed25519Pk.AsTmPubKey()
 	}
 
 	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pkToMarshal))

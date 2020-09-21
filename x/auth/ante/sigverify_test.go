@@ -270,7 +270,11 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 func (suite *AnteTestSuite) TestSigIntegration() {
 	// generate private keys
-	privs := []crypto.PrivKey{secp256k1.GenPrivKey(), secp256k1.GenPrivKey(), secp256k1.GenPrivKey()}
+	privs := []crypto.PrivKey{
+		secp256k1.GenPrivKey(),
+		secp256k1.GenPrivKey(),
+		secp256k1.GenPrivKey(),
+	}
 
 	params := types.DefaultParams()
 	initialSigCost := params.SigVerifyCostSecp256k1

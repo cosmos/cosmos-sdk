@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -1002,7 +1002,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	// setup an ante handler that only accepts PubKeyEd25519
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 		switch pubkey := sig.PubKey.(type) {
-		case ed25519.PubKey:
+		case *ed25519.PubKey:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:

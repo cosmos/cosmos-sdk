@@ -103,11 +103,5 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacke
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(sd.PublicKey, &pubKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }

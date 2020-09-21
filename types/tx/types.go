@@ -12,6 +12,7 @@ import (
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
+// Interface implementation checks.
 var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 var _ sdk.Tx = &Tx{}
 
@@ -138,13 +139,7 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(m.PublicKey, &pubKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

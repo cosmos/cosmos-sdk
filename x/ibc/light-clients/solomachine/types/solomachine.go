@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
+// Interface implementation checks.
 var _, _, _, _ codectypes.UnpackInterfacesMessage = &ClientState{}, &ConsensusState{}, &Header{}, &HeaderData{}
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
@@ -15,33 +16,15 @@ func (cs *ClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (cs *ConsensusState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(cs.PublicKey, &pubKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (h *Header) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(h.NewPublicKey, &pubKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (hd *HeaderData) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(hd.NewPubKey, &pubKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }

@@ -22,10 +22,16 @@ case "${UNAME_S}" in
 Linux)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-linux-x86_64"
+  if [ -e /etc/debian_version ]; then
+  CLANG_FORMAT_BIN="clang-format-6.0"
+  else
+  CLANG_FORMAT_BIN="clang-format"
+  fi
   ;;
 Darwin)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-osx-x86_64.zip"
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-darwin-x86_64"
+  CLANG_FORMAT_BIN="clang-format"
   ;;
 *)
   f_abort 1 "Unknown kernel name. Exiting."
@@ -116,9 +122,9 @@ f_install_protoc_gen_swagger() {
 }
 
 f_install_clang_format() {
-  f_print_installing_with_padding clang-format
+  f_print_installing_with_padding ${CLANG_FORMAT_BIN}
 
-  if which clang-format &>/dev/null ; then
+  if which ${CLANG_FORMAT_BIN} &>/dev/null ; then
     echo -e "\talready installed. Skipping."
     return 0
   fi
@@ -126,7 +132,9 @@ f_install_clang_format() {
   case "${UNAME_S}" in
   Linux)
     if [ -e /etc/debian_version ]; then
-      echo -e "\tRun: sudo apt-get install clang-format" >&2
+      echo -e "\tRun :\n wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - ; \
+sudo apt-add-repository \"deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main\"; \
+sudo apt update ; sudo apt-get install clang-format-6.0 ;" >&2
     elif [ -e /etc/fedora-release ]; then
       echo -e "\tRun: sudo dnf install clang" >&2
     else
@@ -134,10 +142,13 @@ f_install_clang_format() {
     fi
     ;;
   Darwin)
-    echo "\tRun: brew install clang-format" >&2
+    echo -e  "\tRun: \n curl https://gist.githubusercontent.com/bvigueras/daf11aee6876fb9ba4c925c2c31bc04b/raw/\
+526ff0eebbc0476f568c852a8cc5d4cc48281475/clang-format@6.rb -o \
+\$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula/clang-format@6.rb ; \
+brew install clang-format@6 ;" >&2
     ;;
   *)
-    echo "\tunknown operating system. Skipping." >&2
+    echo -e  "\tunknown operating system. Skipping." >&2
   esac
 }
 

@@ -349,13 +349,26 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
+# Get clang-format binary name
+ifeq ($(UNAME_S),Linux)
+# Checking debian release or not
+ifneq ("$(wildcard /etc/debian_version)","")
+  CLANG_FORMAT_BIN ?= clang-format-6.0
+else
+  CLANG_FORMAT_BIN ?= clang-format
+endif
+endif
+ifeq ($(UNAME_OS),Darwin)
+  CLANG_FORMAT_BIN ?= clang-format
+endif
+
 proto-all: proto-tools proto-gen proto-lint proto-check-breaking proto-swagger-gen proto-format
 
 proto-gen:
 	@./scripts/protocgen.sh
 
 proto-format:
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	find ./ -not -path "./third_party/*" -name *.proto -exec ${CLANG_FORMAT_BIN} -i {} \;
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:

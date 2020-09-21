@@ -128,11 +128,23 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		// We just unmarshalled from Tendermint, we take the proto Tx's raw
+		// bytes, and convert them into a StdTx to be displayed.
+		txBytes := output.Tx.Value
+		if rest.CheckBadRequestError(w, err) {
+			return
+		}
+
+		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
+		if !ok {
+			return
+		}
+
 		if output.Empty() {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponseBare(w, clientCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, stdTx)
 	}
 }
 

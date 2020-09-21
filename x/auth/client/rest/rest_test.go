@@ -108,11 +108,10 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 
 func (s *IntegrationTestSuite) TestQueryTxByHash() {
 	val0 := s.network.Validators[0]
-	// val1 := s.network.Validators[1]
 
 	// Create and broadcast a tx.
 	stdTx := s.createTestStdTx(val0, 1) // Validator's sequence starts at 1.
-	res, err := s.broadcastReq(stdTx, "sync")
+	res, err := s.broadcastReq(stdTx, "block")
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	// NOTE: this uses amino explicitly, don't migrate it!
@@ -120,7 +119,6 @@ func (s *IntegrationTestSuite) TestQueryTxByHash() {
 	// we just check for a non-empty TxHash here, the actual hash will depend on the underlying tx configuration
 	s.Require().NotEmpty(txRes.TxHash)
 
-	s.network.WaitForNextBlock()
 	s.network.WaitForNextBlock()
 
 	// We now fetch the tx by has on the `/tx/{hash}` route.

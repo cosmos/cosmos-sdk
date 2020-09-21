@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -771,9 +773,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 	cmd := authcli.GetBroadcastCommand()
 	_, out := testutil.ApplyMockIO(cmd)
-
-	testDir, cleanFunc := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanFunc)
+	testDir := t.TempDir()
 
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()

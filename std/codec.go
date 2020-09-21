@@ -11,9 +11,10 @@ import (
 
 // RegisterLegacyAminoCodec registers types with the Amino codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	vesting.RegisterLegacyAminoCodec(cdc)
 	sdk.RegisterLegacyAminoCodec(cdc)
+	txtypes.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
+	vesting.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces registers Interfaces from sdk/types, vesting, crypto, tx.

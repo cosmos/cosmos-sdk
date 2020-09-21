@@ -5,11 +5,12 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ multisigtypes.PubKey = &LegacyAminoPubKey{}

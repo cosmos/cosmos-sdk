@@ -252,16 +252,25 @@ func marshalInfo(i Info) []byte {
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	// We first try to unmarshal into a multiInfo. This allows the unmarshal
-	// functions to unmarshal Anys correctly too.
-	var multi multiInfo
-	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
-	if err == nil {
-		return multi, nil
+	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	if err != nil {
+		return nil, err
 	}
 
-	// The above might fail, e.g. when Info is a local, offline or ledger info.
-	// In this case, we just unmarshal into the interface.
-	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	// After unmarshalling into &info, if we notice that the info is a
+	// multiInfo, then we unmarshal again, explicitly in a multiInfo this time.
+	// Since multiInfo implements UnpackInterfacesMessage, this will correctly
+	// unpack the underlying anys inside the multiInfo.
+	//
+	// This is a workaround, as go cannot check that an interface (Info)
+	// implements another interface (UnpackInterfacesMessage).
+	_, ok := info.(multiInfo)
+	if ok {
+		var multi multiInfo
+		err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+
+		return multi, err
+	}
+
 	return
 }

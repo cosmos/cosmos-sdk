@@ -3,6 +3,7 @@ package tx
 import (
 	fmt "fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,6 +13,7 @@ import (
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
+// Interface implementation checks.
 var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 var _ sdk.Tx = &Tx{}
 
@@ -138,13 +140,18 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey crypto.PubKey
-	err := unpacker.UnpackAny(m.PublicKey, &pubKey)
-	if err != nil {
-		return err
-	}
+	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
+}
 
-	return nil
+// RegisterLegacyAminoCodec registers interfaces to make them work with Amino.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	// This is used when we want to marshal a pubkey using Amino.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7281
+	cdc.RegisterInterface((*isModeInfo_Sum)(nil), nil)
+	cdc.RegisterConcrete(ModeInfo_Single_{},
+		"cosmos.tx.v1beta1.ModeInfo_Single", nil)
+	cdc.RegisterConcrete(ModeInfo_Multi_{},
+		"cosmos.tx.v1beta1.ModeInfo_Multi", nil)
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

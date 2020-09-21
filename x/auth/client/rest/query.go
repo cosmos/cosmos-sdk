@@ -131,10 +131,6 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// We just unmarshalled from Tendermint, we take the proto Tx's raw
 		// bytes, and convert them into a StdTx to be displayed.
 		txBytes := output.Tx.Value
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
 		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
 		if !ok {
 			return

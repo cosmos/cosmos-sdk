@@ -3,6 +3,7 @@ package tx
 import (
 	fmt "fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -140,6 +141,17 @@ func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
+}
+
+// RegisterLegacyAminoCodec registers interfaces to make them work with Amino.
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	// This is used when we want to marshal a pubkey using Amino.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/7281
+	cdc.RegisterInterface((*isModeInfo_Sum)(nil), nil)
+	cdc.RegisterConcrete(ModeInfo_Single_{},
+		"ModeInfo_Single_", nil)
+	cdc.RegisterConcrete(ModeInfo_Multi_{},
+		"ModeInfo_Multi_", nil)
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

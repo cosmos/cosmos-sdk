@@ -53,7 +53,7 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 	}
 }
 
-// QueryTxsHandlerFn implements a REST handler that searches for transactions.
+// QueryTxsRequestHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
 func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {

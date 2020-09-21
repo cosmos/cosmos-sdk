@@ -149,9 +149,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/7281
 	cdc.RegisterInterface((*isModeInfo_Sum)(nil), nil)
 	cdc.RegisterConcrete(ModeInfo_Single_{},
-		"ModeInfo_Single_", nil)
+		"cosmos.tx.v1beta1.ModeInfo_Single", nil)
 	cdc.RegisterConcrete(ModeInfo_Multi_{},
-		"ModeInfo_Multi_", nil)
+		"cosmos.tx.v1beta1.ModeInfo_Multi", nil)
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

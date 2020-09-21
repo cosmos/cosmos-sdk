@@ -6,12 +6,14 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}
+// Interface implementation checks.
+var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 var _ sdk.Tx = &Tx{}
 
 // GetMsgs implements the GetMsgs method on sdk.Tx.
@@ -100,8 +102,15 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if t.Body != nil {
-		return t.Body.UnpackInterfaces(unpacker)
+		if err := t.Body.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
 	}
+
+	if t.AuthInfo != nil {
+		return t.AuthInfo.UnpackInterfaces(unpacker)
+	}
+
 	return nil
 }
 
@@ -115,6 +124,22 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, signerInfo := range m.SignerInfos {
+		err := signerInfo.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

@@ -5,7 +5,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/std"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
@@ -30,9 +29,9 @@ func (cs ConsensusState) GetRoot() exported.Root {
 
 // GetPubKey unmarshals the public key into a tmcrypto.PubKey type.
 func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
-	publicKey, err := std.DefaultPublicKeyCodec{}.Decode(cs.PublicKey)
-	if err != nil {
-		panic(err)
+	publicKey, ok := cs.PublicKey.GetCachedValue().(tmcrypto.PubKey)
+	if !ok {
+		panic("ConsensusState PublicKey is not crypto.PubKey")
 	}
 
 	return publicKey

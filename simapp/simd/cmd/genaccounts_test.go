@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simcmd "github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -54,9 +53,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			home, cleanup := testutil.NewTestCaseDir(t)
-			defer cleanup()
-
+			home := t.TempDir()
 			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)

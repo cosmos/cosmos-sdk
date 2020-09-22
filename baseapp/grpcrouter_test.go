@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

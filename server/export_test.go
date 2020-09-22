@@ -25,14 +25,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 func TestExportCmd_ConsensusParams(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
+	tempDir := t.TempDir()
 
 	_, ctx, genDoc, cmd := setupApp(t, tempDir)
 
@@ -58,12 +56,10 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 }
 
 func TestExportCmd_HomeDir(t *testing.T) {
-	tempDir, clean := testutil.NewTestCaseDir(t)
-	defer clean()
-
-	_, ctx, _, cmd := setupApp(t, tempDir)
+	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
 	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+
 	err := cmd.ExecuteContext(ctx)
 	require.EqualError(t, err, "stat foobar/config/genesis.json: no such file or directory")
 }
@@ -98,9 +94,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tempDir, clean := testutil.NewTestCaseDir(t)
-			defer clean()
-
+			tempDir := t.TempDir()
 			app, ctx, _, cmd := setupApp(t, tempDir)
 
 			// Fast forward to block `tc.fastForward`.
@@ -128,8 +122,7 @@ func TestExportCmd_Height(t *testing.T) {
 }
 
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
-	err := createConfigFolder(tempDir)
-	if err != nil {
+	if err := createConfigFolder(tempDir); err != nil {
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
@@ -142,11 +135,9 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
-
 	genDoc := newDefaultGenesisDoc()
-	err = saveGenesisFile(genDoc, serverCtx.Config.GenesisFile())
-	require.NoError(t, err)
 
+	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
@@ -154,7 +145,6 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 			AppStateBytes:   genDoc.AppState,
 		},
 	)
-
 	app.Commit()
 
 	cmd := server.ExportCmd(

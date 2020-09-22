@@ -246,7 +246,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv)
+		app.RegisterAPIRoutes(apiSrv, config.API)
 		errCh := make(chan error)
 
 		go func() {

@@ -625,6 +625,7 @@ func TestParseCoins(t *testing.T) {
 		{"0stake,1foo,99bar", false, nil},
 		{"1foo", true, Coins{{"foo", one}}},
 		{"10btc,1atom,20btc", false, nil},
+		{"10btc,1atom,20btc", false, nil},
 		{"10bar", true, Coins{{"bar", NewInt(10)}}},
 		{"99bar,1foo", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
 		{"98 bar , 1 foo  ", true, Coins{{"bar", NewInt(98)}, {"foo", one}}},

@@ -166,10 +166,31 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
-	// Check connection on ChainA is on correct state: INIT or TRYOPEN
-	// If the state is in INIT the encoded version must be supported.
-	// If the state is in TRYOPEN the encoded version must be the only
-	// set version in the retreived connection state.
+	// Verify the provided version against the previously set connection state
+	switch {
+	// connection on ChainA must be in INIT or TRYOPEN
+	case connection.State != types.INIT && connection.State != types.TRYOPEN:
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is not INIT or TRYOPEN (got %s)", connection.State.String(),
+		)
+
+	// if the connection is INIT then the provided version must be supproted
+	case connection.State == types.INIT && !types.IsSupportedVersion(encodedVersion):
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is in INIT but the provided encoded version is not supported %s", encodedVersion,
+		)
+
+	// if the connection is in TRYOPEN then the encoded version must be the only set version in the
+	// retreived connection state.
+	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || connection.Versions[0] != encodedVersion):
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is in TRYOPEN but the provided encoded version (%s) is not set in the previous connection %s", encodedVersion, connection,
+		)
+	}
+
 	if !((connection.State == types.INIT && types.IsSupportedVersion(encodedVersion)) ||
 		(connection.State == types.TRYOPEN && len(connection.Versions) == 1 && connection.Versions[0] == encodedVersion)) {
 		return sdkerrors.Wrapf(

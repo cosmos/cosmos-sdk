@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 type (
@@ -31,7 +32,7 @@ type (
 	Application interface {
 		abci.Application
 
-		RegisterAPIRoutes(*api.Server)
+		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.

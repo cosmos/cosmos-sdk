@@ -170,7 +170,7 @@ go.sum: go.mod
 ###############################################################################
 
 update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/grpc-gateway -dest=client/grpc-gateway -f -m
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\

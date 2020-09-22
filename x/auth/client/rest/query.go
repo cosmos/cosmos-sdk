@@ -53,7 +53,7 @@ func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) ht
 	}
 }
 
-// QueryTxsHandlerFn implements a REST handler that searches for transactions.
+// QueryTxsRequestHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
 func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
@@ -128,11 +128,19 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		// We just unmarshalled from Tendermint, we take the proto Tx's raw
+		// bytes, and convert them into a StdTx to be displayed.
+		txBytes := output.Tx.Value
+		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
+		if !ok {
+			return
+		}
+
 		if output.Empty() {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponseBare(w, clientCtx, output)
+		rest.PostProcessResponseBare(w, clientCtx, stdTx)
 	}
 }
 

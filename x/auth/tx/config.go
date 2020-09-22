@@ -8,13 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 type config struct {
-	pubkeyCodec types.PublicKeyCodec
 	handler     signing.SignModeHandler
 	decoder     sdk.TxDecoder
 	encoder     sdk.TxEncoder
@@ -23,22 +21,21 @@ type config struct {
 	protoCodec  *codec.ProtoCodec
 }
 
-// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec, PublicKeyCodec and sign modes. The
+// NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(protoCodec *codec.ProtoCodec, pubkeyCodec types.PublicKeyCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+func NewTxConfig(protoCodec *codec.ProtoCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
 	return &config{
-		pubkeyCodec: pubkeyCodec,
 		handler:     makeSignModeHandler(enabledSignModes),
-		decoder:     DefaultTxDecoder(protoCodec, pubkeyCodec),
+		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(protoCodec, pubkeyCodec),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
 		jsonEncoder: DefaultJSONTxEncoder(),
 		protoCodec:  protoCodec,
 	}
 }
 
 func (g config) NewTxBuilder() client.TxBuilder {
-	return newBuilder(g.pubkeyCodec)
+	return newBuilder()
 }
 
 // WrapTxBuilder returns a builder from provided transaction

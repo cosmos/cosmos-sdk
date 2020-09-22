@@ -20,8 +20,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 		return nil, err
 	}
 
-	_, err = k.CreateClient(ctx, msg.ClientId, clientState, consensusState)
-	if err != nil {
+	if err = k.CreateClient(ctx, msg.ClientId, clientState, consensusState); err != nil {
 		return nil, err
 	}
 
@@ -50,8 +49,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdat
 		return nil, err
 	}
 
-	_, err = k.UpdateClient(ctx, msg.ClientId, header)
-	if err != nil {
+	if err = k.UpdateClient(ctx, msg.ClientId, header); err != nil {
 		return nil, err
 	}
 
@@ -75,8 +73,7 @@ func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 		return nil, err
 	}
 
-	clientState, err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)
-	if err != nil {
+	if err := k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to process misbehaviour for IBC client")
 	}
 
@@ -84,7 +81,7 @@ func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 		sdk.NewEvent(
 			types.EventTypeSubmitMisbehaviour,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, misbehaviour.GetHeight().String()),
 		),
 	)

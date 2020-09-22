@@ -49,8 +49,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		ctx.ChainID(), types.NewHeight(epoch, uint64(ctx.BlockHeight())),
 	)
 
-	_, err := k.CreateClient(ctx, exported.Localhost, clientState, nil)
-	if err != nil {
+	if err := k.CreateClient(ctx, exported.Localhost, clientState, nil); err != nil {
 		panic(err)
 	}
 }

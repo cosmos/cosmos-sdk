@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
+			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, ibctesting.Tendermint)
 			suite.Require().NoError(err)
 
 			// retrieve client state of chainA to pass as counterpartyClient
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 		}, false},
 		{"invalid previous connection has invalid versions", func() {
-			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 
 			// open init chainA
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainB.GetContext(), connB.ID, connection)
 
-			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
+			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, ibctesting.Tendermint)
 			suite.Require().NoError(err)
 
 			// retrieve client state of chainA to pass as counterpartyClient
@@ -370,7 +370,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		}, false},
 		{"connection is in INIT but the proposed version is invalid", func() {
 			// chainA is in INIT, chainB is in TRYOPEN
-			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		}, false},
 		{"connection is in TRYOPEN but the set version in the connection is invalid", func() {
 			// chainA is in TRYOPEN, chainB is in TRYOPEN
-			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connB, connA, err := suite.coordinator.ConnOpenInit(suite.chainB, suite.chainA, clientB, clientA)
 			suite.Require().NoError(err)
 
@@ -397,8 +397,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			suite.chainB.App.IBCKeeper.ConnectionKeeper.SetConnection(suite.chainB.GetContext(), connB.ID, connection)
 
 			// update clientB so state change is committed
-			suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, exported.Tendermint)
-			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, ibctesting.Tendermint)
+			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			// retrieve client state of chainB to pass as counterpartyClient
 			counterpartyClient = suite.chainB.GetClientState(clientB)

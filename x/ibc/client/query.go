@@ -24,7 +24,7 @@ func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte,
 	height := clientCtx.Height
 
 	// Use the IAVL height if a valid tendermint height is passed in.
-	// ABCI queries at zero or negative height may have other side affects.
+	// ABCI queries at zero or negative height may have other side effects.
 	if clientCtx.Height > 0 {
 		height--
 	}

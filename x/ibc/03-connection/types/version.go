@@ -177,6 +177,9 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 // not allowed for the chosen version identifier then the search for a
 // compatible version continues. This function is called in the ConnOpenTry
 // handshake procedure.
+//
+// CONTRACT: PickVersion must only provide a version that is in the
+// intersection of the supported versions and the counterparty versions.
 func PickVersion(encodedCounterpartyVersions []string) (string, error) {
 	counterpartyVersions, err := DecodeVersions(encodedCounterpartyVersions)
 	if err != nil {

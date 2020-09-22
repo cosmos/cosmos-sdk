@@ -83,7 +83,8 @@ func (k Keeper) ConnOpenTry(
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
-	// with Chain B's supported IBC versions
+	// with Chain B's supported IBC versions. PickVersion will select the intersection
+	// of the supported versions and the counterparty versions.
 	version, err := types.PickVersion(counterpartyVersions)
 	if err != nil {
 		return err

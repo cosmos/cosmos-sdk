@@ -17,22 +17,21 @@ import (
 // the Tendermint block containing the state root. The desired tendermint height
 // to perform the query should be set in the client context. The query will be
 // performed at one below this height (at the IAVL version) in order to obtain
-// the correct merkle proof.
+// the correct merkle proof. Proof queries at height less than or equal to 2 are
+// not supported.
 // Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
-//
-// NOTE: The passed in height will only be decremented if the height set in
-// the client context is greater than 2. A query for height 2 and 3 will
-// return the same values (a proof and value for tendermint block height 3).
-// Queries at height less than or equal to 1 is not expected to succeed.
 func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte, clienttypes.Height, error) {
 	height := clientCtx.Height
 
-	// Use the IAVL height if a valid tendermint height is passed in.
-	// ABCI queries at height less than or equal to 1 height may have
-	// other side effects.
-	if clientCtx.Height > 2 {
-		height--
+	// ABCI queries at height less than or equal to 2 are not supported.
+	// Base app does not support queries for height less than or equal to 1.
+	// Therefore, a query at height 2 would be equivalent to a query at height 3
+	if clientCtx.Height <= 2 {
+		return nil, nil, clienttypes.Height{}, fmt.Errorf("proof queries at height <= 2 are not supported")
 	}
+
+	// Use the IAVL height if a valid tendermint height is passed in.
+	height--
 
 	req := abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),

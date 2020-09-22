@@ -315,7 +315,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"unsupported - localhost",
 			func() {
-				msg, err = types.NewMsgUpdateClient(exported.ClientTypeLocalHost, suite.chainA.CreateTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpdateClient(exported.Localhost, suite.chainA.CreateTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,

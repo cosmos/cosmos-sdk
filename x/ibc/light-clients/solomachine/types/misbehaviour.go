@@ -16,8 +16,8 @@ var (
 )
 
 // ClientType is a Solo Machine light client.
-func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
-	return exported.SoloMachine
+func (misbehaviour Misbehaviour) ClientType() string {
+	return SoloMachine
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.

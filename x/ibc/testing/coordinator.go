@@ -49,7 +49,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 func (coord *Coordinator) Setup(
 	chainA, chainB *TestChain, order channeltypes.Order,
 ) (string, string, *TestConnection, *TestConnection, TestChannel, TestChannel) {
-	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, exported.Tendermint)
+	clientA, clientB, connA, connB := coord.SetupClientConnections(chainA, chainB, Tendermint)
 
 	// channels can also be referenced through the returned connections
 	channelA, channelB := coord.CreateMockChannels(chainA, chainB, connA, connB, order)
@@ -61,7 +61,7 @@ func (coord *Coordinator) Setup(
 // caller does not anticipate any errors.
 func (coord *Coordinator) SetupClients(
 	chainA, chainB *TestChain,
-	clientType exported.ClientType,
+	clientType string,
 ) (string, string) {
 
 	clientA, err := coord.CreateClient(chainA, chainB, clientType)
@@ -78,7 +78,7 @@ func (coord *Coordinator) SetupClients(
 // anticipate any errors.
 func (coord *Coordinator) SetupClientConnections(
 	chainA, chainB *TestChain,
-	clientType exported.ClientType,
+	clientType string,
 ) (string, string, *TestConnection, *TestConnection) {
 
 	clientA, clientB := coord.SetupClients(chainA, chainB, clientType)
@@ -91,14 +91,14 @@ func (coord *Coordinator) SetupClientConnections(
 // CreateClient creates a counterparty client on the source chain and returns the clientID.
 func (coord *Coordinator) CreateClient(
 	source, counterparty *TestChain,
-	clientType exported.ClientType,
+	clientType string,
 ) (clientID string, err error) {
 	coord.CommitBlock(source, counterparty)
 
 	clientID = source.NewClientID(counterparty.ChainID)
 
 	switch clientType {
-	case exported.Tendermint:
+	case Tendermint:
 		err = source.CreateTMClient(counterparty, clientID)
 
 	default:
@@ -118,12 +118,12 @@ func (coord *Coordinator) CreateClient(
 func (coord *Coordinator) UpdateClient(
 	source, counterparty *TestChain,
 	clientID string,
-	clientType exported.ClientType,
+	clientType string,
 ) (err error) {
 	coord.CommitBlock(source, counterparty)
 
 	switch clientType {
-	case exported.Tendermint:
+	case Tendermint:
 		err = source.UpdateTMClient(counterparty, clientID)
 
 	default:
@@ -226,7 +226,7 @@ func (coord *Coordinator) SendPacket(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, exported.Tendermint,
+		counterpartyClientID, Tendermint,
 	)
 }
 
@@ -262,7 +262,7 @@ func (coord *Coordinator) ReceiveExecuted(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, exported.Tendermint,
+		counterpartyClientID, Tendermint,
 	)
 }
 
@@ -299,7 +299,7 @@ func (coord *Coordinator) AcknowledgementExecuted(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, exported.Tendermint,
+		counterpartyClientID, Tendermint,
 	)
 }
 
@@ -346,7 +346,7 @@ func (coord *Coordinator) SendMsgs(source, counterparty *TestChain, counterparty
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, exported.Tendermint,
+		counterpartyClientID, Tendermint,
 	)
 }
 
@@ -405,7 +405,7 @@ func (coord *Coordinator) ConnOpenInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		counterpartyClientID, exported.Tendermint,
+		counterpartyClientID, Tendermint,
 	); err != nil {
 		return sourceConnection, counterpartyConnection, err
 	}
@@ -428,7 +428,7 @@ func (coord *Coordinator) ConnOpenTry(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, exported.Tendermint,
+		counterpartyConnection.ClientID, Tendermint,
 	)
 }
 
@@ -447,7 +447,7 @@ func (coord *Coordinator) ConnOpenAck(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, exported.Tendermint,
+		counterpartyConnection.ClientID, Tendermint,
 	)
 }
 
@@ -465,7 +465,7 @@ func (coord *Coordinator) ConnOpenConfirm(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, exported.Tendermint,
+		counterpartyConnection.ClientID, Tendermint,
 	)
 }
 
@@ -497,7 +497,7 @@ func (coord *Coordinator) ChanOpenInit(
 	// update source client on counterparty connection
 	if err := coord.UpdateClient(
 		counterparty, source,
-		counterpartyConnection.ClientID, exported.Tendermint,
+		counterpartyConnection.ClientID, Tendermint,
 	); err != nil {
 		return sourceChannel, counterpartyChannel, err
 	}
@@ -523,7 +523,7 @@ func (coord *Coordinator) ChanOpenTry(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		connection.CounterpartyClientID, exported.Tendermint,
+		connection.CounterpartyClientID, Tendermint,
 	)
 }
 
@@ -542,7 +542,7 @@ func (coord *Coordinator) ChanOpenAck(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		sourceChannel.CounterpartyClientID, exported.Tendermint,
+		sourceChannel.CounterpartyClientID, Tendermint,
 	)
 }
 
@@ -561,7 +561,7 @@ func (coord *Coordinator) ChanOpenConfirm(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		sourceChannel.CounterpartyClientID, exported.Tendermint,
+		sourceChannel.CounterpartyClientID, Tendermint,
 	)
 }
 
@@ -582,7 +582,7 @@ func (coord *Coordinator) ChanCloseInit(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		channel.CounterpartyClientID, exported.Tendermint,
+		channel.CounterpartyClientID, Tendermint,
 	)
 }
 
@@ -601,6 +601,6 @@ func (coord *Coordinator) SetChannelClosed(
 	// update source client on counterparty connection
 	return coord.UpdateClient(
 		counterparty, source,
-		testChannel.CounterpartyClientID, exported.Tendermint,
+		testChannel.CounterpartyClientID, Tendermint,
 	)
 }

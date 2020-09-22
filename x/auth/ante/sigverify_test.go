@@ -16,8 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *AnteTestSuite) TestSetPubKey() {
@@ -75,8 +75,8 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
 	expectedCost1 := expectedGasCostByKeys(pkSet1)
 	for i := 0; i < len(pkSet1); i++ {
-		stdSig := types.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
-		sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
+		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
+		sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
 		suite.Require().NoError(err)
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
 		suite.Require().NoError(err)
@@ -196,7 +196,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 	// Set up TxConfig.
 	aminoCdc := codec.NewLegacyAmino()
 	// We're using TestMsg amino encoding in some tests, so register it here.
-	txConfig := authtypes.StdTxConfig{Cdc: aminoCdc}
+	txConfig := legacytx.StdTxConfig{Cdc: aminoCdc}
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(txConfig)

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -44,22 +45,22 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr, balances))
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	fee := types.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	signerData := signing.SignerData{
 		ChainID:       chainId,
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 	}
-	signBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+	signBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
-	stdSig := types.StdSignature{PubKey: pubKey, Signature: signature}
-	sigV2, err := types.StdSignatureToSignatureV2(cdc, stdSig)
+	stdSig := legacytx.StdSignature{PubKey: pubKey, Signature: signature}
+	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
 	require.NoError(t, err)
 
 	handler := MakeTestHandlerMap()
-	stdTx := types.NewStdTx(msgs, fee, []types.StdSignature{stdSig}, memo)
+	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo)
 	stdTx.TimeoutHeight = 10
 	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
@@ -68,18 +69,18 @@ func TestVerifySignature(t *testing.T) {
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
 	multisignature := multisig.NewMultisig(2)
 	msgs = []sdk.Msg{testdata.NewTestMsg(addr, addr1)}
-	multiSignBytes := types.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
+	multiSignBytes := legacytx.StdSignBytes(signerData.ChainID, signerData.AccountNumber, signerData.Sequence, 10, fee, msgs, memo)
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig1 := types.StdSignature{PubKey: pubKey, Signature: sig1}
-	sig1V2, err := types.StdSignatureToSignatureV2(cdc, stdSig1)
+	stdSig1 := legacytx.StdSignature{PubKey: pubKey, Signature: sig1}
+	sig1V2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig1)
 	require.NoError(t, err)
 
 	sig2, err := priv1.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig2 := types.StdSignature{PubKey: pubKey, Signature: sig2}
-	sig2V2, err := types.StdSignatureToSignatureV2(cdc, stdSig2)
+	stdSig2 := legacytx.StdSignature{PubKey: pubKey, Signature: sig2}
+	sig2V2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig2)
 	require.NoError(t, err)
 
 	err = multisig.AddSignatureFromPubKey(multisignature, sig1V2.Data, pkSet[0], pkSet)

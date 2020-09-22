@@ -13,8 +13,8 @@ import (
 var _ exported.ConsensusState = ConsensusState{}
 
 // ClientType returns Solo Machine type.
-func (ConsensusState) ClientType() exported.ClientType {
-	return exported.SoloMachine
+func (ConsensusState) ClientType() string {
+	return SoloMachine
 }
 
 // GetTimestamp returns zero.

@@ -34,7 +34,7 @@ func TestClientTestSuite(t *testing.T) {
 func (suite *ClientTestSuite) TestBeginBlocker() {
 	prevHeight := types.GetSelfHeight(suite.chainA.GetContext())
 
-	localHostClient := suite.chainA.GetClientState(exported.ClientTypeLocalHost)
+	localHostClient := suite.chainA.GetClientState(exported.Localhost)
 	suite.Require().Equal(prevHeight, localHostClient.GetLatestHeight())
 
 	for i := 0; i < 10; i++ {
@@ -45,7 +45,7 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 			client.BeginBlocker(suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper)
 		}, "BeginBlocker shouldn't panic")
 
-		localHostClient = suite.chainA.GetClientState(exported.ClientTypeLocalHost)
+		localHostClient = suite.chainA.GetClientState(exported.Localhost)
 		suite.Require().Equal(prevHeight.Increment(), localHostClient.GetLatestHeight())
 		prevHeight = localHostClient.GetLatestHeight().(types.Height)
 	}

@@ -1,14 +1,13 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestConsensusState() {
 	consensusState := suite.solomachine.ConsensusState()
 
-	suite.Require().Equal(exported.SoloMachine, consensusState.ClientType())
+	suite.Require().Equal(types.SoloMachine, consensusState.ClientType())
 	suite.Require().Equal(suite.solomachine.Time, consensusState.GetTimestamp())
 	suite.Require().Nil(consensusState.GetRoot())
 }

@@ -11,8 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 var (
@@ -21,7 +23,7 @@ var (
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
 	simSecp256k1Sig    [64]byte
 
-	_ authsigning.SigVerifiableTx = (*types.StdTx)(nil) // assert StdTx implements SigVerifiableTx
+	_ authsigning.SigVerifiableTx = (*legacytx.StdTx)(nil) // assert StdTx implements SigVerifiableTx
 )
 
 func init() {
@@ -339,7 +341,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 	sigCount := 0
 	for _, pk := range pubKeys {
-		sigCount += types.CountSubKeys(pk)
+		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
 				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
@@ -417,4 +419,19 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (types
 	}
 
 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
+}
+
+// CountSubKeys counts the total number of keys for a multi-sig public key.
+func CountSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(*kmultisig.LegacyAminoPubKey)
+	if !ok {
+		return 1
+	}
+
+	numKeys := 0
+	for _, subkey := range v.GetPubKeys() {
+		numKeys += CountSubKeys(subkey)
+	}
+
+	return numKeys
 }

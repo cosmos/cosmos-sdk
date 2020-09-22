@@ -227,6 +227,7 @@ func GetConfig(v *viper.Viper) Config {
 		},
 		API: APIConfig{
 			Enable:             v.GetBool("api.enable"),
+			Swagger:            v.GetBool("api.swagger"),
 			Address:            v.GetString("api.address"),
 			MaxOpenConnections: v.GetUint("api.max-open-connections"),
 			RPCReadTimeout:     v.GetUint("api.rpc-read-timeout"),

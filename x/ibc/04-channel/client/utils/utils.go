@@ -51,7 +51,6 @@ func queryPacketCommitmentABCI(
 		return nil, sdkerrors.Wrapf(types.ErrPacketCommitmentNotFound, "portID (%s), channelID (%s), sequence (%d)", portID, channelID, sequence)
 	}
 
-	// TODO: retrieve epoch number from chain-id
 	return types.NewQueryPacketCommitmentResponse(portID, channelID, sequence, value, proofBz, proofHeight), nil
 }
 
@@ -230,6 +229,5 @@ func queryNextSequenceRecvABCI(clientCtx client.Context, portID, channelID strin
 
 	sequence := binary.BigEndian.Uint64(value)
 
-	// TODO: retrieve epoch number from chain-id
 	return types.NewQueryNextSequenceReceiveResponse(portID, channelID, sequence, proofBz, proofHeight), nil
 }

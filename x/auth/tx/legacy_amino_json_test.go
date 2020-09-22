@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -34,7 +33,7 @@ func buildTx(t *testing.T, bldr *wrapper) {
 }
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
-	bldr := newBuilder(std.DefaultPublicKeyCodec{})
+	bldr := newBuilder()
 	buildTx(t, bldr)
 	tx := bldr.GetTx()
 
@@ -65,7 +64,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with extension options
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
+	bldr = newBuilder()
 	buildTx(t, bldr)
 	any, err := cdctypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
@@ -75,7 +74,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
+	bldr = newBuilder()
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()

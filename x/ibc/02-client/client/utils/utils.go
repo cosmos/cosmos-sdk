@@ -115,7 +115,6 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	// TODO: retrieve epoch-number from chain-id
 	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
 }
 

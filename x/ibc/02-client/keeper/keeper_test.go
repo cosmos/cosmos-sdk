@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	testChainID = "gaiahub"
+	testChainID       = "gaiahub-0"
+	testChainIDEpoch1 = "gaiahub-1"
 
 	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
@@ -40,6 +41,7 @@ const (
 )
 
 var testClientHeight = types.NewHeight(0, 5)
+var testClientHeightEpoch1 = types.NewHeight(1, 5)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -83,10 +85,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
+	testClientHeightMinus1 := types.NewHeight(0, height-1)
+
 	validator := tmtypes.NewValidator(pubKey, 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(testChainID, height, height-1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.consensusState = ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("hash")), suite.valSetHash)
 
 	var validators stakingtypes.Validators
@@ -168,6 +172,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		{
 			"invalid client height",
 			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.NewHeight(0, testClientHeight.EpochHeight+10), commitmenttypes.GetSDKSpecs(), false, false),
+			false,
+		},
+		{
+			"invalid client epoch",
+			ibctmtypes.NewClientState(testChainIDEpoch1, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightEpoch1, commitmenttypes.GetSDKSpecs(), false, false),
 			false,
 		},
 		{
@@ -291,7 +300,9 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 	nextState := ibctmtypes.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot([]byte("next")), suite.valSetHash)
 
-	header := ibctmtypes.CreateTestHeader(testClientID, height+5, height, suite.header.Header.Time.Add(time.Minute),
+	testClientHeightPlus5 := types.NewHeight(0, height+5)
+
+	header := ibctmtypes.CreateTestHeader(testClientID, testClientHeightPlus5, testClientHeight, suite.header.Header.Time.Add(time.Minute),
 		suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	// mock update functionality

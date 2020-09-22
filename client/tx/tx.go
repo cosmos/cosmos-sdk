@@ -15,6 +15,7 @@ import (
 	sim "github.com/cosmos/cosmos-sdk/client/grpc/simulate"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -257,6 +258,7 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
+		PubKey: &secp256k1.PubKey{},
 		Data: &signing.SingleSignatureData{
 			SignMode: txf.signMode,
 		},

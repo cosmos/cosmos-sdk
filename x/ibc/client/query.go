@@ -13,19 +13,24 @@ import (
 )
 
 // QueryTendermintProof performs an ABCI query with the given key and returns
-// the value of the query, the proto encoded merkle proof, and the height at
-// which the proof will succeed on a tendermint verifier (one above the
-// returned IAVL version height). The desired tendermint height to perform
-// the query should be set in the client context. The query will be performed
-// at one below this height (at the IAVL version) in order to obtain the
-// correct merkle proof.
+// the value of the query, the proto encoded merkle proof, and the height of
+// the Tendermint block containing the state root. The desired tendermint height
+// to perform the query should be set in the client context. The query will be
+// performed at one below this height (at the IAVL version) in order to obtain
+// the correct merkle proof.
 // Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
+//
+// NOTE: The passed in height will only be decremented if the height set in
+// the client context is greater than 2. A query for height 2 and 3 will
+// return the same values (a proof and value for tendermint block height 3).
+// Queries at height less than or equal to 1 is not expected to succeed.
 func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte, clienttypes.Height, error) {
 	height := clientCtx.Height
 
 	// Use the IAVL height if a valid tendermint height is passed in.
-	// ABCI queries at zero or negative height may have other side affects.
-	if clientCtx.Height > 0 {
+	// ABCI queries at height less than or equal to 1 height may have
+	// other side effects.
+	if clientCtx.Height > 2 {
 		height--
 	}
 

@@ -189,13 +189,13 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 			"ed25519 private key, JSON",
 			tmPrivKey,
 			privKey,
-			aminoCdc.MarshalBinaryBare,
+			aminoCdc.MarshalJSON,
 		},
 		{
 			"ed25519 public key, binary",
 			tmPubKey,
 			pubKey,
-			aminoCdc.MarshalJSON,
+			aminoCdc.MarshalBinaryBare,
 		},
 		{
 			"ed25519 public key, JSON",

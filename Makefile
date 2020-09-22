@@ -207,7 +207,7 @@ sync-docs:
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
-# only compiles the tests without
+# only compiles the tests without runing them.
 # note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
 test-build-check:
 	go test -mod=readonly -run=nope  ./...

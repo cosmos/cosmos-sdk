@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
@@ -75,7 +74,7 @@ func (suite *SoloMachineTestSuite) TestHeaderValidateBasic() {
 		},
 	}
 
-	suite.Require().Equal(exported.SoloMachine, header.ClientType())
+	suite.Require().Equal(types.SoloMachine, header.ClientType())
 
 	for _, tc := range cases {
 		tc := tc

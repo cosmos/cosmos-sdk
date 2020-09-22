@@ -1,4 +1,4 @@
-package types_test
+package legacytx_test
 
 import (
 	"testing"
@@ -9,8 +9,8 @@ import (
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func testCodec() *codec.LegacyAmino {
@@ -23,6 +23,6 @@ func testCodec() *codec.LegacyAmino {
 
 func TestStdTxConfig(t *testing.T) {
 	cdc := testCodec()
-	txGen := types.StdTxConfig{Cdc: cdc}
+	txGen := legacytx.StdTxConfig{Cdc: cdc}
 	suite.Run(t, testutil.NewTxConfigTestSuite(txGen))
 }

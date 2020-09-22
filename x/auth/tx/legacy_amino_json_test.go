@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -52,7 +52,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := types.StdSignBytes(chainId, accNum, seqNum, timeout, types.StdFee{
+	expectedSignBz := legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{
 		Amount: coins,
 		Gas:    gas,
 	}, []sdk.Msg{msg}, memo)

@@ -128,10 +128,7 @@ f_install_clang_format() {
   case "${UNAME_S}" in
   Linux)
     if [ -e /etc/debian_version ]; then
-      LINUX_CODE_NAME="$(lsb_release -c -s)"
-      echo -e "\tRun :\n wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - ; \
-sudo apt-add-repository \"deb http://apt.llvm.org/${LINUX_CODE_NAME}/ llvm-toolchain-${LINUX_CODE_NAME}-6.0 main\"; \
-sudo apt update ; sudo apt-get install clang-format-6.0 ;" >&2
+      echo -e "\tRun : sudo apt-get install clang-format-6.0" >&2
     elif [ -e /etc/fedora-release ]; then
       echo -e "\tRun: sudo dnf install clang" >&2
     else

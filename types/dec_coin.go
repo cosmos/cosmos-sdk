@@ -649,5 +649,14 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 		coins[i] = coin
 	}
 
+	// sort coins for determinism
+	coins.Sort()
+
+	// validate coins
+	if err := coins.Validate(); err != nil {
+		return nil, err
+	}
+
+	// call NewDecCoins to sort and remove zero coins.
 	return NewDecCoins(coins...), nil
 }

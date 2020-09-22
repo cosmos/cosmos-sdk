@@ -172,11 +172,11 @@ go.sum: go.mod
 update-swagger-docs: statik
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
+	      echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+	      exit 1;\
+	 else \
+	      echo "\033[92mSwagger docs are in sync\033[0m";\
+	 fi
 .PHONY: update-swagger-docs
 
 godocs:
@@ -207,13 +207,18 @@ sync-docs:
 test: test-unit
 test-all: test-unit test-ledger-mock test-race test-cover
 
+# only compiles the tests without
+# note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
+test-build-check:
+	go test -mod=readonly -run=nope  ./...
+
+
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-
 test-unit: ARGS=-tags='cgo ledger test_ledger_mock norace'
 test-unit-amino: ARGS=-tags='ledger test_ledger_mock test_amino norace'
 test-ledger: ARGS=-tags='cgo ledger norace'

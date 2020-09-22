@@ -72,6 +72,18 @@ message MsgUpdateClient {
   bytes signer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
+// MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+message MsgUpgradeClient {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // upgraded client state
+  google.protobuf.Any client_state = 2;
+  // proof that old chain committed to new client
+  bytes proof_upgrade = 3 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];
+  // signer address
+  bytes signer = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
 message MsgSubmitMisbehaviour {

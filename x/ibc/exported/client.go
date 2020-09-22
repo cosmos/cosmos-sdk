@@ -32,6 +32,15 @@ type ClientState interface {
 	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
+	// Upgrade function
+	VerifyUpgrade(
+		ctx sdk.Context,
+		cdc codec.BinaryMarshaler,
+		store sdk.KVStore,
+		newClient ClientState,
+		proofUpgrade []byte,
+	) error
+
 	// State verification functions
 
 	VerifyClientState(

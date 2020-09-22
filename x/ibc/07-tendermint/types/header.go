@@ -14,11 +14,6 @@ import (
 
 var _ exported.Header = Header{}
 
-// ClientType defines that the Header is a Tendermint consensus algorithm
-func (h Header) ClientType() exported.ClientType {
-	return exported.Tendermint
-}
-
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
@@ -26,6 +21,11 @@ func (h Header) ConsensusState() *ConsensusState {
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
 	}
+}
+
+// ClientType defines that the Header is a Tendermint consensus algorithm
+func (h Header) ClientType() string {
+	return Tendermint
 }
 
 // GetHeight returns the current height. It returns 0 if the tendermint

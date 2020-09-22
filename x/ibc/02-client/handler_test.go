@@ -7,7 +7,6 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -24,7 +23,7 @@ func (suite *ClientTestSuite) TestNewClientUpdateProposalHandler() {
 	}{
 		{
 			"valid update client proposal", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 				clientState := suite.chainA.GetClientState(clientA)
 
 				tmClientState, ok := clientState.(*ibctmtypes.ClientState)

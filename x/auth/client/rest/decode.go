@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp authtypes.StdTx
+	DecodeResp legacytx.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -61,21 +61,21 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 // convertToStdTx converts tx proto binary bytes retrieved from Tendermint into
 // a StdTx. Returns the StdTx, as well as a flag denoting if the function
 // successfully converted or not.
-func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []byte) (authtypes.StdTx, bool) {
+func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []byte) (legacytx.StdTx, bool) {
 	txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
 	if rest.CheckBadRequestError(w, err) {
-		return authtypes.StdTx{}, false
+		return legacytx.StdTx{}, false
 	}
 
 	tx, ok := txI.(signing.Tx)
 	if !ok {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
-		return authtypes.StdTx{}, false
+		rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, legacytx.StdTx{}))
+		return legacytx.StdTx{}, false
 	}
 
 	stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
 	if rest.CheckBadRequestError(w, err) {
-		return authtypes.StdTx{}, false
+		return legacytx.StdTx{}, false
 	}
 
 	return stdTx, true

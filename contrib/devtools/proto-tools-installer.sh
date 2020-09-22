@@ -22,11 +22,7 @@ case "${UNAME_S}" in
 Linux)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-linux-x86_64"
-  if [ -e /etc/debian_version ]; then
-  CLANG_FORMAT_BIN="clang-format-6.0"
-  else
-  CLANG_FORMAT_BIN="clang-format"
-  fi
+  [ -f /etc/debian_version ] && CLANG_FORMAT_BIN="clang-format-6.0" || CLANG_FORMAT_BIN="clang-format"
   ;;
 Darwin)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-osx-x86_64.zip"
@@ -132,8 +128,9 @@ f_install_clang_format() {
   case "${UNAME_S}" in
   Linux)
     if [ -e /etc/debian_version ]; then
+      LINUX_CODE_NAME="$(lsb_release -c -s)"
       echo -e "\tRun :\n wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - ; \
-sudo apt-add-repository \"deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main\"; \
+sudo apt-add-repository \"deb http://apt.llvm.org/${LINUX_CODE_NAME}/ llvm-toolchain-${LINUX_CODE_NAME}-6.0 main\"; \
 sudo apt update ; sudo apt-get install clang-format-6.0 ;" >&2
     elif [ -e /etc/fedora-release ]; then
       echo -e "\tRun: sudo dnf install clang" >&2

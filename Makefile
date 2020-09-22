@@ -351,12 +351,7 @@ devdoc-update:
 
 # Get clang-format binary name
 ifeq ($(UNAME_S),Linux)
-# Checking debian release or not
-ifneq ("$(wildcard /etc/debian_version)","")
-  CLANG_FORMAT_BIN ?= clang-format-6.0
-else
-  CLANG_FORMAT_BIN ?= clang-format
-endif
+CLANG_FORMAT_BIN ?= $(shell [ -f /etc/debian_version ] && echo "clang-format-6.0" || echo "clang-format")
 endif
 ifeq ($(UNAME_OS),Darwin)
   CLANG_FORMAT_BIN ?= clang-format

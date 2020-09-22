@@ -112,9 +112,10 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
-	// If connection already exists for connectionID, ensure that the existing connection's counterparty
-	// is chainA and connection is on INIT stage
-	// Check that existing connection version is on desired version of current handshake
+	// If connection already exists for connectionID, ensure that the existing connection's
+	// counterparty is chainA and connection is on INIT stage.
+	// Check that existing connection versions for initialized connection is equal to compatible
+	// versions for this chain.
 	previousConnection, found := k.GetConnection(ctx, connectionID)
 	if found && !(previousConnection.State == types.INIT &&
 		previousConnection.Counterparty.ConnectionId == counterparty.ConnectionId &&

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +16,6 @@ import (
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
-
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
@@ -160,6 +160,59 @@ func TestMarshalAmino(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, tc.msg, tc.typ)
+		})
+	}
+}
+
+func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
+	aminoCdc := codec.NewLegacyAmino()
+	// Create Tendermint keys.
+	tmPrivKey := tmed25519.GenPrivKey()
+	tmPubKey := tmPrivKey.PubKey()
+	// Create our own keys, with the same private key as Tendermint's.
+	privKey := &ed25519.PrivKey{Key: []byte(tmPrivKey)}
+	pubKey := privKey.PubKey().(*ed25519.PubKey)
+
+	testCases := []struct {
+		desc      string
+		tmKey     interface{}
+		ourKey    interface{}
+		marshalFn func(o interface{}) ([]byte, error)
+	}{
+		{
+			"ed25519 private key, binary",
+			tmPrivKey,
+			privKey,
+			aminoCdc.MarshalBinaryBare,
+		},
+		{
+			"ed25519 private key, JSON",
+			tmPrivKey,
+			privKey,
+			aminoCdc.MarshalBinaryBare,
+		},
+		{
+			"ed25519 public key, binary",
+			tmPubKey,
+			pubKey,
+			aminoCdc.MarshalJSON,
+		},
+		{
+			"ed25519 public key, JSON",
+			tmPubKey,
+			pubKey,
+			aminoCdc.MarshalJSON,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Make sure Amino encoding override is not breaking backwards compatibility.
+			bz1, err := tc.marshalFn(tc.tmKey)
+			require.NoError(t, err)
+			bz2, err := tc.marshalFn(tc.ourKey)
+			require.NoError(t, err)
+			require.Equal(t, bz1, bz2)
 		})
 	}
 }

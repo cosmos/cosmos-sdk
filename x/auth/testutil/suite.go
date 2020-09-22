@@ -226,6 +226,7 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 }
 
 func (s *TxConfigTestSuite) TestTxEncodeDecode() {
+	log := s.T().Log
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
 	gasLimit := uint64(50000)
@@ -250,13 +251,13 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 
-	s.T().Log("encode transaction")
+	log("encode transaction")
 	txBytes, err := s.TxConfig.TxEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(txBytes)
-
-	s.T().Log("decode transaction")
+	log("decode transaction", s.TxConfig)
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
+
 	s.Require().NoError(err)
 	tx3, ok := tx2.(signing.Tx)
 	s.Require().True(ok)
@@ -269,12 +270,12 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
-	s.T().Log("JSON encode transaction")
+	log("JSON encode transaction")
 	jsonTxBytes, err := s.TxConfig.TxJSONEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(jsonTxBytes)
 
-	s.T().Log("JSON decode transaction")
+	log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
 	tx3, ok = tx2.(signing.Tx)

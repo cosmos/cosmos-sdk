@@ -192,14 +192,6 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	if !((connection.State == types.INIT && types.IsSupportedVersion(encodedVersion)) ||
-		(connection.State == types.TRYOPEN && len(connection.Versions) == 1 && connection.Versions[0] == encodedVersion)) {
-		return sdkerrors.Wrapf(
-			types.ErrInvalidConnectionState,
-			"connection state is not INIT or TRYOPEN (got %s)", connection.State.String(),
-		)
-	}
-
 	// validate client parameters of a chainA client stored on chainB
 	if err := k.clientKeeper.ValidateSelfClient(ctx, clientState); err != nil {
 		return err

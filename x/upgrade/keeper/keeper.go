@@ -52,6 +52,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
+// ScheduleUpgrade will also write the upgraded client to the upgraded client path
+// if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
@@ -69,9 +71,16 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store := ctx.KVStore(k.storeKey)
+
+	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
+
+	if plan.UpgradedClientState != nil {
+		// marshal Any into bytes
+		k.cdc.MustMarshalBinaryBare(plan.UpgradedClientState)
+		store.Set(types.UpgradedClientKey(), bz)
+	}
 
 	return nil
 }

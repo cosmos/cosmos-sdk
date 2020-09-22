@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -122,11 +121,8 @@ func TestBuildUnsignedTx(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	dir, clean := testutil.NewTestCaseDir(t)
-	t.Cleanup(clean)
-
 	path := hd.CreateHDPath(118, 0, 0).String()
-	kr, err := keyring.New(t.Name(), "test", dir, nil)
+	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
 	var from = "test_sign"

@@ -12,15 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NewTestCaseDir creates a new temporary directory for a test case.
-// Returns the directory path and a cleanup function.
-// nolint: errcheck
-func NewTestCaseDir(t testing.TB) (string, func()) {
-	dir, err := ioutil.TempDir("", strings.ReplaceAll(t.Name(), "/", "_")+"_")
-	require.NoError(t, err)
-	return dir, func() { os.RemoveAll(dir) }
-}
-
 // BufferReader is implemented by types that read from a string buffer.
 type BufferReader interface {
 	io.Reader

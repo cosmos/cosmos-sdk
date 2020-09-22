@@ -14,6 +14,7 @@ import (
 
 var _ exported.ClientState = (*ClientState)(nil)
 
+// SoloMachine is used to indicate that the light client is a solo machine.
 const SoloMachine string = "Solo Machine"
 
 // NewClientState creates a new ClientState instance.

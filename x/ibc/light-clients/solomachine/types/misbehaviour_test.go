@@ -7,6 +7,7 @@ import (
 func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 	misbehaviour := suite.solomachine.CreateMisbehaviour()
 
+	suite.Require().Equal(types.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
 	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetEpochNumber())
 	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetEpochHeight())

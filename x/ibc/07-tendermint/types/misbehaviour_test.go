@@ -23,6 +23,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 		ClientId: clientID,
 	}
 
+	suite.Require().Equal(types.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
 	suite.Require().Equal(height, misbehaviour.GetHeight())
 }

@@ -12,6 +12,8 @@ const (
 	// TypeClientMisbehaviour is the shared evidence misbehaviour type
 	TypeClientMisbehaviour string = "client_misbehaviour"
 
+	// Localhost is the client type for a localhost client. It is also used as the clientID
+	// for the localhost client.
 	Localhost string = "localhost"
 )
 
@@ -132,6 +134,7 @@ type ConsensusState interface {
 
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
+	ClientType() string
 	GetClientID() string
 	String() string
 	ValidateBasic() error
@@ -142,6 +145,7 @@ type Misbehaviour interface {
 
 // Header is the consensus state update information
 type Header interface {
+	ClientType() string
 	GetHeight() Height
 	ValidateBasic() error
 }

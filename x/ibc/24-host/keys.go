@@ -163,6 +163,11 @@ func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string
 	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }
 
+// PacketReceiptPath defines the packet receipt store path
+func PacketReceiptPath(portID, channelID string, sequence uint64) string {
+	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/receipts/%d", sequence)
+}
+
 // KeyChannel returns the store key for a particular channel
 func KeyChannel(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
@@ -196,6 +201,12 @@ func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
 // acknowledgement is stored
 func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte {
 	return []byte(PacketAcknowledgementPath(portID, channelID, sequence))
+}
+
+// KeyPacketReceipt returns the store key of under which a packet
+// receipt is stored
+func KeyPacketReceipt(portID, channelID string, sequence uint64) []byte {
+	return []byte(PacketReceiptPath(portID, channelID, sequence))
 }
 
 func channelPath(portID, channelID string) string {

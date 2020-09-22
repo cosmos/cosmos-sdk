@@ -678,7 +678,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
-func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, suite.solomachine.Sequence))
 	suite.Require().NoError(err)
 
@@ -750,7 +750,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 		expSeq := tc.clientState.Sequence + 1
 
-		err := tc.clientState.VerifyPacketAcknowledgementAbsence(
+		err := tc.clientState.VerifyPacketReceiptAbsence(
 			suite.store, suite.chainA.Codec, suite.solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, suite.solomachine.Sequence,
 		)
 

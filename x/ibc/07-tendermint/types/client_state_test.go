@@ -495,7 +495,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 // test verification of the absent acknowledgement on chainB being represented
 // in the light client on chainA. A send from chainB to chainA is simulated, but
 // no receive.
-func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 	var (
 		clientState *types.ClientState
 		proof       []byte
@@ -565,7 +565,7 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 			store := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
-			err = clientState.VerifyPacketAcknowledgementAbsence(
+			err = clientState.VerifyPacketReceiptAbsence(
 				store, suite.chainA.Codec, proofHeight, &prefix, proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)

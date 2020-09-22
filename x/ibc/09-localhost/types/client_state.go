@@ -257,10 +257,10 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	return nil
 }
 
-// VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
+// VerifyPacketReceiptAbsence verifies a proof of the absence of an
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
-func (cs ClientState) VerifyPacketAcknowledgementAbsence(
+func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
 	_ codec.BinaryMarshaler,
 	_ exported.Height,

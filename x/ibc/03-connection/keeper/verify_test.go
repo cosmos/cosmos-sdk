@@ -361,10 +361,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
-// TestVerifyPacketAcknowledgementAbsence has chainA verify the acknowledgement
+// TestVerifyPacketReceiptAbsence has chainA verify the acknowledgement
 // absence on channelB. The channels on chainA and chainB are fully opened and
 // a packet is sent from chainA to chainB and not received.
-func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 	cases := []struct {
 		msg            string
 		changeClientID bool
@@ -407,7 +407,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
 
-			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketReceiptAbsence(
 				suite.chainA.GetContext(), connection, malleateHeight(proofHeight, tc.heightDiff), proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)

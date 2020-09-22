@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
@@ -31,7 +31,7 @@ type Solomachine struct {
 // NewSolomachine returns a new solomachine instance with a generated private/public
 // key pair and a sequence starting at 1.
 func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string) *Solomachine {
-	privKey := ed25519.GenPrivKey()
+	privKey := secp256k1.GenPrivKey()
 
 	return &Solomachine{
 		t:           t,
@@ -53,7 +53,7 @@ func (solo *Solomachine) ClientState() *solomachinetypes.ClientState {
 
 // ConsensusState returns a new solo machine ConsensusState instance
 func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
-	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(solo.PublicKey)
+	publicKey, err := tx.PubKeyToAny(solo.PublicKey)
 	require.NoError(solo.t, err)
 
 	return &solomachinetypes.ConsensusState{
@@ -72,9 +72,9 @@ func (solo *Solomachine) GetHeight() exported.Height {
 // necessary signature to construct a valid solo machine header.
 func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private key and signature for header
-	newPrivKey := ed25519.GenPrivKey()
+	newPrivKey := secp256k1.GenPrivKey()
 
-	publicKey, err := std.DefaultPublicKeyCodec{}.Encode(newPrivKey.PubKey())
+	publicKey, err := tx.PubKeyToAny(newPrivKey.PubKey())
 	require.NoError(solo.t, err)
 
 	data := &solomachinetypes.HeaderData{

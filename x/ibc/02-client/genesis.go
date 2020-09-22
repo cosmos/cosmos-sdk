@@ -20,7 +20,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		}
 
 		k.SetClientState(ctx, client.ClientId, cs)
-		k.SetClientType(ctx, client.ClientId, cs.ClientType())
 	}
 
 	for _, cs := range gs.ClientsConsensus {
@@ -40,7 +39,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 
 	// NOTE: return if the localhost client was already imported. The chain-id and
 	// block height will be overwriten to the correct values during BeginBlock.
-	if _, found := k.GetClientState(ctx, exported.ClientTypeLocalHost); found {
+	if _, found := k.GetClientState(ctx, exported.Localhost); found {
 		return
 	}
 
@@ -50,8 +49,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 		ctx.ChainID(), types.NewHeight(epoch, uint64(ctx.BlockHeight())),
 	)
 
-	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
-	if err != nil {
+	if err := k.CreateClient(ctx, exported.Localhost, clientState, nil); err != nil {
 		panic(err)
 	}
 }

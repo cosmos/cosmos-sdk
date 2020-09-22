@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
@@ -18,15 +17,13 @@ type BaseAppSimulateFn func(txBytes []byte, txtypes sdk.Tx) (sdk.GasInfo, *sdk.R
 type simulateServer struct {
 	simulate          BaseAppSimulateFn
 	interfaceRegistry codectypes.InterfaceRegistry
-	pubkeyCodec       cryptotypes.PublicKeyCodec
 }
 
 // NewSimulateServer creates a new SimulateServer.
-func NewSimulateServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry, pubkeyCodec cryptotypes.PublicKeyCodec) SimulateServiceServer {
+func NewSimulateServer(simulate BaseAppSimulateFn, interfaceRegistry codectypes.InterfaceRegistry) SimulateServiceServer {
 	return simulateServer{
 		simulate:          simulate,
 		interfaceRegistry: interfaceRegistry,
-		pubkeyCodec:       pubkeyCodec,
 	}
 }
 
@@ -42,7 +39,7 @@ func (s simulateServer) Simulate(ctx context.Context, req *SimulateRequest) (*Si
 	if err != nil {
 		return nil, err
 	}
-	txBuilder := authtx.WrapTx(req.Tx, s.pubkeyCodec)
+	txBuilder := authtx.WrapTx(req.Tx)
 	txBytes, err := req.Tx.Marshal()
 	if err != nil {
 		return nil, err

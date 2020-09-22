@@ -59,23 +59,6 @@ func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exp
 	store.Set(host.KeyClientState(), k.MustMarshalClientState(clientState))
 }
 
-// GetClientType gets the consensus type for a specific client
-func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
-	store := k.ClientStore(ctx, clientID)
-	bz := store.Get(host.KeyClientType())
-	if bz == nil {
-		return 0, false
-	}
-
-	return exported.ClientType(bz[0]), true
-}
-
-// SetClientType sets the specific client consensus type to the provable store
-func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
-	store := k.ClientStore(ctx, clientID)
-	store.Set(host.KeyClientType(), []byte{byte(clientType)})
-}
-
 // GetClientConsensusState gets the stored consensus state from a client at a given height.
 func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height) (exported.ConsensusState, bool) {
 	store := k.ClientStore(ctx, clientID)

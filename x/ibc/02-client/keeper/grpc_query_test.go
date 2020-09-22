@@ -12,6 +12,7 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *KeeperTestSuite) TestQueryClientState() {
@@ -111,8 +112,8 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 		{
 			"success",
 			func() {
-				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
-				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA1, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				clientA2, _ := suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
 
 				clientStateA1 := suite.chainA.GetClientState(clientA1)
 				clientStateA2 := suite.chainA.GetClientState(clientA2)
@@ -141,8 +142,8 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 			tc.malleate()
 
 			// always add localhost which is created by default in init genesis
-			localhostClientState := suite.chainA.GetClientState(exported.Localhost.String())
-			identifiedLocalhost := types.NewIdentifiedClientState(exported.Localhost.String(), localhostClientState)
+			localhostClientState := suite.chainA.GetClientState(exported.Localhost)
+			identifiedLocalhost := types.NewIdentifiedClientState(exported.Localhost, localhostClientState)
 			expClientStates = append(expClientStates, &identifiedLocalhost)
 
 			ctx := sdk.WrapSDKContext(suite.chainA.GetContext())

@@ -1,4 +1,4 @@
-package types
+package legacytx
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
@@ -18,6 +19,7 @@ type StdTxBuilder struct {
 	cdc *codec.LegacyAmino
 }
 
+// ensure interface implementation
 var _ client.TxBuilder = &StdTxBuilder{}
 
 // GetTx implements TxBuilder.GetTx
@@ -34,14 +36,12 @@ func (s *StdTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
 // SetSignatures implements TxBuilder.SetSignatures.
 func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 	sigs := make([]StdSignature, len(signatures))
-
+	var err error
 	for i, sig := range signatures {
-		stdSig, err := SignatureV2ToStdSignature(s.cdc, sig)
+		sigs[i], err = SignatureV2ToStdSignature(s.cdc, sig)
 		if err != nil {
 			return err
 		}
-
-		sigs[i] = stdSig
 	}
 
 	s.Signatures = sigs
@@ -85,7 +85,7 @@ func (s StdTxConfig) NewTxBuilder() client.TxBuilder {
 func (s StdTxConfig) WrapTxBuilder(newTx sdk.Tx) (client.TxBuilder, error) {
 	stdTx, ok := newTx.(StdTx)
 	if !ok {
-		return nil, fmt.Errorf("expected %T, got %T", StdTx{}, newTx)
+		return nil, fmt.Errorf("wrong type, expected %T, got %T", stdTx, newTx)
 	}
 	return &StdTxBuilder{StdTx: stdTx, cdc: s.Cdc}, nil
 }
@@ -96,7 +96,7 @@ func (s StdTxConfig) TxEncoder() sdk.TxEncoder {
 }
 
 func (s StdTxConfig) TxDecoder() sdk.TxDecoder {
-	return DefaultTxDecoder(s.Cdc)
+	return mkDecoder(s.Cdc.UnmarshalBinaryBare)
 }
 
 func (s StdTxConfig) TxJSONEncoder() sdk.TxEncoder {
@@ -106,7 +106,7 @@ func (s StdTxConfig) TxJSONEncoder() sdk.TxEncoder {
 }
 
 func (s StdTxConfig) TxJSONDecoder() sdk.TxDecoder {
-	return DefaultJSONTxDecoder(s.Cdc)
+	return mkDecoder(s.Cdc.UnmarshalJSON)
 }
 
 func (s StdTxConfig) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
@@ -143,4 +143,51 @@ func (s StdTxConfig) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, e
 
 func (s StdTxConfig) SignModeHandler() authsigning.SignModeHandler {
 	return stdTxSignModeHandler{}
+}
+
+// SignatureV2ToStdSignature converts a SignatureV2 to a StdSignature
+// [Deprecated]
+func SignatureV2ToStdSignature(cdc *codec.LegacyAmino, sig signing.SignatureV2) (StdSignature, error) {
+	var (
+		sigBz []byte
+		err   error
+	)
+
+	if sig.Data != nil {
+		sigBz, err = SignatureDataToAminoSignature(cdc, sig.Data)
+		if err != nil {
+			return StdSignature{}, err
+		}
+	}
+
+	return StdSignature{
+		PubKey:    sig.PubKey,
+		Signature: sigBz,
+	}, nil
+}
+
+// Unmarshaler is a generic type for Unmarshal functions
+type Unmarshaler func(bytes []byte, ptr interface{}) error
+
+func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		if len(txBytes) == 0 {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
+		}
+		var tx = StdTx{}
+		// StdTx.Msg is an interface. The concrete types
+		// are registered by MakeTxCodec
+		err := unmarshaler(txBytes, &tx)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+		return tx, nil
+	}
+}
+
+// DefaultTxEncoder logic for standard transaction encoding
+func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return cdc.MarshalBinaryBare(tx)
+	}
 }

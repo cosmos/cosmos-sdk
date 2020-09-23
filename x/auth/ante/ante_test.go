@@ -954,7 +954,7 @@ func TestCountSubkeys(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(T *testing.T) {
-			require.Equal(t, tc.want, types.CountSubKeys(tc.args.pub))
+			require.Equal(t, tc.want, ante.CountSubKeys(tc.args.pub))
 		})
 	}
 }
@@ -1033,25 +1033,6 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 			false,
 			false,
 			sdkerrors.ErrInvalidPubKey,
-		},
-		{
-			"verify that an ed25519 account gets accepted",
-			func() {
-				priv1 := ed25519.GenPrivKey()
-				pub1 := priv1.PubKey()
-				addr1 := sdk.AccAddress(pub1.Address())
-				acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-
-				suite.Require().NoError(suite.app.BankKeeper.SetBalances(suite.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("atom", 150))))
-				suite.Require().NoError(acc1.SetAccountNumber(1))
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-				msg := testdata.NewTestMsg(addr1)
-				privs, accNums, accSeqs = []crypto.PrivKey{priv1}, []uint64{1}, []uint64{0}
-				msgs = []sdk.Msg{msg}
-			},
-			false,
-			true,
-			nil,
 		},
 	}
 

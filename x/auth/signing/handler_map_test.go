@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -17,7 +17,7 @@ func MakeTestHandlerMap() signing.SignModeHandler {
 	return signing.NewSignModeHandlerMap(
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		[]signing.SignModeHandler{
-			authtypes.NewStdTxSignModeHandler(),
+			legacytx.NewStdTxSignModeHandler(),
 		},
 	)
 }
@@ -30,7 +30,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 
 	coins := sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 
-	fee := authtypes.StdFee{
+	fee := legacytx.StdFee{
 		Amount: coins,
 		Gas:    10000,
 	}
@@ -43,7 +43,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 		},
 	}
 
-	tx := authtypes.StdTx{
+	tx := legacytx.StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: nil,
@@ -57,7 +57,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	)
 
 	handler := MakeTestHandlerMap()
-	aminoJSONHandler := authtypes.NewStdTxSignModeHandler()
+	aminoJSONHandler := legacytx.NewStdTxSignModeHandler()
 
 	signingData := signing.SignerData{
 		ChainID:       chainId,

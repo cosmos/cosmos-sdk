@@ -35,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -387,10 +388,11 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	switch clientType {
 	case Tendermint:
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
+		upgradePath := commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, commitmenttypes.GetSDKSpecs(),
-			false, false,
+			&upgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:

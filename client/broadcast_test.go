@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -20,15 +21,15 @@ type MockClient struct {
 	err error
 }
 
-func (c MockClient) BroadcastTxCommit(tx tmtypes.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+func (c MockClient) BroadcastTxCommit(ctx context.Context, tx tmtypes.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 	return nil, c.err
 }
 
-func (c MockClient) BroadcastTxAsync(tx tmtypes.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxAsync(ctx context.Context, tx tmtypes.Tx) (*ctypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c MockClient) BroadcastTxSync(tx tmtypes.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxSync(ctx context.Context, tx tmtypes.Tx) (*ctypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 

@@ -160,42 +160,6 @@ func TestVerifyMultisignature(t *testing.T) {
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig failed after k good signatures",
 				)
-
-				for i := k + 1; i < len(signingIndices); i++ {
-					signingIndex := signingIndices[i]
-
-					require.NoError(
-						t,
-						multisig.AddSignatureFromPubKey(
-							sig,
-							sigs[signingIndex],
-							pubKeys[signingIndex],
-							pubKeys,
-						),
-					)
-					require.Equal(
-						t,
-						false,
-						pk.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-							return msg, nil
-						}, sig),
-						"multisig didn't verify as expected after k sigs, i %d", i,
-					)
-					require.NoError(
-						t,
-						multisig.AddSignatureFromPubKey(
-							sig,
-							sigs[signingIndex],
-							pubKeys[signingIndex],
-							pubKeys),
-					)
-					require.Equal(
-						t,
-						i+1,
-						len(sig.Signatures),
-						"adding a signature for the same pubkey twice increased signature count by 2",
-					)
-				}
 			},
 			true,
 		},

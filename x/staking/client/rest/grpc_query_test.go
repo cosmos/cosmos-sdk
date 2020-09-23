@@ -456,7 +456,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 			if tc.error {
 				s.Require().Error(err)
 			} else {
-				fmt.Println("err:::", err)
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedResp.String(), tc.respType.String())
 			}

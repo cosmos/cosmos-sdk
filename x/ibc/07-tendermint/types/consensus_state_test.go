@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
@@ -55,7 +54,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		suite.Require().Equal(tc.consensusState.ClientType(), exported.Tendermint)
+		suite.Require().Equal(tc.consensusState.ClientType(), types.Tendermint)
 		suite.Require().Equal(tc.consensusState.GetRoot(), tc.consensusState.Root)
 
 		if tc.expectPass {

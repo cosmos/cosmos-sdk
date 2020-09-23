@@ -11,8 +11,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/version"
+	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,12 +32,17 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
+	// client types
+	Tendermint  = ibctmtypes.Tendermint
+	SoloMachine = solomachinetypes.SoloMachine
+
 	// Default params constants used to create a TM client
 	TrustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
@@ -380,7 +386,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	)
 
 	switch clientType {
-	case exported.ClientTypeTendermint:
+	case Tendermint:
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
@@ -388,7 +394,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 			false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
-	case exported.ClientTypeSoloMachine:
+	case SoloMachine:
 		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
@@ -407,7 +413,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 // client will be created on the (target) chain.
 func (chain *TestChain) CreateTMClient(counterparty *TestChain, clientID string) error {
 	// construct MsgCreateClient using counterparty
-	msg := chain.ConstructMsgCreateClient(counterparty, clientID, exported.ClientTypeTendermint)
+	msg := chain.ConstructMsgCreateClient(counterparty, clientID, Tendermint)
 	return chain.sendMsgs(msg)
 }
 
@@ -476,7 +482,7 @@ func (chain *TestChain) ExpireClient(amount time.Duration) {
 func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
 	vsetHash := chain.Vals.Hash()
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chain.ChainID,
 		Height:             chain.CurrentHeader.Height,
 		Time:               chain.CurrentHeader.Time,

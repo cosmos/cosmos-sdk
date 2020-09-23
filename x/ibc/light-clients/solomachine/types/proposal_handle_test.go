@@ -58,9 +58,17 @@ func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(header.(*types.Header).GetPubKey(), consState.(*types.ConsensusState).GetPubKey())
+
+				smConsState, ok := consState.(*types.ConsensusState)
+				suite.Require().True(ok)
+				smHeader, ok := header.(*types.Header)
+				suite.Require().True(ok)
+
 				suite.Require().Equal(cs.(*types.ClientState).ConsensusState, consState)
-				suite.Require().Equal(header.GetHeight().GetEpochHeight(), cs.(*types.ClientState).Sequence)
+				suite.Require().Equal(smHeader.GetPubKey(), smConsState.GetPubKey())
+				suite.Require().Equal(smHeader.NewDiversifier, smConsState.Diversifier)
+				suite.Require().Equal(smHeader.Timestamp, smConsState.Timestamp)
+				suite.Require().Equal(smHeader.GetHeight().GetEpochHeight(), cs.(*types.ClientState).Sequence)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(cs)

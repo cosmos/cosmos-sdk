@@ -309,7 +309,7 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run --out-format=tab --issues-exit-code=0
+	golangci-lint run --out-format=tab
 
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0

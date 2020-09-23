@@ -13,7 +13,7 @@ const (
 	ModuleName = "evidence"
 )
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = &GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
 func NewGenesisState(e []v038evidence.Evidence) GenesisState {
@@ -58,7 +58,7 @@ func (gs GenesisState) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (gs *GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range gs.Evidence {
 		var evi v038evidence.Evidence
 		err := unpacker.UnpackAny(any, &evi)
@@ -66,5 +66,6 @@ func (gs GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 			return err
 		}
 	}
+
 	return nil
 }

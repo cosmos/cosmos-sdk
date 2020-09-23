@@ -1,20 +1,19 @@
 package v040_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_40"
 )
 
 func TestMigrate(t *testing.T) {
-	encodingConfig := params.MakeEncodingConfig()
+	encodingConfig := simapp.MakeEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}.
@@ -35,10 +34,10 @@ func TestMigrate(t *testing.T) {
 	}
 
 	migrated := v040evidence.Migrate(evidenceGenState, clientCtx)
-	// Using hybrid codec here, expecting Amino JSON.
-	expected := `{"evidence":[{"type":"cosmos-sdk/Equivocation","value":{"height":"20","time":"0001-01-01T00:00:00Z","power":"100","consensus_address":"cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"}}]}`
+	// Expecting Amino JSON.
+	expected := `{"evidence":[{"height":"20","time":"0001-01-01T00:00:00Z","power":"100","consensus_address":"cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"}]}`
 
-	bz, err := json.Marshal(migrated)
+	bz, err := encodingConfig.Amino.MarshalJSON(&migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

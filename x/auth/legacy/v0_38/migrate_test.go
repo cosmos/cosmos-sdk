@@ -103,30 +103,6 @@ func TestMigrateInvalid(t *testing.T) {
 		acc  v036genaccounts.GenesisAccount
 	}{
 		{
-			"vesting account with no base coins",
-			v036genaccounts.GenesisAccount{
-				Address:         accAddressFromBech32(t, "cosmos17n9sztlhx32tfy0tg0zc2ttmkeeth50yyuv9he"),
-				Coins:           sdk.Coins{},
-				OriginalVesting: sdk.NewCoins(sdk.NewInt64Coin("stake", 10000205)),
-				StartTime:       time.Now().Unix(),
-				EndTime:         time.Now().Add(48 * time.Hour).Unix(),
-				Sequence:        5,
-				AccountNumber:   3,
-			},
-		},
-		{
-			"vesting account with base coins <= original vesting",
-			v036genaccounts.GenesisAccount{
-				Address:         accAddressFromBech32(t, "cosmos17n9sztlhx32tfy0tg0zc2ttmkeeth50yyuv9he"),
-				Coins:           sdk.NewCoins(sdk.NewInt64Coin("stake", 10000205)),
-				OriginalVesting: sdk.NewCoins(sdk.NewInt64Coin("stake", 50000205)),
-				StartTime:       time.Now().Unix(),
-				EndTime:         time.Now().Add(48 * time.Hour).Unix(),
-				Sequence:        5,
-				AccountNumber:   3,
-			},
-		},
-		{
 			"module account with invalid name",
 			v036genaccounts.GenesisAccount{
 				Address:           accAddressFromBech32(t, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"),

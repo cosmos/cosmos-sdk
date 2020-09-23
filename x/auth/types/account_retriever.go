@@ -27,6 +27,7 @@ func (ar AccountRetriever) GetAccount(clientCtx client.Context, addr sdk.AccAddr
 // GetAccountWithHeight queries for an account given an address. Returns the
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
+//nolint:interfacer
 func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr sdk.AccAddress) (AccountI, int64, error) {
 	var header metadata.MD
 

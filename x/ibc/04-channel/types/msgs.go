@@ -13,6 +13,7 @@ import (
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelOpenInit
+//nolint:interfacer
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
@@ -66,6 +67,7 @@ func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
+//nolint:interfacer
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
@@ -129,6 +131,7 @@ func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
+//nolint:interfacer
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -188,6 +191,7 @@ func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
+//nolint:interfacer
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -246,6 +250,7 @@ func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
+//nolint:interfacer
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
 ) *MsgChannelCloseInit {
@@ -295,6 +300,7 @@ func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
+//nolint:interfacer
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -353,6 +359,7 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgRecvPacket{}
 
 // NewMsgRecvPacket constructs new MsgRecvPacket
+//nolint:interfacer
 func NewMsgRecvPacket(
 	packet Packet, proof []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -414,6 +421,7 @@ func (msg MsgRecvPacket) Type() string {
 var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
+//nolint:interfacer
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
@@ -467,6 +475,7 @@ func (msg MsgTimeout) Type() string {
 }
 
 // NewMsgTimeoutOnClose constructs new MsgTimeoutOnClose
+//nolint:interfacer
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
 	proof, proofClose []byte,
@@ -527,6 +536,7 @@ func (msg MsgTimeoutOnClose) Type() string {
 var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
+//nolint:interfacer
 func NewMsgAcknowledgement(
 	packet Packet, ack []byte, proof []byte, proofHeight clienttypes.Height, signer sdk.AccAddress) *MsgAcknowledgement {
 	return &MsgAcknowledgement{

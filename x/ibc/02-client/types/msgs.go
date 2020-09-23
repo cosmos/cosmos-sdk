@@ -26,6 +26,7 @@ var (
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
+//nolint:interfacer
 func NewMsgCreateClient(
 	id string, clientState exported.ClientState, consensusState exported.ConsensusState, signer sdk.AccAddress,
 ) (*MsgCreateClient, error) {
@@ -115,6 +116,7 @@ func (msg MsgCreateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
+//nolint:interfacer
 func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress) (*MsgUpdateClient, error) {
 	anyHeader, err := PackHeader(header)
 	if err != nil {
@@ -182,6 +184,7 @@ func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance.
+//nolint:interfacer
 func NewMsgSubmitMisbehaviour(clientID string, misbehaviour exported.Misbehaviour, signer sdk.AccAddress) (*MsgSubmitMisbehaviour, error) {
 	anyMisbehaviour, err := PackMisbehaviour(misbehaviour)
 	if err != nil {

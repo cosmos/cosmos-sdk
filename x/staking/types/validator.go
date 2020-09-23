@@ -30,6 +30,8 @@ const (
 
 var _ exported.ValidatorI = Validator{}
 
+// NewValidator constructs a new Validator
+//nolint:interfacer
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	var pkStr string
 	if pubKey != nil {

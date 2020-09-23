@@ -13,6 +13,7 @@ import (
 var _ sdk.Msg = &MsgConnectionOpenInit{}
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
+//nolint:interfacer
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
@@ -68,6 +69,7 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
+//nolint:interfacer
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
@@ -177,6 +179,7 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
+//nolint:interfacer
 func NewMsgConnectionOpenAck(
 	connectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
@@ -274,6 +277,7 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
+//nolint:interfacer
 func NewMsgConnectionOpenConfirm(
 	connectionID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,

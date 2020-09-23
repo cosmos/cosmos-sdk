@@ -20,7 +20,7 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    # - interfacer
+    - interfacer
     - maligned
     - misspell
     - nakedret

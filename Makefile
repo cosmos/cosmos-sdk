@@ -310,9 +310,11 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run --out-format=tab --issues-exit-code=0
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -name '*.pb.go' | xargs gofmt -d -s
-.PHONY: lint
+	golangci-lint run --out-format=tab
+
+lint-fix:
+	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+.PHONY: lint lint-fix
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s

@@ -22,6 +22,10 @@ func (cs ClientState) VerifyUpgrade(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	upgradedClient exported.ClientState, proofUpgrade []byte,
 ) error {
+	if cs.UpgradePath == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
+	}
+
 	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgrade client height %s must be greater than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())

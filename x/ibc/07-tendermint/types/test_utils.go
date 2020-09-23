@@ -6,8 +6,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/version"
+	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/version"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
@@ -32,7 +33,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clienttypes.Height, 
 	vsetHash := tmValSet.Hash()
 	blockHeight := int64(height.EpochHeight)
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,
 		Height:             blockHeight,
 		Time:               timestamp,

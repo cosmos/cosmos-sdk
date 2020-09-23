@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -90,7 +91,7 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 		return nil, err
 	}
 
-	res, err := node.BroadcastTxCommit(txBytes)
+	res, err := node.BroadcastTxCommit(context.Background(), txBytes)
 	if err != nil {
 		if errRes := CheckTendermintError(err, txBytes); errRes != nil {
 			return errRes, nil
@@ -118,7 +119,7 @@ func (ctx Context) BroadcastTxSync(txBytes []byte) (*sdk.TxResponse, error) {
 		return nil, err
 	}
 
-	res, err := node.BroadcastTxSync(txBytes)
+	res, err := node.BroadcastTxSync(context.Background(), txBytes)
 	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
@@ -134,7 +135,7 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 		return nil, err
 	}
 
-	res, err := node.BroadcastTxAsync(txBytes)
+	res, err := node.BroadcastTxAsync(context.Background(), txBytes)
 	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // Codec defines the x/auth account codec to be used for use with the
@@ -153,10 +153,10 @@ func populateAccountFromState(
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
 // Otherwise returns encoder with default logic.
-func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
+func GetTxEncoder(cdc *codec.LegacyAmino) (encoder sdk.TxEncoder) {
 	encoder = sdk.GetConfig().GetTxEncoder()
 	if encoder == nil {
-		encoder = authtypes.DefaultTxEncoder(cdc)
+		encoder = legacytx.DefaultTxEncoder(cdc)
 	}
 
 	return encoder

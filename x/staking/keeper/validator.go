@@ -368,7 +368,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 		return []sdk.ValAddress{}
 	}
 
-	addrs := sdk.ValAddresses{}
+	addrs := types.ValAddresses{}
 	k.cdc.MustUnmarshalBinaryBare(bz, &addrs)
 
 	return addrs.Addresses
@@ -378,7 +378,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&sdk.ValAddresses{Addresses: addrs})
+	bz := k.cdc.MustMarshalBinaryBare(&types.ValAddresses{Addresses: addrs})
 	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }
 
@@ -450,7 +450,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 		// We only unbond if the height and time are less than the current height
 		// and time.
 		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
-			addrs := sdk.ValAddresses{}
+			addrs := types.ValAddresses{}
 			k.cdc.MustUnmarshalBinaryBare(unbondingValIterator.Value(), &addrs)
 
 			for _, valAddr := range addrs.Addresses {

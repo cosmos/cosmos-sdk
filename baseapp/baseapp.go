@@ -1,18 +1,21 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -60,6 +63,11 @@ type BaseApp struct { // nolint: maligned
 	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
+	// manages snapshots, i.e. dumps of app state at certain intervals
+	snapshotManager    *snapshots.Manager
+	snapshotInterval   uint64 // block interval between state sync snapshots
+	snapshotKeepRecent uint32 // recent state sync snapshots to keep
+
 	// volatile states:
 	//
 	// checkState is set on InitChain and reset on Commit
@@ -81,6 +89,9 @@ type BaseApp struct { // nolint: maligned
 	// transaction. This is mainly used for DoS and spam prevention.
 	minGasPrices sdk.DecCoins
 
+	// initialHeight is the initial height at which we start the baseapp
+	initialHeight int64
+
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
@@ -90,6 +101,18 @@ type BaseApp struct { // nolint: maligned
 	// minimum block time (in Unix seconds) at which to halt the chain and gracefully shutdown
 	haltTime uint64
 
+	// minRetainBlocks defines the minimum block height offset from the current
+	// block being committed, such that all blocks past this offset are pruned
+	// from Tendermint. It is used as part of the process of determining the
+	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+	// that no blocks should be pruned.
+	//
+	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// with the unbonding (safety threshold) period, state pruning and state sync
+	// snapshot parameters to determine the correct minimum value of
+	// ResponseCommit.RetainHeight.
+	minRetainBlocks uint64
+
 	// application's version string
 	appVersion string
 
@@ -98,6 +121,10 @@ type BaseApp struct { // nolint: maligned
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
+
+	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	indexEvents map[string]struct{}
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -202,12 +229,6 @@ func (app *BaseApp) MountMemoryStores(keys map[string]*sdk.MemoryStoreKey) {
 	}
 }
 
-// MountStoreWithDB mounts a store to the provided key in the BaseApp
-// multistore, using a specified DB.
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
-	app.cms.MountStoreWithDB(key, typ, db)
-}
-
 // MountStore mounts a store to the provided key in the BaseApp multistore,
 // using the default DB.
 func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
@@ -257,8 +278,22 @@ func (app *BaseApp) init() error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(abci.Header{})
+	app.setCheckState(tmproto.Header{})
 	app.Seal()
+
+	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
+	if app.snapshotManager != nil && app.snapshotInterval > 0 {
+		rms, ok := app.cms.(*rootmulti.Store)
+		if !ok {
+			return errors.New("state sync snapshots require a rootmulti store")
+		}
+		pruningOpts := rms.GetPruning()
+		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
+			return fmt.Errorf(
+				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
+				app.snapshotInterval, pruningOpts.KeepEvery)
+		}
+	}
 
 	return nil
 }
@@ -275,12 +310,24 @@ func (app *BaseApp) setHaltTime(haltTime uint64) {
 	app.haltTime = haltTime
 }
 
+func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
+	app.minRetainBlocks = minRetainBlocks
+}
+
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
 func (app *BaseApp) setTrace(trace bool) {
 	app.trace = trace
+}
+
+func (app *BaseApp) setIndexEvents(ie []string) {
+	app.indexEvents = make(map[string]struct{})
+
+	for _, e := range ie {
+		app.indexEvents[e] = struct{}{}
+	}
 }
 
 // Router returns the router of the BaseApp.
@@ -307,7 +354,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
-func (app *BaseApp) setCheckState(header abci.Header) {
+func (app *BaseApp) setCheckState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
@@ -319,7 +366,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
-func (app *BaseApp) setDeliverState(header abci.Header) {
+func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
@@ -344,14 +391,14 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyEvidenceParams) {
-		var ep abci.EvidenceParams
+		var ep tmproto.EvidenceParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyEvidenceParams, &ep)
 		cp.Evidence = &ep
 	}
 
 	if app.paramStore.Has(ctx, ParamStoreKeyValidatorParams) {
-		var vp abci.ValidatorParams
+		var vp tmproto.ValidatorParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyValidatorParams, &vp)
 		cp.Validator = &vp
@@ -410,9 +457,23 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		return fmt.Errorf("invalid height: %d", req.Header.Height)
 	}
 
-	prevHeight := app.LastBlockHeight()
-	if req.Header.Height != prevHeight+1 {
-		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, prevHeight+1)
+	// expectedHeight holds the expected height to validate.
+	var expectedHeight int64
+	if app.LastBlockHeight() == 0 && app.initialHeight > 1 {
+		// In this case, we're validating the first block of the chain (no
+		// previous commit). The height we're expecting is the initial height.
+		expectedHeight = app.initialHeight
+	} else {
+		// This case can means two things:
+		// - either there was already a previous commit in the store, in which
+		// case we increment the version from there,
+		// - or there was no previous commit, and initial version was not set,
+		// in which case we start at version 1.
+		expectedHeight = app.LastBlockHeight() + 1
+	}
+
+	if req.Header.Height != expectedHeight {
+		return fmt.Errorf("invalid height: %d; expected: %d", req.Header.Height, expectedHeight)
 	}
 
 	return nil
@@ -610,7 +671,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
-	txData := &sdk.TxData{
+	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
@@ -644,11 +705,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txData.Data = append(txData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
-	data, err := proto.Marshal(txData)
+	data, err := proto.Marshal(txMsgData)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}

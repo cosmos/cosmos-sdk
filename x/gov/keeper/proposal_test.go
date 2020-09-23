@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,12 +17,12 @@ import (
 
 func TestGetSetProposal(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
-	proposalID := proposal.ProposalID
+	proposalID := proposal.ProposalId
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	gotProposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
@@ -31,7 +32,7 @@ func TestGetSetProposal(t *testing.T) {
 
 func TestActivateVotingPeriod(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -43,14 +44,14 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
-	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalID)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.ProposalId)
 	require.True(t, ok)
 
 	activeIterator := app.GovKeeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
 
 	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	require.Equal(t, proposalID, proposal.ProposalID)
+	require.Equal(t, proposalID, proposal.ProposalId)
 	activeIterator.Close()
 }
 
@@ -60,7 +61,7 @@ func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
 func TestSubmitProposal(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	testCases := []struct {
 		content     types.Content
@@ -85,7 +86,7 @@ func TestSubmitProposal(t *testing.T) {
 func TestGetProposalsFiltered(t *testing.T) {
 	proposalID := uint64(1)
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
 
@@ -128,14 +129,16 @@ func TestGetProposalsFiltered(t *testing.T) {
 		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
 	}
 
-	for _, tc := range testCases {
-		proposals := app.GovKeeper.GetProposalsFiltered(ctx, tc.params)
-		require.Len(t, proposals, tc.expectedNumResults)
+	for i, tc := range testCases {
+		t.Run(fmt.Sprintf("Test Case %d", i), func(t *testing.T) {
+			proposals := app.GovKeeper.GetProposalsFiltered(ctx, tc.params)
+			require.Len(t, proposals, tc.expectedNumResults)
 
-		for _, p := range proposals {
-			if len(tc.params.ProposalStatus.String()) != 0 {
-				require.Equal(t, tc.params.ProposalStatus, p.Status)
+			for _, p := range proposals {
+				if types.ValidProposalStatus(tc.params.ProposalStatus) {
+					require.Equal(t, tc.params.ProposalStatus, p.Status)
+				}
 			}
-		}
+		})
 	}
 }

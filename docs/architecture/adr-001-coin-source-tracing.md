@@ -3,10 +3,11 @@
 ## Changelog
 
 - 2020-07-09: Initial Draft
+- 2020-08-11: Implementation changes
 
 ## Status
 
-Proposed
+Accepted, Implemented
 
 ## Context
 
@@ -114,7 +115,7 @@ trace the token back to the originating chain, as specified on ICS20.
 The new proposed format will be the following:
 
 ```golang
-ibcDenom = "ibc/" + hash(trace + "/" + base denom)
+ibcDenom = "ibc/" + hash(trace path + "/" + base denom)
 ```
 
 The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
@@ -124,7 +125,7 @@ The hash function will be a SHA256 hash of the fields of the `DenomTrace`:
 // information
 message DenomTrace {
   // chain of port/channel identifiers used for tracing the source of the fungible token
-  string trace = 1;
+  string path = 1;
   // base denomination of the relayed fungible token
   string base_denom = 2;
 }
@@ -133,47 +134,20 @@ message DenomTrace {
 The `IBCDenom` function constructs the `Coin` denomination used when creating the ICS20 fungible token packet data:
 
 ```golang
-// Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields.
+// Hash returns the hex bytes of the SHA256 hash of the DenomTrace fields using the following formula:
+//
+// hash = sha256(tracePath + "/" + baseDenom)
 func (dt DenomTrace) Hash() tmbytes.HexBytes {
-  return tmhash.Sum(dt.Trace + "/" + dt.BaseDenom)
+  return tmhash.Sum(dt.Path + "/" + dt.BaseDenom)
 }
 
-// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(trace + baseDenom)}'. If the trace is empty, it will return the base denomination.
+// IBCDenom a coin denomination for an ICS20 fungible token in the format 'ibc/{hash(tracePath + baseDenom)}'. 
+// If the trace is empty, it will return the base denomination.
 func (dt DenomTrace) IBCDenom() string {
-  if dt.Trace != "" {
+  if dt.Path != "" {
     return fmt.Sprintf("ibc/%s", dt.Hash())
   }
   return dt.BaseDenom
-}
-```
-
-In order to trim the denomination trace prefix when sending/receiving fungible tokens, the `RemovePrefix` function is provided.
-
-> NOTE: the prefix addition must be done on the client side.
-
-```golang
-// RemovePrefix trims the first portID/channelID pair from the trace info. If the trace is already empty it will perform a no-op. If the trace is incorrectly constructed or doesn't have separators it will return an error.
-func (dt *DenomTrace) RemovePrefix() error {
-  if dt.Trace == "" {
-    return nil
-  }
-
-  traceSplit := strings.SplitN(dt.Trace, "/", 3)
-
-  var err error
-  switch {
-  // NOTE: other cases are checked during msg validation
-  case len(traceSplit) == 2:
-    dt.Trace = ""
-  case len(traceSplit) == 3:
-    dt.Trace = traceSplit[2]
-  }
-
-  if err != nil {
-    return err
-  }
-
-  return nil
 }
 ```
 
@@ -217,44 +191,30 @@ hash, if the trace info is provided, or that the base denominations matches:
 ```golang
 func (msg MsgTransfer) ValidateBasic() error {
   // ...
-  if err := msg.Trace.Validate(); err != nil {
-    return err
-  }
-  if err := ValidateIBCDenom(msg.Token.Denom, msg.Trace); err != nil {
-    return err
-  }
-  // ...
+  return ValidateIBCDenom(msg.Token.Denom)
 }
 ```
 
 ```golang
-// ValidateIBCDenom checks that the denomination for an IBC fungible token is valid. It returns error if the trace `hash` is invalid
-func ValidateIBCDenom(denom string, trace DenomTrace) error {
-  // Validate that base denominations are equal if the trace info is not provided
-  if trace.Trace == "" {
-    if trace.BaseDenom != denom {
-      return Wrapf(
-        ErrInvalidDenomForTransfer,
-        "token denom must match the trace base denom (%s ≠ %s)",
-        denom, trace.BaseDenom,
-      )
-    }
-    return nil
-  }
-
+// ValidateIBCDenom validates that the given denomination is either:
+//
+//  - A valid base denomination (eg: 'uatom')
+//  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
+func ValidateIBCDenom(denom string) error {
   denomSplit := strings.SplitN(denom, "/", 2)
 
   switch {
-    case denomSplit[0] != "ibc":
-      return Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
-    case len(denomSplit) == 2:
-      return tmtypes.ValidateHash([]byte(denomSplit[1]))
+  case strings.TrimSpace(denom) == "",
+    len(denomSplit) == 1 && denomSplit[0] == "ibc",
+    len(denomSplit) == 2 && (denomSplit[0] != "ibc" || strings.TrimSpace(denomSplit[1]) == ""):
+    return sdkerrors.Wrapf(ErrInvalidDenomForTransfer, "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + %s)}'", denom)
+
+  case denomSplit[0] == denom && strings.TrimSpace(denom) != "":
+    return sdk.ValidateDenom(denom)
   }
 
-  denomTraceHash := denomSplit[1]
-  traceHash := trace.Hash()
-  if !bytes.Equal(traceHash.Bytes(), denomTraceHash.Bytes()) {
-    return Errorf("token denomination trace hash mismatch, expected %s got %s", traceHash, denomTraceHash)
+  if _, err := ParseHexHash(denomSplit[1]); err != nil {
+    return Wrapf(err, "invalid denom trace hash %s", denomSplit[1])
   }
 
   return nil
@@ -267,6 +227,46 @@ The denomination trace info only needs to be updated when token is received:
 - Receiver is **not source** chain: Store the received info. For example, during step 1, when chain `B` receives `transfer/channelToA/denom`.
 
 ```golang
+// SendTransfer
+// ...
+
+  fullDenomPath := token.Denom
+
+// deconstruct the token denomination into the denomination trace info
+// to determine if the sender is the source chain
+if strings.HasPrefix(token.Denom, "ibc/") {
+  fullDenomPath, err = k.DenomPathFromHash(ctx, token.Denom)
+  if err != nil {
+    return err
+  }
+}
+
+if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
+//...
+```
+
+```golang
+// DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
+// component.
+func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
+  hexHash := denom[4:]
+  hash, err := ParseHexHash(hexHash)
+  if err != nil {
+    return "", Wrap(ErrInvalidDenomForTransfer, err.Error())
+  }
+
+  denomTrace, found := k.GetDenomTrace(ctx, hash)
+  if !found {
+    return "", Wrap(ErrTraceNotFound, hexHash)
+  }
+
+  fullDenomPath := denomTrace.GetFullDenomPath()
+  return fullDenomPath, nil
+}
+```
+
+
+```golang
 // OnRecvPacket
 // ...
 
@@ -277,19 +277,13 @@ The denomination trace info only needs to be updated when token is received:
 // NOTE: We use SourcePort and SourceChannel here, because the counterparty
 // chain would have prefixed with DestPort and DestChannel when originally
 // receiving this coin as seen in the "sender chain is the source" condition.
-voucherPrefix := GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
-
 if ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
   // sender chain is not the source, unescrow tokens
 
   // remove prefix added by sender chain
-  if err := denomTrace.RemovePrefix(); err != nil {
-    return err
-  }
-
-  // NOTE: since the sender is a sink chain, we already know the unprefixed denomination trace info
-
-  token := sdk.NewCoin(denomTrace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
+  voucherPrefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
+  unprefixedDenom := data.Denom[len(voucherPrefix):]
+  token := sdk.NewCoin(unprefixedDenom, sdk.NewIntFromUint64(data.Amount))
 
   // unescrow tokens
   escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
@@ -298,11 +292,13 @@ if ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data
 
 // sender chain is the source, mint vouchers
 
-// construct the denomination trace from the full raw denomination
-denomTrace := NewDenomTraceFromRawDenom(data.Denom)
+// since SendPacket did not prefix the denomination, we must prefix denomination here
+sourcePrefix := types.GetDenomPrefix(packet.GetDestPort(), packet.GetDestChannel())
+// NOTE: sourcePrefix contains the trailing "/"
+prefixedDenom := sourcePrefix + data.Denom
 
-// since SendPacket did not prefix the denomination with the voucherPrefix, we must add it here
-denomTrace.AddPrefix(packet.GetDestPort(), packet.GetDestChannel())
+// construct the denomination trace from the full raw denomination
+denomTrace := types.ParseDenomTrace(prefixedDenom)
 
 // set the value to the lookup table if not stored already
 traceHash := denomTrace.Hash()
@@ -310,7 +306,8 @@ if !k.HasDenomTrace(ctx, traceHash) {
   k.SetDenomTrace(ctx, traceHash, denomTrace)
 }
 
-voucher := sdk.NewCoin(denomTrace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
+voucherDenom := denomTrace.IBCDenom()
+voucher := sdk.NewCoin(voucherDenom, sdk.NewIntFromUint64(data.Amount))
 
 // mint new tokens if the source of the transfer is the same chain
 if err := k.bankKeeper.MintCoins(
@@ -347,7 +344,8 @@ The coin denomination validation will need to be updated to reflect these change
 function will now:
 
 - Accept slash separators (`"/"`) and uppercase characters (due to the `HexBytes` format)
-- Bump the maximum character length to 64
+- Bump the maximum character length to 128, as the hex representation used by Tendermint's
+  `HexBytes` type contains 64 characters.
 
 Additional validation logic, such as verifying the length of the hash, the  may be added to the bank module in the future if the [custom base denomination validation](https://github.com/cosmos/cosmos-sdk/pull/6755) is integrated into the SDK.
 

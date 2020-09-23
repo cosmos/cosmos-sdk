@@ -17,12 +17,14 @@ import (
 )
 
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
-func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
-	v039Codec := codec.New()
+func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
+	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
-	v039auth.RegisterCodec(v039Codec)
+	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
-	v040Codec := clientCtx.JSONMarshaler
+	v040Codec := codec.NewLegacyAmino()
+	cryptocodec.RegisterCrypto(v040Codec)
+	v039auth.RegisterLegacyAminoCodec(v040Codec)
 
 	// remove balances from existing accounts
 	if appState[v039auth.ModuleName] != nil {

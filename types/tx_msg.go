@@ -69,6 +69,14 @@ type (
 		Tx
 		GetMemo() string
 	}
+
+	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
+	// set a height timeout.
+	TxWithTimeoutHeight interface {
+		Tx
+
+		GetTimeoutHeight() uint64
+	}
 )
 
 // TxDecoder unmarshals transaction bytes
@@ -76,5 +84,3 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
-
-//__________________________________________________________

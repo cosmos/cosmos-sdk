@@ -45,7 +45,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEn
 	}
 
 	// create the app state
-	appGenesisState, err := types.GenesisStateFromGenDoc(cdc, genDoc)
+	appGenesisState, err := types.GenesisStateFromGenDoc(genDoc)
 	if err != nil {
 		return appState, err
 	}
@@ -55,7 +55,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEn
 		return appState, err
 	}
 
-	appState, err = codec.MarshalJSONIndent(cdc, appGenesisState)
+	appState, err = json.MarshalIndent(appGenesisState, "", "  ")
 	if err != nil {
 		return appState, err
 	}
@@ -81,7 +81,7 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
 	var appState map[string]json.RawMessage
-	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
+	if err := json.Unmarshal(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
 

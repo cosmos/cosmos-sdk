@@ -8,15 +8,14 @@ import (
 	"testing"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -38,9 +37,9 @@ var s TestSuite
 
 func setupTest(height int64, skip map[int64]bool) TestSuite {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeEncodingConfig())
 	genesisState := simapp.NewDefaultGenesisState()
-	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {
 		panic(err)
 	}
@@ -52,10 +51,10 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	)
 
 	s.keeper = app.UpgradeKeeper
-	s.ctx = app.BaseApp.NewContext(false, abci.Header{Height: height, Time: time.Now()})
+	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
-	s.querier = s.module.LegacyQuerierHandler(codec.NewAminoCodec(app.Codec()))
+	s.querier = s.module.LegacyQuerierHandler(app.LegacyAmino())
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 	return s
 }

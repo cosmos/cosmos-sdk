@@ -116,8 +116,8 @@ against which this app has been compiled.
 			}{
 				Tendermint:    tversion.Version,
 				ABCI:          tversion.ABCIVersion,
-				BlockProtocol: tversion.BlockProtocol.Uint64(),
-				P2PProtocol:   tversion.P2PProtocol.Uint64(),
+				BlockProtocol: tversion.BlockProtocol,
+				P2PProtocol:   tversion.P2PProtocol,
 			})
 			if err != nil {
 				return err
@@ -130,7 +130,7 @@ against which this app has been compiled.
 }
 
 func printlnJSON(v interface{}) error {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(cdc)
 
 	marshalled, err := cdc.MarshalJSON(v)

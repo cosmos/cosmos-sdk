@@ -14,6 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.169"
+    "vuepress-theme-cosmos": "^1.0.172"
   }
 }

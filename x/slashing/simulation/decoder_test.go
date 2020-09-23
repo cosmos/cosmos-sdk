@@ -33,10 +33,12 @@ func TestDecodeStore(t *testing.T) {
 	missed := gogotypes.BoolValue{Value: true}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryBare(&info)},
-		kv.Pair{Key: types.ValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryBare(&missed)},
-		kv.Pair{Key: types.AddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: bechPK})},
-		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+		Pairs: []kv.Pair{
+			{Key: types.ValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryBare(&info)},
+			{Key: types.ValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryBare(&missed)},
+			{Key: types.AddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: bechPK})},
+			{Key: []byte{0x99}, Value: []byte{0x99}},
+		},
 	}
 
 	tests := []struct {
@@ -53,9 +55,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

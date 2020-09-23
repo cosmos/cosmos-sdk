@@ -9,8 +9,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -223,8 +224,13 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
+	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		panic(err)
+	}
+
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
+		PubKey: pk,
 		Power:  v.ConsensusPower(),
 	}
 }
@@ -232,8 +238,13 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
+	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	if err != nil {
+		panic(err)
+	}
+
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.GetConsPubKey()),
+		PubKey: pk,
 		Power:  0,
 	}
 }

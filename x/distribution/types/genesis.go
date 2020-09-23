@@ -8,9 +8,9 @@ func NewGenesisState(
 	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
-) GenesisState {
+) *GenesisState {
 
-	return GenesisState{
+	return &GenesisState{
 		Params:                          params,
 		FeePool:                         fp,
 		DelegatorWithdrawInfos:          dwis,
@@ -25,8 +25,8 @@ func NewGenesisState(
 }
 
 // get raw genesis raw message for testing
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		FeePool:                         InitialFeePool(),
 		Params:                          DefaultParams(),
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
@@ -41,7 +41,7 @@ func DefaultGenesisState() GenesisState {
 }
 
 // ValidateGenesis validates the genesis state of distribution genesis input
-func ValidateGenesis(gs GenesisState) error {
+func ValidateGenesis(gs *GenesisState) error {
 	if err := gs.Params.ValidateBasic(); err != nil {
 		return err
 	}

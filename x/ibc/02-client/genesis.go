@@ -1,23 +1,35 @@
 package client
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // InitGenesis initializes the ibc client submodule's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	for _, client := range gs.Clients {
-		k.SetClientState(ctx, client.ClientID, client.ClientState)
-		k.SetClientType(ctx, client.ClientID, client.ClientState.ClientType())
+		cs, ok := client.ClientState.GetCachedValue().(exported.ClientState)
+		if !ok {
+			panic("invalid client state")
+		}
+
+		k.SetClientState(ctx, client.ClientId, cs)
 	}
+
 	for _, cs := range gs.ClientsConsensus {
 		for _, consState := range cs.ConsensusStates {
-			k.SetClientConsensusState(ctx, cs.ClientID, consState.GetHeight(), consState)
+			consensusState, ok := consState.ConsensusState.GetCachedValue().(exported.ConsensusState)
+			if !ok {
+				panic(fmt.Sprintf("invalid consensus state with client ID %s at height %s", cs.ClientId, consState.Height))
+			}
+
+			k.SetClientConsensusState(ctx, cs.ClientId, consState.Height, consensusState)
 		}
 	}
 
@@ -27,24 +39,28 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 
 	// NOTE: return if the localhost client was already imported. The chain-id and
 	// block height will be overwriten to the correct values during BeginBlock.
-	if _, found := k.GetClientState(ctx, exported.ClientTypeLocalHost); found {
+	if _, found := k.GetClientState(ctx, exported.Localhost); found {
 		return
 	}
 
 	// client id is always "localhost"
-	clientState := localhosttypes.NewClientState(ctx.ChainID(), ctx.BlockHeight())
+	epoch := types.ParseChainID(ctx.ChainID())
+	clientState := localhosttypes.NewClientState(
+		ctx.ChainID(), types.NewHeight(epoch, uint64(ctx.BlockHeight())),
+	)
 
-	_, err := k.CreateClient(ctx, exported.ClientTypeLocalHost, clientState, nil)
-	if err != nil {
+	if err := k.CreateClient(ctx, exported.Localhost, clientState, nil); err != nil {
 		panic(err)
 	}
 }
 
 // ExportGenesis returns the ibc client submodule's exported genesis.
+// NOTE: CreateLocalhost should always be false on export since a
+// created localhost will be included in the exported clients.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
 		Clients:          k.GetAllGenesisClients(ctx),
 		ClientsConsensus: k.GetAllConsensusStates(ctx),
-		CreateLocalhost:  true,
+		CreateLocalhost:  false,
 	}
 }

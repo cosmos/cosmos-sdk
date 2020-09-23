@@ -7,6 +7,8 @@ coverage:
   precision: 2
   round: down
   range: 70...100
+  notify:
+    after_n_builds: 4
 
   status:
     # Learn more at https://docs.codecov.io/docs/commit-status

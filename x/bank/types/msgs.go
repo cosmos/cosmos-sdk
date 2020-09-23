@@ -13,7 +13,7 @@ const (
 
 var _ sdk.Msg = &MsgSend{}
 
-// NewMsgSend - construct arbitrary multi-in, multi-out send msg.
+// NewMsgSend - construct a msg to send coins from one account to another.
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
@@ -26,12 +26,12 @@ func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
-	if msg.FromAddress.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+	if err := sdk.VerifyAddressFormat(msg.FromAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if msg.ToAddress.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+	if err := sdk.VerifyAddressFormat(msg.ToAddress); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid recipient address (%s)", err)
 	}
 
 	if !msg.Amount.IsValid() {
@@ -47,7 +47,7 @@ func (msg MsgSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -85,7 +85,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 
 // GetSignBytes Implements Msg.
 func (msg MsgMultiSend) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -100,8 +100,8 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
-	if len(in.Address) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "input address missing")
+	if err := sdk.VerifyAddressFormat(in.Address); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid input address (%s)", err)
 	}
 
 	if !in.Coins.IsValid() {
@@ -125,8 +125,8 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
-	if len(out.Address) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "output address missing")
+	if err := sdk.VerifyAddressFormat(out.Address); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid output address (%s)", err)
 	}
 
 	if !out.Coins.IsValid() {

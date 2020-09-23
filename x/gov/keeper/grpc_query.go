@@ -57,12 +57,12 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 
 		// match voter address (if supplied)
 		if len(req.Voter) > 0 {
-			_, matchVoter = q.GetVote(ctx, p.ProposalID, req.Voter)
+			_, matchVoter = q.GetVote(ctx, p.ProposalId, req.Voter)
 		}
 
 		// match depositor (if supplied)
 		if len(req.Depositor) > 0 {
-			_, matchDepositor = q.GetDeposit(ctx, p.ProposalID, req.Depositor)
+			_, matchDepositor = q.GetDeposit(ctx, p.ProposalId, req.Depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {

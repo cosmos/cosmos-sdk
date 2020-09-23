@@ -34,7 +34,7 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
-	var pubKey ed25519.PubKeyEd25519
+	pubKey := make(ed25519.PubKey, ed25519.PubKeySize)
 
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
@@ -85,12 +85,12 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				return err
 			}
 
-			edPK, ok := pk.(ed25519.PubKeyEd25519)
+			edPK, ok := pk.(ed25519.PubKey)
 			if !ok {
 				return fmt.Errorf("invalid pubkey type; expected ED25519")
 			}
 
-			pubKeyJSONBytes, err := clientCtx.JSONMarshaler.MarshalJSON(edPK)
+			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(edPK)
 			if err != nil {
 				return err
 			}

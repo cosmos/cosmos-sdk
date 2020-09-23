@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -28,13 +28,13 @@ func (suite *GenesisTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.keeper = app.EvidenceKeeper
 }
 
 func (suite *GenesisTestSuite) TestInitGenesis() {
 	var (
-		genesisState types.GenesisState
+		genesisState *types.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)

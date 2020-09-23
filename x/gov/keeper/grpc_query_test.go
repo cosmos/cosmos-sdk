@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request with filter of deposit address",
 			func() {
 				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
-				deposit := types.NewDeposit(testProposals[0].ProposalID, addrs[0], depositCoins)
+				deposit := types.NewDeposit(testProposals[0].ProposalId, addrs[0], depositCoins)
 				app.GovKeeper.SetDeposit(ctx, deposit)
 
 				req = &types.QueryProposalsRequest{
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			func() {
 				testProposals[1].Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, testProposals[1])
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].ProposalID, addrs[0], types.OptionAbstain))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, testProposals[1].ProposalId, addrs[0], types.OptionAbstain))
 
 				req = &types.QueryProposalsRequest{
 					Voter: addrs[0],
@@ -278,7 +278,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryVoteRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 					Voter:      addrs[0],
 				}
 
@@ -291,14 +291,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				proposal.Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionAbstain))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionAbstain))
 
 				req = &types.QueryVoteRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 					Voter:      addrs[0],
 				}
 
-				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalID, addrs[0], types.OptionAbstain)}
+				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalId, addrs[0], types.OptionAbstain)}
 			},
 			true,
 		},
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			"wrong voter id request",
 			func() {
 				req = &types.QueryVoteRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 					Voter:      addrs[1],
 				}
 
@@ -383,7 +383,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryVotesRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 				}
 			},
 			true,
@@ -395,15 +395,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []types.Vote{
-					{proposal.ProposalID, addrs[0], types.OptionAbstain},
-					{proposal.ProposalID, addrs[1], types.OptionYes},
+					{proposal.ProposalId, addrs[0], types.OptionAbstain},
+					{proposal.ProposalId, addrs[1], types.OptionYes},
 				}
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, votes[0].Voter, votes[0].Option))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, votes[1].Voter, votes[1].Option))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, votes[0].Voter, votes[0].Option))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, votes[1].Voter, votes[1].Option))
 
 				req = &types.QueryVotesRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 				}
 
 				expRes = &types.QueryVotesResponse{
@@ -572,7 +572,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 				suite.Require().NotNil(proposal)
 
 				req = &types.QueryDepositRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 					Depositor:  addrs[0],
 				}
 			},
@@ -582,11 +582,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			"valid request",
 			func() {
 				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
-				deposit := types.NewDeposit(proposal.ProposalID, addrs[0], depositCoins)
+				deposit := types.NewDeposit(proposal.ProposalId, addrs[0], depositCoins)
 				app.GovKeeper.SetDeposit(ctx, deposit)
 
 				req = &types.QueryDepositRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 					Depositor:  addrs[0],
 				}
 
@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryDepositsRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 				}
 			},
 			true,
@@ -669,17 +669,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"get deposits with default limit",
 			func() {
 				depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(20)))
-				deposit1 := types.NewDeposit(proposal.ProposalID, addrs[0], depositAmount1)
+				deposit1 := types.NewDeposit(proposal.ProposalId, addrs[0], depositAmount1)
 				app.GovKeeper.SetDeposit(ctx, deposit1)
 
 				depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(30)))
-				deposit2 := types.NewDeposit(proposal.ProposalID, addrs[1], depositAmount2)
+				deposit2 := types.NewDeposit(proposal.ProposalId, addrs[1], depositAmount2)
 				app.GovKeeper.SetDeposit(ctx, deposit2)
 
 				deposits := types.Deposits{deposit1, deposit2}
 
 				req = &types.QueryDepositsRequest{
-					ProposalId: proposal.ProposalID,
+					ProposalId: proposal.ProposalId,
 				}
 
 				expRes = &types.QueryDepositsResponse{
@@ -752,7 +752,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(proposal)
 
-				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalID}
+				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalId}
 
 				expRes = &types.QueryTallyResultResponse{
 					Tally: types.EmptyTallyResult(),
@@ -766,11 +766,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				proposal.Status = types.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[0], types.OptionYes))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[1], types.OptionYes))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalID, addrs[2], types.OptionYes))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionYes))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[1], types.OptionYes))
+				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[2], types.OptionYes))
 
-				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalID}
+				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalId}
 
 				expRes = &types.QueryTallyResultResponse{
 					Tally: types.TallyResult{
@@ -785,9 +785,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			func() {
 				proposal.Status = types.StatusPassed
 				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.ProposalID)
+				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.ProposalId)
 
-				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalID}
+				req = &types.QueryTallyResultRequest{ProposalId: proposal.ProposalId}
 
 				expRes = &types.QueryTallyResultResponse{
 					Tally: proposal.FinalTallyResult,

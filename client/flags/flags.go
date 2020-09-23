@@ -62,6 +62,8 @@ const (
 	FlagPageKey          = "page-key"
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
+	FlagTimeoutHeight    = "timeout-height"
+	FlagKeyAlgorithm     = "algo"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -70,10 +72,8 @@ var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 
 // AddQueryFlagsToCmd adds common flags to a module query command.
 func AddQueryFlagsToCmd(cmd *cobra.Command) {
-	cmd.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
-	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
 	cmd.MarkFlagRequired(FlagChainID)
@@ -100,6 +100,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
+	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 
 	// --gas can accept integers and "auto"
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))

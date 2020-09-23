@@ -10,9 +10,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -43,31 +43,23 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
-	}
-
-	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return sdkerrors.Wrap(
-			connectiontypes.ErrInvalidConnectionState,
-			"connection is UNINITIALIZED",
-		)
 	}
 
 	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
@@ -77,10 +69,11 @@ func (k Keeper) SendPacket(
 
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
-	if packet.GetTimeoutHeight() != 0 && latestHeight >= packet.GetTimeoutHeight() {
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && latestHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"receiving chain block height >= packet timeout height (%d >= %d)", latestHeight, packet.GetTimeoutHeight(),
+			"receiving chain block height >= packet timeout height (%s >= %s)", latestHeight, timeoutHeight,
 		)
 	}
 
@@ -121,7 +114,7 @@ func (k Keeper) SendPacket(
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -146,7 +139,7 @@ func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -164,17 +157,17 @@ func (k Keeper) RecvPacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if packet.GetSourcePort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetSourceChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -191,10 +184,12 @@ func (k Keeper) RecvPacket(
 	}
 
 	// check if packet timeouted by comparing it with the latest height of the chain
-	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && selfHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"block height >= packet timeout height (%d >= %d)", uint64(ctx.BlockHeight()), packet.GetTimeoutHeight(),
+			"block height >= packet timeout height (%s >= %s)", selfHeight, timeoutHeight,
 		)
 	}
 
@@ -243,15 +238,15 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the PacketExecuted function
+	// NOTE: the remaining code is located in the ReceiveExecuted function
 	return nil
 }
 
-// PacketExecuted writes the packet execution acknowledgement to the state,
+// ReceiveExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) PacketExecuted(
+func (k Keeper) ReceiveExecuted(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
@@ -299,6 +294,8 @@ func (k Keeper) PacketExecuted(
 
 		nextSequenceRecv++
 
+		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
@@ -311,7 +308,7 @@ func (k Keeper) PacketExecuted(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -340,7 +337,7 @@ func (k Keeper) AcknowledgePacket(
 	packet exported.PacketI,
 	acknowledgement []byte,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
@@ -361,17 +358,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -403,11 +400,11 @@ func (k Keeper) AcknowledgePacket(
 
 	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
@@ -452,17 +449,19 @@ func (k Keeper) AcknowledgementExecuted(
 
 	// increment NextSequenceAck
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
 		nextSequenceAck++
 
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// Since this is the original sending chain, our channelEnd is packet's source port and channel
+		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}
 
 	// log that a packet has been acknowledged
@@ -472,7 +471,7 @@ func (k Keeper) AcknowledgementExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),

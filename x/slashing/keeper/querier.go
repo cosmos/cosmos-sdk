@@ -11,7 +11,7 @@ import (
 )
 
 // NewQuerier creates a new querier for slashing clients.
-func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryParameters:
@@ -29,7 +29,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
 	}
 }
 
-func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	params := k.GetParams(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)
@@ -40,7 +40,7 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc codec.JSONMarshaler
 	return res, nil
 }
 
-func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QuerySigningInfoRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -61,7 +61,7 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 	return res, nil
 }
 
-func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func querySigningInfos(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QuerySigningInfosParams
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)

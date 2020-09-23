@@ -5,82 +5,84 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	lite "github.com/tendermint/tendermint/lite2"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-var _ clientexported.ClientState = (*ClientState)(nil)
+var _ exported.ClientState = (*ClientState)(nil)
 
-// InitializeFromMsg creates a tendermint client state from a CreateClientMsg
-func InitializeFromMsg(msg *MsgCreateClient) *ClientState {
-	return NewClientState(msg.Header.ChainID, msg.TrustLevel,
-		msg.TrustingPeriod, msg.UnbondingPeriod, msg.MaxClockDrift,
-		uint64(msg.Header.Height), msg.ProofSpecs,
-	)
-}
+// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
+const Tendermint string = "Tendermint"
 
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight uint64, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
+	allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
-		ChainID:         chainID,
-		TrustLevel:      trustLevel,
-		TrustingPeriod:  trustingPeriod,
-		UnbondingPeriod: ubdPeriod,
-		MaxClockDrift:   maxClockDrift,
-		LatestHeight:    latestHeight,
-		FrozenHeight:    0,
-		ProofSpecs:      specs,
+		ChainId:                      chainID,
+		TrustLevel:                   trustLevel,
+		TrustingPeriod:               trustingPeriod,
+		UnbondingPeriod:              ubdPeriod,
+		MaxClockDrift:                maxClockDrift,
+		LatestHeight:                 latestHeight,
+		FrozenHeight:                 clienttypes.ZeroHeight(),
+		ProofSpecs:                   specs,
+		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
+		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,
 	}
 }
 
 // GetChainID returns the chain-id
 func (cs ClientState) GetChainID() string {
-	return cs.ChainID
+	return cs.ChainId
 }
 
 // ClientType is tendermint.
-func (cs ClientState) ClientType() clientexported.ClientType {
-	return clientexported.Tendermint
+func (cs ClientState) ClientType() string {
+	return Tendermint
 }
 
 // GetLatestHeight returns latest block height.
-func (cs ClientState) GetLatestHeight() uint64 {
+func (cs ClientState) GetLatestHeight() exported.Height {
 	return cs.LatestHeight
 }
 
 // IsFrozen returns true if the frozen height has been set.
 func (cs ClientState) IsFrozen() bool {
-	return cs.FrozenHeight != 0
+	return !cs.FrozenHeight.IsZero()
 }
 
-// FrozenHeight returns the height at which client is frozen
-// NOTE: FrozenHeight is 0 if client is unfrozen
-func (cs ClientState) GetFrozenHeight() uint64 {
+// GetFrozenHeight returns the height at which client is frozen
+// NOTE: FrozenHeight is zero if client is unfrozen
+func (cs ClientState) GetFrozenHeight() exported.Height {
 	return cs.FrozenHeight
+}
+
+// IsExpired returns whether or not the client has passed the trusting period since the last
+// update (in which case no headers are considered valid).
+func (cs ClientState) IsExpired(latestTimestamp, now time.Time) bool {
+	expirationTime := latestTimestamp.Add(cs.TrustingPeriod)
+	return !expirationTime.After(now)
 }
 
 // Validate performs a basic validation of the client state fields.
 func (cs ClientState) Validate() error {
-	if strings.TrimSpace(cs.ChainID) == "" {
+	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(ErrInvalidChainID, "chain id cannot be empty string")
 	}
-	if err := lite.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
+	if err := light.ValidateTrustLevel(cs.TrustLevel.ToTendermint()); err != nil {
 		return err
 	}
 	if cs.TrustingPeriod == 0 {
@@ -92,8 +94,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalidHeaderHeight, "tendermint height cannot be zero")
+	if cs.LatestHeight.EpochHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint epoch height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(
@@ -101,7 +103,6 @@ func (cs ClientState) Validate() error {
 			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
 		)
 	}
-	// Validate ProofSpecs
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}
@@ -120,20 +121,60 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return cs.ProofSpecs
 }
 
+// VerifyClientState verifies a proof of the client state of the running chain
+// stored on the target machine
+func (cs ClientState) VerifyClientState(
+	store sdk.KVStore,
+	cdc codec.BinaryMarshaler,
+	provingRoot exported.Root,
+	height exported.Height,
+	prefix exported.Prefix,
+	counterpartyClientIdentifier string,
+	proof []byte,
+	clientState exported.ClientState,
+) error {
+	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
+	if err != nil {
+		return err
+	}
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	if err != nil {
+		return err
+	}
+
+	if clientState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "client state cannot be empty")
+	}
+
+	_, ok := clientState.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "invalid client type %T, expected %T", clientState, &ClientState{})
+	}
+
+	bz, err := codec.MarshalAny(cdc, clientState)
+	if err != nil {
+		return err
+	}
+
+	return merkleProof.VerifyMembership(cs.ProofSpecs, provingRoot, path, bz)
+}
+
 // VerifyClientConsensusState verifies a proof of the consensus state of the
 // Tendermint client stored on the target machine.
 func (cs ClientState) VerifyClientConsensusState(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	provingRoot commitmentexported.Root,
-	height uint64,
+	provingRoot exported.Root,
+	height exported.Height,
 	counterpartyClientIdentifier string,
-	consensusHeight uint64,
-	prefix commitmentexported.Prefix,
+	consensusHeight exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
+	consensusState exported.ConsensusState,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, _, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -142,6 +183,15 @@ func (cs ClientState) VerifyClientConsensusState(
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	if err != nil {
 		return err
+	}
+
+	if consensusState == nil {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+	}
+
+	_, ok := consensusState.(*ConsensusState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
 	}
 
 	bz, err := codec.MarshalAny(cdc, consensusState)
@@ -159,16 +209,15 @@ func (cs ClientState) VerifyClientConsensusState(
 // VerifyConnectionState verifies a proof of the connection state of the
 // specified connection end stored on the target machine.
 func (cs ClientState) VerifyConnectionState(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	connectionID string,
-	connectionEnd connectionexported.ConnectionI,
-	consensusState clientexported.ConsensusState,
+	connectionEnd exported.ConnectionI,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -198,17 +247,16 @@ func (cs ClientState) VerifyConnectionState(
 // VerifyChannelState verifies a proof of the channel state of the specified
 // channel end, under the specified port, stored on the target machine.
 func (cs ClientState) VerifyChannelState(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
-	channel channelexported.ChannelI,
-	consensusState clientexported.ConsensusState,
+	channel exported.ChannelI,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -238,18 +286,17 @@ func (cs ClientState) VerifyChannelState(
 // VerifyPacketCommitment verifies a proof of an outgoing packet commitment at
 // the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketCommitment(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	commitmentBytes []byte,
-	consensusState clientexported.ConsensusState,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -269,18 +316,17 @@ func (cs ClientState) VerifyPacketCommitment(
 // VerifyPacketAcknowledgement verifies a proof of an incoming packet
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgement(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-	consensusState clientexported.ConsensusState,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -301,17 +347,16 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 // incoming packet acknowledgement at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketAcknowledgementAbsence(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	sequence uint64,
-	consensusState clientexported.ConsensusState,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -331,17 +376,16 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 // VerifyNextSequenceRecv verifies a proof of the next sequence number to be
 // received of the specified channel at the specified port.
 func (cs ClientState) VerifyNextSequenceRecv(
-	_ sdk.KVStore,
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-	consensusState clientexported.ConsensusState,
 ) error {
-	merkleProof, err := sanitizeVerificationArgs(cdc, cs, height, prefix, proof, consensusState)
+	merkleProof, consensusState, err := produceVerificationArgs(store, cdc, cs, height, prefix, proof)
 	if err != nil {
 		return err
 	}
@@ -360,53 +404,49 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	return nil
 }
 
-// sanitizeVerificationArgs perfoms the basic checks on the arguments that are
+// produceVerificationArgs perfoms the basic checks on the arguments that are
 // shared between the verification functions and returns the unmarshalled
-// merkle proof and an error if one occurred.
-func sanitizeVerificationArgs(
+// merkle proof, the consensus state and an error if one occurred.
+func produceVerificationArgs(
+	store sdk.KVStore,
 	cdc codec.BinaryMarshaler,
 	cs ClientState,
-	height uint64,
-	prefix commitmentexported.Prefix,
+	height exported.Height,
+	prefix exported.Prefix,
 	proof []byte,
-	consensusState clientexported.ConsensusState,
-) (merkleProof commitmenttypes.MerkleProof, err error) {
-	if cs.GetLatestHeight() < height {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(
+) (merkleProof commitmenttypes.MerkleProof, consensusState *ConsensusState, err error) {
+	if cs.GetLatestHeight().LT(height) {
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,
 			"client state height < proof height (%d < %d)", cs.GetLatestHeight(), height,
 		)
 	}
 
-	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return commitmenttypes.MerkleProof{}, clienttypes.ErrClientFrozen
+	if cs.IsFrozen() && !cs.FrozenHeight.GT(height) {
+		return commitmenttypes.MerkleProof{}, nil, clienttypes.ErrClientFrozen
 	}
 
 	if prefix == nil {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidPrefix, "prefix cannot be empty")
 	}
 
 	_, ok := prefix.(*commitmenttypes.MerklePrefix)
 	if !ok {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected *MerklePrefix", prefix)
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected *MerklePrefix", prefix)
 	}
 
 	if proof == nil {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
 	}
 
 	if err = cdc.UnmarshalBinaryBare(proof, &merkleProof); err != nil {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "failed to unmarshal proof into commitment merkle proof")
+		return commitmenttypes.MerkleProof{}, nil, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "failed to unmarshal proof into commitment merkle proof")
 	}
 
-	if consensusState == nil {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
+	consensusState, err = GetConsensusState(store, cdc, height)
+	if err != nil {
+		return commitmenttypes.MerkleProof{}, nil, err
 	}
 
-	_, ok = consensusState.(*ConsensusState)
-	if !ok {
-		return commitmenttypes.MerkleProof{}, sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "invalid consensus type %T, expected %T", consensusState, &ConsensusState{})
-	}
-
-	return merkleProof, nil
+	return merkleProof, consensusState, nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // CounterpartyHops returns the connection hops of the counterparty channel.
@@ -50,10 +51,6 @@ func (k Keeper) ChanOpenInit(
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
 		return nil, sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, connectionHops[0])
-	}
-
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return nil, connectiontypes.ErrInvalidConnectionState
 	}
 
 	if len(connectionEnd.GetVersions()) != 1 {
@@ -105,14 +102,14 @@ func (k Keeper) ChanOpenTry(
 	version,
 	counterpartyVersion string,
 	proofInit []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
 	previousChannel, found := k.GetChannel(ctx, portID, channelID)
 	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
-		previousChannel.Counterparty.PortID == counterparty.PortID &&
-		previousChannel.Counterparty.ChannelID == counterparty.ChannelID &&
+		previousChannel.Counterparty.PortId == counterparty.PortId &&
+		previousChannel.Counterparty.ChannelId == counterparty.ChannelId &&
 		previousChannel.ConnectionHops[0] == connectionHops[0] &&
 		previousChannel.Version == version) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidChannel, "cannot relay connection attempt")
@@ -170,7 +167,7 @@ func (k Keeper) ChanOpenTry(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		counterparty.PortID, counterparty.ChannelID, expectedChannel,
+		counterparty.PortId, counterparty.ChannelId, expectedChannel,
 	); err != nil {
 		return nil, err
 	}
@@ -199,7 +196,7 @@ func (k Keeper) ChanOpenAck(
 	chanCap *capabilitytypes.Capability,
 	counterpartyVersion string,
 	proofTry []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -244,7 +241,7 @@ func (k Keeper) ChanOpenAck(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -267,7 +264,7 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	chanCap *capabilitytypes.Capability,
 	proofAck []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -311,7 +308,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofAck,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -378,7 +375,7 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	chanCap *capabilitytypes.Capability,
 	proofInit []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)")
@@ -419,7 +416,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofInit,
-		channel.Counterparty.PortID, channel.Counterparty.ChannelID,
+		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
 		expectedChannel,
 	); err != nil {
 		return err

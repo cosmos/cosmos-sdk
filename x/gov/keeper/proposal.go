@@ -72,7 +72,7 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 
 	bz := keeper.MustMarshalProposal(proposal)
 
-	store.Set(types.ProposalKey(proposal.ProposalID), bz)
+	store.Set(types.ProposalKey(proposal.ProposalId), bz)
 }
 
 // DeleteProposal deletes a proposal from store
@@ -139,12 +139,12 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 
 		// match voter address (if supplied)
 		if len(params.Voter) > 0 {
-			_, matchVoter = keeper.GetVote(ctx, p.ProposalID, params.Voter)
+			_, matchVoter = keeper.GetVote(ctx, p.ProposalId, params.Voter)
 		}
 
 		// match depositor (if supplied)
 		if len(params.Depositor) > 0 {
-			_, matchDepositor = keeper.GetDeposit(ctx, p.ProposalID, params.Depositor)
+			_, matchDepositor = keeper.GetDeposit(ctx, p.ProposalId, params.Depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
@@ -187,8 +187,8 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
-	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalId, proposal.DepositEndTime)
+	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 }
 
 func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {

@@ -14,7 +14,7 @@ func TestNewDecCoin(t *testing.T) {
 	require.NotPanics(t, func() {
 		NewInt64DecCoin(testDenom1, 0)
 	})
-	require.Panics(t, func() {
+	require.NotPanics(t, func() {
 		NewInt64DecCoin(strings.ToUpper(testDenom1), 5)
 	})
 	require.Panics(t, func() {
@@ -29,7 +29,7 @@ func TestNewDecCoinFromDec(t *testing.T) {
 	require.NotPanics(t, func() {
 		NewDecCoinFromDec(testDenom1, ZeroDec())
 	})
-	require.Panics(t, func() {
+	require.NotPanics(t, func() {
 		NewDecCoinFromDec(strings.ToUpper(testDenom1), NewDec(5))
 	})
 	require.Panics(t, func() {
@@ -44,7 +44,7 @@ func TestNewDecCoinFromCoin(t *testing.T) {
 	require.NotPanics(t, func() {
 		NewDecCoinFromCoin(Coin{testDenom1, NewInt(0)})
 	})
-	require.Panics(t, func() {
+	require.NotPanics(t, func() {
 		NewDecCoinFromCoin(Coin{strings.ToUpper(testDenom1), NewInt(5)})
 	})
 	require.Panics(t, func() {
@@ -164,11 +164,16 @@ func TestIsValid(t *testing.T) {
 		},
 		{
 			DecCoin{Denom: "BTC", Amount: NewDec(10)},
-			false,
-			"invalid denoms",
+			true,
+			"valid uppercase denom",
 		},
 		{
-			DecCoin{Denom: "BTC", Amount: NewDec(-10)},
+			DecCoin{Denom: "Bitcoin", Amount: NewDec(10)},
+			true,
+			"valid mixed case denom",
+		},
+		{
+			DecCoin{Denom: "btc", Amount: NewDec(-10)},
 			false,
 			"negative amount",
 		},
@@ -287,43 +292,50 @@ func TestSortDecCoins(t *testing.T) {
 	}
 
 	cases := []struct {
+		name          string
 		coins         DecCoins
 		before, after bool // valid before/after sort
 	}{
-		{good, true, true},
-		{empty, false, false},
-		{badSort1, false, true},
-		{badSort2, false, true},
-		{badAmt, false, false},
-		{dup, false, false},
+		{"valid coins", good, true, true},
+		{"empty coins", empty, false, false},
+		{"unsorted coins (1)", badSort1, false, true},
+		{"unsorted coins (2)", badSort2, false, true},
+		{"zero amount coins", badAmt, false, false},
+		{"duplicate coins", dup, false, false},
 	}
 
-	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
+	for _, tc := range cases {
+		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting; %s", tc.name)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting;  %s", tc.name)
 	}
 }
 
-func TestDecCoinsIsValid(t *testing.T) {
+func TestDecCoinsValidate(t *testing.T) {
 	testCases := []struct {
-		input    DecCoins
-		expected bool
+		input        DecCoins
+		expectedPass bool
 	}{
 		{DecCoins{}, true},
 		{DecCoins{DecCoin{testDenom1, NewDec(5)}}, true},
 		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, true},
 		{DecCoins{DecCoin{testDenom1, NewDec(-5)}}, false},
-		{DecCoins{DecCoin{"AAA", NewDec(5)}}, false},
+		{DecCoins{DecCoin{"BTC", NewDec(5)}}, true},
+		{DecCoins{DecCoin{"0BTC", NewDec(5)}}, false},
 		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
 		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(-100000)}}, false},
 		{DecCoins{DecCoin{testDenom1, NewDec(-5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"AAA", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"BTC", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, true},
+		{DecCoins{DecCoin{"0BTC", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {
-		res := tc.input.IsValid()
-		require.Equal(t, tc.expected, res, "unexpected result for test case #%d, input: %v", i, tc.input)
+		err := tc.input.Validate()
+		if tc.expectedPass {
+			require.NoError(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		} else {
+			require.Error(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		}
 	}
 }
 
@@ -337,7 +349,11 @@ func TestParseDecCoins(t *testing.T) {
 		{"4stake", nil, true},
 		{"5.5atom,4stake", nil, true},
 		{"0.0stake", nil, true},
-		{"0.004STAKE", nil, true},
+		{
+			"0.004STAKE",
+			DecCoins{NewDecCoinFromDec("STAKE", NewDecWithPrec(4000000000000000, Precision))},
+			false,
+		},
 		{
 			"0.004stake",
 			DecCoins{NewDecCoinFromDec("stake", NewDecWithPrec(4000000000000000, Precision))},
@@ -478,7 +494,7 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 }
 
 func TestNewDecCoinsWithIsValid(t *testing.T) {
-	fake1 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(10)})
+	fake1 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "10BTC", Amount: NewDec(10)})
 	fake2 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(-10)})
 
 	tests := []struct {
@@ -528,7 +544,7 @@ func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
 			"valid coins should have passed",
 		},
 		{
-			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)}),
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "0BTC", Amount: NewDec(10)}),
 			false,
 			"invalid denoms",
 		},

@@ -29,33 +29,35 @@ func TestDecodeStore(t *testing.T) {
 	bz := []byte{0x1, 0x2, 0x3}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{
-			Key:   host.KeyChannel(portID, channelID),
-			Value: cdc.MustMarshalBinaryBare(&channel),
-		},
-		kv.Pair{
-			Key:   host.KeyNextSequenceSend(portID, channelID),
-			Value: sdk.Uint64ToBigEndian(1),
-		},
-		kv.Pair{
-			Key:   host.KeyNextSequenceRecv(portID, channelID),
-			Value: sdk.Uint64ToBigEndian(1),
-		},
-		kv.Pair{
-			Key:   host.KeyNextSequenceAck(portID, channelID),
-			Value: sdk.Uint64ToBigEndian(1),
-		},
-		kv.Pair{
-			Key:   host.KeyPacketCommitment(portID, channelID, 1),
-			Value: bz,
-		},
-		kv.Pair{
-			Key:   host.KeyPacketAcknowledgement(portID, channelID, 1),
-			Value: bz,
-		},
-		kv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+		Pairs: []kv.Pair{
+			{
+				Key:   host.KeyChannel(portID, channelID),
+				Value: cdc.MustMarshalBinaryBare(&channel),
+			},
+			{
+				Key:   host.KeyNextSequenceSend(portID, channelID),
+				Value: sdk.Uint64ToBigEndian(1),
+			},
+			{
+				Key:   host.KeyNextSequenceRecv(portID, channelID),
+				Value: sdk.Uint64ToBigEndian(1),
+			},
+			{
+				Key:   host.KeyNextSequenceAck(portID, channelID),
+				Value: sdk.Uint64ToBigEndian(1),
+			},
+			{
+				Key:   host.KeyPacketCommitment(portID, channelID, 1),
+				Value: bz,
+			},
+			{
+				Key:   host.KeyPacketAcknowledgement(portID, channelID, 1),
+				Value: bz,
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -74,13 +76,13 @@ func TestDecodeStore(t *testing.T) {
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			res, found := simulation.NewDecodeStore(cdc, kvPairs[i], kvPairs[i])
+			res, found := simulation.NewDecodeStore(cdc, kvPairs.Pairs[i], kvPairs.Pairs[i])
 			if i == len(tests)-1 {
-				require.False(t, found, string(kvPairs[i].Key))
-				require.Empty(t, res, string(kvPairs[i].Key))
+				require.False(t, found, string(kvPairs.Pairs[i].Key))
+				require.Empty(t, res, string(kvPairs.Pairs[i].Key))
 			} else {
-				require.True(t, found, string(kvPairs[i].Key))
-				require.Equal(t, tt.expectedLog, res, string(kvPairs[i].Key))
+				require.True(t, found, string(kvPairs.Pairs[i].Key))
+				require.Equal(t, tt.expectedLog, res, string(kvPairs.Pairs[i].Key))
 			}
 		})
 	}

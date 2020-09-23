@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // GRPCQueryRouter returns the GRPCQueryRouter of a BaseApp.
@@ -30,7 +30,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Get height header from the request context, if present.
 		var height int64
-		if heightHeaders := md.Get(servergrpc.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
+		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
 				return nil, err
@@ -51,7 +51,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 		if height == 0 {
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
-		md = metadata.Pairs(servergrpc.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		grpc.SetHeader(grpcCtx, md)
 
 		return handler(grpcCtx, req)

@@ -34,7 +34,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 }
 
 // ExportGenesis returns the bank module's genesis state.
-func (k BaseKeeper) ExportGenesis(ctx sdk.Context) types.GenesisState {
+func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		k.GetAccountsBalances(ctx),

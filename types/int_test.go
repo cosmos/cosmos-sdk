@@ -81,6 +81,8 @@ func TestIntPanic(t *testing.T) {
 
 	// Division-by-zero check
 	require.Panics(t, func() { i1.Quo(NewInt(0)) })
+
+	require.NotPanics(t, func() { Int{}.BigInt() })
 }
 
 // Tests below uses randomness

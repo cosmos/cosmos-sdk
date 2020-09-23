@@ -22,17 +22,19 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	kvPairs := kv.Pairs{
-		kv.Pair{
-			Key:   types.KeyIndex,
-			Value: sdk.Uint64ToBigEndian(10),
-		},
-		kv.Pair{
-			Key:   types.KeyPrefixIndexCapability,
-			Value: cdc.MustMarshalBinaryBare(&capOwners),
-		},
-		kv.Pair{
-			Key:   []byte{0x99},
-			Value: []byte{0x99},
+		Pairs: []kv.Pair{
+			{
+				Key:   types.KeyIndex,
+				Value: sdk.Uint64ToBigEndian(10),
+			},
+			{
+				Key:   types.KeyPrefixIndexCapability,
+				Value: cdc.MustMarshalBinaryBare(&capOwners),
+			},
+			{
+				Key:   []byte{0x99},
+				Value: []byte{0x99},
+			},
 		},
 	}
 	tests := []struct {
@@ -49,9 +51,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
 		})
 	}

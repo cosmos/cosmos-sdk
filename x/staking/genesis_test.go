@@ -161,7 +161,7 @@ func TestValidateGenesis(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			genesisState := types.DefaultGenesisState()
-			tt.mutate(&genesisState)
+			tt.mutate(genesisState)
 			if tt.wantErr {
 				assert.Error(t, staking.ValidateGenesis(genesisState))
 			} else {

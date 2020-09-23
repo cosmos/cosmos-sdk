@@ -10,7 +10,7 @@ import (
 )
 
 func TestMarshalJSONMetaData(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	testCases := []struct {
 		name      string
@@ -21,7 +21,7 @@ func TestMarshalJSONMetaData(t *testing.T) {
 		{"empty metadata", []types.Metadata{}, `[]`},
 		{"non-empty coins", []types.Metadata{{
 			Description: "The native staking token of the Cosmos Hub.",
-			DenomUnits: []*types.DenomUnits{
+			DenomUnits: []*types.DenomUnit{
 				{"uatom", uint32(0), []string{"microatom"}}, // The default exponent value 0 is omitted in the json
 				{"matom", uint32(3), []string{"milliatom"}},
 				{"atom", uint32(6), nil},

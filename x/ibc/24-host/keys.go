@@ -2,6 +2,8 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 const (
@@ -40,8 +42,14 @@ func KeyPrefixBytes(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/", prefix))
 }
 
+// FullClientPath returns the full path of a specific client path in the format:
+// "clients/{clientID}/{path}" as a string.
+func FullClientPath(clientID string, path string) string {
+	return string(FullKeyClientPath(clientID, []byte(path)))
+}
+
 // FullKeyClientPath returns the full path of specific client path in the format:
-// "clients/{clientID}/{path}".
+// "clients/{clientID}/{path}" as a byte array.
 func FullKeyClientPath(clientID string, path []byte) []byte {
 	return append(KeyClientStorePrefix, append([]byte("/"+clientID+"/"), path...)...)
 }
@@ -63,8 +71,8 @@ func ClientTypePath() string {
 
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
-func ConsensusStatePath(height uint64) string {
-	return fmt.Sprintf("consensusState/%d", height)
+func ConsensusStatePath(height exported.Height) string {
+	return fmt.Sprintf("consensusState/%s", height)
 }
 
 // KeyClientState returns the store key for a particular client state
@@ -79,7 +87,7 @@ func KeyClientType() []byte {
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
-func KeyConsensusState(height uint64) []byte {
+func KeyConsensusState(height exported.Height) []byte {
 	return []byte(ConsensusStatePath(height))
 }
 

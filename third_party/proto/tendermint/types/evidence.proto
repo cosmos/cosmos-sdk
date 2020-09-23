@@ -1,0 +1,31 @@
+syntax = "proto3";
+package tendermint.types;
+
+option go_package = "github.com/tendermint/tendermint/proto/tendermint/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "tendermint/types/types.proto";
+import "tendermint/crypto/keys.proto";
+
+// DuplicateVoteEvidence contains evidence a validator signed two conflicting
+// votes.
+message DuplicateVoteEvidence {
+  Vote vote_a = 1;
+  Vote vote_b = 2;
+
+  google.protobuf.Timestamp timestamp = 3
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message Evidence {
+  oneof sum {
+    DuplicateVoteEvidence duplicate_vote_evidence = 1;
+  }
+}
+
+// EvidenceData contains any evidence of malicious wrong-doing by validators
+message EvidenceData {
+  repeated Evidence evidence = 1 [(gogoproto.nullable) = false];
+  bytes             hash     = 2;
+}

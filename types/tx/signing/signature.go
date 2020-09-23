@@ -3,6 +3,7 @@ package signing
 import (
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -18,6 +19,10 @@ type SignatureV2 struct {
 	// Data is the actual data of the signature which includes SignMode's and
 	// the signatures themselves for either single or multi-signatures.
 	Data SignatureData
+
+	// Sequence is the sequence of this account. Only populated in
+	// SIGN_MODE_DIRECT.
+	Sequence uint64
 }
 
 // SignatureDataToProto converts a SignatureData to SignatureDescriptor_Data.
@@ -79,4 +84,24 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 	default:
 		panic(fmt.Errorf("unexpected case %+v", descData))
 	}
+}
+
+var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, sig := range sds.Signatures {
+		err := sig.UnpackInterfaces(unpacker)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(sd.PublicKey, new(crypto.PubKey))
 }

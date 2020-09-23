@@ -101,11 +101,11 @@ func GetAppliedPlanCmd() *cobra.Command {
 			}
 
 			// always output json as Header is unreable in toml ([]byte is a long list of numbers)
-			bz, err := clientCtx.Codec.MarshalJSONIndent(headers.BlockMetas[0], "", "  ")
+			bz, err := clientCtx.LegacyAmino.MarshalJSONIndent(headers.BlockMetas[0], "", "  ")
 			if err != nil {
 				return err
 			}
-			return clientCtx.PrintOutput(string(bz))
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", string(bz)))
 		},
 	}
 

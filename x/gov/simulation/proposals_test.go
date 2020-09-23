@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +18,7 @@ func TestProposalContents(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, abci.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function

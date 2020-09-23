@@ -11,11 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
-const (
-	// GRPCBlockHeightHeader is the gRPC header for block height.
-	GRPCBlockHeightHeader = "x-cosmos-block-height"
-)
-
 // StartGRPCServer starts a gRPC server on the given address.
 func StartGRPCServer(app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()

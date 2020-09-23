@@ -1,4 +1,4 @@
-package cli
+package cli_test
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -47,11 +48,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
+	dir := s.T().TempDir()
 
-	dir, clean := testutil.NewTestCaseDir(s.T())
-	defer clean()
-
-	cmd := GenTxCmd(
+	cmd := cli.GenTxCmd(
 		simapp.ModuleBasics,
 		val.ClientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, val.ClientCtx.HomeDir)
 
@@ -63,7 +62,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 
 	genTxFile := filepath.Join(dir, "myTx")
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
 		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
 		val.Moniker,
 	})

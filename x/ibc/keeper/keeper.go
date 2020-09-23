@@ -20,8 +20,7 @@ type Keeper struct {
 	// implements gRPC QueryServer interface
 	types.QueryServer
 
-	aminoCdc *codec.Codec
-	cdc      codec.BinaryMarshaler
+	cdc codec.BinaryMarshaler
 
 	ClientKeeper     clientkeeper.Keeper
 	ConnectionKeeper connectionkeeper.Keeper
@@ -32,7 +31,7 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	aminoCdc *codec.Codec, cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
 	clientKeeper := clientkeeper.NewKeeper(cdc, key, stakingKeeper)
 	connectionKeeper := connectionkeeper.NewKeeper(cdc, key, clientKeeper)
@@ -40,7 +39,6 @@ func NewKeeper(
 	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
-		aminoCdc:         aminoCdc,
 		cdc:              cdc,
 		ClientKeeper:     clientKeeper,
 		ConnectionKeeper: connectionKeeper,
@@ -49,9 +47,9 @@ func NewKeeper(
 	}
 }
 
-// Codecs returns the IBC module codec.
-func (k Keeper) Codecs() (codec.BinaryMarshaler, *codec.Codec) {
-	return k.cdc, k.aminoCdc
+// Codec returns the IBC module codec.
+func (k Keeper) Codec() codec.BinaryMarshaler {
+	return k.cdc
 }
 
 // SetRouter sets the Router in IBC Keeper and seals it. The method panics if

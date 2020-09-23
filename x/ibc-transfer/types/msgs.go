@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -15,7 +16,7 @@ const (
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
 	token sdk.Coin, sender sdk.AccAddress, receiver string,
-	timeoutHeight, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
@@ -59,12 +60,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
-
-	// sanity check that validate basic on fungible token packet passes
-	// NOTE: this should always pass since validation checks should be the
-	// same. Please open an issue if you encounter an error on this line.
-	packet := NewFungibleTokenPacketData(msg.Token.Denom, msg.Token.Amount.Uint64(), msg.Sender.String(), msg.Receiver)
-	return packet.ValidateBasic()
+	return ValidateIBCDenom(msg.Token.Denom)
 }
 
 // GetSignBytes implements sdk.Msg

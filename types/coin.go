@@ -137,19 +137,21 @@ type Coins []Coin
 
 // NewCoins constructs a new coin set.
 func NewCoins(coins ...Coin) Coins {
-	// remove zeroes
-	newCoins := removeZeroCoins(Coins(coins))
-	if len(newCoins) == 0 {
-		return Coins{}
-	}
-
-	newCoins.Sort()
-
+	newCoins := sanitizeCoins(coins)
 	if err := newCoins.Validate(); err != nil {
 		panic(fmt.Errorf("invalid coin set %s: %w", newCoins, err))
 	}
 
 	return newCoins
+}
+
+func sanitizeCoins(coins []Coin) Coins {
+	newCoins := removeZeroCoins(coins)
+	if len(newCoins) == 0 {
+		return Coins{}
+	}
+
+	return newCoins.Sort()
 }
 
 type coinsJSON Coins
@@ -664,14 +666,10 @@ func ParseCoins(coinsStr string) (Coins, error) {
 		coins[i] = coin
 	}
 
-	// sort coins for determinism
-	coins.Sort()
-
-	// validate coins
-	if err := coins.Validate(); err != nil {
+	newCoins := sanitizeCoins(coins)
+	if err := newCoins.Validate(); err != nil {
 		return nil, err
 	}
 
-	// call NewCoins to remove zero coins.
-	return NewCoins(coins...), nil
+	return newCoins, nil
 }

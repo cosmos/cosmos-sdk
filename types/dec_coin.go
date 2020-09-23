@@ -160,19 +160,22 @@ type DecCoins []DecCoin
 // NewDecCoins constructs a new coin set with with decimal values
 // from DecCoins.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {
-	// remove zeroes
-	newDecCoins := removeZeroDecCoins(DecCoins(decCoins))
-	if len(newDecCoins) == 0 {
-		return DecCoins{}
-	}
-
-	newDecCoins.Sort()
-
+	newDecCoins := sanitizeDecCoins(decCoins)
 	if err := newDecCoins.Validate(); err != nil {
 		panic(fmt.Errorf("invalid coin set %s: %w", newDecCoins, err))
 	}
 
 	return newDecCoins
+}
+
+func sanitizeDecCoins(decCoins []DecCoin) DecCoins {
+	// remove zeroes
+	newDecCoins := removeZeroDecCoins(decCoins)
+	if len(newDecCoins) == 0 {
+		return DecCoins{}
+	}
+
+	return newDecCoins.Sort()
 }
 
 // NewDecCoinsFromCoins constructs a new coin set with decimal values
@@ -639,24 +642,20 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	}
 
 	coinStrs := strings.Split(coinsStr, ",")
-	coins := make(DecCoins, len(coinStrs))
+	decCoins := make(DecCoins, len(coinStrs))
 	for i, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
 
-		coins[i] = coin
+		decCoins[i] = coin
 	}
 
-	// sort coins for determinism
-	coins.Sort()
-
-	// validate coins
-	if err := coins.Validate(); err != nil {
+	newDecCoins := sanitizeDecCoins(decCoins)
+	if err := newDecCoins.Validate(); err != nil {
 		return nil, err
 	}
 
-	// call NewDecCoins to sort and remove zero coins.
-	return NewDecCoins(coins...), nil
+	return newDecCoins, nil
 }

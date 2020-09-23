@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
+mkdir -p ./tmp-swagger-gen
 proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
 
@@ -12,7 +13,8 @@ for dir in $proto_dirs; do
     -I "proto" \
     -I "third_party/proto" \
     "$query_file" \
-    --swagger_out=logtostderr=true,stderrthreshold=1000,fqn_for_swagger_name=true,simple_operation_ids=true:.
+    --swagger_out ./tmp-swagger-gen \
+    --swagger_opt logtostderr=true --swagger_opt fqn_for_swagger_name=true --swagger_opt simple_operation_ids=true
   fi
 done
 
@@ -22,5 +24,4 @@ done
 swagger-combine ./client/docs/config.json -o ./client/docs/swagger-ui/swagger.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
 
 # clean swagger files
-rm -rf cosmos
-rm -rf ibc
+rm -rf ./tmp-swagger-gen

@@ -27,13 +27,6 @@ func (cs ClientState) VerifyUpgrade(
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
 	}
 
-	tmClient, ok := upgradedClient.(*ClientState)
-	if !ok {
-		return sdkerrors.Wrapf(
-			clienttypes.ErrInvalidClient, "upgrade client must be a Tendermint client. expected %T, got %T", &ClientState{}, upgradedClient,
-		)
-	}
-
 	if proofUpgrade == nil {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade is nil")
 	}
@@ -42,16 +35,9 @@ func (cs ClientState) VerifyUpgrade(
 		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal proof. error: %v", err)
 	}
 
-	// construct committed client from upgradedClient by setting all chain-specified parameters
-	// with values from upgraded client, and ommitting all client-specified parameters
-	committedClient := ClientState{
-		ChainId:         tmClient.ChainId,
-		UnbondingPeriod: tmClient.UnbondingPeriod,
-		LatestHeight:    tmClient.LatestHeight,
-		ProofSpecs:      tmClient.ProofSpecs,
-		UpgradePath:     tmClient.UpgradePath,
-	}
-
+	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
+	// at the upgrade path specified by current client
+	committedClient := upgradedClient.ZeroCustomFields()
 	bz, err := codec.MarshalAny(cdc, committedClient)
 	if err != nil {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal clientstate. error: %v", err)

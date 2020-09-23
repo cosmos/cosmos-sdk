@@ -40,6 +40,9 @@ type ClientState interface {
 		newClient ClientState,
 		proofUpgrade []byte,
 	) error
+	// Utility function that zeroes out any client customizable fields in client state
+	// Ledger enforced fields are maintained while all custom fields are zero values
+	ZeroCustomFields() ClientState
 
 	// State verification functions
 

@@ -67,7 +67,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdat
 
 // HandleMsgUpgradeClient defines the sdk.Handler for MsgUpgradeClient
 func HandleMsgUpgradeClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpgradeClient) (*sdk.Result, error) {
-	upgradedClient, err := types.UnpackClientState(msg.UpgradedClientState)
+	upgradedClient, err := types.UnpackClientState(msg.ClientState)
 	if err != nil {
 		return nil, err
 	}

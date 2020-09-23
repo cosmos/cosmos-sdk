@@ -9,9 +9,10 @@ import (
 	"math/big"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
 
 	"github.com/tendermint/tendermint/crypto"
 )

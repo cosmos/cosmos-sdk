@@ -3,10 +3,11 @@ package tx
 import (
 	fmt "fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // MaxGasWanted defines the max gas allowed.

@@ -3,8 +3,9 @@ package signing
 import (
 	"fmt"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // SignatureV2 is a convenience type that is easier to use in application logic

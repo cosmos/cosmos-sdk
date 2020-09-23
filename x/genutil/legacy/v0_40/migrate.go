@@ -17,7 +17,7 @@ import (
 )
 
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
-func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
+func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)

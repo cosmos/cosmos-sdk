@@ -9,7 +9,7 @@ import (
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // evidence module.
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*v038evidence.Evidence)(nil), nil)
 	cdc.RegisterConcrete(&v038evidence.Equivocation{}, "cosmos-sdk/Equivocation", nil)
 }
@@ -27,7 +27,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 //
 // - Removing the `Params` field.
 func Migrate(evidenceState v038evidence.GenesisState, clientCtx client.Context) GenesisState {
-	RegisterCodec(clientCtx.Codec)
+	RegisterCodec(clientCtx.LegacyAmino)
 	RegisterInterfaces(clientCtx.InterfaceRegistry)
 
 	return NewGenesisState(evidenceState.Evidence)

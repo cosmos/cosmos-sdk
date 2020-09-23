@@ -10,7 +10,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
@@ -32,7 +31,7 @@ const (
 )
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 
 	// ModuleCdc references the global x/evidence module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
@@ -40,7 +39,7 @@ var (
 	//
 	// The actual codec used for serialization should be provided to x/evidence and
 	// defined at the application level.
-	ModuleCdc = codec.NewHybridCodec(amino, types.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 // Evidence defines the contract which concrete evidence types of misbehavior

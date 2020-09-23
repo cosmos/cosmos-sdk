@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	types3 "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -29,7 +29,7 @@ var (
 	fee            = types.NewCoins(types.NewInt64Coin("bam", 100))
 	_, pub1, addr1 = testdata.KeyTestPubAddr()
 	_, _, addr2    = testdata.KeyTestPubAddr()
-	msg            = types2.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000)))
+	msg            = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 10000)))
 	sig            = signing2.SignatureV2{
 		PubKey: pub1,
 		Data: &signing2.SingleSignatureData{
@@ -60,7 +60,7 @@ func (s *TestSuite) SetupSuite() {
 	encCfg := simapp.MakeEncodingConfig()
 	s.encCfg = encCfg
 	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
-	s.aminoCfg = types3.StdTxConfig{Cdc: encCfg.Amino}
+	s.aminoCfg = legacytx.StdTxConfig{Cdc: encCfg.Amino}
 }
 
 func (s *TestSuite) TestCopyTx() {
@@ -111,7 +111,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	// std tx
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
-	stdTx = aminoBuilder.GetTx().(types3.StdTx)
+	stdTx = aminoBuilder.GetTx().(legacytx.StdTx)
 	stdTx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, stdTx2)
@@ -121,7 +121,7 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	// convert amino -> proto -> amino
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
-	stdTx := aminoBuilder.GetTx().(types3.StdTx)
+	stdTx := aminoBuilder.GetTx().(legacytx.StdTx)
 	txBz, err := tx2.ConvertAndEncodeStdTx(s.protoCfg, stdTx)
 	s.Require().NoError(err)
 	decodedTx, err := s.protoCfg.TxDecoder()(txBz)

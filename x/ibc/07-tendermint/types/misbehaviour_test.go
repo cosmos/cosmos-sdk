@@ -9,7 +9,6 @@ import (
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
@@ -24,7 +23,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 		ClientId: clientID,
 	}
 
-	suite.Require().Equal(exported.Tendermint, misbehaviour.ClientType())
+	suite.Require().Equal(types.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
 	suite.Require().Equal(height, misbehaviour.GetHeight())
 }

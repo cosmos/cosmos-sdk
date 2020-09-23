@@ -70,7 +70,7 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if err := clientState.Validate(); err != nil {
 		return err
 	}
-	if clientState.ClientType() == exported.Localhost || msg.ClientId == exported.ClientTypeLocalHost {
+	if clientState.ClientType() == exported.Localhost || msg.ClientId == exported.Localhost {
 		return sdkerrors.Wrap(ErrInvalidClient, "localhost client can only be created on chain initialization")
 	}
 	consensusState, err := UnpackConsensusState(msg.ConsensusState)
@@ -146,7 +146,7 @@ func (msg MsgUpdateClient) ValidateBasic() error {
 	if err := header.ValidateBasic(); err != nil {
 		return err
 	}
-	if msg.ClientId == exported.ClientTypeLocalHost {
+	if msg.ClientId == exported.Localhost {
 		return sdkerrors.Wrap(ErrInvalidClient, "localhost client is only updated on ABCI BeginBlock")
 	}
 	return host.ClientIdentifierValidator(msg.ClientId)

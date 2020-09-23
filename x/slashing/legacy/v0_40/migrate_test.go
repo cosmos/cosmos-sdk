@@ -13,7 +13,7 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v039Codec := codec.New()
+	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
 
 	addr1, err := sdk.ConsAddressFromBech32("cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685")

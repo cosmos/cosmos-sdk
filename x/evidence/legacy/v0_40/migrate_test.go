@@ -1,6 +1,7 @@
 package v040_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,11 +17,11 @@ func TestMigrate(t *testing.T) {
 	encodingConfig := params.MakeEncodingConfig()
 
 	txCfg := encodingConfig.TxConfig
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	clientCtx = clientCtx.WithTxConfig(txCfg)
-	clientCtx = clientCtx.WithCodec(encodingConfig.Amino)
-	clientCtx = clientCtx.WithJSONMarshaler(encodingConfig.Marshaler)
+	clientCtx := client.Context{}.
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(txCfg).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
 
@@ -37,7 +38,7 @@ func TestMigrate(t *testing.T) {
 	// Using hybrid codec here, expecting Amino JSON.
 	expected := `{"evidence":[{"type":"cosmos-sdk/Equivocation","value":{"height":"20","time":"0001-01-01T00:00:00Z","power":"100","consensus_address":"cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"}}]}`
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
+	bz, err := json.Marshal(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

@@ -213,6 +213,18 @@ func TestVerifyMultisignature(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"unable to verify signature",
+			func() {
+				pubKeys, _ := generatePubKeysAndSignatures(2, msg)
+				_, sigs := generatePubKeysAndSignatures(2, msg)
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
+				sig = multisig.NewMultisig(2)
+				multisig.AddSignatureFromPubKey(sig, sigs[0], pubKeys[0], pubKeys)
+				multisig.AddSignatureFromPubKey(sig, sigs[1], pubKeys[1], pubKeys)
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -259,10 +271,10 @@ func TestMultiSigMigration(t *testing.T) {
 
 	cdc := codec.NewLegacyAmino()
 
-	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
+	require.NoError(t, multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet))
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := authtypes.StdSignature{PubKey: pkSet[1], Signature: msg}
+	sig := authtypes.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature}
 	sigV2, err := authtypes.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 

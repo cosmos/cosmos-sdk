@@ -1,4 +1,4 @@
-go 1.14
+go 1.15
 
 module github.com/cosmos/cosmos-sdk
 
@@ -19,7 +19,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/grpc-gateway v1.14.8
+	github.com/grpc-ecosystem/grpc-gateway v1.15.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/magiconair/properties v1.8.3
 	github.com/mattn/go-isatty v0.0.12
@@ -40,7 +40,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.0-rc3.0.20200907055413-3359e0bf2f84
+	github.com/tendermint/tendermint v0.34.0-rc3.0.20200922082254-ed002cea7e4a
 	github.com/tendermint/tm-db v0.6.2
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987

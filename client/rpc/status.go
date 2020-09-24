@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -51,7 +52,7 @@ func getNodeStatus(clientCtx client.Context) (*ctypes.ResultStatus, error) {
 		return &ctypes.ResultStatus{}, err
 	}
 
-	return node.Status()
+	return node.Status(context.Background())
 }
 
 // NodeInfoResponse defines a response type that contains node status and version

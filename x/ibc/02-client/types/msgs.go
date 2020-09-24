@@ -12,6 +12,7 @@ import (
 const (
 	TypeMsgCreateClient       string = "create_client"
 	TypeMsgUpdateClient       string = "update_client"
+	TypeMsgUpgradeClient      string = "upgrade_client"
 	TypeMsgSubmitMisbehaviour string = "submit_misbehaviour"
 )
 
@@ -166,6 +167,70 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var header exported.Header
 	err := unpacker.UnpackAny(msg.Header, &header)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// NewMsgUpgradeClient creates a new MsgUpgradeClient instance
+func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, proofUpgrade []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
+	anyClient, err := PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MsgUpgradeClient{
+		ClientId:     clientID,
+		ClientState:  anyClient,
+		ProofUpgrade: proofUpgrade,
+		Signer:       signer,
+	}, nil
+}
+
+// Route implements sdk.Msg
+func (msg MsgUpgradeClient) Route() string {
+	return host.RouterKey
+}
+
+// Type implements sdk.Msg
+func (msg MsgUpgradeClient) Type() string {
+	return TypeMsgUpdateClient
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgUpgradeClient) ValidateBasic() error {
+	clientState, err := UnpackClientState(msg.ClientState)
+	if err != nil {
+		return err
+	}
+	if err := clientState.Validate(); err != nil {
+		return err
+	}
+	if msg.ProofUpgrade == nil {
+		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be nil")
+	}
+	if msg.Signer.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	}
+	return host.ClientIdentifierValidator(msg.ClientId)
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgUpgradeClient) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgUpgradeClient) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgUpgradeClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
 	if err != nil {
 		return err
 	}

@@ -333,6 +333,136 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 	}
 }
 
+func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
+	var (
+		msg *types.MsgUpgradeClient
+		err error
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"client upgrades to new tendermint client",
+			func() {
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+		{
+			"client upgrades to new solomachine client",
+			func() {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "")
+				msg, err = types.NewMsgUpgradeClient("clientid", soloMachine.ClientState(), []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			cdc := suite.chainA.App.AppCodec()
+
+			// marshal message
+			bz, err := cdc.MarshalJSON(msg)
+			suite.Require().NoError(err)
+
+			// unmarshal message
+			newMsg := &types.MsgUpgradeClient{}
+			err = cdc.UnmarshalJSON(bz, newMsg)
+			suite.Require().NoError(err)
+
+			suite.Require().True(proto.Equal(msg, newMsg))
+		})
+	}
+}
+
+func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
+	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+	msg, _ := types.NewMsgUpgradeClient("testclientid", clientState, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+
+	cases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			name:     "success",
+			malleate: func() {},
+			expPass:  true,
+		},
+		{
+			name: "client id empty",
+			malleate: func() {
+				msg.ClientId = ""
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid client id",
+			malleate: func() {
+				msg.ClientId = "invalid~chain/id"
+			},
+			expPass: false,
+		},
+		{
+			name: "unpacking clientstate fails",
+			malleate: func() {
+				msg.ClientState = nil
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid client state",
+			malleate: func() {
+				cs := &ibctmtypes.ClientState{}
+				var err error
+				msg.ClientState, err = types.PackClientState(cs)
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+		{
+			name: "empty proof",
+			malleate: func() {
+				msg.ProofUpgrade = nil
+			},
+			expPass: false,
+		},
+		{
+			name: "empty signer",
+			malleate: func() {
+				msg.Signer = nil
+			},
+			expPass: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			tc.malleate()
+			err := msg.ValidateBasic()
+			if tc.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+
+}
+
 // tests that different misbehaviours within MsgSubmitMisbehaviour can be marshaled
 // and unmarshaled.
 func (suite *TypesTestSuite) TestMarshalMsgSubmitMisbehaviour() {

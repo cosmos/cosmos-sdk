@@ -158,7 +158,8 @@ func (coin DecCoin) IsValid() bool {
 type DecCoins []DecCoin
 
 // NewDecCoins constructs a new coin set with with decimal values
-// from DecCoins.
+// from DecCoins. The provided coins will be sanitized by removing
+// zero coins and sorting the coin set. A panic will occur if the coin set is not valid.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {
 	newDecCoins := sanitizeDecCoins(decCoins)
 	if err := newDecCoins.Validate(); err != nil {
@@ -633,8 +634,12 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	return NewDecCoinFromDec(denomStr, amount), nil
 }
 
-// ParseDecCoins will parse out a list of decimal coins separated by commas. If nothing is provided,
-// it returns nil DecCoins. If the coins aren't valid they return an error. Returned coins are sorted.
+// ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successuful,
+// the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
+// a validation of the coin set is executed. If the check passes, ParseCoins will return the sanitized coins.
+// Otherwise it will return an error.
+// If an empty string is provided to ParseDecCoins, it returns nil Coins.
+// Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {

@@ -135,7 +135,8 @@ func (coin Coin) IsNegative() bool {
 // Coins is a set of Coin, one per currency
 type Coins []Coin
 
-// NewCoins constructs a new coin set.
+// NewCoins constructs a new coin set. The provided coins will be sanitized by removing
+// zero coins and sorting the coin set. A panic will occur if the coin set is not valid.
 func NewCoins(coins ...Coin) Coins {
 	newCoins := sanitizeCoins(coins)
 	if err := newCoins.Validate(); err != nil {
@@ -646,8 +647,11 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 	return NewCoin(denomStr, amount), nil
 }
 
-// ParseCoins will parse out a list of coins separated by commas. If nothing is provided, it returns
-// nil Coins. If the coins aren't valid they return an error. Returned coins are sorted.
+// ParseCoins will parse out a list of coins separated by commas. If the parsing is successuful,
+// the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
+// a validation of the coin set is executed. If the check passes, ParseCoins will return the sanitized coins.
+// Otherwise it will return an error.
+// If an empty string is provided to ParseCoins, it returns nil Coins.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseCoins(coinsStr string) (Coins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)

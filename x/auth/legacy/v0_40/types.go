@@ -8,9 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// DONTCOVER
-// nolint
-
 const (
 	ModuleName = "auth"
 )

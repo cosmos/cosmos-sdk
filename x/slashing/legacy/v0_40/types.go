@@ -1,9 +1,6 @@
 package v040
 
-import fmt "fmt"
-
-// DONTCOVER
-// nolint
+import "fmt"
 
 const (
 	ModuleName = "slashing"

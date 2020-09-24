@@ -2,9 +2,6 @@ package v040
 
 import "gopkg.in/yaml.v2"
 
-// DONTCOVER
-// nolint
-
 const (
 	ModuleName = "bank"
 )

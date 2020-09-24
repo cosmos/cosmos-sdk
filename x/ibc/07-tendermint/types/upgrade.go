@@ -31,12 +31,13 @@ func (cs ClientState) VerifyUpgrade(
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
 	}
 
-	if proofUpgrade == nil {
-		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade is nil")
+	if len(proofUpgrade) == 0 {
+		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof of upgrade is empty")
 	}
+
 	var merkleProof commitmenttypes.MerkleProof
 	if err := cdc.UnmarshalBinaryBare(proofUpgrade, &merkleProof); err != nil {
-		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal proof. error: %v", err)
+		return sdkerrors.Wrapf(commitmenttypes.ErrInvalidProof, "could not unmarshal merkle proof: %v", err)
 	}
 
 	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
@@ -44,7 +45,7 @@ func (cs ClientState) VerifyUpgrade(
 	committedClient := upgradedClient.ZeroCustomFields()
 	bz, err := codec.MarshalAny(cdc, committedClient)
 	if err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal clientstate. error: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal clientstate: %v", err)
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan

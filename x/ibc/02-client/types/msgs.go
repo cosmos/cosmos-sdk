@@ -20,10 +20,12 @@ var (
 	_ sdk.Msg = &MsgCreateClient{}
 	_ sdk.Msg = &MsgUpdateClient{}
 	_ sdk.Msg = &MsgSubmitMisbehaviour{}
+	_ sdk.Msg = &MsgUpgradeClient{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgCreateClient{}
 	_ codectypes.UnpackInterfacesMessage = MsgUpdateClient{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitMisbehaviour{}
+	_ codectypes.UnpackInterfacesMessage = MsgUpgradeClient{}
 )
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
@@ -103,12 +105,7 @@ func (msg MsgCreateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 	}
 
 	var consensusState exported.ConsensusState
-	err = unpacker.UnpackAny(msg.ConsensusState, &consensusState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ConsensusState, &consensusState)
 }
 
 // NewMsgUpdateClient creates a new MsgUpdateClient instance
@@ -166,12 +163,7 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var header exported.Header
-	err := unpacker.UnpackAny(msg.Header, &header)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.Header, &header)
 }
 
 // NewMsgUpgradeClient creates a new MsgUpgradeClient instance
@@ -208,8 +200,8 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	if err := clientState.Validate(); err != nil {
 		return err
 	}
-	if msg.ProofUpgrade == nil {
-		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be nil")
+	if len(msg.ProofUpgrade) == 0 {
+		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be empty")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
@@ -230,12 +222,7 @@ func (msg MsgUpgradeClient) GetSigners() []sdk.AccAddress {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgUpgradeClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var clientState exported.ClientState
-	err := unpacker.UnpackAny(msg.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ClientState, &clientState)
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance.
@@ -297,10 +284,5 @@ func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgSubmitMisbehaviour) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var misbehaviour exported.Misbehaviour
-	err := unpacker.UnpackAny(msg.Misbehaviour, &misbehaviour)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.Misbehaviour, &misbehaviour)
 }

@@ -13,6 +13,8 @@ import (
 	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
+var _ codectypes.UnpackInterfacesMessage = Plan{}
+
 func (p Plan) String() string {
 	due := p.DueAt()
 	dueUp := strings.ToUpper(due[0:1]) + due[1:]
@@ -78,10 +80,5 @@ func (p Plan) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	}
 
 	var clientState ibcexported.ClientState
-	err := unpacker.UnpackAny(p.UpgradedClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(p.UpgradedClientState, &clientState)
 }

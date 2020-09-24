@@ -96,3 +96,24 @@ func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
 }
+
+func (bva BaseVestingAccount) String() string {
+	out, _ := bva.MarshalYAML()
+	return out.(string)
+}
+
+func (cva ContinuousVestingAccount) String() string {
+	out, _ := cva.MarshalYAML()
+	return out.(string)
+}
+
+func (dva DelayedVestingAccount) String() string {
+	out, _ := dva.MarshalYAML()
+	return out.(string)
+}
+
+// String Period implements stringer interface
+func (p Period) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}

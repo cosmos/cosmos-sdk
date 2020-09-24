@@ -1,11 +1,10 @@
 package v040
 
 import (
-	"fmt"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // Default parameter values
@@ -14,48 +13,6 @@ const (
 )
 
 var _ types.UnpackInterfacesMessage = &GenesisState{}
-
-// NewGenesisState creates a new genesis state for the evidence module.
-func NewGenesisState(e []v038evidence.Evidence) *GenesisState {
-	evidence := make([]*types.Any, len(e))
-	for i, evi := range e {
-		msg, ok := evi.(proto.Message)
-		if !ok {
-			panic(fmt.Errorf("cannot proto marshal %T", evi))
-		}
-		any, err := types.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-		evidence[i] = any
-	}
-	return &GenesisState{
-		Evidence: evidence,
-	}
-}
-
-// DefaultGenesisState returns the evidence module's default genesis state.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
-		Evidence: []*types.Any{},
-	}
-}
-
-// Validate performs basic gensis state validation returning an error upon any
-// failure.
-func (gs GenesisState) Validate() error {
-	for _, e := range gs.Evidence {
-		evi, ok := e.GetCachedValue().(v038evidence.Evidence)
-		if !ok {
-			return fmt.Errorf("expected evidence")
-		}
-		if err := evi.ValidateBasic(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (gs *GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
@@ -68,4 +25,9 @@ func (gs *GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	}
 
 	return nil
+}
+
+func (e *Equivocation) String() string {
+	bz, _ := yaml.Marshal(e)
+	return string(bz)
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
@@ -15,9 +15,12 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v039Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v039Codec)
-	v039auth.RegisterLegacyAminoCodec(v039Codec)
+	encodingConfig := simapp.MakeEncodingConfig()
+	clientCtx := client.Context{}.
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
@@ -81,7 +84,7 @@ func TestMigrate(t *testing.T) {
   ]
 }`
 
-	bz, err := v039Codec.MarshalJSONIndent(migrated, "", "  ")
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

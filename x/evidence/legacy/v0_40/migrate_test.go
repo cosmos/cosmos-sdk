@@ -24,7 +24,7 @@ func TestMigrate(t *testing.T) {
 
 	evidenceGenState := v038evidence.GenesisState{
 		Params: v038evidence.Params{MaxEvidenceAge: v038evidence.DefaultMaxEvidenceAge},
-		Evidence: []v038evidence.Evidence{&v038evidence.Equivocation{
+		Evidence: []v038evidence.Evidence{v038evidence.Equivocation{
 			Height:           20,
 			Power:            100,
 			ConsensusAddress: addr1.Bytes(),

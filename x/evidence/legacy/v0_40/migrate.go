@@ -2,6 +2,7 @@ package v040
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
 )
 
@@ -10,5 +11,29 @@ import (
 //
 // - Removing the `Params` field.
 func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *GenesisState {
-	return NewGenesisState(evidenceState.Evidence)
+	var newEquivocations = make([]Equivocation, len(evidenceState.Evidence))
+	for i, evidence := range evidenceState.Evidence {
+		equivocation, ok := evidence.(v038evidence.Equivocation)
+		if !ok {
+			// There's only equivocation in 0.38.
+			continue
+		}
+
+		newEquivocations[i] = Equivocation{
+			Height:           equivocation.Height,
+			Time:             equivocation.Time,
+			Power:            equivocation.Power,
+			ConsensusAddress: equivocation.ConsensusAddress,
+		}
+	}
+
+	// Then convert the equivocations into Any.
+	newEvidence := make([]*codectypes.Any, len(newEquivocations))
+	for i, equi := range newEquivocations {
+		newEvidence[i] = codectypes.UnsafePackAny(&equi)
+	}
+
+	return &GenesisState{
+		Evidence: newEvidence,
+	}
 }

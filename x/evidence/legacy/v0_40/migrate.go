@@ -9,6 +9,6 @@ import (
 // v0.40 x/evidence genesis state. The migration includes:
 //
 // - Removing the `Params` field.
-func Migrate(evidenceState v038evidence.GenesisState, clientCtx client.Context) GenesisState {
+func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *GenesisState {
 	return NewGenesisState(evidenceState.Evidence)
 }

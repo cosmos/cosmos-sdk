@@ -1,8 +1,5 @@
 package v040
 
-// DONTCOVER
-// nolint
-
 import (
 	"sort"
 
@@ -13,31 +10,52 @@ import (
 // to v0.40 x/slashing genesis state. The migration includes:
 //
 // - Chaning SigningInfos and MissedBlocks from map to array.
-func Migrate(oldGenState v039slashing.GenesisState) GenesisState {
+func Migrate(oldGenState v039slashing.GenesisState) *GenesisState {
 	// Note that the two following `for` loop over a map's keys, so are not
 	// deterministic.
-	var si = make([]SigningInfo, 0, len(oldGenState.SigningInfos))
+	var newSigningInfos = make([]SigningInfo, 0, len(oldGenState.SigningInfos))
 	for address, signingInfo := range oldGenState.SigningInfos {
-		si = append(si, SigningInfo{
-			Address:              address,
-			ValidatorSigningInfo: signingInfo,
+		newSigningInfos = append(newSigningInfos, SigningInfo{
+			Address: address,
+			ValidatorSigningInfo: ValidatorSigningInfo{
+				Address:             signingInfo.Address,
+				StartHeight:         signingInfo.StartHeight,
+				IndexOffset:         signingInfo.IndexOffset,
+				JailedUntil:         signingInfo.JailedUntil,
+				Tombstoned:          signingInfo.Tombstoned,
+				MissedBlocksCounter: signingInfo.MissedBlocksCounter,
+			},
 		})
 	}
-	var mb = make([]ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
-	for address, missedBlocks := range oldGenState.MissedBlocks {
-		mb = append(mb, ValidatorMissedBlocks{
+	var newValidatorMissedBlocks = make([]ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
+	for address, validatorMissedBlocks := range oldGenState.MissedBlocks {
+		var newMissedBlocks = make([]MissedBlock, len(validatorMissedBlocks))
+		for _, missedBlock := range validatorMissedBlocks {
+			newMissedBlocks = append(newMissedBlocks, MissedBlock{
+				Index:  missedBlock.Index,
+				Missed: missedBlock.Missed,
+			})
+		}
+
+		newValidatorMissedBlocks = append(newValidatorMissedBlocks, ValidatorMissedBlocks{
 			Address:      address,
-			MissedBlocks: missedBlocks,
+			MissedBlocks: newMissedBlocks,
 		})
 	}
 
 	// We sort these two arrays by address, so that we get determinstic states.
-	sort.Slice(si, func(i, j int) bool { return si[i].Address < si[j].Address })
-	sort.Slice(mb, func(i, j int) bool { return mb[i].Address < mb[j].Address })
+	sort.Slice(newSigningInfos, func(i, j int) bool { return newSigningInfos[i].Address < newSigningInfos[j].Address })
+	sort.Slice(newValidatorMissedBlocks, func(i, j int) bool { return newValidatorMissedBlocks[i].Address < newValidatorMissedBlocks[j].Address })
 
-	return GenesisState{
-		Params:       oldGenState.Params,
-		SigningInfos: si,
-		MissedBlocks: mb,
+	return &GenesisState{
+		Params: Params{
+			SignedBlocksWindow:      oldGenState.Params.SignedBlocksWindow,
+			MinSignedPerWindow:      oldGenState.Params.MinSignedPerWindow,
+			DowntimeJailDuration:    oldGenState.Params.DowntimeJailDuration,
+			SlashFractionDoubleSign: oldGenState.Params.SlashFractionDoubleSign,
+			SlashFractionDowntime:   oldGenState.Params.SlashFractionDowntime,
+		},
+		SigningInfos: newSigningInfos,
+		MissedBlocks: newValidatorMissedBlocks,
 	}
 }

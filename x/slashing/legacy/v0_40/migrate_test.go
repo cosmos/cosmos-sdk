@@ -5,16 +5,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v039slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v0_39"
 	v040slashing "github.com/cosmos/cosmos-sdk/x/slashing/legacy/v0_40"
 )
 
 func TestMigrate(t *testing.T) {
-	v039Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v039Codec)
+	encodingConfig := simapp.MakeEncodingConfig()
+	clientCtx := client.Context{}.
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	addr1, err := sdk.ConsAddressFromBech32("cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685")
 	require.NoError(t, err)
@@ -63,61 +67,9 @@ func TestMigrate(t *testing.T) {
 	// should always come before the address
 	// cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph
 	// (in alphabetic order, basically).
-	expected := `{
-  "params": {
-    "signed_blocks_window": "100",
-    "min_signed_per_window": "0.500000000000000000",
-    "downtime_jail_duration": "600000000000",
-    "slash_fraction_double_sign": "0.050000000000000000",
-    "slash_fraction_downtime": "0.010000000000000000"
-  },
-  "signing_infos": [
-    {
-      "address": "cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685",
-      "validator_signing_info": {
-        "address": "cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685",
-        "index_offset": "2",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "missed_blocks_counter": "2"
-      }
-    },
-    {
-      "address": "cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph",
-      "validator_signing_info": {
-        "address": "cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph",
-        "index_offset": "615501",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "missed_blocks_counter": "1"
-      }
-    }
-  ],
-  "missed_blocks": [
-    {
-      "address": "cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685",
-      "missed_blocks": [
-        {
-          "index": "3",
-          "missed": true
-        },
-        {
-          "index": "4",
-          "missed": true
-        }
-      ]
-    },
-    {
-      "address": "cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph",
-      "missed_blocks": [
-        {
-          "index": "2",
-          "missed": true
-        }
-      ]
-    }
-  ]
-}`
+	expected := `{"params":{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600s","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"},"signing_infos":[{"address":"cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685","validator_signing_info":{"address":"cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685","start_height":"0","index_offset":"2","jailed_until":"0001-01-01T00:00:00Z","tombstoned":false,"missed_blocks_counter":"2"}},{"address":"cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph","validator_signing_info":{"address":"cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph","start_height":"0","index_offset":"615501","jailed_until":"0001-01-01T00:00:00Z","tombstoned":false,"missed_blocks_counter":"1"}}],"missed_blocks":[{"address":"cosmosvalcons104cjmxkrg8y8lmrp25de02e4zf00zle4mzs685","missed_blocks":[{"index":"0","missed":false},{"index":"0","missed":false},{"index":"3","missed":true},{"index":"4","missed":true}]},{"address":"cosmosvalcons10e4c5p6qk0sycy9u6u43t7csmlx9fyadr9yxph","missed_blocks":[{"index":"0","missed":false},{"index":"2","missed":true}]}]}`
 
-	bz, err := v039Codec.MarshalJSONIndent(migrated, "", "  ")
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

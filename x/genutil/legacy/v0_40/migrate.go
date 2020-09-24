@@ -3,7 +3,7 @@ package v040
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/std"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
@@ -19,12 +19,10 @@ import (
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v039Codec)
+	std.RegisterLegacyAminoCodec(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
-	v040Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v040Codec)
-	v039auth.RegisterLegacyAminoCodec(v040Codec)
+	v040Codec := clientCtx.JSONMarshaler
 
 	// remove balances from existing accounts
 	if appState[v039auth.ModuleName] != nil {

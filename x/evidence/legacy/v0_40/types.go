@@ -16,7 +16,7 @@ const (
 var _ types.UnpackInterfacesMessage = &GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
-func NewGenesisState(e []v038evidence.Evidence) GenesisState {
+func NewGenesisState(e []v038evidence.Evidence) *GenesisState {
 	evidence := make([]*types.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)
@@ -29,7 +29,7 @@ func NewGenesisState(e []v038evidence.Evidence) GenesisState {
 		}
 		evidence[i] = any
 	}
-	return GenesisState{
+	return &GenesisState{
 		Evidence: evidence,
 	}
 }

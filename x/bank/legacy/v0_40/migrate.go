@@ -15,7 +15,7 @@ func Migrate(
 	bankGenState v038bank.GenesisState,
 	authGenState v039auth.GenesisState,
 	supplyGenState v036supply.GenesisState,
-) GenesisState {
+) *GenesisState {
 	balances := make([]Balance, len(authGenState.Accounts))
 	for i, acc := range authGenState.Accounts {
 		balances[i] = Balance{
@@ -24,7 +24,7 @@ func Migrate(
 		}
 	}
 
-	return GenesisState{
+	return &GenesisState{
 		Params: Params{
 			SendEnabled:        []*SendEnabled{},
 			DefaultSendEnabled: bankGenState.SendEnabled,

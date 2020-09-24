@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
@@ -16,9 +16,12 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v040Codec := codec.NewLegacyAmino()
-	cryptocodec.RegisterCrypto(v040Codec)
-	v039auth.RegisterLegacyAminoCodec(v040Codec)
+	encodingConfig := simapp.MakeEncodingConfig()
+	clientCtx := client.Context{}.
+		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithLegacyAmino(encodingConfig.Amino).
+		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
@@ -45,40 +48,9 @@ func TestMigrate(t *testing.T) {
 	}
 
 	migrated := v040bank.Migrate(bankGenState, authGenState, supplyGenState)
-	expected := `{
-  "params": {
-    "default_send_enabled": true
-  },
-  "balances": [
-    {
-      "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
-      "coins": [
-        {
-          "denom": "stake",
-          "amount": "50"
-        }
-      ]
-    },
-    {
-      "address": "cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74",
-      "coins": [
-        {
-          "denom": "stake",
-          "amount": "50"
-        }
-      ]
-    }
-  ],
-  "supply": [
-    {
-      "denom": "stake",
-      "amount": "1000"
-    }
-  ],
-  "denom_metadata": []
-}`
+	expected := `{"params":{"send_enabled":[],"default_send_enabled":true},"balances":[{"address":"cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u","coins":[{"denom":"stake","amount":"50"}]},{"address":"cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74","coins":[{"denom":"stake","amount":"50"}]}],"supply":[{"denom":"stake","amount":"1000"}],"denom_metadata":[]}`
 
-	bz, err := v040Codec.MarshalJSONIndent(migrated, "", "  ")
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_40"
@@ -15,14 +14,9 @@ import (
 
 func TestMigrate(t *testing.T) {
 	encodingConfig := simapp.MakeEncodingConfig()
-
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-
-	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(txCfg).
+		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
@@ -40,7 +34,7 @@ func TestMigrate(t *testing.T) {
 	migrated := v040evidence.Migrate(evidenceGenState, clientCtx)
 	expected := `{"evidence":[{"@type":"/cosmos.evidence.Equivocation","height":"20","time":"0001-01-01T00:00:00Z","power":"100","consensus_address":"cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"}]}`
 
-	bz, err := encodingConfig.Marshaler.MarshalJSON(&migrated)
+	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))
 }

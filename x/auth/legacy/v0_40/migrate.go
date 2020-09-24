@@ -11,7 +11,7 @@ import (
 // it to v0.40 x/auth genesis state. The migration includes:
 //
 // - Removing coins from account encoding.
-func Migrate(authGenState v039auth.GenesisState) v039auth.GenesisState {
+func Migrate(authGenState v039auth.GenesisState) *GenesisState {
 	for _, account := range authGenState.Accounts {
 		// set coins to nil and allow the JSON encoding to omit coins
 		if err := account.SetCoins(nil); err != nil {
@@ -20,5 +20,7 @@ func Migrate(authGenState v039auth.GenesisState) v039auth.GenesisState {
 	}
 
 	authGenState.Accounts = v038auth.SanitizeGenesisAccounts(authGenState.Accounts)
-	return authGenState
+
+	// TODO return authGenState
+	return &GenesisState{}
 }

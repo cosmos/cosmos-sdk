@@ -48,6 +48,9 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 	}
 
 	sigData, err := UnmarshalSignatureData(cdc, header.Signature)
+	if err != nil {
+		return err
+	}
 
 	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, sigData); err != nil {
 		return sdkerrors.Wrap(ErrInvalidHeader, err.Error())

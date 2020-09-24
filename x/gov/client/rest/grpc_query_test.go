@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/golang/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {

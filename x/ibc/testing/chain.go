@@ -68,6 +68,8 @@ var (
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
+	UpgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
 	MockAcknowledgement = mock.MockAcknowledgement
@@ -388,11 +390,10 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 	switch clientType {
 	case Tendermint:
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
-		upgradePath := commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, commitmenttypes.GetSDKSpecs(),
-			&upgradePath, false, false,
+			&UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:

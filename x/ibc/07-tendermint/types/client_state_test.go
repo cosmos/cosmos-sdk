@@ -40,7 +40,6 @@ func (suite *TendermintTestSuite) TestValidate() {
 			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), nil, false, false),
 			expPass:     true,
 		},
-
 		{
 			name:        "invalid chainID",
 			clientState: types.NewClientState("  ", types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false),

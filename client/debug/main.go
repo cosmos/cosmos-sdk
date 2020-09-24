@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -87,7 +88,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 			edPK, ok := pk.(*ed25519.PubKey)
 			if !ok {
-				return fmt.Errorf("invalid pubkey type; expected ED25519")
+				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type; expected ED25519")
 			}
 
 			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(edPK)

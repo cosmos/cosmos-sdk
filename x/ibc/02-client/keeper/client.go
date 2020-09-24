@@ -65,7 +65,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated height %s", clientID, consensusHeight))
+	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight)
 
 	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
@@ -100,7 +100,7 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 
 	k.SetClientState(ctx, clientID, upgradedClient)
 
-	k.Logger(ctx).Info(fmt.Sprintf("client %s upgraded height %s", clientID, upgradedClient.GetLatestHeight()))
+	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight())
 
 	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -63,7 +64,12 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return "", nil, err
 	}
 
-	valPubKey, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	tmValPubKey, err := privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	if err != nil {
+		return "", nil, err
+	}
+
+	valPubKey, err = ed25519.FromTmEd25519(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

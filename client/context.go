@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/gogo/protobuf/proto"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

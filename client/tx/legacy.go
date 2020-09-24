@@ -33,31 +33,6 @@ func ConvertTxToStdTx(codec *codec.LegacyAmino, tx signing.Tx) (legacytx.StdTx, 
 	return stdTx, nil
 }
 
-// CopyTx copies a Tx to a new TxBuilder, allowing conversion between
-// different transaction formats.
-func CopyTx(tx signing.Tx, builder client.TxBuilder) error {
-	err := builder.SetMsgs(tx.GetMsgs()...)
-	if err != nil {
-		return err
-	}
-
-	sigs, err := tx.GetSignaturesV2()
-	if err != nil {
-		return err
-	}
-
-	err = builder.SetSignatures(sigs...)
-	if err != nil {
-		return err
-	}
-
-	builder.SetMemo(tx.GetMemo())
-	builder.SetFeeAmount(tx.GetFee())
-	builder.SetGasLimit(tx.GetGas())
-
-	return nil
-}
-
 func ConvertAndEncodeStdTx(txConfig client.TxConfig, stdTx legacytx.StdTx) ([]byte, error) {
 	builder := txConfig.NewTxBuilder()
 

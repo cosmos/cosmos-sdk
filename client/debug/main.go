@@ -35,18 +35,18 @@ func Cmd() *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
-	pubKey := make([]byte, ed25519.PubKeySize)
-
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey, bz)
-		return &ed25519.PubKey{Key: pubKey}, nil
+		if len(bz) == ed25519.PubKeySize {
+			return &ed25519.PubKey{Key: bz}, nil
+		}
 	}
 
 	bz, err = base64.StdEncoding.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey, bz)
-		return &ed25519.PubKey{Key: pubKey}, nil
+		if len(bz) == ed25519.PubKeySize {
+			return &ed25519.PubKey{Key: bz}, nil
+		}
 	}
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pkstr)
@@ -64,7 +64,7 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 		return pk, nil
 	}
 
-	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32", pubKey)
+	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32 of correct size", pkstr)
 }
 
 func PubkeyCmd() *cobra.Command {

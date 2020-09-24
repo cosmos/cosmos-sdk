@@ -33,7 +33,7 @@ type Solomachine struct {
 }
 
 // NewSolomachine returns a new solomachine instance with an `nKeys` amount of
-// generated private/public  key pairs and a sequence starting at 1. If nKeys
+// generated private/public key pairs and a sequence starting at 1. If nKeys
 // is greater than 1 then a multisig public key is used.
 func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string, nKeys uint64) *Solomachine {
 	privKeys, pubKeys, pk := GenerateKeys(nKeys)
@@ -49,6 +49,34 @@ func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifi
 		Time:        10,
 		Diversifier: diversifier,
 	}
+}
+
+// GenerateKeys generates a new set of private keys and public keys. If the
+// number of keys is greater than one then the public key returned represents
+// a multisig public key. The private keys are used for signing, the public
+// keys are used for generating the public key and the public key is used for
+// solo machine verification.
+func GenerateKeys(n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
+	if n == 0 {
+		panic("cannot use zero private keys")
+	}
+
+	privKeys := make([]crypto.PrivKey, n)
+	pubKeys := make([]crypto.PubKey, n)
+	for i := uint64(0); i < n; i++ {
+		privKeys[i] = secp256k1.GenPrivKey()
+		pubKeys[i] = privKeys[i].PubKey()
+	}
+
+	var pk crypto.PubKey
+	if len(privKeys) > 1 {
+		// generate multi sig pk
+		pk = kmultisig.NewLegacyAminoPubKey(int(n), pubKeys)
+	} else {
+		pk = privKeys[0].PubKey()
+	}
+
+	return privKeys, pubKeys, pk
 }
 
 // ClientState returns a new solo machine ClientState instance. Default usage does not allow update
@@ -166,37 +194,9 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	}
 }
 
-// GenerateKeys generates a new set of private keys and public keys. If the
-// number of keys is greater than one then the public key returned represents
-// a multisig public key. The private keys are used for signing, the public
-// keys are used for generating the public key and the public key is used for
-// solo machine verification.
-func GenerateKeys(n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
-	if n == 0 {
-		panic("cannot use zero private keys")
-	}
-
-	privKeys := make([]crypto.PrivKey, n)
-	pubKeys := make([]crypto.PubKey, n)
-	for i := uint64(0); i < n; i++ {
-		privKeys[i] = secp256k1.GenPrivKey()
-		pubKeys[i] = privKeys[i].PubKey()
-	}
-
-	var pk crypto.PubKey
-	if len(privKeys) > 1 {
-		// generate multi sig pk
-		pk = kmultisig.NewLegacyAminoPubKey(int(n), pubKeys)
-	} else {
-		pk = privKeys[0].PubKey()
-	}
-
-	return privKeys, pubKeys, pk
-}
-
 // GenerateSignature uses the stored private keys to generate a signature
 // over the sign bytes with each key. If the amount of keys is greater than
-// one then a multisig data type is returned nesting each of the signatures.
+// 1 then a multisig data type is returned.
 func (solo *Solomachine) GenerateSignature(signBytes []byte) []byte {
 	sigs := make([]signing.SignatureData, len(solo.PrivateKeys))
 	for i, key := range solo.PrivateKeys {

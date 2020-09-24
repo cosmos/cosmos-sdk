@@ -10,7 +10,7 @@ A solo machine proof should verify that the solomachine public key signed
 over some specified data. The format for generating marshaled proofs for
 the SDK's implementation of solo machine is as follows:
 
-Construct the data using the associated protobuf definition to sign over and marshal it.
+Construct the data using the associated protobuf definition and marshal it.
 
 For example:
 ```go

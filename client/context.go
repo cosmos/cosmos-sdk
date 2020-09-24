@@ -7,7 +7,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
-
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"

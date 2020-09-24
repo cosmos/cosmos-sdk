@@ -92,7 +92,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			headers, err := node.BlockchainInfo(res.Height, res.Height)
+			headers, err := node.BlockchainInfo(context.Background(), res.Height, res.Height)
 			if err != nil {
 				return err
 			}

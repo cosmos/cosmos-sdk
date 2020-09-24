@@ -121,6 +121,10 @@ func NewCreateClientCmd() *cobra.Command {
 
 			upgradePath, _ := cmd.Flags().GetString(flagUpgradePath)
 			keyPath := strings.Split(upgradePath, "/")
+			if keyPath[0] == upgradePath {
+				return fmt.Errorf("invalid merkle path %s", upgradePath)
+			}
+
 			merklePath := commitmenttypes.NewMerklePath(keyPath)
 
 			// validate header

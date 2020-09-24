@@ -77,7 +77,7 @@ message MsgUpgradeClient {
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // upgraded client state
-  google.protobuf.Any client_state = 2;
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
   // proof that old chain committed to new client
   bytes proof_upgrade = 3 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];
   // signer address

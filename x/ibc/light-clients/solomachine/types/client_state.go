@@ -398,7 +398,7 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrapf(commitmenttypes.ErrInvalidPrefix, "invalid prefix type %T, expected MerklePrefix", prefix)
 	}
 
-	if proof == nil || len(proof) == 0 {
+	if proof == nil {
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 

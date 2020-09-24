@@ -92,7 +92,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				signBz, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
 				suite.Require().NoError(err)
 
-				sig, err := suite.solomachine.PrivateKey.Sign(signBz)
+				sig := suite.solomachine.GenerateSignature(signBz)
 				suite.Require().NoError(err)
 				h.Signature = sig
 
@@ -107,13 +107,12 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 			func() {
 				// store in temp before assinging to interface type
 				cs := suite.solomachine.ClientState()
-				oldPrivKey := suite.solomachine.PrivateKey
+				oldPubKey := suite.solomachine.PublicKey
 				h := suite.solomachine.CreateHeader()
 
 				// generate invalid signature
-				data := append(sdk.Uint64ToBigEndian(cs.Sequence), oldPrivKey.PubKey().Bytes()...)
-				sig, err := oldPrivKey.Sign(data)
-				suite.Require().NoError(err)
+				data := append(sdk.Uint64ToBigEndian(cs.Sequence), oldPubKey.Bytes()...)
+				sig := suite.solomachine.GenerateSignature(data)
 				h.Signature = sig
 
 				clientState = cs

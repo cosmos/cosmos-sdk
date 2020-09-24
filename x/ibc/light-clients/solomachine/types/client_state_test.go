@@ -89,8 +89,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	value, err := types.ClientStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, clientState)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
+	sig := suite.solomachine.GenerateSignature(value)
 
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
@@ -217,9 +216,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, consensusState)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -341,9 +338,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	value, err := types.ConnectionStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, conn)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -429,9 +424,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	value, err := types.ChannelStateSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ch)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -515,9 +508,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	value, err := types.PacketCommitmentSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, commitmentBytes)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -601,9 +592,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	value, err := types.PacketAcknowledgementSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, ack)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -686,9 +675,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 	value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,
@@ -772,9 +759,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	value, err := types.NextSequenceRecvSignBytes(suite.chainA.Codec, suite.solomachine.Sequence, suite.solomachine.Time, suite.solomachine.Diversifier, path, nextSeqRecv)
 	suite.Require().NoError(err)
 
-	sig, err := suite.solomachine.PrivateKey.Sign(value)
-	suite.Require().NoError(err)
-
+	sig := suite.solomachine.GenerateSignature(value)
 	signatureDoc := &types.TimestampedSignature{
 		Signature: sig,
 		Timestamp: suite.solomachine.Time,

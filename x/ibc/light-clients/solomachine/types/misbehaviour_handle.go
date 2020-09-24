@@ -56,8 +56,10 @@ func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloM
 		return err
 	}
 
+	sigData, err := UnmarshalSignatureData(cdc, soloMisbehaviour.SignatureOne.Signature)
+
 	// check first signature
-	if err := VerifySignature(pubKey, data, soloMisbehaviour.SignatureOne.Signature); err != nil {
+	if err := VerifySignature(pubKey, data, sigData); err != nil {
 		return sdkerrors.Wrap(err, "misbehaviour signature one failed to be verified")
 	}
 
@@ -71,8 +73,10 @@ func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloM
 		return err
 	}
 
+	sigData, err = UnmarshalSignatureData(cdc, soloMisbehaviour.SignatureTwo.Signature)
+
 	// check second signature
-	if err := VerifySignature(pubKey, data, soloMisbehaviour.SignatureTwo.Signature); err != nil {
+	if err := VerifySignature(pubKey, data, sigData); err != nil {
 		return sdkerrors.Wrap(err, "misbehaviour signature two failed to be verified")
 	}
 

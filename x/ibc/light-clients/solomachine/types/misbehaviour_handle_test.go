@@ -61,15 +61,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				msg := []byte("DATA ONE")
 				signBytes := &types.SignBytes{
-					Sequence: suite.solomachine.Sequence + 1,
-					Data:     msg,
+					Sequence:    suite.solomachine.Sequence + 1,
+					Timestamp:   suite.solomachine.Time,
+					Diversifier: suite.solomachine.Diversifier,
+					Data:        msg,
 				}
 
 				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
 				suite.Require().NoError(err)
 
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
+				sig := suite.solomachine.GenerateSignature(data)
 
 				m.SignatureOne.Signature = sig
 				m.SignatureOne.Data = msg
@@ -87,15 +88,16 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 				msg := []byte("DATA TWO")
 				signBytes := &types.SignBytes{
-					Sequence: suite.solomachine.Sequence + 1,
-					Data:     msg,
+					Sequence:    suite.solomachine.Sequence + 1,
+					Timestamp:   suite.solomachine.Time,
+					Diversifier: suite.solomachine.Diversifier,
+					Data:        msg,
 				}
 
 				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
 				suite.Require().NoError(err)
 
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
+				sig := suite.solomachine.GenerateSignature(data)
 
 				m.SignatureTwo.Signature = sig
 				m.SignatureTwo.Data = msg
@@ -122,8 +124,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
 				suite.Require().NoError(err)
 
-				sig, err := suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
+				sig := suite.solomachine.GenerateSignature(data)
 
 				m.SignatureOne.Signature = sig
 				m.SignatureOne.Data = msg
@@ -139,8 +140,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				data, err = suite.chainA.Codec.MarshalBinaryBare(signBytes)
 				suite.Require().NoError(err)
 
-				sig, err = suite.solomachine.PrivateKey.Sign(data)
-				suite.Require().NoError(err)
+				sig = suite.solomachine.GenerateSignature(data)
 
 				m.SignatureTwo.Signature = sig
 				m.SignatureTwo.Data = msg

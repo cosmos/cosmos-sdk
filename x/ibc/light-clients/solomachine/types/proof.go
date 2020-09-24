@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -14,8 +15,17 @@ import (
 
 // VerifySignature verifies if the the provided public key generated the signature
 // over the given data.
-func VerifySignature(pubKey crypto.PubKey, data, signature []byte) error {
-	if !pubKey.VerifySignature(data, signature) {
+func VerifySignature(pubKey crypto.PubKey, signBytes []byte, sigData signing.SignatureData) error {
+	switch data := sigData.(type) {
+	case *signing.SingleSignatureData:
+		if !pubKey.VerifySignature(signBytes, data.Signature) {
+			return ErrSignatureVerificationFailed
+		}
+	case *signing.MultiSignatureData:
+		// TODO
+		return ErrSignatureVerificationFailed
+	default:
+		// TODO
 		return ErrSignatureVerificationFailed
 	}
 

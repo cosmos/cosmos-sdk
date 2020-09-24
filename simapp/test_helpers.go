@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -420,7 +421,8 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	pkEd := make([]byte, ed25519.PubKeySize)
-	copy(pkEd, pkBytes)
-	return &ed25519.PubKey{Key: pkEd}
+	if len(pkBytes) != ed25519.PubKeySize {
+		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+	}
+	return &ed25519.PubKey{Key: pkBytes}
 }

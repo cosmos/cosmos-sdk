@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -23,7 +22,7 @@ func (suite *TypesTestSuite) TestMarshalConsensusStateWithHeight() {
 		},
 		{
 			"tendermint client", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 				clientState := suite.chainA.GetClientState(clientA)
 				consensusState, ok := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 				suite.Require().True(ok)

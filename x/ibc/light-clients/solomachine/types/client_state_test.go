@@ -8,6 +8,7 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 const (
@@ -78,7 +79,7 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
@@ -204,7 +205,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	// create client for tendermint so we can use consensus state for verification
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)

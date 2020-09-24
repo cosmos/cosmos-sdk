@@ -34,7 +34,7 @@ func (cs ClientState) GetChainID() string {
 }
 
 // ClientType is localhost.
-func (cs ClientState) ClientType() exported.ClientType {
+func (cs ClientState) ClientType() string {
 	return exported.Localhost
 }
 

@@ -31,8 +31,8 @@ func NewMisbehaviour(clientID, chainID string, header1, header2 *Header) *Misbeh
 }
 
 // ClientType is Tendermint light client
-func (misbehaviour Misbehaviour) ClientType() exported.ClientType {
-	return exported.Tendermint
+func (misbehaviour Misbehaviour) ClientType() string {
+	return Tendermint
 }
 
 // GetClientID returns the ID of the client that committed a misbehaviour.

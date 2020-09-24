@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -44,57 +44,53 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestEncodeDecode() {
-	val := s.network.Validators[0]
-
+func mkTx() legacytx.StdTx {
 	// NOTE: this uses StdTx explicitly, don't migrate it!
-	stdTx := authtypes.StdTx{
+	return legacytx.StdTx{
 		Msgs: []sdk.Msg{&types.MsgSend{}},
-		Fee: authtypes.StdFee{
+		Fee: legacytx.StdFee{
 			Amount: sdk.Coins{sdk.NewInt64Coin("foo", 10)},
 			Gas:    10000,
 		},
 		Memo: "FOOBAR",
 	}
+}
+
+func (s *IntegrationTestSuite) TestEncodeDecode() {
+	var require = s.Require()
+	val := s.network.Validators[0]
+	stdTx := mkTx()
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino
 
 	bz, err := cdc.MarshalJSON(stdTx)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/encode", val.APIAddress), "application/json", bz)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	var encodeResp rest2.EncodeResp
 	err = cdc.UnmarshalJSON(res, &encodeResp)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	bz, err = cdc.MarshalJSON(rest2.DecodeReq{Tx: encodeResp.Tx})
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	res, err = rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	var respWithHeight rest.ResponseWithHeight
 	err = cdc.UnmarshalJSON(res, &respWithHeight)
-	s.Require().NoError(err)
+	require.NoError(err)
 	var decodeResp rest2.DecodeResp
 	err = cdc.UnmarshalJSON(respWithHeight.Result, &decodeResp)
-	s.Require().NoError(err)
-	s.Require().Equal(stdTx, authtypes.StdTx(decodeResp))
+	require.NoError(err)
+	require.Equal(stdTx, legacytx.StdTx(decodeResp))
 }
 
 func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
-	// NOTE: this uses StdTx explicitly, don't migrate it!
-	stdTx := authtypes.StdTx{
-		Msgs: []sdk.Msg{&types.MsgSend{}},
-		Fee: authtypes.StdFee{
-			Amount: sdk.Coins{sdk.NewInt64Coin("foo", 10)},
-			Gas:    10000,
-		},
-		Memo: "FOOBAR",
-	}
+	stdTx := mkTx()
 
 	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
 	res, err := s.broadcastReq(stdTx, "async")
@@ -182,8 +178,8 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 	}
 }
 
-func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence uint64) authtypes.StdTx {
-	txConfig := authtypes.StdTxConfig{Cdc: s.cfg.LegacyAmino}
+func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence uint64) legacytx.StdTx {
+	txConfig := legacytx.StdTxConfig{Cdc: s.cfg.LegacyAmino}
 
 	msg := &types.MsgSend{
 		FromAddress: val.Address,
@@ -212,17 +208,16 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence 
 	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, true)
 	s.Require().NoError(err)
 
-	stdTx := txBuilder.GetTx().(authtypes.StdTx)
+	stdTx := txBuilder.GetTx().(legacytx.StdTx)
 
 	return stdTx
 }
 
-func (s *IntegrationTestSuite) broadcastReq(stdTx authtypes.StdTx, mode string) ([]byte, error) {
+func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) ([]byte, error) {
 	val := s.network.Validators[0]
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino
-
 	req := rest2.BroadcastReq{
 		Tx:   stdTx,
 		Mode: mode,

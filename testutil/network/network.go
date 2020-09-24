@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -374,7 +375,7 @@ func (n *Network) LatestHeight() (int64, error) {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status()
+	status, err := n.Validators[0].RPCClient.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}
@@ -408,7 +409,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			ticker.Stop()
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			status, err := val.RPCClient.Status()
+			status, err := val.RPCClient.Status(context.Background())
 			if err == nil && status != nil {
 				latestHeight = status.SyncInfo.LatestBlockHeight
 				if latestHeight >= h {

@@ -127,17 +127,6 @@ func checkValidity(
 		)
 	}
 
-	// Construct a trusted header using the fields in consensus state
-	// Only Height, Time, and NextValidatorsHash are necessary for verification
-	trustedHeader := tmtypes.Header{
-		Height:             int64(header.TrustedHeight.EpochHeight),
-		Time:               consState.Timestamp,
-		NextValidatorsHash: consState.NextValidatorsHash,
-	}
-	signedHeader := tmtypes.SignedHeader{
-		Header: &trustedHeader,
-	}
-
 	chainID := clientState.GetChainID()
 	// If chainID is in epoch format, then set epoch number of chainID with the epoch number
 	// of the header we are verifying
@@ -149,13 +138,25 @@ func checkValidity(
 		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
 	}
 
+	// Construct a trusted header using the fields in consensus state
+	// Only Height, Time, and NextValidatorsHash are necessary for verification
+	trustedHeader := tmtypes.Header{
+		ChainID:            chainID,
+		Height:             int64(header.TrustedHeight.EpochHeight),
+		Time:               consState.Timestamp,
+		NextValidatorsHash: consState.NextValidatorsHash,
+	}
+	signedHeader := tmtypes.SignedHeader{
+		Header: &trustedHeader,
+	}
+
 	// Verify next header with the passed-in trustedVals
 	// - asserts trusting period not passed
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
 	err = light.Verify(
-		chainID, &signedHeader,
+		&signedHeader,
 		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)

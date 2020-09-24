@@ -399,7 +399,7 @@ func produceVerificationArgs(
 	}
 
 	if proof == nil || len(proof) == 0 {
-		return nil, 0, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "proof cannot be empty")
+		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 
 	timestampedSignature := &TimestampedSignature{}
@@ -410,7 +410,7 @@ func produceVerificationArgs(
 	timestamp := timestampedSignature.Timestamp
 
 	if timestampedSignature.Signature == nil || len(timestampedSignature.Signature) == 0 {
-		return nil, 0, 0, sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "signature data cannot be empty")
+		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 
 	sigData, err := UnmarshalSignatureData(cdc, timestampedSignature.Signature)

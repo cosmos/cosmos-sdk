@@ -4,6 +4,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -14,19 +15,30 @@ import (
 )
 
 // VerifySignature verifies if the the provided public key generated the signature
-// over the given data.
+// over the given data. Single and Multi signature public keys are supported.
+// The type of the signature data determines how the public key is used to
+// verify the signature. An error is returned if signature verification fails
+// or an invalid SignatureData type is provided.
 func VerifySignature(pubKey crypto.PubKey, signBytes []byte, sigData signing.SignatureData) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
 		if !pubKey.VerifySignature(signBytes, data.Signature) {
 			return ErrSignatureVerificationFailed
 		}
+
 	case *signing.MultiSignatureData:
-		// TODO
-		return ErrSignatureVerificationFailed
+		multiPK, ok := pubKey.(multisig.PubKey)
+		if !ok {
+			return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "invalid pubkey type: expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+		}
+		if err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
+			return signBytes, nil
+		}, data); err != nil {
+			return err
+		}
+
 	default:
-		// TODO
-		return ErrSignatureVerificationFailed
+		return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "unsupported signature data type %T", data)
 	}
 
 	return nil

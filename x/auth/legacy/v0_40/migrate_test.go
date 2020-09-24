@@ -1,11 +1,13 @@
 package v040_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
@@ -24,11 +26,11 @@ func TestMigrate(t *testing.T) {
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
-	acc1 := v039auth.NewBaseAccount(addr1, coins, nil, 1, 0)
+	acc1 := v039auth.NewBaseAccount(addr1, coins, secp256k1.GenPrivKey().PubKey(), 1, 0)
 
 	addr2, _ := sdk.AccAddressFromBech32("cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74")
 	vaac := v039auth.NewContinuousVestingAccountRaw(
-		v039auth.NewBaseVestingAccount(v039auth.NewBaseAccount(addr2, coins, nil, 1, 0), coins, nil, nil, 3160620846),
+		v039auth.NewBaseVestingAccount(v039auth.NewBaseAccount(addr2, coins, secp256k1.GenPrivKey().PubKey(), 1, 0), coins, nil, nil, 3160620846),
 		1580309972,
 	)
 
@@ -84,6 +86,7 @@ func TestMigrate(t *testing.T) {
   ]
 }`
 
+	fmt.Printf("migrated=%+v\n", migrated.Accounts)
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
 	require.NoError(t, err)
 	require.Equal(t, expected, string(bz))

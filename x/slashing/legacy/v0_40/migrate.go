@@ -29,7 +29,7 @@ func Migrate(oldGenState v039slashing.GenesisState) *GenesisState {
 	}
 	var newValidatorMissedBlocks = make([]ValidatorMissedBlocks, 0, len(oldGenState.MissedBlocks))
 	for address, validatorMissedBlocks := range oldGenState.MissedBlocks {
-		var newMissedBlocks = make([]MissedBlock, len(validatorMissedBlocks))
+		var newMissedBlocks = make([]MissedBlock, 0, len(validatorMissedBlocks))
 		for _, missedBlock := range validatorMissedBlocks {
 			newMissedBlocks = append(newMissedBlocks, MissedBlock{
 				Index:  missedBlock.Index,

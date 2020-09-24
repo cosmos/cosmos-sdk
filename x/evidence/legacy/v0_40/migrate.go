@@ -11,7 +11,7 @@ import (
 //
 // - Removing the `Params` field.
 func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *GenesisState {
-	var newEquivocations = make([]Equivocation, len(evidenceState.Evidence))
+	var newEquivocations = make([]Equivocation, 0, len(evidenceState.Evidence))
 	for i, evidence := range evidenceState.Evidence {
 		equivocation, ok := evidence.(v038evidence.Equivocation)
 		if !ok {
@@ -28,7 +28,7 @@ func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *Genesis
 	}
 
 	// Then convert the equivocations into Any.
-	newEvidence := make([]*codectypes.Any, len(newEquivocations))
+	newEvidence := make([]*codectypes.Any, 0, len(newEquivocations))
 	for i, equi := range newEquivocations {
 		newEvidence[i] = codectypes.UnsafePackAny(&equi)
 	}

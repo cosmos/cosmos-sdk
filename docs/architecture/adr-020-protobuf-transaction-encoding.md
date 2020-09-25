@@ -297,7 +297,7 @@ message PubKey {
 }
 ```
 
-`multisig.LegacyAminoPubKey` has a slice of `Any`'s member to support any
+`multisig.LegacyAminoPubKey` has an array of `Any`'s member to support any
 protobuf public key type.
 
 Apps should only attempt to handle a registered set of public keys that they

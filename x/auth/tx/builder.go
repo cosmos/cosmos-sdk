@@ -133,11 +133,15 @@ func (w *wrapper) GetFee() sdk.Coins {
 
 func (w *wrapper) FeePayer() sdk.AccAddress {
 	feePayer := w.tx.AuthInfo.Fee.Payer
-	if feePayer == nil {
-		// use first signer as default if no payer specified
-		feePayer = w.GetSigners()[0]
+	if feePayer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return payerAddr
 	}
-	return feePayer
+	// use first signer as default if no payer specified
+	return w.GetSigners()[0]
 }
 
 func (w *wrapper) GetMemo() string {
@@ -245,7 +249,7 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 		w.tx.AuthInfo.Fee = &tx.Fee{}
 	}
 
-	w.tx.AuthInfo.Fee.Payer = feePayer
+	w.tx.AuthInfo.Fee.Payer = feePayer.String()
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

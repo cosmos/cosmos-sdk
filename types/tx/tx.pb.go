@@ -725,11 +725,11 @@ func (m *Fee) GetGasLimit() uint64 {
 	return 0
 }
 
-func (m *Fee) GetPayer() github_com_cosmos_cosmos_sdk_types.AccAddress {
+func (m *Fee) GetPayer() string {
 	if m != nil {
 		return m.Payer
 	}
-	return nil
+	return ""
 }
 
 func init() {

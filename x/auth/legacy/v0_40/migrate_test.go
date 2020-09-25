@@ -46,45 +46,7 @@ func TestMigrate(t *testing.T) {
 	}
 
 	migrated := v040auth.Migrate(gs)
-	expected := `{
-  "params": {
-    "max_memo_characters": "10",
-    "tx_sig_limit": "10",
-    "tx_size_cost_per_byte": "10",
-    "sig_verify_cost_ed25519": "10",
-    "sig_verify_cost_secp256k1": "10"
-  },
-  "accounts": [
-    {
-      "type": "cosmos-sdk/Account",
-      "value": {
-        "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
-        "public_key": null,
-        "account_number": "1",
-        "sequence": "0"
-      }
-    },
-    {
-      "type": "cosmos-sdk/ContinuousVestingAccount",
-      "value": {
-        "address": "cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74",
-        "public_key": null,
-        "account_number": "1",
-        "sequence": "0",
-        "original_vesting": [
-          {
-            "denom": "stake",
-            "amount": "50"
-          }
-        ],
-        "delegated_free": [],
-        "delegated_vesting": [],
-        "end_time": "3160620846",
-        "start_time": "1580309972"
-      }
-    }
-  ]
-}`
+	expected := `{"params":{"max_memo_characters":"10","tx_sig_limit":"10","tx_size_cost_per_byte":"10","sig_verify_cost_ed25519":"10","sig_verify_cost_secp256k1":"10"},"accounts":[{"@type":"/cosmos.auth.v1beta1.BaseAccount","address":"cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u","pub_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A6F1ZrVNtYoOow+b4WfUKgv4FqotgS/1gPlG23d69ER9"},"account_number":"1","sequence":"0"},{"@type":"/cosmos.vesting.v1beta1.ContinuousVestingAccount","base_vesting_account":{"base_account":{"address":"cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74","pub_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A9cjpzj9EGI+klNDXM5eH68hKjEygnUY5hktk74OnSri"},"account_number":"1","sequence":"0"},"original_vesting":[{"denom":"stake","amount":"50"}],"delegated_free":[],"delegated_vesting":[],"end_time":"3160620846"},"start_time":"3160620846"}]}`
 
 	fmt.Printf("migrated=%+v\n", migrated.Accounts)
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)

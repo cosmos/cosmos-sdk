@@ -71,7 +71,11 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDeposit) (*sdk.Result, error) {
-	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalId, msg.Depositor, msg.Amount)
+	accAddr, err := sdk.AccAddressFromBech32(msg.Depositor)
+	if err != nil {
+		return nil, err
+	}
+	votingStarted, err := keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +92,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDepos
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
 		),
 	)
 
@@ -105,7 +109,11 @@ func handleMsgDeposit(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgDepos
 }
 
 func handleMsgVote(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgVote) (*sdk.Result, error) {
-	err := keeper.AddVote(ctx, msg.ProposalId, msg.Voter, msg.Option)
+	accAddr, accErr := sdk.AccAddressFromBech32(msg.Voter)
+	if accErr != nil {
+		return nil, accErr
+	}
+	err := keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Option)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +130,7 @@ func handleMsgVote(ctx sdk.Context, keeper keeper.Keeper, msg *types.MsgVote) (*
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Voter),
 		),
 	)
 

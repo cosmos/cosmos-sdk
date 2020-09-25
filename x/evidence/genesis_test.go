@@ -54,7 +54,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 						Height:           int64(i + 1),
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)
@@ -75,7 +75,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 					testEvidence[i] = &types.Equivocation{
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)
@@ -124,7 +124,7 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 					Height:           1,
 					Power:            100,
 					Time:             time.Now().UTC(),
-					ConsensusAddress: pk.PubKey().Address().Bytes(),
+					ConsensusAddress: pk.PubKey().Address().String(),
 				})
 			},
 			true,

@@ -90,7 +90,7 @@ func TestGetProposalsFiltered(t *testing.T) {
 
 	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
 
-	addr1 := sdk.AccAddress("foo")
+	addr1 := sdk.AccAddress("foo_________________")
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {

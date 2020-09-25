@@ -32,11 +32,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Tx struct {
 	// body is the processable content of the transaction
 	Body *TxBody `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
-	// auth_info is the authorization related content of the transaction, specifically
-	// signers, signer modes and fee
+	// auth_info is the authorization related content of the transaction,
+	// specifically signers, signer modes and fee
 	AuthInfo *AuthInfo `protobuf:"bytes,2,opt,name=auth_info,json=authInfo,proto3" json:"auth_info,omitempty"`
-	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
-	// allow connecting signature meta information like public key and signing mode by position.
+	// signatures is a list of signatures that matches the length and order of
+	// AuthInfo's signer_infos to allow connecting signature meta information like
+	// public key and signing mode by position.
 	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
 }
 
@@ -94,17 +95,21 @@ func (m *Tx) GetSignatures() [][]byte {
 	return nil
 }
 
-// TxRaw is a variant of Tx that pins the signer's exact binary representation of body and
-// auth_info. This is used for signing, broadcasting and verification. The binary
-// `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
-// becomes the "txhash", commonly used as the transaction ID.
+// TxRaw is a variant of Tx that pins the signer's exact binary representation
+// of body and auth_info. This is used for signing, broadcasting and
+// verification. The binary `serialize(tx: TxRaw)` is stored in Tendermint and
+// the hash `sha256(serialize(tx: TxRaw))` becomes the "txhash", commonly used
+// as the transaction ID.
 type TxRaw struct {
-	// body_bytes is a protobuf serialization of a TxBody that matches the representation in SignDoc.
+	// body_bytes is a protobuf serialization of a TxBody that matches the
+	// representation in SignDoc.
 	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
-	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in SignDoc.
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the
+	// representation in SignDoc.
 	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
-	// signatures is a list of signatures that matches the length and order of AuthInfo's signer_infos to
-	// allow connecting signature meta information like public key and signing mode by position.
+	// signatures is a list of signatures that matches the length and order of
+	// AuthInfo's signer_infos to allow connecting signature meta information like
+	// public key and signing mode by position.
 	Signatures [][]byte `protobuf:"bytes,3,rep,name=signatures,proto3" json:"signatures,omitempty"`
 }
 
@@ -164,9 +169,11 @@ func (m *TxRaw) GetSignatures() [][]byte {
 
 // SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 type SignDoc struct {
-	// body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw.
+	// body_bytes is protobuf serialization of a TxBody that matches the
+	// representation in TxRaw.
 	BodyBytes []byte `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
-	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in TxRaw.
+	// auth_info_bytes is a protobuf serialization of an AuthInfo that matches the
+	// representation in TxRaw.
 	AuthInfoBytes []byte `protobuf:"bytes,2,opt,name=auth_info_bytes,json=authInfoBytes,proto3" json:"auth_info_bytes,omitempty"`
 	// chain_id is the unique identifier of the chain this transaction targets.
 	// It prevents signed transactions from being used on another chain by an
@@ -239,12 +246,14 @@ func (m *SignDoc) GetAccountNumber() uint64 {
 
 // TxBody is the body of a transaction that all signers sign over.
 type TxBody struct {
-	// messages is a list of messages to be executed. The required signers of those messages define
-	// the number and order of elements in AuthInfo's signer_infos and Tx's signatures.
-	// Each required signer address is added to the list only the first time it occurs.
+	// messages is a list of messages to be executed. The required signers of
+	// those messages define the number and order of elements in AuthInfo's
+	// signer_infos and Tx's signatures. Each required signer address is added to
+	// the list only the first time it occurs.
 	//
-	// By convention, the first required signer (usually from the first message) is referred
-	// to as the primary signer and pays the fee for the whole transaction.
+	// By convention, the first required signer (usually from the first message)
+	// is referred to as the primary signer and pays the fee for the whole
+	// transaction.
 	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
 	// memo is any arbitrary memo to be added to the transaction
 	Memo string `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
@@ -329,11 +338,13 @@ func (m *TxBody) GetNonCriticalExtensionOptions() []*types.Any {
 	return nil
 }
 
-// AuthInfo describes the fee and signer modes that are used to sign a transaction.
+// AuthInfo describes the fee and signer modes that are used to sign a
+// transaction.
 type AuthInfo struct {
 	// signer_infos defines the signing modes for the required signers. The number
-	// and order of elements must match the required signers from TxBody's messages.
-	// The first element is the primary signer and the one which pays the fee.
+	// and order of elements must match the required signers from TxBody's
+	// messages. The first element is the primary signer and the one which pays
+	// the fee.
 	SignerInfos []*SignerInfo `protobuf:"bytes,1,rep,name=signer_infos,json=signerInfos,proto3" json:"signer_infos,omitempty"`
 	// Fee is the fee and gas limit for the transaction. The first signer is the
 	// primary signer and the one which pays the fee. The fee can be calculated
@@ -389,7 +400,8 @@ func (m *AuthInfo) GetFee() *Fee {
 	return nil
 }
 
-// SignerInfo describes the public key and signing mode of a single top-level signer.
+// SignerInfo describes the public key and signing mode of a single top-level
+// signer.
 type SignerInfo struct {
 	// public_key is the public key of the signer. It is optional for accounts
 	// that already exist in state. If unset, the verifier can use the required \
@@ -399,8 +411,8 @@ type SignerInfo struct {
 	// structure to support nested multisig pubkey's
 	ModeInfo *ModeInfo `protobuf:"bytes,2,opt,name=mode_info,json=modeInfo,proto3" json:"mode_info,omitempty"`
 	// sequence is the sequence of the account, which describes the
-	// number of committed transactions signed by a given address. It is used to prevent
-	// replay attacks.
+	// number of committed transactions signed by a given address. It is used to
+	// prevent replay attacks.
 	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
@@ -548,7 +560,8 @@ func (*ModeInfo) XXX_OneofWrappers() []interface{} {
 }
 
 // Single is the mode info for a single signer. It is structured as a message
-// to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the future
+// to allow for additional fields such as locale for SIGN_MODE_TEXTUAL in the
+// future
 type ModeInfo_Single struct {
 	// mode is the signing mode of the single signer
 	Mode signing.SignMode `protobuf:"varint,1,opt,name=mode,proto3,enum=cosmos.tx.signing.v1beta1.SignMode" json:"mode,omitempty"`

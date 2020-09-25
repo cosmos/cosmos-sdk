@@ -37,7 +37,15 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 	if header.Sequence != clientState.Sequence {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"sequence provided in the header does not match the client state sequence (%d != %d)", header.Sequence, clientState.Sequence,
+			"header sequence does not match the client state sequence (%d != %d)", header.Sequence, clientState.Sequence,
+		)
+	}
+
+	// assert update timestamp is greater than or equal to current consensus state timestamp
+	if header.Timestamp < clientState.ConsensusState.Timestamp {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header timestamp is not greater than or equal to the consensus state timestamp (%d < %d)", header.Timestamp, clientState.ConsensusState.Timestamp,
 		)
 	}
 

@@ -59,6 +59,15 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				false,
 			},
 			{
+				"invalid header Signature",
+				func() {
+					clientState = solomachine.ClientState()
+					h := solomachine.CreateHeader()
+					h.Signature = suite.GetInvalidProof()
+					header = h
+				}, false,
+			},
+			{
 				"signature uses wrong sequence",
 				func() {
 					clientState = solomachine.ClientState()

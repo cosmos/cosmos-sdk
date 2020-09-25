@@ -56,6 +56,26 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
+				"invalid SignatureOne signature",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureOne.Signature = suite.GetInvalidProof()
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"invalid SignatureTwo signature",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureTwo.Signature = suite.GetInvalidProof()
+					misbehaviour = m
+				}, false,
+			},
+			{
 				"invalid first signature",
 				func() {
 					clientState = solomachine.ClientState()

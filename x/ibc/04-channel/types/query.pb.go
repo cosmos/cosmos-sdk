@@ -1278,7 +1278,7 @@ func (m *QueryUnrelayedAcksRequest) GetPacketCommitmentSequences() []uint64 {
 // QueryUnrelayedAcksResponse is the response type for the
 // Query/UnrelayedAcks RPC method
 type QueryUnrelayedAcksResponse struct {
-	// list of unreceived acknowledgement sequences
+	// list of unrelayed acknowledgement sequences
 	Sequences []uint64 `protobuf:"varint,1,rep,packed,name=sequences,proto3" json:"sequences,omitempty"`
 	// query block height
 	Height types.Height `protobuf:"bytes,2,opt,name=height,proto3" json:"height"`

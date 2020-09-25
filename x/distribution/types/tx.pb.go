@@ -4,7 +4,6 @@
 package types
 
 import (
-	bytes "bytes"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -29,8 +28,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgSetWithdrawAddress sets the withdraw address for
 // a delegator (or validator self-delegation).
 type MsgSetWithdrawAddress struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	WithdrawAddress  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	WithdrawAddress  string `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
 }
 
 func (m *MsgSetWithdrawAddress) Reset()         { *m = MsgSetWithdrawAddress{} }
@@ -66,25 +65,11 @@ func (m *MsgSetWithdrawAddress) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetWithdrawAddress proto.InternalMessageInfo
 
-func (m *MsgSetWithdrawAddress) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *MsgSetWithdrawAddress) GetWithdrawAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.WithdrawAddress
-	}
-	return nil
-}
-
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
 // from a single validator.
 type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 }
 
 func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegatorReward{} }
@@ -120,23 +105,10 @@ func (m *MsgWithdrawDelegatorReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
 
-func (m *MsgWithdrawDelegatorReward) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *MsgWithdrawDelegatorReward) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-// MsgWithdrawValidatorCommission withdraws the full commission to the validator address.
+// MsgWithdrawValidatorCommission withdraws the full commission to the validator
+// address.
 type MsgWithdrawValidatorCommission struct {
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 }
 
 func (m *MsgWithdrawValidatorCommission) Reset()         { *m = MsgWithdrawValidatorCommission{} }
@@ -172,18 +144,11 @@ func (m *MsgWithdrawValidatorCommission) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawValidatorCommission proto.InternalMessageInfo
 
-func (m *MsgWithdrawValidatorCommission) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 type MsgFundCommunityPool struct {
-	Amount    github_com_cosmos_cosmos_sdk_types.Coins      `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	Depositor github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=depositor,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"depositor,omitempty"`
+	Amount    github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	Depositor string                                   `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
 }
 
 func (m *MsgFundCommunityPool) Reset()         { *m = MsgFundCommunityPool{} }
@@ -219,20 +184,6 @@ func (m *MsgFundCommunityPool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgFundCommunityPool proto.InternalMessageInfo
 
-func (m *MsgFundCommunityPool) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
-
-func (m *MsgFundCommunityPool) GetDepositor() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Depositor
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*MsgSetWithdrawAddress)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddress")
 	proto.RegisterType((*MsgWithdrawDelegatorReward)(nil), "cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward")
@@ -245,148 +196,37 @@ func init() {
 }
 
 var fileDescriptor_ed4f433d965e58ca = []byte{
-	// 449 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0xb1, 0x6e, 0xd4, 0x30,
-	0x1c, 0xc6, 0xe3, 0x20, 0x55, 0xc2, 0x20, 0xd1, 0x46, 0x45, 0x1c, 0x87, 0xe4, 0x54, 0x11, 0xc3,
-	0x2d, 0x4d, 0x08, 0x6c, 0x6c, 0xbd, 0x22, 0x26, 0xa2, 0xa2, 0x43, 0x2a, 0x12, 0x0b, 0x72, 0x62,
-	0x2b, 0xb5, 0x48, 0xf2, 0x3f, 0xc5, 0x4e, 0xd3, 0xeb, 0x33, 0x30, 0x30, 0x30, 0xf2, 0x00, 0x88,
-	0x27, 0xe9, 0xc0, 0xd0, 0x91, 0x29, 0xa0, 0xdc, 0x1b, 0x74, 0x64, 0x42, 0x49, 0x9c, 0xd0, 0x6b,
-	0x11, 0x2a, 0x0c, 0x30, 0x25, 0x8a, 0x3f, 0x7f, 0xbf, 0x2f, 0x7f, 0xeb, 0x33, 0xbe, 0x1f, 0x81,
-	0x4c, 0x41, 0x7a, 0x4c, 0x48, 0x95, 0x8b, 0xb0, 0x50, 0x02, 0x32, 0xef, 0xd0, 0x0f, 0xb9, 0xa2,
-	0xbe, 0xa7, 0x8e, 0xdc, 0x79, 0x0e, 0x0a, 0xac, 0x7b, 0x9d, 0xca, 0x3d, 0xaf, 0x72, 0xb5, 0x6a,
-	0xbc, 0x19, 0x43, 0x0c, 0xad, 0xce, 0x6b, 0xde, 0xba, 0x2d, 0x63, 0xa2, 0x8d, 0x43, 0x2a, 0xf9,
-	0x60, 0x18, 0x81, 0xc8, 0xba, 0x75, 0xe7, 0xad, 0x89, 0x6f, 0x07, 0x32, 0x7e, 0xc1, 0xd5, 0x4b,
-	0xa1, 0x0e, 0x58, 0x4e, 0xcb, 0x1d, 0xc6, 0x72, 0x2e, 0xa5, 0x75, 0x8c, 0x37, 0x18, 0x4f, 0x78,
-	0x4c, 0x15, 0xe4, 0xaf, 0x69, 0xf7, 0x71, 0x84, 0xb6, 0xd0, 0xe4, 0xe6, 0x34, 0x38, 0xab, 0xec,
-	0xd1, 0x82, 0xa6, 0xc9, 0x63, 0xe7, 0x92, 0xc4, 0xf9, 0x5e, 0xd9, 0xdb, 0xb1, 0x50, 0x07, 0x45,
-	0xe8, 0x46, 0x90, 0x7a, 0x9a, 0xdf, 0x3d, 0xb6, 0x25, 0x7b, 0xe3, 0xa9, 0xc5, 0x9c, 0x4b, 0x77,
-	0x27, 0x8a, 0x34, 0x69, 0xb6, 0x3e, 0x98, 0xf4, 0xec, 0x12, 0xaf, 0x97, 0x3a, 0xce, 0x80, 0x36,
-	0x5b, 0xf4, 0xb3, 0xb3, 0xca, 0xbe, 0xd3, 0xa1, 0x2f, 0x2a, 0xfe, 0x82, 0x7c, 0xab, 0x5c, 0xfd,
-	0x69, 0xe7, 0xbd, 0x89, 0xc7, 0x81, 0x8c, 0xfb, 0x59, 0x3c, 0xe9, 0x83, 0xcd, 0x78, 0x49, 0x73,
-	0xf6, 0x5f, 0x67, 0x72, 0x8c, 0x37, 0x0e, 0x69, 0x22, 0xd8, 0x0a, 0xdb, 0xbc, 0xc8, 0xbe, 0x24,
-	0xb9, 0x2a, 0x7b, 0x9f, 0x26, 0x03, 0x7b, 0x30, 0xe9, 0xc7, 0xf2, 0x01, 0x61, 0x72, 0x6e, 0x2c,
-	0xfb, 0xfd, 0xfa, 0x2e, 0xa4, 0xa9, 0x90, 0x52, 0x40, 0xf6, 0xeb, 0x78, 0xe8, 0xdf, 0xc4, 0xfb,
-	0x8c, 0xf0, 0x66, 0x20, 0xe3, 0xa7, 0x45, 0xc6, 0x9a, 0x44, 0x45, 0x26, 0xd4, 0xe2, 0x39, 0x40,
-	0x62, 0x45, 0x78, 0x8d, 0xa6, 0x50, 0x64, 0x6a, 0x84, 0xb6, 0xae, 0x4d, 0x6e, 0x3c, 0xbc, 0xeb,
-	0xea, 0x06, 0x35, 0x75, 0xe8, 0x9b, 0xe3, 0xee, 0x82, 0xc8, 0xa6, 0x0f, 0x4e, 0x2a, 0xdb, 0xf8,
-	0xf4, 0xd5, 0x9e, 0x5c, 0x21, 0x4c, 0xb3, 0x41, 0xce, 0xb4, 0xb5, 0xb5, 0x87, 0xaf, 0x33, 0x3e,
-	0x07, 0x29, 0x14, 0xe4, 0xfa, 0x40, 0xfc, 0x3f, 0x3f, 0xf0, 0x9f, 0x1e, 0xd3, 0xbd, 0x8f, 0x35,
-	0x41, 0x27, 0x35, 0x41, 0xa7, 0x35, 0x41, 0xdf, 0x6a, 0x82, 0xde, 0x2d, 0x89, 0x71, 0xba, 0x24,
-	0xc6, 0x97, 0x25, 0x31, 0x5e, 0xf9, 0xbf, 0xf5, 0x3d, 0x5a, 0xbd, 0x42, 0x5a, 0x4c, 0xb8, 0xd6,
-	0x76, 0xfd, 0xd1, 0x8f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xce, 0x95, 0x71, 0x58, 0x66, 0x04, 0x00,
-	0x00,
+	// 436 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xbd, 0x8e, 0xd3, 0x40,
+	0x1c, 0xc4, 0xbd, 0x87, 0x74, 0xe2, 0x96, 0x82, 0x9c, 0x75, 0x88, 0x90, 0x3b, 0xad, 0x4f, 0x16,
+	0x45, 0x1a, 0x6c, 0x02, 0xdd, 0x75, 0xe4, 0xd0, 0x49, 0x29, 0x22, 0x90, 0x91, 0x40, 0xa2, 0x41,
+	0x6b, 0xef, 0xca, 0x59, 0x61, 0xfb, 0x1f, 0x79, 0xd7, 0x71, 0xf2, 0x06, 0x94, 0x3c, 0x42, 0x24,
+	0x1a, 0x44, 0x4d, 0xc9, 0x03, 0xa4, 0x4c, 0x49, 0x15, 0x90, 0xd3, 0x50, 0xe7, 0x09, 0x50, 0xfc,
+	0x95, 0x2f, 0x44, 0x03, 0x95, 0xad, 0xf1, 0xec, 0x6f, 0x46, 0xd6, 0x2c, 0x7e, 0xe8, 0x81, 0x0c,
+	0x41, 0xda, 0x4c, 0x48, 0x15, 0x0b, 0x37, 0x51, 0x02, 0x22, 0x7b, 0xd4, 0x71, 0xb9, 0xa2, 0x1d,
+	0x5b, 0x8d, 0xad, 0x61, 0x0c, 0x0a, 0xf4, 0xf3, 0xc2, 0x65, 0x6d, 0xbb, 0xac, 0xd2, 0xd5, 0x3a,
+	0xf3, 0xc1, 0x87, 0xdc, 0x67, 0xaf, 0xdf, 0x8a, 0x23, 0x2d, 0x52, 0x82, 0x5d, 0x2a, 0x79, 0x0d,
+	0xf4, 0x40, 0x44, 0xc5, 0x77, 0xf3, 0x2b, 0xc2, 0xf7, 0xfa, 0xd2, 0x7f, 0xc5, 0xd5, 0x1b, 0xa1,
+	0x06, 0x2c, 0xa6, 0xe9, 0x33, 0xc6, 0x62, 0x2e, 0xa5, 0xde, 0xc3, 0xa7, 0x8c, 0x07, 0xdc, 0xa7,
+	0x0a, 0xe2, 0x77, 0xb4, 0x10, 0x9b, 0xe8, 0x12, 0xb5, 0x4f, 0xba, 0x17, 0xab, 0x85, 0xd1, 0x9c,
+	0xd0, 0x30, 0xb8, 0x32, 0x0f, 0x2c, 0xa6, 0xd3, 0xa8, 0xb5, 0x0a, 0x75, 0x83, 0x1b, 0x69, 0x49,
+	0xaf, 0x49, 0x47, 0x39, 0xe9, 0x7c, 0xb5, 0x30, 0xee, 0x17, 0xa4, 0x7d, 0x87, 0xe9, 0xdc, 0x4d,
+	0x77, 0x2b, 0x5d, 0xdd, 0xfe, 0x30, 0x35, 0xb4, 0x5f, 0x53, 0x43, 0x33, 0xbf, 0x21, 0xdc, 0xea,
+	0x4b, 0xbf, 0xea, 0xfc, 0xbc, 0x4a, 0x74, 0x78, 0x4a, 0x63, 0xf6, 0x3f, 0xbb, 0xf7, 0xf0, 0xe9,
+	0x88, 0x06, 0x82, 0xed, 0xa0, 0x8e, 0xf6, 0x51, 0x07, 0x16, 0xd3, 0x69, 0xd4, 0xda, 0x61, 0xfd,
+	0x04, 0x93, 0xad, 0xf6, 0xaf, 0x2b, 0xe3, 0x35, 0x84, 0xa1, 0x90, 0x52, 0x40, 0xf4, 0xe7, 0x58,
+	0xf4, 0x8f, 0xb1, 0x9f, 0x10, 0x3e, 0xeb, 0x4b, 0xff, 0x26, 0x89, 0xd8, 0x3a, 0x2a, 0x89, 0x84,
+	0x9a, 0xbc, 0x04, 0x08, 0x74, 0x0f, 0x1f, 0xd3, 0x10, 0x92, 0x48, 0x35, 0xd1, 0xe5, 0xad, 0xf6,
+	0x9d, 0x27, 0x0f, 0xac, 0x72, 0x69, 0xeb, 0xd9, 0x54, 0x0b, 0xb3, 0xae, 0x41, 0x44, 0xdd, 0xc7,
+	0xb3, 0x85, 0xa1, 0x7d, 0xf9, 0x61, 0xb4, 0x7d, 0xa1, 0x06, 0x89, 0x6b, 0x79, 0x10, 0xda, 0xe5,
+	0xc6, 0x8a, 0xc7, 0x23, 0xc9, 0xde, 0xdb, 0x6a, 0x32, 0xe4, 0x32, 0x3f, 0x20, 0x9d, 0x12, 0xad,
+	0x5f, 0xe0, 0x13, 0xc6, 0x87, 0x20, 0x85, 0x82, 0xb8, 0xf8, 0x83, 0xce, 0x46, 0xd8, 0xb4, 0xec,
+	0xbe, 0xf8, 0x9c, 0x11, 0x34, 0xcb, 0x08, 0x9a, 0x67, 0x04, 0xfd, 0xcc, 0x08, 0xfa, 0xb8, 0x24,
+	0xda, 0x7c, 0x49, 0xb4, 0xef, 0x4b, 0xa2, 0xbd, 0xed, 0xfc, 0x35, 0x77, 0xbc, 0x7b, 0x83, 0xf2,
+	0x1a, 0xee, 0x71, 0x3e, 0xf5, 0xa7, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x89, 0x6e, 0x9f, 0xc2,
+	0x65, 0x03, 0x00, 0x00,
 }
 
-func (this *MsgSetWithdrawAddress) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgSetWithdrawAddress)
-	if !ok {
-		that2, ok := that.(MsgSetWithdrawAddress)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.WithdrawAddress, that1.WithdrawAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgWithdrawDelegatorReward) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgWithdrawDelegatorReward)
-	if !ok {
-		that2, ok := that.(MsgWithdrawDelegatorReward)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgWithdrawValidatorCommission) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgWithdrawValidatorCommission)
-	if !ok {
-		that2, ok := that.(MsgWithdrawValidatorCommission)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	return true
-}
-func (this *MsgFundCommunityPool) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*MsgFundCommunityPool)
-	if !ok {
-		that2, ok := that.(MsgFundCommunityPool)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if len(this.Amount) != len(that1.Amount) {
-		return false
-	}
-	for i := range this.Amount {
-		if !this.Amount[i].Equal(&that1.Amount[i]) {
-			return false
-		}
-	}
-	if !bytes.Equal(this.Depositor, that1.Depositor) {
-		return false
-	}
-	return true
-}
 func (m *MsgSetWithdrawAddress) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -651,7 +491,7 @@ func (m *MsgSetWithdrawAddress) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -661,31 +501,29 @@ func (m *MsgSetWithdrawAddress) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -695,25 +533,23 @@ func (m *MsgSetWithdrawAddress) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.WithdrawAddress = append(m.WithdrawAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.WithdrawAddress == nil {
-				m.WithdrawAddress = []byte{}
-			}
+			m.WithdrawAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -772,7 +608,7 @@ func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -782,31 +618,29 @@ func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -816,25 +650,23 @@ func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -893,7 +725,7 @@ func (m *MsgWithdrawValidatorCommission) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -903,25 +735,23 @@ func (m *MsgWithdrawValidatorCommission) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1014,7 +844,7 @@ func (m *MsgFundCommunityPool) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1024,25 +854,23 @@ func (m *MsgFundCommunityPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Depositor = append(m.Depositor[:0], dAtA[iNdEx:postIndex]...)
-			if m.Depositor == nil {
-				m.Depositor = []byte{}
-			}
+			m.Depositor = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -25,7 +25,7 @@ func TestDecodeStore(t *testing.T) {
 		Height:           10,
 		Time:             time.Now().UTC(),
 		Power:            1000,
-		ConsensusAddress: sdk.ConsAddress(delPk1.Address()),
+		ConsensusAddress: sdk.ConsAddress(delPk1.Address()).String(),
 	}
 
 	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)

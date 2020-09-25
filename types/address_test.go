@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -57,10 +57,11 @@ func TestEmptyAddresses(t *testing.T) {
 }
 
 func TestRandBech32PubkeyConsistency(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub)
+		rand.Read(pub.Key)
 
 		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
@@ -115,10 +116,11 @@ func TestYAMLMarshalers(t *testing.T) {
 }
 
 func TestRandBech32AccAddrConsistency(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 1000; i++ {
-		rand.Read(pub)
+		rand.Read(pub.Key)
 
 		acc := types.AccAddress(pub.Address())
 		res := types.AccAddress{}
@@ -153,10 +155,11 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 }
 
 func TestValAddr(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 20; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub.Key)
 
 		acc := types.ValAddress(pub.Address())
 		res := types.ValAddress{}
@@ -193,10 +196,11 @@ func TestValAddr(t *testing.T) {
 }
 
 func TestConsAddress(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
 
 	for i := 0; i < 20; i++ {
-		rand.Read(pub[:])
+		rand.Read(pub.Key[:])
 
 		acc := types.ConsAddress(pub.Address())
 		res := types.ConsAddress{}
@@ -242,10 +246,11 @@ func RandString(n int) string {
 }
 
 func TestConfiguredPrefix(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
 	for length := 1; length < 10; length++ {
 		for times := 1; times < 20; times++ {
-			rand.Read(pub[:])
+			rand.Read(pub.Key[:])
 			// Test if randomly generated prefix of a given length works
 			prefix := RandString(length)
 
@@ -297,8 +302,9 @@ func TestConfiguredPrefix(t *testing.T) {
 }
 
 func TestAddressInterface(t *testing.T) {
-	pub := make(ed25519.PubKey, ed25519.PubKeySize)
-	rand.Read(pub)
+	pubBz := make([]byte, ed25519.PubKeySize)
+	pub := &ed25519.PubKey{Key: pubBz}
+	rand.Read(pub.Key)
 
 	addrs := []types.Address{
 		types.ConsAddress(pub.Address()),

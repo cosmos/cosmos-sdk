@@ -4,14 +4,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v0_38"
+	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // Migrate accepts exported v0.38 x/evidence genesis state and migrates it to
 // v0.40 x/evidence genesis state. The migration includes:
 //
 // - Removing the `Params` field.
-func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *GenesisState {
-	var newEquivocations = make([]Equivocation, len(evidenceState.Evidence))
+func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *v040evidence.GenesisState {
+	var newEquivocations = make([]v040evidence.Equivocation, len(evidenceState.Evidence))
 	for i, evidence := range evidenceState.Evidence {
 		equivocation, ok := evidence.(v038evidence.Equivocation)
 		if !ok {
@@ -19,7 +20,7 @@ func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *Genesis
 			continue
 		}
 
-		newEquivocations[i] = Equivocation{
+		newEquivocations[i] = v040evidence.Equivocation{
 			Height:           equivocation.Height,
 			Time:             equivocation.Time,
 			Power:            equivocation.Power,
@@ -33,7 +34,7 @@ func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *Genesis
 		newEvidence[i] = codectypes.UnsafePackAny(&equi)
 	}
 
-	return &GenesisState{
+	return &v040evidence.GenesisState{
 		Evidence: newEvidence,
 	}
 }

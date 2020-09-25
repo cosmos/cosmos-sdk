@@ -13,7 +13,7 @@ import (
 	v034 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
-	v040 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
+	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
 )
 
 func TestMigrate(t *testing.T) {
@@ -45,7 +45,7 @@ func TestMigrate(t *testing.T) {
 		Accounts: v038auth.GenesisAccounts{acc1, vaac},
 	}
 
-	migrated := v040.Migrate(gs)
+	migrated := v040auth.Migrate(gs)
 	expected := `{
   "params": {
     "max_memo_characters": "10",

@@ -84,6 +84,8 @@ func (t *Tx) ValidateBasic() error {
 }
 
 // GetSigners retrieves all the signers of a tx.
+// This includes all unique signers of the messages (in order),
+// as well as the FeePayer (if specified and not already included).
 func (t *Tx) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
@@ -95,6 +97,13 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 				seen[addr.String()] = true
 			}
 		}
+	}
+
+	// ensure any specified fee payer is included in the required signers (at the end)
+	feePayer := t.AuthInfo.Fee.Payer
+	if feePayer != nil && !seen[feePayer.String()] {
+		signers = append(signers, feePayer)
+		seen[feePayer.String()] = true
 	}
 
 	return signers

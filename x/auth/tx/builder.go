@@ -132,7 +132,12 @@ func (w *wrapper) GetFee() sdk.Coins {
 }
 
 func (w *wrapper) FeePayer() sdk.AccAddress {
-	return w.GetSigners()[0]
+	feePayer := w.tx.AuthInfo.Fee.Payer
+	if feePayer == nil {
+		// use first signer as default if no payer specified
+		feePayer = w.GetSigners()[0]
+	}
+	return feePayer
 }
 
 func (w *wrapper) GetMemo() string {

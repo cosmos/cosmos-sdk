@@ -124,7 +124,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to sort JSON genesis doc")
 			}
 
-			cmd.Println(string(sortedBz))
+			fmt.Println(string(sortedBz))
 			return nil
 		},
 	}

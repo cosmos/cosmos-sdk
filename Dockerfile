@@ -22,10 +22,9 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 # Add source files
 COPY . .
 
-# build Cosmos SDK, remove packages
-RUN make build-simd && \
-    cp ./build/simd /go/bin
-# make build-sim-linux ??
+# install simapp, remove packages
+RUN make install
+# make install-linux ??
 
 
 # Final image

@@ -84,6 +84,9 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
+	go build -mod=readonly ./...
+
+install: go.sum
 	go install -mod=readonly ./...
 
 simd:
@@ -122,7 +125,7 @@ build-simd-linux: go.sum
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build build-simd build-simd-linux cosmovisor
+.PHONY: build install build-simd-all build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

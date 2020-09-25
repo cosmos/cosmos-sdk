@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -40,13 +40,13 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // RegisterRESTRoutes registers all REST query handlers
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
-	rest.RegisterRoutes(ctx, r)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
+	rest.RegisterRoutes(clientCtx, r)
 }
 
 //GetQueryCmd returns the cli query commands for this module
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(StoreKey, cdc)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd(StoreKey)
 }
 
 // GetTxCmd returns the transaction commands for this module

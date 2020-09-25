@@ -142,7 +142,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},
@@ -291,7 +291,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},
@@ -315,7 +315,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"unsupported - localhost",
 			func() {
-				msg, err = types.NewMsgUpdateClient(exported.ClientTypeLocalHost, suite.chainA.CreateTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpdateClient(exported.Localhost, suite.chainA.CreateTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,
@@ -441,7 +441,7 @@ func (suite *TypesTestSuite) TestMsgSubmitMisbehaviour_ValidateBasic() {
 		{
 			"invalid signer",
 			func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			false,
 		},

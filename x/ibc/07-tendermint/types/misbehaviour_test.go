@@ -7,9 +7,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
@@ -24,7 +24,7 @@ func (suite *TendermintTestSuite) TestMisbehaviour() {
 		ClientId: clientID,
 	}
 
-	suite.Require().Equal(exported.Tendermint, misbehaviour.ClientType())
+	suite.Require().Equal(types.Tendermint, misbehaviour.ClientType())
 	suite.Require().Equal(clientID, misbehaviour.GetClientID())
 	suite.Require().Equal(height, misbehaviour.GetHeight())
 }
@@ -36,7 +36,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 
 	epochHeight := int64(height.EpochHeight)
 
-	altVal := tmtypes.NewValidator(altPubKey, epochHeight)
+	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), epochHeight)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))

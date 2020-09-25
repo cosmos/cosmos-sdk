@@ -12,12 +12,7 @@ import (
 // ClientUpdateProposal will try to update the client with the new header if and only if
 // the proposal passes. The localhost client is not allowed to be modified with a proposal.
 func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdateProposal) error {
-	clientType, found := k.GetClientType(ctx, p.ClientId)
-	if !found {
-		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", p.ClientId)
-	}
-
-	if clientType == exported.Localhost || p.ClientId == exported.ClientTypeLocalHost {
+	if p.ClientId == exported.Localhost {
 		return sdkerrors.Wrap(types.ErrInvalidUpdateClientProposal, "cannot update localhost client with proposal")
 	}
 
@@ -46,7 +41,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 		sdk.NewEvent(
 			types.EventTypeUpdateClientProposal,
 			sdk.NewAttribute(types.AttributeKeyClientID, p.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientType.String()),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", header.GetHeight())),
 		),
 	)

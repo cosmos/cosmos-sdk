@@ -1,4 +1,4 @@
-package types
+package legacytx
 
 import (
 	"fmt"
@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -25,6 +25,11 @@ var (
 	priv = ed25519.GenPrivKey()
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
+
+func init() {
+	var amino = codec.NewLegacyAmino()
+	RegisterLegacyAminoCodec(amino)
+}
 
 // Deprecated, use fee amount and gas limit separately on TxBuilder.
 func NewTestStdFee() StdFee {
@@ -156,7 +161,6 @@ func TestTxValidateBasic(t *testing.T) {
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
-	RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 	encoder := DefaultTxEncoder(cdc)
 
@@ -207,7 +211,6 @@ func TestSignatureV2Conversions(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
-	RegisterLegacyAminoCodec(cdc)
 	dummy := []byte("dummySig")
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}
 
@@ -265,7 +268,6 @@ func TestGetSignaturesV2(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
-	RegisterLegacyAminoCodec(cdc)
 
 	fee := NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	sig := StdSignature{PubKey: pubKey, Signature: dummy}

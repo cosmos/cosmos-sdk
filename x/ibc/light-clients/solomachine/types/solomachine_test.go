@@ -38,7 +38,7 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
 	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "testingsolomachine", "testing")
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), exported.ClientTypeSoloMachine)
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
 
 	bz, err := codec.MarshalAny(suite.chainA.Codec, suite.solomachine.ClientState())
 	suite.Require().NoError(err)

@@ -102,7 +102,8 @@ message ClientStateData {
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
-// ConsensusStateSignBytes returns the SignBytes data for consensus state verification.
+// ConsensusStateSignBytes returns the SignBytes data for consensus state
+// verification.
 message ConsensusStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -110,7 +111,8 @@ message ConsensusStateData {
   google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
-// ConnectionStateSignBytes returns the SignBytes data for connection state verification.
+// ConnectionStateSignBytes returns the SignBytes data for connection state
+// verification.
 message ConnectionStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -118,7 +120,8 @@ message ConnectionStateData {
   ibc.connection.ConnectionEnd connection = 2;
 }
 
-// ChannelStateSignBytes returns the SignBytes data for channel state verification.
+// ChannelStateSignBytes returns the SignBytes data for channel state
+// verification.
 message ChannelStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -126,20 +129,22 @@ message ChannelStateData {
   ibc.channel.Channel channel = 2;
 }
 
-// PacketCommitmentSignBytes returns the SignBytes data for packet commitment verification.
+// PacketCommitmentSignBytes returns the SignBytes data for packet commitment
+// verification.
 message PacketCommitmentData {
   bytes path       = 1;
   bytes commitment = 2;
 }
 
-// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement verification.
+// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement
+// verification.
 message PacketAcknowledgementData {
   bytes path            = 1;
   bytes acknowledgement = 2;
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for acknowledgement absence
-// verification.
+// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for
+// acknowledgement absence verification.
 message PacketAcknowledgementAbsenseData {
   bytes path = 1;
 }

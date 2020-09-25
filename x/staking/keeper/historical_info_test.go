@@ -79,12 +79,12 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	// Set last validators in keeper
 	val1 := types.NewValidator(addrVals[2], PKs[2], types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val1.OperatorAddress, 10)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := types.NewValidator(addrVals[3], PKs[3], types.Description{})
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.Validators(vals))
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val2.OperatorAddress, 8)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 8)
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{

@@ -31,7 +31,8 @@ message SigningInfo {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_signing_info\""];
 }
 
-// ValidatorMissedBlocks contains array of missed blocks of corresponding address.
+// ValidatorMissedBlocks contains array of missed blocks of corresponding
+// address.
 message ValidatorMissedBlocks {
   // address is the validator address.
   string address = 1;

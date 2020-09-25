@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
@@ -87,7 +88,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	testClientHeightMinus1 := types.NewHeight(0, height-1)
 
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	suite.valSetHash = suite.valSet.Hash()
 	suite.header = ibctmtypes.CreateTestHeader(testChainID, testClientHeight, testClientHeightMinus1, now2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
@@ -122,14 +123,6 @@ func (suite *KeeperTestSuite) TestSetClientState() {
 	retrievedState, found := suite.keeper.GetClientState(suite.ctx, testClientID)
 	suite.Require().True(found, "GetClientState failed")
 	suite.Require().Equal(clientState, retrievedState, "Client states are not equal")
-}
-
-func (suite *KeeperTestSuite) TestSetClientType() {
-	suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
-	clientType, found := suite.keeper.GetClientType(suite.ctx, testClientID)
-
-	suite.Require().True(found, "GetClientType failed")
-	suite.Require().Equal(exported.Tendermint, clientType, "ClientTypes not stored correctly")
 }
 
 func (suite *KeeperTestSuite) TestSetClientConsensusState() {
@@ -229,7 +222,7 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
 	suite.Require().True(found)
 	expClients = append(expClients, localHostClient)
 
@@ -256,9 +249,9 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	}
 
 	// add localhost client
-	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
+	localHostClient, found := suite.keeper.GetClientState(suite.ctx, exported.Localhost)
 	suite.Require().True(found)
-	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.ClientTypeLocalHost, localHostClient))
+	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.Localhost, localHostClient))
 
 	genClients := suite.keeper.GetAllGenesisClients(suite.ctx)
 
@@ -323,7 +316,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 // 2 clients in total are created on chainA. The first client is updated so it contains an initial consensus state
 // and a consensus state at the update height.
 func (suite KeeperTestSuite) TestGetAllConsensusStates() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 
 	clientState := suite.chainA.GetClientState(clientA)
 	expConsensusHeight0 := clientState.GetLatestHeight()
@@ -331,7 +324,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	suite.Require().True(ok)
 
 	// update client to create a second consensus state
-	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
+	err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 	suite.Require().NoError(err)
 
 	clientState = suite.chainA.GetClientState(clientA)
@@ -346,7 +339,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 	}
 
 	// create second client on chainA
-	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	clientA2, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 	clientState = suite.chainA.GetClientState(clientA2)
 
 	expConsensusHeight2 := clientState.GetLatestHeight()

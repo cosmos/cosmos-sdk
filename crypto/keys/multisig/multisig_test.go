@@ -160,42 +160,6 @@ func TestVerifyMultisignature(t *testing.T) {
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig failed after k good signatures",
 				)
-
-				for i := k + 1; i < len(signingIndices); i++ {
-					signingIndex := signingIndices[i]
-
-					require.NoError(
-						t,
-						multisig.AddSignatureFromPubKey(
-							sig,
-							sigs[signingIndex],
-							pubKeys[signingIndex],
-							pubKeys,
-						),
-					)
-					require.Equal(
-						t,
-						false,
-						pk.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-							return msg, nil
-						}, sig),
-						"multisig didn't verify as expected after k sigs, i %d", i,
-					)
-					require.NoError(
-						t,
-						multisig.AddSignatureFromPubKey(
-							sig,
-							sigs[signingIndex],
-							pubKeys[signingIndex],
-							pubKeys),
-					)
-					require.Equal(
-						t,
-						i+1,
-						len(sig.Signatures),
-						"adding a signature for the same pubkey twice increased signature count by 2",
-					)
-				}
 			},
 			true,
 		},
@@ -210,6 +174,18 @@ func TestVerifyMultisignature(t *testing.T) {
 				multisig.AddSignatureFromPubKey(sig, sigs[0], pubKeys[0], pubKeys)
 				// Add second signature manually
 				sig.Signatures = append(sig.Signatures, sigs[0])
+			},
+			false,
+		},
+		{
+			"unable to verify signature",
+			func() {
+				pubKeys, _ := generatePubKeysAndSignatures(2, msg)
+				_, sigs := generatePubKeysAndSignatures(2, msg)
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
+				sig = multisig.NewMultisig(2)
+				multisig.AddSignatureFromPubKey(sig, sigs[0], pubKeys[0], pubKeys)
+				multisig.AddSignatureFromPubKey(sig, sigs[1], pubKeys[1], pubKeys)
 			},
 			false,
 		},
@@ -259,10 +235,10 @@ func TestMultiSigMigration(t *testing.T) {
 
 	cdc := codec.NewLegacyAmino()
 
-	err := multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet)
+	require.NoError(t, multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet))
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: msg}
+	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature}
 	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 

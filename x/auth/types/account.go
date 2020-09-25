@@ -7,17 +7,14 @@ import (
 	"fmt"
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -95,7 +92,7 @@ func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 
 		any, err := codectypes.NewAnyWithValue(protoMsg)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		acc.PubKey = any

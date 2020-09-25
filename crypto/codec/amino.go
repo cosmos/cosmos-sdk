@@ -42,6 +42,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyName, nil)
+	// TODO Same as above
 	cdc.RegisterConcrete(tmed25519.PrivKey{},
 		tmed25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&ed25519.PrivKey{},

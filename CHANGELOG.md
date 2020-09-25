@@ -1,44 +1,43 @@
 <!--
 guiding principles:
 
-changelogs are for humans, not machines.
-there should be an entry for every single version.
-the same types of changes should be grouped.
-versions and sections should be linkable.
-the latest version comes first.
-the release date of each version is displayed.
-mention whether you follow semantic versioning.
+Changelogs are for humans, not machines.
+There should be an entry for every single version.
+The same types of changes should be grouped.
+Versions and sections should be linkable.
+The latest version comes first.
+The release date of each version is displayed.
+Mention whether you follow Semantic Versioning.
 
 usage:
 
-change log entries are to be added to the unreleased section under the
-appropriate stanza (see below). each entry should ideally include a tag and
-the github issue reference in the following format:
+Change log entries are to be added to the Unreleased section under the
+appropriate stanza (see below). Each entry should ideally include a tag and
+the Github issue reference in the following format:
 
 * (<tag>) \#<issue-number> message
 
-the issue numbers will later be link-ified during the release process so you do
+The issue numbers will later be link-ified during the release process so you do
 not have to worry about including a link manually, but you can if you wish.
 
-types of changes (stanzas):
+Types of changes (Stanzas):
 
-"features" for new features.
-"improvements" for changes in existing functionality.
-"deprecated" for soon-to-be removed features.
-"bug fixes" for any bug fixes.
-"client breaking" for breaking cli commands and rest routes used by end-users.
-"api breaking" for breaking exported apis used by developers building on sdk.
-"state machine breaking" for any changes that result in a different appstate given same genesisstate and txlist.
-
-ref: https://keepachangelog.com/en/1.0.0/
+"Features" for new features.
+"Improvements" for changes in existing functionality.
+"Deprecated" for soon-to-be removed features.
+"Bug Fixes" for any bug fixes.
+"Client Breaking" for breaking CLI commands and REST routes used by end-users.
+"API Breaking" for breaking exported APIs used by developers building on SDK.
+"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-# changelog
+# Changelog
 
-## [unreleased]
+## [Unreleased]
 
 ### Client Breaking Changes
-* __cli__
+* __CLI__
   * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) remove `keys update` command.
   `--moniker` flag can be provided to override the moniker found in `config.toml`.
   * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.

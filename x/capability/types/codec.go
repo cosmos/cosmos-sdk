@@ -4,13 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// capability module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&Capability{}, "cosmos-sdk/Capability", nil)
-	cdc.RegisterConcrete(Owner{}, "cosmos-sdk/Owner", nil)
-	cdc.RegisterConcrete(&CapabilityOwners{}, "cosmos-sdk/CapabilityOwners", nil)
-}
+// RegisterLegacyAminoCodec does nothing. IBC does not support amino, so capability.
+func RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
 
 var (
 	amino = codec.NewLegacyAmino()

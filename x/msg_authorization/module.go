@@ -12,36 +12,49 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 // module codec
-var moduleCdc = codec.New()
+// var moduleCdc = codec.New()
 
-func init() {
-	RegisterCodec(moduleCdc)
-}
+// func init() {
+// 	RegisterCodec(moduleCdc)
+// }
 
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Marshaler
+}
 
 // Name returns the ModuleName
 func (AppModuleBasic) Name() string {
-	return ModuleName
+	return types.ModuleName
 }
 
-// RegisterCodec registers the msg_authorization types on the amino codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
+
+// DefaultGenesis is an empty object
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return nil
+}
+
+// ValidateGenesis is always successful, as we ignore the value
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+	return nil
 }
 
 // RegisterRESTRoutes registers all REST query handlers
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
-	rest.RegisterRoutes(clientCtx, r)
+	// rest.RegisterRoutes(clientCtx, r)
 }
 
 //GetQueryCmd returns the cli query commands for this module
@@ -50,18 +63,18 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(StoreKey, cdc)
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.GetTxCmd(StoreKey)
 }
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -72,14 +85,14 @@ func NewAppModule(keeper Keeper) AppModule {
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route is empty, as we do not handle Messages (just proposals)
-func (AppModule) Route() string { return RouterKey }
+func (AppModule) Route() string { return types.RouterKey }
 
 func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
 }
 
 // QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return QuerierRoute }
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 /// NewQuerierHandler registers a query handler to respond to the module-specific queries
 func (am AppModule) NewQuerierHandler() sdk.Querier {
@@ -90,16 +103,6 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
-}
-
-// DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return []byte("{}")
-}
-
-// ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	return nil
 }
 
 // ExportGenesis is always empty, as InitGenesis does nothing either

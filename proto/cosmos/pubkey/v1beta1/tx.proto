@@ -6,8 +6,8 @@ import "cosmos/crypto/secp256k1/keys.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/pubkey/types";
 
-// MsgCreateVestingAccount defines a message that enables creating a vesting
-// account.
+// MsgChangePubKey defines a message that enables changing a pubkey
+// of an account.
 message MsgChangePubKey {
   bytes address = 1 [
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",

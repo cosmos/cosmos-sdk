@@ -23,7 +23,15 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper) sdk.Handler {
 }
 
 func handleMsgChangePubKey(ctx sdk.Context, ak keeper.AccountKeeper, bk types.BankKeeper, msg *types.MsgChangePubKey) (*sdk.Result, error) {
-	// TODO should implement pubKey change logic here
+
+	if acc := ak.GetAccount(ctx, msg.Address); acc == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s does not exist", msg.Address)
+	}
+
+	acc.SetPubKey(msg.PubKey)
+	ak.SetAccount(ctx, acc)
+
+	// TODO should implement ChangePubKey gas logic here
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -29,8 +29,14 @@ func NewTestGasLimit() uint64 {
 
 // NewTestMsg creates a message for testing with the given signers.
 func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
+	var accAddresses []string
+
+	for _, addr := range addrs {
+		accAddresses = append(accAddresses, addr.String())
+	}
+
 	return &TestMsg{
-		Signers: addrs,
+		Signers: accAddresses,
 	}
 }
 
@@ -44,5 +50,14 @@ func (msg *TestMsg) GetSignBytes() []byte {
 		panic(err)
 	}
 	return sdk.MustSortJSON(bz)
+}
+func (msg *TestMsg) GetSigners() []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(msg.Signers))
+	for i, in := range msg.Signers {
+		addr, _ := sdk.AccAddressFromBech32(in)
+		addrs[i] = addr
+	}
+
+	return addrs
 }
 func (msg *TestMsg) ValidateBasic() error { return nil }

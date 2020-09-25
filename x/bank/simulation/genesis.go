@@ -42,7 +42,7 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 
 	for _, acc := range simState.Accounts {
 		genesisBalances = append(genesisBalances, types.Balance{
-			Address: acc.Address,
+			Address: acc.Address.String(),
 			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))),
 		})
 	}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -57,9 +58,10 @@ func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshalling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
-	*privKey = PrivKey{
-		Key: bz,
+	if len(bz) != PrivKeySize {
+		return fmt.Errorf("invalid privkey size")
 	}
+	privKey.Key = bz
 
 	return nil
 }
@@ -183,9 +185,10 @@ func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshalling.
 func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
-	*pubKey = PubKey{
-		Key: bz,
+	if len(bz) != PubKeySize {
+		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
+	pubKey.Key = bz
 
 	return nil
 }

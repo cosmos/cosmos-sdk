@@ -37,8 +37,8 @@ service Query {
   // ConnectionConsensusState queries the consensus state associated with the
   // connection.
   rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/epoch/"
-                                   "{epoch_number}/height/{epoch_height}";
+    option (google.api.http).get = "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/"
+                                   "epoch/{epoch_number}/height/{epoch_height}";
   }
 }
 

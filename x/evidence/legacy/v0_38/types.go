@@ -4,18 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
-
-// DONTCOVER
-// nolint
 
 // Default parameter values
 const (
@@ -112,38 +107,7 @@ func (e Equivocation) ValidateBasic() error {
 	return nil
 }
 
-// GetConsensusAddress returns the validator's consensus address at time of the
-// Equivocation infraction.
-func (e Equivocation) GetConsensusAddress() sdk.ConsAddress {
-	return e.ConsensusAddress
-}
-
 // GetHeight returns the height at time of the Equivocation infraction.
 func (e Equivocation) GetHeight() int64 {
 	return e.Height
-}
-
-// GetTime returns the time at time of the Equivocation infraction.
-func (e Equivocation) GetTime() time.Time {
-	return e.Time
-}
-
-// GetValidatorPower returns the validator's power at time of the Equivocation
-// infraction.
-func (e Equivocation) GetValidatorPower() int64 {
-	return e.Power
-}
-
-// GetTotalPower is a no-op for the Equivocation type.
-func (e Equivocation) GetTotalPower() int64 { return 0 }
-
-// ConvertDuplicateVoteEvidence converts a Tendermint concrete Evidence type to
-// SDK Evidence using Equivocation as the concrete type.
-func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.Evidence {
-	return Equivocation{
-		Height:           dupVote.Height,
-		Power:            dupVote.Validator.Power,
-		ConsensusAddress: sdk.ConsAddress(dupVote.Validator.Address),
-		Time:             dupVote.Time,
-	}
 }

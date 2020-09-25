@@ -18,8 +18,8 @@ import (
 //-------------------------------------
 
 const (
-	PrivKeyName = "cosmos/PrivKeyEd25519"
-	PubKeyName  = "cosmos/PubKeyEd25519"
+	PrivKeyName = "tendermint/PrivKeyEd25519"
+	PubKeyName  = "tendermint/PubKeyEd25519"
 	// PubKeySize is is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
@@ -56,7 +56,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 // PubKey gets the corresponding public key from the private key.
 //
 // Panics if the private key is not initialized.
-func (privKey *PrivKey) PubKey() crypto.PubKey {
+func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 	// If the latter 32 bytes of the privkey are all zero, privkey is not
 	// initialized.
 	initialized := false
@@ -78,7 +78,7 @@ func (privKey *PrivKey) PubKey() crypto.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
+func (privKey *PrivKey) Equals(other cryptotypes.PrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}
@@ -182,7 +182,7 @@ func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
+func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 	if pubKey.Type() != other.Type() {
 		return false
 	}

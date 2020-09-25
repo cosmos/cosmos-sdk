@@ -39,7 +39,7 @@ func TestPubKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		pubKey   cryptotypes.PubKey
-		other    crypto.PubKey
+		other    cryptotypes.PubKey
 		expectEq bool
 	}{
 		{
@@ -78,7 +78,7 @@ func TestPrivKeyEquals(t *testing.T) {
 	testCases := []struct {
 		msg      string
 		privKey  cryptotypes.PrivKey
-		other    crypto.PrivKey
+		other    cryptotypes.PrivKey
 		expectEq bool
 	}{
 		{

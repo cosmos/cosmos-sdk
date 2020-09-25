@@ -35,7 +35,7 @@ func (privKey *PrivKey) Bytes() []byte {
 
 // PubKey performs the point-scalar multiplication from the privKey on the
 // generator point to get the pubkey.
-func (privKey *PrivKey) PubKey() crypto.PubKey {
+func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), privKey.Key)
 	pk := pubkeyObject.SerializeCompressed()
 	return &PubKey{Key: pk}
@@ -43,7 +43,7 @@ func (privKey *PrivKey) PubKey() crypto.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the
-func (privKey *PrivKey) Equals(other crypto.PrivKey) bool {
+func (privKey *PrivKey) Equals(other cryptotypes.PrivKey) bool {
 	return privKey.Type() == other.Type() && subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
@@ -174,7 +174,7 @@ func (pubKey *PubKey) Type() string {
 	return keyType
 }
 
-func (pubKey *PubKey) Equals(other crypto.PubKey) bool {
+func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 

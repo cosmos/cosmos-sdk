@@ -5,18 +5,28 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 
-// PubKey interface extends proto.Message
-// and tendermint crypto.PubKey
+// PubKey defines a public key and
+// extends proto.Message.
 type PubKey interface {
 	proto.Message
-	tmcrypto.PubKey
+
+	Address() Address
+	Bytes() []byte
+	VerifySignature(msg []byte, sig []byte) bool
+	Equals(PubKey) bool
+	Type() string
 }
 
-// PrivKey interface extends proto.Message
-// and tendermint crypto.PrivKey
+// PrivKey defines a private key and
+// extends proto.Message.
 type PrivKey interface {
 	proto.Message
-	tmcrypto.PrivKey
+
+	Bytes() []byte
+	Sign(msg []byte) ([]byte, error)
+	PubKey() PubKey
+	Equals(PrivKey) bool
+	Type() string
 }
 
 type (

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
@@ -24,7 +25,7 @@ const (
 )
 
 var (
-	addr1     = sdk.AccAddress("testaddr1")
+	addr1     = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	addr2     = sdk.AccAddress("testaddr2").String()
 	emptyAddr sdk.AccAddress
 
@@ -89,7 +90,7 @@ func TestMsgTransferGetSignBytes(t *testing.T) {
 	msg := NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, clienttypes.NewHeight(0, 110), 10)
 	res := msg.GetSignBytes()
 
-	expected := `{"receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"cosmos1w3jhxarpv3j8yvg4ufs4x","source_channel":"testchannel","source_port":"testportid","timeout_height":{"epoch_height":"110","epoch_number":"0"},"timeout_timestamp":"10","token":{"amount":"100","denom":"atom"}}`
+	expected := fmt.Sprintf(`{"receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"epoch_height":"110","epoch_number":"0"},"timeout_timestamp":"10","token":{"amount":"100","denom":"atom"}}`, addr1.String())
 	require.Equal(t, expected, string(res))
 }
 
@@ -98,6 +99,5 @@ func TestMsgTransferGetSigners(t *testing.T) {
 	msg := NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, timeoutHeight, 0)
 	res := msg.GetSigners()
 
-	expected := "[746573746164647231]"
-	require.Equal(t, expected, fmt.Sprintf("%v", res))
+	require.Equal(t, []sdk.AccAddress{addr1}, res)
 }

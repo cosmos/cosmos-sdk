@@ -50,13 +50,13 @@ func TestInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize the validators
-	validators[0].OperatorAddress = sdk.ValAddress(addrs[0])
+	validators[0].OperatorAddress = sdk.ValAddress(addrs[0]).String()
 	validators[0].ConsensusPubkey = pk0
 	validators[0].Description = types.NewDescription("hoop", "", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
-	validators[1].OperatorAddress = sdk.ValAddress(addrs[1])
+	validators[1].OperatorAddress = sdk.ValAddress(addrs[1]).String()
 	validators[1].ConsensusPubkey = pk1
 	validators[1].Description = types.NewDescription("bloop", "", "", "", "")
 	validators[1].Status = sdk.Bonded

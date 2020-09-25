@@ -11,15 +11,21 @@ import "ibc/client/client.proto";
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 message MsgConnectionOpenInit {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  bytes        signer        = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string       signer        = 4;
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
 message MsgConnectionOpenTry {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   string              client_id           = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string              connection_id       = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   google.protobuf.Any client_state        = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
@@ -35,12 +41,15 @@ message MsgConnectionOpenTry {
   bytes             proof_consensus  = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   ibc.client.Height consensus_height = 10
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
-  bytes signer = 11 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 11;
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
 // acknowledge the change of connection state to TRYOPEN on Chain B.
 message MsgConnectionOpenAck {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   string              connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string              version       = 2;
   google.protobuf.Any client_state  = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
@@ -54,17 +63,20 @@ message MsgConnectionOpenAck {
   bytes             proof_consensus  = 7 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
   ibc.client.Height consensus_height = 8
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
-  bytes signer = 9 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 9;
 }
 
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
 // acknowledge the change of connection state to OPEN on Chain A.
 message MsgConnectionOpenConfirm {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   // proof for the change of the connection state on Chain A: `INIT -> OPEN`
   bytes             proof_ack    = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
   ibc.client.Height proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  bytes             signer       = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string            signer       = 4;
 }
 
 // ICS03 - Connection Data Structures as defined in

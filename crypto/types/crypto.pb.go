@@ -24,8 +24,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MultiSignature wraps the signatures from a PubKeyMultisigThreshold.
-// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers signed and
-// with which modes.
+// See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers
+// signed and with which modes.
 type MultiSignature struct {
 	Signatures       [][]byte `protobuf:"bytes,1,rep,name=signatures,proto3" json:"signatures,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`

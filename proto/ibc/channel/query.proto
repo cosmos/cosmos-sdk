@@ -72,7 +72,6 @@ service Query {
                                    "{packet_commitment_sequences}/unrelayed_acks";
   }
 
-
   // NextSequenceReceive returns the next receive sequence for a given channel.
   rpc NextSequenceReceive(QueryNextSequenceReceiveRequest) returns (QueryNextSequenceReceiveResponse) {
     option (google.api.http).get = "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/next_sequence";

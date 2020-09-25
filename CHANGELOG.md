@@ -53,29 +53,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * (x/bank) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account balances or a single balance by denom when the `denom` query parameter is present.
   * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove CLI and REST handlers for querying `x/evidence` parameters.
   * (x/gov) [#6295](https://github.com/cosmos/cosmos-sdk/pull/6295) Fix typo in querying governance params.
-* (baseapp) [\#6384](https://github.com/cosmos/cosmos-sdk/pull/6384) The `Result.Data` is now a Protocol Buffer encoded binary blob of type `TxData`. The `TxData` contains `Data` which contains a list of Protocol Buffer encoded message data and the corresponding message type.
-* (client) [\#5783](https://github.com/cosmos/cosmos-sdk/issues/5783) Unify all coins representations on JSON client requests for governance proposals.
-* (store/rootmulti) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) Proofs of empty stores are no longer supported.
-* (store/types) [\#5730](https://github.com/cosmos/cosmos-sdk/pull/5730) store.types.Cp() is removed in favour of types.CopyBytes().
-* (x/auth) [\#6054](https://github.com/cosmos/cosmos-sdk/pull/6054) Remove custom JSON marshaling for base accounts as multsigs cannot be bech32 decoded.
-* (x/auth/vesting) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) Custom JSON marshaling of vesting accounts was removed. Vesting accounts are now marshaled using their default proto or amino JSON representation.
-* (x/bank) [\#5785](https://github.com/cosmos/cosmos-sdk/issues/5785) In x/bank errors, JSON strings coerced to valid UTF-8 bytes at JSON marshalling time
-are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
-that parse log messages.
-* (x/gov) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) `ProposalStatus` and `VoteOption` are now JSON serialized using its protobuf name, so expect names like `PROPOSAL_STATUS_DEPOSIT_PERIOD` as opposed to `DepositPeriod`.
+* General
+  * (baseapp) [\#6384](https://github.com/cosmos/cosmos-sdk/pull/6384) The `Result.Data` is now a Protocol Buffer encoded binary blob of type `TxData`. The `TxData` contains `Data` which contains a list of Protocol Buffer encoded message data and the corresponding message type.
+  * (client) [\#5783](https://github.com/cosmos/cosmos-sdk/issues/5783) Unify all coins representations on JSON client requests for governance proposals.
+  * (store/rootmulti) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) Proofs of empty stores are no longer supported.
+  * (store/types) [\#5730](https://github.com/cosmos/cosmos-sdk/pull/5730) store.types.Cp() is removed in favour of types.CopyBytes().
+  * (x/auth) [\#6054](https://github.com/cosmos/cosmos-sdk/pull/6054) Remove custom JSON marshaling for base accounts as multsigs cannot be bech32 decoded.
+  * (x/auth/vesting) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) Custom JSON marshaling of vesting accounts was removed. Vesting accounts are now marshaled using their default proto or amino JSON representation.
+  * (x/bank) [\#5785](https://github.com/cosmos/cosmos-sdk/issues/5785) In x/bank errors, JSON strings coerced to valid UTF-8 bytes at JSON marshalling time
+  are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
+  that parse log messages.
+  * (x/gov) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) `ProposalStatus` and `VoteOption` are now JSON serialized using its protobuf name, so expect names like `PROPOSAL_STATUS_DEPOSIT_PERIOD` as opposed to `DepositPeriod`.
 
 ### API Breaking Changes
 
-* (modules) [\#6564](https://github.com/cosmos/cosmos-sdk/pull/6564) Constant `DefaultParamspace` is removed from all modules, use ModuleName instead.
-* (modules) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) `AppModuleBasic.GetTxCmd` now takes a single `CLIContext` parameter.
-* (modules) [\#5664](https://github.com/cosmos/cosmos-sdk/pull/5664) Remove amino `Codec` from simulation `StoreDecoder`, which now returns a function closure in order to unmarshal the key-value pairs.
-* (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move `x/auth/client/utils/` types and functions to `x/auth/client/`.
-* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
 * (baseapp) [\#5865](https://github.com/cosmos/cosmos-sdk/pull/5865) The `SimulationResponse` returned from tx simulation is now JSON encoded instead of Amino binary.
 * (client) [\#6525](https://github.com/cosmos/cosmos-sdk/pull/6525) Removed support for `indent` in JSON responses. Clients should consider piping to an external tool such as `jq`.
 * (client/input) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) Removal of unnecessary `GetCheckPassword`, `PrintPrefixed` functions.
 * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Rename `NewKeyBaseFromDir()` -> `NewLegacyKeyBaseFromDir()`.
-* (keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
+* (client/keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
 * (codec) `*codec.LegacyAmino` is now a wrapper around Amino which provides backwards compatibility with protobuf `Any`. ALL legacy code should use `*codec.LegacyAmino` instead of `*amino.Codec` directly
 * (crypto) [\#5880](https://github.com/cosmos/cosmos-sdk/pull/5880) Merge `crypto/keys/mintkey` into `crypto`.
 * (crypto/hd) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) `crypto/keys/hd` moved to `crypto/hd`.
@@ -98,77 +94,73 @@ and provided directly the IAVL store.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
-* (x/auth) [\#6029](https://github.com/cosmos/cosmos-sdk/pull/6029) Module accounts have been moved from `x/supply` to `x/auth`.
-* (x/bank) [\#7327](https://github.com/cosmos/cosmos-sdk/pull/7327) AddCoins and SubtractCoins no longer return a resultingValue and will only return an error.
-* (x/evidence) [\#7251](https://github.com/cosmos/cosmos-sdk/pull/7251) New evidence types and light client evidence handling. The module function names changed.
-* (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
-a reference to an amino codec. Amino is still used for JSON serialization.
-* (x/staking) [\#6451](https://github.com/cosmos/cosmos-sdk/pull/6451) `DefaultParamspace` and `ParamKeyTable` in staking module are moved from keeper to types to enforce consistency.
-* (x/supply) [\#6010](https://github.com/cosmos/cosmos-sdk/pull/6010) All `x/supply` types and APIs have been moved to `x/bank`.
-* [\#6409](https://github.com/cosmos/cosmos-sdk/pull/6409) Rename all IsEmpty methods to Empty across the codebase and enforce consistency.
-* [\#6231](https://github.com/cosmos/cosmos-sdk/pull/6231) Simplify `AppModule` interface, `Route` and `NewHandler` methods become only `Route`
-and returns a new `Route` type.
-* (x/slashing) [\#6212](https://github.com/cosmos/cosmos-sdk/pull/6212) Remove `Get*` prefixes from key construction functions
-* (server) [\#6079](https://github.com/cosmos/cosmos-sdk/pull/6079) Remove `UpgradeOldPrivValFile` (deprecated in Tendermint Core v0.28).
-* [\#5719](https://github.com/cosmos/cosmos-sdk/pull/5719) Bump Go requirement to 1.14+
-* (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove APIs for getting and setting `x/evidence` parameters. `BaseApp` now uses a `ParamStore` to manage Tendermint consensus parameters which is managed via the `x/params` `Substore` type.
-* (x/gov) [\#6147](https://github.com/cosmos/cosmos-sdk/pull/6147) The `Content` field on `Proposal` and `MsgSubmitProposal`
-is now `Any` in concordance with [ADR 019](docs/architecture/adr-019-protobuf-state-encoding.md) and `GetContent` should now
-be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposal` constructor now may return an `error`
-* (x/auth) [\#7006](https://github.com/cosmos/cosmos-sdk/pull/7006) All `AccountRetriever` methods now take `client.Context` as a parameter instead of as a struct member.
-* (x/auth) [\#6270](https://github.com/cosmos/cosmos-sdk/pull/6270) The passphrase argument has been removed from the signature of the following functions and methods:
-  - BuildAndSign
-  - MakeSignature
-  - SignStdTx
-  - TxBuilder.BuildAndSign
-  - TxBuilder.Sign
-  - TxBuilder.SignStdTx
-* (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client.
-* (modules) [\#6326](https://github.com/cosmos/cosmos-sdk/pull/6326) `AppModuleBasic.GetQueryCmd` now takes a single `CLIContext` parameter.
-* (modules) [\#6336](https://github.com/cosmos/cosmos-sdk/pull/6336) `AppModuleBasic.RegisterQueryService` method was added to support gRPC queries, and `QuerierRoute` and `NewQuerierHandler` were deprecated.
-* (modules) [\#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) Remove `alias.go` usage
-* (x/auth) [\#6443](https://github.com/cosmos/cosmos-sdk/issues/6443) Move `FeeTx` and `TxWithMemo` interfaces from `x/auth/ante` to `types`.
-* (modules) [\#6447](https://github.com/cosmos/cosmos-sdk/issues/6447) Rename `blacklistedAddrs` to `blockedAddrs`.
-
-  Migration guide:
-  ```go
-  cliCtx := context.CLIContext{}
-  ```
-  Now becomes:
-  ```go
-  clientCtx = client.Context{}
-  ```
-* (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to client/rpc and client/rpc.RegisterRPCRoutes is removed.
-* (client/lcd) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CliCtx` of struct `RestServer` in package client/lcd has been renamed to `ClientCtx`.
-* (types) [\#6327](https://github.com/cosmos/cosmos-sdk/pull/6327) `sdk.Msg` now inherits `proto.Message`, as a result all `sdk.Msg` types now use pointer semantics.
-* (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) `codec.RegisterCrypto` has been moved to the `crypto/codec` package and the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package.
-* (x/ibc) [\#6374](https://github.com/cosmos/cosmos-sdk/pull/6374) `VerifyMembership` and `VerifyNonMembership` now take a `specs []string` argument to specify the proof format used for verification. Most SDK chains can simply use `commitmenttypes.GetSDKSpecs()` for this argument.
-* (crypto/types/multisig) [\#6373](https://github.com/cosmos/cosmos-sdk/pull/6373) `multisig.Multisignature` has been renamed  to `AminoMultisignature`
-* (x/auth) [\#6428](https://github.com/cosmos/cosmos-sdk/issues/6428):
-  * `NewAnteHandler` and `NewSigVerificationDecorator` both now take a `SignModeHandler` parameter.
-  * `SignatureVerificationGasConsumer` now has the signature: `func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error`.
-  * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
-* (client/flags) [\#6632](https://github.com/cosmos/cosmos-sdk/pull/6632) Remove NewCompletionCmd(), the function is now available in tendermint.
-* (crypto) [\#6780](https://github.com/cosmos/cosmos-sdk/issues/6780) Move ledger code to its own package.
-* (modules) [\#6834](https://github.com/cosmos/cosmos-sdk/issues/6834) Add `RegisterInterfaces` method to `AppModuleBasic` to support registration of protobuf interface types.
-* (modules) [\#6734](https://github.com/cosmos/cosmos-sdk/issues/6834) Add `TxEncodingConfig` parameter to `AppModuleBasic.ValidateGenesis` command to support JSON tx decoding in `genutil`.
-* (genesis) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) The root `GenesisState` is now decoded using `encoding/json` instead of amino so `int64` and `uint64` types are now encoded as integers as opposed to strings.
-* (types) [\#7032](https://github.com/cosmos/cosmos-sdk/pull/7032) All types ending with `ID` (e.g. `ProposalID`) now end with `Id` (e.g. `ProposalId`), to match default Protobuf generated format. Also see [\#7033](https://github.com/cosmos/cosmos-sdk/pull/7033) for more details.
-* (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `snapshots.Snapshotter` interface as well.
+* Modules
+  * (modules) [\#6564](https://github.com/cosmos/cosmos-sdk/pull/6564) Constant `DefaultParamspace` is removed from all modules, use ModuleName instead.
+  * (modules) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) `AppModuleBasic.GetTxCmd` now takes a single `CLIContext` parameter.
+  * (modules) [\#5664](https://github.com/cosmos/cosmos-sdk/pull/5664) Remove amino `Codec` from simulation `StoreDecoder`, which now returns a function closure in order to unmarshal the key-value pairs.
+  * (modules) [\#5555](https://github.com/cosmos/cosmos-sdk/pull/5555) Move `x/auth/client/utils/` types and functions to `x/auth/client/`.
+  * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Move account balance logic and APIs from `x/auth` to `x/bank`.
+  * (modules) [\#6326](https://github.com/cosmos/cosmos-sdk/pull/6326) `AppModuleBasic.GetQueryCmd` now takes a single `client.Context` parameter.
+  * (modules) [\#6336](https://github.com/cosmos/cosmos-sdk/pull/6336) `AppModuleBasic.RegisterQueryService` method was added to support gRPC queries, and `QuerierRoute` and `NewQuerierHandler` were deprecated.
+  * (modules) [\#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) Remove `alias.go` usage
+  * (modules) [\#6447](https://github.com/cosmos/cosmos-sdk/issues/6447) Rename `blacklistedAddrs` to `blockedAddrs`.
+  * (modules) [\#6834](https://github.com/cosmos/cosmos-sdk/issues/6834) Add `RegisterInterfaces` method to `AppModuleBasic` to support registration of protobuf interface types.
+  * (modules) [\#6734](https://github.com/cosmos/cosmos-sdk/issues/6834) Add `TxEncodingConfig` parameter to `AppModuleBasic.ValidateGenesis` command to support JSON tx decoding in `genutil`.
+  * (types) [\#6327](https://github.com/cosmos/cosmos-sdk/pull/6327) `sdk.Msg` now inherits `proto.Message`, as a result all `sdk.Msg` types now use pointer semantics.
+  * (types) [\#7032](https://github.com/cosmos/cosmos-sdk/pull/7032) All types ending with `ID` (e.g. `ProposalID`) now end with `Id` (e.g. `ProposalId`), to match default Protobuf generated format. Also see [\#7033](https://github.com/cosmos/cosmos-sdk/pull/7033) for more details.
+  * (x/auth) [\#6029](https://github.com/cosmos/cosmos-sdk/pull/6029) Module accounts have been moved from `x/supply` to `x/auth`.
+  * (x/auth) [\#6443](https://github.com/cosmos/cosmos-sdk/issues/6443) Move `FeeTx` and `TxWithMemo` interfaces from `x/auth/ante` to `types`.
+  * (x/bank) [\#7327](https://github.com/cosmos/cosmos-sdk/pull/7327) AddCoins and SubtractCoins no longer return a resultingValue and will only return an error.
+  * (x/evidence) [\#7251](https://github.com/cosmos/cosmos-sdk/pull/7251) New evidence types and light client evidence handling. The module function names changed.
+  * (x/ibc) [\#6374](https://github.com/cosmos/cosmos-sdk/pull/6374) `VerifyMembership` and `VerifyNonMembership` now take a `specs []string` argument to specify the proof format used for verification. Most SDK chains can simply use `commitmenttypes.GetSDKSpecs()` for this argument.
+  * (x/params) [\#5619](https://github.com/cosmos/cosmos-sdk/pull/5619) The `x/params` keeper now accepts a `codec.Marshaller` instead of
+  a reference to an amino codec. Amino is still used for JSON serialization.
+  * (x/staking) [\#6451](https://github.com/cosmos/cosmos-sdk/pull/6451) `DefaultParamspace` and `ParamKeyTable` in staking module are moved from keeper to types to enforce consistency.
+  * (x/supply) [\#6010](https://github.com/cosmos/cosmos-sdk/pull/6010) All `x/supply` types and APIs have been moved to `x/bank`.
+  * [\#6409](https://github.com/cosmos/cosmos-sdk/pull/6409) Rename all IsEmpty methods to Empty across the codebase and enforce consistency.
+  * [\#6231](https://github.com/cosmos/cosmos-sdk/pull/6231) Simplify `AppModule` interface, `Route` and `NewHandler` methods become only `Route`
+  and returns a new `Route` type.
+  * (x/slashing) [\#6212](https://github.com/cosmos/cosmos-sdk/pull/6212) Remove `Get*` prefixes from key construction functions
+  * (server) [\#6079](https://github.com/cosmos/cosmos-sdk/pull/6079) Remove `UpgradeOldPrivValFile` (deprecated in Tendermint Core v0.28).
+  * [\#5719](https://github.com/cosmos/cosmos-sdk/pull/5719) Bump Go requirement to 1.14+
+  * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove APIs for getting and setting `x/evidence` parameters. `BaseApp` now uses a `ParamStore` to manage Tendermint consensus parameters which is managed via the `x/params` `Substore` type.
+  * (x/gov) [\#6147](https://github.com/cosmos/cosmos-sdk/pull/6147) The `Content` field on `Proposal` and `MsgSubmitProposal`
+  is now `Any` in concordance with [ADR 019](docs/architecture/adr-019-protobuf-state-encoding.md) and `GetContent` should now
+  be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposal` constructor now may return an `error`
+  * (x/auth) [\#7006](https://github.com/cosmos/cosmos-sdk/pull/7006) All `AccountRetriever` methods now take `client.Context` as a parameter instead of as a struct member.
+  * (x/auth) [\#6270](https://github.com/cosmos/cosmos-sdk/pull/6270) The passphrase argument has been removed from the signature of the following functions and methods: `BuildAndSign`, ` MakeSignature`, ` SignStdTx`, `TxBuilder.BuildAndSign`, `TxBuilder.Sign`, `TxBuilder.SignStdTx`
+  * (x/auth) [\#6428](https://github.com/cosmos/cosmos-sdk/issues/6428):
+    * `NewAnteHandler` and `NewSigVerificationDecorator` both now take a `SignModeHandler` parameter.
+    * `SignatureVerificationGasConsumer` now has the signature: `func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error`.
+    * The `SigVerifiableTx` interface now has a `GetSignaturesV2() ([]signing.SignatureV2, error)` method and no longer has the `GetSignBytes` method.
+* Baseapp / Client
+  * (client) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CLIContext` is renamed to `Context`. `Context` and all related methods have been moved from package context to client.
+  * (client/flags) [\#6632](https://github.com/cosmos/cosmos-sdk/pull/6632) Remove NewCompletionCmd(), the function is now available in tendermint.
+  * (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to client/rpc and client/rpc.RegisterRPCRoutes is removed.
+  * (client/lcd) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CliCtx` of struct `RestServer` in package client/lcd has been renamed to `ClientCtx`.
+  * (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) `codec.RegisterCrypto` has been moved to the `crypto/codec` package and the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package.
+  * (crypto) [\#6780](https://github.com/cosmos/cosmos-sdk/issues/6780) Move ledger code to its own package.
+  * (crypto/types/multisig) [\#6373](https://github.com/cosmos/cosmos-sdk/pull/6373) `multisig.Multisignature` has been renamed  to `AminoMultisignature`
+  * (genesis) [\#7000](https://github.com/cosmos/cosmos-sdk/pull/7000) The root `GenesisState` is now decoded using `encoding/json` instead of amino so `int64` and `uint64` types are now encoded as integers as opposed to strings.
+  * (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) The `store.CommitMultiStore` interface now includes the new `snapshots.Snapshotter` interface as well.
 
 ### Features
 
 * (x/auth) [\6350](https://github.com/cosmos/cosmos-sdk/pull/6350) New sign-batch command to sign StdTx batch files.
-* [\#7265](https://github.com/cosmos/cosmos-sdk/pull/7265) Support Tendermint block pruning through a new `min-retain-blocks` configuration that can be set in either `app.toml` or via the CLI. This parameter is used in conjunction with other criteria to determine the height at which Tendermint should prune blocks.
-* (vesting) [\#7209](https://github.com/cosmos/cosmos-sdk/pull/7209) Create new `MsgCreateVestingAccount` message type along with CLI handler that allows for the creation of delayed and continuous vesting types.
-* (events) [\#7121](https://github.com/cosmos/cosmos-sdk/pull/7121) The application now drives what events are indexed by Tendermint via the `index-events` configuration in `app.toml`, which is a list of events taking the form `{eventType}.{attributeKey}`.
-* [\#6089](https://github.com/cosmos/cosmos-sdk/pull/6089) Transactions can now have a `TimeoutHeight` set which allows the transaction to be rejected if it's committed at a height greater than the timeout.
+* (x/auth/vesting) [\#7209](https://github.com/cosmos/cosmos-sdk/pull/7209) Create new `MsgCreateVestingAccount` message type along with CLI handler that allows for the creation of delayed and continuous vesting types.
+* (config) [\#7265](https://github.com/cosmos/cosmos-sdk/pull/7265) Support Tendermint block pruning through a new `min-retain-blocks` configuration that can be set in either `app.toml` or via the CLI. This parameter is used in conjunction with other criteria to determine the height at which Tendermint should prune blocks.
+* (events) [\#7121](https://github.com/cosmos/cosmos-sdk/pull/7121) The application now derives what events are indexed by Tendermint via the `index-events` configuration in `app.toml`, which is a list of events taking the form `{eventType}.{attributeKey}`.
+* (tx) [\#6089](https://github.com/cosmos/cosmos-sdk/pull/6089) Transactions can now have a `TimeoutHeight` set which allows the transaction to be rejected if it's committed at a height greater than the timeout.
 * (tests) [\#6489](https://github.com/cosmos/cosmos-sdk/pull/6489) Introduce package `testutil`, new in-process testing network framework for use in integration and unit tests.
 * (crypto/multisig) [\#6241](https://github.com/cosmos/cosmos-sdk/pull/6241) Add Multisig type directly to the repo. Previously this was in tendermint.
 * (rest) [\#6167](https://github.com/cosmos/cosmos-sdk/pull/6167) Support `max-body-bytes` CLI flag for the REST service.
 * (x/ibc) [\#5588](https://github.com/cosmos/cosmos-sdk/pull/5588) Add [ICS 024 - Host State Machine Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) subpackage to `x/ibc` module.
 * (baseapp) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added support for taking state snapshots at regular height intervals, via options `snapshot-interval` and `snapshot-keep-recent`.
 * (store) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added `rootmulti.Store` methods for taking and restoring snapshots, based on `iavl.Store` export/import.
+* (store) [\#6324](https://github.com/cosmos/cosmos-sdk/pull/6324) IAVL store query proofs now return CommitmentOp which wraps an ics23 CommitmentProof
+* (store) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) `RootMulti` store query proofs now return `CommitmentOp` which wraps `CommitmentProofs`
+  * `store.Query` now only returns chained `ics23.CommitmentProof` wrapped in `merkle.Proof`
+  * `ProofRuntime` only decodes and verifies `ics23.CommitmentProof`
 * (x/ibc) [\#5277](https://github.com/cosmos/cosmos-sdk/pull/5277) `x/ibc` changes from IBC alpha. For more details check the the  [`x/ibc/spec`](https://github.com/cosmos/tree/master/x/ibc/spec) directory:
   * [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics) subpackage
   * [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics) subpackage
@@ -181,10 +173,6 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
   * (x/params) [\#6005](https://github.com/cosmos/cosmos-sdk/pull/6005) Add new CLI command for querying raw x/params parameters by subspace and key.
   * (x/ibc) [\#5769](https://github.com/cosmos/cosmos-sdk/pull/5769) [ICS 009 - Loopback Client](https://github.com/cosmos/ics/tree/master/spec/ics-009-loopback-client) subpackage
 * (x/ibc) [\#6374](https://github.com/cosmos/cosmos-sdk/pull/6374) ICS-23 Verify functions will now accept and verify ics23 CommitmentProofs exclusively
-* (store) [\#6324](https://github.com/cosmos/cosmos-sdk/pull/6324) IAVL store query proofs now return CommitmentOp which wraps an ics23 CommitmentProof
-* (store) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) `RootMulti` store query proofs now return `CommitmentOp` which wraps `CommitmentProofs`
-  * `store.Query` now only returns chained `ics23.CommitmentProof` wrapped in `merkle.Proof`
-  * `ProofRuntime` only decodes and verifies `ics23.CommitmentProof`
 
 ### Bug Fixes
 

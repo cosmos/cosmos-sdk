@@ -430,3 +430,20 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: "env.GIT_DIFF != ''"
+  
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v1
+        id: git_diff
+        with:
+          SUFFIX_FILTER: |
+            .go
+            .mod
+            .sum
+      - name: build docker image
+        run: |
+          docker build --pull --rm -f "Dockerfile" -t simapp:latest "."
+        if: "env.GIT_DIFF != ''"

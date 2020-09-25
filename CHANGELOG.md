@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Client Breaking
-* CLI
+* __CLI__
   * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Remove `keys update` command.
   `--moniker` flag can be provided to override the moniker found in `config.toml`.
   * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
@@ -46,14 +46,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
   * (x/auth) [\#6108](https://github.com/cosmos/cosmos-sdk/pull/6108) `tx sign` command's `--validate-signatures` flag is migrated into a `tx validate-signatures` standalone command.
   * (x/genutil) [\#6651](https://github.com/cosmos/cosmos-sdk/pull/6651) The `gentx` command has been improved. No longer are `--from` and `--name` flags required. Instead, a single argument, `name`, is required which refers to the key pair in the Keyring. In addition, an optional
-* REST / Queriers
+* __REST / Queriers__
   * (api) [\#6426](https://github.com/cosmos/cosmos-sdk/pull/6426) The ability to start an out-of-process API REST server has now been removed. Instead, the API server is now started in-process along with the application and Tendermint. Configuration options have been added to `app.toml` to enable/disable the API server along with additional HTTP server options.
   * (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
   * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
   * (x/bank) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account balances or a single balance by denom when the `denom` query parameter is present.
   * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove CLI and REST handlers for querying `x/evidence` parameters.
   * (x/gov) [#6295](https://github.com/cosmos/cosmos-sdk/pull/6295) Fix typo in querying governance params.
-* General
+* __General__
   * (baseapp) [\#6384](https://github.com/cosmos/cosmos-sdk/pull/6384) The `Result.Data` is now a Protocol Buffer encoded binary blob of type `TxData`. The `TxData` contains `Data` which contains a list of Protocol Buffer encoded message data and the corresponding message type.
   * (client) [\#5783](https://github.com/cosmos/cosmos-sdk/issues/5783) Unify all coins representations on JSON client requests for governance proposals.
   * (store/rootmulti) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) Proofs of empty stores are no longer supported.
@@ -94,7 +94,7 @@ and provided directly the IAVL store.
 * (types) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Refactored `AppModuleBasic` and `AppModuleGenesis`
 to now accept a `codec.JSONMarshaler` for modular serialization of genesis state.
 * (types/rest) [\#5779](https://github.com/cosmos/cosmos-sdk/pull/5779) Drop unused Parse{Int64OrReturnBadRequest,QueryParamBool}() functions.
-* Modules
+* __Modules__
   * (modules) [\#6564](https://github.com/cosmos/cosmos-sdk/pull/6564) Constant `DefaultParamspace` is removed from all modules, use ModuleName instead.
   * (modules) [\#5989](https://github.com/cosmos/cosmos-sdk/pull/5989) `AppModuleBasic.GetTxCmd` now takes a single `CLIContext` parameter.
   * (modules) [\#5664](https://github.com/cosmos/cosmos-sdk/pull/5664) Remove amino `Codec` from simulation `StoreDecoder`, which now returns a function closure in order to unmarshal the key-value pairs.

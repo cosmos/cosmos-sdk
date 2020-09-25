@@ -3,7 +3,7 @@ package v040
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/std"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_40"
 	v036supply "github.com/cosmos/cosmos-sdk/x/bank/legacy/v0_36"
@@ -19,24 +19,10 @@ import (
 // Migrate migrates exported state from v0.39 to a v0.40 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v039Codec := codec.NewLegacyAmino()
-	std.RegisterLegacyAminoCodec(v039Codec)
+	cryptocodec.RegisterCrypto(v039Codec)
 	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
 	v040Codec := clientCtx.JSONMarshaler
-
-	// remove balances from existing accounts
-	if appState[v039auth.ModuleName] != nil {
-		// unmarshal relative source genesis application state
-		var authGenState v039auth.GenesisState
-		v039Codec.MustUnmarshalJSON(appState[v039auth.ModuleName], &authGenState)
-
-		// delete deprecated x/auth genesis state
-		delete(appState, v039auth.ModuleName)
-
-		// Migrate relative source genesis application state and marshal it into
-		// the respective key.
-		appState[v040auth.ModuleName] = v040Codec.MustMarshalJSON(v040auth.Migrate(authGenState))
-	}
 
 	if appState[v038bank.ModuleName] != nil {
 		// unmarshal relative source genesis application state
@@ -60,6 +46,20 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
 		appState[v040bank.ModuleName] = v040Codec.MustMarshalJSON(v040bank.Migrate(bankGenState, authGenState, supplyGenState))
+	}
+
+	// remove balances from existing accounts
+	if appState[v039auth.ModuleName] != nil {
+		// unmarshal relative source genesis application state
+		var authGenState v039auth.GenesisState
+		v039Codec.MustUnmarshalJSON(appState[v039auth.ModuleName], &authGenState)
+
+		// delete deprecated x/auth genesis state
+		delete(appState, v039auth.ModuleName)
+
+		// Migrate relative source genesis application state and marshal it into
+		// the respective key.
+		appState[v040auth.ModuleName] = v040Codec.MustMarshalJSON(v040auth.Migrate(authGenState))
 	}
 
 	// Migrate x/evidence.

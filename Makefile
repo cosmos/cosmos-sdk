@@ -122,7 +122,7 @@ build-simd-linux: go.sum
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build install build-simd-all build-simd-linux cosmovisor
+.PHONY: build simd simd-linux build-simd-all build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

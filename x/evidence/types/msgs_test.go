@@ -20,7 +20,7 @@ func testMsgSubmitEvidence(t *testing.T, e exported.Evidence, s sdk.AccAddress) 
 
 func TestMsgSubmitEvidence(t *testing.T) {
 	pk := ed25519.GenPrivKey()
-	submitter := sdk.AccAddress("test")
+	submitter := sdk.AccAddress("test________________")
 
 	testCases := []struct {
 		msg       sdk.Msg
@@ -32,7 +32,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 				Height:           0,
 				Power:            100,
 				Time:             time.Now().UTC(),
-				ConsensusAddress: pk.PubKey().Address().Bytes(),
+				ConsensusAddress: pk.PubKey().Address().String(),
 			}, submitter),
 			submitter,
 			true,
@@ -42,7 +42,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 				Height:           10,
 				Power:            100,
 				Time:             time.Now().UTC(),
-				ConsensusAddress: pk.PubKey().Address().Bytes(),
+				ConsensusAddress: pk.PubKey().Address().String(),
 			}, submitter),
 			submitter,
 			false,

@@ -78,7 +78,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						Height:           int64(i + 1),
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)
@@ -94,7 +94,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						Height:           int64(i),
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)

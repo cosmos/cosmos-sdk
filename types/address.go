@@ -185,6 +185,7 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
+
 	if err != nil {
 		return err
 	}

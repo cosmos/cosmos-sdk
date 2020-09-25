@@ -163,7 +163,9 @@ func TestQueries(t *testing.T) {
 	proposal1, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit1 := types.NewDeposit(proposal1.ProposalId, TestAddrs[0], oneCoins)
-	_, err = app.GovKeeper.AddDeposit(ctx, deposit1.ProposalId, deposit1.Depositor, deposit1.Amount)
+	depositer1, err := sdk.AccAddressFromBech32(deposit1.Depositor)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.AddDeposit(ctx, deposit1.ProposalId, depositer1, deposit1.Amount)
 	require.NoError(t, err)
 
 	proposal1.TotalDeposit = proposal1.TotalDeposit.Add(deposit1.Amount...)
@@ -171,7 +173,9 @@ func TestQueries(t *testing.T) {
 	proposal2, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit2 := types.NewDeposit(proposal2.ProposalId, TestAddrs[0], consCoins)
-	_, err = app.GovKeeper.AddDeposit(ctx, deposit2.ProposalId, deposit2.Depositor, deposit2.Amount)
+	depositer2, err := sdk.AccAddressFromBech32(deposit2.Depositor)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.AddDeposit(ctx, deposit2.ProposalId, depositer2, deposit2.Amount)
 	require.NoError(t, err)
 
 	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit2.Amount...)
@@ -180,14 +184,19 @@ func TestQueries(t *testing.T) {
 	proposal3, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit3 := types.NewDeposit(proposal3.ProposalId, TestAddrs[1], oneCoins)
-	_, err = app.GovKeeper.AddDeposit(ctx, deposit3.ProposalId, deposit3.Depositor, deposit3.Amount)
+	depositer3, err := sdk.AccAddressFromBech32(deposit3.Depositor)
+	require.NoError(t, err)
+
+	_, err = app.GovKeeper.AddDeposit(ctx, deposit3.ProposalId, depositer3, deposit3.Amount)
 	require.NoError(t, err)
 
 	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit3.Amount...)
 
 	// TestAddrs[1] deposits on proposals #2 & #3
 	deposit4 := types.NewDeposit(proposal2.ProposalId, TestAddrs[1], depositParams.MinDeposit)
-	_, err = app.GovKeeper.AddDeposit(ctx, deposit4.ProposalId, deposit4.Depositor, deposit4.Amount)
+	depositer4, err := sdk.AccAddressFromBech32(deposit4.Depositor)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.AddDeposit(ctx, deposit4.ProposalId, depositer4, deposit4.Amount)
 	require.NoError(t, err)
 
 	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount...)
@@ -195,7 +204,9 @@ func TestQueries(t *testing.T) {
 	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(types.DefaultPeriod)
 
 	deposit5 := types.NewDeposit(proposal3.ProposalId, TestAddrs[1], depositParams.MinDeposit)
-	_, err = app.GovKeeper.AddDeposit(ctx, deposit5.ProposalId, deposit5.Depositor, deposit5.Amount)
+	depositer5, err := sdk.AccAddressFromBech32(deposit5.Depositor)
+	require.NoError(t, err)
+	_, err = app.GovKeeper.AddDeposit(ctx, deposit5.ProposalId, depositer5, deposit5.Amount)
 	require.NoError(t, err)
 
 	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount...)
@@ -311,7 +322,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		rand.Read(addr)
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
-			Voter:      addr,
+			Voter:      addr.String(),
 			Option:     types.OptionYes,
 		}
 		votes[i] = vote

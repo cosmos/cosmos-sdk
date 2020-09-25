@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.vesting.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/crypto/secp256k1/keys.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/pubkey/types";
+
+// MsgCreateVestingAccount defines a message that enables creating a vesting
+// account.
+message MsgChangePubKey {
+  bytes address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
+    (gogoproto.moretags) = "yaml:\"from_address\""
+  ];
+  cosmos.crypto.secp256k1.PubKey amount = 2;
+}

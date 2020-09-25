@@ -67,6 +67,10 @@ func TestMigrate(t *testing.T) {
 		BaseVestingAccount: v039auth.NewBaseVestingAccount(v039auth.NewBaseAccount(sdk.AccAddress(pk6.Address()), coins, pk6, 1, 0), coins, nil, nil, 3160620846),
 	}
 
+	// BaseAccount with nil pubkey (coming from older genesis).
+	pk7 := secp256k1.GenPrivKeyFromSecret([]byte("acc7")).PubKey()
+	acc7 := v039auth.NewBaseAccount(sdk.AccAddress(pk7.Address()), coins, nil, 1, 0)
+
 	gs := v039auth.GenesisState{
 		Params: v034.Params{
 			MaxMemoCharacters:      10,
@@ -75,7 +79,7 @@ func TestMigrate(t *testing.T) {
 			SigVerifyCostED25519:   40,
 			SigVerifyCostSecp256k1: 50,
 		},
-		Accounts: v038auth.GenesisAccounts{acc1, acc2, acc3, acc4, acc5, acc6},
+		Accounts: v038auth.GenesisAccounts{acc1, acc2, acc3, acc4, acc5, acc6, acc7},
 	}
 
 	migrated := v040auth.Migrate(gs)
@@ -219,6 +223,16 @@ func TestMigrate(t *testing.T) {
      }
     ]
    }
+  },
+  {
+   "@type": "/cosmos.auth.v1beta1.BaseAccount",
+   "account_number": "1",
+   "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
+   "pub_key": {
+    "@type": "/google.protobuf.StringValue",
+    "value": ""
+   },
+   "sequence": "0"
   }
  ],
  "params": {

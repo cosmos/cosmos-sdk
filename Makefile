@@ -71,7 +71,6 @@ ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
 endif
-
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb

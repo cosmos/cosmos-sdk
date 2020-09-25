@@ -127,7 +127,7 @@ func validatePubKeyChangeCost(i interface{}) error {
 	}
 
 	if v == 0 {
-		return fmt.Errorf("invalid SECK256k1 pubkey change cost: %d", v)
+		return fmt.Errorf("invalid pubkey change cost: %d", v)
 	}
 
 	return nil

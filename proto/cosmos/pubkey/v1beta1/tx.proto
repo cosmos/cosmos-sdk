@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.vesting.v1beta1;
+package cosmos.pubkey.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/secp256k1/keys.proto";

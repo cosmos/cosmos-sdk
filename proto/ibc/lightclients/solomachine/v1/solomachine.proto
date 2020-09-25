@@ -28,7 +28,7 @@ message ClientState {
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
   // public key of the solo machine
-   google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+  google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
   // diversifier allows the same public key to be re-used across different solo machine clients
   // (potentially on different chains) without being considered misbehaviour.
   string diversifier = 2;
@@ -39,11 +39,11 @@ message ConsensusState {
 message Header {
   option (gogoproto.goproto_getters) = false;
   // sequence to update solo machine public key at
-  uint64                               sequence        = 1;
-  uint64                               timestamp       = 2;
-  bytes                                signature       = 3;
+  uint64              sequence        = 1;
+  uint64              timestamp       = 2;
+  bytes               signature       = 3;
   google.protobuf.Any new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
-  string                               new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
+  string              new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }
 
 // Misbehaviour defines misbehaviour for a solo machine which consists
@@ -80,11 +80,40 @@ message SignBytes {
   uint64 sequence    = 1;
   uint64 timestamp   = 2;
   string diversifier = 3;
+  // type of the data used
+  DataType data_type = 4 [(gogoproto.moretags) = "yaml:\"data_type\""];
   // marshaled data
-  bytes data = 4;
+  bytes data = 5;
 }
 
-// HeaderData returns the SignBytes data for misbehaviour verification.
+// DataType defines the type of solo machine proof is being created. This is done to preserve uniqueness of different
+// data sign byte encodings.
+enum DataType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  DATA_TYPE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
+  // Data type for client state verification
+  DATA_TYPE_CLIENT_STATE = 1 [(gogoproto.enumvalue_customname) = "CLIENT"];
+  // Data type for consensus state verification
+  DATA_TYPE_CONSENSUS_STATE = 2 [(gogoproto.enumvalue_customname) = "CONSENSUS"];
+  // Data type for connection state verification
+  DATA_TYPE_CONNECTION_STATE = 3 [(gogoproto.enumvalue_customname) = "CONNECTION"];
+  // Data type for channel state verification
+  DATA_TYPE_CHANNEL_STATE = 4 [(gogoproto.enumvalue_customname) = "CHANNEL"];
+  // Data type for packet commitment verification
+  DATA_TYPE_PACKET_COMMITMENT = 5 [(gogoproto.enumvalue_customname) = "PACKETCOMMITMENT"];
+  // Data type for packet acknowledgement verification
+  DATA_TYPE_PACKET_ACKNOWLEDGEMENT = 6 [(gogoproto.enumvalue_customname) = "PACKETACKNOWLEDGEMENT"];
+  // Data type for packet acknowledgement absence verification
+  DATA_TYPE_PACKET_ACKNOWLEDGEMENT_ABSENCE = 7 [(gogoproto.enumvalue_customname) = "PACKETACKNOWLEDGEMENTABSENCE"];
+  // Data type for next sequence recv verification
+  DATA_TYPE_NEXT_SEQUENCE_RECV = 8 [(gogoproto.enumvalue_customname) = "NEXTSEQUENCERECV"];
+  // Data type for header verification
+  DATA_TYPE_HEADER = 9 [(gogoproto.enumvalue_customname) = "HEADER"];
+}
+
+// HeaderData returns the SignBytes data for update verification.
 message HeaderData {
   option (gogoproto.goproto_getters) = false;
 

@@ -18,6 +18,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // UpgradeInfoFileName file to store upgrade information
@@ -78,10 +81,27 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	if plan.UpgradedClientState != nil {
 		// marshal Any into bytes
-		k.cdc.MustMarshalBinaryBare(plan.UpgradedClientState)
+		bz = k.cdc.MustMarshalBinaryBare(plan.UpgradedClientState)
 		store.Set(types.UpgradedClientKey(), bz)
 	}
 
+	return nil
+}
+
+// SetUpgradedClient sets the expected upgraded client for the next version of this chain
+// Not used in this file, but useful for IBC testing
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) error {
+	// zero out any custom fields before setting
+	cs = cs.ZeroCustomFields()
+	csAny, err := clienttypes.PackClientState(cs)
+	if err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	// marshal Any into bytes
+	bz := k.cdc.MustMarshalBinaryBare(csAny)
+	store.Set(types.UpgradedClientKey(), bz)
 	return nil
 }
 

@@ -31,8 +31,9 @@ const (
 )
 
 var (
-	height      = clienttypes.NewHeight(0, 4)
-	upgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+	height        = clienttypes.NewHeight(0, 4)
+	upgradeHeight = clienttypes.NewHeight(1, 1)
+	upgradePath   = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
 )
 
 type TendermintTestSuite struct {

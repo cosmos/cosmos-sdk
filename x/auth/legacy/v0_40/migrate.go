@@ -1,8 +1,6 @@
 package v040
 
 import (
-	"fmt"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_39"
@@ -46,20 +44,14 @@ func convertBaseVestingAccount(old *v039auth.BaseVestingAccount) *v040vesting.Ba
 func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 	// Convert v0.39 accounts to v0.40 ones.
 	var v040Accounts = make([]v040auth.GenesisAccount, len(authGenState.Accounts))
-	for i, account := range authGenState.Accounts {
-		// set coins to nil and allow the JSON encoding to omit coins.
-		if err := account.SetCoins(nil); err != nil {
-			panic(fmt.Sprintf("failed to set account coins to nil: %s", err))
-		}
-
-		switch account := account.(type) {
+	for i, v039Account := range authGenState.Accounts {
+		switch v039Account := v039Account.(type) {
 		case *v039auth.BaseAccount:
 			{
-				v040Accounts[i] = convertBaseAccount(account)
+				v040Accounts[i] = convertBaseAccount(v039Account)
 			}
 		case *v039auth.ModuleAccount:
 			{
-				v039Account := account
 				v040Accounts[i] = &v040auth.ModuleAccount{
 					BaseAccount: convertBaseAccount(v039Account.BaseAccount),
 					Name:        v039Account.Name,
@@ -68,11 +60,10 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 			}
 		case *v039auth.BaseVestingAccount:
 			{
-				v040Accounts[i] = convertBaseVestingAccount(account)
+				v040Accounts[i] = convertBaseVestingAccount(v039Account)
 			}
 		case *v039auth.ContinuousVestingAccount:
 			{
-				v039Account := account
 				v040Accounts[i] = &v040vesting.ContinuousVestingAccount{
 					BaseVestingAccount: convertBaseVestingAccount(v039Account.BaseVestingAccount),
 					StartTime:          v039Account.EndTime,
@@ -80,14 +71,12 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 			}
 		case *v039auth.DelayedVestingAccount:
 			{
-				v039Account := account
 				v040Accounts[i] = &v040vesting.DelayedVestingAccount{
 					BaseVestingAccount: convertBaseVestingAccount(v039Account.BaseVestingAccount),
 				}
 			}
 		case *v039auth.PeriodicVestingAccount:
 			{
-				v039Account := account
 				vestingPeriods := make([]v040vesting.Period, len(v039Account.VestingPeriods))
 				for i, period := range v039Account.VestingPeriods {
 					vestingPeriods[i] = v040vesting.Period{
@@ -102,7 +91,7 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 				}
 			}
 		default:
-			panic(sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "got invalid type %T", account))
+			panic(sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "got invalid type %T", v039Account))
 		}
 
 	}

@@ -13,5 +13,5 @@ message MsgChangePubKey {
     (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
     (gogoproto.moretags) = "yaml:\"from_address\""
   ];
-  cosmos.crypto.secp256k1.PubKey amount = 2;
+  cosmos.crypto.secp256k1.PubKey pub_key = 2;
 }

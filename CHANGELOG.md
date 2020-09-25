@@ -1,48 +1,48 @@
 <!--
-Guiding Principles:
+guiding principles:
 
-Changelogs are for humans, not machines.
-There should be an entry for every single version.
-The same types of changes should be grouped.
-Versions and sections should be linkable.
-The latest version comes first.
-The release date of each version is displayed.
-Mention whether you follow Semantic Versioning.
+changelogs are for humans, not machines.
+there should be an entry for every single version.
+the same types of changes should be grouped.
+versions and sections should be linkable.
+the latest version comes first.
+the release date of each version is displayed.
+mention whether you follow semantic versioning.
 
-Usage:
+usage:
 
-Change log entries are to be added to the Unreleased section under the
-appropriate stanza (see below). Each entry should ideally include a tag and
-the Github issue reference in the following format:
+change log entries are to be added to the unreleased section under the
+appropriate stanza (see below). each entry should ideally include a tag and
+the github issue reference in the following format:
 
 * (<tag>) \#<issue-number> message
 
-The issue numbers will later be link-ified during the release process so you do
+the issue numbers will later be link-ified during the release process so you do
 not have to worry about including a link manually, but you can if you wish.
 
-Types of changes (Stanzas):
+types of changes (stanzas):
 
-"Features" for new features.
-"Improvements" for changes in existing functionality.
-"Deprecated" for soon-to-be removed features.
-"Bug Fixes" for any bug fixes.
-"Client Breaking" for breaking CLI commands and REST routes used by end-users.
-"API Breaking" for breaking exported APIs used by developers building on SDK.
-"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+"features" for new features.
+"improvements" for changes in existing functionality.
+"deprecated" for soon-to-be removed features.
+"bug fixes" for any bug fixes.
+"client breaking" for breaking cli commands and rest routes used by end-users.
+"api breaking" for breaking exported apis used by developers building on sdk.
+"state machine breaking" for any changes that result in a different appstate given same genesisstate and txlist.
 
-Ref: https://keepachangelog.com/en/1.0.0/
+ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-# Changelog
+# changelog
 
-## [Unreleased]
+## [unreleased]
 
-### Client Breaking
-* __CLI__
-  * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Remove `keys update` command.
+### Client Breaking Changes
+* __cli__
+  * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) remove `keys update` command.
   `--moniker` flag can be provided to override the moniker found in `config.toml`.
   * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
-  * (x/auth) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) The `tx encode/decode` commands, due to change on encoding break compatibility with older clients.
+  * (x/auth) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) the `tx encode/decode` commands, due to change on encoding break compatibility with older clients.
   * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
   * (x/auth) [\#6108](https://github.com/cosmos/cosmos-sdk/pull/6108) `tx sign` command's `--validate-signatures` flag is migrated into a `tx validate-signatures` standalone command.
   * (x/genutil) [\#6651](https://github.com/cosmos/cosmos-sdk/pull/6651) The `gentx` command has been improved. No longer are `--from` and `--name` flags required. Instead, a single argument, `name`, is required which refers to the key pair in the Keyring. In addition, an optional
@@ -177,140 +177,146 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
-* (client) [\#5964](https://github.com/cosmos/cosmos-sdk/issues/5964) `--trust-node` is now false by default - for real. Users must ensure it is set to true if they don't want to enable the verifier.
-* (client) [\#6402](https://github.com/cosmos/cosmos-sdk/issues/6402) Fix `keys add` `--algo` flag which only worked for Tendermint's `secp256k1` default key signing algorithm.
-* (crypto/keyring) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `Keyring.Sign()` methods no longer decode amino signatures when method receivers
-* (rest) [\#5906](https://github.com/cosmos/cosmos-sdk/pull/5906) Fix an issue that make some REST calls panic when sending invalid or incomplete requests.
-* (types) [\#7038](https://github.com/cosmos/cosmos-sdk/issues/7038) Fix infinite looping of `ApproxRoot` by including a hard-coded maximum iterations limit of 100.
-* (simulation) [\#7129](https://github.com/cosmos/cosmos-sdk/issues/7129) Fix support for custom `Account` and key types on auth's simulation.
-* (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
-* (export) [\#6510](https://github.com/cosmos/cosmos-sdk/pull/6510/) Field TimeIotaMs now is included in genesis file while exporting.
-* (x/auth) [\#5892](https://github.com/cosmos/cosmos-sdk/pull/5892) Add `RegisterKeyTypeCodec` to register new
-types (eg. keys) to the `auth` module internal amino codec.
-* (x/bank) [\#6536](https://github.com/cosmos/cosmos-sdk/pull/6536) Fix bug in `WriteGeneratedTxResponse` function used by multiple
-REST endpoints. Now it writes a Tx in StdTx format.
-* (x/genutil) [\#5938](https://github.com/cosmos/cosmos-sdk/pull/5938) Fix `InitializeNodeValidatorFiles` error handling.
-* (x/staking) [\#6529](https://github.com/cosmos/cosmos-sdk/pull/6529) Export validator addresses (previously was empty).
-* (x/staking) [\#5949](https://github.com/cosmos/cosmos-sdk/pull/5949) Skip staking `HistoricalInfoKey` in simulations as headers are not exported.
-* (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to
+* __Baseapp / Client / REST__
+  * (client) [\#5964](https://github.com/cosmos/cosmos-sdk/issues/5964) `--trust-node` is now false by default - for real. Users must ensure it is set to true if they don't want to enable the verifier.
+  * (client) [\#6402](https://github.com/cosmos/cosmos-sdk/issues/6402) Fix `keys add` `--algo` flag which only worked for Tendermint's `secp256k1` default key signing algorithm.
+  * (export) [\#6510](https://github.com/cosmos/cosmos-sdk/pull/6510/) Field TimeIotaMs now is included in genesis file while exporting.
+  * (rest) [\#5906](https://github.com/cosmos/cosmos-sdk/pull/5906) Fix an issue that make some REST calls panic when sending invalid or incomplete requests.
+  * (crypto/keyring) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `Keyring.Sign()` methods no longer decode amino signatures when method receivers
+  are offline/multisig keys.
+* __Modules__
+  * (modules) [\#5569](https://github.com/cosmos/cosmos-sdk/issues/5569) `InitGenesis`, for the relevant modules, now ensures module accounts exist.
+  * (x/auth) [\#5892](https://github.com/cosmos/cosmos-sdk/pull/5892) Add `RegisterKeyTypeCodec` to register new
+  types (eg. keys) to the `auth` module internal amino codec.
+  * (x/bank) [\#6536](https://github.com/cosmos/cosmos-sdk/pull/6536) Fix bug in `WriteGeneratedTxResponse` function used by multiple
+  REST endpoints. Now it writes a Tx in StdTx format.
+  * (x/genutil) [\#5938](https://github.com/cosmos/cosmos-sdk/pull/5938) Fix `InitializeNodeValidatorFiles` error handling.
+  * (x/staking) [\#6529](https://github.com/cosmos/cosmos-sdk/pull/6529) Export validator addresses (previously was empty).
+  * (x/staking) [\#5949](https://github.com/cosmos/cosmos-sdk/pull/5949) Skip staking `HistoricalInfoKey` in simulations as headers are not exported.
+  * (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to
 falling below their minimum self-delegation and never having been bonded. The validator may immediately unjail once they've met their minimum self-delegation.
-are offline/multisig keys.
+* __General__
+  * (types) [\#7038](https://github.com/cosmos/cosmos-sdk/issues/7038) Fix infinite looping of `ApproxRoot` by including a hard-coded maximum iterations limit of 100.
+  * (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
+  * (simulation) [\#7129](https://github.com/cosmos/cosmos-sdk/issues/7129) Fix support for custom `Account` and key types on auth's simulation.
 
 ### State Machine Breaking
 
-* (x/staking) [\#6844](https://github.com/cosmos/cosmos-sdk/pull/6844) Validators are now inserted into the unbonding queue based on their unbonding time and height. The relevant keeper APIs are modified to reflect these changes by now also requiring a height.
-* (x/bank) [\#6518](https://github.com/cosmos/cosmos-sdk/pull/6518) Support for global and per-denomination send enabled flags.
-  * Existing send_enabled global flag has been moved into a Params structure as `default_send_enabled`.
-  * An array of: `{denom: string, enabled: bool}` is added to bank Params to support per-denomination override of global default value.
-* (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to
-falling below their minimum self-delegation and never having been bonded. The validator may immediately unjail once they've met their minimum self-delegation.
-* (x/supply) [\#6010](https://github.com/cosmos/cosmos-sdk/pull/6010) Removed the `x/supply` module by merging the existing types and APIs into the `x/bank` module.
-* (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
-  * Account balances are now persisted and retrieved via the `x/bank` module.
-  * Vesting account interface has been modified to account for changes.
-  * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
-  the original vesting amount.
-  * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
-* (x/staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffers for state
-serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
-for JSON encoding.
-  * `BondStatus` is now of type `int32` instead of `byte`.
-  * Types of `int16` in the `Params` type are now of type `int32`.
-  * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.
-  * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
-  provided is specified by `ModuleCdc`.
-* (x/slashing) [\#5627](https://github.com/cosmos/cosmos-sdk/pull/5627) Migrate the `x/slashing` module to use Protocol Buffers for state
-serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
-for JSON encoding.
-  * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
-  provided is specified by `ModuleCdc`.
-* (x/distribution) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffers for state
-serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
-for JSON encoding.
-  * `ValidatorHistoricalRewards.ReferenceCount` is now of types `uint32` instead of `uint16`.
-  * `ValidatorSlashEvents` is now a struct with `slashevents`.
-  * `ValidatorOutstandingRewards` is now a struct with `rewards`.
-  * `ValidatorAccumulatedCommission` is now a struct with `commission`.
-  * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
-  provided is specified by `ModuleCdc`.
-* (x/auth) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/auth` module to use Protocol Buffers for state
-serialization instead of Amino.
-  * The `BaseAccount.PubKey` field is now represented as a Bech32 string instead of a `crypto.Pubkey`.
-  * `NewBaseAccountWithAddress` now returns a reference to a `BaseAccount`.
-  * The `x/auth` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
-  requiring a concrete codec to know how to serialize accounts.
-  * The `AccountRetriever` type now accepts a `Codec` in its constructor in order to know how to
-  serialize accounts.
-* (x/supply) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/supply` module to use Protocol Buffers for state
-serialization instead of Amino.
-  * The `internal` sub-package has been removed in order to expose the types proto file.
-  * The `x/supply` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
-  requiring a concrete codec to know how to serialize `SupplyI` types.
-  * The `SupplyI` interface has been modified to no longer return `SupplyI` on methods. Instead the
-  concrete type's receiver should modify the type.
-* (x/mint) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/mint` module to use Protocol Buffers for state
-serialization instead of Amino.
-  * The `internal` sub-package has been removed in order to expose the types proto file.
-* (x/evidence) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/evidence` module to use Protocol Buffers for state
-serialization instead of Amino.
-  * The `internal` sub-package has been removed in order to expose the types proto file.
-  * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
-  requiring a concrete codec to know how to serialize `Evidence` types.
-  * The `MsgSubmitEvidence` message has been removed in favor of `MsgSubmitEvidenceBase`. The application-level
-  codec must now define the concrete `MsgSubmitEvidence` type which must implement the module's `MsgSubmitEvidence`
-  interface.
-* (x/upgrade) [\#5659](https://github.com/cosmos/cosmos-sdk/pull/5659) Migrate the `x/upgrade` module to use Protocol
-Buffers for state serialization instead of Amino.
-  * The `internal` sub-package has been removed in order to expose the types proto file.
-  * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
-* (x/gov) [\#5737](https://github.com/cosmos/cosmos-sdk/pull/5737) Migrate the `x/gov` module to use Protocol
-Buffers for state serialization instead of Amino.
-  * `MsgSubmitProposal` will be removed in favor of the application-level proto-defined `MsgSubmitProposal` which
-  implements the `MsgSubmitProposalI` interface. Applications should extend the `NewMsgSubmitProposalBase` type
-  to define their own concrete `MsgSubmitProposal` types.
-  * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
-  requiring a concrete codec to know how to serialize `Proposal` types.
-* (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) Now we favor the use of `(Un)MarshalBinaryBare` instead of `(Un)MarshalBinaryLengthPrefixed` in all cases that are not needed.
-* (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove parameters from `x/evidence` genesis and module state. The `x/evidence` module now solely uses Tendermint consensus parameters to determine of evidence is valid or not.
+* __General__
+  * (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) Now we favor the use of `(Un)MarshalBinaryBare` instead of `(Un)MarshalBinaryLengthPrefixed` in all cases that are not needed.
+* __Modules__
+  * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
+    * Account balances are now persisted and retrieved via the `x/bank` module.
+    * Vesting account interface has been modified to account for changes.
+    * Callers to `NewBaseVestingAccount` are responsible for verifying account balance in relation to
+    the original vesting amount.
+    * The `SendKeeper` and `ViewKeeper` interfaces in `x/bank` have been modified to account for changes.
+  * (x/auth) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/auth` module to use Protocol Buffers for state
+  serialization instead of Amino.
+    * The `BaseAccount.PubKey` field is now represented as a Bech32 string instead of a `crypto.Pubkey`.
+    * `NewBaseAccountWithAddress` now returns a reference to a `BaseAccount`.
+    * The `x/auth` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+    requiring a concrete codec to know how to serialize accounts.
+    * The `AccountRetriever` type now accepts a `Codec` in its constructor in order to know how to
+    serialize accounts.
+  * (x/bank) [\#6518](https://github.com/cosmos/cosmos-sdk/pull/6518) Support for global and per-denomination send enabled flags.
+    * Existing send_enabled global flag has been moved into a Params structure as `default_send_enabled`.
+    * An array of: `{denom: string, enabled: bool}` is added to bank Params to support per-denomination override of global default value.
+  * (x/distribution) [\#5610](https://github.com/cosmos/cosmos-sdk/pull/5610) Migrate the `x/distribution` module to use Protocol Buffers for state
+  serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
+  for JSON encoding.
+    * `ValidatorHistoricalRewards.ReferenceCount` is now of types `uint32` instead of `uint16`.
+    * `ValidatorSlashEvents` is now a struct with `slashevents`.
+    * `ValidatorOutstandingRewards` is now a struct with `rewards`.
+    * `ValidatorAccumulatedCommission` is now a struct with `commission`.
+    * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
+    provided is specified by `ModuleCdc`.
+  * (x/evidence) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/evidence` module to use Protocol Buffers for state
+  serialization instead of Amino.
+    * The `internal` sub-package has been removed in order to expose the types proto file.
+    * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+    requiring a concrete codec to know how to serialize `Evidence` types.
+    * The `MsgSubmitEvidence` message has been removed in favor of `MsgSubmitEvidenceBase`. The application-level
+    codec must now define the concrete `MsgSubmitEvidence` type which must implement the module's `MsgSubmitEvidence`
+    interface.
+  * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove parameters from `x/evidence` genesis and module state. The `x/evidence` module now solely uses Tendermint consensus parameters to determine of evidence is valid or not.
+  * (x/gov) [\#5737](https://github.com/cosmos/cosmos-sdk/pull/5737) Migrate the `x/gov` module to use Protocol
+  Buffers for state serialization instead of Amino.
+    * `MsgSubmitProposal` will be removed in favor of the application-level proto-defined `MsgSubmitProposal` which
+    implements the `MsgSubmitProposalI` interface. Applications should extend the `NewMsgSubmitProposalBase` type
+    to define their own concrete `MsgSubmitProposal` types.
+    * The module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+    requiring a concrete codec to know how to serialize `Proposal` types.
+  * (x/mint) [\#5634](https://github.com/cosmos/cosmos-sdk/pull/5634) Migrate the `x/mint` module to use Protocol Buffers for state
+  serialization instead of Amino.
+    * The `internal` sub-package has been removed in order to expose the types proto file.
+  * (x/slashing) [\#5627](https://github.com/cosmos/cosmos-sdk/pull/5627) Migrate the `x/slashing` module to use Protocol Buffers for state
+  serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
+  for JSON encoding.
+    * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
+    provided is specified by `ModuleCdc`.
+  * (x/staking) [\#6844](https://github.com/cosmos/cosmos-sdk/pull/6844) Validators are now inserted into the unbonding queue based on their unbonding time and height. The relevant keeper APIs are modified to reflect these changes by now also requiring a height.
+  * (x/staking) [\#6061](https://github.com/cosmos/cosmos-sdk/pull/6061) Allow a validator to immediately unjail when no signing info is present due to
+  falling below their minimum self-delegation and never having been bonded. The validator may immediately unjail once they've met their minimum self-delegation.
+  * (x/staking) [\#5600](https://github.com/cosmos/cosmos-sdk/pull/5600) Migrate the `x/staking` module to use Protocol Buffers for state
+  serialization instead of Amino. The exact codec used is `codec.HybridCodec` which utilizes Protobuf for binary encoding and Amino
+  for JSON encoding.
+    * `BondStatus` is now of type `int32` instead of `byte`.
+    * Types of `int16` in the `Params` type are now of type `int32`.
+    * Every reference of `crypto.Pubkey` in context of a `Validator` is now of type string. `GetPubKeyFromBech32` must be used to get the `crypto.Pubkey`.
+    * The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This exact type
+    provided is specified by `ModuleCdc`.
+  * (x/supply) [\#6010](https://github.com/cosmos/cosmos-sdk/pull/6010) Removed the `x/supply` module by merging the existing types and APIs into the `x/bank` module.
+  * (x/supply) [\#5533](https://github.com/cosmos/cosmos-sdk/pull/5533) Migrate the `x/supply` module to use Protocol Buffers for state
+  serialization instead of Amino.
+    * The `internal` sub-package has been removed in order to expose the types proto file.
+    * The `x/supply` module now accepts a `Codec` interface which extends the `codec.Marshaler` interface by
+    requiring a concrete codec to know how to serialize `SupplyI` types.
+    * The `SupplyI` interface has been modified to no longer return `SupplyI` on methods. Instead the
+    concrete type's receiver should modify the type.
+  * (x/upgrade) [\#5659](https://github.com/cosmos/cosmos-sdk/pull/5659) Migrate the `x/upgrade` module to use Protocol
+  Buffers for state serialization instead of Amino.
+    * The `internal` sub-package has been removed in order to expose the types proto file.
+    * The `x/upgrade` module now accepts a `codec.Marshaler` interface.
 
 ### Improvements
-
-* (x/ibc-transfer) [\#6871](https://github.com/cosmos/cosmos-sdk/pull/6871) Implement [ADR 001 - Coin Source Tracing](./docs/architecture/adr-001-coin-source-tracing.md).
-* (types) [\#7027](https://github.com/cosmos/cosmos-sdk/pull/7027) `Coin(s)` and `DecCoin(s)` updates:
-  * Bump denomination max length to 128
-  * Allow uppercase letters and numbers in denominations to support [ADR 001](./docs/architecture/adr-001-coin-source-tracing.md)
-  * Added `Validate` function that returns a descriptive error
-* (baseapp) [\#6186](https://github.com/cosmos/cosmos-sdk/issues/6186) Support emitting events during `AnteHandler` execution.
-* (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
-* (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
-* (staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
-* (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
-  * `Coin` denomination max lenght has been increased to 32.
-  * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
-* (client) [\#5810](https://github.com/cosmos/cosmos-sdk/pull/5810) Added a new `--offline` flag that allows commands to be executed without an
-internet connection. Previously, `--generate-only` served this purpose in addition to only allowing txs to be generated. Now, `--generate-only` solely
-allows txs to be generated without being broadcasted and disallows Keybase use and `--offline` allows the use of Keybase but does not allow any
-functionality that requires an online connection.
-* (types/module) [\#5724](https://github.com/cosmos/cosmos-sdk/issues/5724) The `types/module` package does no longer depend on `x/simulation`.
-* (client) [\#5856](https://github.com/cosmos/cosmos-sdk/pull/5856) Added the possibility to set `--offline` flag with config command.
-* (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
-* (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
-* (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Tendermint Consensus parameters can now be changed via parameter change proposals through `x/gov`.
-* (x/evidence) [\#5961](https://github.com/cosmos/cosmos-sdk/issues/5961) Add `StoreDecoder` simulation for evidence module.
-* (x/auth/ante) [\#6040](https://github.com/cosmos/cosmos-sdk/pull/6040) `AccountKeeper` interface used for `NewAnteHandler` and handler's decorators to add support of using custom `AccountKeeper` implementations.
-* (simulation) [\#6002](https://github.com/cosmos/cosmos-sdk/pull/6002) Add randomized consensus params into simulation.
-* (x/staking) [\#6059](https://github.com/cosmos/cosmos-sdk/pull/6059) Updated `HistoricalEntries` parameter default to 100.
-* (x/ibc) [\#5948](https://github.com/cosmos/cosmos-sdk/issues/5948) Add `InitGenesis` and `ExportGenesis` functions for `ibc` module.
-* (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add String() method to GasMeter
-* (x/staking) [\#6163](https://github.com/cosmos/cosmos-sdk/pull/6163) CLI and REST call to unbonding delegations and delegations now accept
-pagination.
-* (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
-* (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
-* (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.
-* (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
-* (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.
-* (types) \#6897 Add KV type from tendermint to `types` directory.
+* __Baseapp / Client / REST__
+  * (baseapp) [\#6186](https://github.com/cosmos/cosmos-sdk/issues/6186) Support emitting events during `AnteHandler` execution.
+  * (baseapp) [\#6053](https://github.com/cosmos/cosmos-sdk/pull/6053) Customizable panic recovery handling added for `app.runTx()` method (as proposed in the [ADR 22](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-022-custom-panic-handling.md)). Adds ability for developers to register custom panic handlers extending standard ones.
+  * (client) [\#5810](https://github.com/cosmos/cosmos-sdk/pull/5810) Added a new `--offline` flag that allows commands to be executed without an
+  internet connection. Previously, `--generate-only` served this purpose in addition to only allowing txs to be generated. Now, `--generate-only` solely
+  allows txs to be generated without being broadcasted and disallows Keybase use and `--offline` allows the use of Keybase but does not allow any
+  functionality that requires an online connection.
+  * (client) [\#5856](https://github.com/cosmos/cosmos-sdk/pull/5856) Added the possibility to set `--offline` flag with config command.
+  * (client) [\#5895](https://github.com/cosmos/cosmos-sdk/issues/5895) show config options in the config command's help screen.
+* __Modules__
+  * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) Add parameter querying support for `x/auth`.
+  * (x/auth/ante) [\#6040](https://github.com/cosmos/cosmos-sdk/pull/6040) `AccountKeeper` interface used for `NewAnteHandler` and handler's decorators to add support of using custom `AccountKeeper` implementations.
+  * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Tendermint Consensus parameters can now be changed via parameter change proposals through `x/gov`.
+  * (x/evidence) [\#5961](https://github.com/cosmos/cosmos-sdk/issues/5961) Add `StoreDecoder` simulation for evidence module.
+  * (x/ibc) [\#5948](https://github.com/cosmos/cosmos-sdk/issues/5948) Add `InitGenesis` and `ExportGenesis` functions for `ibc` module.
+  * (x/ibc-transfer) [\#6871](https://github.com/cosmos/cosmos-sdk/pull/6871) Implement [ADR 001 - Coin Source Tracing](./docs/architecture/adr-001-coin-source-tracing.md).
+  * (x/staking) [\#6059](https://github.com/cosmos/cosmos-sdk/pull/6059) Updated `HistoricalEntries` parameter default to 100.
+  * (x/staking) [\#5584](https://github.com/cosmos/cosmos-sdk/pull/5584) Add util function `ToTmValidator` that converts a `staking.Validator` type to `*tmtypes.Validator`.
+  * (x/staking) [\#6163](https://github.com/cosmos/cosmos-sdk/pull/6163) CLI and REST call to unbonding delegations and delegations now accept
+  pagination.
+* __General__
+  * (simulation) [\#6002](https://github.com/cosmos/cosmos-sdk/pull/6002) Add randomized consensus params into simulation.
+  * (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
+  * (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.
+  * (types) [\#7027](https://github.com/cosmos/cosmos-sdk/pull/7027) `Coin(s)` and `DecCoin(s)` updates:
+    * Bump denomination max length to 128
+    * Allow uppercase letters and numbers in denominations to support [ADR 001](./docs/architecture/adr-001-coin-source-tracing.md)
+    * Added `Validate` function that returns a descriptive error
+  * (types) [\#5581](https://github.com/cosmos/cosmos-sdk/pull/5581) Add convenience functions {,Must}Bech32ifyAddressBytes.
+  * (types/module) [\#5724](https://github.com/cosmos/cosmos-sdk/issues/5724) The `types/module` package does no longer depend on `x/simulation`.
+  * (types) [\#5585](https://github.com/cosmos/cosmos-sdk/pull/5585) IBC additions:
+    * `Coin` denomination max lenght has been increased to 32.
+    * Added `CapabilityKey` alias for `StoreKey` to match IBC spec.
+  * (types/rest) [\#5900](https://github.com/cosmos/cosmos-sdk/pull/5900) Add Check*Error function family to spare developers from replicating tons of boilerplate code.
+  * (types) [\#6128](https://github.com/cosmos/cosmos-sdk/pull/6137) Add `String()` method to `GasMeter`.
+  * (types) [\#6195](https://github.com/cosmos/cosmos-sdk/pull/6195) Add codespace to broadcast(sync/async) response.
+  * (types) \#6897 Add KV type from tendermint to `types` directory.
 
 ## [v0.39.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.39.1) - 2020-08-11
 

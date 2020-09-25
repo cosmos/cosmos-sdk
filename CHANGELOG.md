@@ -1,5 +1,5 @@
 <!--
-guiding principles:
+Guiding Principles:
 
 Changelogs are for humans, not machines.
 There should be an entry for every single version.
@@ -9,7 +9,7 @@ The latest version comes first.
 The release date of each version is displayed.
 Mention whether you follow Semantic Versioning.
 
-usage:
+Usage:
 
 Change log entries are to be added to the Unreleased section under the
 appropriate stanza (see below). Each entry should ideally include a tag and

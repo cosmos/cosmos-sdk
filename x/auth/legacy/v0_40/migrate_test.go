@@ -229,8 +229,8 @@ func TestMigrate(t *testing.T) {
    "account_number": "1",
    "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
    "pub_key": {
-    "@type": "/google.protobuf.StringValue",
-    "value": ""
+    "@type": "/google.protobuf.Empty",
+    "value": {}
    },
    "sequence": "0"
   }

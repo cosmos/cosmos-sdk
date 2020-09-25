@@ -22,7 +22,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 	if old.PubKey != nil {
 		any, err = tx.PubKeyToAny(old.PubKey)
 	} else {
-		s := pt.StringValue{Value: ""}
+		s := pt.Empty{}
 		any, err = codectypes.NewAnyWithValue(&s)
 	}
 	if err != nil {

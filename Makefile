@@ -63,7 +63,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 endif
-ifeq (badgerdb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 endif
 

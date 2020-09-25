@@ -11,6 +11,7 @@ import (
 // v0.40 x/evidence genesis state. The migration includes:
 //
 // - Removing the `Params` field.
+// - Converting Equivocations into Anys.
 func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *v040evidence.GenesisState {
 	var newEquivocations = make([]v040evidence.Equivocation, len(evidenceState.Evidence))
 	for i, evidence := range evidenceState.Evidence {

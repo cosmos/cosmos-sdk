@@ -41,11 +41,11 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 		)
 	}
 
-	// assert update timestamp is greater than or equal to current consensus state timestamp
+	// assert update timestamp is not less than current consensus state timestamp
 	if header.Timestamp < clientState.ConsensusState.Timestamp {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"header timestamp is not greater than or equal to the consensus state timestamp (%d < %d)", header.Timestamp, clientState.ConsensusState.Timestamp,
+			"header timestamp is less than to the consensus state timestamp (%d < %d)", header.Timestamp, clientState.ConsensusState.Timestamp,
 		)
 	}
 

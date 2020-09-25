@@ -120,8 +120,8 @@ type SignatureDescriptor struct {
 	PublicKey *types.Any                `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	Data      *SignatureDescriptor_Data `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	// sequence is the sequence of the account, which describes the
-	// number of committed transactions signed by a given address. It is used to
-	// prevent replay attacks.
+	// number of committed transactions signed by a given address. It is used to prevent
+	// replay attacks.
 	Sequence uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
@@ -181,8 +181,7 @@ func (m *SignatureDescriptor) GetSequence() uint64 {
 
 // Data represents signature data
 type SignatureDescriptor_Data struct {
-	// sum is the oneof that specifies whether this represents single or
-	// multi-signature data
+	// sum is the oneof that specifies whether this represents single or multi-signature data
 	//
 	// Types that are valid to be assigned to Sum:
 	//	*SignatureDescriptor_Data_Single_

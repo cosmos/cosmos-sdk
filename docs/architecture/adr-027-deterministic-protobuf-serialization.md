@@ -12,7 +12,7 @@ Proposed
 ## Abstract
 
 Fully deterministic structure serialization, which works across many languages and clients,
-is needed for the use case of structure signatures. We need to be sure that whenever we serialize
+is needed when signing messages. We need to be sure that whenever we serialize
 a data structure, no matter in which supported language, the raw bytes
 will stay the same.
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)

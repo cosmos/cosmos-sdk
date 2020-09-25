@@ -10,8 +10,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/pubkey/types";
 // of an account.
 message MsgChangePubKey {
   bytes address = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-    (gogoproto.moretags) = "yaml:\"from_address\""
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
   ];
   cosmos.crypto.secp256k1.PubKey pub_key = 2;
 }

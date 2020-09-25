@@ -19,7 +19,7 @@ func Migrate(oldGenState v039slashing.GenesisState) *v040slashing.GenesisState {
 		newSigningInfos = append(newSigningInfos, v040slashing.SigningInfo{
 			Address: address,
 			ValidatorSigningInfo: v040slashing.ValidatorSigningInfo{
-				Address:             signingInfo.Address,
+				Address:             signingInfo.Address.String(),
 				StartHeight:         signingInfo.StartHeight,
 				IndexOffset:         signingInfo.IndexOffset,
 				JailedUntil:         signingInfo.JailedUntil,

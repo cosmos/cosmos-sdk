@@ -22,7 +22,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 	}
 
 	return &v040auth.BaseAccount{
-		Address:       old.Address,
+		Address:       old.Address.String(),
 		PubKey:        any,
 		AccountNumber: old.AccountNumber,
 		Sequence:      old.Sequence,

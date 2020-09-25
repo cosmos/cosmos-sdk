@@ -20,7 +20,7 @@ func Migrate(
 	balances := make([]v040bank.Balance, len(authGenState.Accounts))
 	for i, acc := range authGenState.Accounts {
 		balances[i] = v040bank.Balance{
-			Address: acc.GetAddress(),
+			Address: acc.GetAddress().String(),
 			Coins:   acc.GetCoins(),
 		}
 	}

@@ -25,7 +25,7 @@ func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *v040evi
 			Height:           equivocation.Height,
 			Time:             equivocation.Time,
 			Power:            equivocation.Power,
-			ConsensusAddress: equivocation.ConsensusAddress,
+			ConsensusAddress: equivocation.ConsensusAddress.String(),
 		}
 	}
 

@@ -30,8 +30,13 @@ func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *v040evi
 
 	// Then convert the equivocations into Any.
 	newEvidence := make([]*codectypes.Any, len(newEquivocations))
-	for i, equi := range newEquivocations {
-		newEvidence[i] = codectypes.UnsafePackAny(&equi)
+	for i := range newEquivocations {
+		any, err := codectypes.NewAnyWithValue(&newEquivocations[i])
+		if err != nil {
+			panic(err)
+		}
+
+		newEvidence[i] = any
 	}
 
 	return &v040evidence.GenesisState{

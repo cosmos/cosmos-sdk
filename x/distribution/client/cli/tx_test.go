@@ -81,12 +81,9 @@ func TestParseProposal(t *testing.T) {
 	proposal, err := ParseCommunityPoolSpendProposalWithDeposit(encodingConfig.Marshaler, okJSON.Name())
 	require.NoError(t, err)
 
-	addr, err := sdk.AccAddressFromBech32("cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq")
-	require.NoError(t, err)
-
 	require.Equal(t, "Community Pool Spend", proposal.Title)
 	require.Equal(t, "Pay me some Atoms!", proposal.Description)
-	require.Equal(t, addr, proposal.Recipient)
+	require.Equal(t, "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq", proposal.Recipient)
 	require.Equal(t, "1000stake", proposal.Deposit)
 	require.Equal(t, "1000stake", proposal.Amount)
 }

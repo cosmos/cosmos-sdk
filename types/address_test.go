@@ -456,7 +456,6 @@ func (s *AddressTestSuite) TestMustBech32ifyAddressBytes() {
 }
 
 func (s *AddressTestSuite) TestAddressTypesEquals() {
-	s.T().Parallel()
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	accAddr1 := types.AccAddress(addr1)
 	consAddr1 := types.ConsAddress(addr1)
@@ -496,15 +495,13 @@ func (s *AddressTestSuite) TestAddressTypesEquals() {
 	s.Require().Equal(valAddr1.Equals(valAddr2), valAddr2.Equals(valAddr1))
 }
 
-func TestNilAddressTypesEmpty(t *testing.T) {
-	t.Parallel()
-	require.True(t, types.AccAddress(nil).Empty())
-	require.True(t, types.ConsAddress(nil).Empty())
-	require.True(t, types.ValAddress(nil).Empty())
+func (s *AddressTestSuite) TestNilAddressTypesEmpty() {
+	s.Require().True(types.AccAddress(nil).Empty())
+	s.Require().True(types.ConsAddress(nil).Empty())
+	s.Require().True(types.ValAddress(nil).Empty())
 }
 
 func (s *AddressTestSuite) TestGetConsAddress() {
-	s.T().Parallel()
 	pk := secp256k1.GenPrivKey().PubKey()
 	s.Require().NotEqual(types.GetConsAddress(pk), pk.Address())
 	s.Require().True(bytes.Equal(types.GetConsAddress(pk).Bytes(), pk.Address().Bytes()))

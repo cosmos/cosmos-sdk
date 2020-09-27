@@ -16,18 +16,18 @@ var (
 	testDenom2 = "muon"
 )
 
-type CoinTestSuite struct {
+type coinTestSuite struct {
 	suite.Suite
 }
 
 func TestCoinTestSuite(t *testing.T) {
-	suite.Run(t, new(CoinTestSuite))
+	suite.Run(t, new(coinTestSuite))
 }
 
 // ----------------------------------------------------------------------------
 // Coin tests
 
-func (s *CoinTestSuite) TestCoin() {
+func (s *coinTestSuite) TestCoin() {
 	s.Require().Panics(func() { sdk.NewInt64Coin(testDenom1, -1) })
 	s.Require().Panics(func() { sdk.NewCoin(testDenom1, sdk.NewInt(-1)) })
 	s.Require().Equal(sdk.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
@@ -36,12 +36,12 @@ func (s *CoinTestSuite) TestCoin() {
 	s.Require().Equal(sdk.NewInt(5), sdk.NewCoin(testDenom1, sdk.NewInt(5)).Amount)
 }
 
-func (s *CoinTestSuite) TestCoin_String() {
+func (s *coinTestSuite) TestCoin_String() {
 	coin := sdk.NewCoin(testDenom1, sdk.NewInt(10))
 	s.Require().Equal(fmt.Sprintf("10%s", testDenom1), coin.String())
 }
 
-func (s *CoinTestSuite) TestIsEqualCoin() {
+func (s *coinTestSuite) TestIsEqualCoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -64,7 +64,7 @@ func (s *CoinTestSuite) TestIsEqualCoin() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoinIsValid() {
+func (s *coinTestSuite) TestCoinIsValid() {
 	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
 	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
 	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
@@ -94,7 +94,7 @@ func (s *CoinTestSuite) TestCoinIsValid() {
 	}
 }
 
-func (s *CoinTestSuite) TestAddCoin() {
+func (s *coinTestSuite) TestAddCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -117,7 +117,7 @@ func (s *CoinTestSuite) TestAddCoin() {
 	}
 }
 
-func (s *CoinTestSuite) TestSubCoin() {
+func (s *coinTestSuite) TestSubCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -150,7 +150,7 @@ func (s *CoinTestSuite) TestSubCoin() {
 	s.Require().Equal(tc.expected, res.Amount.Int64())
 }
 
-func (s *CoinTestSuite) TestIsGTECoin() {
+func (s *coinTestSuite) TestIsGTECoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -173,7 +173,7 @@ func (s *CoinTestSuite) TestIsGTECoin() {
 	}
 }
 
-func (s *CoinTestSuite) TestIsLTCoin() {
+func (s *coinTestSuite) TestIsLTCoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -199,7 +199,7 @@ func (s *CoinTestSuite) TestIsLTCoin() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoinIsZero() {
+func (s *coinTestSuite) TestCoinIsZero() {
 	coin := sdk.NewInt64Coin(testDenom1, 0)
 	res := coin.IsZero()
 	s.Require().True(res)
@@ -209,7 +209,7 @@ func (s *CoinTestSuite) TestCoinIsZero() {
 	s.Require().False(res)
 }
 
-func (s *CoinTestSuite) TestFilteredZeroCoins() {
+func (s *coinTestSuite) TestFilteredZeroCoins() {
 	cases := []struct {
 		name     string
 		input    sdk.Coins
@@ -264,7 +264,7 @@ func (s *CoinTestSuite) TestFilteredZeroCoins() {
 // ----------------------------------------------------------------------------
 // Coins tests
 
-func (s *CoinTestSuite) TestCoins_String() {
+func (s *coinTestSuite) TestCoins_String() {
 	cases := []struct {
 		name     string
 		input    sdk.Coins
@@ -296,7 +296,7 @@ func (s *CoinTestSuite) TestCoins_String() {
 	}
 }
 
-func (s *CoinTestSuite) TestIsZeroCoins() {
+func (s *coinTestSuite) TestIsZeroCoins() {
 	cases := []struct {
 		inputOne sdk.Coins
 		expected bool
@@ -314,7 +314,7 @@ func (s *CoinTestSuite) TestIsZeroCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestEqualCoins() {
+func (s *coinTestSuite) TestEqualCoins() {
 	cases := []struct {
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
@@ -341,7 +341,7 @@ func (s *CoinTestSuite) TestEqualCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestAddCoins() {
+func (s *coinTestSuite) TestAddCoins() {
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
@@ -365,7 +365,7 @@ func (s *CoinTestSuite) TestAddCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestSubCoins() {
+func (s *coinTestSuite) TestSubCoins() {
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
@@ -395,7 +395,7 @@ func (s *CoinTestSuite) TestSubCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoins_Validate() {
+func (s *coinTestSuite) TestCoins_Validate() {
 	testCases := []struct {
 		name    string
 		coins   sdk.Coins
@@ -572,7 +572,7 @@ func (s *CoinTestSuite) TestCoins_Validate() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoinsGT() {
+func (s *coinTestSuite) TestCoinsGT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -584,7 +584,7 @@ func (s *CoinTestSuite) TestCoinsGT() {
 	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom2, two}}))
 }
 
-func (s *CoinTestSuite) TestCoinsLT() {
+func (s *coinTestSuite) TestCoinsLT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -599,7 +599,7 @@ func (s *CoinTestSuite) TestCoinsLT() {
 	s.Require().True(sdk.Coins{}.IsAllLT(sdk.Coins{{testDenom1, one}}))
 }
 
-func (s *CoinTestSuite) TestCoinsLTE() {
+func (s *coinTestSuite) TestCoinsLTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -614,7 +614,7 @@ func (s *CoinTestSuite) TestCoinsLTE() {
 	s.Require().True(sdk.Coins{}.IsAllLTE(sdk.Coins{{testDenom1, one}}))
 }
 
-func (s *CoinTestSuite) TestParseCoins() {
+func (s *coinTestSuite) TestParseCoins() {
 	one := sdk.OneInt()
 
 	cases := []struct {
@@ -652,7 +652,7 @@ func (s *CoinTestSuite) TestParseCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestSortCoins() {
+func (s *coinTestSuite) TestSortCoins() {
 	good := sdk.Coins{
 		sdk.NewInt64Coin("gas", 1),
 		sdk.NewInt64Coin("mineral", 1),
@@ -715,7 +715,7 @@ func (s *CoinTestSuite) TestSortCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestAmountOf() {
+func (s *coinTestSuite) TestAmountOf() {
 	case0 := sdk.Coins{}
 	case1 := sdk.Coins{
 		sdk.NewInt64Coin("gold", 0),
@@ -757,7 +757,7 @@ func (s *CoinTestSuite) TestAmountOf() {
 	s.Require().Panics(func() { cases[0].coins.AmountOf("10Invalid") })
 }
 
-func (s *CoinTestSuite) TestCoinsIsAnyGTE() {
+func (s *coinTestSuite) TestCoinsIsAnyGTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -777,7 +777,7 @@ func (s *CoinTestSuite) TestCoinsIsAnyGTE() {
 	s.Require().True(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAnyGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func (s *CoinTestSuite) TestCoinsIsAllGT() {
+func (s *coinTestSuite) TestCoinsIsAllGT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -797,7 +797,7 @@ func (s *CoinTestSuite) TestCoinsIsAllGT() {
 	s.Require().False(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGT(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func (s *CoinTestSuite) TestCoinsIsAllGTE() {
+func (s *coinTestSuite) TestCoinsIsAllGTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
@@ -819,7 +819,7 @@ func (s *CoinTestSuite) TestCoinsIsAllGTE() {
 	s.Require().False(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func (s *CoinTestSuite) TestNewCoins() {
+func (s *coinTestSuite) TestNewCoins() {
 	tenatom := sdk.NewInt64Coin("atom", 10)
 	tenbtc := sdk.NewInt64Coin("btc", 10)
 	zeroeth := sdk.NewInt64Coin("eth", 0)
@@ -847,7 +847,7 @@ func (s *CoinTestSuite) TestNewCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoinsIsAnyGT() {
+func (s *coinTestSuite) TestCoinsIsAnyGT() {
 	twoAtom := sdk.NewInt64Coin("atom", 2)
 	fiveAtom := sdk.NewInt64Coin("atom", 5)
 	threeEth := sdk.NewInt64Coin("eth", 3)
@@ -874,7 +874,7 @@ func (s *CoinTestSuite) TestCoinsIsAnyGT() {
 	}
 }
 
-func (s *CoinTestSuite) TestMarshalJSONCoins() {
+func (s *coinTestSuite) TestMarshalJSONCoins() {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 
@@ -904,7 +904,7 @@ func (s *CoinTestSuite) TestMarshalJSONCoins() {
 	}
 }
 
-func (s *CoinTestSuite) TestCoinAminoEncoding() {
+func (s *coinTestSuite) TestCoinAminoEncoding() {
 	cdc := codec.NewLegacyAmino()
 	c := sdk.NewInt64Coin(testDenom1, 5)
 

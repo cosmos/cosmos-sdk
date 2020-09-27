@@ -2,8 +2,9 @@ package rest_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
+
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+
 	rest2 "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -182,8 +184,8 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, sequence 
 	txConfig := legacytx.StdTxConfig{Cdc: s.cfg.LegacyAmino}
 
 	msg := &types.MsgSend{
-		FromAddress: val.Address,
-		ToAddress:   val.Address,
+		FromAddress: val.Address.String(),
+		ToAddress:   val.Address.String(),
 		Amount:      sdk.Coins{sdk.NewInt64Coin(fmt.Sprintf("%stoken", val.Moniker), 100)},
 	}
 

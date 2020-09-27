@@ -62,7 +62,8 @@ func (m *ParameterChangeProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ParameterChangeProposal proto.InternalMessageInfo
 
-// ParamChange defines an individual parameter change, for use in ParameterChangeProposal.
+// ParamChange defines an individual parameter change, for use in
+// ParameterChangeProposal.
 type ParamChange struct {
 	Subspace string `protobuf:"bytes,1,opt,name=subspace,proto3" json:"subspace,omitempty"`
 	Key      string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`

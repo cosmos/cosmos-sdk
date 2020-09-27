@@ -5,8 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,24 +16,32 @@ var (
 	testDenom2 = "muon"
 )
 
+type CoinTestSuite struct {
+	suite.Suite
+}
+
+func TestCoinTestSuite(t *testing.T) {
+	suite.Run(t, new(CoinTestSuite))
+}
+
 // ----------------------------------------------------------------------------
 // Coin tests
 
-func TestCoin(t *testing.T) {
-	require.Panics(t, func() { sdk.NewInt64Coin(testDenom1, -1) })
-	require.Panics(t, func() { sdk.NewCoin(testDenom1, sdk.NewInt(-1)) })
-	require.Equal(t, sdk.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
-	require.Equal(t, sdk.NewInt(10), sdk.NewCoin(strings.ToUpper(testDenom1), sdk.NewInt(10)).Amount)
-	require.Equal(t, sdk.NewInt(5), sdk.NewInt64Coin(testDenom1, 5).Amount)
-	require.Equal(t, sdk.NewInt(5), sdk.NewCoin(testDenom1, sdk.NewInt(5)).Amount)
+func (s *CoinTestSuite) TestCoin() {
+	s.Require().Panics(func() { sdk.NewInt64Coin(testDenom1, -1) })
+	s.Require().Panics(func() { sdk.NewCoin(testDenom1, sdk.NewInt(-1)) })
+	s.Require().Equal(sdk.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
+	s.Require().Equal(sdk.NewInt(10), sdk.NewCoin(strings.ToUpper(testDenom1), sdk.NewInt(10)).Amount)
+	s.Require().Equal(sdk.NewInt(5), sdk.NewInt64Coin(testDenom1, 5).Amount)
+	s.Require().Equal(sdk.NewInt(5), sdk.NewCoin(testDenom1, sdk.NewInt(5)).Amount)
 }
 
-func TestCoin_String(t *testing.T) {
+func (s *CoinTestSuite) TestCoin_String() {
 	coin := sdk.NewCoin(testDenom1, sdk.NewInt(10))
-	require.Equal(t, fmt.Sprintf("10%s", testDenom1), coin.String())
+	s.Require().Equal(fmt.Sprintf("10%s", testDenom1), coin.String())
 }
 
-func TestIsEqualCoin(t *testing.T) {
+func (s *CoinTestSuite) TestIsEqualCoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -49,15 +56,15 @@ func TestIsEqualCoin(t *testing.T) {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.panics {
-			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
+			s.Require().Equal(tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestCoinIsValid(t *testing.T) {
+func (s *CoinTestSuite) TestCoinIsValid() {
 	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
 	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
 	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
@@ -83,11 +90,11 @@ func TestCoinIsValid(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
+		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
 }
 
-func TestAddCoin(t *testing.T) {
+func (s *CoinTestSuite) TestAddCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -102,15 +109,15 @@ func TestAddCoin(t *testing.T) {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.shouldPanic {
-			require.Panics(t, func() { tc.inputOne.Add(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.Add(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.Add(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+			s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestSubCoin(t *testing.T) {
+func (s *CoinTestSuite) TestSubCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -127,10 +134,10 @@ func TestSubCoin(t *testing.T) {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.shouldPanic {
-			require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.Sub(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
+			s.Require().Equal(tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
 		}
 	}
 
@@ -140,10 +147,10 @@ func TestSubCoin(t *testing.T) {
 		expected int64
 	}{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), 0}
 	res := tc.inputOne.Sub(tc.inputTwo)
-	require.Equal(t, tc.expected, res.Amount.Int64())
+	s.Require().Equal(tc.expected, res.Amount.Int64())
 }
 
-func TestIsGTECoin(t *testing.T) {
+func (s *CoinTestSuite) TestIsGTECoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -158,15 +165,15 @@ func TestIsGTECoin(t *testing.T) {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.panics {
-			require.Panics(t, func() { tc.inputOne.IsGTE(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.IsGTE(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsGTE(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
+			s.Require().Equal(tc.expected, res, "coin GTE relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestIsLTCoin(t *testing.T) {
+func (s *CoinTestSuite) TestIsLTCoin() {
 	cases := []struct {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
@@ -184,25 +191,25 @@ func TestIsLTCoin(t *testing.T) {
 	for tcIndex, tc := range cases {
 		tc := tc
 		if tc.panics {
-			require.Panics(t, func() { tc.inputOne.IsLT(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.IsLT(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsLT(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "coin LT relation is incorrect, tc #%d", tcIndex)
+			s.Require().Equal(tc.expected, res, "coin LT relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestCoinIsZero(t *testing.T) {
+func (s *CoinTestSuite) TestCoinIsZero() {
 	coin := sdk.NewInt64Coin(testDenom1, 0)
 	res := coin.IsZero()
-	require.True(t, res)
+	s.Require().True(res)
 
 	coin = sdk.NewInt64Coin(testDenom1, 1)
 	res = coin.IsZero()
-	require.False(t, res)
+	s.Require().False(res)
 }
 
-func TestFilteredZeroCoins(t *testing.T) {
+func (s *CoinTestSuite) TestFilteredZeroCoins() {
 	cases := []struct {
 		name     string
 		input    sdk.Coins
@@ -248,19 +255,16 @@ func TestFilteredZeroCoins(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			undertest := sdk.NewCoins(tt.input...)
-			require.Equal(t, tt.expected, undertest.String(), "NewCoins must return expected results")
-			require.Equal(t, tt.original, tt.input.String(), "input must be unmodified and match original")
-		})
+		undertest := sdk.NewCoins(tt.input...)
+		s.Require().Equal(tt.expected, undertest.String(), "NewCoins must return expected results")
+		s.Require().Equal(tt.original, tt.input.String(), "input must be unmodified and match original")
 	}
 }
 
 // ----------------------------------------------------------------------------
 // Coins tests
 
-func TestCoins_String(t *testing.T) {
+func (s *CoinTestSuite) TestCoins_String() {
 	cases := []struct {
 		name     string
 		input    sdk.Coins
@@ -288,14 +292,11 @@ func TestCoins_String(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.input.String())
-		})
+		s.Require().Equal(tt.expected, tt.input.String())
 	}
 }
 
-func TestIsZeroCoins(t *testing.T) {
+func (s *CoinTestSuite) TestIsZeroCoins() {
 	cases := []struct {
 		inputOne sdk.Coins
 		expected bool
@@ -309,11 +310,11 @@ func TestIsZeroCoins(t *testing.T) {
 
 	for _, tc := range cases {
 		res := tc.inputOne.IsZero()
-		require.Equal(t, tc.expected, res)
+		s.Require().Equal(tc.expected, res)
 	}
 }
 
-func TestEqualCoins(t *testing.T) {
+func (s *CoinTestSuite) TestEqualCoins() {
 	cases := []struct {
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
@@ -332,15 +333,15 @@ func TestEqualCoins(t *testing.T) {
 	for tcnum, tc := range cases {
 		tc := tc
 		if tc.panics {
-			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.IsEqual(tc.inputTwo)
-			require.Equal(t, tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+			s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 		}
 	}
 }
 
-func TestAddCoins(t *testing.T) {
+func (s *CoinTestSuite) TestAddCoins() {
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
@@ -359,12 +360,12 @@ func TestAddCoins(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Add(tc.inputTwo...)
-		assert.True(t, res.IsValid())
-		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+		s.Require().True(res.IsValid())
+		s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
-func TestSubCoins(t *testing.T) {
+func (s *CoinTestSuite) TestSubCoins() {
 	zero := sdk.NewInt(0)
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
@@ -385,16 +386,16 @@ func TestSubCoins(t *testing.T) {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
+			s.Require().Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.Sub(tc.inputTwo)
-			assert.True(t, res.IsValid())
-			require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", i)
+			s.Require().True(res.IsValid())
+			s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
 	}
 }
 
-func TestCoins_Validate(t *testing.T) {
+func (s *CoinTestSuite) TestCoins_Validate() {
 	testCases := []struct {
 		name    string
 		coins   sdk.Coins
@@ -564,56 +565,56 @@ func TestCoins_Validate(t *testing.T) {
 	for _, tc := range testCases {
 		err := tc.coins.Validate()
 		if tc.expPass {
-			require.NoError(t, err, tc.name)
+			s.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			s.Require().Error(err, tc.name)
 		}
 	}
 }
 
-func TestCoinsGT(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsGT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.False(t, sdk.Coins{}.IsAllGT(sdk.Coins{}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom2, two}}))
+	s.Require().False(sdk.Coins{}.IsAllGT(sdk.Coins{}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom2, two}}))
 }
 
-func TestCoinsLT(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsLT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.False(t, sdk.Coins{}.IsAllLT(sdk.Coins{}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom1, two}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{}.IsAllLT(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{}.IsAllLT(sdk.Coins{}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLT(sdk.Coins{{testDenom1, two}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{}.IsAllLT(sdk.Coins{{testDenom1, one}}))
 }
 
-func TestCoinsLTE(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsLTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.True(t, sdk.Coins{}.IsAllLTE(sdk.Coins{}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom2, two}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{}.IsAllLTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().True(sdk.Coins{}.IsAllLTE(sdk.Coins{}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom2, two}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllLTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{}.IsAllLTE(sdk.Coins{{testDenom1, one}}))
 }
 
-func TestParseCoins(t *testing.T) {
+func (s *CoinTestSuite) TestParseCoins() {
 	one := sdk.OneInt()
 
 	cases := []struct {
@@ -644,14 +645,14 @@ func TestParseCoins(t *testing.T) {
 	for tcIndex, tc := range cases {
 		res, err := sdk.ParseCoins(tc.input)
 		if !tc.valid {
-			require.Error(t, err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
-		} else if assert.Nil(t, err, "%s: %+v", tc.input, err) {
-			require.Equal(t, tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
+			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
+		} else if s.Assert().Nil(err, "%s: %+v", tc.input, err) {
+			s.Require().Equal(tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
 		}
 	}
 }
 
-func TestSortCoins(t *testing.T) {
+func (s *CoinTestSuite) TestSortCoins() {
 	good := sdk.Coins{
 		sdk.NewInt64Coin("gas", 1),
 		sdk.NewInt64Coin("mineral", 1),
@@ -698,23 +699,23 @@ func TestSortCoins(t *testing.T) {
 	for _, tc := range cases {
 		err := tc.coins.Validate()
 		if tc.validBefore {
-			require.NoError(t, err, tc.name)
+			s.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			s.Require().Error(err, tc.name)
 		}
 
 		tc.coins.Sort()
 
 		err = tc.coins.Validate()
 		if tc.validAfter {
-			require.NoError(t, err, tc.name)
+			s.Require().NoError(err, tc.name)
 		} else {
-			require.Error(t, err, tc.name)
+			s.Require().Error(err, tc.name)
 		}
 	}
 }
 
-func TestAmountOf(t *testing.T) {
+func (s *CoinTestSuite) TestAmountOf() {
 	case0 := sdk.Coins{}
 	case1 := sdk.Coins{
 		sdk.NewInt64Coin("gold", 0),
@@ -748,77 +749,77 @@ func TestAmountOf(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, sdk.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"))
-		assert.Equal(t, sdk.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"))
-		assert.Equal(t, sdk.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
+		s.Require().Equal(sdk.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"))
+		s.Require().Equal(sdk.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"))
+		s.Require().Equal(sdk.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
 	}
 
-	assert.Panics(t, func() { cases[0].coins.AmountOf("10Invalid") })
+	s.Require().Panics(func() { cases[0].coins.AmountOf("10Invalid") })
 }
 
-func TestCoinsIsAnyGTE(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsIsAnyGTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.False(t, sdk.Coins{}.IsAnyGTE(sdk.Coins{}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{}))
-	assert.False(t, sdk.Coins{}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, two}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{{testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom2, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAnyGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+	s.Require().False(sdk.Coins{}.IsAnyGTE(sdk.Coins{}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{}))
+	s.Require().False(sdk.Coins{}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, two}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{{testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom2, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAnyGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAnyGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func TestCoinsIsAllGT(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsIsAllGT() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.False(t, sdk.Coins{}.IsAllGT(sdk.Coins{}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
-	assert.False(t, sdk.Coins{}.IsAllGT(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, two}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, two}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGT(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+	s.Require().False(sdk.Coins{}.IsAllGT(sdk.Coins{}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
+	s.Require().False(sdk.Coins{}.IsAllGT(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, two}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, two}}.IsAllGT(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGT(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGT(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func TestCoinsIsAllGTE(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsIsAllGTE() {
 	one := sdk.OneInt()
 	two := sdk.NewInt(2)
 
-	assert.True(t, sdk.Coins{}.IsAllGTE(sdk.Coins{}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom2, two}}))
-	assert.False(t, sdk.Coins{}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, two}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
-	assert.True(t, sdk.Coins{{testDenom1, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.True(t, sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
-	assert.False(t, sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
-	assert.False(t, sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
+	s.Require().True(sdk.Coins{}.IsAllGTE(sdk.Coins{}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom2, two}}))
+	s.Require().False(sdk.Coins{}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, two}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, two}, {testDenom2, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().True(sdk.Coins{{testDenom1, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().True(sdk.Coins{{testDenom1, one}, {testDenom2, two}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, one}}))
+	s.Require().False(sdk.Coins{{testDenom1, one}, {testDenom2, one}}.IsAllGTE(sdk.Coins{{testDenom1, one}, {testDenom2, two}}))
+	s.Require().False(sdk.Coins{{"xxx", one}, {"yyy", one}}.IsAllGTE(sdk.Coins{{testDenom2, one}, {"ccc", one}, {"yyy", one}, {"zzz", one}}))
 }
 
-func TestNewCoins(t *testing.T) {
+func (s *CoinTestSuite) TestNewCoins() {
 	tenatom := sdk.NewInt64Coin("atom", 10)
 	tenbtc := sdk.NewInt64Coin("btc", 10)
 	zeroeth := sdk.NewInt64Coin("eth", 0)
@@ -837,19 +838,16 @@ func TestNewCoins(t *testing.T) {
 		{"panic on invalid coin", []sdk.Coin{invalidCoin, tenatom}, sdk.Coins{}, true},
 	}
 	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.wantPanic {
-				require.Panics(t, func() { sdk.NewCoins(tt.coins...) })
-				return
-			}
-			got := sdk.NewCoins(tt.coins...)
-			require.True(t, got.IsEqual(tt.want))
-		})
+		if tt.wantPanic {
+			s.Require().Panics(func() { sdk.NewCoins(tt.coins...) })
+			return
+		}
+		got := sdk.NewCoins(tt.coins...)
+		s.Require().True(got.IsEqual(tt.want))
 	}
 }
 
-func TestCoinsIsAnyGT(t *testing.T) {
+func (s *CoinTestSuite) TestCoinsIsAnyGT() {
 	twoAtom := sdk.NewInt64Coin("atom", 2)
 	fiveAtom := sdk.NewInt64Coin("atom", 5)
 	threeEth := sdk.NewInt64Coin("eth", 3)
@@ -872,11 +870,11 @@ func TestCoinsIsAnyGT(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		require.True(t, tc.expPass == tc.coinsA.IsAnyGT(tc.coinsB), tc.name)
+		s.Require().True(tc.expPass == tc.coinsA.IsAnyGT(tc.coinsB), tc.name)
 	}
 }
 
-func TestMarshalJSONCoins(t *testing.T) {
+func (s *CoinTestSuite) TestMarshalJSONCoins() {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 
@@ -891,36 +889,33 @@ func TestMarshalJSONCoins(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			bz, err := cdc.MarshalJSON(tc.input)
-			require.NoError(t, err)
-			require.Equal(t, tc.strOutput, string(bz))
+		bz, err := cdc.MarshalJSON(tc.input)
+		s.Require().NoError(err)
+		s.Require().Equal(tc.strOutput, string(bz))
 
-			var newCoins sdk.Coins
-			require.NoError(t, cdc.UnmarshalJSON(bz, &newCoins))
+		var newCoins sdk.Coins
+		s.Require().NoError(cdc.UnmarshalJSON(bz, &newCoins))
 
-			if tc.input.Empty() {
-				require.Nil(t, newCoins)
-			} else {
-				require.Equal(t, tc.input, newCoins)
-			}
-		})
+		if tc.input.Empty() {
+			s.Require().Nil(newCoins)
+		} else {
+			s.Require().Equal(tc.input, newCoins)
+		}
 	}
 }
 
-func TestCoinAminoEncoding(t *testing.T) {
+func (s *CoinTestSuite) TestCoinAminoEncoding() {
 	cdc := codec.NewLegacyAmino()
 	c := sdk.NewInt64Coin(testDenom1, 5)
 
 	bz1, err := cdc.MarshalBinaryBare(c)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	bz2, err := cdc.MarshalBinaryLengthPrefixed(c)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	bz3, err := c.Marshal()
-	require.NoError(t, err)
-	require.Equal(t, bz1, bz3)
-	require.Equal(t, bz2[1:], bz3)
+	s.Require().NoError(err)
+	s.Require().Equal(bz1, bz3)
+	s.Require().Equal(bz2[1:], bz3)
 }

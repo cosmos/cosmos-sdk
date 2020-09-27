@@ -22,7 +22,7 @@ type AddressTestSuite struct {
 	suite.Suite
 }
 
-func TestUnittestTestSuite(t *testing.T) {
+func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
 }
 

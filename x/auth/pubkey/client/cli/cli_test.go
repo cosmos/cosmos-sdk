@@ -53,6 +53,9 @@ func (s *IntegrationTestSuite) TestNewMsgChangePubKeyCmd() {
 		"try changing pubkey": { // TODO make sure test work
 			args: []string{
 				"example PubKey",
+				// “pubkey”: “cosmosvalconspub1zcjduepqy9u4eklf020rvuwxl0h2xqwv44hzpvqapz4y45rzxqvdxzewskfq70ddcv”
+				// “pubkey”: “cosmosvalconspub1zcjduepq233jufquq5derghvylktngfdx0n3pv8dml0ettm2e0sryp6ugcmq9e0san”,
+				// “pubkey”: “cosmosvalconspub1zcjduepqdd4uea73qsv0dagq53m0t73d5snaavmr9568pd72wg8rgl4p3t7s9vu983",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
 			expectErr:    false,

@@ -1,11 +1,11 @@
 package pubkey
 
 import (
-	authtypes "github.com/cosmos/cosmos-sdk/auth/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewHandler returns a handler for x/auth message types.

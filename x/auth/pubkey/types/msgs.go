@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // TypeMsgChangePubKey defines the type value for a MsgChangePubKey.

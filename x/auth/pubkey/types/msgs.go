@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto"
@@ -15,7 +16,8 @@ var _ sdk.Msg = &MsgChangePubKey{}
 func NewMsgChangePubKey(address sdk.AccAddress, pubKey crypto.PubKey) *MsgChangePubKey {
 	return &MsgChangePubKey{
 		Address: address,
-		PubKey:  pubKey,
+		// TODO for now, we do force type conversion as it support only secp256k1 right now
+		PubKey: pubKey.(*secp256k1.PubKey),
 	}
 }
 

@@ -12,12 +12,12 @@ Proposed
 ## Abstract
 
 Fully deterministic structure serialization, which works across many languages and clients,
-is needed for structure signature use-case. We need to be sure that whenever we serialize
+is needed when signing messages. We need to be sure that whenever we serialize
 a data structure, no matter in which supported language, the raw bytes
 will stay the same.
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
 serialization is not bijective (i.e. there exist a practically unlimited number of
-valid binary representations for a protobuf document)<sup>1</sup>.
+valid binary representations for a given protobuf document)<sup>1</sup>.
 
 This document describes a deterministic serialization scheme for
 a subset of protobuf documents, that covers this use case but can be reused in
@@ -25,7 +25,7 @@ other cases as well.
 
 ### Context
 
-For signature verification in Cosmos SDK, signer and verifier need to agree on
+For signature verification in Cosmos SDK, the signer and verifier need to agree on
 the same serialization of a `SignDoc` as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
 serialization.
@@ -38,8 +38,8 @@ step when sending and signing transactions.
 
 ### Decision
 
-The following encoding scheme is proposed to be used by other ADRs.
-Currently we are using the this ADR to for `SignDoc` serialization.
+The following encoding scheme is to be used by other ADRs, 
+and in particular for `SignDoc` serialization.
 
 ## Specification
 
@@ -271,7 +271,7 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - The need for rule number 3. adds some complexity to implementations.
 - Some data structures may require custom code for serialization. Thus
   the code is not very portable - it will require additional work for each
-  client implementing serialization for not compatible data structures.
+  client implementing serialization to properly handle custom data structures.
 
 ### Neutral
 
@@ -281,7 +281,7 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 For the reasons mentioned above ("Negative" section) we prefer to keep workarounds
 for shared data structure. Example: the aforementioned `TxRaw` is using raw bytes
 as a workaround. This allows them to use any valid Protobuf library without
-a need of implementing this standard (and related risks of bugs).
+the need of implementing a custom serializer that adheres to this standard (and related risks of bugs).
 
 ## References
 

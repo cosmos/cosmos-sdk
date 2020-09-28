@@ -258,7 +258,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 }
 
 // VerifyPacketReceiptAbsence verifies a proof of the absence of an
-// incoming packet acknowledgement at the specified port, specified channel, and
+// incoming packet receipt at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
@@ -270,11 +270,11 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 	channelID string,
 	sequence uint64,
 ) error {
-	path := host.KeyPacketAcknowledgement(portID, channelID, sequence)
+	path := host.KeyPacketReceipt(portID, channelID, sequence)
 
 	data := store.Get(path)
 	if data != nil {
-		return sdkerrors.Wrap(clienttypes.ErrFailedPacketAckAbsenceVerification, "expected no ack absence")
+		return sdkerrors.Wrap(clienttypes.ErrFailedPacketReceiptVerification, "expected no packet receipt")
 	}
 
 	return nil

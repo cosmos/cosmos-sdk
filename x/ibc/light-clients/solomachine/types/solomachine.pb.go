@@ -631,7 +631,7 @@ func (m *PacketAcknowledgementData) GetAcknowledgement() []byte {
 	return nil
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for
+// PacketReceiptAbsenceSignBytes returns the SignBytes data for
 // acknowledgement absence verification.
 type PacketAcknowledgementAbsenseData struct {
 	Path []byte `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`

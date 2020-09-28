@@ -361,7 +361,7 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, sequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, sequence))
 	if err != nil {
 		return err
 	}

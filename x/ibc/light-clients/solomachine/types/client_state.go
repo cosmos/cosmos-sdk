@@ -295,7 +295,7 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 }
 
 // VerifyPacketReceiptAbsence verifies a proof of the absence of an
-// incoming packet acknowledgement at the specified port, specified channel, and
+// incoming packet receipt at the specified port, specified channel, and
 // specified sequence.
 func (cs ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
@@ -312,12 +312,12 @@ func (cs ClientState) VerifyPacketReceiptAbsence(
 		return err
 	}
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, packetSequence))
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, packetSequence))
 	if err != nil {
 		return err
 	}
 
-	signBz, err := PacketAcknowledgementAbsenceSignBytes(cdc, sequence, timestamp, cs.ConsensusState.Diversifier, path)
+	signBz, err := PacketReceiptAbsenceSignBytes(cdc, sequence, timestamp, cs.ConsensusState.Diversifier, path)
 	if err != nil {
 		return err
 	}

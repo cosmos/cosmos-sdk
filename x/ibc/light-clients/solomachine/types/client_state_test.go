@@ -704,7 +704,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, solomachine.Sequence))
 		suite.Require().NoError(err)
 
-		value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)
+		value, err := types.PacketReceiptAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)

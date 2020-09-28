@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
 )
 
@@ -25,7 +26,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewMsgChangePubKey(),
+		NewMsgChangePubKeyCmd(),
 	)
 
 	return txCmd
@@ -49,8 +50,10 @@ func NewMsgChangePubKeyCmd() *cobra.Command {
 				return err
 			}
 
-			pubKeyText := args[0]
-			pubKey := pubKeyText // TODO should convert to correct format
+			pubKey, err := sdktypes.GetPubKeyFromBech32(sdktypes.Bech32PubKeyTypeAccPub, args[0])
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgChangePubKey(clientCtx.GetFromAddress(), pubKey)
 			if err := msg.ValidateBasic(); err != nil {

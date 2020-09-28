@@ -5,7 +5,7 @@ parent:
   title: "evidence"
 -->
 
-# `evidence`
+# `x/evidence`
 
 ## Abstract
 
@@ -46,27 +46,36 @@ such as slashing, jailing, and tombstoning.
 Any concrete type of evidence submitted to the `x/evidence` module must fulfill the
 `Evidence` contract outlined below. Not all concrete types of evidence will fulfill
 this contract in the same way and some data may be entirely irrelevant to certain
-types of evidence.
+types of evidence. An additional `ValidatorEvidence`, which extends `Evidence`, has also
+been created to define a contract for evidence against malicious validators.
 
 ```go
+// Evidence defines the contract which concrete evidence types of misbehavior
+// must implement.
 type Evidence interface {
-  Route() string
-  Type() string
-  String() string
-  Hash() HexBytes
-  ValidateBasic() error
+	Route() string
+	Type() string
+	String() string
+	Hash() tmbytes.HexBytes
+	ValidateBasic() error
 
-  // The consensus address of the malicious validator at time of infraction
-  GetConsensusAddress() ConsAddress
+	// Height at which the infraction occurred
+	GetHeight() int64
+}
 
-  // Height at which the infraction occurred
-  GetHeight() int64
+// ValidatorEvidence extends Evidence interface to define contract
+// for evidence against malicious validators
+type ValidatorEvidence interface {
+	Evidence
 
-  // The total power of the malicious validator at time of infraction
-  GetValidatorPower() int64
+	// The consensus address of the malicious validator at time of infraction
+	GetConsensusAddress() sdk.ConsAddress
 
-  // The total validator set power at time of infraction
-  GetTotalPower() int64
+	// The total power of the malicious validator at time of infraction
+	GetValidatorPower() int64
+
+	// The total validator set power at time of infraction
+	GetTotalPower() int64
 }
 ```
 

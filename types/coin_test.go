@@ -840,7 +840,7 @@ func (s *coinTestSuite) TestNewCoins() {
 	for _, tt := range tests {
 		if tt.wantPanic {
 			s.Require().Panics(func() { sdk.NewCoins(tt.coins...) })
-			return
+			continue
 		}
 		got := sdk.NewCoins(tt.coins...)
 		s.Require().True(got.IsEqual(tt.want))

@@ -182,20 +182,6 @@ func TestCompInt(t *testing.T) {
 	}
 }
 
-func minuint(i1, i2 uint64) uint64 {
-	if i1 < i2 {
-		return i1
-	}
-	return i2
-}
-
-func maxuint(i1, i2 uint64) uint64 {
-	if i1 > i2 {
-		return i1
-	}
-	return i2
-}
-
 func randint() Int {
 	return NewInt(rand.Int63())
 }

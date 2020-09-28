@@ -71,10 +71,10 @@ The `ModuleAccountI` interface is defined as follows:
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	AccountI					// same methods as the Account interface
+	AccountI                    // same methods as the Account interface
 
-	GetName() string			// name of the module; used to obtain the address
-	GetPermissions() []string	// permissions of module account
+	GetName() string            // name of the module; used to obtain the address
+	GetPermissions() []string   // permissions of module account
 	HasPermission(string) bool
 }
 ```

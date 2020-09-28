@@ -32,5 +32,4 @@ jobs:
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          repository: interchainio/simapp
-          tags: interchainio/Simapp:nightly-${{ steps.date.outputs.date }}
+          tags: interchainio/simapp:nightly-${{ steps.date.outputs.date }}

@@ -33,4 +33,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           repository: interchainio/simapp
-          tags: nightly-${{ steps.date.outputs.date }}
+          tags: interchainio/Simapp:nightly-${{ steps.date.outputs.date }}

@@ -37,8 +37,11 @@ func NewMsgChangePubKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "change-pubkey [pubkey]",
 		Short: "Change PubKey of an account.",
-		Long:  `Change PubKey of an account.`, // TODO should add more usecase
-		Args:  cobra.ExactArgs(1),
+		Long: `This msg will update the public key associated with an account
+		 to a new public key, while keeping the same address.
+		 This can be used for purposes such as passing ownership of an account
+		 to a new key for security reasons or upgrading multisig signers.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())

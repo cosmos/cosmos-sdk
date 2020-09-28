@@ -22,6 +22,22 @@ supply of all assets used in the application.
 
 This module will be used in the Cosmos Hub.
 
+## Contents
+
+1. **[Supply](#supply)**
+1. **[Module Accounts](#module-accounts)**
+1. **[State](#state)**
+1. **[Keepers](#keepers)**
+   - [Common Types](#common-types)
+   - [BaseKeeper](#basekeeper)
+   - [SendKeeper](#sendkeeper)
+   - [ViewKeeper](#viewkeeper)
+1. **[Messages](#messages)**
+   - [MsgSend](#msgsend)
+1. **[Events](#events)**
+   - [Handlers](#handlers)
+1. **[Parameters](#params)**
+
 ## Supply
 
 The `supply` module:
@@ -89,21 +105,7 @@ The available permissions are:
 - `Burner`: allows for a module to burn a specific amount of coins.
 - `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
 
-## Contents
-
-1. **[State](#state)**
-2. **[Keepers](#keepers)**
-   - [Common Types](#common-types)
-   - [BaseKeeper](#basekeeper)
-   - [SendKeeper](#sendkeeper)
-   - [ViewKeeper](#viewkeeper)
-3. **[Messages](#messages)**
-   - [MsgSend](#msgsend)
-4. **[Events](#events)**
-   - [Handlers](#handlers)
-5. **[Parameters](#params)**
-
-## 1. State
+## State
 
 The `x/bank` module keeps state of two primary objects, account balances and the
 total supply of all balances.

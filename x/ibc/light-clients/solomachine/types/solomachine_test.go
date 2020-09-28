@@ -22,8 +22,9 @@ import (
 type SoloMachineTestSuite struct {
 	suite.Suite
 
-	solomachine *ibctesting.Solomachine
-	coordinator *ibctesting.Coordinator
+	solomachine      *ibctesting.Solomachine // singlesig public key
+	solomachineMulti *ibctesting.Solomachine // multisig public key
+	coordinator      *ibctesting.Coordinator
 
 	// testing chain used for convenience and readability
 	chainA *ibctesting.TestChain
@@ -37,12 +38,10 @@ func (suite *SoloMachineTestSuite) SetupTest() {
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 
-	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "testingsolomachine", "testing")
-	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
+	suite.solomachine = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinesingle", "testing", 1)
+	suite.solomachineMulti = ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachinemulti", "testing", 4)
 
-	bz, err := codec.MarshalAny(suite.chainA.Codec, suite.solomachine.ClientState())
-	suite.Require().NoError(err)
-	suite.store.Set(host.KeyClientState(), bz)
+	suite.store = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), types.SoloMachine)
 }
 
 func TestSoloMachineTestSuite(t *testing.T) {

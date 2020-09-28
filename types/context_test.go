@@ -18,15 +18,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-type ContextTestSuite struct {
+type contextTestSuite struct {
 	suite.Suite
 }
 
 func TestContextTestSuite(t *testing.T) {
-	suite.Run(t, new(ContextTestSuite))
+	suite.Run(t, new(contextTestSuite))
 }
 
-func (s *ContextTestSuite) defaultContext(key types.StoreKey) types.Context {
+func (s *contextTestSuite) defaultContext(key types.StoreKey) types.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, types.StoreTypeIAVL, db)
@@ -35,7 +35,7 @@ func (s *ContextTestSuite) defaultContext(key types.StoreKey) types.Context {
 	return ctx
 }
 
-func (s *ContextTestSuite) TestCacheContext() {
+func (s *contextTestSuite) TestCacheContext() {
 	key := types.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
 	k1 := []byte("hello")
 	v1 := []byte("world")
@@ -62,7 +62,7 @@ func (s *ContextTestSuite) TestCacheContext() {
 	s.Require().Equal(v2, store.Get(k2))
 }
 
-func (s *ContextTestSuite) TestLogContext() {
+func (s *contextTestSuite) TestLogContext() {
 	key := types.NewKVStoreKey(s.T().Name())
 	ctx := s.defaultContext(key)
 	ctrl := gomock.NewController(s.T())
@@ -86,7 +86,7 @@ func (d dummy) Clone() interface{} {
 }
 
 // Testing saving/loading sdk type values to/from the context
-func (s *ContextTestSuite) TestContextWithCustom() {
+func (s *contextTestSuite) TestContextWithCustom() {
 	var ctx types.Context
 	s.Require().True(ctx.IsZero())
 
@@ -144,7 +144,7 @@ func (s *ContextTestSuite) TestContextWithCustom() {
 }
 
 // Testing saving/loading of header fields to/from the context
-func (s *ContextTestSuite) TestContextHeader() {
+func (s *contextTestSuite) TestContextHeader() {
 	var ctx types.Context
 
 	height := int64(5)
@@ -164,7 +164,7 @@ func (s *ContextTestSuite) TestContextHeader() {
 	s.Require().Equal(proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
 }
 
-func (s *ContextTestSuite) TestContextHeaderClone() {
+func (s *contextTestSuite) TestContextHeaderClone() {
 	cases := map[string]struct {
 		h tmproto.Header
 	}{
@@ -220,7 +220,7 @@ func (s *ContextTestSuite) TestContextHeaderClone() {
 	}
 }
 
-func (s *ContextTestSuite) TestUnwrapSDKContext() {
+func (s *contextTestSuite) TestUnwrapSDKContext() {
 	sdkCtx := types.NewContext(nil, tmproto.Header{}, false, nil)
 	ctx := types.WrapSDKContext(sdkCtx)
 	sdkCtx2 := types.UnwrapSDKContext(ctx)

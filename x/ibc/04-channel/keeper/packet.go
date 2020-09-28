@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
+const emptyReceipt = ""
+
 // SendPacket is called by a module in order to send an IBC packet on a channel
 // end owned by the calling module to the corresponding module on the counterparty
 // chain.
@@ -250,7 +252,6 @@ func (k Keeper) ReceiveExecuted(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
-	acknowledgement []byte,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -273,16 +274,6 @@ func (k Keeper) ReceiveExecuted(
 		)
 	}
 
-	if len(acknowledgement) == 0 {
-		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
-	}
-
-	// always set the acknowledgement so that it can be verified on the other side
-	k.SetPacketAcknowledgement(
-		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-		types.CommitAcknowledgement(acknowledgement),
-	)
-
 	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
@@ -297,6 +288,19 @@ func (k Keeper) ReceiveExecuted(
 		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
 		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+	} else {
+		// For unordered channels we must set the receipt so it can be verified on the other side.
+		// This receipt does not contain any data, since the packet has not yet been processed,
+		// it's just a single store key set to an empty string to indicate that the packet has been received
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		if found {
+			return sdkerrors.Wrapf(
+				types.ErrPacketReceived,
+				"destination port: %s, destination channel: %s, sequence: %d", packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			)
+		}
+
+		k.SetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	}
 
 	// log that a packet has been received & executed
@@ -307,7 +311,6 @@ func (k Keeper) ReceiveExecuted(
 		sdk.NewEvent(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),

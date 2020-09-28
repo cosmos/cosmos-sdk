@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) TestReceiveExecuted() {
 
 			tc.malleate()
 
-			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(suite.chainB.GetContext(), channelCap, packet, ack)
+			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(suite.chainB.GetContext(), channelCap, packet)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

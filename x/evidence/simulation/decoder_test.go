@@ -25,7 +25,7 @@ func TestDecodeStore(t *testing.T) {
 		Height:           10,
 		Time:             time.Now().UTC(),
 		Power:            1000,
-		ConsensusAddress: sdk.ConsAddress(delPk1.Address()),
+		ConsensusAddress: sdk.ConsAddress(delPk1.Address()).String(),
 	}
 
 	evBz, err := app.EvidenceKeeper.MarshalEvidence(ev)

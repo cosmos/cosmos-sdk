@@ -69,7 +69,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 	pk := ed25519.GenPrivKey()
-	s := sdk.AccAddress("test")
+	s := sdk.AccAddress("test________________")
 
 	testCases := []struct {
 		msg       sdk.Msg
@@ -82,7 +82,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 					Height:           11,
 					Time:             time.Now().UTC(),
 					Power:            100,
-					ConsensusAddress: pk.PubKey().Address().Bytes(),
+					ConsensusAddress: pk.PubKey().Address().String(),
 				},
 				s,
 			),
@@ -95,7 +95,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 					Height:           10,
 					Time:             time.Now().UTC(),
 					Power:            100,
-					ConsensusAddress: pk.PubKey().Address().Bytes(),
+					ConsensusAddress: pk.PubKey().Address().String(),
 				},
 				s,
 			),

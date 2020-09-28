@@ -68,6 +68,15 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 				}, false,
 			},
 			{
+				"invalid timestamp in header",
+				func() {
+					clientState = solomachine.ClientState()
+					h := solomachine.CreateHeader()
+					h.Timestamp--
+					header = h
+				}, false,
+			},
+			{
 				"signature uses wrong sequence",
 				func() {
 					clientState = solomachine.ClientState()

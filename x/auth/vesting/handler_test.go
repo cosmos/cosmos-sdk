@@ -31,9 +31,9 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
 	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
-	addr1 := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
-	addr3 := sdk.AccAddress([]byte("addr3"))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
@@ -72,7 +72,9 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 
-				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.ToAddress)
+				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+				suite.Require().NoError(err)
+				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
 
 				if tc.msg.Delayed {

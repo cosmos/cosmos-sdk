@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
 )
 
@@ -50,7 +50,7 @@ func NewMsgChangePubKeyCmd() *cobra.Command {
 				return err
 			}
 
-			pubKey, err := sdktypes.GetPubKeyFromBech32(sdktypes.Bech32PubKeyTypeAccPub, args[0])
+			pubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, args[0])
 			if err != nil {
 				return err
 			}

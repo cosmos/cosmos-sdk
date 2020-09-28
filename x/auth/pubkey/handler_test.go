@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -23,7 +24,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.handler = pubkey.NewHandler(app.AccountKeeper, app.BankKeeper)
+	suite.handler = pubkey.NewHandler(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	suite.app = app
 }
 
@@ -37,6 +38,8 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
 	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, balances))
 
+	var pubKey crypto.PubKey // TODO should define pubKey to use for testing
+
 	testCases := []struct {
 		name      string
 		msg       *types.MsgChangePubKey
@@ -44,7 +47,7 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 	}{
 		{
 			name:      "try changing pubkey",
-			msg:       types.NewMsgMsgChangePubKey(addr1, pubKey), // TODO should define pubKey
+			msg:       types.NewMsgChangePubKey(addr1, pubKey),
 			expectErr: false,
 		},
 		// TODO should add more tests
@@ -61,7 +64,7 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 
-				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.ToAddress)
+				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.Address)
 				suite.Require().NotNil(accI)
 			}
 		})

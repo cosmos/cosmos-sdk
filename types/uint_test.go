@@ -15,8 +15,12 @@ type uintTestSuite struct {
 	suite.Suite
 }
 
-func (s *uintTestSuite) TestUnitTestSuite(t *testing.T) {
+func TestUnitTestSuite(t *testing.T) {
 	suite.Run(t, new(uintTestSuite))
+}
+
+func (s *uintTestSuite) SetupSuite() {
+	s.T().Parallel()
 }
 
 func (s *uintTestSuite) TestUintPanics() {

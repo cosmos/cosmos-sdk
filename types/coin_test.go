@@ -24,6 +24,10 @@ func TestCoinTestSuite(t *testing.T) {
 	suite.Run(t, new(coinTestSuite))
 }
 
+func (s *coinTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 // ----------------------------------------------------------------------------
 // Coin tests
 

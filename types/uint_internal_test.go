@@ -17,6 +17,10 @@ func TestUintInternalTestSuite(t *testing.T) {
 	suite.Run(t, new(uintInternalTestSuite))
 }
 
+func (s *uintInternalTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 func (s *uintInternalTestSuite) TestIdentUint() {
 	for d := 0; d < 1000; d++ {
 		n := rand.Uint64()

@@ -409,7 +409,7 @@ func produceVerificationArgs(
 
 	timestamp := timestampedSignature.Timestamp
 
-	if timestampedSignature.Signature == nil || len(timestampedSignature.Signature) == 0 {
+	if len(timestampedSignature.Signature) == 0 {
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 

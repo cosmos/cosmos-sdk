@@ -37,7 +37,7 @@ func handleMsgChangePubKey(ctx sdk.Context, ak keeper.AccountKeeper, bk types.Ba
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "signers should exist")
 	}
 	feePayer := signers[0]
-	amount := uint64(ak.GetParams(ctx).PubKeyChangeCost) // should get from auth params
+	amount := ak.GetParams(ctx).PubKeyChangeCost // should get from auth params
 	fees := sdk.Coins{sdk.NewInt64Coin(sk.BondDenom(ctx), int64(amount))}
 	err := bk.SendCoinsFromAccountToModule(ctx, feePayer, authtypes.FeeCollectorName, fees)
 	if err != nil {

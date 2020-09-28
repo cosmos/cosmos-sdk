@@ -13,6 +13,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -152,8 +153,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addr1)
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr1, validator.OperatorAddress)
-	assert.Equal(t, pk1, validator.GetConsPubKey())
+	assert.Equal(t, addr1.String(), validator.OperatorAddress)
+	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -184,8 +185,8 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
-	assert.Equal(t, addr2, validator.OperatorAddress)
-	assert.Equal(t, pk2, validator.GetConsPubKey())
+	assert.Equal(t, addr2.String(), validator.OperatorAddress)
+	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)

@@ -43,7 +43,7 @@ func InitGenesis(
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
+			keeper.AfterValidatorCreated(ctx, validator.GetOperator())
 		}
 
 		// update timeslice if necessary
@@ -62,15 +62,20 @@ func InitGenesis(
 	}
 
 	for _, delegation := range data.Delegations {
+		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 	}
 
@@ -126,8 +131,12 @@ func InitGenesis(
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
-			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
-			validator, found := keeper.GetValidator(ctx, lv.Address)
+			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			if err != nil {
+				panic(err)
+			}
+			keeper.SetLastValidatorPower(ctx, valAddr, lv.Power)
+			validator, found := keeper.GetValidator(ctx, valAddr)
 
 			if !found {
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
@@ -165,7 +174,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	var lastValidatorPowers []types.LastValidatorPower
 
 	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr, Power: power})
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr.String(), Power: power})
 		return false
 	})
 

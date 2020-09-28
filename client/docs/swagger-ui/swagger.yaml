@@ -676,6 +676,7 @@ paths:
           description: Server internal error
   '/txs/{hash}':
     get:
+      deprecated: true
       summary: Get a Tx by hash
       tags:
         - Transactions
@@ -773,6 +774,7 @@ paths:
           description: Internal Server Error
   /txs:
     get:
+      deprecated: true
       tags:
         - Transactions
       summary: Search transactions
@@ -1073,6 +1075,7 @@ paths:
           description: Internal Server Error
   /txs/encode:
     post:
+      deprecated: true
       tags:
         - Transactions
       summary: Encode a transaction to the Amino wire format
@@ -1153,6 +1156,7 @@ paths:
           description: Server internal error
   /txs/decode:
     post:
+      deprecated: true
       tags:
         - Transactions
       summary: Decode a transaction from the Amino wire format
@@ -1231,6 +1235,7 @@ paths:
           description: Server internal error
   '/bank/balances/{address}':
     get:
+      deprecated: true
       summary: Get the account balances
       tags:
         - Bank
@@ -1261,6 +1266,7 @@ paths:
           description: Server internal error
   '/bank/accounts/{address}/transfers':
     post:
+      deprecated: true
       summary: Send coins from one account to another
       tags:
         - Bank
@@ -1391,6 +1397,7 @@ paths:
           description: Server internal error
   '/auth/accounts/{address}':
     get:
+      deprecated: true
       summary: Get the account information on blockchain
       tags:
         - Auth
@@ -1449,6 +1456,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Get all delegations from a delegator
       tags:
         - Staking
@@ -1626,6 +1634,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query the current delegation between a delegator and a validator
       tags:
         - Staking
@@ -1665,6 +1674,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Get all unbonding delegations from a delegator
       tags:
         - Staking
@@ -1833,6 +1843,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query all unbonding delegations between a delegator and a validator
       tags:
         - Staking
@@ -1883,6 +1894,7 @@ paths:
         required: false
         type: string
     get:
+      deprecated: true
       summary: Get all redelegations (filter by query params)
       tags:
         - Staking
@@ -1906,6 +1918,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     post:
+      deprecated: true
       summary: Submit a redelegation
       parameters:
         - in: body
@@ -2040,6 +2053,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Query all validators that a delegator is bonded to
       tags:
         - Staking
@@ -2128,6 +2142,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query a validator that a delegator is bonded to
       tags:
         - Staking
@@ -2201,6 +2216,7 @@ paths:
           description: Internal Server Error
   /staking/validators:
     get:
+      deprecated: true
       summary: >-
         Get all validator candidates. By default it returns only the bonded
         validators.
@@ -2301,6 +2317,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query the information from a single validator
       tags:
         - Staking
@@ -2381,6 +2398,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Get all delegations from a validator
       tags:
         - Staking
@@ -2422,6 +2440,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Get all unbonding delegations from a validator
       tags:
         - Staking
@@ -2453,6 +2472,7 @@ paths:
           description: Internal Server Error
   /staking/pool:
     get:
+      deprecated: true
       summary: Get the current state of the staking pool
       tags:
         - Staking
@@ -2480,6 +2500,7 @@ paths:
           description: Internal Server Error
   /staking/parameters:
     get:
+      deprecated: true
       summary: Get the current staking parameter values
       tags:
         - Staking
@@ -2509,6 +2530,7 @@ paths:
           description: Internal Server Error
   /slashing/signing_infos:
     get:
+      deprecated: true
       summary: Get sign info of given all validators
       description: Get sign info of all validators
       produces:
@@ -2550,6 +2572,7 @@ paths:
           description: Internal Server Error
   '/slashing/validators/{validatorAddr}/unjail':
     post:
+      deprecated: true
       summary: Unjail a jailed validator
       description: Send transaction to unjail a jailed validator
       consumes:
@@ -2675,6 +2698,7 @@ paths:
           description: Internal Server Error
   /slashing/parameters:
     get:
+      deprecated: true
       summary: Get the current slashing parameters
       tags:
         - Slashing
@@ -2704,6 +2728,7 @@ paths:
           description: Internal Server Error
   /gov/proposals:
     post:
+      deprecated: true
       summary: Submit a proposal
       description: Send transaction to submit a proposal
       consumes:
@@ -2841,6 +2866,7 @@ paths:
         '500':
           description: Internal Server Error
     get:
+      deprecated: true
       summary: Query proposals
       description: Query proposals information with parameters
       produces:
@@ -2919,6 +2945,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/param_change:
     post:
+      deprecated: true
       summary: Generate a parameter change proposal transaction
       description: Generate a parameter change proposal transaction
       consumes:
@@ -3072,6 +3099,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}':
     get:
+      deprecated: true
       summary: Query a proposal
       description: Query a proposal by id
       produces:
@@ -3136,6 +3164,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/proposer':
     get:
+      deprecated: true
       summary: Query proposer
       description: Query for the proposer for a proposal
       produces:
@@ -3164,6 +3193,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/deposits':
     get:
+      deprecated: true
       summary: Query deposits
       description: Query deposits by proposalId
       produces:
@@ -3206,6 +3236,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Deposit tokens to a proposal
       description: Send transaction to deposit tokens to a proposal
       consumes:
@@ -3343,6 +3374,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/deposits/{depositor}':
     get:
+      deprecated: true
       summary: Query deposit
       description: Query deposit by proposalId and depositor address
       produces:
@@ -3393,6 +3425,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/votes':
     get:
+      deprecated: true
       summary: Query voters
       description: Query voters information by proposalId
       produces:
@@ -3425,6 +3458,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Vote a proposal
       description: Send transaction to vote a proposal
       consumes:
@@ -3556,6 +3590,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/votes/{voter}':
     get:
+      deprecated: true
       summary: Query vote
       description: Query vote information by proposal Id and voter address
       produces:
@@ -3595,6 +3630,7 @@ paths:
           description: Internal Server Error
   '/gov/proposals/{proposalId}/tally':
     get:
+      deprecated: true
       summary: Get a proposal's tally result at the current time
       description: >-
         Gets a proposal's tally result at the current time. If the proposal is
@@ -3635,6 +3671,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/deposit:
     get:
+      deprecated: true
       summary: Query governance deposit parameters
       description: >-
         Query governance deposit parameters. The max_deposit_period units are in
@@ -3671,6 +3708,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/tallying:
     get:
+      deprecated: true
       summary: Query governance tally parameters
       description: Query governance tally parameters
       produces:
@@ -3699,6 +3737,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/voting:
     get:
+      deprecated: true
       summary: Query governance voting parameters
       description: >-
         Query governance voting parameters. The voting_period units are in
@@ -3730,6 +3769,7 @@ paths:
         type: string
         x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
     get:
+      deprecated: true
       summary: Get the total rewards balance from all delegations
       description: >-
         Get the sum of all the rewards earned by delegations by a single
@@ -3780,6 +3820,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw all the delegator's delegation rewards
       description: Withdraw all the delegator's delegation rewards
       tags:
@@ -3906,6 +3947,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query a delegation reward
       description: Query a single delegation reward by a delegator
       tags:
@@ -3931,6 +3973,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw a delegation reward
       description: Withdraw a delegator's delegation reward from a single validator
       tags:
@@ -4051,6 +4094,7 @@ paths:
         type: string
         x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
     get:
+      deprecated: true
       summary: Get the rewards withdrawal address
       description: >-
         Get the delegations' rewards withdrawal address. This is the address in
@@ -4071,6 +4115,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Replace the rewards withdrawal address
       description: Replace the delegations' rewards withdrawal address for a new one.
       tags:
@@ -4195,6 +4240,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Validator distribution information
       description: Query the distribution information of a single validator
       tags:
@@ -4246,6 +4292,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Fee distribution outstanding rewards of a single validator
       tags:
         - Distribution
@@ -4276,6 +4323,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Commission and self-delegation rewards of a single validator
       description: Query the commission and self-delegation rewards of validator.
       tags:
@@ -4301,6 +4349,7 @@ paths:
         '500':
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw the validator's rewards
       description: Withdraw the validator's self-delegation and commissions rewards
       tags:
@@ -4414,6 +4463,7 @@ paths:
           description: Internal Server Error
   /distribution/community_pool:
     get:
+      deprecated: true
       summary: Community pool parameters
       tags:
         - Distribution
@@ -4437,6 +4487,7 @@ paths:
           description: Internal Server Error
   /distribution/parameters:
     get:
+      deprecated: true
       summary: Fee distribution parameters
       tags:
         - Distribution
@@ -4457,6 +4508,7 @@ paths:
           description: Internal Server Error
   /minting/parameters:
     get:
+      deprecated: true
       summary: Minting module parameters
       tags:
         - Mint
@@ -4483,6 +4535,7 @@ paths:
           description: Internal Server Error
   /minting/inflation:
     get:
+      deprecated: true
       summary: Current minting inflation value
       tags:
         - Mint
@@ -4497,6 +4550,7 @@ paths:
           description: Internal Server Error
   /minting/annual-provisions:
     get:
+      deprecated: true
       summary: Current minting annual provisions value
       tags:
         - Mint
@@ -4511,6 +4565,7 @@ paths:
           description: Internal Server Error
   /supply/total:
     get:
+      deprecated: true
       summary: Total supply of coins in the chain
       tags:
         - Supply
@@ -4544,6 +4599,7 @@ paths:
         type: string
         x-example: uatom
     get:
+      deprecated: true
       summary: Total supply of a single coin denomination
       tags:
         - Supply
@@ -4833,7 +4889,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   /cosmos/auth/v1beta1/params:
@@ -5107,7 +5162,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAllBalancesResponse is the response type for the
-              Query/AllBalances RPC method.
+              Query/AllBalances RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -5136,7 +5193,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -5174,10 +5230,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -5233,7 +5291,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: denom
           description: denom is the coin denom to query balances for.
           in: path
@@ -5266,7 +5323,9 @@ paths:
                           format: boolean
                       description: >-
                         SendEnabled maps coin denom to a send_enabled status
-                        (whether a denom is sendable).
+                        (whether a denom is
+
+                        sendable).
                   default_send_enabled:
                     type: boolean
                     format: boolean
@@ -5328,7 +5387,9 @@ paths:
                 title: supply is the supply of the coins
             title: >-
               QueryTotalSupplyResponse is the response type for the
-              Query/TotalSupply RPC method
+              Query/TotalSupply RPC
+
+              method
         default:
           description: An unexpected error response
           schema:
@@ -5435,7 +5496,9 @@ paths:
                 description: pool defines community pool's coins.
             description: >-
               QueryCommunityPoolResponse is the response type for the
-              Query/CommunityPool RPC method.
+              Query/CommunityPool
+
+              RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -5462,7 +5525,7 @@ paths:
         - Query
   '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
     get:
-      summary: >-
+      summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
         validator.
       operationId: DelegationTotalRewards
@@ -5479,7 +5542,6 @@ paths:
                   properties:
                     validator_address:
                       type: string
-                      format: byte
                     reward:
                       type: array
                       items:
@@ -5521,7 +5583,7 @@ paths:
 
                     signatures required by gogoproto.
                 description: total defines the sum of all the rewards.
-            description: >-
+            description: |-
               QueryDelegationTotalRewardsResponse is the response type for the
               Query/DelegationTotalRewards RPC method.
         default:
@@ -5552,7 +5614,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
@@ -5584,7 +5645,7 @@ paths:
 
                     signatures required by gogoproto.
                 description: rewards defines the rewards accrued by a delegation.
-            description: >-
+            description: |-
               QueryDelegationRewardsResponse is the response type for the
               Query/DelegationRewards RPC method.
         default:
@@ -5615,13 +5676,11 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: validator_address
           description: validator_address defines the validator address to query for.
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
@@ -5638,11 +5697,10 @@ paths:
                 type: array
                 items:
                   type: string
-                  format: byte
                 description: >-
                   validators defines the validators a delegator is delegating
                   for.
-            description: >-
+            description: |-
               QueryDelegatorValidatorsResponse is the response type for the
               Query/DelegatorValidators RPC method.
         default:
@@ -5673,7 +5731,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
@@ -5688,9 +5745,8 @@ paths:
             properties:
               withdraw_address:
                 type: string
-                format: byte
                 description: withdraw_address defines the delegator address to query for.
-            description: >-
+            description: |-
               QueryDelegatorWithdrawAddressResponse is the response type for the
               Query/DelegatorWithdrawAddress RPC method.
         default:
@@ -5721,7 +5777,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   /cosmos/distribution/v1beta1/params:
@@ -5806,7 +5861,7 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-            title: >-
+            title: |-
               QueryValidatorCommissionResponse is the response type for the
               Query/ValidatorCommission RPC method
         default:
@@ -5837,7 +5892,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
@@ -5879,7 +5933,9 @@ paths:
                   checks.
             description: >-
               QueryValidatorOutstandingRewardsResponse is the response type for
-              the Query/ValidatorOutstandingRewards RPC method.
+              the
+
+              Query/ValidatorOutstandingRewards RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -5908,7 +5964,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
@@ -5960,7 +6015,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
+            description: |-
               QueryValidatorSlashesResponse is the response type for the
               Query/ValidatorSlashes RPC method.
         default:
@@ -5991,7 +6046,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: starting_height
           description: >-
             starting_height defines the optional starting height to query the
@@ -6045,10 +6099,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -6263,7 +6319,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryAllEvidenceResponse is the response type for the
-              Query/AllEvidence RPC method.
+              Query/AllEvidence RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -6491,10 +6549,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -6822,7 +6882,8 @@ paths:
                     type: string
                     description: >-
                       Maximum period for Atom holders to deposit on a proposal.
-                      Initial value: 2 months.
+                      Initial value: 2
+                       months.
               tally_params:
                 description: tally_params defines the parameters related to tally.
                 type: object
@@ -6832,7 +6893,8 @@ paths:
                     format: byte
                     description: >-
                       Minimum percentage of total stake needed to vote for a
-                      result to be considered valid.
+                      result to be
+                       considered valid.
                   threshold:
                     type: string
                     format: byte
@@ -6844,7 +6906,8 @@ paths:
                     format: byte
                     description: >-
                       Minimum value of Veto votes to Total votes ratio for
-                      proposal to be vetoed. Default value: 1/3.
+                      proposal to be
+                       vetoed. Default value: 1/3.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -7041,7 +7104,9 @@ paths:
         - name: params_type
           description: >-
             params_type defines which parameters to query for, can be one of
-            "voting", "tallying" or "deposit".
+            "voting",
+
+            "tallying" or "deposit".
           in: path
           required: true
           type: string
@@ -7257,11 +7322,16 @@ paths:
                         proposal.
 
                          - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-                         - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-                         - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-                         - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-                         - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-                         - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+                         - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+                        period.
+                         - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+                        period.
+                         - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+                        passed.
+                         - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+                        been rejected.
+                         - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+                        failed.
                     final_tally_result:
                       type: object
                       properties:
@@ -7329,7 +7399,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryProposalsResponse is the response type for the
-              Query/Proposals RPC method.
+              Query/Proposals RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -7525,11 +7597,16 @@ paths:
             proposal_status defines the status of the proposals.
 
              - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-             - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-             - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-             - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-             - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-             - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+             - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+            period.
+             - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+            period.
+             - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+            passed.
+             - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+            been rejected.
+             - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+            failed.
           in: query
           required: false
           type: string
@@ -7546,13 +7623,11 @@ paths:
           in: query
           required: false
           type: string
-          format: byte
         - name: depositor
           description: depositor defines the deposit addresses from the proposals.
           in: query
           required: false
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -7590,10 +7665,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -7806,11 +7883,16 @@ paths:
                       proposal.
 
                        - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-                       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-                       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-                       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-                       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-                       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+                       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+                      period.
+                       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+                      period.
+                       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+                      passed.
+                       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+                      been rejected.
+                       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+                      failed.
                   final_tally_result:
                     type: object
                     properties:
@@ -8078,7 +8160,6 @@ paths:
                       format: uint64
                     depositor:
                       type: string
-                      format: byte
                     amount:
                       type: array
                       items:
@@ -8099,7 +8180,9 @@ paths:
                           signatures required by gogoproto.
                   description: >-
                     Deposit defines an amount deposited by an account address to
-                    an active proposal.
+                    an active
+
+                    proposal.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -8354,10 +8437,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -8385,7 +8470,6 @@ paths:
                     format: uint64
                   depositor:
                     type: string
-                    format: byte
                   amount:
                     type: array
                     items:
@@ -8607,7 +8691,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
@@ -8853,7 +8936,6 @@ paths:
                       format: uint64
                     voter:
                       type: string
-                      format: byte
                     option:
                       type: string
                       enum:
@@ -9132,10 +9214,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -9161,7 +9245,6 @@ paths:
                     format: uint64
                   voter:
                     type: string
-                    format: byte
                   option:
                     type: string
                     enum:
@@ -9384,7 +9467,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   /cosmos/mint/v1beta1/annual_provisions:
@@ -9403,7 +9485,7 @@ paths:
                 description: >-
                   annual_provisions is the current minting annual provisions
                   value.
-            description: >-
+            description: |-
               QueryAnnualProvisionsResponse is the response type for the
               Query/AnnualProvisions RPC method.
         default:
@@ -9446,7 +9528,9 @@ paths:
                 description: inflation is the current minting inflation value.
             description: >-
               QueryInflationResponse is the response type for the
-              Query/Inflation RPC method.
+              Query/Inflation RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -9533,7 +9617,7 @@ paths:
         - Query
   /cosmos/params/v1beta1/params:
     get:
-      summary: >-
+      summary: |-
         Params queries a specific parameter of a module, given its subspace and
         key.
       operationId: Params
@@ -9665,7 +9749,6 @@ paths:
                   properties:
                     address:
                       type: string
-                      format: byte
                     start_height:
                       type: string
                       format: int64
@@ -9685,7 +9768,9 @@ paths:
                       format: boolean
                       title: >-
                         whether or not a validator has been tombstoned (killed
-                        out of validator set)
+                        out of validator
+
+                        set)
                     missed_blocks_counter:
                       type: string
                       format: int64
@@ -9694,7 +9779,9 @@ paths:
                         time)
                   description: >-
                     ValidatorSigningInfo defines a validator's signing info for
-                    monitoring their liveness activity.
+                    monitoring their
+
+                    liveness activity.
                 title: info is the signing info of all validators
               pagination:
                 type: object
@@ -9715,9 +9802,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -9725,7 +9812,9 @@ paths:
                    }
             title: >-
               QuerySigningInfosResponse is the response type for the
-              Query/SigningInfos RPC method
+              Query/SigningInfos RPC
+
+              method
         default:
           description: An unexpected error response
           schema:
@@ -9786,10 +9875,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -9814,7 +9905,6 @@ paths:
                 properties:
                   address:
                     type: string
-                    format: byte
                   start_height:
                     type: string
                     format: int64
@@ -9834,7 +9924,9 @@ paths:
                     format: boolean
                     title: >-
                       whether or not a validator has been tombstoned (killed out
-                      of validator set)
+                      of validator
+
+                      set)
                   missed_blocks_counter:
                     type: string
                     format: int64
@@ -9843,10 +9935,14 @@ paths:
                       time)
                 description: >-
                   ValidatorSigningInfo defines a validator's signing info for
-                  monitoring their liveness activity.
+                  monitoring their
+
+                  liveness activity.
             title: >-
               QuerySigningInfoResponse is the response type for the
-              Query/SigningInfo RPC method
+              Query/SigningInfo RPC
+
+              method
         default:
           description: An unexpected error response
           schema:
@@ -9875,7 +9971,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/staking/v1beta1/delegations/{delegator_addr}':
@@ -9900,10 +9995,8 @@ paths:
                       properties:
                         delegator_address:
                           type: string
-                          format: byte
                         validator_address:
                           type: string
-                          format: byte
                         shares:
                           type: string
                       description: >-
@@ -9931,10 +10024,10 @@ paths:
                         signatures required by gogoproto.
                   description: >-
                     DelegationResponse is equivalent to Delegation except that
-                    it contains a balance
+                    it contains a
 
-                    in addition to shares which is more suitable for client
-                    responses.
+                    balance in addition to shares which is more suitable for
+                    client responses.
                 description: >-
                   delegation_responses defines all the delegations' info of a
                   delegator.
@@ -9956,7 +10049,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
+            description: |-
               QueryDelegatorDelegationsResponse is response type for the
               Query/DelegatorDelegations RPC method.
         default:
@@ -9987,7 +10080,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -10025,10 +10117,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -10055,13 +10149,10 @@ paths:
                       properties:
                         delegator_address:
                           type: string
-                          format: byte
                         validator_src_address:
                           type: string
-                          format: byte
                         validator_dst_address:
                           type: string
-                          format: byte
                         entries:
                           type: array
                           items:
@@ -10145,7 +10236,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryRedelegationsResponse is response type for the
-              Query/Redelegations RPC method.
+              Query/Redelegations RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -10174,19 +10267,16 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: src_validator_addr
           description: src_validator_addr defines the validator address to redelegate from.
           in: query
           required: false
           type: string
-          format: byte
         - name: dst_validator_addr
           description: dst_validator_addr defines the validator address to redelegate to.
           in: query
           required: false
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -10224,10 +10314,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -10238,7 +10330,9 @@ paths:
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
-        given delegator address.
+        given
+
+        delegator address.
       operationId: DelegatorUnbondingDelegations
       responses:
         '200':
@@ -10253,10 +10347,8 @@ paths:
                   properties:
                     delegator_address:
                       type: string
-                      format: byte
                     validator_address:
                       type: string
-                      format: byte
                     entries:
                       type: array
                       items:
@@ -10300,7 +10392,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryUnbondingDelegatorDelegationsResponse is response type for
-              the Query/UnbondingDelegatorDelegations RPC method.
+              the
+
+              Query/UnbondingDelegatorDelegations RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -10329,7 +10423,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -10367,10 +10460,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -10379,7 +10474,7 @@ paths:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
     get:
-      summary: >-
+      summary: |-
         DelegatorValidators queries all validators info for given delegator
         address.
       operationId: StakingDelegatorValidators
@@ -10396,7 +10491,6 @@ paths:
                   properties:
                     operator_address:
                       type: string
-                      format: byte
                     consensus_pubkey:
                       type: string
                     jailed:
@@ -10456,27 +10550,27 @@ paths:
                       type: string
                   description: >-
                     Validator defines a validator, together with the total
-                    amount of the Validator's
+                    amount of the
 
-                    bond shares and their exchange rate to coins.
+                    Validator's bond shares and their exchange rate to coins.
+                    Slashing results in
 
-                    Slashing results in a decrease in the exchange rate,
-                    allowing correct
+                    a decrease in the exchange rate, allowing correct
+                    calculation of future
 
-                    calculation of future undelegations without iterating over
-                    delegators.
+                    undelegations without iterating over delegators. When coins
+                    are delegated to
 
-                    When coins are delegated to this validator, the validator is
-                    credited with a
+                    this validator, the validator is credited with a delegation
+                    whose number of
 
-                    delegation whose number of bond shares is based on the
-                    amount of coins
+                    bond shares is based on the amount of coins delegated
+                    divided by the current
 
-                    delegated divided by the current exchange rate. Voting power
-                    can be
+                    exchange rate. Voting power can be calculated as total
+                    bonded shares
 
-                    calculated as total bonded shares multiplied by exchange
-                    rate.
+                    multiplied by exchange rate.
                 description: validators defines the the validators' info of a delegator.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -10496,7 +10590,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
+            description: |-
               QueryDelegatorValidatorsResponse is response type for the
               Query/DelegatorValidators RPC method.
         default:
@@ -10527,7 +10621,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -10565,10 +10658,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -10577,7 +10672,7 @@ paths:
         - Query
   '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
     get:
-      summary: >-
+      summary: |-
         DelegatorValidator queries validator info for given delegator validator
         pair.
       operationId: DelegatorValidator
@@ -10593,7 +10688,6 @@ paths:
                 properties:
                   operator_address:
                     type: string
-                    format: byte
                   consensus_pubkey:
                     type: string
                   jailed:
@@ -10651,7 +10745,7 @@ paths:
                       validator.
                   min_self_delegation:
                     type: string
-            description: >-
+            description: |-
               QueryDelegatorValidatorResponse response type for the
               Query/DelegatorValidator RPC method.
         default:
@@ -10682,13 +10776,11 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: validator_addr
           description: validator_addr defines the validator address to query for.
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/staking/v1beta1/historical_info/{height}':
@@ -10789,7 +10881,6 @@ paths:
                       properties:
                         operator_address:
                           type: string
-                          format: byte
                         consensus_pubkey:
                           type: string
                         jailed:
@@ -10849,30 +10940,32 @@ paths:
                           type: string
                       description: >-
                         Validator defines a validator, together with the total
-                        amount of the Validator's
+                        amount of the
 
-                        bond shares and their exchange rate to coins.
+                        Validator's bond shares and their exchange rate to
+                        coins. Slashing results in
 
-                        Slashing results in a decrease in the exchange rate,
-                        allowing correct
+                        a decrease in the exchange rate, allowing correct
+                        calculation of future
 
-                        calculation of future undelegations without iterating
-                        over delegators.
+                        undelegations without iterating over delegators. When
+                        coins are delegated to
 
-                        When coins are delegated to this validator, the
-                        validator is credited with a
+                        this validator, the validator is credited with a
+                        delegation whose number of
 
-                        delegation whose number of bond shares is based on the
-                        amount of coins
+                        bond shares is based on the amount of coins delegated
+                        divided by the current
 
-                        delegated divided by the current exchange rate. Voting
-                        power can be
+                        exchange rate. Voting power can be calculated as total
+                        bonded shares
 
-                        calculated as total bonded shares multiplied by exchange
-                        rate.
+                        multiplied by exchange rate.
             description: >-
               QueryHistoricalInfoResponse is response type for the
-              Query/HistoricalInfo RPC method.
+              Query/HistoricalInfo RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -11018,7 +11111,6 @@ paths:
                   properties:
                     operator_address:
                       type: string
-                      format: byte
                     consensus_pubkey:
                       type: string
                     jailed:
@@ -11078,27 +11170,27 @@ paths:
                       type: string
                   description: >-
                     Validator defines a validator, together with the total
-                    amount of the Validator's
+                    amount of the
 
-                    bond shares and their exchange rate to coins.
+                    Validator's bond shares and their exchange rate to coins.
+                    Slashing results in
 
-                    Slashing results in a decrease in the exchange rate,
-                    allowing correct
+                    a decrease in the exchange rate, allowing correct
+                    calculation of future
 
-                    calculation of future undelegations without iterating over
-                    delegators.
+                    undelegations without iterating over delegators. When coins
+                    are delegated to
 
-                    When coins are delegated to this validator, the validator is
-                    credited with a
+                    this validator, the validator is credited with a delegation
+                    whose number of
 
-                    delegation whose number of bond shares is based on the
-                    amount of coins
+                    bond shares is based on the amount of coins delegated
+                    divided by the current
 
-                    delegated divided by the current exchange rate. Voting power
-                    can be
+                    exchange rate. Voting power can be calculated as total
+                    bonded shares
 
-                    calculated as total bonded shares multiplied by exchange
-                    rate.
+                    multiplied by exchange rate.
                 description: validators contains all the queried validators.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -11186,10 +11278,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -11212,7 +11306,6 @@ paths:
                 properties:
                   operator_address:
                     type: string
-                    format: byte
                   consensus_pubkey:
                     type: string
                   jailed:
@@ -11301,7 +11394,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations':
@@ -11324,10 +11416,8 @@ paths:
                       properties:
                         delegator_address:
                           type: string
-                          format: byte
                         validator_address:
                           type: string
-                          format: byte
                         shares:
                           type: string
                       description: >-
@@ -11355,10 +11445,10 @@ paths:
                         signatures required by gogoproto.
                   description: >-
                     DelegationResponse is equivalent to Delegation except that
-                    it contains a balance
+                    it contains a
 
-                    in addition to shares which is more suitable for client
-                    responses.
+                    balance in addition to shares which is more suitable for
+                    client responses.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -11377,7 +11467,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            title: >-
+            title: |-
               QueryValidatorDelegationsResponse is response type for the
               Query/ValidatorDelegations RPC method
         default:
@@ -11408,7 +11498,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -11446,10 +11535,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -11477,10 +11568,8 @@ paths:
                     properties:
                       delegator_address:
                         type: string
-                        format: byte
                       validator_address:
                         type: string
-                        format: byte
                       shares:
                         type: string
                     description: >-
@@ -11537,18 +11626,16 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: delegator_addr
           description: delegator_addr defines the delegator address to query for.
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
     get:
-      summary: >-
+      summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
         pair.
       operationId: UnbondingDelegation
@@ -11564,10 +11651,8 @@ paths:
                 properties:
                   delegator_address:
                     type: string
-                    format: byte
                   validator_address:
                     type: string
-                    format: byte
                   entries:
                     type: array
                     items:
@@ -11588,7 +11673,9 @@ paths:
                         with relevant metadata.
             description: >-
               QueryDelegationResponse is response type for the
-              Query/UnbondingDelegation RPC method.
+              Query/UnbondingDelegation
+
+              RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -11617,13 +11704,11 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: delegator_addr
           description: delegator_addr defines the delegator address to query for.
           in: path
           required: true
           type: string
-          format: byte
       tags:
         - Query
   '/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
@@ -11645,10 +11730,8 @@ paths:
                   properties:
                     delegator_address:
                       type: string
-                      format: byte
                     validator_address:
                       type: string
-                      format: byte
                     entries:
                       type: array
                       items:
@@ -11692,7 +11775,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryValidatorUnbondingDelegationsResponse is response type for
-              the Query/ValidatorUnbondingDelegations RPC method.
+              the
+
+              Query/ValidatorUnbondingDelegations RPC method.
         default:
           description: An unexpected error response
           schema:
@@ -11721,7 +11806,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -11759,10 +11843,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -11785,7 +11871,9 @@ paths:
                 description: height is the block height at which the plan was applied.
             description: >-
               QueryAppliedPlanResponse is the response type for the
-              Query/AppliedPlan RPC method.
+              Query/AppliedPlan RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -11834,18 +11922,24 @@ paths:
                     type: string
                     description: >-
                       Sets the name for the upgrade. This name will be used by
-                      the upgraded version of the software to apply any
+                      the upgraded
 
-                      special "on-upgrade" commands during the first BeginBlock
-                      method after the upgrade is applied. It is also used
+                      version of the software to apply any special "on-upgrade"
+                      commands during
+
+                      the first BeginBlock method after the upgrade is applied.
+                      It is also used
 
                       to detect whether a software version can handle a given
-                      upgrade. If no upgrade handler with this name has been
+                      upgrade. If no
 
-                      set in the software, it will be assumed that the software
-                      is out-of-date when the upgrade Time or Height
+                      upgrade handler with this name has been set in the
+                      software, it will be
 
-                      is reached and the software will exit.
+                      assumed that the software is out-of-date when the upgrade
+                      Time or Height is
+
+                      reached and the software will exit.
                   time:
                     type: string
                     format: date-time
@@ -11870,7 +11964,9 @@ paths:
                       upgrade to
             description: >-
               QueryCurrentPlanResponse is the response type for the
-              Query/CurrentPlan RPC method.
+              Query/CurrentPlan RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -12005,9 +12101,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -12269,10 +12365,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -14058,9 +14156,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -14332,10 +14430,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -15239,9 +15339,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -15508,10 +15608,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -15740,9 +15842,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -15980,10 +16082,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -16412,7 +16516,7 @@ paths:
         - Query
   '/ibc/client/v1beta1/consensus_states/{client_id}':
     get:
-      summary: >-
+      summary: |-
         ConsensusStates queries all the consensus state associated with a given
         client.
       operationId: ConsensusStates
@@ -16656,15 +16760,15 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
                            PageResponse page = 2;
                    }
-            title: >-
+            title: |-
               QueryConsensusStatesResponse is the response type for the
               Query/ConsensusStates RPC method
         default:
@@ -16899,10 +17003,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -16913,7 +17019,9 @@ paths:
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
-        at a given height.
+        at
+
+        a given height.
       operationId: ConsensusState
       responses:
         '200':
@@ -17130,7 +17238,9 @@ paths:
                   be monitonically increasing even as the EpochHeight gets reset
             title: >-
               QueryConsensusStateResponse is the response type for the
-              Query/ConsensusState RPC method
+              Query/ConsensusState
+
+              RPC method
         default:
           description: An unexpected error response
           schema:
@@ -17341,7 +17451,9 @@ paths:
         - name: latest_height
           description: >-
             latest_height overrrides the height field and queries the latest
-            stored ConsensusState.
+            stored
+
+            ConsensusState.
           in: query
           required: false
           type: boolean
@@ -17688,9 +17800,9 @@ paths:
                       was set, its value is undefined otherwise
                 description: >-
                   PageResponse is to be embedded in gRPC response messages where
-                  the corresponding
+                  the
 
-                  request message has used PageRequest.
+                  corresponding request message has used PageRequest.
 
                    message SomeResponse {
                            repeated Bar results = 1;
@@ -17954,10 +18066,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -19184,7 +19298,9 @@ paths:
                       was set, its value is undefined otherwise
             description: >-
               QueryConnectionsResponse is the response type for the
-              Query/DenomTraces RPC method.
+              Query/DenomTraces RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -19412,10 +19528,12 @@ paths:
             include
 
             a count of the total number of items available for pagination in
-            UIs. count_total
+            UIs.
 
-            is only respected when offset is used. It is ignored when key is
-            set.
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
           in: query
           required: false
           type: boolean
@@ -19450,7 +19568,9 @@ paths:
                     description: base denomination of the relayed fungible token.
             description: >-
               QueryDenomTraceResponse is the response type for the
-              Query/DenomTrace RPC method.
+              Query/DenomTrace RPC
+
+              method.
         default:
           description: An unexpected error response
           schema:
@@ -21607,7 +21727,9 @@ definitions:
               format: boolean
           description: >-
             SendEnabled maps coin denom to a send_enabled status (whether a
-            denom is sendable).
+            denom is
+
+            sendable).
       default_send_enabled:
         type: boolean
         format: boolean
@@ -21650,7 +21772,9 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryAllBalancesResponse is the response type for the Query/AllBalances
-      RPC method.
+      RPC
+
+      method.
   cosmos.bank.v1beta1.QueryBalanceResponse:
     type: object
     properties:
@@ -21683,7 +21807,9 @@ definitions:
                   format: boolean
               description: >-
                 SendEnabled maps coin denom to a send_enabled status (whether a
-                denom is sendable).
+                denom is
+
+                sendable).
           default_send_enabled:
             type: boolean
             format: boolean
@@ -21725,7 +21851,9 @@ definitions:
         title: supply is the supply of the coins
     title: >-
       QueryTotalSupplyResponse is the response type for the Query/TotalSupply
-      RPC method
+      RPC
+
+      method
   cosmos.bank.v1beta1.SendEnabled:
     type: object
     properties:
@@ -21734,7 +21862,7 @@ definitions:
       enabled:
         type: boolean
         format: boolean
-    description: >-
+    description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
   cosmos.base.query.v1beta1.PageRequest:
@@ -21770,9 +21898,11 @@ definitions:
           include
 
           a count of the total number of items available for pagination in UIs.
-          count_total
 
-          is only respected when offset is used. It is ignored when key is set.
+          count_total is only respected when offset is used. It is ignored when
+          key
+
+          is set.
     description: |-
       message SomeRequest {
                Foo some_parameter = 1;
@@ -21796,11 +21926,9 @@ definitions:
         title: |-
           total is total number of results available if PageRequest.count_total
           was set, its value is undefined otherwise
-    description: >-
+    description: |-
       PageResponse is to be embedded in gRPC response messages where the
-      corresponding
-
-      request message has used PageRequest.
+      corresponding request message has used PageRequest.
 
        message SomeResponse {
                repeated Bar results = 1;
@@ -21835,7 +21963,6 @@ definitions:
     properties:
       validator_address:
         type: string
-        format: byte
       reward:
         type: array
         items:
@@ -21886,7 +22013,9 @@ definitions:
         description: pool defines community pool's coins.
     description: >-
       QueryCommunityPoolResponse is the response type for the
-      Query/CommunityPool RPC method.
+      Query/CommunityPool
+
+      RPC method.
   cosmos.distribution.v1beta1.QueryDelegationRewardsResponse:
     type: object
     properties:
@@ -21905,7 +22034,7 @@ definitions:
             NOTE: The amount field is an Dec which implements the custom method
             signatures required by gogoproto.
         description: rewards defines the rewards accrued by a delegation.
-    description: >-
+    description: |-
       QueryDelegationRewardsResponse is the response type for the
       Query/DelegationRewards RPC method.
   cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse:
@@ -21918,7 +22047,6 @@ definitions:
           properties:
             validator_address:
               type: string
-              format: byte
             reward:
               type: array
               items:
@@ -21956,7 +22084,7 @@ definitions:
             NOTE: The amount field is an Dec which implements the custom method
             signatures required by gogoproto.
         description: total defines the sum of all the rewards.
-    description: >-
+    description: |-
       QueryDelegationTotalRewardsResponse is the response type for the
       Query/DelegationTotalRewards RPC method.
   cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse:
@@ -21966,9 +22094,8 @@ definitions:
         type: array
         items:
           type: string
-          format: byte
         description: validators defines the validators a delegator is delegating for.
-    description: >-
+    description: |-
       QueryDelegatorValidatorsResponse is the response type for the
       Query/DelegatorValidators RPC method.
   cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse:
@@ -21976,9 +22103,8 @@ definitions:
     properties:
       withdraw_address:
         type: string
-        format: byte
         description: withdraw_address defines the delegator address to query for.
-    description: >-
+    description: |-
       QueryDelegatorWithdrawAddressResponse is the response type for the
       Query/DelegatorWithdrawAddress RPC method.
   cosmos.distribution.v1beta1.QueryParamsResponse:
@@ -22023,7 +22149,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-    title: >-
+    title: |-
       QueryValidatorCommissionResponse is the response type for the
       Query/ValidatorCommission RPC method
   cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse:
@@ -22055,7 +22181,7 @@ definitions:
           rewards
 
           for a validator inexpensive to track, allows simple sanity checks.
-    description: >-
+    description: |-
       QueryValidatorOutstandingRewardsResponse is the response type for the
       Query/ValidatorOutstandingRewards RPC method.
   cosmos.distribution.v1beta1.QueryValidatorSlashesResponse:
@@ -22095,7 +22221,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryValidatorSlashesResponse is the response type for the
       Query/ValidatorSlashes RPC method.
   cosmos.distribution.v1beta1.ValidatorAccumulatedCommission:
@@ -22339,7 +22465,9 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryAllEvidenceResponse is the response type for the Query/AllEvidence
-      RPC method.
+      RPC
+
+      method.
   cosmos.evidence.v1beta1.QueryEvidenceResponse:
     type: object
     properties:
@@ -22416,7 +22544,6 @@ definitions:
         format: uint64
       depositor:
         type: string
-        format: byte
       amount:
         type: array
         items:
@@ -22431,7 +22558,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-    description: >-
+    description: |-
       Deposit defines an amount deposited by an account address to an active
       proposal.
   cosmos.gov.v1beta1.DepositParams:
@@ -22456,7 +22583,8 @@ definitions:
         type: string
         description: >-
           Maximum period for Atom holders to deposit on a proposal. Initial
-          value: 2 months.
+          value: 2
+           months.
     description: DepositParams defines the params for deposits on governance proposals.
   cosmos.gov.v1beta1.Proposal:
     type: object
@@ -22637,11 +22765,16 @@ definitions:
           ProposalStatus enumerates the valid statuses of a proposal.
 
            - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-           - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-           - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-           - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-           - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-           - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+           - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+          period.
+           - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+          period.
+           - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+          passed.
+           - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+          been rejected.
+           - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+          failed.
       final_tally_result:
         type: object
         properties:
@@ -22695,11 +22828,16 @@ definitions:
       ProposalStatus enumerates the valid statuses of a proposal.
 
        - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+      period.
+       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+      period.
+       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+      passed.
+       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+      been rejected.
+       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+      failed.
   cosmos.gov.v1beta1.QueryDepositResponse:
     type: object
     properties:
@@ -22712,7 +22850,6 @@ definitions:
             format: uint64
           depositor:
             type: string
-            format: byte
           amount:
             type: array
             items:
@@ -22746,7 +22883,6 @@ definitions:
               format: uint64
             depositor:
               type: string
-              format: byte
             amount:
               type: array
               items:
@@ -22766,7 +22902,9 @@ definitions:
                   signatures required by gogoproto.
           description: >-
             Deposit defines an amount deposited by an account address to an
-            active proposal.
+            active
+
+            proposal.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -22824,7 +22962,8 @@ definitions:
             type: string
             description: >-
               Maximum period for Atom holders to deposit on a proposal. Initial
-              value: 2 months.
+              value: 2
+               months.
       tally_params:
         description: tally_params defines the parameters related to tally.
         type: object
@@ -22834,7 +22973,8 @@ definitions:
             format: byte
             description: >-
               Minimum percentage of total stake needed to vote for a result to
-              be considered valid.
+              be
+               considered valid.
           threshold:
             type: string
             format: byte
@@ -22846,7 +22986,8 @@ definitions:
             format: byte
             description: >-
               Minimum value of Veto votes to Total votes ratio for proposal to
-              be vetoed. Default value: 1/3.
+              be
+               vetoed. Default value: 1/3.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1beta1.QueryProposalResponse:
     type: object
@@ -23036,11 +23177,16 @@ definitions:
               ProposalStatus enumerates the valid statuses of a proposal.
 
                - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-               - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-               - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-               - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-               - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-               - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+               - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+              period.
+               - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+              period.
+               - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+              passed.
+               - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+              been rejected.
+               - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+              failed.
           final_tally_result:
             type: object
             properties:
@@ -23280,11 +23426,16 @@ definitions:
                 ProposalStatus enumerates the valid statuses of a proposal.
 
                  - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
-                 - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit period.
-                 - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting period.
-                 - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has passed.
-                 - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has been rejected.
-                 - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has failed.
+                 - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+                period.
+                 - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+                period.
+                 - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+                passed.
+                 - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+                been rejected.
+                 - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+                failed.
             final_tally_result:
               type: object
               properties:
@@ -23345,7 +23496,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryProposalsResponse is the response type for the Query/Proposals RPC
       method.
   cosmos.gov.v1beta1.QueryTallyResultResponse:
@@ -23378,7 +23529,6 @@ definitions:
             format: uint64
           voter:
             type: string
-            format: byte
           option:
             type: string
             enum:
@@ -23411,7 +23561,6 @@ definitions:
               format: uint64
             voter:
               type: string
-              format: byte
             option:
               type: string
               enum:
@@ -23459,9 +23608,9 @@ definitions:
       quorum:
         type: string
         format: byte
-        description: >-
+        description: |-
           Minimum percentage of total stake needed to vote for a result to be
-          considered valid.
+           considered valid.
       threshold:
         type: string
         format: byte
@@ -23471,9 +23620,9 @@ definitions:
       veto_threshold:
         type: string
         format: byte
-        description: >-
+        description: |-
           Minimum value of Veto votes to Total votes ratio for proposal to be
-          vetoed. Default value: 1/3.
+           vetoed. Default value: 1/3.
     description: TallyParams defines the params for tallying votes on governance proposals.
   cosmos.gov.v1beta1.TallyResult:
     type: object
@@ -23495,7 +23644,6 @@ definitions:
         format: uint64
       voter:
         type: string
-        format: byte
       option:
         type: string
         enum:
@@ -23572,7 +23720,7 @@ definitions:
         type: string
         format: byte
         description: annual_provisions is the current minting annual provisions value.
-    description: >-
+    description: |-
       QueryAnnualProvisionsResponse is the response type for the
       Query/AnnualProvisions RPC method.
   cosmos.mint.v1beta1.QueryInflationResponse:
@@ -23582,7 +23730,7 @@ definitions:
         type: string
         format: byte
         description: inflation is the current minting inflation value.
-    description: >-
+    description: |-
       QueryInflationResponse is the response type for the Query/Inflation RPC
       method.
   cosmos.mint.v1beta1.QueryParamsResponse:
@@ -23621,7 +23769,7 @@ definitions:
         type: string
       value:
         type: string
-    description: >-
+    description: |-
       ParamChange defines an individual parameter change, for use in
       ParameterChangeProposal.
   cosmos.params.v1beta1.QueryParamsResponse:
@@ -23687,7 +23835,6 @@ definitions:
         properties:
           address:
             type: string
-            format: byte
           start_height:
             type: string
             format: int64
@@ -23705,17 +23852,23 @@ definitions:
             format: boolean
             title: >-
               whether or not a validator has been tombstoned (killed out of
-              validator set)
+              validator
+
+              set)
           missed_blocks_counter:
             type: string
             format: int64
             title: missed blocks counter (to avoid scanning the array every time)
         description: >-
           ValidatorSigningInfo defines a validator's signing info for monitoring
-          their liveness activity.
+          their
+
+          liveness activity.
     title: >-
       QuerySigningInfoResponse is the response type for the Query/SigningInfo
-      RPC method
+      RPC
+
+      method
   cosmos.slashing.v1beta1.QuerySigningInfosResponse:
     type: object
     properties:
@@ -23726,7 +23879,6 @@ definitions:
           properties:
             address:
               type: string
-              format: byte
             start_height:
               type: string
               format: int64
@@ -23744,14 +23896,18 @@ definitions:
               format: boolean
               title: >-
                 whether or not a validator has been tombstoned (killed out of
-                validator set)
+                validator
+
+                set)
             missed_blocks_counter:
               type: string
               format: int64
               title: missed blocks counter (to avoid scanning the array every time)
           description: >-
             ValidatorSigningInfo defines a validator's signing info for
-            monitoring their liveness activity.
+            monitoring their
+
+            liveness activity.
         title: info is the signing info of all validators
       pagination:
         type: object
@@ -23770,11 +23926,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -23782,13 +23936,14 @@ definitions:
            }
     title: >-
       QuerySigningInfosResponse is the response type for the Query/SigningInfos
-      RPC method
+      RPC
+
+      method
   cosmos.slashing.v1beta1.ValidatorSigningInfo:
     type: object
     properties:
       address:
         type: string
-        format: byte
       start_height:
         type: string
         format: int64
@@ -23806,14 +23961,18 @@ definitions:
         format: boolean
         title: >-
           whether or not a validator has been tombstoned (killed out of
-          validator set)
+          validator
+
+          set)
       missed_blocks_counter:
         type: string
         format: int64
         title: missed blocks counter (to avoid scanning the array every time)
     description: >-
       ValidatorSigningInfo defines a validator's signing info for monitoring
-      their liveness activity.
+      their
+
+      liveness activity.
   cosmos.staking.v1beta1.Commission:
     type: object
     properties:
@@ -23854,10 +24013,8 @@ definitions:
     properties:
       delegator_address:
         type: string
-        format: byte
       validator_address:
         type: string
-        format: byte
       shares:
         type: string
     description: |-
@@ -23872,10 +24029,8 @@ definitions:
         properties:
           delegator_address:
             type: string
-            format: byte
           validator_address:
             type: string
-            format: byte
           shares:
             type: string
         description: |-
@@ -23894,11 +24049,9 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-    description: >-
+    description: |-
       DelegationResponse is equivalent to Delegation except that it contains a
-      balance
-
-      in addition to shares which is more suitable for client responses.
+      balance in addition to shares which is more suitable for client responses.
   cosmos.staking.v1beta1.Description:
     type: object
     properties:
@@ -24000,7 +24153,6 @@ definitions:
           properties:
             operator_address:
               type: string
-              format: byte
             consensus_pubkey:
               type: string
             jailed:
@@ -24058,31 +24210,33 @@ definitions:
               type: string
           description: >-
             Validator defines a validator, together with the total amount of the
-            Validator's
 
-            bond shares and their exchange rate to coins.
+            Validator's bond shares and their exchange rate to coins. Slashing
+            results in
 
-            Slashing results in a decrease in the exchange rate, allowing
-            correct
+            a decrease in the exchange rate, allowing correct calculation of
+            future
 
-            calculation of future undelegations without iterating over
-            delegators.
+            undelegations without iterating over delegators. When coins are
+            delegated to
 
-            When coins are delegated to this validator, the validator is
-            credited with a
+            this validator, the validator is credited with a delegation whose
+            number of
 
-            delegation whose number of bond shares is based on the amount of
-            coins
+            bond shares is based on the amount of coins delegated divided by the
+            current
 
-            delegated divided by the current exchange rate. Voting power can be
+            exchange rate. Voting power can be calculated as total bonded shares
 
-            calculated as total bonded shares multiplied by exchange rate.
+            multiplied by exchange rate.
     description: >-
       HistoricalInfo contains header and validator information for a given
-      block. It is stored
+      block.
 
-      as part of staking module's state, which persists the `n` most recent
-      HistoricalInfo
+      It is stored as part of staking module's state, which persists the `n`
+      most
+
+      recent HistoricalInfo
 
       (`n` is set by the staking module's `historical_entries` parameter).
   cosmos.staking.v1beta1.Params:
@@ -24109,7 +24263,7 @@ definitions:
         type: string
       bonded_tokens:
         type: string
-    description: >-
+    description: |-
       Pool is used for tracking bonded and not-bonded token supply of the bond
       denomination.
   cosmos.staking.v1beta1.QueryDelegationResponse:
@@ -24124,10 +24278,8 @@ definitions:
             properties:
               delegator_address:
                 type: string
-                format: byte
               validator_address:
                 type: string
-                format: byte
               shares:
                 type: string
             description: >-
@@ -24169,10 +24321,8 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  format: byte
                 validator_address:
                   type: string
-                  format: byte
                 shares:
                   type: string
               description: >-
@@ -24200,9 +24350,10 @@ definitions:
                 signatures required by gogoproto.
           description: >-
             DelegationResponse is equivalent to Delegation except that it
-            contains a balance
+            contains a
 
-            in addition to shares which is more suitable for client responses.
+            balance in addition to shares which is more suitable for client
+            responses.
         description: delegation_responses defines all the delegations' info of a delegator.
       pagination:
         description: pagination defines the pagination in the response.
@@ -24222,7 +24373,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryDelegatorDelegationsResponse is response type for the
       Query/DelegatorDelegations RPC method.
   cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegationsResponse:
@@ -24235,10 +24386,8 @@ definitions:
           properties:
             delegator_address:
               type: string
-              format: byte
             validator_address:
               type: string
-              format: byte
             entries:
               type: array
               items:
@@ -24280,7 +24429,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryUnbondingDelegatorDelegationsResponse is response type for the
       Query/UnbondingDelegatorDelegations RPC method.
   cosmos.staking.v1beta1.QueryDelegatorValidatorResponse:
@@ -24292,7 +24441,6 @@ definitions:
         properties:
           operator_address:
             type: string
-            format: byte
           consensus_pubkey:
             type: string
           jailed:
@@ -24348,7 +24496,7 @@ definitions:
             description: Commission defines commission parameters for a given validator.
           min_self_delegation:
             type: string
-    description: >-
+    description: |-
       QueryDelegatorValidatorResponse response type for the
       Query/DelegatorValidator RPC method.
   cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse:
@@ -24361,7 +24509,6 @@ definitions:
           properties:
             operator_address:
               type: string
-              format: byte
             consensus_pubkey:
               type: string
             jailed:
@@ -24419,25 +24566,25 @@ definitions:
               type: string
           description: >-
             Validator defines a validator, together with the total amount of the
-            Validator's
 
-            bond shares and their exchange rate to coins.
+            Validator's bond shares and their exchange rate to coins. Slashing
+            results in
 
-            Slashing results in a decrease in the exchange rate, allowing
-            correct
+            a decrease in the exchange rate, allowing correct calculation of
+            future
 
-            calculation of future undelegations without iterating over
-            delegators.
+            undelegations without iterating over delegators. When coins are
+            delegated to
 
-            When coins are delegated to this validator, the validator is
-            credited with a
+            this validator, the validator is credited with a delegation whose
+            number of
 
-            delegation whose number of bond shares is based on the amount of
-            coins
+            bond shares is based on the amount of coins delegated divided by the
+            current
 
-            delegated divided by the current exchange rate. Voting power can be
+            exchange rate. Voting power can be calculated as total bonded shares
 
-            calculated as total bonded shares multiplied by exchange rate.
+            multiplied by exchange rate.
         description: validators defines the the validators' info of a delegator.
       pagination:
         description: pagination defines the pagination in the response.
@@ -24457,7 +24604,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryDelegatorValidatorsResponse is response type for the
       Query/DelegatorValidators RPC method.
   cosmos.staking.v1beta1.QueryHistoricalInfoResponse:
@@ -24551,7 +24698,6 @@ definitions:
               properties:
                 operator_address:
                   type: string
-                  format: byte
                 consensus_pubkey:
                   type: string
                 jailed:
@@ -24611,29 +24757,32 @@ definitions:
                   type: string
               description: >-
                 Validator defines a validator, together with the total amount of
-                the Validator's
+                the
 
-                bond shares and their exchange rate to coins.
+                Validator's bond shares and their exchange rate to coins.
+                Slashing results in
 
-                Slashing results in a decrease in the exchange rate, allowing
-                correct
+                a decrease in the exchange rate, allowing correct calculation of
+                future
 
-                calculation of future undelegations without iterating over
-                delegators.
+                undelegations without iterating over delegators. When coins are
+                delegated to
 
-                When coins are delegated to this validator, the validator is
-                credited with a
+                this validator, the validator is credited with a delegation
+                whose number of
 
-                delegation whose number of bond shares is based on the amount of
-                coins
+                bond shares is based on the amount of coins delegated divided by
+                the current
 
-                delegated divided by the current exchange rate. Voting power can
-                be
+                exchange rate. Voting power can be calculated as total bonded
+                shares
 
-                calculated as total bonded shares multiplied by exchange rate.
+                multiplied by exchange rate.
     description: >-
       QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo
-      RPC method.
+      RPC
+
+      method.
   cosmos.staking.v1beta1.QueryParamsResponse:
     type: object
     properties:
@@ -24680,13 +24829,10 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  format: byte
                 validator_src_address:
                   type: string
-                  format: byte
                 validator_dst_address:
                   type: string
-                  format: byte
                 entries:
                   type: array
                   items:
@@ -24770,7 +24916,9 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryRedelegationsResponse is response type for the Query/Redelegations
-      RPC method.
+      RPC
+
+      method.
   cosmos.staking.v1beta1.QueryUnbondingDelegationResponse:
     type: object
     properties:
@@ -24780,10 +24928,8 @@ definitions:
         properties:
           delegator_address:
             type: string
-            format: byte
           validator_address:
             type: string
-            format: byte
           entries:
             type: array
             items:
@@ -24802,7 +24948,7 @@ definitions:
               description: >-
                 UnbondingDelegationEntry defines an unbonding object with
                 relevant metadata.
-    description: >-
+    description: |-
       QueryDelegationResponse is response type for the Query/UnbondingDelegation
       RPC method.
   cosmos.staking.v1beta1.QueryValidatorDelegationsResponse:
@@ -24818,10 +24964,8 @@ definitions:
               properties:
                 delegator_address:
                   type: string
-                  format: byte
                 validator_address:
                   type: string
-                  format: byte
                 shares:
                   type: string
               description: >-
@@ -24849,9 +24993,10 @@ definitions:
                 signatures required by gogoproto.
           description: >-
             DelegationResponse is equivalent to Delegation except that it
-            contains a balance
+            contains a
 
-            in addition to shares which is more suitable for client responses.
+            balance in addition to shares which is more suitable for client
+            responses.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -24870,7 +25015,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    title: >-
+    title: |-
       QueryValidatorDelegationsResponse is response type for the
       Query/ValidatorDelegations RPC method
   cosmos.staking.v1beta1.QueryValidatorResponse:
@@ -24882,7 +25027,6 @@ definitions:
         properties:
           operator_address:
             type: string
-            format: byte
           consensus_pubkey:
             type: string
           jailed:
@@ -24949,10 +25093,8 @@ definitions:
           properties:
             delegator_address:
               type: string
-              format: byte
             validator_address:
               type: string
-              format: byte
             entries:
               type: array
               items:
@@ -24994,7 +25136,7 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-    description: >-
+    description: |-
       QueryValidatorUnbondingDelegationsResponse is response type for the
       Query/ValidatorUnbondingDelegations RPC method.
   cosmos.staking.v1beta1.QueryValidatorsResponse:
@@ -25007,7 +25149,6 @@ definitions:
           properties:
             operator_address:
               type: string
-              format: byte
             consensus_pubkey:
               type: string
             jailed:
@@ -25065,25 +25206,25 @@ definitions:
               type: string
           description: >-
             Validator defines a validator, together with the total amount of the
-            Validator's
 
-            bond shares and their exchange rate to coins.
+            Validator's bond shares and their exchange rate to coins. Slashing
+            results in
 
-            Slashing results in a decrease in the exchange rate, allowing
-            correct
+            a decrease in the exchange rate, allowing correct calculation of
+            future
 
-            calculation of future undelegations without iterating over
-            delegators.
+            undelegations without iterating over delegators. When coins are
+            delegated to
 
-            When coins are delegated to this validator, the validator is
-            credited with a
+            this validator, the validator is credited with a delegation whose
+            number of
 
-            delegation whose number of bond shares is based on the amount of
-            coins
+            bond shares is based on the amount of coins delegated divided by the
+            current
 
-            delegated divided by the current exchange rate. Voting power can be
+            exchange rate. Voting power can be calculated as total bonded shares
 
-            calculated as total bonded shares multiplied by exchange rate.
+            multiplied by exchange rate.
         description: validators contains all the queried validators.
       pagination:
         description: pagination defines the pagination in the response.
@@ -25111,13 +25252,10 @@ definitions:
     properties:
       delegator_address:
         type: string
-        format: byte
       validator_src_address:
         type: string
-        format: byte
       validator_dst_address:
         type: string
-        format: byte
       entries:
         type: array
         items:
@@ -25191,13 +25329,10 @@ definitions:
         properties:
           delegator_address:
             type: string
-            format: byte
           validator_src_address:
             type: string
-            format: byte
           validator_dst_address:
             type: string
-            format: byte
           entries:
             type: array
             items:
@@ -25265,10 +25400,8 @@ definitions:
     properties:
       delegator_address:
         type: string
-        format: byte
       validator_address:
         type: string
-        format: byte
       entries:
         type: array
         items:
@@ -25311,7 +25444,6 @@ definitions:
     properties:
       operator_address:
         type: string
-        format: byte
       consensus_pubkey:
         type: string
       jailed:
@@ -25369,22 +25501,24 @@ definitions:
         type: string
     description: >-
       Validator defines a validator, together with the total amount of the
-      Validator's
 
-      bond shares and their exchange rate to coins.
+      Validator's bond shares and their exchange rate to coins. Slashing results
+      in
 
-      Slashing results in a decrease in the exchange rate, allowing correct
+      a decrease in the exchange rate, allowing correct calculation of future
 
-      calculation of future undelegations without iterating over delegators.
+      undelegations without iterating over delegators. When coins are delegated
+      to
 
-      When coins are delegated to this validator, the validator is credited with
-      a
+      this validator, the validator is credited with a delegation whose number
+      of
 
-      delegation whose number of bond shares is based on the amount of coins
+      bond shares is based on the amount of coins delegated divided by the
+      current
 
-      delegated divided by the current exchange rate. Voting power can be
+      exchange rate. Voting power can be calculated as total bonded shares
 
-      calculated as total bonded shares multiplied by exchange rate.
+      multiplied by exchange rate.
   tendermint.types.BlockID:
     type: object
     properties:
@@ -25513,18 +25647,22 @@ definitions:
         type: string
         description: >-
           Sets the name for the upgrade. This name will be used by the upgraded
-          version of the software to apply any
 
-          special "on-upgrade" commands during the first BeginBlock method after
-          the upgrade is applied. It is also used
+          version of the software to apply any special "on-upgrade" commands
+          during
+
+          the first BeginBlock method after the upgrade is applied. It is also
+          used
 
           to detect whether a software version can handle a given upgrade. If no
-          upgrade handler with this name has been
 
-          set in the software, it will be assumed that the software is
-          out-of-date when the upgrade Time or Height
+          upgrade handler with this name has been set in the software, it will
+          be
 
-          is reached and the software will exit.
+          assumed that the software is out-of-date when the upgrade Time or
+          Height is
+
+          reached and the software will exit.
       time:
         type: string
         format: date-time
@@ -25554,7 +25692,9 @@ definitions:
         description: height is the block height at which the plan was applied.
     description: >-
       QueryAppliedPlanResponse is the response type for the Query/AppliedPlan
-      RPC method.
+      RPC
+
+      method.
   cosmos.upgrade.v1beta1.QueryCurrentPlanResponse:
     type: object
     properties:
@@ -25566,18 +25706,24 @@ definitions:
             type: string
             description: >-
               Sets the name for the upgrade. This name will be used by the
-              upgraded version of the software to apply any
+              upgraded
 
-              special "on-upgrade" commands during the first BeginBlock method
-              after the upgrade is applied. It is also used
+              version of the software to apply any special "on-upgrade" commands
+              during
+
+              the first BeginBlock method after the upgrade is applied. It is
+              also used
 
               to detect whether a software version can handle a given upgrade.
-              If no upgrade handler with this name has been
+              If no
 
-              set in the software, it will be assumed that the software is
-              out-of-date when the upgrade Time or Height
+              upgrade handler with this name has been set in the software, it
+              will be
 
-              is reached and the software will exit.
+              assumed that the software is out-of-date when the upgrade Time or
+              Height is
+
+              reached and the software will exit.
           time:
             type: string
             format: date-time
@@ -25599,7 +25745,9 @@ definitions:
               to
     description: >-
       QueryCurrentPlanResponse is the response type for the Query/CurrentPlan
-      RPC method.
+      RPC
+
+      method.
   ibc.channel.Channel:
     type: object
     properties:
@@ -26403,11 +26551,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -26538,11 +26684,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -26757,11 +26901,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -27691,11 +27833,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -27906,7 +28046,9 @@ definitions:
           be monitonically increasing even as the EpochHeight gets reset
     title: >-
       QueryConsensusStateResponse is the response type for the
-      Query/ConsensusState RPC method
+      Query/ConsensusState
+
+      RPC method
   ibc.client.QueryConsensusStatesResponse:
     type: object
     properties:
@@ -28133,17 +28275,15 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-    title: >-
+    title: |-
       QueryConsensusStatesResponse is the response type for the
       Query/ConsensusStates RPC method
   ibc.commitment.MerklePrefix:
@@ -28152,9 +28292,8 @@ definitions:
       key_prefix:
         type: string
         format: byte
-    title: >-
+    title: |-
       MerklePrefix is merkle path prefixed to the key.
-
       The constructed key from the Path and the key will be append(Path.KeyPath,
       append(Path.KeyPrefix, key...))
   ibc.connection.ConnectionEnd:
@@ -28936,11 +29075,9 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: >-
+        description: |-
           PageResponse is to be embedded in gRPC response messages where the
-          corresponding
-
-          request message has used PageRequest.
+          corresponding request message has used PageRequest.
 
            message SomeResponse {
                    repeated Bar results = 1;
@@ -29057,7 +29194,7 @@ definitions:
           base_denom:
             type: string
             description: base denomination of the relayed fungible token.
-    description: >-
+    description: |-
       QueryDenomTraceResponse is the response type for the Query/DenomTrace RPC
       method.
   ibc.transfer.QueryDenomTracesResponse:
@@ -29104,7 +29241,9 @@ definitions:
               was set, its value is undefined otherwise
     description: >-
       QueryConnectionsResponse is the response type for the Query/DenomTraces
-      RPC method.
+      RPC
+
+      method.
   ibc.transfer.QueryParamsResponse:
     type: object
     properties:

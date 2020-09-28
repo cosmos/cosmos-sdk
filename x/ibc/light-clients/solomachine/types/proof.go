@@ -31,7 +31,10 @@ func VerifySignature(pubKey crypto.PubKey, signBytes []byte, sigData signing.Sig
 		if !ok {
 			return sdkerrors.Wrapf(ErrSignatureVerificationFailed, "invalid pubkey type: expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
-		if err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
+
+		// The function supplied fulfills the VerifyMultisignature interface. No special
+		// adjustments need to be made to the sign bytes based on the sign mode.
+		if err := multiPK.VerifyMultisignature(func(signing.SignMode) ([]byte, error) {
 			return signBytes, nil
 		}, data); err != nil {
 			return err

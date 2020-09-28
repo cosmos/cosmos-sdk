@@ -36,7 +36,7 @@ type Solomachine struct {
 // generated private/public key pairs and a sequence starting at 1. If nKeys
 // is greater than 1 then a multisig public key is used.
 func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifier string, nKeys uint64) *Solomachine {
-	privKeys, pubKeys, pk := GenerateKeys(nKeys)
+	privKeys, pubKeys, pk := GenerateKeys(t, nKeys)
 
 	return &Solomachine{
 		t:           t,
@@ -51,15 +51,16 @@ func NewSolomachine(t *testing.T, cdc codec.BinaryMarshaler, clientID, diversifi
 	}
 }
 
-// GenerateKeys generates a new set of private keys and public keys. If the
-// number of keys is greater than one then the public key returned represents
+// GenerateKeys generates a new set of secp256k1 private keys and public keys.
+// If the number of keys is greater than one then the public key returned represents
 // a multisig public key. The private keys are used for signing, the public
 // keys are used for generating the public key and the public key is used for
-// solo machine verification.
-func GenerateKeys(n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
-	if n == 0 {
-		panic("cannot use zero private keys")
-	}
+// solo machine verification. The usage of secp256k1 is entirely arbitrary.
+// The key type can be swapped for any key type supported by the PublicKey
+// interface, if needed. The same is true for the amino based Multisignature
+// public key.
+func GenerateKeys(t *testing.T, n uint64) ([]crypto.PrivKey, []crypto.PubKey, crypto.PubKey) {
+	require.NotEqual(t, uint64(0), n, "generation of zero keys is not allowed")
 
 	privKeys := make([]crypto.PrivKey, n)
 	pubKeys := make([]crypto.PubKey, n)
@@ -106,7 +107,7 @@ func (solo *Solomachine) GetHeight() exported.Height {
 // necessary signature to construct a valid solo machine header.
 func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 	// generate new private keys and signature for header
-	newPrivKeys, newPubKeys, newPubKey := GenerateKeys(uint64(len(solo.PrivateKeys)))
+	newPrivKeys, newPubKeys, newPubKey := GenerateKeys(solo.t, uint64(len(solo.PrivateKeys)))
 
 	publicKey, err := tx.PubKeyToAny(newPubKey)
 	require.NoError(solo.t, err)

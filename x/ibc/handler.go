@@ -187,13 +187,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			// Perform application logic callback
-			res, _, err := cbs.OnRecvPacket(ctx, msg.Packet)
+			res, ack, err := cbs.OnRecvPacket(ctx, msg.Packet)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "receive packet callback failed")
 			}
 
+			if err := k.ChannelKeeper.ReceiveExecuted(ctx, cap, msg.Packet); err != nil {
+				return nil, err
+			}
+
 			// Set packet acknowledgement
-			if err = k.ChannelKeeper.ReceiveExecuted(ctx, cap, msg.Packet); err != nil {
+			if err := k.ChannelKeeper.WriteAcknowledgement(ctx, msg.Packet, ack); err != nil {
 				return nil, err
 			}
 

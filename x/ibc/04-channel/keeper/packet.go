@@ -244,8 +244,8 @@ func (k Keeper) RecvPacket(
 	return nil
 }
 
-// ReceiveExecuted writes the packet execution acknowledgement to the state,
-// which will be verified by the counterparty chain using AcknowledgePacket.
+// ReceiveExecuted updates the receive sequence in the case of an ordered channel or sets an empty receipt
+// if the channel is unordered.
 //
 // CONTRACT: this function must be called in the IBC handler
 func (k Keeper) ReceiveExecuted(
@@ -304,7 +304,7 @@ func (k Keeper) ReceiveExecuted(
 	}
 
 	// log that a packet has been received & executed
-	k.Logger(ctx).Info(fmt.Sprintf("packet received & executed: %v", packet))
+	k.Logger(ctx).Info("packet received and executed", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -319,6 +319,43 @@ func (k Keeper) ReceiveExecuted(
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
 			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return nil
+}
+
+// WriteAcknowledgement writes the packet execution acknowledgement to the state,
+// which will be verified by the counterparty chain using AcknowledgePacket.
+//
+// CONTRACT: this function must be called in the IBC handler
+func (k Keeper) WriteAcknowledgement(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	acknowledgement []byte,
+) error {
+	if len(acknowledgement) == 0 {
+		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
+	}
+
+	// always set the acknowledgement so that it can be verified on the other side
+	k.SetPacketAcknowledgement(
+		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+		types.CommitAcknowledgement(acknowledgement),
+	)
+
+	// log that a packet has been acknowledged
+	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
+
+	// emit an event that the relayer can query for
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRecvPacket,
+			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

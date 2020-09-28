@@ -1,13 +1,26 @@
-<!--
-order: 0
-title: Bank Overview
-parent:
-  title: "bank"
--->
-
 # `x/bank`
 
-## Abstract
+## Table of Contents
+
+<!-- TOC -->
+
+1. **[01. Abstract](#01-abstract)**
+1. **[02. Concepts](#02-concepts)**
+   - [Supply](#supply)
+   - [Module Accounts](#module-accounts)
+1. **[03. State](#03-state)**
+1. **[04. Keepers](#04-keepers)**
+   - [Common Types](#common-types)
+   - [BaseKeeper](#basekeeper)
+   - [SendKeeper](#sendkeeper)
+   - [ViewKeeper](#viewkeeper)
+1. **[05. Messages](#05-messages)**
+   - [MsgSend](#msgsend)
+1. **[06. Events](#06-events)**
+   - [Handlers](#handlers)
+1. **[07. Parameters](#07-parameters)**
+
+## 01. Abstract
 
 This document specifies the bank module of the Cosmos SDK.
 
@@ -22,25 +35,9 @@ supply of all assets used in the application.
 
 This module will be used in the Cosmos Hub.
 
-## Table of Contents
+## 02. Abstract
 
-<!-- TOC -->
-
-1. **[Supply](#supply)**
-1. **[Module Accounts](#module-accounts)**
-1. **[State](#state)**
-1. **[Keepers](#keepers)**
-   - [Common Types](#common-types)
-   - [BaseKeeper](#basekeeper)
-   - [SendKeeper](#sendkeeper)
-   - [ViewKeeper](#viewkeeper)
-1. **[Messages](#messages)**
-   - [MsgSend](#msgsend)
-1. **[Events](#events)**
-   - [Handlers](#handlers)
-1. **[Parameters](#parameters)**
-
-## Supply
+### Supply
 
 The `supply` module:
 
@@ -48,14 +45,14 @@ The `supply` module:
 - provides a pattern for modules to hold/interact with `Coins`, and
 - introduces the invariant check to verify a chain's total supply.
 
-### Total Supply
+#### Total Supply
 
 The total `Supply` of the network is equal to the sum of all coins from the
 account. The total supply is updated every time a `Coin` is minted (eg: as part
 of the inflation mechanism) or burned (eg: due to slashing or if a governance
 proposal is vetoed).
 
-## Module Accounts
+### Module Accounts
 
 The supply module introduces a new type of `auth.AccountI` interface, called `ModuleAccountI`, which can be used by
 modules to allocate tokens and in special cases mint or burn tokens. At a base
@@ -93,7 +90,7 @@ to:
   (`BaseAccount` or `VestingAccount`) by passing only the `Name`.
 - `Mint` or `Burn` coins for a `ModuleAccountI` (restricted to its permissions).
 
-### Permissions
+#### Permissions
 
 Each `ModuleAccountI` has a different set of permissions that provide different
 object capabilities to perform certain actions. Permissions need to be
@@ -107,7 +104,7 @@ The available permissions are:
 - `Burner`: allows for a module to burn a specific amount of coins.
 - `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
 
-## State
+## 03. State
 
 The `x/bank` module keeps state of two primary objects, account balances and the
 total supply of all balances.
@@ -115,7 +112,7 @@ total supply of all balances.
 - Balances: `[]byte("balances") | []byte(address) / []byte(balance.Denom) -> ProtocolBuffer(balance)`
 - Supply: `0x0 -> ProtocolBuffer(Supply)`
 
-## Keepers
+## 04. Keepers
 
 The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.
 
@@ -235,7 +232,7 @@ type ViewKeeper interface {
 }
 ```
 
-## Messages
+## 05. Messages
 
 ### MsgSend
 
@@ -264,7 +261,7 @@ handleMsgSend(msg MsgSend)
   return inputOutputCoins(msg.Inputs, msg.Outputs)
 ```
 
-## Events
+## 06. Events
 
 The bank module emits the following events:
 
@@ -290,7 +287,7 @@ The bank module emits the following events:
 | message  | action        | multisend          |
 | message  | sender        | {senderAddress}    |
 
-## Parameters
+## 07. Parameters
 
 The bank module contains the following parameters:
 

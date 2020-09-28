@@ -1,13 +1,18 @@
-<!--
-order: 0
-title: Evidence Overview
-parent:
-  title: "evidence"
--->
-
 # `x/evidence`
 
-## Abstract
+## Table of Contents
+
+<!-- TOC -->
+
+1. **[01. Abstract](#01-abstract)**
+1. **[02. Concepts](#02-concepts)**
+1. **[03. State](#03-state)**
+1. **[04. Messages](#04-messages)**
+1. **[05. Events](#05-events)**
+1. **[06. Parameters](#06-parameters)**
+1. **[07. BeginBlock](#07-beginblock)**
+
+## 01. Abstract
 
 `x/evidence` is an implementation of a Cosmos SDK module, per [ADR 009](./../../../docs/architecture/adr-009-evidence-module.md),
 that allows for the submission and handling of arbitrary evidence of misbehavior such
@@ -28,18 +33,7 @@ Each corresponding handler must also fulfill the `Handler` interface contract. T
 `Handler` for a given `Evidence` type can perform any arbitrary state transitions
 such as slashing, jailing, and tombstoning.
 
-## Table of Contents
-
-<!-- TOC -->
-
-1. **[Concepts](#concepts)**
-2. **[State](#state)**
-3. **[Messages](#messages)**
-4. **[Events](#events)**
-5. **[Parameters](#parameters)**
-6. **[BeginBlock](#begin-block)**
-
-## Concepts
+## 02. Concepts
 
 ### Evidence
 
@@ -113,7 +107,7 @@ capabilities such as slashing and jailing a validator.
 type Handler func(Context, Evidence) error
 ```
 
-## State
+## 03. State
 
 Currently the `x/evidence` module only stores valid submitted `Evidence` in state.
 The evidence state is also stored and exported in the `x/evidence` module's `GenesisState`.
@@ -128,7 +122,7 @@ message GenesisState {
 
 All `Evidence` is retrieved and stored via a prefix `KVStore` using prefix `0x00` (`KeyPrefixEvidence`).
 
-## Messages
+## 04. Messages
 
 ### MsgSubmitEvidence
 
@@ -173,7 +167,7 @@ First, there must not already exist valid submitted `Evidence` of the exact same
 type. Secondly, the `Evidence` is routed to the `Handler` and executed. Finally,
 if there is no error in handling the `Evidence`, it is persisted to state.
 
-## Events
+## 05. Events
 
 The `x/evidence` module emits the following events:
 
@@ -188,11 +182,11 @@ The `x/evidence` module emits the following events:
 | message         | sender        | {senderAddress} |
 | message         | action        | submit_evidence |
 
-## Parameters
+## 06. Parameters
 
 The evidence module does not have any parameters.
 
-## BeginBlock
+## 07. BeginBlock
 
 ### Evidence Handling
 

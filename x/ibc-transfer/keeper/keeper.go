@@ -80,7 +80,7 @@ func (k Keeper) ReceiveExecuted(ctx sdk.Context, packet ibcexported.PacketI, ack
 	if !ok {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "channel capability could not be retrieved for packet")
 	}
-	return k.channelKeeper.ReceiveExecuted(ctx, chanCap, packet, acknowledgement)
+	return k.channelKeeper.ReceiveExecuted(ctx, chanCap, packet)
 }
 
 // ChanCloseInit defines a wrapper function for the channel Keeper's function

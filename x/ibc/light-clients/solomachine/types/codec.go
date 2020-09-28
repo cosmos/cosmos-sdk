@@ -48,3 +48,47 @@ func UnmarshalSignatureData(cdc codec.BinaryMarshaler, data []byte) (signing.Sig
 
 	return sigData, nil
 }
+
+// CanUnmarshalDataByType returns true if the data provided can be unmarshaled
+// to the specified DataType.
+func CanUnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data []byte) bool {
+	switch dataType {
+	case UNSPECIFIED:
+		return false
+
+	case CLIENT:
+		clientData := &ClientStateData{}
+		return cdc.UnmarshalBinaryBare(data, clientData) == nil
+
+	case CONSENSUS:
+		consensusData := &ConsensusStateData{}
+		return cdc.UnmarshalBinaryBare(data, consensusData) == nil
+
+	case CONNECTION:
+		connectionData := &ConnectionStateData{}
+		return cdc.UnmarshalBinaryBare(data, connectionData) == nil
+
+	case CHANNEL:
+		channelData := &ChannelStateData{}
+		return cdc.UnmarshalBinaryBare(data, channelData) == nil
+
+	case PACKETCOMMITMENT:
+		commitmentData := &PacketCommitmentData{}
+		return cdc.UnmarshalBinaryBare(data, commitmentData) == nil
+
+	case PACKETACKNOWLEDGEMENT:
+		ackData := &PacketAcknowledgementData{}
+		return cdc.UnmarshalBinaryBare(data, ackData) == nil
+
+	case PACKETACKNOWLEDGEMENTABSENCE:
+		ackAbsenceData := &PacketAcknowledgementAbsenceData{}
+		return cdc.UnmarshalBinaryBare(data, ackAbsenceData) == nil
+
+	case NEXTSEQUENCERECV:
+		nextSeqRecvData := &NextSequenceRecvData{}
+		return cdc.UnmarshalBinaryBare(data, nextSeqRecvData) == nil
+
+	default:
+		return false
+	}
+}

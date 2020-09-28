@@ -61,8 +61,9 @@ message Misbehaviour {
 // signature.
 message SignatureAndData {
   option (gogoproto.goproto_getters) = false;
-  bytes signature                    = 1;
-  bytes data                         = 2;
+  bytes    signature                 = 1;
+  DataType data_type                 = 2 [(gogoproto.moretags) = "yaml:\"data_type\""];
+  bytes    data                      = 3;
 }
 
 // TimestampedSignature contains the signature and the timestamp of the
@@ -131,7 +132,7 @@ message ClientStateData {
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
-// ConsensusStateSignBytes returns the SignBytes data for consensus state
+// ConsensusStateData returns the SignBytes data for consensus state
 // verification.
 message ConsensusStateData {
   option (gogoproto.goproto_getters) = false;
@@ -140,7 +141,7 @@ message ConsensusStateData {
   google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
-// ConnectionStateSignBytes returns the SignBytes data for connection state
+// ConnectionStateData returns the SignBytes data for connection state
 // verification.
 message ConnectionStateData {
   option (gogoproto.goproto_getters) = false;
@@ -149,7 +150,7 @@ message ConnectionStateData {
   ibc.connection.ConnectionEnd connection = 2;
 }
 
-// ChannelStateSignBytes returns the SignBytes data for channel state
+// ChannelStateData returns the SignBytes data for channel state
 // verification.
 message ChannelStateData {
   option (gogoproto.goproto_getters) = false;
@@ -158,27 +159,27 @@ message ChannelStateData {
   ibc.channel.Channel channel = 2;
 }
 
-// PacketCommitmentSignBytes returns the SignBytes data for packet commitment
+// PacketCommitmentData returns the SignBytes data for packet commitment
 // verification.
 message PacketCommitmentData {
   bytes path       = 1;
   bytes commitment = 2;
 }
 
-// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement
+// PacketAcknowledgementData returns the SignBytes data for acknowledgement
 // verification.
 message PacketAcknowledgementData {
   bytes path            = 1;
   bytes acknowledgement = 2;
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for
+// PacketAcknowledgementAbsenceData returns the SignBytes data for
 // acknowledgement absence verification.
-message PacketAcknowledgementAbsenseData {
+message PacketAcknowledgementAbsenceData {
   bytes path = 1;
 }
 
-// NextSequenceRecv returns the SignBytes data for verification of the next
+// NextSequenceRecvData returns the SignBytes data for verification of the next
 // sequence to be received.
 message NextSequenceRecvData {
   bytes  path          = 1;

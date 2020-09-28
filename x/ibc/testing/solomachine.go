@@ -13,9 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
+
+var prefix = commitmenttypes.NewMerklePrefix([]byte("ibc"))
 
 // Solomachine is a testing helper used to simulate a counterparty
 // solo machine client.
@@ -124,6 +128,7 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 		Sequence:    solo.Sequence,
 		Timestamp:   solo.Time,
 		Diversifier: solo.Diversifier,
+		DataType:    solomachinetypes.HEADER,
 		Data:        dataBz,
 	}
 
@@ -152,13 +157,14 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 // CreateMisbehaviour constructs testing misbehaviour for the solo machine client
 // by signing over two different data bytes at the same sequence.
 func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
-	dataOne := []byte("DATA ONE")
-	dataTwo := []byte("DATA TWO")
+	dataOne := solo.GetClientStateDataBytes("counterparty")
+	dataTwo := solo.GetConsensusStateDataBytes("counterparty", clienttypes.NewHeight(0, 1))
 
 	signBytes := &solomachinetypes.SignBytes{
 		Sequence:    solo.Sequence,
 		Timestamp:   solo.Time,
 		Diversifier: solo.Diversifier,
+		DataType:    solomachinetypes.CLIENT,
 		Data:        dataOne,
 	}
 
@@ -168,6 +174,7 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	sig := solo.GenerateSignature(bz)
 	signatureOne := solomachinetypes.SignatureAndData{
 		Signature: sig,
+		DataType:  solomachinetypes.CLIENT,
 		Data:      dataOne,
 	}
 
@@ -175,6 +182,7 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Sequence:    solo.Sequence,
 		Timestamp:   solo.Time,
 		Diversifier: solo.Diversifier,
+		DataType:    solomachinetypes.CONSENSUS,
 		Data:        dataTwo,
 	}
 
@@ -184,6 +192,7 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 	sig = solo.GenerateSignature(bz)
 	signatureTwo := solomachinetypes.SignatureAndData{
 		Signature: sig,
+		DataType:  solomachinetypes.CONSENSUS,
 		Data:      dataTwo,
 	}
 
@@ -228,4 +237,44 @@ func (solo *Solomachine) GenerateSignature(signBytes []byte) []byte {
 	require.NoError(solo.t, err)
 
 	return bz
+}
+
+// GetClientStateDataBytes is a helper function which returns the client
+// state data bytes used in constructing SignBytes.
+func (solo *Solomachine) GetClientStateDataBytes(counterpartyClientIdentifier string) []byte {
+	any, err := clienttypes.PackClientState(solo.ClientState())
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	require.NoError(solo.t, err)
+
+	clientData := &solomachinetypes.ClientStateData{
+		Path:        []byte(path.String()),
+		ClientState: any,
+	}
+
+	data, err := solo.cdc.MarshalBinaryBare(clientData)
+	require.NoError(solo.t, err)
+
+	return data
+}
+
+// GetConsensusStateDataBytes is a helper function which returns the consensus
+// state data bytes used in constructing SignBytes.
+func (solo *Solomachine) GetConsensusStateDataBytes(counterpartyClientIdentifier string, consensusHeight clienttypes.Height) []byte {
+	any, err := clienttypes.PackConsensusState(solo.ConsensusState())
+
+	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
+	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
+	require.NoError(solo.t, err)
+
+	consensusData := &solomachinetypes.ConsensusStateData{
+		Path:           []byte(path.String()),
+		ConsensusState: any,
+	}
+
+	data, err := solo.cdc.MarshalBinaryBare(consensusData)
+	require.NoError(solo.t, err)
+
+	return data
 }

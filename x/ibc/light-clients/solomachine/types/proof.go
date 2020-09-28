@@ -52,11 +52,13 @@ func MisbehaviourSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
+	dataType DataType,
 	data []byte) ([]byte, error) {
 	signBytes := &SignBytes{
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    dataType,
 		Data:        data,
 	}
 
@@ -82,6 +84,7 @@ func HeaderSignBytes(
 		Sequence:    header.Sequence,
 		Timestamp:   header.Timestamp,
 		Diversifier: header.NewDiversifier,
+		DataType:    HEADER,
 		Data:        dataBz,
 	}
 
@@ -116,6 +119,7 @@ func ClientStateSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    CLIENT,
 		Data:        dataBz,
 	}
 
@@ -150,6 +154,7 @@ func ConsensusStateSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    CONSENSUS,
 		Data:        dataBz,
 	}
 
@@ -187,6 +192,7 @@ func ConnectionStateSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    CONNECTION,
 		Data:        dataBz,
 	}
 
@@ -223,6 +229,7 @@ func ChannelStateSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    CHANNEL,
 		Data:        dataBz,
 	}
 
@@ -252,6 +259,7 @@ func PacketCommitmentSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    PACKETCOMMITMENT,
 		Data:        dataBz,
 	}
 
@@ -281,6 +289,7 @@ func PacketAcknowledgementSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    PACKETACKNOWLEDGEMENT,
 		Data:        dataBz,
 	}
 
@@ -295,7 +304,7 @@ func PacketAcknowledgementAbsenceSignBytes(
 	diversifier string,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
-	data := &PacketAcknowledgementAbsenseData{
+	data := &PacketAcknowledgementAbsenceData{
 		Path: []byte(path.String()),
 	}
 
@@ -308,6 +317,7 @@ func PacketAcknowledgementAbsenceSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    PACKETACKNOWLEDGEMENTABSENCE,
 		Data:        dataBz,
 	}
 
@@ -337,6 +347,7 @@ func NextSequenceRecvSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
+		DataType:    NEXTSEQUENCERECV,
 		Data:        dataBz,
 	}
 

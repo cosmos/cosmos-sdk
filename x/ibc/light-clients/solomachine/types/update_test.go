@@ -108,6 +108,7 @@ func (suite *SoloMachineTestSuite) TestCheckHeaderAndUpdateState() {
 						Sequence:    cs.Sequence,
 						Timestamp:   solomachine.Time,
 						Diversifier: solomachine.Diversifier,
+						DataType:    types.CLIENT,
 						Data:        dataBz,
 					}
 

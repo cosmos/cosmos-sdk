@@ -50,6 +50,7 @@ func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloM
 		cdc,
 		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
 		clientState.ConsensusState.Diversifier,
+		soloMisbehaviour.SignatureOne.DataType,
 		soloMisbehaviour.SignatureOne.Data,
 	)
 	if err != nil {
@@ -70,6 +71,7 @@ func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloM
 		cdc,
 		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
 		clientState.ConsensusState.Diversifier,
+		soloMisbehaviour.SignatureTwo.DataType,
 		soloMisbehaviour.SignatureTwo.Data,
 	)
 	if err != nil {

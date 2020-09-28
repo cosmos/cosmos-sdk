@@ -4,13 +4,13 @@
 
 <!-- TOC -->
 
-1. **[01. Abstract](#01-abstract)**
-1. **[02. Concepts](#02-concepts)**
-1. **[03. State](#03-state)**
-1. **[04. Messages](#04-messages)**
-1. **[05. Events](#05-events)**
-1. **[06. Parameters](#06-parameters)**
-1. **[07. BeginBlock](#07-beginblock)**
+- **[01. Abstract](#01-abstract)**
+- **[02. Concepts](#02-concepts)**
+- **[03. State](#03-state)**
+- **[04. Messages](#04-messages)**
+- **[05. Events](#05-events)**
+- **[06. Parameters](#06-parameters)**
+- **[07. BeginBlock](#07-beginblock)**
 
 ## 01. Abstract
 

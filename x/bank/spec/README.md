@@ -4,21 +4,21 @@
 
 <!-- TOC -->
 
-1. **[01. Abstract](#01-abstract)**
-1. **[02. Concepts](#02-concepts)**
-   - [Supply](#supply)
-   - [Module Accounts](#module-accounts)
-1. **[03. State](#03-state)**
-1. **[04. Keepers](#04-keepers)**
-   - [Common Types](#common-types)
-   - [BaseKeeper](#basekeeper)
-   - [SendKeeper](#sendkeeper)
-   - [ViewKeeper](#viewkeeper)
-1. **[05. Messages](#05-messages)**
-   - [MsgSend](#msgsend)
-1. **[06. Events](#06-events)**
-   - [Handlers](#handlers)
-1. **[07. Parameters](#07-parameters)**
+- **[01. Abstract](#01-abstract)**
+- **[02. Concepts](#02-concepts)**
+  - [Supply](#supply)
+  - [Module Accounts](#module-accounts)
+- **[03. State](#03-state)**
+- **[04. Keepers](#04-keepers)**
+  - [Common Types](#common-types)
+  - [BaseKeeper](#basekeeper)
+  - [SendKeeper](#sendkeeper)
+  - [ViewKeeper](#viewkeeper)
+- **[05. Messages](#05-messages)**
+  - [MsgSend](#msgsend)
+- **[06. Events](#06-events)**
+  - [Handlers](#handlers)
+- **[07. Parameters](#07-parameters)**
 
 ## 01. Abstract
 
@@ -35,7 +35,7 @@ supply of all assets used in the application.
 
 This module will be used in the Cosmos Hub.
 
-## 02. Abstract
+## 02. Concepts
 
 ### Supply
 

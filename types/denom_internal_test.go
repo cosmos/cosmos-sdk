@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 var (
@@ -13,36 +13,44 @@ var (
 	natom = "natom" // 10^-9 (nano)
 )
 
-func TestRegisterDenom(t *testing.T) {
+type internalDenomTestSuite struct {
+	suite.Suite
+}
+
+func TestInternalDenomTestSuite(t *testing.T) {
+	suite.Run(t, new(internalDenomTestSuite))
+}
+
+func (s *internalDenomTestSuite) TestRegisterDenom() {
 	atomUnit := OneDec() // 1 (base denom unit)
 
-	require.NoError(t, RegisterDenom(atom, atomUnit))
-	require.Error(t, RegisterDenom(atom, atomUnit))
+	s.Require().NoError(RegisterDenom(atom, atomUnit))
+	s.Require().Error(RegisterDenom(atom, atomUnit))
 
 	res, ok := GetDenomUnit(atom)
-	require.True(t, ok)
-	require.Equal(t, atomUnit, res)
+	s.Require().True(ok)
+	s.Require().Equal(atomUnit, res)
 
 	res, ok = GetDenomUnit(matom)
-	require.False(t, ok)
-	require.Equal(t, ZeroDec(), res)
+	s.Require().False(ok)
+	s.Require().Equal(ZeroDec(), res)
 
 	// reset registration
 	denomUnits = map[string]Dec{}
 }
 
-func TestConvertCoins(t *testing.T) {
+func (s *internalDenomTestSuite) TestConvertCoins() {
 	atomUnit := OneDec() // 1 (base denom unit)
-	require.NoError(t, RegisterDenom(atom, atomUnit))
+	s.Require().NoError(RegisterDenom(atom, atomUnit))
 
 	matomUnit := NewDecWithPrec(1, 3) // 10^-3 (milli)
-	require.NoError(t, RegisterDenom(matom, matomUnit))
+	s.Require().NoError(RegisterDenom(matom, matomUnit))
 
 	uatomUnit := NewDecWithPrec(1, 6) // 10^-6 (micro)
-	require.NoError(t, RegisterDenom(uatom, uatomUnit))
+	s.Require().NoError(RegisterDenom(uatom, uatomUnit))
 
 	natomUnit := NewDecWithPrec(1, 9) // 10^-9 (nano)
-	require.NoError(t, RegisterDenom(natom, natomUnit))
+	s.Require().NoError(RegisterDenom(natom, natomUnit))
 
 	testCases := []struct {
 		input  Coin
@@ -68,12 +76,12 @@ func TestConvertCoins(t *testing.T) {
 
 	for i, tc := range testCases {
 		res, err := ConvertCoin(tc.input, tc.denom)
-		require.Equal(
-			t, tc.expErr, err != nil,
+		s.Require().Equal(
+			tc.expErr, err != nil,
 			"unexpected error; tc: #%d, input: %s, denom: %s", i+1, tc.input, tc.denom,
 		)
-		require.Equal(
-			t, tc.result, res,
+		s.Require().Equal(
+			tc.result, res,
 			"invalid result; tc: #%d, input: %s, denom: %s", i+1, tc.input, tc.denom,
 		)
 	}

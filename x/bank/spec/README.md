@@ -22,7 +22,9 @@ supply of all assets used in the application.
 
 This module will be used in the Cosmos Hub.
 
-## Contents
+## Table of Contents
+
+<!-- TOC -->
 
 1. **[Supply](#supply)**
 1. **[Module Accounts](#module-accounts)**
@@ -36,7 +38,7 @@ This module will be used in the Cosmos Hub.
    - [MsgSend](#msgsend)
 1. **[Events](#events)**
    - [Handlers](#handlers)
-1. **[Parameters](#params)**
+1. **[Parameters](#parameters)**
 
 ## Supply
 

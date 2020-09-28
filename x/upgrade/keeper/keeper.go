@@ -105,6 +105,12 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) e
 	return nil
 }
 
+// GetUpgradedClient gets the expected upgraded client for the next version of this chain
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(types.UpgradedClientKey())
+}
+
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})

@@ -54,5 +54,5 @@ func (cs ClientState) VerifyUpgrade(
 		return sdkerrors.Wrap(err, "could not retrieve latest consensus state")
 	}
 
-	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), cs.UpgradePath, bz)
+	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), *cs.UpgradePath, bz)
 }

@@ -21,6 +21,7 @@ type StdTxBuilder struct {
 
 // ensure interface implementation
 var _ client.TxBuilder = &StdTxBuilder{}
+var _ client.TxConfig = StdTxConfig{}
 
 // GetTx implements TxBuilder.GetTx
 func (s *StdTxBuilder) GetTx() authsigning.Tx {
@@ -70,8 +71,6 @@ func (s *StdTxBuilder) SetTimeoutHeight(height uint64) {
 type StdTxConfig struct {
 	Cdc *codec.LegacyAmino
 }
-
-var _ client.TxConfig = StdTxConfig{}
 
 // NewTxBuilder implements TxConfig.NewTxBuilder
 func (s StdTxConfig) NewTxBuilder() client.TxBuilder {

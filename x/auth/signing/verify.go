@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes
@@ -40,20 +39,4 @@ func VerifySignature(pubKey crypto.PubKey, signerData SignerData, sigData signin
 	default:
 		return fmt.Errorf("unexpected SignatureData %T", sigData)
 	}
-}
-
-func TxToStdTx(tx Tx) legacytx.StdTx {
-	if stdTx, ok := tx.(legacytx.StdTx); ok {
-		return stdTx, nil
-	}
-	return legacytx.StdTx{
-		Msgs: tx.GetMsgs(),
-		Fee: {
-			Amount: tx.GetFee(),
-			Gas:    tx.GetGas(),
-		},
-		Signatures: tx.GetSignaturesV2(),
-		Memo:       tx.GetMemo(),
-		// TimeoutHeight: uint64,
-	}, nil
 }

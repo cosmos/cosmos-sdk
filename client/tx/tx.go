@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
@@ -341,7 +341,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
-	signMode signing.SignMode, signerData authsigning.SignerData,
+	signMode signing.SignMode, signerData client.SignerData,
 	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
@@ -394,7 +394,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
-	signerData := authsigning.SignerData{
+	signerData := client.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
@@ -455,4 +455,22 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
+// TODO: maybe we don't need this. It's used for serialization
+// Renamed from ConvertTxToStdTx
+func TxToStdTx(tx Tx) legacytx.StdTx {
+	if stdTx, ok := tx.(legacytx.StdTx); ok {
+		return stdTx, nil
+	}
+	return legacytx.StdTx{
+		Msgs: tx.GetMsgs(),
+		Fee: {
+			Amount: tx.GetFee(),
+			Gas:    tx.GetGas(),
+		},
+		Signatures: tx.GetSignaturesV2(),
+		Memo:       tx.GetMemo(),
+		// TimeoutHeight: uint64,
+	}, nil
 }

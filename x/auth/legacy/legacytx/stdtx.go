@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -272,4 +273,9 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// TODO: maybe we don't need this!
+func (tx *StdTx) MarshalAmino(txConfig client.TxConfig) ([]byte, error) {
+	return txConfig.TxEncoder()(tx)
 }

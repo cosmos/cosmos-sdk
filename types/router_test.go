@@ -16,6 +16,10 @@ func TestRouteTestSuite(t *testing.T) {
 	suite.Run(t, new(routeTestSuite))
 }
 
+func (s *routeTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 func (s *routeTestSuite) TestNilRoute() {
 	tests := []struct {
 		name     string

@@ -4,80 +4,92 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNewDecCoin(t *testing.T) {
-	require.NotPanics(t, func() {
+type decCoinTestSuite struct {
+	suite.Suite
+}
+
+func NewDecCoinTestSuite(t *testing.T) {
+	suite.Run(t, new(decCoinTestSuite))
+}
+
+func (s *decCoinTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *decCoinTestSuite) TestNewDecCoin() {
+	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(testDenom1, 5)
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(testDenom1, 0)
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(strings.ToUpper(testDenom1), 5)
 	})
-	require.Panics(t, func() {
+	s.Require().Panics(func() {
 		sdk.NewInt64DecCoin(testDenom1, -5)
 	})
 }
 
-func TestNewDecCoinFromDec(t *testing.T) {
-	require.NotPanics(t, func() {
+func (s *decCoinTestSuite) TestNewDecCoinFromDec() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(testDenom1, sdk.NewDec(5))
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(testDenom1, sdk.ZeroDec())
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(strings.ToUpper(testDenom1), sdk.NewDec(5))
 	})
-	require.Panics(t, func() {
+	s.Require().Panics(func() {
 		sdk.NewDecCoinFromDec(testDenom1, sdk.NewDec(-5))
 	})
 }
 
-func TestNewDecCoinFromCoin(t *testing.T) {
-	require.NotPanics(t, func() {
+func (s *decCoinTestSuite) TestNewDecCoinFromCoin() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(5)})
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(0)})
 	})
-	require.NotPanics(t, func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{strings.ToUpper(testDenom1), sdk.NewInt(5)})
 	})
-	require.Panics(t, func() {
+	s.Require().Panics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(-5)})
 	})
 }
 
-func TestDecCoinIsPositive(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinIsPositive() {
 	dc := sdk.NewInt64DecCoin(testDenom1, 5)
-	require.True(t, dc.IsPositive())
+	s.Require().True(dc.IsPositive())
 
 	dc = sdk.NewInt64DecCoin(testDenom1, 0)
-	require.False(t, dc.IsPositive())
+	s.Require().False(dc.IsPositive())
 }
 
-func TestAddDecCoin(t *testing.T) {
+func (s *decCoinTestSuite) TestAddDecCoin() {
 	decCoinA1 := sdk.NewDecCoinFromDec(testDenom1, sdk.NewDecWithPrec(11, 1))
 	decCoinA2 := sdk.NewDecCoinFromDec(testDenom1, sdk.NewDecWithPrec(22, 1))
 	decCoinB1 := sdk.NewDecCoinFromDec(testDenom2, sdk.NewDecWithPrec(11, 1))
 
 	// regular add
 	res := decCoinA1.Add(decCoinA1)
-	require.Equal(t, decCoinA2, res, "sum of coins is incorrect")
+	s.Require().Equal(decCoinA2, res, "sum of coins is incorrect")
 
 	// bad denom add
-	require.Panics(t, func() {
+	s.Require().Panics(func() {
 		decCoinA1.Add(decCoinB1)
 	}, "expected panic on sum of different denoms")
 }
 
-func TestAddDecCoins(t *testing.T) {
+func (s *decCoinTestSuite) TestAddDecCoins() {
 	one := sdk.NewDec(1)
 	zero := sdk.NewDec(0)
 	two := sdk.NewDec(2)
@@ -94,11 +106,11 @@ func TestAddDecCoins(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Add(tc.inputTwo...)
-		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
+		s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
 
-func TestFilteredZeroDecCoins(t *testing.T) {
+func (s *decCoinTestSuite) TestFilteredZeroDecCoins() {
 	cases := []struct {
 		name     string
 		input    sdk.DecCoins
@@ -144,16 +156,13 @@ func TestFilteredZeroDecCoins(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			undertest := sdk.NewDecCoins(tt.input...)
-			require.Equal(t, tt.expected, undertest.String(), "NewDecCoins must return expected results")
-			require.Equal(t, tt.original, tt.input.String(), "input must be unmodified and match original")
-		})
+		undertest := sdk.NewDecCoins(tt.input...)
+		s.Require().Equal(tt.expected, undertest.String(), "NewDecCoins must return expected results")
+		s.Require().Equal(tt.original, tt.input.String(), "input must be unmodified and match original")
 	}
 }
 
-func TestIsValid(t *testing.T) {
+func (s *decCoinTestSuite) TestIsValid() {
 	tests := []struct {
 		coin       sdk.DecCoin
 		expectPass bool
@@ -184,14 +193,14 @@ func TestIsValid(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		if tc.expectPass {
-			require.True(t, tc.coin.IsValid(), tc.msg)
+			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
-			require.False(t, tc.coin.IsValid(), tc.msg)
+			s.Require().False(tc.coin.IsValid(), tc.msg)
 		}
 	}
 }
 
-func TestSubDecCoin(t *testing.T) {
+func (s *decCoinTestSuite) TestSubDecCoin() {
 	tests := []struct {
 		coin       sdk.DecCoin
 		expectPass bool
@@ -220,14 +229,14 @@ func TestSubDecCoin(t *testing.T) {
 		tc := tc
 		if tc.expectPass {
 			equal := tc.coin.Sub(decCoin)
-			require.Equal(t, equal, decCoin, tc.msg)
+			s.Require().Equal(equal, decCoin, tc.msg)
 		} else {
-			require.Panics(t, func() { tc.coin.Sub(decCoin) }, tc.msg)
+			s.Require().Panics(func() { tc.coin.Sub(decCoin) }, tc.msg)
 		}
 	}
 }
 
-func TestSubDecCoins(t *testing.T) {
+func (s *decCoinTestSuite) TestSubDecCoins() {
 	tests := []struct {
 		coins      sdk.DecCoins
 		expectPass bool
@@ -256,14 +265,14 @@ func TestSubDecCoins(t *testing.T) {
 		tc := tc
 		if tc.expectPass {
 			equal := tc.coins.Sub(decCoins)
-			require.Equal(t, equal, decCoins, tc.msg)
+			s.Require().Equal(equal, decCoins, tc.msg)
 		} else {
-			require.Panics(t, func() { tc.coins.Sub(decCoins) }, tc.msg)
+			s.Require().Panics(func() { tc.coins.Sub(decCoins) }, tc.msg)
 		}
 	}
 }
 
-func TestSortDecCoins(t *testing.T) {
+func (s *decCoinTestSuite) TestSortDecCoins() {
 	good := sdk.DecCoins{
 		sdk.NewInt64DecCoin("gas", 1),
 		sdk.NewInt64DecCoin("mineral", 1),
@@ -292,7 +301,6 @@ func TestSortDecCoins(t *testing.T) {
 		sdk.NewInt64DecCoin("gas", 1),
 		sdk.NewInt64DecCoin("mineral", 1),
 	}
-
 	cases := []struct {
 		name          string
 		coins         sdk.DecCoins
@@ -307,13 +315,13 @@ func TestSortDecCoins(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting; %s", tc.name)
+		s.Require().Equal(tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting; %s", tc.name)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting;  %s", tc.name)
+		s.Require().Equal(tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting;  %s", tc.name)
 	}
 }
 
-func TestDecCoinsValidate(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinsValidate() {
 	testCases := []struct {
 		input        sdk.DecCoins
 		expectedPass bool
@@ -334,14 +342,14 @@ func TestDecCoinsValidate(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.input.Validate()
 		if tc.expectedPass {
-			require.NoError(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+			s.Require().NoError(err, "unexpected result for test case #%d, input: %v", i, tc.input)
 		} else {
-			require.Error(t, err, "unexpected result for test case #%d, input: %v", i, tc.input)
+			s.Require().Error(err, "unexpected result for test case #%d, input: %v", i, tc.input)
 		}
 	}
 }
 
-func TestParseDecCoins(t *testing.T) {
+func (s *decCoinTestSuite) TestParseDecCoins() {
 	testCases := []struct {
 		input          string
 		expectedResult sdk.DecCoins
@@ -382,15 +390,15 @@ func TestParseDecCoins(t *testing.T) {
 	for i, tc := range testCases {
 		res, err := sdk.ParseDecCoins(tc.input)
 		if tc.expectedErr {
-			require.Error(t, err, "expected error for test case #%d, input: %v", i, tc.input)
+			s.Require().Error(err, "expected error for test case #%d, input: %v", i, tc.input)
 		} else {
-			require.NoError(t, err, "unexpected error for test case #%d, input: %v", i, tc.input)
-			require.Equal(t, tc.expectedResult, res, "unexpected result for test case #%d, input: %v", i, tc.input)
+			s.Require().NoError(err, "unexpected error for test case #%d, input: %v", i, tc.input)
+			s.Require().Equal(tc.expectedResult, res, "unexpected result for test case #%d, input: %v", i, tc.input)
 		}
 	}
 }
 
-func TestDecCoinsString(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinsString() {
 	testCases := []struct {
 		input    sdk.DecCoins
 		expected string
@@ -407,11 +415,11 @@ func TestDecCoinsString(t *testing.T) {
 
 	for i, tc := range testCases {
 		out := tc.input.String()
-		require.Equal(t, tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
+		s.Require().Equal(tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
 	}
 }
 
-func TestDecCoinsIntersect(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinsIntersect() {
 	testCases := []struct {
 		input1         string
 		input2         string
@@ -432,17 +440,16 @@ func TestDecCoinsIntersect(t *testing.T) {
 
 	for i, tc := range testCases {
 		in1, err := sdk.ParseDecCoins(tc.input1)
-		require.NoError(t, err, "unexpected parse error in %v", i)
+		s.Require().NoError(err, "unexpected parse error in %v", i)
 		in2, err := sdk.ParseDecCoins(tc.input2)
-		require.NoError(t, err, "unexpected parse error in %v", i)
+		s.Require().NoError(err, "unexpected parse error in %v", i)
 		exr, err := sdk.ParseDecCoins(tc.expectedResult)
-		require.NoError(t, err, "unexpected parse error in %v", i)
-
-		require.True(t, in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		s.Require().NoError(err, "unexpected parse error in %v", i)
+		s.Require().True(in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
 	}
 }
 
-func TestDecCoinsTruncateDecimal(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinsTruncateDecimal() {
 	decCoinA := sdk.NewDecCoinFromDec("bar", sdk.MustNewDecFromStr("5.41"))
 	decCoinB := sdk.NewDecCoinFromDec("foo", sdk.MustNewDecFromStr("6.00"))
 
@@ -466,18 +473,18 @@ func TestDecCoinsTruncateDecimal(t *testing.T) {
 
 	for i, tc := range testCases {
 		truncatedCoins, changeCoins := tc.input.TruncateDecimal()
-		require.Equal(
-			t, tc.truncatedCoins, truncatedCoins,
+		s.Require().Equal(
+			tc.truncatedCoins, truncatedCoins,
 			"unexpected truncated coins; tc #%d, input: %s", i, tc.input,
 		)
-		require.Equal(
-			t, tc.changeCoins, changeCoins,
+		s.Require().Equal(
+			tc.changeCoins, changeCoins,
 			"unexpected change coins; tc #%d, input: %s", i, tc.input,
 		)
 	}
 }
 
-func TestDecCoinsQuoDecTruncate(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 	x := sdk.MustNewDecFromStr("1.00")
 	y := sdk.MustNewDecFromStr("10000000000000000000.00")
 
@@ -495,15 +502,15 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 	for i, tc := range testCases {
 		tc := tc
 		if tc.panics {
-			require.Panics(t, func() { tc.coins.QuoDecTruncate(tc.input) })
+			s.Require().Panics(func() { tc.coins.QuoDecTruncate(tc.input) })
 		} else {
 			res := tc.coins.QuoDecTruncate(tc.input)
-			require.Equal(t, tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
+			s.Require().Equal(tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
 		}
 	}
 }
 
-func TestNewDecCoinsWithIsValid(t *testing.T) {
+func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 	fake1 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", sdk.NewInt(10))), sdk.DecCoin{Denom: "10BTC", Amount: sdk.NewDec(10)})
 	fake2 := append(sdk.NewDecCoins(sdk.NewDecCoin("mytoken", sdk.NewInt(10))), sdk.DecCoin{Denom: "BTC", Amount: sdk.NewDec(-10)})
 
@@ -532,16 +539,16 @@ func TestNewDecCoinsWithIsValid(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		if tc.expectPass {
-			require.True(t, tc.coin.IsValid(), tc.msg)
+			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
-			require.False(t, tc.coin.IsValid(), tc.msg)
+			s.Require().False(tc.coin.IsValid(), tc.msg)
 		}
 	}
 }
 
-func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
+func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 	lengthTestDecCoins := sdk.NewDecCoins().Add(sdk.NewDecCoin("mytoken", sdk.NewInt(10))).Add(sdk.DecCoin{Denom: "BTC", Amount: sdk.NewDec(10)})
-	require.Equal(t, 2, len(lengthTestDecCoins), "should be 2")
+	s.Require().Equal(2, len(lengthTestDecCoins), "should be 2")
 
 	tests := []struct {
 		coin       sdk.DecCoins
@@ -568,9 +575,9 @@ func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		if tc.expectPass {
-			require.True(t, tc.coin.IsValid(), tc.msg)
+			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
-			require.False(t, tc.coin.IsValid(), tc.msg)
+			s.Require().False(tc.coin.IsValid(), tc.msg)
 		}
 	}
 }

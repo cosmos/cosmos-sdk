@@ -15,15 +15,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type resultTestStuite struct {
+type resultTestSuite struct {
 	suite.Suite
 }
 
-func TestRTestStuite(t *testing.T) {
-	suite.Run(t, new(resultTestStuite))
+func TestResultTestSuite(t *testing.T) {
+	suite.Run(t, new(resultTestSuite))
 }
 
-func (s *resultTestStuite) TestParseABCILog() {
+func (s *resultTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *resultTestSuite) TestParseABCILog() {
 	logs := `[{"log":"","msg_index":1,"success":true}]`
 	res, err := sdk.ParseABCILogs(logs)
 
@@ -33,7 +37,7 @@ func (s *resultTestStuite) TestParseABCILog() {
 	s.Require().Equal(res[0].MsgIndex, uint32(1))
 }
 
-func (s *resultTestStuite) TestABCIMessageLog() {
+func (s *resultTestSuite) TestABCIMessageLog() {
 	cdc := codec.NewLegacyAmino()
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
@@ -44,7 +48,7 @@ func (s *resultTestStuite) TestABCIMessageLog() {
 	s.Require().Equal(string(bz), msgLogs.String())
 }
 
-func (s *resultTestStuite) TestNewSearchTxsResult() {
+func (s *resultTestSuite) TestNewSearchTxsResult() {
 	got := sdk.NewSearchTxsResult(150, 20, 2, 20, []*sdk.TxResponse{})
 	s.Require().Equal(&sdk.SearchTxsResult{
 		TotalCount: 150,
@@ -56,7 +60,7 @@ func (s *resultTestStuite) TestNewSearchTxsResult() {
 	}, got)
 }
 
-func (s *resultTestStuite) TestResponseResultTx() {
+func (s *resultTestSuite) TestResponseResultTx() {
 	deliverTxResult := abci.ResponseDeliverTx{
 		Codespace: "codespace",
 		Code:      1,
@@ -126,7 +130,7 @@ func (s *resultTestStuite) TestResponseResultTx() {
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
 }
 
-func (s *resultTestStuite) TestResponseFormatBroadcastTxCommit() {
+func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 	// test nil
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTxCommit(nil))
 

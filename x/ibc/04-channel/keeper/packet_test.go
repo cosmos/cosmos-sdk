@@ -287,7 +287,7 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 
 			// write packet acknowledgement
-			suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 		}, false},
 		{"next receive sequence is not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -335,8 +335,8 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 
 }
 
-// TestReceiveExecuted tests the ReceiveExecuted call on chainB.
-func (suite *KeeperTestSuite) TestReceiveExecuted() {
+// TestWriteReceipt tests the WriteReceipt call on chainB.
+func (suite *KeeperTestSuite) TestWriteReceipt() {
 	var (
 		packet     types.Packet
 		channelCap *capabilitytypes.Capability
@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) TestReceiveExecuted() {
 
 			tc.malleate()
 
-			err := suite.chainB.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(suite.chainB.GetContext(), channelCap, packet)
+			err := suite.chainB.App.IBCKeeper.ChannelKeeper.WriteReceipt(suite.chainB.GetContext(), channelCap, packet)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -439,7 +439,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"success on unordered channel", func() {
@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"channel not found", func() {
@@ -542,7 +542,7 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			// set next sequence ack wrong
@@ -589,7 +589,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
@@ -605,7 +605,7 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			suite.Require().NoError(err)
 
 			// create packet acknowledgement
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)

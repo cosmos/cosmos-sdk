@@ -238,15 +238,15 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the ReceiveExecuted function
+	// NOTE: the remaining code is located in the WriteReceipt function
 	return nil
 }
 
-// ReceiveExecuted updates the receive sequence in the case of an ordered channel or sets an empty receipt
+// WriteReceipt updates the receive sequence in the case of an ordered channel or sets an empty receipt
 // if the channel is unordered.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) ReceiveExecuted(
+func (k Keeper) WriteReceipt(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,

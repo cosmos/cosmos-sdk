@@ -7,8 +7,8 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine"
 )
 

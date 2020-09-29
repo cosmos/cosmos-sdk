@@ -34,7 +34,7 @@ client's consensus state. A client may be associated with any number of connecti
 chains. The supported IBC clients are:
 
 * [Solo Machine light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/solomachine): devices such as phones, browsers, or laptops.
-* [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/07-tendermint): The default for SDK-based chains,
+* [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/07-tendermint): The default for SDK-based chains,
 * [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/09-localhost): Useful for
 testing, simulation and relaying packets to modules on the same application.
 

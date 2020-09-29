@@ -16,8 +16,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	// SubModuleCdc references the global x/ibc/09-localhost module codec.
-	// The actual codec used for serialization should be provided to x/ibc/09-localhost and
+	// SubModuleCdc references the global x/ibc/light-clients/09-localhost module codec.
+	// The actual codec used for serialization should be provided to x/ibc/light-clients/09-localhost and
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )

@@ -100,17 +100,7 @@ func ClientStateSignBytes(
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	clientState exported.ClientState,
 ) ([]byte, error) {
-	any, err := clienttypes.PackClientState(clientState)
-	if err != nil {
-		return nil, err
-	}
-
-	data := &ClientStateData{
-		Path:        []byte(path.String()),
-		ClientState: any,
-	}
-
-	dataBz, err := cdc.MarshalBinaryBare(data)
+	dataBz, err := ClientStateDataBytes(cdc, path, clientState)
 	if err != nil {
 		return nil, err
 	}
@@ -126,12 +116,60 @@ func ClientStateSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
+// ClientStateDataBytes returns the client state data bytes used in constructing
+// SignBytes.
+func ClientStateDataBytes(
+	cdc codec.BinaryMarshaler,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	clientState exported.ClientState,
+) ([]byte, error) {
+	any, err := clienttypes.PackClientState(clientState)
+	if err != nil {
+		return nil, err
+	}
+
+	data := &ClientStateData{
+		Path:        []byte(path.String()),
+		ClientState: any,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataBz, nil
+}
+
 // ConsensusStateSignBytes returns the sign bytes for verification of the
 // consensus state.
 func ConsensusStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	consensusState exported.ConsensusState,
+) ([]byte, error) {
+	dataBz, err := ConsensusStateDataBytes(cdc, path, consensusState)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence:    sequence,
+		Timestamp:   timestamp,
+		Diversifier: diversifier,
+		DataType:    CONSENSUS,
+		Data:        dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
+}
+
+// ConsensusStateDataBytes returns the consensus state data bytes used in constructing
+// SignBytes.
+func ConsensusStateDataBytes(
+	cdc codec.BinaryMarshaler,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	consensusState exported.ConsensusState,
 ) ([]byte, error) {
@@ -150,15 +188,7 @@ func ConsensusStateSignBytes(
 		return nil, err
 	}
 
-	signBytes := &SignBytes{
-		Sequence:    sequence,
-		Timestamp:   timestamp,
-		Diversifier: diversifier,
-		DataType:    CONSENSUS,
-		Data:        dataBz,
-	}
-
-	return cdc.MarshalBinaryBare(signBytes)
+	return dataBz, nil
 }
 
 // ConnectionStateSignBytes returns the sign bytes for verification of the
@@ -167,6 +197,29 @@ func ConnectionStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	connectionEnd exported.ConnectionI,
+) ([]byte, error) {
+	dataBz, err := ConnectionStateDataBytes(cdc, path, connectionEnd)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence:    sequence,
+		Timestamp:   timestamp,
+		Diversifier: diversifier,
+		DataType:    CONNECTION,
+		Data:        dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
+}
+
+// ConnectionStateDataBytes returns the connection state data bytes used in constructing
+// SignBytes.
+func ConnectionStateDataBytes(
+	cdc codec.BinaryMarshaler,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	connectionEnd exported.ConnectionI,
 ) ([]byte, error) {
@@ -188,15 +241,7 @@ func ConnectionStateSignBytes(
 		return nil, err
 	}
 
-	signBytes := &SignBytes{
-		Sequence:    sequence,
-		Timestamp:   timestamp,
-		Diversifier: diversifier,
-		DataType:    CONNECTION,
-		Data:        dataBz,
-	}
-
-	return cdc.MarshalBinaryBare(signBytes)
+	return dataBz, nil
 }
 
 // ChannelStateSignBytes returns the sign bytes for verification of the
@@ -205,6 +250,29 @@ func ChannelStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	channelEnd exported.ChannelI,
+) ([]byte, error) {
+	dataBz, err := ChannelStateDataBytes(cdc, path, channelEnd)
+	if err != nil {
+		return nil, err
+	}
+
+	signBytes := &SignBytes{
+		Sequence:    sequence,
+		Timestamp:   timestamp,
+		Diversifier: diversifier,
+		DataType:    CHANNEL,
+		Data:        dataBz,
+	}
+
+	return cdc.MarshalBinaryBare(signBytes)
+}
+
+// ChannelStateDataBytes returns the channel state data bytes used in constructing
+// SignBytes.
+func ChannelStateDataBytes(
+	cdc codec.BinaryMarshaler,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	channelEnd exported.ChannelI,
 ) ([]byte, error) {
@@ -225,15 +293,7 @@ func ChannelStateSignBytes(
 		return nil, err
 	}
 
-	signBytes := &SignBytes{
-		Sequence:    sequence,
-		Timestamp:   timestamp,
-		Diversifier: diversifier,
-		DataType:    CHANNEL,
-		Data:        dataBz,
-	}
-
-	return cdc.MarshalBinaryBare(signBytes)
+	return dataBz, nil
 }
 
 // PacketCommitmentSignBytes returns the sign bytes for verification of the
@@ -245,12 +305,7 @@ func PacketCommitmentSignBytes(
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	commitmentBytes []byte,
 ) ([]byte, error) {
-	data := &PacketCommitmentData{
-		Path:       []byte(path.String()),
-		Commitment: commitmentBytes,
-	}
-
-	dataBz, err := cdc.MarshalBinaryBare(data)
+	dataBz, err := PacketCommitmentDataBytes(cdc, path, commitmentBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -266,6 +321,26 @@ func PacketCommitmentSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
+// PacketCommitmentDataBytes returns the packet commitment data bytes used in constructing
+// SignBytes.
+func PacketCommitmentDataBytes(
+	cdc codec.BinaryMarshaler,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	commitmentBytes []byte,
+) ([]byte, error) {
+	data := &PacketCommitmentData{
+		Path:       []byte(path.String()),
+		Commitment: commitmentBytes,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataBz, nil
+}
+
 // PacketAcknowledgementSignBytes returns the sign bytes for verification of
 // the acknowledgement.
 func PacketAcknowledgementSignBytes(
@@ -275,12 +350,7 @@ func PacketAcknowledgementSignBytes(
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	acknowledgement []byte,
 ) ([]byte, error) {
-	data := &PacketAcknowledgementData{
-		Path:            []byte(path.String()),
-		Acknowledgement: acknowledgement,
-	}
-
-	dataBz, err := cdc.MarshalBinaryBare(data)
+	dataBz, err := PacketAcknowledgementDataBytes(cdc, path, acknowledgement)
 	if err != nil {
 		return nil, err
 	}
@@ -296,6 +366,26 @@ func PacketAcknowledgementSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
+// PacketAcknowledgementDataBytes returns the packet acknowledgement data bytes used in constructing
+// SignBytes.
+func PacketAcknowledgementDataBytes(
+	cdc codec.BinaryMarshaler,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	acknowledgement []byte,
+) ([]byte, error) {
+	data := &PacketAcknowledgementData{
+		Path:            []byte(path.String()),
+		Acknowledgement: acknowledgement,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataBz, nil
+}
+
 // PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verification
 // of the absence of an acknowledgement.
 func PacketAcknowledgementAbsenceSignBytes(
@@ -304,11 +394,7 @@ func PacketAcknowledgementAbsenceSignBytes(
 	diversifier string,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
-	data := &PacketAcknowledgementAbsenceData{
-		Path: []byte(path.String()),
-	}
-
-	dataBz, err := cdc.MarshalBinaryBare(data)
+	dataBz, err := PacketAcknowledgementAbsenceDataBytes(cdc, path)
 	if err != nil {
 		return nil, err
 	}
@@ -324,6 +410,24 @@ func PacketAcknowledgementAbsenceSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
+// PacketAcknowledgementAbsenceDataBytes returns the packet acknowledgement absence data bytes used in constructing
+// SignBytes.
+func PacketAcknowledgementAbsenceDataBytes(
+	cdc codec.BinaryMarshaler,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+) ([]byte, error) {
+	data := &PacketAcknowledgementAbsenceData{
+		Path: []byte(path.String()),
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataBz, nil
+}
+
 // NextSequenceRecvSignBytes returns the sign bytes for verification of the next
 // sequence to be received.
 func NextSequenceRecvSignBytes(
@@ -333,12 +437,7 @@ func NextSequenceRecvSignBytes(
 	path commitmenttypes.MerklePath, // nolint: interfacer
 	nextSequenceRecv uint64,
 ) ([]byte, error) {
-	data := &NextSequenceRecvData{
-		Path:        []byte(path.String()),
-		NextSeqRecv: nextSequenceRecv,
-	}
-
-	dataBz, err := cdc.MarshalBinaryBare(data)
+	dataBz, err := NextSequenceRecvDataBytes(cdc, path, nextSequenceRecv)
 	if err != nil {
 		return nil, err
 	}
@@ -352,4 +451,24 @@ func NextSequenceRecvSignBytes(
 	}
 
 	return cdc.MarshalBinaryBare(signBytes)
+}
+
+// NextSequenceRecvDataBytes returns the next sequence recv data bytes used in constructing
+// SignBytes.
+func NextSequenceRecvDataBytes(
+	cdc codec.BinaryMarshaler,
+	path commitmenttypes.MerklePath, // nolint: interfacer
+	nextSequenceRecv uint64,
+) ([]byte, error) {
+	data := &NextSequenceRecvData{
+		Path:        []byte(path.String()),
+		NextSeqRecv: nextSequenceRecv,
+	}
+
+	dataBz, err := cdc.MarshalBinaryBare(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataBz, nil
 }

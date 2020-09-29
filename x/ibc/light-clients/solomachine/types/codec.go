@@ -1,10 +1,12 @@
 package types
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
@@ -52,17 +54,39 @@ func UnmarshalSignatureData(cdc codec.BinaryMarshaler, data []byte) (signing.Sig
 // CanUnmarshalDataByType returns true if the data provided can be unmarshaled
 // to the specified DataType.
 func CanUnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data []byte) bool {
+	if len(data) == 0 {
+		return false
+	}
+
 	switch dataType {
 	case UNSPECIFIED:
 		return false
 
 	case CLIENT:
 		clientData := &ClientStateData{}
-		return cdc.UnmarshalBinaryBare(data, clientData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, clientData); err != nil {
+			return false
+		}
+
+		// unpack any
+		if _, err := clienttypes.UnpackClientState(clientData.ClientState); err != nil {
+			fmt.Println(clientData.ClientState)
+			fmt.Println(err)
+			return false
+		}
+		return true
 
 	case CONSENSUS:
 		consensusData := &ConsensusStateData{}
-		return cdc.UnmarshalBinaryBare(data, consensusData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, consensusData); err != nil {
+			return false
+		}
+
+		// unpack any
+		if _, err := clienttypes.UnpackConsensusState(consensusData.ConsensusState); err != nil {
+			return false
+		}
+		return true
 
 	case CONNECTION:
 		connectionData := &ConnectionStateData{}

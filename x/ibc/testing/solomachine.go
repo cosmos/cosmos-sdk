@@ -157,8 +157,13 @@ func (solo *Solomachine) CreateHeader() *solomachinetypes.Header {
 // CreateMisbehaviour constructs testing misbehaviour for the solo machine client
 // by signing over two different data bytes at the same sequence.
 func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
-	dataOne := solo.GetClientStateDataBytes("counterparty")
-	dataTwo := solo.GetConsensusStateDataBytes("counterparty", clienttypes.NewHeight(0, 1))
+	path := solo.GetClientStatePath("counterparty")
+	dataOne, err := solomachinetypes.ClientStateDataBytes(solo.cdc, path, solo.ClientState())
+	require.NoError(solo.t, err)
+
+	path = solo.GetConsensusStatePath("counterparty", clienttypes.NewHeight(0, 1))
+	dataTwo, err := solomachinetypes.ConsensusStateDataBytes(solo.cdc, path, solo.ConsensusState())
+	require.NoError(solo.t, err)
 
 	signBytes := &solomachinetypes.SignBytes{
 		Sequence:    solo.Sequence,
@@ -239,42 +244,61 @@ func (solo *Solomachine) GenerateSignature(signBytes []byte) []byte {
 	return bz
 }
 
-// GetClientStateDataBytes is a helper function which returns the client
-// state data bytes used in constructing SignBytes.
-func (solo *Solomachine) GetClientStateDataBytes(counterpartyClientIdentifier string) []byte {
-	any, err := clienttypes.PackClientState(solo.ClientState())
-
+// GetClientStatePath returns the commitment path for the client state.
+func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string) commitmenttypes.MerklePath {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	require.NoError(solo.t, err)
 
-	clientData := &solomachinetypes.ClientStateData{
-		Path:        []byte(path.String()),
-		ClientState: any,
-	}
-
-	data, err := solo.cdc.MarshalBinaryBare(clientData)
-	require.NoError(solo.t, err)
-
-	return data
+	return path
 }
 
-// GetConsensusStateDataBytes is a helper function which returns the consensus
-// state data bytes used in constructing SignBytes.
-func (solo *Solomachine) GetConsensusStateDataBytes(counterpartyClientIdentifier string, consensusHeight clienttypes.Height) []byte {
-	any, err := clienttypes.PackConsensusState(solo.ConsensusState())
-
+// GetConsensusStatePath returns the commitment path for the consensus state.
+func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier string, consensusHeight clienttypes.Height) commitmenttypes.MerklePath {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	require.NoError(solo.t, err)
 
-	consensusData := &solomachinetypes.ConsensusStateData{
-		Path:           []byte(path.String()),
-		ConsensusState: any,
-	}
+	return path
+}
 
-	data, err := solo.cdc.MarshalBinaryBare(consensusData)
+// GetConnectionStatePath returns the commitment path for the connection state.
+func (solo *Solomachine) GetConnectionStatePath(connID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(connID))
 	require.NoError(solo.t, err)
 
-	return data
+	return path
+}
+
+// GetChannelStatePath returns the commitment path for that channel state.
+func (solo *Solomachine) GetChannelStatePath(portID, channelID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(portID, channelID))
+	require.NoError(solo.t, err)
+
+	return path
+}
+
+// GetPacketCommitmentPath returns the commitment path for a packet commitment.
+func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(portID, channelID, solo.Sequence))
+	require.NoError(solo.t, err)
+
+	return path
+}
+
+// GetPacketAcknowledgementPath returns the commitment path for a packet acknowledgement
+// and an absent acknowledgement.
+func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	require.NoError(solo.t, err)
+
+	return path
+}
+
+// GetNextSequenceRecvPath returns the commitment path for the next sequence recv counter.
+func (solo *Solomachine) GetNextSequenceRecvPath(portID, channelID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(portID, channelID))
+	require.NoError(solo.t, err)
+
+	return path
 }

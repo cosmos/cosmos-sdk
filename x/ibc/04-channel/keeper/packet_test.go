@@ -280,15 +280,6 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, disabledTimeoutHeight, uint64(suite.chainB.GetContext().BlockTime().UnixNano()))
 		}, false},
-		{"acknowledgement already received", func() {
-			// setup uses an UNORDERED channel
-			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
-			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
-			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
-
-			// write packet acknowledgement
-			suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
-		}, false},
 		{"next receive sequence is not found", func() {
 			_, _, connA, connB := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			channelA := connA.NextTestChannel(ibctesting.TransferPort)
@@ -340,7 +331,6 @@ func (suite *KeeperTestSuite) TestWriteReceipt() {
 	var (
 		packet     types.Packet
 		channelCap *capabilitytypes.Capability
-		ack        []byte
 	)
 
 	testCases := []testCase{
@@ -391,21 +381,19 @@ func (suite *KeeperTestSuite) TestWriteReceipt() {
 
 			channelCap = capabilitytypes.NewCapability(3)
 		}, false},
-		{"acknowledgement is empty", func() {
+		{"receipt already stored", func() {
 			_, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 			packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
 			suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
+			suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketReceipt(suite.chainB.GetContext(), channelB.PortID, channelB.ID, 1)
 			channelCap = suite.chainB.GetChannelCapability(channelB.PortID, channelB.ID)
-
-			ack = []byte{}
 		}, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
-			suite.SetupTest()         // reset
-			ack = ibctesting.TestHash // must explicitly be changed in malleate
+			suite.SetupTest() // reset
 
 			tc.malleate()
 
@@ -413,9 +401,60 @@ func (suite *KeeperTestSuite) TestWriteReceipt() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				// verify packet ack is written
-				actualAck := suite.chainB.GetAcknowledgement(packet)
-				suite.Require().Equal(types.CommitAcknowledgement(ack), actualAck)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestWriteAcknowledgement() {
+	var (
+		ack    []byte
+		packet exported.PacketI
+	)
+
+	testCases := []testCase{
+		{
+			"success",
+			func() {
+				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+				ack = ibctesting.TestHash
+			},
+			true,
+		},
+		{
+			"no-op, already acked",
+			func() {
+				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+				ack = ibctesting.TestHash
+				suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainB.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
+			},
+			true,
+		},
+		{
+			"empty acknowledgement",
+			func() {
+				_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
+				packet = types.NewPacket(validPacketData, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, disabledTimeoutTimestamp)
+				ack = nil
+			},
+			false,
+		},
+	}
+	for i, tc := range testCases {
+		tc := tc
+		suite.Run(fmt.Sprintf("Case %s, %d/%d tests", tc.msg, i, len(testCases)), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+
+			err := suite.chainB.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(suite.chainB.GetContext(), packet, ack)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -438,8 +477,11 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// create packet acknowledgement
+			// create packet receipt and acknowledgement
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"success on unordered channel", func() {
@@ -451,8 +493,11 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// create packet acknowledgement
+			// create packet receipt and acknowledgement
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"channel not found", func() {

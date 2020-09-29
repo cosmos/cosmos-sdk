@@ -201,8 +201,9 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	// check if the packet acknowledgement has been received already for unordered channels
-	if channel.Ordering == types.UNORDERED {
+	switch channel.Ordering {
+	case types.UNORDERED:
+		// check if the packet acknowledgement has been received already for unordered channels
 		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		if found {
 			return sdkerrors.Wrapf(
@@ -210,10 +211,9 @@ func (k Keeper) RecvPacket(
 				"packet sequence (%d) already has been received", packet.GetSequence(),
 			)
 		}
-	}
 
-	// check if the packet is being received in order
-	if channel.Ordering == types.ORDERED {
+	case types.ORDERED:
+		// check if the packet is being received in order
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -283,7 +283,7 @@ func (k Keeper) WriteReceipt(
 
 		nextSequenceRecv++
 
-		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// incrementing nextSequenceRecv and storing under this chain's channelEnd identifiers
 		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	} else {
@@ -506,7 +506,7 @@ func (k Keeper) AcknowledgementExecuted(
 
 		nextSequenceAck++
 
-		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// incrementing NextSequenceAck and storing under this chain's channelEnd identifiers
 		// Since this is the original sending chain, our channelEnd is packet's source port and channel
 		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}

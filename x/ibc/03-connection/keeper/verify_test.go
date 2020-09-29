@@ -339,6 +339,9 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
 

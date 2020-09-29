@@ -181,6 +181,9 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
@@ -190,6 +193,9 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 		}, true},
 		{"success: UNORDERED acknowledge out of order packet", func() {
@@ -206,6 +212,8 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 
+				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+				suite.Require().NoError(err)
 			}
 		}, true},
 		{"failure: ORDERED acknowledge out of order packet", func() {
@@ -219,6 +227,9 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 				suite.Require().NoError(err)
 
 				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+				suite.Require().NoError(err)
+
+				err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 			}
 		}, false},
@@ -243,6 +254,9 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
 			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 		}, false},
@@ -255,6 +269,9 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			err = suite.coordinator.AcknowledgementExecuted(suite.chainA, suite.chainB, packet, clientB)

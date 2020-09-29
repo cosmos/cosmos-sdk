@@ -416,7 +416,7 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 
 	suite.Require().NoError(err, "receipt absence failed")
 
-	suite.store.Set(host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("ack"))
+	suite.store.Set(host.KeyPacketReceipt(testPortID, testChannelID, testSequence), []byte("receipt"))
 
 	err = clientState.VerifyPacketReceiptAbsence(
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,

@@ -459,8 +459,11 @@ func (suite *TendermintTestSuite) TestVerifyPacketAcknowledgement() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// write ack
+			// write receipt and ack
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			var ok bool
@@ -557,9 +560,9 @@ func (suite *TendermintTestSuite) TestVerifyPacketReceiptAbsence() {
 
 			prefix = suite.chainB.GetPrefix()
 
-			// make packet acknowledgement absence proof
-			acknowledgementKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-			proof, proofHeight = suite.chainB.QueryProof(acknowledgementKey)
+			// make packet receipt absence proof
+			receiptKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight = suite.chainB.QueryProof(receiptKey)
 
 			tc.malleate() // make changes as necessary
 

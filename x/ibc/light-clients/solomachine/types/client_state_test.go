@@ -701,7 +701,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, solomachine.Sequence))
+		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(testPortID, testChannelID, solomachine.Sequence))
 		suite.Require().NoError(err)
 
 		value, err := types.PacketReceiptAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)

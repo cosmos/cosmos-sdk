@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *SoloMachineTestSuite) TestMisbehaviour() {
@@ -14,89 +15,93 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
-	testCases := []struct {
-		name                 string
-		malleateMisbehaviour func(misbehaviour *types.Misbehaviour)
-		expPass              bool
-	}{
-		{
-			"valid misbehaviour",
-			func(*types.Misbehaviour) {},
-			true,
-		},
-		{
-			"invalid client ID",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.ClientId = "(badclientid)"
-			},
-			false,
-		},
-		{
-			"sequence is zero",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.Sequence = 0
-			},
-			false,
-		},
-		{
-			"signature one sig is empty",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureOne.Signature = []byte{}
-			},
-			false,
-		},
-		{
-			"signature two sig is empty",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureTwo.Signature = []byte{}
-			},
-			false,
-		},
-		{
-			"signature one data is empty",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureOne.Data = nil
-			},
-			false,
-		},
-		{
-			"signature two data is empty",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureTwo.Data = []byte{}
-			},
-			false,
-		},
-		{
-			"signatures are identical",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureTwo.Signature = misbehaviour.SignatureOne.Signature
-			},
-			false,
-		},
-		{
-			"data signed is identical",
-			func(misbehaviour *types.Misbehaviour) {
-				misbehaviour.SignatureTwo.Data = misbehaviour.SignatureOne.Data
-			},
-			false,
-		},
-	}
+	// test singlesig and multisig public keys
+	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-	for _, tc := range testCases {
-		tc := tc
+		testCases := []struct {
+			name                 string
+			malleateMisbehaviour func(misbehaviour *types.Misbehaviour)
+			expPass              bool
+		}{
+			{
+				"valid misbehaviour",
+				func(*types.Misbehaviour) {},
+				true,
+			},
+			{
+				"invalid client ID",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.ClientId = "(badclientid)"
+				},
+				false,
+			},
+			{
+				"sequence is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.Sequence = 0
+				},
+				false,
+			},
+			{
+				"signature one sig is empty",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.Signature = []byte{}
+				},
+				false,
+			},
+			{
+				"signature two sig is empty",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Signature = []byte{}
+				},
+				false,
+			},
+			{
+				"signature one data is empty",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.Data = nil
+				},
+				false,
+			},
+			{
+				"signature two data is empty",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Data = []byte{}
+				},
+				false,
+			},
+			{
+				"signatures are identical",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Signature = misbehaviour.SignatureOne.Signature
+				},
+				false,
+			},
+			{
+				"data signed is identical",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Data = misbehaviour.SignatureOne.Data
+				},
+				false,
+			},
+		}
 
-		suite.Run(tc.name, func() {
+		for _, tc := range testCases {
+			tc := tc
 
-			misbehaviour := suite.solomachine.CreateMisbehaviour()
-			tc.malleateMisbehaviour(misbehaviour)
+			suite.Run(tc.name, func() {
 
-			err := misbehaviour.ValidateBasic()
+				misbehaviour := solomachine.CreateMisbehaviour()
+				tc.malleateMisbehaviour(misbehaviour)
 
-			if tc.expPass {
-				suite.Require().NoError(err)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
+				err := misbehaviour.ValidateBasic()
+
+				if tc.expPass {
+					suite.Require().NoError(err)
+				} else {
+					suite.Require().Error(err)
+				}
+			})
+		}
 	}
 }

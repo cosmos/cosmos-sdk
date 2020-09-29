@@ -9,9 +9,11 @@ import (
 	"math/big"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
+	"github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -56,9 +58,10 @@ func (privKey PrivKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshalling.
 func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
-	*privKey = PrivKey{
-		Key: bz,
+	if len(bz) != PrivKeySize {
+		return fmt.Errorf("invalid privkey size")
 	}
+	privKey.Key = bz
 
 	return nil
 }
@@ -182,9 +185,10 @@ func (pubKey PubKey) MarshalAmino() ([]byte, error) {
 
 // UnmarshalAmino overrides Amino binary marshalling.
 func (pubKey *PubKey) UnmarshalAmino(bz []byte) error {
-	*pubKey = PubKey{
-		Key: bz,
+	if len(bz) != PubKeySize {
+		return errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size")
 	}
+	pubKey.Key = bz
 
 	return nil
 }

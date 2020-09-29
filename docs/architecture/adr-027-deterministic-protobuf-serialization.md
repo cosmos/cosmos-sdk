@@ -9,17 +9,48 @@
 
 Proposed
 
-## Context
+## Abstract
 
+Fully deterministic structure serialization, which works across many languages and clients,
+is needed when signing messages. We need to be sure that whenever we serialize
+a data structure, no matter in which supported language, the raw bytes
+will stay the same.
 [Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
 serialization is not bijective (i.e. there exist a practically unlimited number of
-valid binary representations for a protobuf document)<sup>1</sup>. For signature
-verification in Cosmos SDK, signer and verifier need to agree on the same
-serialization of a SignDoc as defined in
-[ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
-serialization. This document describes a bijective serialization scheme for
+valid binary representations for a given protobuf document)<sup>1</sup>.
+
+This document describes a deterministic serialization scheme for
 a subset of protobuf documents, that covers this use case but can be reused in
 other cases as well.
+
+### Context
+
+For signature verification in Cosmos SDK, the signer and verifier need to agree on
+the same serialization of a `SignDoc` as defined in
+[ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
+serialization.
+
+Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
+instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
+by converting all [Tx](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
+fields to bytes on the client side. This adds an additional manual
+step when sending and signing transactions.
+
+### Decision
+
+The following encoding scheme is to be used by other ADRs, 
+and in particular for `SignDoc` serialization.
+
+## Specification
+
+### Scope
+
+This ADR defines a protobuf3 serializer. The output is a valid protobuf
+serialization, such that every protobuf parser can parse it.
+
+No maps are supported in version 1 due to the complexity of defining a
+deterministic serialization. This might change in future. Implementations must
+reject documents containing maps as invalid input.
 
 ### Background - Protobuf3 Encoding
 
@@ -40,18 +71,6 @@ malleability.
 Among other sources of non-determinism, this ADR eliminates the possibility of
 encoding malleability.
 
-## Decision
-
-The following encoding scheme is proposed to be used by other ADRs.
-
-### Scope
-
-This ADR defines a protobuf3 serializer. The output is a valid protobuf
-serialization, such that every protobuf parser can parse it.
-
-No maps are supported in version 1 due to the complexity of defining a
-deterministic serialization. This might change in future. Implementations must
-reject documents containing maps as invalid input.
 
 ### Serialization rules
 
@@ -250,8 +269,19 @@ for all protobuf documents we need in the context of Cosmos SDK signing.
 - When implementing transaction signing, the encoding rules above must be
   understood and implemented.
 - The need for rule number 3. adds some complexity to implementations.
+- Some data structures may require custom code for serialization. Thus
+  the code is not very portable - it will require additional work for each
+  client implementing serialization to properly handle custom data structures.
 
 ### Neutral
+
+
+### Usage in SDK
+
+For the reasons mentioned above ("Negative" section) we prefer to keep workarounds
+for shared data structure. Example: the aforementioned `TxRaw` is using raw bytes
+as a workaround. This allows them to use any valid Protobuf library without
+the need of implementing a custom serializer that adheres to this standard (and related risks of bugs).
 
 ## References
 

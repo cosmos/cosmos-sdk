@@ -65,7 +65,7 @@ func request_Query_SigningInfo_0(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cons_address")
 	}
 
-	protoReq.ConsAddress, err = runtime.Bytes(val)
+	protoReq.ConsAddress, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cons_address", err)
@@ -92,7 +92,7 @@ func local_request_Query_SigningInfo_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cons_address")
 	}
 
-	protoReq.ConsAddress, err = runtime.Bytes(val)
+	protoReq.ConsAddress, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cons_address", err)

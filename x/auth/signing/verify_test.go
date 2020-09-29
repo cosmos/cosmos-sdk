@@ -88,6 +88,9 @@ func TestVerifySignature(t *testing.T) {
 	err = multisig.AddSignatureFromPubKey(multisignature, sig2V2.Data, pkSet[1], pkSet)
 	require.NoError(t, err)
 
+	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo)
+	stdTx.TimeoutHeight = 10
+
 	err = signing.VerifySignature(multisigKey, signerData, multisignature, handler, stdTx)
 	require.NoError(t, err)
 }

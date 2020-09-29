@@ -39,13 +39,13 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: []byte("")})
+	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: ""})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := testdata.KeyTestPubAddr()
-	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: addr})
+	req.Data = legacyQuerierCdc.MustMarshalJSON(&types.QueryAccountRequest{Address: addr.String()})
 	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)

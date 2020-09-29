@@ -148,7 +148,7 @@ func request_Query_Vote_0(ctx context.Context, marshaler runtime.Marshaler, clie
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "voter")
 	}
 
-	protoReq.Voter, err = runtime.Bytes(val)
+	protoReq.Voter, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "voter", err)
@@ -186,7 +186,7 @@ func local_request_Query_Vote_0(ctx context.Context, marshaler runtime.Marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "voter")
 	}
 
-	protoReq.Voter, err = runtime.Bytes(val)
+	protoReq.Voter, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "voter", err)
@@ -350,7 +350,7 @@ func request_Query_Deposit_0(ctx context.Context, marshaler runtime.Marshaler, c
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "depositor")
 	}
 
-	protoReq.Depositor, err = runtime.Bytes(val)
+	protoReq.Depositor, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "depositor", err)
@@ -388,7 +388,7 @@ func local_request_Query_Deposit_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "depositor")
 	}
 
-	protoReq.Depositor, err = runtime.Bytes(val)
+	protoReq.Depositor, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "depositor", err)

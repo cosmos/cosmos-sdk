@@ -158,21 +158,25 @@ func (coin DecCoin) IsValid() bool {
 type DecCoins []DecCoin
 
 // NewDecCoins constructs a new coin set with with decimal values
-// from DecCoins.
+// from DecCoins. The provided coins will be sanitized by removing
+// zero coins and sorting the coin set. A panic will occur if the coin set is not valid.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {
-	// remove zeroes
-	newDecCoins := removeZeroDecCoins(DecCoins(decCoins))
-	if len(newDecCoins) == 0 {
-		return DecCoins{}
-	}
-
-	newDecCoins.Sort()
-
+	newDecCoins := sanitizeDecCoins(decCoins)
 	if err := newDecCoins.Validate(); err != nil {
 		panic(fmt.Errorf("invalid coin set %s: %w", newDecCoins, err))
 	}
 
 	return newDecCoins
+}
+
+func sanitizeDecCoins(decCoins []DecCoin) DecCoins {
+	// remove zeroes
+	newDecCoins := removeZeroDecCoins(decCoins)
+	if len(newDecCoins) == 0 {
+		return DecCoins{}
+	}
+
+	return newDecCoins.Sort()
 }
 
 // NewDecCoinsFromCoins constructs a new coin set with decimal values
@@ -630,8 +634,12 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	return NewDecCoinFromDec(denomStr, amount), nil
 }
 
-// ParseDecCoins will parse out a list of decimal coins separated by commas. If nothing is provided,
-// it returns nil DecCoins. If the coins aren't valid they return an error. Returned coins are sorted.
+// ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successuful,
+// the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
+// a validation of the coin set is executed. If the check passes, ParseDecCoins will return the sanitized coins.
+// Otherwise it will return an error.
+// If an empty string is provided to ParseDecCoins, it returns nil Coins.
+// Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
 	if len(coinsStr) == 0 {
@@ -639,23 +647,20 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	}
 
 	coinStrs := strings.Split(coinsStr, ",")
-	coins := make(DecCoins, len(coinStrs))
+	decCoins := make(DecCoins, len(coinStrs))
 	for i, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
 		if err != nil {
 			return nil, err
 		}
 
-		coins[i] = coin
+		decCoins[i] = coin
 	}
 
-	// sort coins for determinism
-	coins.Sort()
-
-	// validate coins before returning
-	if err := coins.Validate(); err != nil {
+	newDecCoins := sanitizeDecCoins(decCoins)
+	if err := newDecCoins.Validate(); err != nil {
 		return nil, err
 	}
 
-	return coins, nil
+	return newDecCoins, nil
 }

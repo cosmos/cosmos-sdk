@@ -25,7 +25,7 @@ func (suite *TypesTestSuite) TestPackClientState() {
 	}{
 		{
 			"solo machine client",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ClientState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ClientState(),
 			true,
 		},
 		{
@@ -77,7 +77,7 @@ func (suite *TypesTestSuite) TestPackConsensusState() {
 	}{
 		{
 			"solo machine consensus",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ConsensusState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
 			true,
 		},
 		{
@@ -123,7 +123,7 @@ func (suite *TypesTestSuite) TestPackHeader() {
 	}{
 		{
 			"solo machine header",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateHeader(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).CreateHeader(),
 			true,
 		},
 		{
@@ -170,7 +170,7 @@ func (suite *TypesTestSuite) TestPackMisbehaviour() {
 	}{
 		{
 			"solo machine misbehaviour",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateMisbehaviour(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).CreateMisbehaviour(),
 			true,
 		},
 		{

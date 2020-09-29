@@ -84,164 +84,164 @@ func TestMigrate(t *testing.T) {
 
 	migrated := v040auth.Migrate(gs)
 	expected := `{
- "accounts": [
-  {
-   "@type": "/cosmos.auth.v1beta1.BaseAccount",
-   "account_number": "1",
-   "address": "cosmos13syh7de9xndv9wmklccpfvc0d8dcyvay4s6z6l",
-   "pub_key": {
-    "@type": "/cosmos.crypto.secp256k1.PubKey",
-    "key": "A8oWyJkohwy8XZ0Df92jFMBTtTPMvYJplYIrlEHTKPYk"
-   },
-   "sequence": "0"
-  },
-  {
-   "@type": "/cosmos.auth.v1beta1.ModuleAccount",
-   "base_account": {
-    "account_number": "1",
-    "address": "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-    "pub_key": {
-     "@type": "/cosmos.crypto.secp256k1.PubKey",
-     "key": "AruDygh5HprMOpHOEato85dLgAsybMJVyxBGUa3KuWCr"
-    },
-    "sequence": "0"
-   },
-   "name": "module2",
-   "permissions": [
-    "permission2"
-   ]
-  },
-  {
-   "@type": "/cosmos.vesting.v1beta1.BaseVestingAccount",
-   "base_account": {
-    "account_number": "1",
-    "address": "cosmos18hnp9fjflrkeeqn4gmhjhzljusxzmjeartdckw",
-    "pub_key": {
-     "@type": "/cosmos.crypto.secp256k1.PubKey",
-     "key": "A5aEFDIdQHh0OYmNXNv1sHBNURDWWgVkXC2IALcWLLwJ"
-    },
-    "sequence": "0"
-   },
-   "delegated_free": [
+  "accounts": [
     {
-     "amount": "50",
-     "denom": "stake"
-    }
-   ],
-   "delegated_vesting": [
-    {
-     "amount": "50",
-     "denom": "stake"
-    }
-   ],
-   "end_time": "1580309973",
-   "original_vesting": [
-    {
-     "amount": "50",
-     "denom": "stake"
-    }
-   ]
-  },
-  {
-   "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
-   "base_vesting_account": {
-    "base_account": {
-     "account_number": "1",
-     "address": "cosmos1t9kvvejvk6hjtddx6antck39s206csqduq3ke3",
-     "pub_key": {
-      "@type": "/cosmos.crypto.secp256k1.PubKey",
-      "key": "AoXDzxwTnljemHxfnJcwrKqODBP6Q2l3K3U3UhVDzyah"
-     },
-     "sequence": "0"
+      "@type": "/cosmos.auth.v1beta1.BaseAccount",
+      "account_number": "1",
+      "address": "cosmos13syh7de9xndv9wmklccpfvc0d8dcyvay4s6z6l",
+      "pub_key": {
+        "@type": "/cosmos.crypto.secp256k1.PubKey",
+        "key": "A8oWyJkohwy8XZ0Df92jFMBTtTPMvYJplYIrlEHTKPYk"
+      },
+      "sequence": "0"
     },
-    "delegated_free": [],
-    "delegated_vesting": [],
-    "end_time": "3160620846",
-    "original_vesting": [
-     {
-      "amount": "50",
-      "denom": "stake"
-     }
-    ]
-   },
-   "start_time": "3160620846"
-  },
-  {
-   "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
-   "base_vesting_account": {
-    "base_account": {
-     "account_number": "1",
-     "address": "cosmos1s4ss9zquz7skvguechzlk3na635jdrecl0sgy2",
-     "pub_key": {
-      "@type": "/cosmos.crypto.secp256k1.PubKey",
-      "key": "A2a4P4TQ1OKzpfu0eKnCoEtmTvoiclSx0G9higenUGws"
-     },
-     "sequence": "0"
-    },
-    "delegated_free": [],
-    "delegated_vesting": [],
-    "end_time": "3160620846",
-    "original_vesting": [
-     {
-      "amount": "50",
-      "denom": "stake"
-     }
-    ]
-   },
-   "start_time": "1580309975",
-   "vesting_periods": [
     {
-     "amount": [
-      {
-       "amount": "50",
-       "denom": "stake"
+      "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+      "base_account": {
+        "account_number": "1",
+        "address": "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+        "pub_key": {
+          "@type": "/cosmos.crypto.secp256k1.PubKey",
+          "key": "AruDygh5HprMOpHOEato85dLgAsybMJVyxBGUa3KuWCr"
+        },
+        "sequence": "0"
+      },
+      "name": "module2",
+      "permissions": [
+        "permission2"
+      ]
+    },
+    {
+      "@type": "/cosmos.vesting.v1beta1.BaseVestingAccount",
+      "base_account": {
+        "account_number": "1",
+        "address": "cosmos18hnp9fjflrkeeqn4gmhjhzljusxzmjeartdckw",
+        "pub_key": {
+          "@type": "/cosmos.crypto.secp256k1.PubKey",
+          "key": "A5aEFDIdQHh0OYmNXNv1sHBNURDWWgVkXC2IALcWLLwJ"
+        },
+        "sequence": "0"
+      },
+      "delegated_free": [
+        {
+          "amount": "50",
+          "denom": "stake"
+        }
+      ],
+      "delegated_vesting": [
+        {
+          "amount": "50",
+          "denom": "stake"
+        }
+      ],
+      "end_time": "1580309973",
+      "original_vesting": [
+        {
+          "amount": "50",
+          "denom": "stake"
+        }
+      ]
+    },
+    {
+      "@type": "/cosmos.vesting.v1beta1.ContinuousVestingAccount",
+      "base_vesting_account": {
+        "base_account": {
+          "account_number": "1",
+          "address": "cosmos1t9kvvejvk6hjtddx6antck39s206csqduq3ke3",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "AoXDzxwTnljemHxfnJcwrKqODBP6Q2l3K3U3UhVDzyah"
+          },
+          "sequence": "0"
+        },
+        "delegated_free": [],
+        "delegated_vesting": [],
+        "end_time": "3160620846",
+        "original_vesting": [
+          {
+            "amount": "50",
+            "denom": "stake"
+          }
+        ]
+      },
+      "start_time": "1580309974"
+    },
+    {
+      "@type": "/cosmos.vesting.v1beta1.PeriodicVestingAccount",
+      "base_vesting_account": {
+        "base_account": {
+          "account_number": "1",
+          "address": "cosmos1s4ss9zquz7skvguechzlk3na635jdrecl0sgy2",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A2a4P4TQ1OKzpfu0eKnCoEtmTvoiclSx0G9higenUGws"
+          },
+          "sequence": "0"
+        },
+        "delegated_free": [],
+        "delegated_vesting": [],
+        "end_time": "3160620846",
+        "original_vesting": [
+          {
+            "amount": "50",
+            "denom": "stake"
+          }
+        ]
+      },
+      "start_time": "1580309975",
+      "vesting_periods": [
+        {
+          "amount": [
+            {
+              "amount": "50",
+              "denom": "stake"
+            }
+          ],
+          "length": "32"
+        }
+      ]
+    },
+    {
+      "@type": "/cosmos.vesting.v1beta1.DelayedVestingAccount",
+      "base_vesting_account": {
+        "base_account": {
+          "account_number": "1",
+          "address": "cosmos1mcc6rwrj4hswf8p9ct82c7lmf77w9tuk07rha4",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A4tuAfmZlhjK5cjp6ImR704miybHnITVNOyJORdDPFu3"
+          },
+          "sequence": "0"
+        },
+        "delegated_free": [],
+        "delegated_vesting": [],
+        "end_time": "3160620846",
+        "original_vesting": [
+          {
+            "amount": "50",
+            "denom": "stake"
+          }
+        ]
       }
-     ],
-     "length": "32"
-    }
-   ]
-  },
-  {
-   "@type": "/cosmos.vesting.v1beta1.DelayedVestingAccount",
-   "base_vesting_account": {
-    "base_account": {
-     "account_number": "1",
-     "address": "cosmos1mcc6rwrj4hswf8p9ct82c7lmf77w9tuk07rha4",
-     "pub_key": {
-      "@type": "/cosmos.crypto.secp256k1.PubKey",
-      "key": "A4tuAfmZlhjK5cjp6ImR704miybHnITVNOyJORdDPFu3"
-     },
-     "sequence": "0"
     },
-    "delegated_free": [],
-    "delegated_vesting": [],
-    "end_time": "3160620846",
-    "original_vesting": [
-     {
-      "amount": "50",
-      "denom": "stake"
-     }
-    ]
-   }
-  },
-  {
-   "@type": "/cosmos.auth.v1beta1.BaseAccount",
-   "account_number": "1",
-   "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
-   "pub_key": {
-    "@type": "/google.protobuf.Empty",
-    "value": {}
-   },
-   "sequence": "0"
+    {
+      "@type": "/cosmos.auth.v1beta1.BaseAccount",
+      "account_number": "1",
+      "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
+      "pub_key": {
+        "@type": "/google.protobuf.Empty",
+        "value": {}
+      },
+      "sequence": "0"
+    }
+  ],
+  "params": {
+    "max_memo_characters": "10",
+    "sig_verify_cost_ed25519": "40",
+    "sig_verify_cost_secp256k1": "50",
+    "tx_sig_limit": "20",
+    "tx_size_cost_per_byte": "30"
   }
- ],
- "params": {
-  "max_memo_characters": "10",
-  "sig_verify_cost_ed25519": "40",
-  "sig_verify_cost_secp256k1": "50",
-  "tx_sig_limit": "20",
-  "tx_size_cost_per_byte": "30"
- }
 }`
 
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
@@ -251,7 +251,7 @@ func TestMigrate(t *testing.T) {
 	var jsonObj map[string]interface{}
 	err = json.Unmarshal(bz, &jsonObj)
 	require.NoError(t, err)
-	indentedBz, err := json.MarshalIndent(jsonObj, "", " ")
+	indentedBz, err := json.MarshalIndent(jsonObj, "", "  ")
 	require.NoError(t, err)
 
 	require.Equal(t, expected, string(indentedBz))

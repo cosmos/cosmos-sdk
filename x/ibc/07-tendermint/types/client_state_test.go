@@ -637,7 +637,7 @@ func (suite *TendermintTestSuite) TestVerifyNextSeqRecv() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// write ack, next seq recv incremented
+			// write receipt, next seq recv incremented
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 

@@ -182,6 +182,12 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 	return bz, true
 }
 
+// HasPacketAcknowledgement check if the packet ack hash is already on the store
+func (k Keeper) HasPacketAcknowledgement(ctx sdk.Context, portID, channelID string, sequence uint64) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(host.KeyPacketAcknowledgement(portID, channelID, sequence))
+}
+
 // IteratePacketSequence provides an iterator over all send, receive or ack sequences.
 // For each sequence, cb will be called. If the cb returns true, the iterator
 // will close and stop.

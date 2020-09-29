@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
-const emptyReceipt = ""
-
 // SendPacket is called by a module in order to send an IBC packet on a channel
 // end owned by the calling module to the corresponding module on the counterparty
 // chain.
@@ -332,12 +330,21 @@ func (k Keeper) ReceiveExecuted(
 // WriteAcknowledgement writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
-// CONTRACT: this function must be called in the IBC handler
+// CONTRACT: for synchronous execution, this function is be called in the IBC handler .
+// For async handling, it needs to be called directly by the module which originally
+// processed the packet.
 func (k Keeper) WriteAcknowledgement(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement []byte,
 ) error {
+	// NOTE: IBC app modules might have written the acknowledgement synchronously on
+	// the OnRecvPacket callback so we need to check if the acknowledgement is already
+	// set on the store and perform a no-op if so.
+	if k.HasPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()) {
+		return nil
+	}
+
 	if len(acknowledgement) == 0 {
 		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
 	}

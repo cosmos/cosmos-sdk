@@ -295,7 +295,7 @@ func PacketReceiptAbsenceSignBytes(
 	diversifier string,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
-	data := &PacketAcknowledgementAbsenseData{
+	data := &PacketReceiptAbsenseData{
 		Path: []byte(path.String()),
 	}
 

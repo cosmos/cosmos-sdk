@@ -414,14 +414,14 @@ func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
 
-	suite.Require().NoError(err, "ack absence failed")
+	suite.Require().NoError(err, "receipt absence failed")
 
 	suite.store.Set(host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("ack"))
 
 	err = clientState.VerifyPacketReceiptAbsence(
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
-	suite.Require().Error(err, "ack exists in store")
+	suite.Require().Error(err, "receipt exists in store")
 }
 
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {

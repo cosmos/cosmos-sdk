@@ -83,15 +83,15 @@ func (s *internalIntTestSuite) TestSerializationOverflow() {
 func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 	size := 500
 
-	ops := []intop{
-		intarith(Int.Add, (*big.Int).Add),
-		intarith(Int.Sub, (*big.Int).Sub),
-		intarith(Int.Mul, (*big.Int).Mul),
-		intarith(Int.Quo, (*big.Int).Quo),
-		intarithraw(Int.AddRaw, (*big.Int).Add),
-		intarithraw(Int.SubRaw, (*big.Int).Sub),
-		intarithraw(Int.MulRaw, (*big.Int).Mul),
-		intarithraw(Int.QuoRaw, (*big.Int).Quo),
+	ops := []intOp{
+		intArithOp(Int.Add, (*big.Int).Add),
+		intArithOp(Int.Sub, (*big.Int).Sub),
+		intArithOp(Int.Mul, (*big.Int).Mul),
+		intArithOp(Int.Quo, (*big.Int).Quo),
+		intArithRawOp(Int.AddRaw, (*big.Int).Add),
+		intArithRawOp(Int.SubRaw, (*big.Int).Sub),
+		intArithRawOp(Int.MulRaw, (*big.Int).Mul),
+		intArithRawOp(Int.QuoRaw, (*big.Int).Quo),
 	}
 
 	for i := 0; i < 100; i++ {
@@ -115,20 +115,20 @@ func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 	}
 }
 
-type intop func(Int, *big.Int) (Int, *big.Int)
+type intOp func(Int, *big.Int) (Int, *big.Int)
 
-func intarith(uifn func(Int, Int) Int, bifn func(*big.Int, *big.Int, *big.Int) *big.Int) intop {
-	return func(ui Int, bi *big.Int) (Int, *big.Int) {
+func intArithOp(intFn func(Int, Int) Int, bigIntFn func(*big.Int, *big.Int, *big.Int) *big.Int) intOp {
+	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)
-		return uifn(ui, NewInt(r)), bifn(new(big.Int), bi, br)
+		return intFn(integer, NewInt(r)), bigIntFn(new(big.Int), bigInteger, br)
 	}
 }
 
-func intarithraw(uifn func(Int, int64) Int, bifn func(*big.Int, *big.Int, *big.Int) *big.Int) intop {
-	return func(ui Int, bi *big.Int) (Int, *big.Int) {
+func intArithRawOp(intFn func(Int, int64) Int, bigIntFn func(*big.Int, *big.Int, *big.Int) *big.Int) intOp {
+	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)
-		return uifn(ui, r), bifn(new(big.Int), bi, br)
+		return intFn(integer, r), bigIntFn(new(big.Int), bigInteger, br)
 	}
 }

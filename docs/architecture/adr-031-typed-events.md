@@ -30,7 +30,7 @@ __Step-1__: Declare event types for `sdk.Msg`s a module implements using the typ
 // ModuleEvent is the interface that all message events will implement
 type ModuleEvent interface {
     Context()   BaseModuleEvent
-	ABCIEvent() Event
+    ABCIEvent() Event
 }
 
 // BaseModuleEvent contains information about the Module and Action of an event
@@ -67,27 +67,27 @@ func NewSDKEvent(bev abci.Event) (ev SDKEvent, err error) {
     if err != nil {
         return
     }
-	return SDKEvent{sev, BaseModuleEvent{module, action}}, nil
+    return SDKEvent{sev, BaseModuleEvent{module, action}}, nil
 }
 
 // GetEventString take sdk attributes, key and returns value for that key. 
 func GetEventString(attrs []Attribute, key string) (string, error) {
-	for _, attr := range attrs {
-		if attr.Key == key {
-			return attr.Value, nil
-		}
-	}
-	return "", fmt.Errorf("not found")
+    for _, attr := range attrs {
+        if attr.Key == key {
+            return attr.Value, nil
+        }
+    }
+    return "", fmt.Errorf("not found")
 }
 
 // GetEventUint64 take sdk attributes, key and returns uint64 value. 
 // Returns error incase of failure.
 func GetEventUint64(attrs []Attribute, key string) (uint64, error) {
-	sval, err := GetEventString(attrs, key)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseUint(sval, 10, 64)
+    sval, err := GetEventString(attrs, key)
+    if err != nil {
+        return 0, err
+    }
+    return strconv.ParseUint(sval, 10, 64)
 }
 
 // Other type functions for use in the individual module parsers
@@ -107,7 +107,7 @@ type AppModuleBasic interface {
 
 // ParseEvent takes an sdk.SDKEvent and returns the module specific sdk.ModuleEvent
 func (bm BasicManager) ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error) {
-	for m, b := range bm {
+    for m, b := range bm {
         if m == ev.Base.Module {
             return b.ParseEvent(cdc)
         }
@@ -123,11 +123,11 @@ For example, let's take `MsgSubmitProposal` of `gov` module and implement this e
 ```go
 // x/gov/types/events.go
 func NewEventSubmitProposal(from sdk.Address, id govtypes.ProposalID, proposal govtypes.TextProposal) EventSubmitProposal {
-	return EventSubmitProposal{
-		ID:          id,
-		FromAddress: from,
-		Proposal:    proposal,
-	}
+    return EventSubmitProposal{
+        ID:          id,
+        FromAddress: from,
+        Proposal:    proposal,
+    }
 }
 
 type EventSubmitProposal struct {
@@ -144,13 +144,13 @@ func (ev EventSubmitProposal) Context() sdk.BaseModuleEvent {
 }
 
 func (ev EventSubmitProposal) ABCIEvent() sdk.Event {
-	return types.NewEvent("cosmos-sdk-events",
-		sdk.NewAttribute(sdk.AttributeKeyModule, ev.Context().Module),
-		sdk.NewAttribute(sdk.AttributeKeyAction, ev.Context().Action),
-		sdk.NewAttribute("from", ev.FromAddress.String()),
-		sdk.NewAttribute("title", ev.Proposal.Title.String()),
-		sdk.NewAttribute("description", ev.Proposal.Description.String()),
-	)
+    return types.NewEvent("cosmos-sdk-events",
+        sdk.NewAttribute(sdk.AttributeKeyModule, ev.Context().Module),
+        sdk.NewAttribute(sdk.AttributeKeyAction, ev.Context().Action),
+        sdk.NewAttribute("from", ev.FromAddress.String()),
+        sdk.NewAttribute("title", ev.Proposal.Title.String()),
+        sdk.NewAttribute("description", ev.Proposal.Description.String()),
+    )
 }
 ```
 
@@ -164,7 +164,7 @@ func (AppModuleBasic) ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error) {
     if ev.Sev.Type != sdk.EventTypeMessage {
         return nil, fmt.Errorf("unknown message type")
     }
-    
+
     if ev.Base.Module != ModuleName {
         return nil, fmt.Errorf("wrong module: %s not %s", ev.Base.Module, ModuleName)
     }
@@ -175,22 +175,18 @@ func (AppModuleBasic) ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error) {
         if err != nil {
             return nil, err
         }
-
         proposalId, err := sdk.GetEventUint64(ev.Sev.Attributes, "proposal_id")
         if err != nil {
             return nil, err
         }
-
         proposal, err := parseProposalFromEvent(ev.Sev.Attributes, "id")
         if err != nil {
             return nil, err
         }
-
         from, err := sdk.AccAddressFromBech32(addr)
         if err != nil {
             return nil, err
         }
-        
         return NewEventSubmitProposal(from, proposalId, proposal), nil
     case "proposal_deposit":
         // TODO: Implement
@@ -316,44 +312,46 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
         return err
     }
 
-	if err = client.Start(); err != nil {
-		return err
-	}
+    if err = client.Start(); err != nil {
+        return err
+    }
 
-	// Start the pubsub bus
-	bus := pubsub.NewBus()
-	defer bus.Close()
+    // Start the pubsub bus
+    bus := pubsub.NewBus()
+    defer bus.Close()
 
-	// Initialize a new error group
-	eg, ctx := errgroup.WithContext(ctx)
+    // Initialize a new error group
+    eg, ctx := errgroup.WithContext(ctx)
 
-	// Publish chain events to the pubsub bus
-	eg.Go(func() error {
-		return PublishChainTxEvents(ctx, client, bus, simapp.ModuleBasics)
-	})
+    // Publish chain events to the pubsub bus
+    eg.Go(func() error {
+        return PublishChainTxEvents(ctx, client, bus, simapp.ModuleBasics)
+    })
 
-	// Subscribe to the bus events
-	subscriber, err := bus.Subscribe()
-	if err != nil {
-		return err
-	}
+    // Subscribe to the bus events
+    subscriber, err := bus.Subscribe()
+    if err != nil {
+        return err
+    }
 
 	// Handle all the events coming out of the bus
 	eg.Go(func() error {
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-subscriber.Done():
-				return nil
-			case ev := <-subscriber.Events():
-				for _, eh := range ehs {
-					if err = eh(ev); err != nil {
-						return err
-					}
-				}
-			}
-		}
+        var err error
+        for {
+            select {
+            case <-ctx.Done():
+                return nil
+            case <-subscriber.Done():
+                return nil
+            case ev := <-subscriber.Events():
+                for _, eh := range ehs {
+                    if err = eh(ev); err != nil {
+                        break
+                    }
+                }
+            }
+        }
+        return nil
 	})
 
 	return group.Wait()
@@ -362,21 +360,21 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
 // PublishChainTxEvents events using tmclient. Waits on context shutdown signals to exit.
 func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus pubsub.Bus, mb module.BasicManager) (err error) {
     // Subscribe to transaction events
-	txch, err := client.Subscribe(ctx, "txevents", "tm.event='Tx'", 100)
-	if err != nil {
-		return err
+    txch, err := client.Subscribe(ctx, "txevents", "tm.event='Tx'", 100)
+    if err != nil {
+        return err
     }
-    
+
     // Unsubscribe from transaction events on function exit
-	defer func() {
-		err = client.UnsubscribeAll(ctx, "txevents")
-	}()
+    defer func() {
+        err = client.UnsubscribeAll(ctx, "txevents")
+    }()
 
     // Use errgroup to manage concurrency
     g, ctx := errgroup.WithContext(ctx)
-    
+
     // Publish transaction events in a goroutine
-	g.Go(func() error {
+    g.Go(func() error {
         var err error
         for {
             select {
@@ -412,7 +410,7 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 	})
 
     // Exit on error or context cancelation
-	return g.Wait()
+    return g.Wait()
 }
 ```
 

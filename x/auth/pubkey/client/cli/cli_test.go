@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -51,16 +50,42 @@ func (s *IntegrationTestSuite) TestNewMsgChangePubKeyCmd() {
 		respType     proto.Message
 		expectedCode uint32
 	}{
-		"try changing pubkey": { // TODO make sure test work
+		// simd tx pubkey change-pubkey cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv --from validator --keyring-backend=test --chain-id=testing --home=$HOME/.simd
+		"try changing pubkey": {
 			args: []string{
 				"cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
 		},
-		// TODO should add more tests
+		"wrong pubkey set": {
+			args: []string{
+				"cosmospub1adXXXXX",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
+		"no from flag set": {
+			args: []string{
+				"cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv",
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -70,7 +95,6 @@ func (s *IntegrationTestSuite) TestNewMsgChangePubKeyCmd() {
 			clientCtx := val.ClientCtx
 
 			bw, err := clitestutil.ExecTestCLICmd(clientCtx, cli.NewMsgChangePubKeyCmd(), tc.args)
-			fmt.Fprintf(os.Stdout, "bw, err %+v, %+v", bw, err)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

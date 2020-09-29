@@ -18,12 +18,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-type AddressTestSuite struct {
+type addressTestSuite struct {
 	suite.Suite
 }
 
 func TestAddressTestSuite(t *testing.T) {
-	suite.Run(t, new(AddressTestSuite))
+	suite.Run(t, new(addressTestSuite))
 }
 
 var invalidStrs = []string{
@@ -38,14 +38,14 @@ var invalidStrs = []string{
 	types.Bech32PrefixConsPub + "6789",
 }
 
-func (s *AddressTestSuite) testMarshal(original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
+func (s *addressTestSuite) testMarshal(original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
 	s.Require().Nil(err)
 	s.Require().Nil(unmarshal(bz))
 	s.Require().Equal(original, res)
 }
 
-func (s *AddressTestSuite) TestEmptyAddresses() {
+func (s *addressTestSuite) TestEmptyAddresses() {
 	s.T().Parallel()
 	s.Require().Equal((types.AccAddress{}).String(), "")
 	s.Require().Equal((types.ValAddress{}).String(), "")
@@ -64,7 +64,7 @@ func (s *AddressTestSuite) TestEmptyAddresses() {
 	s.Require().Error(err)
 }
 
-func (s *AddressTestSuite) TestRandBech32PubkeyConsistency() {
+func (s *addressTestSuite) TestRandBech32PubkeyConsistency() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
@@ -106,7 +106,7 @@ func (s *AddressTestSuite) TestRandBech32PubkeyConsistency() {
 	}
 }
 
-func (s *AddressTestSuite) TestYAMLMarshalers() {
+func (s *addressTestSuite) TestYAMLMarshalers() {
 	addr := secp256k1.GenPrivKey().PubKey().Address()
 
 	acc := types.AccAddress(addr)
@@ -123,7 +123,7 @@ func (s *AddressTestSuite) TestYAMLMarshalers() {
 	s.Require().Equal(cons.String()+"\n", string(got))
 }
 
-func (s *AddressTestSuite) TestRandBech32AccAddrConsistency() {
+func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
@@ -162,7 +162,7 @@ func (s *AddressTestSuite) TestRandBech32AccAddrConsistency() {
 	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 
-func (s *AddressTestSuite) TestValAddr() {
+func (s *addressTestSuite) TestValAddr() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
@@ -203,7 +203,7 @@ func (s *AddressTestSuite) TestValAddr() {
 	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
 }
 
-func (s *AddressTestSuite) TestConsAddress() {
+func (s *addressTestSuite) TestConsAddress() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
@@ -253,7 +253,7 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func (s *AddressTestSuite) TestConfiguredPrefix() {
+func (s *addressTestSuite) TestConfiguredPrefix() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 	for length := 1; length < 10; length++ {
@@ -309,7 +309,7 @@ func (s *AddressTestSuite) TestConfiguredPrefix() {
 	}
 }
 
-func (s *AddressTestSuite) TestAddressInterface() {
+func (s *addressTestSuite) TestAddressInterface() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 	rand.Read(pub.Key)
@@ -338,7 +338,7 @@ func (s *AddressTestSuite) TestAddressInterface() {
 
 }
 
-func (s *AddressTestSuite) TestVerifyAddressFormat() {
+func (s *addressTestSuite) TestVerifyAddressFormat() {
 	addr0 := make([]byte, 0)
 	addr5 := make([]byte, 5)
 	addr20 := make([]byte, 20)
@@ -354,7 +354,7 @@ func (s *AddressTestSuite) TestVerifyAddressFormat() {
 	s.Require().EqualError(err, "incorrect address length 32")
 }
 
-func (s *AddressTestSuite) TestCustomAddressVerifier() {
+func (s *addressTestSuite) TestCustomAddressVerifier() {
 	// Create a 10 byte address
 	addr := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	accBech := types.AccAddress(addr).String()
@@ -390,7 +390,7 @@ func (s *AddressTestSuite) TestCustomAddressVerifier() {
 	s.Require().Nil(err)
 }
 
-func (s *AddressTestSuite) TestBech32ifyAddressBytes() {
+func (s *addressTestSuite) TestBech32ifyAddressBytes() {
 	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	type args struct {
@@ -423,7 +423,7 @@ func (s *AddressTestSuite) TestBech32ifyAddressBytes() {
 	}
 }
 
-func (s *AddressTestSuite) TestMustBech32ifyAddressBytes() {
+func (s *addressTestSuite) TestMustBech32ifyAddressBytes() {
 	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	type args struct {
@@ -455,7 +455,7 @@ func (s *AddressTestSuite) TestMustBech32ifyAddressBytes() {
 	}
 }
 
-func (s *AddressTestSuite) TestAddressTypesEquals() {
+func (s *addressTestSuite) TestAddressTypesEquals() {
 	addr1 := secp256k1.GenPrivKey().PubKey().Address()
 	accAddr1 := types.AccAddress(addr1)
 	consAddr1 := types.ConsAddress(addr1)
@@ -495,20 +495,20 @@ func (s *AddressTestSuite) TestAddressTypesEquals() {
 	s.Require().Equal(valAddr1.Equals(valAddr2), valAddr2.Equals(valAddr1))
 }
 
-func (s *AddressTestSuite) TestNilAddressTypesEmpty() {
+func (s *addressTestSuite) TestNilAddressTypesEmpty() {
 	s.Require().True(types.AccAddress(nil).Empty())
 	s.Require().True(types.ConsAddress(nil).Empty())
 	s.Require().True(types.ValAddress(nil).Empty())
 }
 
-func (s *AddressTestSuite) TestGetConsAddress() {
+func (s *addressTestSuite) TestGetConsAddress() {
 	pk := secp256k1.GenPrivKey().PubKey()
 	s.Require().NotEqual(types.GetConsAddress(pk), pk.Address())
 	s.Require().True(bytes.Equal(types.GetConsAddress(pk).Bytes(), pk.Address().Bytes()))
 	s.Require().Panics(func() { types.GetConsAddress(crypto.PubKey(nil)) })
 }
 
-func (s *AddressTestSuite) TestGetFromBech32() {
+func (s *addressTestSuite) TestGetFromBech32() {
 	_, err := types.GetFromBech32("", "prefix")
 	s.Require().Error(err)
 	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())

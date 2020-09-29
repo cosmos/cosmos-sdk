@@ -3,8 +3,8 @@ package pubkey_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -31,14 +31,18 @@ func (suite *HandlerTestSuite) SetupTest() {
 func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
-	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
 	addr1 := sdk.AccAddress([]byte("addr1"))
-
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))))
 
-	var pubKey crypto.PubKey // TODO should define pubKey to use for testing
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	suite.app.AccountKeeper.SetAccount(ctx, acc2)
+	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("stake", 10000))))
+
+	privKey := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
+	pubKey := privKey.PubKey()
 
 	testCases := []struct {
 		name      string
@@ -46,11 +50,15 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 		expectErr bool
 	}{
 		{
-			name:      "try changing pubkey",
+			name:      "try changing pubkey without enough fee balance",
 			msg:       types.NewMsgChangePubKey(addr1, pubKey),
+			expectErr: true,
+		},
+		{
+			name:      "try changing pubkey with enough balance",
+			msg:       types.NewMsgChangePubKey(addr2, pubKey),
 			expectErr: false,
 		},
-		// TODO should add more tests
 	}
 
 	for _, tc := range testCases {
@@ -66,6 +74,9 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 
 				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.Address)
 				suite.Require().NotNil(accI)
+				// check remaining balance after successful run
+				balance := suite.app.BankKeeper.GetBalance(ctx, tc.msg.GetAddress(), "stake")
+				suite.Require().Equal(balance.Amount.Int64(), int64(5000))
 			}
 		})
 	}

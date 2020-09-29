@@ -30,10 +30,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	// SubModuleCdc references the global x/ibc/light-clients/solomachine module codec. Note, the codec
+	// SubModuleCdc references the global x/ibc/light-clients/06-solomachine module codec. Note, the codec
 	// should ONLY be used in certain instances of tests and for JSON encoding.
 	//
-	// The actual codec used for serialization should be provided to x/ibc/light-clients/solomachine and
+	// The actual codec used for serialization should be provided to x/ibc/light-clients/06-solomachine and
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )

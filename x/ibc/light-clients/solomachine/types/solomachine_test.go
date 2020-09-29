@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 

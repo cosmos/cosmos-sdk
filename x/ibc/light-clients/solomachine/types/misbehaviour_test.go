@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 

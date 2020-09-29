@@ -16,7 +16,13 @@ Proposed
 
 ## Context
 
-Currently in the SDK, events are not properly organized (event data is defined in the handlers for each message) and are prone to inconsistencies. This makes customizing events difficult. In addition, they are difficult to consume. This proposal focuses on updating the events to use **typed events** in each module such that emiting and subscribing to events will be much more egrnomic. This will make use of the SDK to build event driven processes much easier and enable rapid development of things like relayers and automated transaction bots for SDK based chains. These types of bots enable will enable easy building of new features at exchanges, wallets, explorers, and defi protocols. IBC especially will benefit from this proposal.
+Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
+
+[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes developement, our team has developed a standard method for defining and consuming typed events in SDK modules. We have found that it is extremely useful in building this type of event driven application. 
+
+As the SDK gets used more extensively for apps like `peggy`, other peg zones, IBC, DeFi, etc... there will be an exploding demand for event driven applications to support new features desired by users. We propose upstreaming our findings into the SDK to enable all SDK applications to quickly and easily build event driven apps to aid their core application. Wallets, exchanges, explorers, and defi protocols all stand to benefit from this work.
+
+If this proposal is accepted, users will be able to build event driven SDK apps in go by just writing `EventHandler`s for their specific event types and passing them to `EventEmitters` that are defined in the SDK.
 
 The end of this proposal contains a detailed example of how to consume events after this refactor.
 

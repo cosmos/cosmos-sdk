@@ -84,14 +84,14 @@ func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 	size := 500
 
 	ops := []intOp{
-		intArithOp(Int.Add, (*big.Int).Add),
-		intArithOp(Int.Sub, (*big.Int).Sub),
-		intArithOp(Int.Mul, (*big.Int).Mul),
-		intArithOp(Int.Quo, (*big.Int).Quo),
-		intArithRawOp(Int.AddRaw, (*big.Int).Add),
-		intArithRawOp(Int.SubRaw, (*big.Int).Sub),
-		intArithRawOp(Int.MulRaw, (*big.Int).Mul),
-		intArithRawOp(Int.QuoRaw, (*big.Int).Quo),
+		applyWithRand(Int.Add, (*big.Int).Add),
+		applyWithRand(Int.Sub, (*big.Int).Sub),
+		applyWithRand(Int.Mul, (*big.Int).Mul),
+		applyWithRand(Int.Quo, (*big.Int).Quo),
+		applyRawWithRand(Int.AddRaw, (*big.Int).Add),
+		applyRawWithRand(Int.SubRaw, (*big.Int).Sub),
+		applyRawWithRand(Int.MulRaw, (*big.Int).Mul),
+		applyRawWithRand(Int.QuoRaw, (*big.Int).Quo),
 	}
 
 	for i := 0; i < 100; i++ {
@@ -120,7 +120,7 @@ type (
 	bigIntFunc func(*big.Int, *big.Int, *big.Int) *big.Int
 )
 
-func intArithOp(intFn func(Int, Int) Int, bigIntFn bigIntFunc) intOp {
+func applyWithRand(intFn func(Int, Int) Int, bigIntFn bigIntFunc) intOp {
 	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)
@@ -128,7 +128,7 @@ func intArithOp(intFn func(Int, Int) Int, bigIntFn bigIntFunc) intOp {
 	}
 }
 
-func intArithRawOp(intFn func(Int, int64) Int, bigIntFn bigIntFunc) intOp {
+func applyRawWithRand(intFn func(Int, int64) Int, bigIntFn bigIntFunc) intOp {
 	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)

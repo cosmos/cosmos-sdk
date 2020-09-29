@@ -3,63 +3,50 @@ package types_test
 import (
 	"time"
 
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	testCases := []struct {
 		msg            string
-		consensusState ibctmtypes.ConsensusState
+		consensusState *types.ConsensusState
 		expectPass     bool
 	}{
 		{"success",
-			ibctmtypes.ConsensusState{
-				Timestamp:    suite.now,
-				Height:       height,
-				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
-				ValidatorSet: suite.valSet,
+			&types.ConsensusState{
+				Timestamp:          suite.now,
+				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+				NextValidatorsHash: suite.valsHash,
 			},
 			true},
 		{"root is nil",
-			ibctmtypes.ConsensusState{
-				Timestamp:    suite.now,
-				Height:       height,
-				Root:         nil,
-				ValidatorSet: suite.valSet,
+			&types.ConsensusState{
+				Timestamp:          suite.now,
+				Root:               commitmenttypes.MerkleRoot{},
+				NextValidatorsHash: suite.valsHash,
 			},
 			false},
 		{"root is empty",
-			ibctmtypes.ConsensusState{
-				Timestamp:    suite.now,
-				Height:       height,
-				Root:         commitmenttypes.MerkleRoot{},
-				ValidatorSet: suite.valSet,
+			&types.ConsensusState{
+				Timestamp:          suite.now,
+				Root:               commitmenttypes.MerkleRoot{},
+				NextValidatorsHash: suite.valsHash,
 			},
 			false},
-		{"valset is nil",
-			ibctmtypes.ConsensusState{
-				Timestamp:    suite.now,
-				Height:       height,
-				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
-				ValidatorSet: nil,
+		{"nextvalshash is invalid",
+			&types.ConsensusState{
+				Timestamp:          suite.now,
+				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+				NextValidatorsHash: []byte("hi"),
 			},
 			false},
-		{"height is 0",
-			ibctmtypes.ConsensusState{
-				Timestamp:    suite.now,
-				Height:       0,
-				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
-				ValidatorSet: suite.valSet,
-			},
-			false},
+
 		{"timestamp is zero",
-			ibctmtypes.ConsensusState{
-				Timestamp:    time.Time{},
-				Height:       height,
-				Root:         commitmenttypes.NewMerkleRoot([]byte("app_hash")),
-				ValidatorSet: suite.valSet,
+			&types.ConsensusState{
+				Timestamp:          time.Time{},
+				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
+				NextValidatorsHash: suite.valsHash,
 			},
 			false},
 	}
@@ -67,7 +54,7 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 	for i, tc := range testCases {
 		tc := tc
 
-		suite.Require().Equal(tc.consensusState.ClientType(), clientexported.Tendermint)
+		suite.Require().Equal(tc.consensusState.ClientType(), types.Tendermint)
 		suite.Require().Equal(tc.consensusState.GetRoot(), tc.consensusState.Root)
 
 		if tc.expectPass {

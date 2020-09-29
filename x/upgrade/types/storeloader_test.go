@@ -7,17 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -68,17 +66,15 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	// set a temporary home dir
-	homeDir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
-	// TODO cleanup viper
-	viper.Set(flags.FlagHome, homeDir)
-
+	homeDir := t.TempDir()
 	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 	upgradeInfo := &store.UpgradeInfo{
 		Name: "test", Height: 0,
 	}
+
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
+
 	err = ioutil.WriteFile(upgradeInfoFilePath, data, 0644)
 	require.NoError(t, err)
 
@@ -132,7 +128,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: 2}})
+			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 

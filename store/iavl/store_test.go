@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
@@ -72,7 +73,7 @@ func TestGetImmutable(t *testing.T) {
 
 	res := newStore.Query(abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
 	require.Equal(t, res.Value, []byte("adios"))
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	require.Panics(t, func() { newStore.Set(nil, nil) })
 	require.Panics(t, func() { newStore.Delete(nil) })
@@ -131,6 +132,10 @@ func TestIAVLStoreNoNilSet(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
+
+	require.Panics(t, func() { iavlStore.Set(nil, []byte("value")) }, "setting a nil key should panic")
+	require.Panics(t, func() { iavlStore.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
+
 	require.Panics(t, func() { iavlStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
@@ -404,18 +409,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := []types.KVPair{}
-	KVs1 := []types.KVPair{
-		{Key: k1, Value: v1},
-		{Key: k2, Value: v2},
+	KVs0 := kv.Pairs{}
+	KVs1 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v1},
+			{Key: k2, Value: v2},
+		},
 	}
-	KVs2 := []types.KVPair{
-		{Key: k1, Value: v3},
-		{Key: k2, Value: v2},
+	KVs2 := kv.Pairs{
+		Pairs: []kv.Pair{
+			{Key: k1, Value: v3},
+			{Key: k2, Value: v2},
+		},
 	}
-	valExpSubEmpty := cdc.MustMarshalBinaryBare(KVs0)
-	valExpSub1 := cdc.MustMarshalBinaryBare(KVs1)
-	valExpSub2 := cdc.MustMarshalBinaryBare(KVs2)
+
+	valExpSubEmpty, err := KVs0.Marshal()
+	require.NoError(t, err)
+
+	valExpSub1, err := KVs1.Marshal()
+	require.NoError(t, err)
+
+	valExpSub2, err := KVs2.Marshal()
+	require.NoError(t, err)
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
@@ -509,5 +524,56 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 		for j := 0; j < treeSize; j++ {
 			iter.Next()
 		}
+	}
+}
+
+func TestSetInitialVersion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		storeFn  func(db *dbm.MemDB) *Store
+		expPanic bool
+	}{
+		{
+			"works with a mutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+
+				return store
+			}, false,
+		},
+		{
+			"throws error on immutable tree",
+			func(db *dbm.MemDB) *Store {
+				tree, err := iavl.NewMutableTree(db, cacheSize)
+				require.NoError(t, err)
+				store := UnsafeNewStore(tree)
+				_, version, err := store.tree.SaveVersion()
+				require.NoError(t, err)
+				require.Equal(t, int64(1), version)
+				store, err = store.GetImmutable(1)
+				require.NoError(t, err)
+
+				return store
+			}, true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			db := dbm.NewMemDB()
+			store := tc.storeFn(db)
+
+			if tc.expPanic {
+				require.Panics(t, func() { store.SetInitialVersion(5) })
+			} else {
+				store.SetInitialVersion(5)
+				cid := store.Commit()
+				require.Equal(t, int64(5), cid.GetVersion())
+			}
+		})
 	}
 }

@@ -41,7 +41,7 @@ We will define a type named `Mapping`:
 ```go
 type Mapping struct {
   storeKey sdk.StoreKey
-  cdc      *codec.Codec
+  cdc      *codec.LegacyAmino
   prefix   []byte
 }
 ```

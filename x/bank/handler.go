@@ -1,7 +1,7 @@
 package bank
 
 import (
-	"github.com/armon/go-metrics"
+	metrics "github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,15 +30,24 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.Result, error) {
-	if !k.GetSendEnabled(ctx) {
-		return nil, types.ErrSendDisabled
+	if err := k.SendEnabledCoins(ctx, msg.Amount...); err != nil {
+		return nil, err
 	}
 
-	if k.BlockedAddr(msg.ToAddress) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, err
 	}
 
-	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	if k.BlockedAddr(to) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	err = k.SendCoins(ctx, from, to, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -66,12 +75,18 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 // Handle MsgMultiSend.
 func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSend) (*sdk.Result, error) {
 	// NOTE: totalIn == totalOut should already have been checked
-	if !k.GetSendEnabled(ctx) {
-		return nil, types.ErrSendDisabled
+	for _, in := range msg.Inputs {
+		if err := k.SendEnabledCoins(ctx, in.Coins...); err != nil {
+			return nil, err
+		}
 	}
 
 	for _, out := range msg.Outputs {
-		if k.BlockedAddr(out.Address) {
+		accAddr, err := sdk.AccAddressFromBech32(out.Address)
+		if err != nil {
+			panic(err)
+		}
+		if k.BlockedAddr(accAddr) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}

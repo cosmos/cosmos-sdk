@@ -1,5 +1,5 @@
 <!--
-order: 10
+order: 9
 -->
 
 # Object-Capability Model
@@ -39,7 +39,7 @@ foundation of an object capability system.
 >     to another object only through a preexisting chain of references.
 >     In short, "Only connectivity begets connectivity."
 
-For an introduction to object-capabilities, see [this article](https://en.wikipedia.org/wiki/Object-capability_model).
+For an introduction to object-capabilities, see this [Wikipedia article](https://en.wikipedia.org/wiki/Object-capability_model).
 
 ## Ocaps in practice
 
@@ -50,11 +50,11 @@ principle:
 
 ```go
 type AppAccount struct {...}
-var account := &AppAccount{
+account := &AppAccount{
     Address: pub.Address(),
     Coins: sdk.Coins{sdk.NewInt64Coin("ATM", 100)},
 }
-var sumValue := externalModule.ComputeSumValue(account)
+sumValue := externalModule.ComputeSumValue(account)
 ```
 
 The method `ComputeSumValue` implies a pure function, yet the implied
@@ -62,7 +62,7 @@ capability of accepting a pointer value is the capability to modify that
 value. The preferred method signature should take a copy instead.
 
 ```go
-var sumValue := externalModule.ComputeSumValue(*account)
+sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
@@ -70,6 +70,6 @@ gaia app.
 
 +++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
 
-## Next
+## Next {hide}
 
-Learn about [building modules](../building-modules/intro.md) {hide}
+Learn about the [`runTx` middleware](./runtx_middleware.md) {hide}

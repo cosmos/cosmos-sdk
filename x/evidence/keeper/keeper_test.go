@@ -6,6 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,11 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -43,8 +44,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 
-	var pubkey ed25519.PubKeyEd25519
-	copy(pubkey[:], pkBytes)
+	pubkey := &ed25519.PubKey{Key: pkBytes}
 
 	return pubkey
 }
@@ -73,6 +73,8 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	app     *simapp.SimApp
+
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -89,14 +91,18 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	app.EvidenceKeeper = *evidenceKeeper
 
-	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
-	suite.querier = keeper.NewQuerier(*evidenceKeeper)
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
+	suite.querier = keeper.NewQuerier(*evidenceKeeper, app.LegacyAmino())
 	suite.app = app
 
 	for i, addr := range valAddresses {
 		addr := sdk.AccAddress(addr)
 		app.AccountKeeper.SetAccount(suite.ctx, authtypes.NewBaseAccount(addr, pubkeys[i], uint64(i), 0))
 	}
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -109,7 +115,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 			Height:           11,
 			Power:            100,
 			Time:             time.Now().UTC(),
-			ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()),
+			ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 		}
 
 		suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, evidence[i]))
@@ -125,7 +131,7 @@ func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	suite.app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	for _, addr := range valAddresses {
-		_, err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+		err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
 		suite.NoError(err)
 	}
 }
@@ -138,7 +144,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()),
+		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
 	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
@@ -156,7 +162,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()),
+		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
 	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
@@ -174,7 +180,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 		Height:           0,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()),
+		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
 	suite.Error(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))

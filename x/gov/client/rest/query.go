@@ -69,7 +69,7 @@ func queryProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryProposalParams(proposalID)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -101,7 +101,7 @@ func queryDepositsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryProposalParams(proposalID)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -112,7 +112,7 @@ func queryDepositsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var proposal types.Proposal
-		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &proposal)) {
+		if rest.CheckInternalServerError(w, clientCtx.LegacyAmino.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 
@@ -192,7 +192,7 @@ func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryDepositParams(proposalID, depositorAddr)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -203,7 +203,7 @@ func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var deposit types.Deposit
-		if rest.CheckBadRequestError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &deposit)) {
+		if rest.CheckBadRequestError(w, clientCtx.LegacyAmino.UnmarshalJSON(res, &deposit)) {
 			return
 		}
 
@@ -211,7 +211,7 @@ func queryDepositHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// which case the deposit would be removed from state and should be queried
 		// for directly via a txs query.
 		if deposit.Empty() {
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(types.NewQueryProposalParams(proposalID))
+			bz, err := clientCtx.LegacyAmino.MarshalJSON(types.NewQueryProposalParams(proposalID))
 			if rest.CheckBadRequestError(w, err) {
 				return
 			}
@@ -269,7 +269,7 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryVoteParams(proposalID, voterAddr)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -280,7 +280,7 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var vote types.Vote
-		if rest.CheckBadRequestError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &vote)) {
+		if rest.CheckBadRequestError(w, clientCtx.LegacyAmino.UnmarshalJSON(res, &vote)) {
 			return
 		}
 
@@ -288,7 +288,7 @@ func queryVoteHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		// which case the vote would be removed from state and should be queried for
 		// directly via a txs query.
 		if vote.Empty() {
-			bz, err := clientCtx.JSONMarshaler.MarshalJSON(types.NewQueryProposalParams(proposalID))
+			bz, err := clientCtx.LegacyAmino.MarshalJSON(types.NewQueryProposalParams(proposalID))
 			if rest.CheckBadRequestError(w, err) {
 				return
 			}
@@ -339,7 +339,7 @@ func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -350,7 +350,7 @@ func queryVotesOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var proposal types.Proposal
-		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &proposal)) {
+		if rest.CheckInternalServerError(w, clientCtx.LegacyAmino.UnmarshalJSON(res, &proposal)) {
 			return
 		}
 
@@ -412,7 +412,7 @@ func queryProposalsWithParameterFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryProposalsParams(page, limit, proposalStatus, voterAddr, depositorAddr)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -452,7 +452,7 @@ func queryTallyOnProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		params := types.NewQueryProposalParams(proposalID)
 
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

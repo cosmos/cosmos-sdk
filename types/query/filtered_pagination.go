@@ -16,19 +16,19 @@ import (
 // to the client.
 func FilteredPaginate(
 	prefixStore types.KVStore,
-	req *PageRequest,
+	pageRequest *PageRequest,
 	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
 
 	// if the PageRequest is nil, use default PageRequest
-	if req == nil {
-		req = &PageRequest{}
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
 	}
 
-	offset := req.Offset
-	key := req.Key
-	limit := req.Limit
-	countTotal := req.CountTotal
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
 
 	if offset > 0 && key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -85,6 +85,7 @@ func FilteredPaginate(
 		if iterator.Error() != nil {
 			return nil, iterator.Error()
 		}
+
 		accumulate := numHits >= offset && numHits < end
 		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
 		if err != nil {
@@ -95,7 +96,7 @@ func FilteredPaginate(
 			numHits++
 		}
 
-		if numHits == end {
+		if numHits == end+1 {
 			nextKey = iterator.Key()
 
 			if !countTotal {

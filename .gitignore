@@ -12,14 +12,14 @@
 # Build
 vendor
 build
-tools/bin/*
-examples/build/*
 docs/_build
 docs/tutorial
 docs/node_modules
+docs/modules
 dist
 tools-stamp
 proto-tools-stamp
+artifacts
 
 # Data - ideally these don't exist
 baseapp/data/*

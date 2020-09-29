@@ -10,9 +10,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -24,7 +24,7 @@ func (k Keeper) SendPacket(
 	packet exported.PacketI,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
-		return err
+		return sdkerrors.Wrap(err, "packet failed basic validation")
 	}
 
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -40,34 +40,26 @@ func (k Keeper) SendPacket(
 	}
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, channelCap, host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())) {
-		return sdkerrors.Wrap(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel")
+		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
-	}
-
-	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return sdkerrors.Wrap(
-			connectiontypes.ErrInvalidConnectionState,
-			"connection is UNINITIALIZED",
-		)
 	}
 
 	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
@@ -77,10 +69,11 @@ func (k Keeper) SendPacket(
 
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
-	if packet.GetTimeoutHeight() != 0 && latestHeight >= packet.GetTimeoutHeight() {
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && latestHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"receiving chain block height >= packet timeout height (%d >= %d)", latestHeight, packet.GetTimeoutHeight(),
+			"receiving chain block height >= packet timeout height (%s >= %s)", latestHeight, timeoutHeight,
 		)
 	}
 
@@ -121,13 +114,18 @@ func (k Keeper) SendPacket(
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -141,7 +139,7 @@ func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -159,17 +157,17 @@ func (k Keeper) RecvPacket(
 	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if packet.GetSourcePort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID,
+			"packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
+	if packet.GetSourceChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelID,
+			"packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetSourceChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -186,10 +184,12 @@ func (k Keeper) RecvPacket(
 	}
 
 	// check if packet timeouted by comparing it with the latest height of the chain
-	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && selfHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"block height >= packet timeout height (%d >= %d)", uint64(ctx.BlockHeight()), packet.GetTimeoutHeight(),
+			"block height >= packet timeout height (%s >= %s)", selfHeight, timeoutHeight,
 		)
 	}
 
@@ -212,6 +212,24 @@ func (k Keeper) RecvPacket(
 		}
 	}
 
+	// check if the packet is being received in order
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceReceiveNotFound,
+				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+			)
+		}
+
+		if packet.GetSequence() != nextSequenceRecv {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
+			)
+		}
+	}
+
 	if err := k.connectionKeeper.VerifyPacketCommitment(
 		ctx, connectionEnd, proofHeight, proof,
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
@@ -220,15 +238,15 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the PacketExecuted function
+	// NOTE: the remaining code is located in the ReceiveExecuted function
 	return nil
 }
 
-// PacketExecuted writes the packet execution acknowledgement to the state,
+// ReceiveExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) PacketExecuted(
+func (k Keeper) ReceiveExecuted(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
@@ -249,9 +267,9 @@ func (k Keeper) PacketExecuted(
 
 	capName := host.ChannelCapabilityPath(packet.GetDestPort(), packet.GetDestChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
@@ -274,15 +292,10 @@ func (k Keeper) PacketExecuted(
 			)
 		}
 
-		if packet.GetSequence() != nextSequenceRecv {
-			return sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
-			)
-		}
-
 		nextSequenceRecv++
 
+		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
@@ -295,13 +308,18 @@ func (k Keeper) PacketExecuted(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
 			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 
@@ -319,13 +337,13 @@ func (k Keeper) AcknowledgePacket(
 	packet exported.PacketI,
 	acknowledgement []byte,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
@@ -340,17 +358,17 @@ func (k Keeper) AcknowledgePacket(
 	// so the capability authentication can be omitted here
 
 	// packet must have been sent to the channel's counterparty
-	if packet.GetDestPort() != channel.Counterparty.PortID {
+	if packet.GetDestPort() != channel.Counterparty.PortId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortId,
 		)
 	}
 
-	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
+	if packet.GetDestChannel() != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidPacket,
-			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -370,22 +388,23 @@ func (k Keeper) AcknowledgePacket(
 
 	// verify we sent the packet and haven't cleared it out yet
 	if !bytes.Equal(commitment, types.CommitPacket(packet)) {
-		return sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+		return sdkerrors.Wrapf(types.ErrInvalidPacket, "commitment bytes are not equal: got (%v), expected (%v)", types.CommitPacket(packet), commitment)
 	}
 
 	if err := k.connectionKeeper.VerifyPacketAcknowledgement(
 		ctx, connectionEnd, proofHeight, proof, packet.GetDestPort(), packet.GetDestChannel(),
 		packet.GetSequence(), acknowledgement,
 	); err != nil {
-		return sdkerrors.Wrap(err, "invalid acknowledgement on counterparty chain")
+		return sdkerrors.Wrap(err, "packet acknowledgement verification failed")
 	}
 
+	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
@@ -395,8 +414,6 @@ func (k Keeper) AcknowledgePacket(
 				"packet sequence ≠ next ack sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceAck,
 			)
 		}
-
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck+1)
 	}
 
 	// NOTE: the remaining code is located in the AcknowledgementExecuted function
@@ -412,24 +429,40 @@ func (k Keeper) AcknowledgementExecuted(
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
-	// sanity check
-	_, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel(),
+			"port ID (%s) channel ID (%s)", packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
 	capName := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, capName) {
-		return sdkerrors.Wrap(
+		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelCapability,
-			"channel capability failed authentication",
+			"channel capability failed authentication for capability name %s", capName,
 		)
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	// increment NextSequenceAck
+	if channel.Ordering == types.ORDERED {
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+		if !found {
+			return sdkerrors.Wrapf(
+				types.ErrSequenceAckNotFound,
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
+			)
+		}
+
+		nextSequenceAck++
+
+		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// Since this is the original sending chain, our channelEnd is packet's source port and channel
+		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
+	}
 
 	// log that a packet has been acknowledged
 	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
@@ -438,13 +471,18 @@ func (k Keeper) AcknowledgementExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
 			sdk.NewAttribute(types.AttributeKeySrcChannel, packet.GetSourceChannel()),
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
+			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	})
 

@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -37,16 +36,6 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			route  string
 		)
 
-		// TODO: Remove once client-side Protobuf migration has been completed.
-		// ref: https://github.com/cosmos/cosmos-sdk/issues/5864
-		var marshaler codec.JSONMarshaler
-
-		if ctx.JSONMarshaler != nil {
-			marshaler = ctx.JSONMarshaler
-		} else {
-			marshaler = ctx.Codec
-		}
-
 		denom := r.FormValue("denom")
 		if denom == "" {
 			params = types.NewQueryAllBalancesRequest(addr, nil)
@@ -56,7 +45,7 @@ func QueryBalancesRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			route = fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryBalance)
 		}
 
-		bz, err := marshaler.MarshalJSON(params)
+		bz, err := ctx.LegacyAmino.MarshalJSON(params)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -85,7 +74,7 @@ func totalSupplyHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryTotalSupplyParams(page, limit)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return
@@ -112,7 +101,7 @@ func supplyOfHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQuerySupplyOfParams(denom)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 
 		if rest.CheckBadRequestError(w, err) {
 			return

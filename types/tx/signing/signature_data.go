@@ -5,7 +5,7 @@ import (
 )
 
 // SignatureData represents either a *SingleSignatureData or *MultiSignatureData.
-// It is a convenience type that is easier to use in buiness logic than the encoded
+// It is a convenience type that is easier to use in business logic than the encoded
 // protobuf ModeInfo's and raw signatures.
 type SignatureData interface {
 	isSignatureData()

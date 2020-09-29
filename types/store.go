@@ -1,9 +1,8 @@
 package types
 
 import (
-	tmkv "github.com/tendermint/tendermint/libs/kv"
-
 	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type (
@@ -25,7 +24,7 @@ type (
 
 // StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
 // simulation.
-type StoreDecoderRegistry map[string]func(kvA, kvB tmkv.Pair) string
+type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string
 
 // Iterator over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
@@ -46,12 +45,12 @@ func KVStorePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint
 // KVStoreReversePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in descending order.
 func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
-	return types.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
+	return types.KVStoreReversePrefixIteratorPaginated(kvs, prefix, page, limit)
 }
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []tmkv.Pair) {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 

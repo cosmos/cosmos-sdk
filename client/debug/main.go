@@ -8,24 +8,23 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func Cmd(cdc *codec.Codec) *cobra.Command {
+func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "debug",
 		Short: "Tool for helping with debugging your application",
 		RunE:  client.ValidateCmd,
 	}
 
-	cmd.AddCommand(PubkeyCmd(cdc))
+	cmd.AddCommand(PubkeyCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
 
@@ -36,18 +35,18 @@ func Cmd(cdc *codec.Codec) *cobra.Command {
 // to decode the pubkey string from hex, base64, and finally bech32. If all
 // encodings fail, an error is returned.
 func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
-	var pubKey ed25519.PubKeyEd25519
-
 	bz, err := hex.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey[:], bz)
-		return pubKey, nil
+		if len(bz) == ed25519.PubKeySize {
+			return &ed25519.PubKey{Key: bz}, nil
+		}
 	}
 
 	bz, err = base64.StdEncoding.DecodeString(pkstr)
 	if err == nil {
-		copy(pubKey[:], bz)
-		return pubKey, nil
+		if len(bz) == ed25519.PubKeySize {
+			return &ed25519.PubKey{Key: bz}, nil
+		}
 	}
 
 	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pkstr)
@@ -65,10 +64,10 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 		return pk, nil
 	}
 
-	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32", pubKey)
+	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32 of correct size", pkstr)
 }
 
-func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
+func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a ED25519 pubkey from hex, base64, or bech32",
@@ -77,20 +76,22 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
 $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.ClientName, version.ClientName),
+			`, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
 			pk, err := getPubKeyFromString(args[0])
 			if err != nil {
 				return err
 			}
 
-			edPK, ok := pk.(ed25519.PubKeyEd25519)
+			edPK, ok := pk.(*ed25519.PubKey)
 			if !ok {
-				return fmt.Errorf("invalid pubkey type; expected ED25519")
+				return errors.Wrapf(errors.ErrInvalidType, "invalid pubkey type; expected ED25519")
 			}
 
-			pubKeyJSONBytes, err := cdc.MarshalJSON(edPK)
+			pubKeyJSONBytes, err := clientCtx.LegacyAmino.MarshalJSON(edPK)
 			if err != nil {
 				return err
 			}
@@ -108,7 +109,7 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			}
 
 			cmd.Println("Address:", edPK.Address())
-			cmd.Printf("Hex: %X\n", edPK[:])
+			cmd.Printf("Hex: %X\n", edPK.Key)
 			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
 			cmd.Println("Bech32 Acc:", accPub)
 			cmd.Println("Bech32 Validator Operator:", valPub)
@@ -127,7 +128,7 @@ func AddrCmd() *cobra.Command {
 			
 Example:
 $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.ClientName),
+			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -171,7 +172,7 @@ func RawBytesCmd() *cobra.Command {
 			
 Example:
 $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
-			`, version.ClientName),
+			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stringBytes := args[0]

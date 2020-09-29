@@ -6,16 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestExportGenesisFileWithTime(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tests.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
 
-	fname := filepath.Join(dir, "genesis.json")
-	require.NoError(t, ExportGenesisFileWithTime(fname, "test", nil, json.RawMessage(""), time.Now()))
+	fname := filepath.Join(t.TempDir(), "genesis.json")
+
+	require.NoError(t, ExportGenesisFileWithTime(fname, "test", nil, json.RawMessage(`{"account_owner": "Bob"}`), time.Now()))
 }

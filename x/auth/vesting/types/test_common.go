@@ -2,14 +2,16 @@ package types
 
 import (
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewTestMsg generates a test message
-func NewTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
-	return sdk.NewTestMsg(addrs...)
+func NewTestMsg(addrs ...sdk.AccAddress) *testdata.TestMsg {
+	return testdata.NewTestMsg(addrs...)
 }
 
 // NewTestCoins coins to more than cover the fee

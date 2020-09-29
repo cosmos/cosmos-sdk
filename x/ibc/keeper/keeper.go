@@ -8,32 +8,37 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	portkeeper "github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
+
+var _ types.QueryServer = (*Keeper)(nil)
 
 // Keeper defines each ICS keeper for IBC
 type Keeper struct {
-	aminoCdc *codec.Codec
-	cdc      codec.Marshaler
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
+	cdc codec.BinaryMarshaler
 
 	ClientKeeper     clientkeeper.Keeper
 	ConnectionKeeper connectionkeeper.Keeper
 	ChannelKeeper    channelkeeper.Keeper
-	PortKeeper       port.Keeper
-	Router           *port.Router
+	PortKeeper       portkeeper.Keeper
+	Router           *porttypes.Router
 }
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	aminoCdc *codec.Codec, cdc codec.Marshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey, stakingKeeper clienttypes.StakingKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) *Keeper {
-	clientKeeper := clientkeeper.NewKeeper(aminoCdc, key, stakingKeeper)
-	connectionKeeper := connectionkeeper.NewKeeper(aminoCdc, cdc, key, clientKeeper)
-	portKeeper := port.NewKeeper(scopedKeeper)
+	clientKeeper := clientkeeper.NewKeeper(cdc, key, stakingKeeper)
+	connectionKeeper := connectionkeeper.NewKeeper(cdc, key, clientKeeper)
+	portKeeper := portkeeper.NewKeeper(scopedKeeper)
 	channelKeeper := channelkeeper.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper, scopedKeeper)
 
 	return &Keeper{
-		aminoCdc:         aminoCdc,
 		cdc:              cdc,
 		ClientKeeper:     clientKeeper,
 		ConnectionKeeper: connectionKeeper,
@@ -42,14 +47,14 @@ func NewKeeper(
 	}
 }
 
-// Codecs returns the IBC module codec.
-func (k Keeper) Codecs() (codec.Marshaler, *codec.Codec) {
-	return k.cdc, k.aminoCdc
+// Codec returns the IBC module codec.
+func (k Keeper) Codec() codec.BinaryMarshaler {
+	return k.cdc
 }
 
 // SetRouter sets the Router in IBC Keeper and seals it. The method panics if
 // there is an existing router that's already sealed.
-func (k *Keeper) SetRouter(rtr *port.Router) {
+func (k *Keeper) SetRouter(rtr *porttypes.Router) {
 	if k.Router != nil && k.Router.Sealed() {
 		panic("cannot reset a sealed router")
 	}

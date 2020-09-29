@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -12,16 +13,17 @@ const (
 )
 
 // NewMsgTransfer creates a new MsgTransfer instance
+//nolint:interfacer
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
-	amount sdk.Coins, sender sdk.AccAddress, receiver string,
-	timeoutHeight, timeoutTimestamp uint64,
+	token sdk.Coin, sender sdk.AccAddress, receiver string,
+	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 ) *MsgTransfer {
 	return &MsgTransfer{
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
-		Amount:           amount,
-		Sender:           sender,
+		Token:            token,
+		Sender:           sender.String(),
 		Receiver:         receiver,
 		TimeoutHeight:    timeoutHeight,
 		TimeoutTimestamp: timeoutTimestamp,
@@ -39,7 +41,7 @@ func (MsgTransfer) Type() string {
 }
 
 // ValidateBasic performs a basic check of the MsgTransfer fields.
-// NOTE: timeout height and timestamp values can be 0 to disable the timeout.
+// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
@@ -47,27 +49,31 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
 		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
-	if !msg.Amount.IsAllPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Amount.String())
+	if !msg.Token.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Token.String())
 	}
-	if !msg.Amount.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	if !msg.Token.IsPositive() {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
-	if msg.Sender.Empty() {
+	if msg.Sender == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if msg.Receiver == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
-	return nil
+	return ValidateIBCDenom(msg.Token.Denom)
 }
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgTransfer) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Sender}
+	valAddr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr}
 }

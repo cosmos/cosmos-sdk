@@ -4,21 +4,32 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-// GenesisState is currently only used to ensure that the InitGenesis gets run
-// by the module manager
-type GenesisState struct {
-	PortID string `json:"port_id" yaml:"port_id"`
+// NewGenesisState creates a new ibc-transfer GenesisState instance.
+func NewGenesisState(portID string, denomTraces Traces, params Params) *GenesisState {
+	return &GenesisState{
+		PortId:      portID,
+		DenomTraces: denomTraces,
+		Params:      params,
+	}
 }
 
 // DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
-		PortID: PortID,
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
+		PortId:      PortID,
+		DenomTraces: Traces{},
+		Params:      DefaultParams(),
 	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	return host.PortIdentifierValidator(gs.PortID)
+	if err := host.PortIdentifierValidator(gs.PortId); err != nil {
+		return err
+	}
+	if err := gs.DenomTraces.Validate(); err != nil {
+		return err
+	}
+	return gs.Params.Validate()
 }

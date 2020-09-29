@@ -2,6 +2,7 @@ package gov
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,26 +12,26 @@ import (
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := keeper.Logger(ctx)
 
 	// delete inactive proposal from store and its deposits
 	keeper.IterateInactiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal types.Proposal) bool {
-		keeper.DeleteProposal(ctx, proposal.ProposalID)
-		keeper.DeleteDeposits(ctx, proposal.ProposalID)
+		keeper.DeleteProposal(ctx, proposal.ProposalId)
+		keeper.DeleteDeposits(ctx, proposal.ProposalId)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeInactiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, types.AttributeValueProposalDropped),
 			),
 		)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
-				proposal.ProposalID,
+				proposal.ProposalId,
 				proposal.GetTitle(),
 				keeper.GetDepositParams(ctx).MinDeposit,
 				proposal.TotalDeposit,
@@ -46,9 +47,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
 		if burnDeposits {
-			keeper.DeleteDeposits(ctx, proposal.ProposalID)
+			keeper.DeleteDeposits(ctx, proposal.ProposalId)
 		} else {
-			keeper.RefundDeposits(ctx, proposal.ProposalID)
+			keeper.RefundDeposits(ctx, proposal.ProposalId)
 		}
 
 		if passes {
@@ -86,19 +87,19 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		proposal.FinalTallyResult = tallyResults
 
 		keeper.SetProposal(ctx, proposal)
-		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
+		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 
 		logger.Info(
 			fmt.Sprintf(
 				"proposal %d (%s) tallied; result: %s",
-				proposal.ProposalID, proposal.GetTitle(), logMsg,
+				proposal.ProposalId, proposal.GetTitle(), logMsg,
 			),
 		)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeActiveProposal,
-				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalID)),
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.ProposalId)),
 				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
 			),
 		)

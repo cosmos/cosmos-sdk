@@ -19,10 +19,10 @@ For the general specification please refer to the [Interchain Standards](https:/
 
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
-3. **[State Transitions](02_state_transitions.md)**
-4. **[Messages](03_messages.md)**
-5. **[Callbacks](06_callbacks.md)**
-6. **[Events](07_events.md)**
+3. **[State Transitions](03_state_transitions.md)**
+4. **[Messages](04_messages.md)**
+5. **[Callbacks](05_callbacks.md)**
+6. **[Events](06_events.md)**
 
 ## Implementation Details
 
@@ -40,7 +40,7 @@ in the SDK's `x/ibc` module:
 * [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/x/ibc/03-connection)
 * [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/x/ibc/04-channel)
 * [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/x/ibc/05-port)
-* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/06-solomachine`](https://github.com/cosmos/x/ibc/06-solomachine)
+* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/light-clients/solomachine`](https://github.com/cosmos/x/ibc/solomachine)
 * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/07-tendermint`](https://github.com/cosmos/x/ibc/07-tendermint)
 * [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  Implemented in [`x/ibc/09-localhost`](https://github.com/cosmos/x/ibc/09-localhost)
 * [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
@@ -55,13 +55,14 @@ which call each ICS submodule's handlers (i.e `x/ibc/{XX-ICS}/handler.go`).
 
 The following ADR provide the design and architecture decision of IBC-related components.
 
-* [ADR 10 - Modular AnteHandler](../../../docs/architecture/adr-010-modular-antehandler.md): Introduces a decorator pattern for the [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler), making it modular.  
-* [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md): replaces the ICS26 routing module with [`AnteHandler`](../../../docs/basics/gas-fees.md#antehandler) logic within IBC. This is implemented using the `AnteDecorators` defined in [ADR10]((../../../docs/architecture/adr-010-modular-antehandler.md))
+* [ADR 001 - Coin Source Tracing](../../../docs/architecture/adr-001-coin-source-tracing.md): standard to hash the ICS20's fungible token
+denomination trace path in order to support special characters and limit the maximum denomination length.
 * [ADR 17 - Historical Header Module](../../../docs/architecture/adr-017-historical-header-module.md): Introduces the ability to introspect past
 consensus states in order to verify their membership in the counterparty clients.
 * [ADR 19 - Protobuf State Encoding](../../../docs/architecture/adr-019-protobuf-state-encoding.md): Migration from Amino to Protobuf for state encoding.
 * [ADR 020 - Protocol Buffer Transaction Encoding](./../../docs/architecture/adr-020-protobuf-transaction-encoding.md): Client side migration to Protobuf.
-* [ADR 021 - Protocol Buffer Query Encoding](./../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 021 - Protocol Buffer Query Encoding](../../../docs/architecture/adr-020-protobuf-query-encoding.md): Queries migration to Protobuf.
+* [ADR 026 - IBC Client Recovery Mechanisms](../../../docs/architecture/adr-026-ibc-client-recovery-mechanisms.md): Allows IBC Clients to be recovered after freezing or expiry.
 
 ### SDK Modules
 
@@ -86,13 +87,12 @@ x/
 │  ├── 03-connection/
 │  ├── 04-channel/
 │  ├── 05-port/
-│  ├── 06-solo/
+│  ├── light-clients/
+│  │   └── solomachine/
 │  ├── 07-tendermint/
 │  ├── 09-localhost/
 │  ├── 23-commitment/
 │  ├── 24-host/
-│  ├── ante
-│  │   └── ante.go
 │  ├── client
 │  │   ├── cli
 │  │   │   └── cli.go

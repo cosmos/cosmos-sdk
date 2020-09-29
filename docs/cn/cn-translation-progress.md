@@ -6,7 +6,7 @@ Documentation has been translated for **reference use only** and may contain typ
 
 Please refer to the official english version of the documentation for the latest and accurate information.
 
-## Cosmos SDK文档翻译
+## Cosmos SDK 文档翻译
 
 本文档跟踪官方 Cosmos SDK 文档的中文翻译进度。
 
@@ -18,7 +18,7 @@ Please refer to the official english version of the documentation for the latest
 
 ### README.md
 
-- Synced until commit [1c326ea5](https://github.com/cosmos/cosmos-sdk/commit/1c326ea524eade1da8771cd7e4343012203a166f) (2019-05-27)
+- Synced until commit [b18bd06a](https://github.com/cosmos/cosmos-sdk/commit/b18bd06a364e6ac15f22423e6b66a9feb3eeae93) (2019-12-10)
 
 ### [`concepts`](../concepts/)
 
@@ -34,7 +34,7 @@ Please refer to the official english version of the documentation for the latest
 
 ### [`intro`](../intro/)
 
-- Synced until commit [1c326ea5](https://github.com/cosmos/cosmos-sdk/commit/1c326ea524eade1da8771cd7e4343012203a166f) (2019-05-27)
+- Synced until commit [be194ca1](https://github.com/cosmos/cosmos-sdk/commit/be194ca1b7d159590a0147da3226b7e09eaa3f61) (2020-07-07)
 
 ### [`modules`](../modules/)
 
@@ -43,4 +43,3 @@ Please refer to the official english version of the documentation for the latest
 ### [`clients`](../clients/)
 
 - Synced until Commit [7558f760](https://github.com/cosmos/cosmos-sdk/commit/7558f7607918b6337a8b58b8f956d6776f503138) (2019-05-13)
-

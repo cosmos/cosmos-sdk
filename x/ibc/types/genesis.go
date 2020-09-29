@@ -1,30 +1,31 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// GenesisState defines the ibc module's genesis state.
-type GenesisState struct {
-	ClientGenesis     clienttypes.GenesisState     `json:"client_genesis" yaml:"client_genesis"`
-	ConnectionGenesis connectiontypes.GenesisState `json:"connection_genesis" yaml:"connection_genesis"`
-	ChannelGenesis    channeltypes.GenesisState    `json:"channel_genesis" yaml:"channel_genesis"`
-}
+var _ codectypes.UnpackInterfacesMessage = GenesisState{}
 
 // DefaultGenesisState returns the ibc module's default genesis state.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		ClientGenesis:     clienttypes.DefaultGenesisState(),
 		ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 		ChannelGenesis:    channeltypes.DefaultGenesisState(),
 	}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return gs.ClientGenesis.UnpackInterfaces(unpacker)
+}
+
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
-func (gs GenesisState) Validate() error {
+func (gs *GenesisState) Validate() error {
 	if err := gs.ClientGenesis.Validate(); err != nil {
 		return err
 	}

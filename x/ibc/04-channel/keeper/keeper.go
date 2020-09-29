@@ -19,8 +19,11 @@ import (
 
 // Keeper defines the IBC channel keeper
 type Keeper struct {
+	// implements gRPC QueryServer interface
+	types.QueryServer
+
 	storeKey         sdk.StoreKey
-	cdc              codec.Marshaler
+	cdc              codec.BinaryMarshaler
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
@@ -29,7 +32,7 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
-	cdc codec.Marshaler, key sdk.StoreKey,
+	cdc codec.BinaryMarshaler, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
 	portKeeper types.PortKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
@@ -131,7 +134,8 @@ func (k Keeper) GetPacketCommitment(ctx sdk.Context, portID, channelID string, s
 
 // HasPacketCommitment returns true if the packet commitment exists
 func (k Keeper) HasPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) bool {
-	return len(k.GetPacketCommitment(ctx, portID, channelID, sequence)) > 0
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(host.KeyPacketCommitment(portID, channelID, sequence))
 }
 
 // SetPacketCommitment sets the packet commitment hash to the store

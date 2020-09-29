@@ -4,30 +4,27 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 type ClientTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	coordinator *ibctesting.Coordinator
+
+	chainA *ibctesting.TestChain
+	chainB *ibctesting.TestChain
 }
 
 func (suite *ClientTestSuite) SetupTest() {
-	isCheckTx := false
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
-	suite.app = simapp.Setup(isCheckTx)
-	suite.cdc = suite.app.Codec()
-	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, abci.Header{Height: 0, ChainID: "localhost_chain"})
-
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
 func TestClientTestSuite(t *testing.T) {
@@ -35,23 +32,21 @@ func TestClientTestSuite(t *testing.T) {
 }
 
 func (suite *ClientTestSuite) TestBeginBlocker() {
-	prevHeight := suite.ctx.BlockHeight()
+	prevHeight := types.GetSelfHeight(suite.chainA.GetContext())
 
-	localHostClient, found := suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-	suite.Require().True(found)
-	suite.Require().Equal(prevHeight, int64(localHostClient.GetLatestHeight()))
+	localHostClient := suite.chainA.GetClientState(exported.Localhost)
+	suite.Require().Equal(prevHeight, localHostClient.GetLatestHeight())
 
 	for i := 0; i < 10; i++ {
 		// increment height
-		suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
+		suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 
 		suite.Require().NotPanics(func() {
-			client.BeginBlocker(suite.ctx, suite.app.IBCKeeper.ClientKeeper)
+			client.BeginBlocker(suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper)
 		}, "BeginBlocker shouldn't panic")
 
-		localHostClient, found = suite.app.IBCKeeper.ClientKeeper.GetClientState(suite.ctx, exported.ClientTypeLocalHost)
-		suite.Require().True(found)
-		suite.Require().Equal(prevHeight+1, int64(localHostClient.GetLatestHeight()))
-		prevHeight = int64(localHostClient.GetLatestHeight())
+		localHostClient = suite.chainA.GetClientState(exported.Localhost)
+		suite.Require().Equal(prevHeight.Increment(), localHostClient.GetLatestHeight())
+		prevHeight = localHostClient.GetLatestHeight().(types.Height)
 	}
 }

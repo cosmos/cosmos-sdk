@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -26,13 +27,18 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeEncodingConfig(), interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
+		b,
+		os.Stdout,
+		app.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -65,13 +71,18 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeEncodingConfig(), interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
+		b,
+		os.Stdout,
+		app.BaseApp,
+		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
+		config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -87,7 +98,7 @@ func BenchmarkInvariants(b *testing.B) {
 		PrintStats(db)
 	}
 
-	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1})
 
 	// 3. Benchmark each invariant separately
 	//

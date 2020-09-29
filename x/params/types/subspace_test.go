@@ -6,27 +6,27 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 type SubspaceTestSuite struct {
 	suite.Suite
 
-	cdc codec.Marshaler
-	ctx sdk.Context
-	ss  types.Subspace
+	cdc   codec.BinaryMarshaler
+	amino *codec.LegacyAmino
+	ctx   sdk.Context
+	ss    types.Subspace
 }
 
 func (suite *SubspaceTestSuite) SetupTest() {
-	cdc := proposal.ModuleCdc
 	db := dbm.NewMemDB()
 
 	ms := store.NewCommitMultiStore(db)
@@ -34,10 +34,12 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	ms.MountStoreWithDB(tkey, sdk.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	ss := types.NewSubspace(cdc, key, tkey, "testsubspace")
+	encCfg := simapp.MakeEncodingConfig()
+	ss := types.NewSubspace(encCfg.Marshaler, encCfg.Amino, key, tkey, "testsubspace")
 
-	suite.cdc = cdc
-	suite.ctx = sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	suite.cdc = encCfg.Marshaler
+	suite.amino = encCfg.Amino
+	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 
@@ -47,7 +49,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
 	suite.Require().NotPanics(func() {
-		ss := types.NewSubspace(proposal.ModuleCdc, key, tkey, "testsubspace2")
+		ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }
@@ -122,12 +124,12 @@ func (suite *SubspaceTestSuite) TestUpdate() {
 
 	bad := time.Minute * 5
 
-	bz, err := suite.cdc.MarshalJSON(bad)
+	bz, err := suite.amino.MarshalJSON(bad)
 	suite.Require().NoError(err)
 	suite.Require().Error(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
 	good := time.Hour * 360
-	bz, err = suite.cdc.MarshalJSON(good)
+	bz, err = suite.amino.MarshalJSON(good)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 

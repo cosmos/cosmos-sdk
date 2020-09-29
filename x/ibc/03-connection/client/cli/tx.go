@@ -7,8 +7,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -16,25 +18,29 @@ import (
 
 // NewConnectionOpenInitCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
 		Short: "Initialize connection on chain A",
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 			clientID := args[1]
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
@@ -48,64 +54,84 @@ func NewConnectionOpenInitCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewConnectionOpenTryCmd defines the command to relay a try open a connection on
 // chain B
-func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-[counterparty-versions] [path/to/proof_init.json] [path/to/proof_consensus.json]`),
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]
+[counterparty-versions] [consensus-height] [proof-height] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long:  "Initialize a connection on chain A with a given counterparty chain B",
 		Example: fmt.Sprintf(
 			`%s tx %s %s open-try connection-id] [client-id] \
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
-[counterparty-versions] [path/to/proof_init.json] [path/tp/proof_consensus.json]`,
-			version.ClientName, host.ModuleName, types.SubModuleName,
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] [path/to/client_state.json]\
+[counterparty-versions] [consensus-height] [proof-height] [path/to/proof_init.json] [path/to/proof_client.json] [path/to/proof_consensus.json]`,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(8),
+		Args: cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 			clientID := args[1]
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.Codec, args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(clientCtx.LegacyAmino, args[4])
+			if err != nil {
+				return err
+			}
+
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[5])
 			if err != nil {
 				return err
 			}
 
 			// TODO: parse strings?
-			counterpartyVersions := args[5]
+			counterpartyVersions := args[6]
 
-			proofInit, err := utils.ParseProof(clientCtx.Codec, args[6])
+			consensusHeight, err := clienttypes.ParseHeight(args[7])
+			if err != nil {
+				return err
+			}
+			proofHeight, err := clienttypes.ParseHeight(args[8])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[7])
+			proofInit, err := utils.ParseProof(clientCtx.LegacyAmino, args[9])
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(clientCtx.Height)
-			consensusHeight, err := lastHeight(clientCtx)
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[10])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[11])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofConsensus, proofHeight,
+				counterpartyClient, counterpartyPrefix, []string{counterpartyVersions},
+				proofInit, proofClient, proofConsensus, proofHeight,
 				consensusHeight, clientCtx.GetFromAddress(),
 			)
 
@@ -113,50 +139,71 @@ func NewConnectionOpenTryCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewConnectionOpenAckCmd defines the command to relay the acceptance of a
 // connection open attempt from chain B to chain A
-func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
+		Use: `open-ack [connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+		[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
 		Short: "relay the acceptance of a connection open attempt",
 		Long:  "Relay the acceptance of a connection open attempt from chain B to chain A",
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-ack [connection-id] [path/to/proof_try.json] [path/to/proof_consensus.json] [version]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			`%s tx %s %s open-ack [connection-id] [path/to/client_state.json] [consensus-height] [proof-height] 
+			[path/to/proof_try.json] [path/to/proof_client.json] [path/to/proof_consensus.json] [version]`,
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			connectionID := args[0]
 
-			proofTry, err := utils.ParseProof(clientCtx.Codec, args[1])
+			counterpartyClient, err := utils.ParseClientState(clientCtx.LegacyAmino, args[1])
 			if err != nil {
 				return err
 			}
 
-			proofConsensus, err := utils.ParseProof(clientCtx.Codec, args[2])
+			consensusHeight, err := clienttypes.ParseHeight(args[2])
+			if err != nil {
+				return err
+			}
+			proofHeight, err := clienttypes.ParseHeight(args[3])
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(clientCtx.Height)
-			consensusHeight, err := lastHeight(clientCtx)
+			proofTry, err := utils.ParseProof(clientCtx.LegacyAmino, args[4])
 			if err != nil {
 				return err
 			}
 
-			version := args[3]
+			proofClient, err := utils.ParseProof(clientCtx.LegacyAmino, args[5])
+			if err != nil {
+				return err
+			}
+
+			proofConsensus, err := utils.ParseProof(clientCtx.LegacyAmino, args[6])
+			if err != nil {
+				return err
+			}
+
+			version := args[7]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofConsensus, proofHeight,
+				connectionID, counterpartyClient, proofTry, proofClient, proofConsensus, proofHeight,
 				consensusHeight, version, clientCtx.GetFromAddress(),
 			)
 
@@ -164,36 +211,42 @@ func NewConnectionOpenAckCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
 // NewConnectionOpenConfirmCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
-func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
+func NewConnectionOpenConfirmCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-confirm [connection-id] [path/to/proof_ack.json]",
+		Use:   "open-confirm [connection-id] [proof-height] [path/to/proof_ack.json]",
 		Short: "confirm to chain B that connection is open on chain A",
 		Long:  "Confirm to chain B that connection is open on chain A",
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-confirm [connection-id] [path/to/proof_ack.json]",
-			version.ClientName, host.ModuleName, types.SubModuleName,
+			"%s tx %s %s open-confirm [connection-id] [proof-height] [path/to/proof_ack.json]",
+			version.AppName, host.ModuleName, types.SubModuleName,
 		),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.InitWithInput(cmd.InOrStdin())
-
-			connectionID := args[0]
-
-			proofAck, err := utils.ParseProof(clientCtx.Codec, args[1])
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			proofHeight := uint64(clientCtx.Height)
+			connectionID := args[0]
+
+			proofHeight, err := clienttypes.ParseHeight(args[1])
+			if err != nil {
+				return err
+			}
+
+			proofAck, err := utils.ParseProof(clientCtx.LegacyAmino, args[2])
 			if err != nil {
 				return err
 			}
@@ -206,24 +259,11 @@ func NewConnectionOpenConfirmCmd(clientCtx client.Context) *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTx(clientCtx, msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
-}
-
-// lastHeight util function to get the consensus height from the node
-func lastHeight(clientCtx client.Context) (uint64, error) {
-	node, err := clientCtx.GetNode()
-	if err != nil {
-		return 0, err
-	}
-
-	info, err := node.ABCIInfo()
-	if err != nil {
-		return 0, err
-	}
-
-	return uint64(info.Response.LastBlockHeight), nil
 }

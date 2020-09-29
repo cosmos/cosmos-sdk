@@ -1,25 +1,25 @@
 package codec
 
 import (
-	"encoding/binary"
-	"io"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/gogo/protobuf/proto"
 )
 
 type (
 	// Marshaler defines the interface module codecs must implement in order to support
 	// backwards compatibility with Amino while allowing custom Protobuf-based
 	// serialization. Note, Amino can still be used without any dependency on
-	// Protobuf. There are three typical implementations that fulfill this contract:
+	// Protobuf. There are two typical implementations that fulfill this contract:
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
-	// 3. HybridCodec: Provides Protobuf serialization for binary encoding and Amino
-	// for JSON encoding.
 	Marshaler interface {
+		BinaryMarshaler
+		JSONMarshaler
+	}
+
+	BinaryMarshaler interface {
 		MarshalBinaryBare(o ProtoMarshaler) ([]byte, error)
 		MustMarshalBinaryBare(o ProtoMarshaler) []byte
 
@@ -32,16 +32,15 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
-		JSONMarshaler
 		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {
-		MarshalJSON(o interface{}) ([]byte, error)
-		MustMarshalJSON(o interface{}) []byte
+		MarshalJSON(o proto.Message) ([]byte, error)
+		MustMarshalJSON(o proto.Message) []byte
 
-		UnmarshalJSON(bz []byte, ptr interface{}) error
-		MustUnmarshalJSON(bz []byte, ptr interface{})
+		UnmarshalJSON(bz []byte, ptr proto.Message) error
+		MustUnmarshalJSON(bz []byte, ptr proto.Message)
 	}
 
 	// ProtoMarshaler defines an interface a type must implement as protocol buffer
@@ -55,13 +54,13 @@ type (
 		Size() int
 		Unmarshal(data []byte) error
 	}
+
+	// AminoMarshaler defines an interface where Amino marshalling can be
+	// overridden by custom marshalling.
+	AminoMarshaler interface {
+		MarshalAmino() ([]byte, error)
+		UnmarshalAmino([]byte) error
+		MarshalAminoJSON() ([]byte, error)
+		UnmarshalAminoJSON([]byte) error
+	}
 )
-
-func encodeUvarint(w io.Writer, u uint64) (err error) {
-	var buf [10]byte
-
-	n := binary.PutUvarint(buf[:], u)
-	_, err = w.Write(buf[0:n])
-
-	return err
-}

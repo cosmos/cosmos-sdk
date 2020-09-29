@@ -28,6 +28,7 @@ const (
 	AttributeKeySrcChannel       = "packet_src_channel"
 	AttributeKeyDstPort          = "packet_dst_port"
 	AttributeKeyDstChannel       = "packet_dst_channel"
+	AttributeKeyChannelOrdering  = "packet_channel_ordering"
 )
 
 // IBC channel events vars

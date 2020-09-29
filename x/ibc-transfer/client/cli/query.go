@@ -1,49 +1,114 @@
 package cli
 
 import (
+	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 )
 
-// GetCmdQueryNextSequence defines the command to query a next receive sequence
-// TODO: move to channel
-func GetCmdQueryNextSequence(clientCtx client.Context) *cobra.Command {
+// GetCmdQueryDenomTrace defines the command to query a a denomination trace from a given hash.
+func GetCmdQueryDenomTrace() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "next-recv [port-id] [channel-id]",
-		Short: "Query a next receive sequence",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query an IBC channel end
-		
-Example:
-$ %s query ibc-transfer next-recv [port-id] [channel-id]
-		`, version.ClientName),
-		),
-		Example: fmt.Sprintf("%s query ibc-transfer next-recv [port-id] [channel-id]", version.ClientName),
-		Args:    cobra.ExactArgs(2),
+		Use:     "denom-trace [hash]",
+		Short:   "Query the denom trace info from a given trace hash",
+		Long:    "Query the denom trace info from a given trace hash",
+		Example: fmt.Sprintf("%s query ibc-transfer denom-trace [hash]", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx = clientCtx.Init()
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-			portID := args[0]
-			channelID := args[1]
-			prove := viper.GetBool(flags.FlagProve)
+			req := &types.QueryDenomTraceRequest{
+				Hash: args[0],
+			}
 
-			sequenceRes, err := utils.QueryNextSequenceRecv(clientCtx, portID, channelID, prove)
+			res, err := queryClient.DenomTrace(context.Background(), req)
 			if err != nil {
 				return err
 			}
 
-			clientCtx = clientCtx.WithHeight(int64(sequenceRes.ProofHeight))
-			return clientCtx.PrintOutput(sequenceRes)
+			return clientCtx.PrintOutput(res)
 		},
 	}
-	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryDenomTraces defines the command to query all the denomination trace infos
+// that this chain mantains.
+func GetCmdQueryDenomTraces() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "denom-traces",
+		Short:   "Query the trace info for all token denominations",
+		Long:    "Query the trace info for all token denominations",
+		Example: fmt.Sprintf("%s query ibc-transfer denom-traces", version.AppName),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryDenomTracesRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.DenomTraces(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "denominations trace")
+
+	return cmd
+}
+
+// QueryParamsCmd returns the command handler for ibc-transfer parameter querying.
+func QueryParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "params",
+		Short:   "Query the current ibc-transfer parameters",
+		Long:    "Query the current ibc-transfer parameters",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s query ibc-transfer params", version.AppName),
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, _ := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			return clientCtx.PrintOutput(res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

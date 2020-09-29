@@ -88,9 +88,9 @@ x/
 │  ├── 04-channel/
 │  ├── 05-port/
 │  ├── light-clients/
-│  │   └── solomachine/
-│  ├── 07-tendermint/
-│  ├── 09-localhost/
+│  │   ├── 06-solomachine/
+│  │   ├── 07-tendermint/
+│  │   └── 09-localhost/
 │  ├── 23-commitment/
 │  ├── 24-host/
 │  ├── client

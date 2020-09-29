@@ -136,6 +136,7 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 }
 
 func (suite *KeeperTestSuite) TestValidateSelfClient() {
+	badUpgradePath := commitmenttypes.NewMerklePath([]string{"bad", "upgrade", "path"})
 	testCases := []struct {
 		name        string
 		clientState exported.ClientState
@@ -189,6 +190,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		{
 			"invalid trusting period",
 			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, ubdPeriod+10, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			false,
+		},
+		{
+			"invalid upgrade path",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &badUpgradePath, false, false),
 			false,
 		},
 	}

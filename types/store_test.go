@@ -19,6 +19,10 @@ func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(storeTestSuite))
 }
 
+func (s *storeTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 func (s *storeTestSuite) TestPrefixEndBytes() {
 	var testCases = []struct {
 		prefix   []byte

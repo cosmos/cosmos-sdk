@@ -16,6 +16,10 @@ func TestStakingTestSuite(t *testing.T) {
 	suite.Run(t, new(stakingTestSuite))
 }
 
+func (s *stakingTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 func (s *stakingTestSuite) TestBondStatus() {
 	s.Require().False(sdk.Unbonded.Equal(sdk.Bonded))
 	s.Require().False(sdk.Unbonded.Equal(sdk.Unbonding))

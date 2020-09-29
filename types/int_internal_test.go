@@ -115,9 +115,12 @@ func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 	}
 }
 
-type intOp func(Int, *big.Int) (Int, *big.Int)
+type (
+	intOp      func(Int, *big.Int) (Int, *big.Int)
+	bigIntFunc func(*big.Int, *big.Int, *big.Int) *big.Int
+)
 
-func intArithOp(intFn func(Int, Int) Int, bigIntFn func(*big.Int, *big.Int, *big.Int) *big.Int) intOp {
+func intArithOp(intFn func(Int, Int) Int, bigIntFn bigIntFunc) intOp {
 	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)
@@ -125,7 +128,7 @@ func intArithOp(intFn func(Int, Int) Int, bigIntFn func(*big.Int, *big.Int, *big
 	}
 }
 
-func intArithRawOp(intFn func(Int, int64) Int, bigIntFn func(*big.Int, *big.Int, *big.Int) *big.Int) intOp {
+func intArithRawOp(intFn func(Int, int64) Int, bigIntFn bigIntFunc) intOp {
 	return func(integer Int, bigInteger *big.Int) (Int, *big.Int) {
 		r := rand.Int63()
 		br := new(big.Int).SetInt64(r)

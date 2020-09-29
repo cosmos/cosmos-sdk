@@ -203,8 +203,8 @@ func (k Keeper) RecvPacket(
 
 	switch channel.Ordering {
 	case types.UNORDERED:
-		// check if the packet acknowledgement has been received already for unordered channels
-		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		// check if the packet receipt has been received already for unordered channels
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		if found {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidPacket,

@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *SoloMachineTestSuite) TestConsensusState() {
@@ -13,57 +14,61 @@ func (suite *SoloMachineTestSuite) TestConsensusState() {
 }
 
 func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
-	testCases := []struct {
-		name           string
-		consensusState *types.ConsensusState
-		expPass        bool
-	}{
-		{
-			"valid consensus state",
-			suite.solomachine.ConsensusState(),
-			true,
-		},
-		{
-			"timestamp is zero",
-			&types.ConsensusState{
-				PublicKey:   suite.solomachine.ConsensusState().PublicKey,
-				Timestamp:   0,
-				Diversifier: suite.solomachine.Diversifier,
+	// test singlesig and multisig public keys
+	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+
+		testCases := []struct {
+			name           string
+			consensusState *types.ConsensusState
+			expPass        bool
+		}{
+			{
+				"valid consensus state",
+				solomachine.ConsensusState(),
+				true,
 			},
-			false,
-		},
-		{
-			"diversifier is blank",
-			&types.ConsensusState{
-				PublicKey:   suite.solomachine.ConsensusState().PublicKey,
-				Timestamp:   suite.solomachine.Time,
-				Diversifier: " ",
+			{
+				"timestamp is zero",
+				&types.ConsensusState{
+					PublicKey:   solomachine.ConsensusState().PublicKey,
+					Timestamp:   0,
+					Diversifier: solomachine.Diversifier,
+				},
+				false,
 			},
-			false,
-		},
-		{
-			"pubkey is nil",
-			&types.ConsensusState{
-				Timestamp:   suite.solomachine.Time,
-				Diversifier: suite.solomachine.Diversifier,
-				PublicKey:   nil,
+			{
+				"diversifier is blank",
+				&types.ConsensusState{
+					PublicKey:   solomachine.ConsensusState().PublicKey,
+					Timestamp:   solomachine.Time,
+					Diversifier: " ",
+				},
+				false,
 			},
-			false,
-		},
-	}
+			{
+				"pubkey is nil",
+				&types.ConsensusState{
+					Timestamp:   solomachine.Time,
+					Diversifier: solomachine.Diversifier,
+					PublicKey:   nil,
+				},
+				false,
+			},
+		}
 
-	for _, tc := range testCases {
-		tc := tc
+		for _, tc := range testCases {
+			tc := tc
 
-		suite.Run(tc.name, func() {
+			suite.Run(tc.name, func() {
 
-			err := tc.consensusState.ValidateBasic()
+				err := tc.consensusState.ValidateBasic()
 
-			if tc.expPass {
-				suite.Require().NoError(err)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
+				if tc.expPass {
+					suite.Require().NoError(err)
+				} else {
+					suite.Require().Error(err)
+				}
+			})
+		}
 	}
 }

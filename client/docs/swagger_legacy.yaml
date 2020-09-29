@@ -219,6 +219,7 @@ paths:
           description: Server internal error
   /txs/{hash}:
     get:
+      deprecated: true
       summary: Get a Tx by hash
       tags:
         - Transactions
@@ -241,6 +242,7 @@ paths:
           description: Internal Server Error
   /txs:
     get:
+      deprecated: true
       tags:
         - Transactions
       summary: Search transactions
@@ -318,6 +320,7 @@ paths:
           description: Internal Server Error
   /txs/encode:
     post:
+      deprecated: true
       tags:
         - Transactions
       summary: Encode a transaction to the Amino wire format
@@ -351,6 +354,7 @@ paths:
           description: Server internal error
   /txs/decode:
     post:
+      deprecated: true
       tags:
         - Transactions
       summary: Decode a transaction from the Amino wire format
@@ -381,6 +385,7 @@ paths:
           description: Server internal error
   /bank/balances/{address}:
     get:
+      deprecated: true
       summary: Get the account balances
       tags:
         - Bank
@@ -404,6 +409,7 @@ paths:
           description: Server internal error
   /bank/accounts/{address}/transfers:
     post:
+      deprecated: true
       summary: Send coins from one account to another
       tags:
         - Bank
@@ -442,6 +448,7 @@ paths:
           description: Server internal error
   /auth/accounts/{address}:
     get:
+      deprecated: true
       summary: Get the account information on blockchain
       tags:
         - Auth
@@ -488,6 +495,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Get all delegations from a delegator
       tags:
         - Staking
@@ -553,6 +561,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query the current delegation between a delegator and a validator
       tags:
         - Staking
@@ -576,6 +585,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Get all unbonding delegations from a delegator
       tags:
         - Staking
@@ -642,6 +652,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query all unbonding delegations between a delegator and a validator
       tags:
         - Staking
@@ -674,6 +685,7 @@ paths:
         required: false
         type: string
     get:
+      deprecated: true
       summary: Get all redelegations (filter by query params)
       tags:
         - Staking
@@ -697,6 +709,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     post:
+      deprecated: true
       summary: Submit a redelegation
       parameters:
         - in: body
@@ -740,6 +753,7 @@ paths:
         type: string
         x-example: cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv
     get:
+      deprecated: true
       summary: Query all validators that a delegator is bonded to
       tags:
         - Staking
@@ -771,6 +785,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query a validator that a delegator is bonded to
       tags:
         - Staking
@@ -787,6 +802,7 @@ paths:
           description: Internal Server Error
   /staking/validators:
     get:
+      deprecated: true
       summary: Get all validator candidates. By default it returns only the bonded validators.
       parameters:
         - in: query
@@ -826,6 +842,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query the information from a single validator
       tags:
         - Staking
@@ -849,6 +866,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Get all delegations from a validator
       tags:
         - Staking
@@ -874,6 +892,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Get all unbonding delegations from a validator
       tags:
         - Staking
@@ -892,6 +911,7 @@ paths:
           description: Internal Server Error
   /staking/pool:
     get:
+      deprecated: true
       summary: Get the current state of the staking pool
       tags:
         - Staking
@@ -919,6 +939,7 @@ paths:
           description: Internal Server Error
   /staking/parameters:
     get:
+      deprecated: true
       summary: Get the current staking parameter values
       tags:
         - Staking
@@ -973,6 +994,7 @@ paths:
   #          description: Internal Server Error
   /slashing/signing_infos:
     get:
+      deprecated: true
       summary: Get sign info of given all validators
       description: Get sign info of all validators
       produces:
@@ -1005,6 +1027,7 @@ paths:
           description: Internal Server Error
   /slashing/validators/{validatorAddr}/unjail:
     post:
+      deprecated: true
       summary: Unjail a jailed validator
       description: Send transaction to unjail a jailed validator
       consumes:
@@ -1040,6 +1063,7 @@ paths:
           description: Internal Server Error
   /slashing/parameters:
     get:
+      deprecated: true
       summary: Get the current slashing parameters
       tags:
         - Slashing
@@ -1069,6 +1093,7 @@ paths:
           description: Internal Server Error
   /gov/proposals:
     post:
+      deprecated: true
       summary: Submit a proposal
       description: Send transaction to submit a proposal
       consumes:
@@ -1110,6 +1135,7 @@ paths:
         500:
           description: Internal Server Error
     get:
+      deprecated: true
       summary: Query proposals
       description: Query proposals information with parameters
       produces:
@@ -1145,6 +1171,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/param_change:
     post:
+      deprecated: true
       summary: Generate a parameter change proposal transaction
       description: Generate a parameter change proposal transaction
       consumes:
@@ -1190,6 +1217,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}:
     get:
+      deprecated: true
       summary: Query a proposal
       description: Query a proposal by id
       produces:
@@ -1213,6 +1241,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/proposer:
     get:
+      deprecated: true
       summary: Query proposer
       description: Query for the proposer for a proposal
       produces:
@@ -1236,6 +1265,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits:
     get:
+      deprecated: true
       summary: Query deposits
       description: Query deposits by proposalId
       produces:
@@ -1260,6 +1290,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Deposit tokens to a proposal
       description: Send transaction to deposit tokens to a proposal
       consumes:
@@ -1303,6 +1334,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits/{depositor}:
     get:
+      deprecated: true
       summary: Query deposit
       description: Query deposit by proposalId and depositor address
       produces:
@@ -1335,6 +1367,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/votes:
     get:
+      deprecated: true
       summary: Query voters
       description: Query voters information by proposalId
       produces:
@@ -1360,6 +1393,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Vote a proposal
       description: Send transaction to vote a proposal
       consumes:
@@ -1402,6 +1436,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/votes/{voter}:
     get:
+      deprecated: true
       summary: Query vote
       description: Query vote information by proposal Id and voter address
       produces:
@@ -1434,6 +1469,7 @@ paths:
           description: Internal Server Error
   /gov/proposals/{proposalId}/tally:
     get:
+      deprecated: true
       summary: Get a proposal's tally result at the current time
       description: Gets a proposal's tally result at the current time. If the proposal is pending deposits (i.e status 'DepositPeriod') it returns an empty tally result.
       produces:
@@ -1458,6 +1494,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/deposit:
     get:
+      deprecated: true
       summary: Query governance deposit parameters
       description: Query governance deposit parameters. The max_deposit_period units are in nanoseconds.
       produces:
@@ -1485,6 +1522,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/tallying:
     get:
+      deprecated: true
       summary: Query governance tally parameters
       description: Query governance tally parameters
       produces:
@@ -1513,6 +1551,7 @@ paths:
           description: Internal Server Error
   /gov/parameters/voting:
     get:
+      deprecated: true
       summary: Query governance voting parameters
       description: Query governance voting parameters. The voting_period units are in nanoseconds.
       produces:
@@ -1542,6 +1581,7 @@ paths:
         type: string
         x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
     get:
+      deprecated: true
       summary: Get the total rewards balance from all delegations
       description: Get the sum of all the rewards earned by delegations by a single delegator
       produces:
@@ -1558,6 +1598,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw all the delegator's delegation rewards
       description: Withdraw all the delegator's delegation rewards
       tags:
@@ -1599,6 +1640,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Query a delegation reward
       description: Query a single delegation reward by a delegator
       tags:
@@ -1617,6 +1659,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw a delegation reward
       description: Withdraw a delegator's delegation reward from a single validator
       tags:
@@ -1652,6 +1695,7 @@ paths:
         type: string
         x-example: cosmos167w96tdvmazakdwkw2u57227eduula2cy572lf
     get:
+      deprecated: true
       summary: Get the rewards withdrawal address
       description: Get the delegations' rewards withdrawal address. This is the address in which the user will receive the reward funds
       tags:
@@ -1668,6 +1712,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Replace the rewards withdrawal address
       description: Replace the delegations' rewards withdrawal address for a new one.
       tags:
@@ -1705,6 +1750,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Validator distribution information
       description: Query the distribution information of a single validator
       tags:
@@ -1729,6 +1775,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Fee distribution outstanding rewards of a single validator
       tags:
         - Distribution
@@ -1752,6 +1799,7 @@ paths:
         type: string
         x-example: cosmosvaloper16xyempempp92x9hyzz9wrgf94r6j9h5f2w4n2l
     get:
+      deprecated: true
       summary: Commission and self-delegation rewards of a single validator
       description: Query the commission and self-delegation rewards of validator.
       tags:
@@ -1770,6 +1818,7 @@ paths:
         500:
           description: Internal Server Error
     post:
+      deprecated: true
       summary: Withdraw the validator's rewards
       description: Withdraw the validator's self-delegation and commissions rewards
       tags:
@@ -1798,6 +1847,7 @@ paths:
           description: Internal Server Error
   /distribution/community_pool:
     get:
+      deprecated: true
       summary: Community pool parameters
       tags:
         - Distribution
@@ -1814,6 +1864,7 @@ paths:
           description: Internal Server Error
   /distribution/parameters:
     get:
+      deprecated: true
       summary: Fee distribution parameters
       tags:
         - Distribution
@@ -1834,6 +1885,7 @@ paths:
           description: Internal Server Error
   /minting/parameters:
     get:
+      deprecated: true
       summary: Minting module parameters
       tags:
         - Mint
@@ -1860,6 +1912,7 @@ paths:
           description: Internal Server Error
   /minting/inflation:
     get:
+      deprecated: true
       summary: Current minting inflation value
       tags:
         - Mint
@@ -1874,6 +1927,7 @@ paths:
           description: Internal Server Error
   /minting/annual-provisions:
     get:
+      deprecated: true
       summary: Current minting annual provisions value
       tags:
         - Mint
@@ -1888,6 +1942,7 @@ paths:
           description: Internal Server Error
   /supply/total:
     get:
+      deprecated: true
       summary: Total supply of coins in the chain
       tags:
         - Supply
@@ -1909,6 +1964,7 @@ paths:
         type: string
         x-example: uatom
     get:
+      deprecated: true
       summary: Total supply of a single coin denomination
       tags:
         - Supply

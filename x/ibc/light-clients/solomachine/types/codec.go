@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -70,8 +69,6 @@ func CanUnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data [
 
 		// unpack any
 		if _, err := clienttypes.UnpackClientState(clientData.ClientState); err != nil {
-			fmt.Println(clientData.ClientState)
-			fmt.Println(err)
 			return false
 		}
 		return true

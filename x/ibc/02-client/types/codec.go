@@ -79,7 +79,7 @@ func UnpackClientState(any *codectypes.Any) (exported.ClientState, error) {
 
 	clientState, ok := any.GetCachedValue().(exported.ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into ClientState %T", any)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into ClientState %T", any.GetCachedValue())
 	}
 
 	return clientState, nil

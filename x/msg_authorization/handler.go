@@ -36,7 +36,7 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg *types.MsgGrantAuthorizati
 		),
 	)
 
-	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg *types.MsgRevokeAuthorization, k keeper.Keeper) (*sdk.Result, error) {
@@ -55,7 +55,7 @@ func handleMsgRevokeAuthorization(ctx sdk.Context, msg *types.MsgRevokeAuthoriza
 		),
 	)
 
-	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgExecAuthorized(ctx sdk.Context, msg *types.MsgExecAuthorized, k keeper.Keeper) (*sdk.Result, error) {

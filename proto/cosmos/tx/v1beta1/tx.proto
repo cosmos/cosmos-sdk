@@ -2,7 +2,7 @@ syntax = "proto3";
 package cosmos.tx.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
@@ -150,7 +150,7 @@ message ModeInfo {
   // Multi is the mode info for a multisig public key
   message Multi {
     // bitarray specifies which keys within the multisig are signing
-    cosmos.base.crypto.v1beta1.CompactBitArray bitarray = 1;
+    cosmos.crypto.multisig.v1beta1.CompactBitArray bitarray = 1;
 
     // mode_infos is the corresponding modes of the signers of the multisig
     // which could include nested multisig public keys

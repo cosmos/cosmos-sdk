@@ -86,6 +86,9 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
 		return k.SetUpgradedClient(ctx, clientState)
+	} else {
+		// delete upgraded client key to remove any upgraded client set by outdated plan
+		store.Delete(types.UpgradedClientKey())
 	}
 
 	return nil
@@ -106,18 +109,14 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) e
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, bool) {
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedClientKey())
 	if len(bz) == 0 {
-		return nil, false
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no upgraded client in store")
 	}
 
-	cs, err := clienttypes.UnmarshalClientState(k.cdc, bz)
-	if err != nil {
-		return nil, false
-	}
-	return cs, true
+	return clienttypes.UnmarshalClientState(k.cdc, bz)
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed

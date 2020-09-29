@@ -272,7 +272,8 @@ func (k Keeper) WriteReceipt(
 		)
 	}
 
-	if channel.Ordering == types.ORDERED {
+	switch channel.Ordering {
+	case types.ORDERED:
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -286,7 +287,8 @@ func (k Keeper) WriteReceipt(
 		// incrementing nextSequenceRecv and storing under this chain's channelEnd identifiers
 		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
-	} else {
+
+	case types.UNORDERED:
 		// For unordered channels we must set the receipt so it can be verified on the other side.
 		// This receipt does not contain any data, since the packet has not yet been processed,
 		// it's just a single store key set to an empty string to indicate that the packet has been received
@@ -330,9 +332,13 @@ func (k Keeper) WriteReceipt(
 // WriteAcknowledgement writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 //
-// CONTRACT: for synchronous execution, this function is be called in the IBC handler .
+// CONTRACT:
+//
+// 1) For synchronous execution, this function is be called in the IBC handler .
 // For async handling, it needs to be called directly by the module which originally
 // processed the packet.
+//
+// 2) Assumes that packet receipt has been writted previously by WriteReceipt.
 func (k Keeper) WriteAcknowledgement(
 	ctx sdk.Context,
 	packet exported.PacketI,
@@ -340,9 +346,9 @@ func (k Keeper) WriteAcknowledgement(
 ) error {
 	// NOTE: IBC app modules might have written the acknowledgement synchronously on
 	// the OnRecvPacket callback so we need to check if the acknowledgement is already
-	// set on the store and perform a no-op if so.
+	// set on the store and return an error if so.
 	if k.HasPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()) {
-		return nil
+		return types.ErrAcknowledgementExists
 	}
 
 	if len(acknowledgement) == 0 {

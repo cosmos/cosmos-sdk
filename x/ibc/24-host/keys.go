@@ -35,6 +35,7 @@ const (
 	KeyNextSeqAckPrefix        = "seqAcks"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
+	KeyPacketReceiptPrefix     = "receipts"
 )
 
 // KeyPrefixBytes return the key prefix bytes from a URL string format
@@ -165,7 +166,7 @@ func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string
 
 // PacketReceiptPath defines the packet receipt store path
 func PacketReceiptPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/receipts/%d", sequence)
+	return fmt.Sprintf("%s/", KeyPacketReceiptPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/receipts/%d", sequence)
 }
 
 // KeyChannel returns the store key for a particular channel

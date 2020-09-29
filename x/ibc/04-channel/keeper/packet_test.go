@@ -590,6 +590,9 @@ func (suite *KeeperTestSuite) TestAcknowledgePacket() {
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
 			// set next sequence ack wrong
 			suite.chainA.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.chainA.GetContext(), channelA.PortID, channelA.ID, 10)
 		}, false},
@@ -633,8 +636,11 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// create packet acknowledgement
+			// create packet receipt and acknowledgement
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
@@ -649,8 +655,11 @@ func (suite *KeeperTestSuite) TestAcknowledgementExecuted() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			// create packet acknowledgement
+			// create packet receipt and acknowledgement
 			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			chanCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)

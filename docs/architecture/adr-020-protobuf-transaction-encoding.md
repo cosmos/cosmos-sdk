@@ -285,10 +285,9 @@ and `FileDescriptor`s and returns a boolean result.
 
 ### Public Key Encoding
 
-Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface,
-so the proposed solution is to use `Any` as we are doing for other interfaces (e.g. in `BaseAccount` `PubKey` or `SignerInfo` `PublicKey`).
-Following public keys are implemented: secp256k1, ed25519 and multisignature, which
-correspond to individual protobuf types.
+Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface.
+We propose to use `Any` for protobuf encoding as we are doing with other interfaces (e.g. in `BaseAccount` `PubKey` or `SignerInfo` `PublicKey`).
+Following public keys are implemented: secp256k1, ed25519 and multisignature.
 
 Ex:
 

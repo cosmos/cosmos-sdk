@@ -5,7 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -28,11 +27,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
 type MsgCreateVestingAccount struct {
-	FromAddress string                                   `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
-	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
-	Amount      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-	EndTime     int64                                    `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
-	Delayed     bool                                     `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
+	FromAddress string       `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	ToAddress   string       `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	Amount      []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	EndTime     int64        `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time"`
+	Delayed     bool         `protobuf:"varint,5,opt,name=delayed,proto3" json:"delayed,omitempty"`
 }
 
 func (m *MsgCreateVestingAccount) Reset()         { *m = MsgCreateVestingAccount{} }
@@ -82,7 +81,7 @@ func (m *MsgCreateVestingAccount) GetToAddress() string {
 	return ""
 }
 
-func (m *MsgCreateVestingAccount) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *MsgCreateVestingAccount) GetAmount() []types.Coin {
 	if m != nil {
 		return m.Amount
 	}

@@ -25,9 +25,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the ibc-transfer genesis state
 type GenesisState struct {
-	PortId      string `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
-	DenomTraces Traces `protobuf:"bytes,2,rep,name=denom_traces,json=denomTraces,proto3,castrepeated=Traces" json:"denom_traces" yaml:"denom_traces"`
-	Params      Params `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
+	PortId      string       `protobuf:"bytes,1,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	DenomTraces []DenomTrace `protobuf:"bytes,2,rep,name=denom_traces,json=denomTraces,proto3" json:"denom_traces" yaml:"denom_traces"`
+	Params      Params       `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -70,7 +70,7 @@ func (m *GenesisState) GetPortId() string {
 	return ""
 }
 
-func (m *GenesisState) GetDenomTraces() Traces {
+func (m *GenesisState) GetDenomTraces() []DenomTrace {
 	if m != nil {
 		return m.DenomTraces
 	}

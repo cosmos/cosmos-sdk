@@ -186,26 +186,20 @@ func (m *Minter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.AnnualProvisions.Size()
-		i -= size
-		if _, err := m.AnnualProvisions.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.AnnualProvisions) > 0 {
+		i -= len(m.AnnualProvisions)
+		copy(dAtA[i:], m.AnnualProvisions)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.AnnualProvisions)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.Inflation.Size()
-		i -= size
-		if _, err := m.Inflation.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.Inflation) > 0 {
+		i -= len(m.Inflation)
+		copy(dAtA[i:], m.Inflation)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.Inflation)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -234,46 +228,34 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x30
 	}
-	{
-		size := m.GoalBonded.Size()
-		i -= size
-		if _, err := m.GoalBonded.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.GoalBonded) > 0 {
+		i -= len(m.GoalBonded)
+		copy(dAtA[i:], m.GoalBonded)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.GoalBonded)))
+		i--
+		dAtA[i] = 0x2a
 	}
-	i--
-	dAtA[i] = 0x2a
-	{
-		size := m.InflationMin.Size()
-		i -= size
-		if _, err := m.InflationMin.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.InflationMin) > 0 {
+		i -= len(m.InflationMin)
+		copy(dAtA[i:], m.InflationMin)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.InflationMin)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.InflationMax.Size()
-		i -= size
-		if _, err := m.InflationMax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.InflationMax) > 0 {
+		i -= len(m.InflationMax)
+		copy(dAtA[i:], m.InflationMax)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.InflationMax)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.InflationRateChange.Size()
-		i -= size
-		if _, err := m.InflationRateChange.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintMint(dAtA, i, uint64(size))
+	if len(m.InflationRateChange) > 0 {
+		i -= len(m.InflationRateChange)
+		copy(dAtA[i:], m.InflationRateChange)
+		i = encodeVarintMint(dAtA, i, uint64(len(m.InflationRateChange)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.MintDenom) > 0 {
 		i -= len(m.MintDenom)
 		copy(dAtA[i:], m.MintDenom)
@@ -301,10 +283,14 @@ func (m *Minter) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Inflation.Size()
-	n += 1 + l + sovMint(uint64(l))
-	l = m.AnnualProvisions.Size()
-	n += 1 + l + sovMint(uint64(l))
+	l = len(m.Inflation)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
+	l = len(m.AnnualProvisions)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
 	return n
 }
 
@@ -318,14 +304,22 @@ func (m *Params) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMint(uint64(l))
 	}
-	l = m.InflationRateChange.Size()
-	n += 1 + l + sovMint(uint64(l))
-	l = m.InflationMax.Size()
-	n += 1 + l + sovMint(uint64(l))
-	l = m.InflationMin.Size()
-	n += 1 + l + sovMint(uint64(l))
-	l = m.GoalBonded.Size()
-	n += 1 + l + sovMint(uint64(l))
+	l = len(m.InflationRateChange)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
+	l = len(m.InflationMax)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
+	l = len(m.InflationMin)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
+	l = len(m.GoalBonded)
+	if l > 0 {
+		n += 1 + l + sovMint(uint64(l))
+	}
 	if m.BlocksPerYear != 0 {
 		n += 1 + sovMint(uint64(m.BlocksPerYear))
 	}
@@ -397,9 +391,7 @@ func (m *Minter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Inflation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Inflation = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -431,9 +423,7 @@ func (m *Minter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.AnnualProvisions.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.AnnualProvisions = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -550,9 +540,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.InflationRateChange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.InflationRateChange = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -584,9 +572,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.InflationMax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.InflationMax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -618,9 +604,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.InflationMin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.InflationMin = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -652,9 +636,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.GoalBonded.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.GoalBonded = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {

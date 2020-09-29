@@ -5,7 +5,6 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -133,8 +132,8 @@ func (m *SendEnabled) GetEnabled() bool {
 
 // Input models transaction input.
 type Input struct {
-	Address string                                   `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Coins   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	Address string       `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Coins   []types.Coin `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
 }
 
 func (m *Input) Reset()         { *m = Input{} }
@@ -172,8 +171,8 @@ var xxx_messageInfo_Input proto.InternalMessageInfo
 
 // Output models transaction outputs.
 type Output struct {
-	Address string                                   `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Coins   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	Address string       `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Coins   []types.Coin `protobuf:"bytes,2,rep,name=coins,proto3" json:"coins"`
 }
 
 func (m *Output) Reset()         { *m = Output{} }
@@ -212,7 +211,7 @@ var xxx_messageInfo_Output proto.InternalMessageInfo
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
 type Supply struct {
-	Total github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=total,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total"`
+	Total []types.Coin `protobuf:"bytes,1,rep,name=total,proto3" json:"total"`
 }
 
 func (m *Supply) Reset()      { *m = Supply{} }

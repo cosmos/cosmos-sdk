@@ -197,8 +197,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			// Set packet acknowledgement only if the acknowledgement is not nil.
-			// NOTE: IBC applications modules will have to call the WriteAcknowledgement asynchronously if this
-			// is the case.
+			// NOTE: IBC applications modules will have to call the WriteAcknowledgement asynchronously if the
+			// acknowledgement is nil.
 			if ack != nil {
 				if err := k.ChannelKeeper.WriteAcknowledgement(ctx, msg.Packet, ack); err != nil {
 					return nil, err

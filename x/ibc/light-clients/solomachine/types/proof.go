@@ -288,7 +288,7 @@ func PacketAcknowledgementSignBytes(
 }
 
 // PacketReceiptAbsenceSignBytes returns the sign bytes for verification
-// of the absence of an acknowledgement.
+// of the absence of a receipt.
 func PacketReceiptAbsenceSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,

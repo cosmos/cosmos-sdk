@@ -176,7 +176,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 }
 
 // VerifyPacketReceiptAbsence verifies a proof of the absence of an
-// incoming packet acknowledgement at the specified port, specified channel, and
+// incoming packet receipt at the specified port, specified channel, and
 // specified sequence.
 func (k Keeper) VerifyPacketReceiptAbsence(
 	ctx sdk.Context,

@@ -23,5 +23,5 @@ var (
 	ErrAcknowledgementTooLong    = sdkerrors.Register(SubModuleName, 16, "acknowledgement too long")
 	ErrInvalidAcknowledgement    = sdkerrors.Register(SubModuleName, 17, "invalid acknowledgement")
 	ErrPacketCommitmentNotFound  = sdkerrors.Register(SubModuleName, 18, "packet commitment not found")
-	ErrPacketReceived            = sdkerrors.Register(SubModuleName, 19, "packet receipt already received")
+	ErrPacketReceived            = sdkerrors.Register(SubModuleName, 19, "packet already received")
 )

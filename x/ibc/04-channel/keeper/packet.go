@@ -302,7 +302,7 @@ func (k Keeper) WriteReceipt(
 	}
 
 	// log that a packet has been received & executed
-	k.Logger(ctx).Info("packet received and executed", "packet", fmt.Sprintf("%v", packet))
+	k.Logger(ctx).Info("packet received", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{

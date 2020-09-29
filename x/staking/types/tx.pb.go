@@ -343,13 +343,16 @@ func (m *MsgCreateValidator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.MinSelfDelegation) > 0 {
-		i -= len(m.MinSelfDelegation)
-		copy(dAtA[i:], m.MinSelfDelegation)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.MinSelfDelegation)))
-		i--
-		dAtA[i] = 0x1a
+	{
+		size := m.MinSelfDelegation.Size()
+		i -= size
+		if _, err := m.MinSelfDelegation.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	{
 		size, err := m.Commission.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -394,22 +397,28 @@ func (m *MsgEditValidator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.MinSelfDelegation != nil {
-		if len(m.MinSelfDelegation) > 0 {
-			i -= len(m.MinSelfDelegation)
-			copy(dAtA[i:], m.MinSelfDelegation)
-			i = encodeVarintTx(dAtA, i, uint64(len(m.MinSelfDelegation)))
-			i--
-			dAtA[i] = 0x22
+		{
+			size := m.MinSelfDelegation.Size()
+			i -= size
+			if _, err := m.MinSelfDelegation.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+			i = encodeVarintTx(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x22
 	}
 	if m.CommissionRate != nil {
-		if len(m.CommissionRate) > 0 {
-			i -= len(m.CommissionRate)
-			copy(dAtA[i:], m.CommissionRate)
-			i = encodeVarintTx(dAtA, i, uint64(len(m.CommissionRate)))
-			i--
-			dAtA[i] = 0x1a
+		{
+			size := m.CommissionRate.Size()
+			i -= size
+			if _, err := m.CommissionRate.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+			i = encodeVarintTx(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.ValidatorAddress) > 0 {
 		i -= len(m.ValidatorAddress)
@@ -600,10 +609,8 @@ func (m *MsgCreateValidator) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.Commission.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = len(m.MinSelfDelegation)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.MinSelfDelegation.Size()
+	n += 1 + l + sovTx(uint64(l))
 	l = len(m.DelegatorAddress)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
@@ -634,16 +641,12 @@ func (m *MsgEditValidator) Size() (n int) {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	if m.CommissionRate != nil {
-		l = len(m.CommissionRate)
-		if l > 0 {
-			n += 1 + l + sovTx(uint64(l))
-		}
+		l = m.CommissionRate.Size()
+		n += 1 + l + sovTx(uint64(l))
 	}
 	if m.MinSelfDelegation != nil {
-		l = len(m.MinSelfDelegation)
-		if l > 0 {
-			n += 1 + l + sovTx(uint64(l))
-		}
+		l = m.MinSelfDelegation.Size()
+		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
 }
@@ -840,7 +843,9 @@ func (m *MsgCreateValidator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MinSelfDelegation = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			if err := m.MinSelfDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1119,7 +1124,11 @@ func (m *MsgEditValidator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CommissionRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
+			var v github_com_cosmos_cosmos_sdk_types.Dec
+			m.CommissionRate = &v
+			if err := m.CommissionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1151,7 +1160,11 @@ func (m *MsgEditValidator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MinSelfDelegation = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
+			var v github_com_cosmos_cosmos_sdk_types.Int
+			m.MinSelfDelegation = &v
+			if err := m.MinSelfDelegation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

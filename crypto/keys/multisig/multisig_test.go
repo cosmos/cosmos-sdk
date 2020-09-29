@@ -255,7 +255,7 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 
 	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
-	// like other crypto.Pubkey implementations (e.g. ed25519.PubKeyMultisigThreshold),
+	// like other crypto.Pubkey implementations (e.g. ed25519.PubKey),
 	// LegacyAminoPubKey should be deserializable into a crypto.LegacyAminoPubKey:
 	var pubKey kmultisig.LegacyAminoPubKey
 	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)

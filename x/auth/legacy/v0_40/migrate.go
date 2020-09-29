@@ -79,7 +79,7 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 			{
 				v040Accounts[i] = &v040vesting.ContinuousVestingAccount{
 					BaseVestingAccount: convertBaseVestingAccount(v039Account.BaseVestingAccount),
-					StartTime:          v039Account.EndTime,
+					StartTime:          v039Account.StartTime,
 				}
 			}
 		case *v039auth.DelayedVestingAccount:
@@ -91,8 +91,8 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 		case *v039auth.PeriodicVestingAccount:
 			{
 				vestingPeriods := make([]v040vesting.Period, len(v039Account.VestingPeriods))
-				for i, period := range v039Account.VestingPeriods {
-					vestingPeriods[i] = v040vesting.Period{
+				for j, period := range v039Account.VestingPeriods {
+					vestingPeriods[j] = v040vesting.Period{
 						Length: period.Length,
 						Amount: period.Amount,
 					}

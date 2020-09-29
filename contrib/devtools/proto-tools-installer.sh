@@ -85,9 +85,9 @@ f_install_buf() {
 
 f_install_protoc_gen_gocosmos() {
   f_print_installing_with_padding protoc-gen-gocosmos
-  pushd "${TEMPDIR}" >/dev/null
+  # Note: we need to run this command in the root folder, because we added some
+  # an alias to our own fork of gogoproto inside go.mod.
   go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
-  popd >/dev/null
   f_print_done
 }
 

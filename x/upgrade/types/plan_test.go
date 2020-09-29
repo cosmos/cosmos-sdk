@@ -128,7 +128,6 @@ func TestPlanValid(t *testing.T) {
 			p: Plan{
 				Name:                "ibc-all-good",
 				Info:                "some text here",
-				Height:              123450000,
 				Time:                mustParseTime("2019-07-08T11:33:55Z"),
 				UpgradedClientState: cs,
 			},

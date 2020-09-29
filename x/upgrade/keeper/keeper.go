@@ -17,6 +17,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -80,35 +81,43 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	store.Set(types.PlanKey(), bz)
 
 	if plan.UpgradedClientState != nil {
-		// marshal Any into bytes
-		bz = k.cdc.MustMarshalBinaryBare(plan.UpgradedClientState)
-		store.Set(types.UpgradedClientKey(), bz)
+		clientState, err := clienttypes.UnpackClientState(plan.UpgradedClientState)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
+		}
+		return k.SetUpgradedClient(ctx, clientState)
 	}
 
 	return nil
 }
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain
-// Not used in this file, but useful for IBC testing
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) error {
 	// zero out any custom fields before setting
 	cs = cs.ZeroCustomFields()
-	csAny, err := clienttypes.PackClientState(cs)
+	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
 	if err != nil {
-		return err
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	// marshal Any into bytes
-	bz := k.cdc.MustMarshalBinaryBare(csAny)
 	store.Set(types.UpgradedClientKey(), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx sdk.Context) []byte {
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, bool) {
 	store := ctx.KVStore(k.storeKey)
-	return store.Get(types.UpgradedClientKey())
+	bz := store.Get(types.UpgradedClientKey())
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	cs, err := clienttypes.UnmarshalClientState(k.cdc, bz)
+	if err != nil {
+		return nil, false
+	}
+	return cs, true
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed

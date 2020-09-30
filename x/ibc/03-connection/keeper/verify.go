@@ -197,7 +197,7 @@ func (k Keeper) VerifyPacketReceiptAbsence(
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence,
 	); err != nil {
-		return sdkerrors.Wrapf(err, "failed packet acknowledgement absence verification for client (%s)", connection.GetClientID())
+		return sdkerrors.Wrapf(err, "failed packet receipt absence verification for client (%s)", connection.GetClientID())
 	}
 
 	return nil

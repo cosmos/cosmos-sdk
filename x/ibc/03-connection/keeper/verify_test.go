@@ -407,8 +407,8 @@ func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			}
 
-			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
+			packetReceiptKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight := suite.chainB.QueryProof(packetReceiptKey)
 
 			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketReceiptAbsence(
 				suite.chainA.GetContext(), connection, malleateHeight(proofHeight, tc.heightDiff), proof,

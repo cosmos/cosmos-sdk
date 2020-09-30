@@ -355,7 +355,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
@@ -372,8 +372,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-
+			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
@@ -401,7 +400,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 		{"UNORDERED: packet not sent", func() {
 			_, _, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 			packet = channeltypes.NewPacket(ibctesting.MockCommitment, 1, channelA.PortID, channelA.ID, channelB.PortID, channelB.ID, timeoutHeight, 0)
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		}, false},
 	}
 
@@ -476,7 +475,6 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
-
 		}, true},
 		{"success: UNORDERED", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
@@ -494,11 +492,10 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			// need to update chainA client to prove missing ack
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
-
 		}, true},
 		{"success: UNORDERED timeout out of order packet", func() {
 			// setup uses an UNORDERED channel
@@ -517,15 +514,13 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 				// create packet commitment
 				err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 				suite.Require().NoError(err)
-
 			}
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-			packetKey = host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			packetKey = host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
-
 		}, true},
 		{"success: ORDERED timeout out of order packet", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
@@ -550,7 +545,6 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
-
 		}, true},
 		{"channel does not exist", func() {
 			// any non-nil value of packet is valid
@@ -570,7 +564,6 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 
 			// close counterparty channel
 			suite.coordinator.SetChannelClosed(suite.chainB, suite.chainA, counterpartyChannel)
-
 		}, false},
 		{"ORDERED: channel not closed", func() {
 			clientA, clientB, _, _, channelA, channelB := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.ORDERED)
@@ -589,7 +582,6 @@ func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 
 			packetKey = host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())
-
 		}, false},
 	}
 

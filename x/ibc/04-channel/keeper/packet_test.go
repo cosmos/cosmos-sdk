@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestWriteAcknowledgement() {
 				ack = ibctesting.TestHash
 				suite.chainB.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(suite.chainB.GetContext(), packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
 			},
-			true,
+			false,
 		},
 		{
 			"empty acknowledgement",

@@ -47,7 +47,8 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 - **A reference to [`baseapp`](../core/baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by Tendermint to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://tendermint.com/docs/spec/abci/abci.html#overview) and the [routing logic](../core/baseapp.md#routing).
 - **A list of store keys**. The [store](../core/store.md), which contains the entire state, is implemented as a [`multistore`](../core/store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../core/ocap.md) of the Cosmos SDK.
 - **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../building-modules/keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
-- **A reference to a [`codec`](../core/encoding.md).** The application's `codec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The `codec` must be deterministic. The default codec is [Protocol Buffers](../core/encoding.md).
+- **A reference to a [`codec`](../core/encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../core/encoding.md).
+- **A reference to a [`legacyAmino`](../core/encoding.md) codec.** Some parts of the SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicity use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
 - **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering [`routes`](../core/baseapp.md#routing), [gRPC query routes](../core/baseapp.md#query-routing) or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from [`gaia`](https://github.com/cosmos/gaia)
@@ -106,14 +107,14 @@ See an example of `BeginBlocker` and `EndBlocker` functions from [`gaia`](https:
 
 ### Register Codec
 
-The `MakeCodecs` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `cdc`](../core/encoding.md) (e.g. Protobuf), and initialize the codec of the SDK and each of the application's modules using the `RegisterInterfaces` function.
+The `MakeCodecs` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `appCodec`](../core/encoding.md) (defaults to Protobuf), and initialize the codec of the SDK and each of the application's modules using the `RegisterInterfaces` function.
 
 To register the application's modules, the `MakeCodecs` creates a codec which will be passed as argument into the `RegisterInterfaces` method on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
 
 Please note that in this version of the SDK, the `MakeCodecs` function actually creates two codecs:
 
 - an `appCodec`, which will be used by default across the SDK, defaults to Protocol Buffers,
-- a `legacyAmino` codec, as some legacy parts of the SDK still uses Amino for backwards-compatibility. This `legacyAmino` codec should not be used by app developers, and will be removed in the next release.
+- a `legacyAmino` codec, as some legacy parts of the SDK still uses Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `legacyAmino` codec should not be used by app developers anymore, and will be removed in the next releases.
 
 See an example of a `MakeCodecs` from [`gaia`](https://github.com/cosmos/gaia):
 

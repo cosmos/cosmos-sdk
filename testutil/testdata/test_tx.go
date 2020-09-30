@@ -54,7 +54,11 @@ func (msg *TestMsg) GetSignBytes() []byte {
 func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, len(msg.Signers))
 	for i, in := range msg.Signers {
-		addr, _ := sdk.AccAddressFromBech32(in)
+		addr, err := sdk.AccAddressFromBech32(in)
+		if err != nil {
+			panic(err)
+		}
+
 		addrs[i] = addr
 	}
 

@@ -1,4 +1,4 @@
-package pubkey_test
+package changepubkey_test
 
 import (
 	"testing"
@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
+	changepubkey "github.com/cosmos/cosmos-sdk/x/auth/changepubkey"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 )
 
 type HandlerTestSuite struct {
@@ -24,7 +24,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.handler = pubkey.NewHandler(app.AccountKeeper)
+	suite.handler = changepubkey.NewHandler(app.AccountKeeper)
 	suite.app = app
 }
 

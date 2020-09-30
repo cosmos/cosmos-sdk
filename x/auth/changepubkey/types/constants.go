@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName defines the module's name.
-	ModuleName = "pubkey"
+	ModuleName = "changepubkey"
 
 	// AttributeValueCategory is an alias for the message event value.
 	AttributeValueCategory = ModuleName

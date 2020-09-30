@@ -1,4 +1,4 @@
-package pubkey
+package changepubkey
 
 import (
 	"encoding/json"
@@ -14,9 +14,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
 )
 
 var (

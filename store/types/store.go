@@ -44,6 +44,7 @@ type Queryable interface {
 
 // StoreUpgrades defines a series of transformations to apply the multistore db upon load
 type StoreUpgrades struct {
+	Added   []string      `json:"added"`
 	Renamed []StoreRename `json:"renamed"`
 	Deleted []string      `json:"deleted"`
 }
@@ -61,6 +62,19 @@ type UpgradeInfo struct {
 type StoreRename struct {
 	OldKey string `json:"old_key"`
 	NewKey string `json:"new_key"`
+}
+
+// IsDeleted returns true if the given key should be added
+func (s *StoreUpgrades) IsAdded(key string) bool {
+	if s == nil {
+		return false
+	}
+	for _, d := range s.Added {
+		if d == key {
+			return true
+		}
+	}
+	return false
 }
 
 // IsDeleted returns true if the given key should be deleted

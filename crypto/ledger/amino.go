@@ -14,6 +14,6 @@ func init() {
 
 // RegisterAmino registers all go-crypto related types in the given (amino) codec.
 func RegisterAmino(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(PrivKeyLedgerSecp256k1{},
-		"tendermint/PrivKeyLedgerSecp256k1", nil)
+	cdc.RegisterConcrete(PrivKeyLedgerSecp256K1{},
+		"tendermint/PrivKeyLedgerSecp256K1", nil)
 }

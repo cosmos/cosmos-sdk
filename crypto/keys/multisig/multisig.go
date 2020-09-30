@@ -5,8 +5,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
-	proto "github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	multisigtypes "github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -18,7 +16,7 @@ var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.
-func NewLegacyAminoPubKey(k int, pubKeys []tmcrypto.PubKey) *LegacyAminoPubKey {
+func NewLegacyAminoPubKey(k int, pubKeys []crypto.PubKey) *LegacyAminoPubKey {
 	if k <= 0 {
 		panic("threshold k of n multisignature: k <= 0")
 	}
@@ -99,11 +97,11 @@ func (m *LegacyAminoPubKey) VerifySignature(msg []byte, sig []byte) bool {
 }
 
 // GetPubKeys implements the PubKey.GetPubKeys method
-func (m *LegacyAminoPubKey) GetPubKeys() []tmcrypto.PubKey {
+func (m *LegacyAminoPubKey) GetPubKeys() []crypto.PubKey {
 	if m != nil {
-		pubKeys := make([]tmcrypto.PubKey, len(m.PubKeys))
+		pubKeys := make([]crypto.PubKey, len(m.PubKeys))
 		for i := 0; i < len(m.PubKeys); i++ {
-			pubKeys[i] = m.PubKeys[i].GetCachedValue().(tmcrypto.PubKey)
+			pubKeys[i] = m.PubKeys[i].GetCachedValue().(crypto.PubKey)
 		}
 		return pubKeys
 	}
@@ -113,7 +111,7 @@ func (m *LegacyAminoPubKey) GetPubKeys() []tmcrypto.PubKey {
 
 // Equals returns true if m and other both have the same number of keys, and
 // all constituent keys are the same, and in the same order.
-func (m *LegacyAminoPubKey) Equals(key tmcrypto.PubKey) bool {
+func (m *LegacyAminoPubKey) Equals(key crypto.PubKey) bool {
 	otherKey, ok := key.(multisigtypes.PubKey)
 	if !ok {
 		return false
@@ -154,11 +152,11 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return nil
 }
 
-func packPubKeys(pubKeys []tmcrypto.PubKey) ([]*types.Any, error) {
+func packPubKeys(pubKeys []crypto.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
 	for i := 0; i < len(pubKeys); i++ {
-		any, err := types.NewAnyWithValue(pubKeys[i].(proto.Message))
+		any, err := types.NewAnyWithValue(pubKeys[i])
 		if err != nil {
 			return nil, err
 		}

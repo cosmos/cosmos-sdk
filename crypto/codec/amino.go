@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +30,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute, nil)
 
-	cdc.RegisterInterface((*crypto.PrivKey)(nil), nil)
+	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&ed25519.PrivKey{},

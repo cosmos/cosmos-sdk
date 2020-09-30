@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.crypto.ledger;
+
+import "cosmos/crypto/secp256k1/keys.proto";
+import "cosmos/crypto/hd/v1beta1/hdpath.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/ledger";
+
+// PrivKeyLedgerSecp256K1 implements PrivKey, calling the ledger nano we
+// cache the PubKey from the first call to use it later.
+message PrivKeyLedgerSecp256K1 {
+  // CachedPubKey should be private, but we want to encode it via
+  // go-amino so we can view the address later, even without having the
+  // ledger attached.
+  cosmos.crypto.secp256k1.PubKey cached_pub_key = 1;
+  cosmos.crypto.hd.v1beta1.BIP44Params path = 2;
+}

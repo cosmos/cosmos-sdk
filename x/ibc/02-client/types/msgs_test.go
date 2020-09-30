@@ -354,7 +354,7 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 		{
 			"client upgrades to new solomachine client",
 			func() {
-				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "")
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 1)
 				msg, err = types.NewMsgUpgradeClient("clientid", soloMachine.ClientState(), []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},

@@ -73,7 +73,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 				// demonstrate that VerifyUpgrade allows for arbitrary changes to clienstate structure so long as
 				// previous chain committed to the change
-				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier").ClientState()
+				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier", 1).ClientState()
 				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
 				// change sequence to be higher height than latest current client height
 				soloClient.Sequence = cs.GetLatestHeight().GetEpochHeight() + 100
@@ -99,7 +99,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 				// demonstrate that VerifyUpgrade allows for arbitrary changes to clienstate structure so long as
 				// previous chain committed to the change
-				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier").ClientState()
+				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier", 1).ClientState()
 				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
 				// change sequence to be higher height than latest current client height
 				soloClient.Sequence = cs.GetLatestHeight().GetEpochHeight() + 100
@@ -151,7 +151,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 				// demonstrate that VerifyUpgrade allows for arbitrary changes to clienstate structure so long as
 				// previous chain committed to the change
-				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier").ClientState()
+				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier", 1).ClientState()
 				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
 				// change sequence to be higher height than latest current client height
 				soloClient.Sequence = cs.GetLatestHeight().GetEpochHeight() + 100

@@ -86,8 +86,6 @@ f_install_buf() {
 f_install_protoc_gen_gocosmos() {
   f_print_installing_with_padding protoc-gen-gocosmos
 
-  # Note: we need to run this command in the root folder, because we added some
-  # an alias to our own fork of gogoproto inside go.mod.
   if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
     echo -e "\tPlease run this command from the root folder."
     return 1

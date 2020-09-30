@@ -50,66 +50,90 @@ func UnmarshalSignatureData(cdc codec.BinaryMarshaler, data []byte) (signing.Sig
 	return sigData, nil
 }
 
-// CanUnmarshalDataByType returns true if the data provided can be unmarshaled
-// to the specified DataType.
-func CanUnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data []byte) bool {
+// UnmarshalDataByType attempts to unmarshal the data to the specified type. An error is
+// return if it fails.
+func UnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data []byte) (Data, error) {
 	if len(data) == 0 {
-		return false
+		return nil, sdkerrors.Wrap(ErrInvalidSignatureAndData, "data cannot be empty")
 	}
 
 	switch dataType {
 	case UNSPECIFIED:
-		return false
+		return nil, sdkerrors.Wrap(ErrInvalidDataType, "data type cannot be UNSPECIFIED")
 
 	case CLIENT:
 		clientData := &ClientStateData{}
 		if err := cdc.UnmarshalBinaryBare(data, clientData); err != nil {
-			return false
+			return nil, err
 		}
 
 		// unpack any
 		if _, err := clienttypes.UnpackClientState(clientData.ClientState); err != nil {
-			return false
+			return nil, err
 		}
-		return true
+		return clientData, nil
 
 	case CONSENSUS:
 		consensusData := &ConsensusStateData{}
 		if err := cdc.UnmarshalBinaryBare(data, consensusData); err != nil {
-			return false
+			return nil, err
 		}
 
 		// unpack any
 		if _, err := clienttypes.UnpackConsensusState(consensusData.ConsensusState); err != nil {
-			return false
+			return nil, err
 		}
-		return true
+		return consensusData, nil
 
 	case CONNECTION:
 		connectionData := &ConnectionStateData{}
-		return cdc.UnmarshalBinaryBare(data, connectionData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, connectionData); err != nil {
+			return nil, err
+		}
+
+		return connectionData, nil
 
 	case CHANNEL:
 		channelData := &ChannelStateData{}
-		return cdc.UnmarshalBinaryBare(data, channelData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, channelData); err != nil {
+			return nil, err
+		}
+
+		return channelData, nil
 
 	case PACKETCOMMITMENT:
 		commitmentData := &PacketCommitmentData{}
-		return cdc.UnmarshalBinaryBare(data, commitmentData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, commitmentData); err != nil {
+			return nil, err
+		}
+
+		return commitmentData, nil
 
 	case PACKETACKNOWLEDGEMENT:
 		ackData := &PacketAcknowledgementData{}
-		return cdc.UnmarshalBinaryBare(data, ackData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, ackData); err != nil {
+			return nil, err
+		}
+
+		return ackData, nil
 
 	case PACKETACKNOWLEDGEMENTABSENCE:
 		ackAbsenceData := &PacketAcknowledgementAbsenceData{}
-		return cdc.UnmarshalBinaryBare(data, ackAbsenceData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, ackAbsenceData); err != nil {
+			return nil, err
+		}
+
+		return ackAbsenceData, nil
 
 	case NEXTSEQUENCERECV:
 		nextSeqRecvData := &NextSequenceRecvData{}
-		return cdc.UnmarshalBinaryBare(data, nextSeqRecvData) == nil
+		if err := cdc.UnmarshalBinaryBare(data, nextSeqRecvData); err != nil {
+			return nil, err
+		}
+
+		return nextSeqRecvData, nil
 
 	default:
-		return false
+		return nil, sdkerrors.Wrapf(ErrInvalidDataType, "unsupported data type %T", dataType)
 	}
 }

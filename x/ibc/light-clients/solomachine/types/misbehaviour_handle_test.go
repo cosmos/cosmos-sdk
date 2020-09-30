@@ -56,7 +56,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
-				"invalid SignatureOne signature",
+				"invalid SignatureOne SignatureData",
 				func() {
 					clientState = solomachine.ClientState()
 					m := solomachine.CreateMisbehaviour()
@@ -66,7 +66,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				}, false,
 			},
 			{
-				"invalid SignatureTwo signature",
+				"invalid SignatureTwo SignatureData",
 				func() {
 					clientState = solomachine.ClientState()
 					m := solomachine.CreateMisbehaviour()
@@ -76,7 +76,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				}, false,
 			},
 			{
-				"invalid first signature",
+				"invalid first signature data",
 				func() {
 					clientState = solomachine.ClientState()
 
@@ -104,7 +104,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
-				"invalid second signature",
+				"invalid second signature data",
 				func() {
 					clientState = solomachine.ClientState()
 
@@ -131,6 +131,37 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				},
 				false,
 			},
+			{
+				"wrong pubkey generates first signature",
+				func() {
+					clientState = solomachine.ClientState()
+					badMisbehaviour := solomachine.CreateMisbehaviour()
+
+					// update public key to a new one
+					solomachine.CreateHeader()
+					m := solomachine.CreateMisbehaviour()
+
+					// set SignatureOne to use the wrong signature
+					m.SignatureOne = badMisbehaviour.SignatureOne
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"wrong pubkey generates second signature",
+				func() {
+					clientState = solomachine.ClientState()
+					badMisbehaviour := solomachine.CreateMisbehaviour()
+
+					// update public key to a new one
+					solomachine.CreateHeader()
+					m := solomachine.CreateMisbehaviour()
+
+					// set SignatureTwo to use the wrong signature
+					m.SignatureTwo = badMisbehaviour.SignatureTwo
+					misbehaviour = m
+				}, false,
+			},
+
 			{
 				"signatures sign over different sequence",
 				func() {

@@ -129,9 +129,15 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 			suite.Run(tc.name, func() {
 				tc.malleate()
 
-				res := types.CanUnmarshalDataByType(cdc, tc.dataType, data)
+				data, err := types.UnmarshalDataByType(cdc, tc.dataType, data)
 
-				suite.Require().Equal(tc.expPass, res)
+				if tc.expPass {
+					suite.Require().NoError(err)
+					suite.Require().NotNil(data)
+				} else {
+					suite.Require().Error(err)
+					suite.Require().Nil(data)
+				}
 			})
 		}
 	}

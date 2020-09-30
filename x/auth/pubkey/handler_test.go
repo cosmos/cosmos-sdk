@@ -24,7 +24,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
-	suite.handler = pubkey.NewHandler(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
+	suite.handler = pubkey.NewHandler(app.AccountKeeper)
 	suite.app = app
 }
 
@@ -50,12 +50,7 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 		expectErr bool
 	}{
 		{
-			name:      "try changing pubkey without enough fee balance",
-			msg:       types.NewMsgChangePubKey(addr1, pubKey),
-			expectErr: true,
-		},
-		{
-			name:      "try changing pubkey with enough balance",
+			name:      "try changing pubkey",
 			msg:       types.NewMsgChangePubKey(addr2, pubKey),
 			expectErr: false,
 		},
@@ -74,9 +69,6 @@ func (suite *HandlerTestSuite) TestMsgChangePubKey() {
 
 				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.Address)
 				suite.Require().NotNil(accI)
-				// check remaining balance after successful run
-				balance := suite.app.BankKeeper.GetBalance(ctx, tc.msg.GetAddress(), "stake")
-				suite.Require().Equal(balance.Amount.Int64(), int64(5000))
 			}
 		})
 	}

@@ -321,7 +321,7 @@ func NewSimApp(
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		pubkey.NewAppModule(app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		pubkey.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),

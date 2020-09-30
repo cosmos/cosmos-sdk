@@ -86,11 +86,9 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
 		return k.SetUpgradedClient(ctx, clientState)
-	} else {
-		// delete upgraded client key to remove any upgraded client set by outdated plan
-		store.Delete(types.UpgradedClientKey())
 	}
-
+	// delete upgraded client key to remove any upgraded client set by outdated plan
+	store.Delete(types.UpgradedClientKey())
 	return nil
 }
 

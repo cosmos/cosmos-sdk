@@ -199,7 +199,7 @@ func (msg MsgUpgradeClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgUpgradeClient) Type() string {
-	return TypeMsgUpdateClient
+	return TypeMsgUpgradeClient
 }
 
 // ValidateBasic implements sdk.Msg

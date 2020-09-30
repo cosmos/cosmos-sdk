@@ -102,7 +102,7 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 
 	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight())
 
-	// emitting events in the keeper emits for both begin block and handler client updates
+	// emitting events in the keeper emits for client upgrades
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeUpgradeClient,

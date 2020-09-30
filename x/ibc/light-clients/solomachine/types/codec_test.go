@@ -8,7 +8,7 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
+func (suite SoloMachineTestSuite) TestUnmarshalDataByType() {
 	var (
 		data []byte
 		err  error
@@ -77,6 +77,16 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 				}, true,
 			},
 			{
+				"bad connection (uses channel data)", types.CONNECTION, func() {
+					counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
+					ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
+					path := solomachine.GetChannelStatePath("portID", "channelID")
+
+					data, err = types.ChannelStateDataBytes(cdc, path, ch)
+					suite.Require().NoError(err)
+				}, false,
+			},
+			{
 				"channel", types.CHANNEL, func() {
 					counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
 					ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
@@ -85,6 +95,17 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 					data, err = types.ChannelStateDataBytes(cdc, path, ch)
 					suite.Require().NoError(err)
 				}, true,
+			},
+			{
+				"bad channel (uses connection data)", types.CHANNEL, func() {
+					counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
+					conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
+					path := solomachine.GetConnectionStatePath("connectionID")
+
+					data, err = types.ConnectionStateDataBytes(cdc, path, conn)
+					suite.Require().NoError(err)
+
+				}, false,
 			},
 			{
 				"packet commitment", types.PACKETCOMMITMENT, func() {
@@ -96,6 +117,14 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 				}, true,
 			},
 			{
+				"bad packet commitment (uses next seq recv)", types.PACKETCOMMITMENT, func() {
+					path := solomachine.GetNextSequenceRecvPath("portID", "channelID")
+
+					data, err = types.NextSequenceRecvDataBytes(cdc, path, 10)
+					suite.Require().NoError(err)
+				}, false,
+			},
+			{
 				"packet acknowledgement", types.PACKETACKNOWLEDGEMENT, func() {
 					commitment := []byte("packet acknowledgement")
 					path := solomachine.GetPacketAcknowledgementPath("portID", "channelID")
@@ -103,6 +132,14 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 					data, err = types.PacketAcknowledgementDataBytes(cdc, path, commitment)
 					suite.Require().NoError(err)
 				}, true,
+			},
+			{
+				"bad packet acknowledgement (uses next sequence recv)", types.PACKETACKNOWLEDGEMENT, func() {
+					path := solomachine.GetNextSequenceRecvPath("portID", "channelID")
+
+					data, err = types.NextSequenceRecvDataBytes(cdc, path, 10)
+					suite.Require().NoError(err)
+				}, false,
 			},
 			{
 				"packet acknowledgement absence", types.PACKETACKNOWLEDGEMENTABSENCE, func() {
@@ -120,6 +157,15 @@ func (suite SoloMachineTestSuite) TestCanUnmarshalDataByType() {
 					data, err = types.NextSequenceRecvDataBytes(cdc, path, 10)
 					suite.Require().NoError(err)
 				}, true,
+			},
+			{
+				"bad next sequence recv (uses packet commitment)", types.NEXTSEQUENCERECV, func() {
+					commitment := []byte("packet commitment")
+					path := solomachine.GetPacketCommitmentPath("portID", "channelID")
+
+					data, err = types.PacketCommitmentDataBytes(cdc, path, commitment)
+					suite.Require().NoError(err)
+				}, false,
 			},
 		}
 

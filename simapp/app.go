@@ -82,7 +82,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization"
 	msgauthkeeper "github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
+	msgauthtypes "github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -212,6 +214,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		msgauthtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -277,6 +280,8 @@ func NewSimApp(
 		appCodec, keys[ibchost.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
+	app.MsgAuthKeeper = msgauthkeeper.NewKeeper(keys[msgauthtypes.StoreKey], appCodec, baseapp.Router{})
+
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
@@ -335,6 +340,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
+		msg_authorization.NewAppModule(app.MsgAuthKeeper),
 		transferModule,
 	)
 

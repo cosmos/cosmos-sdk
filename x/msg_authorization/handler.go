@@ -24,12 +24,28 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 func handleMsgGrantAuthorization(ctx sdk.Context, msg *types.MsgGrantAuthorization, k keeper.Keeper) (*sdk.Result, error) {
-	k.Grant(ctx, msg.Grantee, msg.Granter, msg.Authorization, msg.Expiration)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		return nil, err
+	}
+
+	var authorization types.Authorization
+	err = types.ModuleCdc.UnpackAny(msg.Authorization, &authorization)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventGrantAuthorization,
-			sdk.NewAttribute(types.AttributeKeyGrantType, msg.Authorization.MsgType()),
+			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MsgType()),
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter),
 			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee),
@@ -40,7 +56,16 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg *types.MsgGrantAuthorizati
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg *types.MsgRevokeAuthorization, k keeper.Keeper) (*sdk.Result, error) {
-	err := k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
+	if err != nil {
+		return nil, err
+	}
+	err = k.Revoke(ctx, grantee, granter, msg.AuthorizationMsgType)
 	if err != nil {
 		return nil, err
 	}
@@ -59,5 +84,15 @@ func handleMsgRevokeAuthorization(ctx sdk.Context, msg *types.MsgRevokeAuthoriza
 }
 
 func handleMsgExecAuthorized(ctx sdk.Context, msg *types.MsgExecAuthorized, k keeper.Keeper) (*sdk.Result, error) {
-	return k.DispatchActions(ctx, msg.Grantee, msg.Msgs)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := msg.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	return k.DispatchActions(ctx, grantee, msgs)
 }

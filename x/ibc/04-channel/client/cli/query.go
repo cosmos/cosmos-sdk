@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	flagSequences        = "sequences"
-	flagAcknowledgements = "acknowledgements"
+	flagSequences = "sequences"
 )
 
 // GetCmdQueryChannels defines the command to query all the channels ends
@@ -161,7 +160,7 @@ func GetCmdQueryChannelClientState() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutputLegacy(res.IdentifiedClientState)
+			return clientCtx.PrintOutput(res.IdentifiedClientState)
 		},
 	}
 
@@ -253,20 +252,18 @@ func GetCmdQueryPacketCommitment() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryUnrelayedPackets defines the command to query all the unrelayed
-// packets for either packet commitments or acknowledgements.
-func GetCmdQueryUnrelayedPackets() *cobra.Command {
+// GetCmdQueryUnreceivedPackets defines the command to query all the unreceived
+// packets on the receiving chain
+func GetCmdQueryUnreceivedPackets() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unrelayed-packets [port-id] [channel-id]",
-		Short: "Query all the unrelayed packets associated with a channel",
-		Long: `Determine if a packet, given a list of packet commitment sequences, is unrelayed.
+		Use:   "unreceived-packets [port-id] [channel-id]",
+		Short: "Query all the unreceived packets associated with a channel",
+		Long: `Determine if a packet, given a list of packet commitment sequences, is unreceived.
 
-If the '-acknowledgements' flag is false (default) then the return value represents:
-- Unrelayed packet commitments: no acknowledgement exists for the given packet commitment sequence.
-
-Otherwise, the return value represents:
-- Unrelayed packet acknowledgements: an acknowledgement exists for the given packet commitment sequence.`,
-		Example: fmt.Sprintf("%s query %s %s unrelayed-packets [port-id] [channel-id] --sequences=1,2,3 --acknowledgements=false", version.AppName, host.ModuleName, types.SubModuleName),
+The return value represents:
+- Unreceived packet commitments: no acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
+`,
+		Example: fmt.Sprintf("%s query %s %s unreceived-packets [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -281,24 +278,18 @@ Otherwise, the return value represents:
 				return err
 			}
 
-			acknowledgements, err := cmd.Flags().GetBool(flagAcknowledgements)
-			if err != nil {
-				return err
-			}
-
 			seqs := make([]uint64, len(seqSlice))
 			for i := range seqSlice {
 				seqs[i] = uint64(seqSlice[i])
 			}
 
-			req := &types.QueryUnrelayedPacketsRequest{
+			req := &types.QueryUnreceivedPacketsRequest{
 				PortId:                    args[0],
 				ChannelId:                 args[1],
 				PacketCommitmentSequences: seqs,
-				Acknowledgements:          acknowledgements,
 			}
 
-			res, err := queryClient.UnrelayedPackets(context.Background(), req)
+			res, err := queryClient.UnreceivedPackets(context.Background(), req)
 			if err != nil {
 				return err
 			}
@@ -308,7 +299,57 @@ Otherwise, the return value represents:
 	}
 
 	cmd.Flags().Int64Slice(flagSequences, []int64{}, "comma separated list of packet sequence numbers")
-	cmd.Flags().Bool(flagAcknowledgements, false, "boolean indicating if unrelayed acknowledgements (true) or unrelayed packet commitments (false) are returned.")
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryUnrelayedAcks defines the command to query all the unrelayed acks on the original sending chain
+func GetCmdQueryUnrelayedAcks() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unrelayed-acks [port-id] [channel-id]",
+		Short: "Query all the unrelayed acks associated with a channel",
+		Long: `Given a list of packet commitment sequences from counterparty, determine if an ack on executing chain has not been relayed to counterparty.
+
+The return value represents:
+- Unrelayed packet acknowledgement: packet commitment exists on original sending chain and ack exists on receiving (executing) chain.
+`,
+		Example: fmt.Sprintf("%s query %s %s unrelayed-acks [port-id] [channel-id] --sequences=1,2,3", version.AppName, host.ModuleName, types.SubModuleName),
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			seqSlice, err := cmd.Flags().GetInt64Slice(flagSequences)
+			if err != nil {
+				return err
+			}
+
+			seqs := make([]uint64, len(seqSlice))
+			for i := range seqSlice {
+				seqs[i] = uint64(seqSlice[i])
+			}
+
+			req := &types.QueryUnrelayedAcksRequest{
+				PortId:                    args[0],
+				ChannelId:                 args[1],
+				PacketCommitmentSequences: seqs,
+			}
+
+			res, err := queryClient.UnrelayedAcks(context.Background(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+
+	cmd.Flags().Int64Slice(flagSequences, []int64{}, "comma separated list of packet sequence numbers")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

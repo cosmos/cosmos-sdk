@@ -11,15 +11,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
 	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
-	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
+	pk := multisig.NewLegacyAminoPubKey(
+		1,
+		[]crypto.PubKey{tmpKey1.PubKey()},
+	)
 	tmp := keyring.NewMultiInfo("myMultisig", pk)
 
 	require.Equal(t, "myMultisig", tmp.GetName())
@@ -46,9 +49,7 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
 	require.EqualError(t, cmd.Execute(), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
-
+	kbHome := t.TempDir()
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
 

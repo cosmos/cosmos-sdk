@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -162,7 +163,7 @@ func New(t *testing.T, cfg Config) *Network {
 	t.Log("acquiring test network lock")
 	lock.Lock()
 
-	baseDir, err := ioutil.TempDir(os.TempDir(), cfg.ChainID)
+	baseDir, err := ioutil.TempDir(t.TempDir(), cfg.ChainID)
 	require.NoError(t, err)
 	t.Logf("created temporary directory: %s", baseDir)
 
@@ -282,7 +283,7 @@ func New(t *testing.T, cfg Config) *Network {
 		)
 
 		genFiles = append(genFiles, tmCfg.GenesisFile())
-		genBalances = append(genBalances, banktypes.Balance{Address: addr, Coins: balances.Sort()})
+		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		commission, err := sdk.NewDecFromStr("0.5")
@@ -374,7 +375,7 @@ func (n *Network) LatestHeight() (int64, error) {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status()
+	status, err := n.Validators[0].RPCClient.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}
@@ -408,7 +409,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			ticker.Stop()
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			status, err := val.RPCClient.Status()
+			status, err := val.RPCClient.Status(context.Background())
 			if err == nil && status != nil {
 				latestHeight = status.SyncInfo.LatestBlockHeight
 				if latestHeight >= h {

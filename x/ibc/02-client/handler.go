@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -22,8 +20,7 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 		return nil, err
 	}
 
-	_, err = k.CreateClient(ctx, msg.ClientId, clientState, consensusState)
-	if err != nil {
+	if err = k.CreateClient(ctx, msg.ClientId, clientState, consensusState); err != nil {
 		return nil, err
 	}
 
@@ -31,8 +28,8 @@ func HandleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreat
 		sdk.NewEvent(
 			types.EventTypeCreateClient,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType().String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusState.GetHeight().String()),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, clientState.GetLatestHeight().String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -52,8 +49,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdat
 		return nil, err
 	}
 
-	_, err = k.UpdateClient(ctx, msg.ClientId, header)
-	if err != nil {
+	if err = k.UpdateClient(ctx, msg.ClientId, header); err != nil {
 		return nil, err
 	}
 
@@ -85,8 +81,8 @@ func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.Ms
 		sdk.NewEvent(
 			types.EventTypeSubmitMisbehaviour,
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
-			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType().String()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", misbehaviour.GetHeight())),
+			sdk.NewAttribute(types.AttributeKeyClientType, misbehaviour.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, misbehaviour.GetHeight().String()),
 		),
 	)
 

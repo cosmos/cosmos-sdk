@@ -25,7 +25,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func handleMsgUnjail(ctx sdk.Context, msg *types.MsgUnjail, k keeper.Keeper) (*sdk.Result, error) {
-	err := k.Unjail(ctx, msg.ValidatorAddr)
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddr)
+	if valErr != nil {
+		return nil, valErr
+	}
+	err := k.Unjail(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +38,7 @@ func handleMsgUnjail(ctx sdk.Context, msg *types.MsgUnjail, k keeper.Keeper) (*s
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr),
 		),
 	)
 

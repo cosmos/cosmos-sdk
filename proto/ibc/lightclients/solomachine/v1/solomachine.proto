@@ -3,7 +3,6 @@ package ibc.lightclients.solomachine.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 
-import "cosmos/base/crypto/v1beta1/crypto.proto";
 import "ibc/connection/connection.proto";
 import "ibc/channel/channel.proto";
 import "gogoproto/gogo.proto";
@@ -28,7 +27,7 @@ message ClientState {
 message ConsensusState {
   option (gogoproto.goproto_getters) = false;
   // public key of the solo machine
-  cosmos.base.crypto.v1beta1.PublicKey public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
+   google.protobuf.Any public_key = 1 [(gogoproto.moretags) = "yaml:\"public_key\""];
   // diversifier allows the same public key to be re-used across different solo machine clients
   // (potentially on different chains) without being considered misbehaviour.
   string diversifier = 2;
@@ -42,7 +41,7 @@ message Header {
   uint64                               sequence        = 1;
   uint64                               timestamp       = 2;
   bytes                                signature       = 3;
-  cosmos.base.crypto.v1beta1.PublicKey new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
+  google.protobuf.Any new_public_key  = 4 [(gogoproto.moretags) = "yaml:\"new_public_key\""];
   string                               new_diversifier = 5 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }
 
@@ -89,7 +88,7 @@ message HeaderData {
   option (gogoproto.goproto_getters) = false;
 
   // header public key
-  cosmos.base.crypto.v1beta1.PublicKey new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
+  google.protobuf.Any new_pub_key = 1 [(gogoproto.moretags) = "yaml:\"new_pub_key\""];
   // header diversifier
   string new_diversifier = 2 [(gogoproto.moretags) = "yaml:\"new_diversifier\""];
 }
@@ -102,7 +101,8 @@ message ClientStateData {
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
-// ConsensusStateSignBytes returns the SignBytes data for consensus state verification.
+// ConsensusStateSignBytes returns the SignBytes data for consensus state
+// verification.
 message ConsensusStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -110,7 +110,8 @@ message ConsensusStateData {
   google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
 }
 
-// ConnectionStateSignBytes returns the SignBytes data for connection state verification.
+// ConnectionStateSignBytes returns the SignBytes data for connection state
+// verification.
 message ConnectionStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -118,7 +119,8 @@ message ConnectionStateData {
   ibc.connection.ConnectionEnd connection = 2;
 }
 
-// ChannelStateSignBytes returns the SignBytes data for channel state verification.
+// ChannelStateSignBytes returns the SignBytes data for channel state
+// verification.
 message ChannelStateData {
   option (gogoproto.goproto_getters) = false;
 
@@ -126,20 +128,22 @@ message ChannelStateData {
   ibc.channel.Channel channel = 2;
 }
 
-// PacketCommitmentSignBytes returns the SignBytes data for packet commitment verification.
+// PacketCommitmentSignBytes returns the SignBytes data for packet commitment
+// verification.
 message PacketCommitmentData {
   bytes path       = 1;
   bytes commitment = 2;
 }
 
-// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement verification.
+// PacketAcknowledgementSignBytes returns the SignBytes data for acknowledgement
+// verification.
 message PacketAcknowledgementData {
   bytes path            = 1;
   bytes acknowledgement = 2;
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for acknowledgement absence
-// verification.
+// PacketAcknowledgementAbsenceSignBytes returns the SignBytes data for
+// acknowledgement absence verification.
 message PacketAcknowledgementAbsenseData {
   bytes path = 1;
 }

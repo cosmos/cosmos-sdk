@@ -19,22 +19,26 @@ service Query {
   }
 }
 
-// QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC method.
+// QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
+// method.
 message QueryCurrentPlanRequest {}
 
-// QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC method.
+// QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC
+// method.
 message QueryCurrentPlanResponse {
   // plan is the current upgrade plan.
   Plan plan = 1;
 }
 
-// QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC method.
+// QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC
+// method.
 message QueryAppliedPlanRequest {
   // name is the name of the applied plan to query for.
   string name = 1;
 }
 
-// QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC method.
+// QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC
+// method.
 message QueryAppliedPlanResponse {
   // height is the block height at which the plan was applied.
   int64 height = 1;

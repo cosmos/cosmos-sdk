@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 	}{
 		{
 			"valid update client proposal", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 				clientState := suite.chainA.GetClientState(clientA)
 
 				tmClientState, ok := clientState.(*ibctmtypes.ClientState)
@@ -46,28 +46,26 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 		},
 		{
 			"cannot update localhost", func() {
-				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, exported.Localhost.String(), &ibctmtypes.Header{})
+				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, exported.Localhost, &ibctmtypes.Header{})
 				suite.Require().NoError(err)
 			}, false,
 		},
 		{
 			"client does not exist", func() {
-				// bypass ClientType check
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientType(suite.chainA.GetContext(), ibctesting.InvalidID, exported.Tendermint)
 				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, ibctesting.InvalidID, &ibctmtypes.Header{})
 				suite.Require().NoError(err)
 			}, false,
 		},
 		{
 			"cannot unpack header, header is nil", func() {
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 				content = &clienttypes.ClientUpdateProposal{ibctesting.Title, ibctesting.Description, clientA, nil}
 			}, false,
 		},
 		{
 			"update fails", func() {
 				header := &ibctmtypes.Header{}
-				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+				clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 				content, err = clienttypes.NewClientUpdateProposal(ibctesting.Title, ibctesting.Description, clientA, header)
 				suite.Require().NoError(err)
 			}, false,

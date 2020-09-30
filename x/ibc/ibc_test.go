@@ -8,6 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
@@ -60,10 +61,12 @@ func (suite *IBCTestSuite) SetupTest() {
 
 	now := time.Now().UTC()
 
-	val := tmtypes.NewValidator(pubKey, 10)
+	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, height-1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
+	clientHeightMinus1 := clienttypes.NewHeight(0, height-1)
+
+	suite.header = ibctmtypes.CreateTestHeader(chainID, clientHeight, clientHeightMinus1, now, valSet, valSet, []tmtypes.PrivValidator{privVal})
 
 	suite.ctx = suite.app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 }

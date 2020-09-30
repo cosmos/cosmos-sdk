@@ -39,6 +39,13 @@ func SetHaltTime(haltTime uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
 }
 
+// SetMinRetainBlocks returns a BaseApp option function that sets the minimum
+// block retention height value when determining which heights to prune during
+// ABCI Commit.
+func SetMinRetainBlocks(minRetainBlocks uint64) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.setMinRetainBlocks(minRetainBlocks) }
+}
+
 // SetTrace will turn on or off trace flag
 func SetTrace(trace bool) func(*BaseApp) {
 	return func(app *BaseApp) { app.setTrace(trace) }

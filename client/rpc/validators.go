@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -56,7 +57,7 @@ func ValidatorCommand() *cobra.Command {
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
 
 	return cmd
@@ -119,7 +120,7 @@ func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (R
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(height, page, limit)
+	validatorsRes, err := node.Validators(context.Background(), height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}

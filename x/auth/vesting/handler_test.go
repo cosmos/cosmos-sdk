@@ -31,36 +31,40 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
 	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
-	addr1 := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
-	addr3 := sdk.AccAddress([]byte("addr3"))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
 	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, balances))
 
-	testCases := map[string]struct {
+	testCases := []struct {
+		name      string
 		msg       *types.MsgCreateVestingAccount
 		expectErr bool
 	}{
-		"create delayed vesting account": {
+		{
+			name:      "create delayed vesting account",
 			msg:       types.NewMsgCreateVestingAccount(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("test", 100)), ctx.BlockTime().Unix()+10000, true),
 			expectErr: false,
 		},
-		"create continuous vesting account": {
+		{
+			name:      "create continuous vesting account",
 			msg:       types.NewMsgCreateVestingAccount(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("test", 100)), ctx.BlockTime().Unix()+10000, false),
 			expectErr: false,
 		},
-		"continuous vesting account already exists": {
+		{
+			name:      "continuous vesting account already exists",
 			msg:       types.NewMsgCreateVestingAccount(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("test", 100)), ctx.BlockTime().Unix()+10000, false),
 			expectErr: true,
 		},
 	}
 
-	for name, tc := range testCases {
+	for _, tc := range testCases {
 		tc := tc
 
-		suite.Run(name, func() {
+		suite.Run(tc.name, func() {
 			res, err := suite.handler(ctx, tc.msg)
 			if tc.expectErr {
 				suite.Require().Error(err)
@@ -68,7 +72,9 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 
-				accI := suite.app.AccountKeeper.GetAccount(ctx, tc.msg.ToAddress)
+				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+				suite.Require().NoError(err)
+				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
 
 				if tc.msg.Delayed {

@@ -5,20 +5,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -49,7 +47,7 @@ func TestParseQueryResponse(t *testing.T) {
 func TestDefaultTxEncoder(t *testing.T) {
 	cdc := makeCodec()
 
-	defaultEncoder := authtypes.DefaultTxEncoder(cdc)
+	defaultEncoder := legacytx.DefaultTxEncoder(cdc)
 	encoder := authclient.GetTxEncoder(cdc)
 
 	compareEncoders(t, defaultEncoder, encoder)
@@ -142,7 +140,7 @@ func TestBatchScanner_Scan(t *testing.T) {
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
+	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

@@ -8,14 +8,13 @@ import (
 
 // BeginBlocker updates an existing localhost client with the latest block height.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	_, found := k.GetClientState(ctx, exported.ClientTypeLocalHost)
+	_, found := k.GetClientState(ctx, exported.Localhost)
 	if !found {
 		return
 	}
 
 	// update the localhost client with the latest block height
-	_, err := k.UpdateClient(ctx, exported.ClientTypeLocalHost, nil)
-	if err != nil {
+	if err := k.UpdateClient(ctx, exported.Localhost, nil); err != nil {
 		panic(err)
 	}
 }

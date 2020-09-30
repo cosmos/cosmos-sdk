@@ -1,11 +1,11 @@
 package cosmovisor
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -80,8 +80,7 @@ func (cfg *Config) CurrentBin() (string, error) {
 	}
 
 	// and return the binary
-	dest = filepath.Join(dest, "bin", cfg.Name)
-	return dest, nil
+	return filepath.Join(dest, "bin", cfg.Name), nil
 }
 
 // GetConfigFromEnv will read the environmental variables into a config
@@ -91,15 +90,19 @@ func GetConfigFromEnv() (*Config, error) {
 		Home: os.Getenv("DAEMON_HOME"),
 		Name: os.Getenv("DAEMON_NAME"),
 	}
+
 	if os.Getenv("DAEMON_ALLOW_DOWNLOAD_BINARIES") == "true" {
 		cfg.AllowDownloadBinaries = true
 	}
+
 	if os.Getenv("DAEMON_RESTART_AFTER_UPGRADE") == "true" {
 		cfg.RestartAfterUpgrade = true
 	}
+
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
+
 	return cfg, nil
 }
 
@@ -110,6 +113,7 @@ func (cfg *Config) validate() error {
 	if cfg.Name == "" {
 		return errors.New("DAEMON_NAME is not set")
 	}
+
 	if cfg.Home == "" {
 		return errors.New("DAEMON_HOME is not set")
 	}
@@ -121,10 +125,11 @@ func (cfg *Config) validate() error {
 	// ensure the root directory exists
 	info, err := os.Stat(cfg.Root())
 	if err != nil {
-		return errors.Wrap(err, "cannot stat home dir")
+		return fmt.Errorf("cannot stat home dir: %w", err)
 	}
+
 	if !info.IsDir() {
-		return errors.Errorf("%s is not a directory", info.Name())
+		return fmt.Errorf("%s is not a directory", info.Name())
 	}
 
 	return nil

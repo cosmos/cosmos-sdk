@@ -88,7 +88,7 @@ var (
 
 func TestSendNotEnoughBalance(t *testing.T) {
 	acc := &authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc}
@@ -164,12 +164,17 @@ func TestSendToModuleAcc(t *testing.T) {
 			app := simapp.SetupWithGenesisAccounts(genAccs)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-			err := app.BankKeeper.SetBalances(ctx, test.msg.FromAddress, test.fromBalance)
+			fromAddr, err := sdk.AccAddressFromBech32(test.msg.FromAddress)
+			require.NoError(t, err)
+			toAddr, err := sdk.AccAddressFromBech32(test.msg.ToAddress)
+			require.NoError(t, err)
+
+			err = app.BankKeeper.SetBalances(ctx, fromAddr, test.fromBalance)
 			require.NoError(t, err)
 
 			app.Commit()
 
-			res1 := app.AccountKeeper.GetAccount(ctx, test.msg.FromAddress)
+			res1 := app.AccountKeeper.GetAccount(ctx, fromAddr)
 			require.NotNil(t, res1)
 			require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
@@ -185,8 +190,8 @@ func TestSendToModuleAcc(t *testing.T) {
 				require.Error(t, err)
 			}
 
-			simapp.CheckBalance(t, app, test.msg.FromAddress, test.expFromBalance)
-			simapp.CheckBalance(t, app, test.msg.ToAddress, test.expToBalance)
+			simapp.CheckBalance(t, app, fromAddr, test.expFromBalance)
+			simapp.CheckBalance(t, app, toAddr, test.expToBalance)
 
 			res2 := app.AccountKeeper.GetAccount(app.NewContext(true, tmproto.Header{}), addr1)
 			require.NotNil(t, res2)
@@ -199,7 +204,7 @@ func TestSendToModuleAcc(t *testing.T) {
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
 	acc := &authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc}
@@ -267,10 +272,10 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 	acc2 := &authtypes.BaseAccount{
-		Address: addr2,
+		Address: addr2.String(),
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
@@ -315,13 +320,13 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 	acc2 := &authtypes.BaseAccount{
-		Address: addr2,
+		Address: addr2.String(),
 	}
 	acc4 := &authtypes.BaseAccount{
-		Address: addr4,
+		Address: addr4.String(),
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2, acc4}

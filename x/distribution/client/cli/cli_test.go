@@ -1,10 +1,11 @@
+// +build norace
+
 package cli_test
 
 import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -685,9 +686,8 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 	val := s.network.Validators[0]
 
-	invalidPropFile, err := ioutil.TempFile(os.TempDir(), "invalid_community_spend_proposal.*.json")
+	invalidPropFile, err := ioutil.TempFile(s.T().TempDir(), "invalid_community_spend_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(invalidPropFile.Name())
 
 	invalidProp := `{
   "title": "",
@@ -700,9 +700,8 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 	_, err = invalidPropFile.WriteString(invalidProp)
 	s.Require().NoError(err)
 
-	validPropFile, err := ioutil.TempFile(os.TempDir(), "valid_community_spend_proposal.*.json")
+	validPropFile, err := ioutil.TempFile(s.T().TempDir(), "valid_community_spend_proposal.*.json")
 	s.Require().NoError(err)
-	defer os.Remove(validPropFile.Name())
 
 	validProp := fmt.Sprintf(`{
   "title": "Community Pool Spend",

@@ -32,8 +32,13 @@ func (msg MsgChangePubKey) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
 	}
 
-	// TODO should validate PubKey
-	// problem: there can be several pubKey types
+	if len(msg.PubKey) == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "pubkey should not be empty")
+	}
+
+	if len(msg.GetPubKey().Address()) == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "pubkey should be able to associated to a valid address")
+	}
 
 	return nil
 }

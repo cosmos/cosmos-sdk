@@ -187,7 +187,7 @@ func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, proo
 		ClientId:     clientID,
 		ClientState:  anyClient,
 		ProofUpgrade: proofUpgrade,
-		Signer:       signer,
+		Signer:       signer.String(),
 	}, nil
 }
 
@@ -213,7 +213,7 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	if len(msg.ProofUpgrade) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be empty")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
 	}
 	return host.ClientIdentifierValidator(msg.ClientId)
@@ -226,7 +226,11 @@ func (msg MsgUpgradeClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpgradeClient) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

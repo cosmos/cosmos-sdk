@@ -440,7 +440,7 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 		{
 			name: "empty signer",
 			malleate: func() {
-				msg.Signer = nil
+				msg.Signer = ""
 			},
 			expPass: false,
 		},

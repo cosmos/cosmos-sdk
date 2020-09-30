@@ -3,6 +3,8 @@ package tx
 import (
 	fmt "fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,7 +13,8 @@ import (
 // MaxGasWanted defines the max gas allowed.
 const MaxGasWanted = uint64((1 << 63) - 1)
 
-var _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}
+// Interface implementation checks.
+var _, _, _, _ codectypes.UnpackInterfacesMessage = &Tx{}, &TxBody{}, &AuthInfo{}, &SignerInfo{}
 var _ sdk.Tx = &Tx{}
 
 // GetMsgs implements the GetMsgs method on sdk.Tx.
@@ -64,6 +67,13 @@ func (t *Tx) ValidateBasic() error {
 		)
 	}
 
+	if fee.Payer != "" {
+		_, err := sdk.AccAddressFromBech32(fee.Payer)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid fee payer address (%s)", err)
+		}
+	}
+
 	sigs := t.Signatures
 
 	if len(sigs) == 0 {
@@ -81,6 +91,8 @@ func (t *Tx) ValidateBasic() error {
 }
 
 // GetSigners retrieves all the signers of a tx.
+// This includes all unique signers of the messages (in order),
+// as well as the FeePayer (if specified and not already included).
 func (t *Tx) GetSigners() []sdk.AccAddress {
 	var signers []sdk.AccAddress
 	seen := map[string]bool{}
@@ -94,14 +106,32 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 		}
 	}
 
+	// ensure any specified fee payer is included in the required signers (at the end)
+	feePayer := t.AuthInfo.Fee.Payer
+	if feePayer != "" && !seen[feePayer] {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		signers = append(signers, payerAddr)
+		seen[feePayer] = true
+	}
+
 	return signers
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if t.Body != nil {
-		return t.Body.UnpackInterfaces(unpacker)
+		if err := t.Body.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
 	}
+
+	if t.AuthInfo != nil {
+		return t.AuthInfo.UnpackInterfaces(unpacker)
+	}
+
 	return nil
 }
 
@@ -115,6 +145,22 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		}
 	}
 	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *AuthInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, signerInfo := range m.SignerInfos {
+		err := signerInfo.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
+func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(m.PublicKey, new(crypto.PubKey))
 }
 
 // RegisterInterfaces registers the sdk.Tx interface.

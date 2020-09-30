@@ -14,30 +14,24 @@ import (
 
 // NewConsensusState creates a new ConsensusState instance.
 func NewConsensusState(
-	timestamp time.Time, root commitmenttypes.MerkleRoot, height clienttypes.Height,
+	timestamp time.Time, root commitmenttypes.MerkleRoot,
 	nextValsHash tmbytes.HexBytes,
 ) *ConsensusState {
 	return &ConsensusState{
 		Timestamp:          timestamp,
 		Root:               root,
-		Height:             height,
 		NextValidatorsHash: nextValsHash,
 	}
 }
 
 // ClientType returns Tendermint
-func (ConsensusState) ClientType() exported.ClientType {
-	return exported.Tendermint
+func (ConsensusState) ClientType() string {
+	return Tendermint
 }
 
 // GetRoot returns the commitment Root for the specific
 func (cs ConsensusState) GetRoot() exported.Root {
 	return cs.Root
-}
-
-// GetHeight returns the height for the specific consensus state
-func (cs ConsensusState) GetHeight() exported.Height {
-	return cs.Height
 }
 
 // GetTimestamp returns block time in nanoseconds at which the consensus state was stored
@@ -52,9 +46,6 @@ func (cs ConsensusState) ValidateBasic() error {
 	}
 	if err := tmtypes.ValidateHash(cs.NextValidatorsHash); err != nil {
 		return sdkerrors.Wrap(err, "next validators hash is invalid")
-	}
-	if cs.Height.EpochHeight == 0 {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidConsensus, "tendermint epoch height cannot be zero")
 	}
 	if cs.Timestamp.IsZero() {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be zero Unix time")

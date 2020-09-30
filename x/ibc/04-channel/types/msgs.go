@@ -13,6 +13,7 @@ import (
 var _ sdk.Msg = &MsgChannelOpenInit{}
 
 // NewMsgChannelOpenInit creates a new MsgChannelOpenInit
+//nolint:interfacer
 func NewMsgChannelOpenInit(
 	portID, channelID string, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
@@ -23,7 +24,7 @@ func NewMsgChannelOpenInit(
 		PortId:    portID,
 		ChannelId: channelID,
 		Channel:   channel,
-		Signer:    signer,
+		Signer:    signer.String(),
 	}
 }
 
@@ -56,12 +57,17 @@ func (msg MsgChannelOpenInit) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgChannelOpenTry{}
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
+//nolint:interfacer
 func NewMsgChannelOpenTry(
 	portID, channelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
@@ -76,7 +82,7 @@ func NewMsgChannelOpenTry(
 		CounterpartyVersion: counterpartyVersion,
 		ProofInit:           proofInit,
 		ProofHeight:         proofHeight,
-		Signer:              signer,
+		Signer:              signer.String(),
 	}
 }
 
@@ -115,12 +121,17 @@ func (msg MsgChannelOpenTry) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgChannelOpenAck{}
 
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
+//nolint:interfacer
 func NewMsgChannelOpenAck(
 	portID, channelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -131,7 +142,7 @@ func NewMsgChannelOpenAck(
 		CounterpartyVersion: cpv,
 		ProofTry:            proofTry,
 		ProofHeight:         proofHeight,
-		Signer:              signer,
+		Signer:              signer.String(),
 	}
 }
 
@@ -170,12 +181,17 @@ func (msg MsgChannelOpenAck) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgChannelOpenConfirm{}
 
 // NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
+//nolint:interfacer
 func NewMsgChannelOpenConfirm(
 	portID, channelID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -185,7 +201,7 @@ func NewMsgChannelOpenConfirm(
 		ChannelId:   channelID,
 		ProofAck:    proofAck,
 		ProofHeight: proofHeight,
-		Signer:      signer,
+		Signer:      signer.String(),
 	}
 }
 
@@ -224,19 +240,24 @@ func (msg MsgChannelOpenConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgChannelCloseInit{}
 
 // NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
+//nolint:interfacer
 func NewMsgChannelCloseInit(
 	portID string, channelID string, signer sdk.AccAddress,
 ) *MsgChannelCloseInit {
 	return &MsgChannelCloseInit{
 		PortId:    portID,
 		ChannelId: channelID,
-		Signer:    signer,
+		Signer:    signer.String(),
 	}
 }
 
@@ -269,12 +290,17 @@ func (msg MsgChannelCloseInit) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgChannelCloseConfirm{}
 
 // NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
+//nolint:interfacer
 func NewMsgChannelCloseConfirm(
 	portID, channelID string, proofInit []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -284,7 +310,7 @@ func NewMsgChannelCloseConfirm(
 		ChannelId:   channelID,
 		ProofInit:   proofInit,
 		ProofHeight: proofHeight,
-		Signer:      signer,
+		Signer:      signer.String(),
 	}
 }
 
@@ -323,12 +349,17 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 var _ sdk.Msg = &MsgRecvPacket{}
 
 // NewMsgRecvPacket constructs new MsgRecvPacket
+//nolint:interfacer
 func NewMsgRecvPacket(
 	packet Packet, proof []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
@@ -337,7 +368,7 @@ func NewMsgRecvPacket(
 		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
-		Signer:      signer,
+		Signer:      signer.String(),
 	}
 }
 
@@ -354,7 +385,7 @@ func (msg MsgRecvPacket) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 
@@ -375,7 +406,11 @@ func (msg MsgRecvPacket) GetDataSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 // Type implements sdk.Msg
@@ -386,6 +421,7 @@ func (msg MsgRecvPacket) Type() string {
 var _ sdk.Msg = &MsgTimeout{}
 
 // NewMsgTimeout constructs new MsgTimeout
+//nolint:interfacer
 func NewMsgTimeout(
 	packet Packet, nextSequenceRecv uint64, proof []byte,
 	proofHeight clienttypes.Height, signer sdk.AccAddress,
@@ -395,7 +431,7 @@ func NewMsgTimeout(
 		NextSequenceRecv: nextSequenceRecv,
 		Proof:            proof,
 		ProofHeight:      proofHeight,
-		Signer:           signer,
+		Signer:           signer.String(),
 	}
 }
 
@@ -412,7 +448,7 @@ func (msg MsgTimeout) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 
@@ -426,7 +462,11 @@ func (msg MsgTimeout) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 // Type implements sdk.Msg
@@ -435,6 +475,7 @@ func (msg MsgTimeout) Type() string {
 }
 
 // NewMsgTimeoutOnClose constructs new MsgTimeoutOnClose
+//nolint:interfacer
 func NewMsgTimeoutOnClose(
 	packet Packet, nextSequenceRecv uint64,
 	proof, proofClose []byte,
@@ -446,7 +487,7 @@ func NewMsgTimeoutOnClose(
 		Proof:            proof,
 		ProofClose:       proofClose,
 		ProofHeight:      proofHeight,
-		Signer:           signer,
+		Signer:           signer.String(),
 	}
 }
 
@@ -466,7 +507,7 @@ func (msg MsgTimeoutOnClose) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 
@@ -480,7 +521,11 @@ func (msg MsgTimeoutOnClose) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgTimeoutOnClose) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 // Type implements sdk.Msg
@@ -491,6 +536,7 @@ func (msg MsgTimeoutOnClose) Type() string {
 var _ sdk.Msg = &MsgAcknowledgement{}
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement
+//nolint:interfacer
 func NewMsgAcknowledgement(
 	packet Packet, ack []byte, proof []byte, proofHeight clienttypes.Height, signer sdk.AccAddress) *MsgAcknowledgement {
 	return &MsgAcknowledgement{
@@ -498,7 +544,7 @@ func NewMsgAcknowledgement(
 		Acknowledgement: ack,
 		Proof:           proof,
 		ProofHeight:     proofHeight,
-		Signer:          signer,
+		Signer:          signer.String(),
 	}
 }
 
@@ -515,7 +561,7 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	if msg.ProofHeight.IsZero() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 
@@ -529,7 +575,11 @@ func (msg MsgAcknowledgement) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	signer, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 
 // Type implements sdk.Msg

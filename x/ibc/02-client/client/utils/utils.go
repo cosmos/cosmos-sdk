@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -42,6 +43,11 @@ func QueryClientStateABCI(
 	value, proofBz, proofHeight, err := ibcclient.QueryTendermintProof(clientCtx, key)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if client exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrClientNotFound, clientID)
 	}
 
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
@@ -92,6 +98,11 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
+	// check if consensus state exists
+	if len(value) == 0 {
+		return nil, sdkerrors.Wrap(types.ErrConsensusStateNotFound, clientID)
+	}
+
 	cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 	cs, err := types.UnmarshalConsensusState(cdc, value)
@@ -104,7 +115,6 @@ func QueryConsensusStateABCI(
 		return nil, err
 	}
 
-	// TODO: retrieve epoch-number from chain-id
 	return types.NewQueryConsensusStateResponse(clientID, anyConsensusState, proofBz, proofHeight), nil
 }
 
@@ -116,14 +126,14 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 		return ibctmtypes.Header{}, 0, err
 	}
 
-	info, err := node.ABCIInfo()
+	info, err := node.ABCIInfo(context.Background())
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
-	commit, err := node.Commit(&height)
+	commit, err := node.Commit(context.Background(), &height)
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -131,7 +141,7 @@ func QueryTendermintHeader(clientCtx client.Context) (ibctmtypes.Header, int64, 
 	page := 0
 	count := 10_000
 
-	validators, err := node.Validators(&height, &page, &count)
+	validators, err := node.Validators(context.Background(), &height, &page, &count)
 	if err != nil {
 		return ibctmtypes.Header{}, 0, err
 	}
@@ -158,23 +168,23 @@ func QueryNodeConsensusState(clientCtx client.Context) (*ibctmtypes.ConsensusSta
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	info, err := node.ABCIInfo()
+	info, err := node.ABCIInfo(context.Background())
 	if err != nil {
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
 	height := info.Response.LastBlockHeight
 
-	commit, err := node.Commit(&height)
+	commit, err := node.Commit(context.Background(), &height)
 	if err != nil {
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}
 
-	page := 0
+	page := 1
 	count := 10_000
 
 	nextHeight := height + 1
-	nextVals, err := node.Validators(&nextHeight, &page, &count)
+	nextVals, err := node.Validators(context.Background(), &nextHeight, &page, &count)
 	if err != nil {
 		return &ibctmtypes.ConsensusState{}, 0, err
 	}

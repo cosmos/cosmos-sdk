@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"time"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/version"
+	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
+	tmversion "github.com/tendermint/tendermint/version"
+
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // MakeBlockID is a copied unimported test function from tmtypes to use here
@@ -23,16 +25,17 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 }
 
 // CreateTestHeader creates a mock header for testing only.
-func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *Header {
+func CreateTestHeader(chainID string, height, trustedHeight clienttypes.Height, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *Header {
 	var (
 		valSet      *tmproto.ValidatorSet
 		trustedVals *tmproto.ValidatorSet
 	)
 	vsetHash := tmValSet.Hash()
+	blockHeight := int64(height.EpochHeight)
 	tmHeader := tmtypes.Header{
-		Version:            version.Consensus{Block: 2, App: 2},
+		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,
-		Height:             height,
+		Height:             blockHeight,
 		Time:               timestamp,
 		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
@@ -48,8 +51,8 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
-	voteSet := tmtypes.NewVoteSet(chainID, height, 1, tmproto.PrecommitType, tmValSet)
-	commit, err := tmtypes.MakeCommit(blockID, height, 1, voteSet, signers, timestamp)
+	voteSet := tmtypes.NewVoteSet(chainID, blockHeight, 1, tmproto.PrecommitType, tmValSet)
+	commit, err := tmtypes.MakeCommit(blockID, blockHeight, 1, voteSet, signers, timestamp)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +79,7 @@ func CreateTestHeader(chainID string, height, trustedHeight int64, timestamp tim
 	return &Header{
 		SignedHeader:      &signedHeader,
 		ValidatorSet:      valSet,
-		TrustedHeight:     clienttypes.NewHeight(0, uint64(trustedHeight)),
+		TrustedHeight:     trustedHeight,
 		TrustedValidators: trustedVals,
 	}
 }

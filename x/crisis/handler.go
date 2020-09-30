@@ -27,7 +27,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func handleMsgVerifyInvariant(ctx sdk.Context, msg *types.MsgVerifyInvariant, k keeper.Keeper) (*sdk.Result, error) {
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
-	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.SendCoinsFromAccountToFeeCollector(ctx, sender, constantFee); err != nil {
 		return nil, err
 	}
 
@@ -80,7 +84,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg *types.MsgVerifyInvariant, k 
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCrisis),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
 

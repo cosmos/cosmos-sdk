@@ -1,7 +1,8 @@
+// +build norace
+
 package rest_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -113,10 +114,6 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name  string
 		url   string
@@ -134,7 +131,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, valAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
 			false,
 		},
 	}
@@ -153,7 +150,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(validator.Validator)
-				s.Require().Equal(s.network.Validators[0].ValAddress, validator.Validator.OperatorAddress)
+				s.Require().Equal(s.network.Validators[0].ValAddress.String(), validator.Validator.OperatorAddress)
 			}
 		})
 	}
@@ -162,10 +159,6 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
 		name         string
@@ -193,7 +186,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 		},
 		{
 			"valid request(height specific)",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations", baseURL, valAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations", baseURL, val.ValAddress.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -230,10 +223,6 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name  string
 		url   string
@@ -251,7 +240,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, valAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, val.ValAddress.String()),
 			false,
 		},
 	}
@@ -271,7 +260,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress)
+				s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress.String())
 			}
 		})
 	}
@@ -282,14 +271,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val2.Address)
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name         string
 		url          string
@@ -299,42 +280,42 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	}{
 		{
 			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "wrongValAddress", accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "wrongValAddress", val.Address.String()),
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
 		},
 		{
 			"wrong account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, "wrongAccAddress"),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val.ValAddress.String(), "wrongAccAddress"),
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
 		},
 		{
 			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "", accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, "", val.Address.String()),
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
 		},
 		{
 			"with no account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, ""),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val.ValAddress.String(), ""),
 			true,
 			&types.QueryDelegationResponse{},
 			nil,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, valAddressBase64, accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val2.ValAddress.String(), val.Address.String()),
 			false,
 			&types.QueryDelegationResponse{},
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
-						DelegatorAddress: val.Address,
-						ValidatorAddress: val2.ValAddress,
+						DelegatorAddress: val.Address.String(),
+						ValidatorAddress: val2.ValAddress.String(),
 						Shares:           sdk.NewDec(10),
 					},
 					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
@@ -365,14 +346,6 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name  string
 		url   string
@@ -380,27 +353,27 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	}{
 		{
 			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "wrongValAddress", accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "wrongValAddress", val.Address.String()),
 			true,
 		},
 		{
 			"wrong account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, "wrongAccAddress"),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, val.ValAddress.String(), "wrongAccAddress"),
 			true,
 		},
 		{
 			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "", accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, "", val.Address.String()),
 			true,
 		},
 		{
 			"with no account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, ""),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, val.ValAddress.String(), ""),
 			true,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, valAddressBase64, accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s/unbonding_delegation", baseURL, val.ValAddress.String(), val.Address.String()),
 			false,
 		},
 	}
@@ -419,8 +392,8 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(ubd.Unbond.DelegatorAddress, val.Address)
-				s.Require().Equal(ubd.Unbond.ValidatorAddress, val.ValAddress)
+				s.Require().Equal(ubd.Unbond.DelegatorAddress, val.Address.String())
+				s.Require().Equal(ubd.Unbond.ValidatorAddress, val.ValAddress.String())
 				s.Require().Len(ubd.Unbond.Entries, 1)
 			}
 		})
@@ -430,10 +403,6 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
 		name         string
@@ -461,7 +430,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 		},
 		{
 			"valid request (height specific)",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, delAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, val.Address.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
@@ -498,10 +467,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name       string
 		url        string
@@ -522,7 +487,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, delAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/unbonding_delegations", baseURL, val.Address.String()),
 			false,
 			1,
 		},
@@ -553,18 +518,6 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	srcValBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	dstValBase64 := base64.URLEncoding.EncodeToString(val2.Address)
-
 	testCases := []struct {
 		name  string
 		url   string
@@ -582,22 +535,22 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, delAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, val.Address.String()),
 			false,
 		},
 		{
 			"valid request with src address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s", baseURL, delAddressBase64, srcValBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String()),
 			false,
 		},
 		{
 			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, delAddressBase64, dstValBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, val.Address.String(), val2.ValAddress.String()),
 			false,
 		},
 		{
 			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, delAddressBase64, srcValBase64, dstValBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val2.ValAddress.String()),
 			false,
 		},
 	}
@@ -617,9 +570,9 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress)
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}
@@ -628,10 +581,6 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	delAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 
 	testCases := []struct {
 		name  string
@@ -650,7 +599,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators", baseURL, delAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators", baseURL, val.Address.String()),
 			false,
 		},
 	}
@@ -680,42 +629,34 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	valAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
-	// TODO: need to pass bech32 string instead of base64 encoding string.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/7195
-	accAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name  string
 		url   string
 		error bool
 	}{
 		{
+			"wrong delegator address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "wrongAccAddress", val.ValAddress.String()),
+			true,
+		},
+		{
 			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "wrongValAddress", accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, val.Address.String(), "wrongValAddress"),
 			true,
 		},
 		{
-			"wrong account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, "wrongAccAddress"),
+			"with empty delegator address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "", val.ValAddress.String()),
 			true,
 		},
 		{
-			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, "", accAddressBase64),
-			true,
-		},
-		{
-			"with no account address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, ""),
+			"with empty validator address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, val.Address.String(), ""),
 			true,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, valAddressBase64, accAddressBase64),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/validators/%s", baseURL, val.Address.String(), val.ValAddress.String()),
 			false,
 		},
 	}
@@ -734,7 +675,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotNil(validator)
-				s.Require().Equal(validator.Validator.OperatorAddress, val.ValAddress)
+				s.Require().Equal(validator.Validator.OperatorAddress, val.ValAddress.String())
 			}
 		})
 	}

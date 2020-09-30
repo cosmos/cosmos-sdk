@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -82,14 +83,15 @@ func (k Keeper) ConnOpenTry(
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
-	// with the supported IBC versions
+	// with Chain B's supported IBC versions. PickVersion will select the intersection
+	// of the supported versions and the counterparty versions.
 	version, err := types.PickVersion(counterpartyVersions)
 	if err != nil {
 		return err
 	}
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.TRYOPEN, clientID, counterparty, []string{version})
 
 	// Check that ChainA committed expectedConnectionEnd to its state
 	if err := k.VerifyConnectionState(
@@ -111,21 +113,21 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
-	// If connection already exists for connectionID, ensure that the existing connection's counterparty
-	// is chainA and connection is on INIT stage
-	// Check that existing connection version is on desired version of current handshake
+	// If connection already exists for connectionID, ensure that the existing connection's
+	// counterparty is chainA and connection is on INIT stage.
+	// Check that existing connection versions for initialized connection is equal to compatible
+	// versions for this chain.
 	previousConnection, found := k.GetConnection(ctx, connectionID)
 	if found && !(previousConnection.State == types.INIT &&
 		previousConnection.Counterparty.ConnectionId == counterparty.ConnectionId &&
 		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
 		previousConnection.ClientId == clientID &&
 		previousConnection.Counterparty.ClientId == counterparty.ClientId &&
-		previousConnection.Versions[0] == version) {
+		reflect.DeepEqual(previousConnection.Versions, types.GetCompatibleEncodedVersions())) {
 		return sdkerrors.Wrap(types.ErrInvalidConnection, "cannot relay connection attempt")
 	}
 
-	// Set connection state to TRYOPEN and store in chainB state
-	connection.State = types.TRYOPEN
+	// store connection in chainB state
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
 		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
 	}
@@ -165,31 +167,29 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
-	// Check connection on ChainA is on correct state: INIT or TRYOPEN
-	if connection.State != types.INIT && connection.State != types.TRYOPEN {
+	// Verify the provided version against the previously set connection state
+	switch {
+	// connection on ChainA must be in INIT or TRYOPEN
+	case connection.State != types.INIT && connection.State != types.TRYOPEN:
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionState,
 			"connection state is not INIT or TRYOPEN (got %s)", connection.State.String(),
 		)
-	}
 
-	version, err := types.DecodeVersion(encodedVersion)
-	if err != nil {
-		return sdkerrors.Wrap(err, "version negotiation failed")
-	}
-
-	// Check that ChainB's proposed version identifier is supported by chainA
-	supportedVersion, found := types.FindSupportedVersion(version, types.GetCompatibleVersions())
-	if !found {
+	// if the connection is INIT then the provided version must be supproted
+	case connection.State == types.INIT && !types.IsSupportedVersion(encodedVersion):
 		return sdkerrors.Wrapf(
-			types.ErrVersionNegotiationFailed,
-			"connection version provided (%s) is not supported (%s)", version, types.GetCompatibleVersions(),
+			types.ErrInvalidConnectionState,
+			"connection state is in INIT but the provided encoded version is not supported %s", encodedVersion,
 		)
-	}
 
-	// Check that ChainB's proposed feature set is supported by chainA
-	if err := supportedVersion.VerifyProposedVersion(version); err != nil {
-		return err
+	// if the connection is in TRYOPEN then the encoded version must be the only set version in the
+	// retreived connection state.
+	case connection.State == types.TRYOPEN && (len(connection.Versions) != 1 || connection.Versions[0] != encodedVersion):
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is in TRYOPEN but the provided encoded version (%s) is not set in the previous connection %s", encodedVersion, connection,
+		)
 	}
 
 	// validate client parameters of a chainA client stored on chainB

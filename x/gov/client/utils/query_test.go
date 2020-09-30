@@ -1,9 +1,11 @@
 package utils_test
 
 import (
+	"context"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/rpc/client/mock"
@@ -22,7 +24,7 @@ type TxSearchMock struct {
 	txs []tmtypes.Tx
 }
 
-func (mock TxSearchMock) TxSearch(query string, prove bool, page, perPage *int, orderBy string) (*ctypes.ResultTxSearch, error) {
+func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool, page, perPage *int, orderBy string) (*ctypes.ResultTxSearch, error) {
 	if page == nil {
 		*page = 0
 	}
@@ -44,7 +46,7 @@ func (mock TxSearchMock) TxSearch(query string, prove bool, page, perPage *int, 
 	return rst, nil
 }
 
-func (mock TxSearchMock) Block(height *int64) (*ctypes.ResultBlock, error) {
+func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*ctypes.ResultBlock, error) {
 	// any non nil Block needs to be returned. used to get time value
 	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
 }

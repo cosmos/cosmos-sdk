@@ -22,7 +22,8 @@ message TxResponse {
   uint32 code = 4;
   // Result bytes, if any.
   string data = 5;
-  // The output of the application's logger (raw string). May be non-deterministic.
+  // The output of the application's logger (raw string). May be
+  // non-deterministic.
   string raw_log = 6;
   // The output of the application's logger (typed). May be non-deterministic.
   repeated ABCIMessageLog logs = 7 [(gogoproto.castrepeated) = "ABCIMessageLogs", (gogoproto.nullable) = false];
@@ -34,8 +35,9 @@ message TxResponse {
   int64 gas_used = 10;
   // The request transaction bytes.
   google.protobuf.Any tx = 11;
-  // Time of the previous block. For heights > 1, it's the weighted median of the
-  // timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time.
+  // Time of the previous block. For heights > 1, it's the weighted median of
+  // the timestamps of the valid votes in the block.LastCommit. For height == 1,
+  // it's genesis time.
   string timestamp = 12;
 }
 
@@ -80,15 +82,15 @@ message GasInfo {
 message Result {
   option (gogoproto.goproto_getters) = false;
 
-  // Data is any data returned from message or handler execution. It MUST be length
-  // prefixed in order to separate data from multiple message executions.
+  // Data is any data returned from message or handler execution. It MUST be
+  // length prefixed in order to separate data from multiple message executions.
   bytes data = 1;
 
   // Log contains the log information from message or handler execution.
   string log = 2;
 
-  // Events contains a slice of Event objects that were emitted during message or
-  // handler execution.
+  // Events contains a slice of Event objects that were emitted during message
+  // or handler execution.
   repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
 }
 
@@ -99,7 +101,8 @@ message SimulationResponse {
   Result  result   = 2;
 }
 
-// MsgData defines the data returned in a Result object during message execution.
+// MsgData defines the data returned in a Result object during message
+// execution.
 message MsgData {
   option (gogoproto.stringer) = true;
 
@@ -107,8 +110,8 @@ message MsgData {
   bytes  data     = 2;
 }
 
-// TxMsgData defines a list of MsgData. A transaction will have a MsgData object for
-// each message.
+// TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+// for each message.
 message TxMsgData {
   option (gogoproto.stringer) = true;
 
@@ -120,22 +123,13 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [
-    (gogoproto.moretags)   = "yaml:\"total_count\"",
-    (gogoproto.jsontag)   = "total_count"
-  ];
+  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
   // Count of txs in current page
   uint64 count = 2;
   // Index of current page, start from 1
-  uint64 page_number = 3 [
-    (gogoproto.moretags)   = "yaml:\"page_number\"",
-    (gogoproto.jsontag)   = "page_number"
-  ];
+  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
   // Count of total pages
-  uint64 page_total = 4 [
-    (gogoproto.moretags)   = "yaml:\"page_total\"",
-    (gogoproto.jsontag)   = "page_total"
-  ];
+  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
   // Max count txs per page
   uint64 limit = 5;
   // List of txs in current page

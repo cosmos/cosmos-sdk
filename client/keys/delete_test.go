@@ -15,9 +15,7 @@ import (
 
 func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
-
+	kbHome := t.TempDir()
 	cmd := DeleteKeyCommand()
 	cmd.Flags().AddFlagSet(Commands(kbHome).PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)

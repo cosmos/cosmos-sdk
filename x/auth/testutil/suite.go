@@ -7,13 +7,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct
@@ -82,7 +81,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	privKey2, pubkey2, _ := testdata.KeyTestPubAddr()
-	multisigPk := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{pubkey, pubkey2})
+	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []crypto.PubKey{pubkey, pubkey2})
 
 	txBuilder := s.TxConfig.NewTxBuilder()
 
@@ -227,6 +226,7 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 }
 
 func (s *TxConfigTestSuite) TestTxEncodeDecode() {
+	log := s.T().Log
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
 	gasLimit := uint64(50000)
@@ -239,7 +239,6 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: dummySig,
 		},
-		SkipSequenceCheck: s.TxConfig.SignModeHandler().DefaultMode() == signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 	}
 
 	txBuilder := s.TxConfig.NewTxBuilder()
@@ -252,13 +251,13 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
 
-	s.T().Log("encode transaction")
+	log("encode transaction")
 	txBytes, err := s.TxConfig.TxEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(txBytes)
-
-	s.T().Log("decode transaction")
+	log("decode transaction", s.TxConfig)
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
+
 	s.Require().NoError(err)
 	tx3, ok := tx2.(signing.Tx)
 	s.Require().True(ok)
@@ -271,12 +270,12 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
-	s.T().Log("JSON encode transaction")
+	log("JSON encode transaction")
 	jsonTxBytes, err := s.TxConfig.TxJSONEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(jsonTxBytes)
 
-	s.T().Log("JSON decode transaction")
+	log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
 	tx3, ok = tx2.(signing.Tx)

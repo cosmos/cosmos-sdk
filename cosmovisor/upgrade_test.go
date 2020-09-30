@@ -159,6 +159,14 @@ func TestGetDownloadURL(t *testing.T) {
 			info: `{"binaries": {"linux/amd64": "https://foo.bar/", "windows/amd64": "https://something.else"}}`,
 			url:  "https://foo.bar/",
 		},
+		"any architecture not used": {
+			info: `{"binaries": {"linux/amd64": "https://foo.bar/", "*": "https://something.else"}}`,
+			url:  "https://foo.bar/",
+		},
+		"any architecture used": {
+			info: `{"binaries": {"linux/arm": "https://foo.bar/arm-only", "any": "https://foo.bar/portable"}}`,
+			url:  "https://foo.bar/portable",
+		},
 		"missing binary": {
 			info:  `{"binaries": {"linux/arm": "https://foo.bar/"}}`,
 			isErr: true,

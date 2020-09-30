@@ -6,7 +6,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-// IdentifiedClientState defines a client state with additional client
+// IdentifiedClientState defines a client state with an additional client
 // identifier field.
 message IdentifiedClientState {
   // client identifier
@@ -15,13 +15,22 @@ message IdentifiedClientState {
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
 }
 
+// ConsensusStateWithHeight defines a consensus state with an additional height field.
+message ConsensusStateWithHeight {
+  // consensus state height
+  Height height = 1 [(gogoproto.nullable) = false];
+  // consensus state
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml\"consensus_state\""];
+}
+
 // ClientConsensusStates defines all the stored consensus states for a given
 // client.
 message ClientConsensusStates {
   // client identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  // consensus states associated with the client
-  repeated google.protobuf.Any consensus_states = 2 [(gogoproto.moretags) = "yaml:\"consensus_states\""];
+  // consensus states and their heights associated with the client
+  repeated ConsensusStateWithHeight consensus_states = 2
+      [(gogoproto.moretags) = "yaml:\"consensus_states\"", (gogoproto.nullable) = false];
 }
 
 // ClientUpdateProposal is a governance proposal. If it passes, the client is
@@ -41,6 +50,9 @@ message ClientUpdateProposal {
 
 // MsgCreateClient defines a message to create an IBC client
 message MsgCreateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // light client state
@@ -49,29 +61,35 @@ message MsgCreateClient {
   // height.
   google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
   // signer address
-  bytes signer = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 4;
 }
 
 // MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
 message MsgUpdateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // header to update the light client
   google.protobuf.Any header = 2;
   // signer address
-  bytes signer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 3;
 }
 
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
 message MsgSubmitMisbehaviour {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // client unique identifier
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // misbehaviour used for freezing the light client
   google.protobuf.Any misbehaviour = 2;
   // signer address
-  bytes signer = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string signer = 3;
 }
 
 // Height is a monotonically increasing data type

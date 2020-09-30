@@ -1,19 +1,25 @@
 package exported
 
 import (
-	"encoding/json"
-
 	ics23 "github.com/confio/ics23/go"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+const (
+	// TypeClientMisbehaviour is the shared evidence misbehaviour type
+	TypeClientMisbehaviour string = "client_misbehaviour"
+
+	// Localhost is the client type for a localhost client. It is also used as the clientID
+	// for the localhost client.
+	Localhost string = "localhost"
+)
+
 // ClientState defines the required common functions for light clients.
 type ClientState interface {
-	ClientType() ClientType
+	ClientType() string
 	GetLatestHeight() Height
 	IsFrozen() bool
 	GetFrozenHeight() Height
@@ -114,10 +120,7 @@ type ClientState interface {
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
-	ClientType() ClientType // Consensus kind
-
-	// GetHeight returns the height of the consensus state
-	GetHeight() Height
+	ClientType() string // Consensus kind
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
@@ -129,12 +132,9 @@ type ConsensusState interface {
 	ValidateBasic() error
 }
 
-// TypeClientMisbehaviour is the shared evidence misbehaviour type
-const TypeClientMisbehaviour string = "client_misbehaviour"
-
 // Misbehaviour defines counterparty misbehaviour for a specific consensus type
 type Misbehaviour interface {
-	ClientType() ClientType
+	ClientType() string
 	GetClientID() string
 	String() string
 	ValidateBasic() error
@@ -145,7 +145,7 @@ type Misbehaviour interface {
 
 // Header is the consensus state update information
 type Header interface {
-	ClientType() ClientType
+	ClientType() string
 	GetHeight() Height
 	ValidateBasic() error
 }
@@ -163,71 +163,4 @@ type Height interface {
 	GetEpochHeight() uint64
 	Decrement() (Height, bool)
 	String() string
-}
-
-// ClientType defines the type of the consensus algorithm
-type ClientType byte
-
-// available client types
-const (
-	SoloMachine ClientType = 6
-	Tendermint  ClientType = 7
-	Localhost   ClientType = 9
-)
-
-// string representation of the client types
-const (
-	ClientTypeSoloMachine string = "solomachine"
-	ClientTypeTendermint  string = "tendermint"
-	ClientTypeLocalHost   string = "localhost"
-)
-
-func (ct ClientType) String() string {
-	switch ct {
-	case SoloMachine:
-		return ClientTypeSoloMachine
-	case Tendermint:
-		return ClientTypeTendermint
-	case Localhost:
-		return ClientTypeLocalHost
-	default:
-		return ""
-	}
-}
-
-// MarshalJSON marshal to JSON using string.
-func (ct ClientType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ct.String())
-}
-
-// UnmarshalJSON decodes from JSON.
-func (ct *ClientType) UnmarshalJSON(data []byte) error {
-	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return err
-	}
-
-	clientType := ClientTypeFromString(s)
-	if clientType == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "invalid client type '%s'", s)
-	}
-
-	*ct = clientType
-	return nil
-}
-
-// ClientTypeFromString returns a byte that corresponds to the registered client
-// type. It returns 0 if the type is not found/registered.
-func ClientTypeFromString(clientType string) ClientType {
-	switch clientType {
-	case ClientTypeSoloMachine:
-		return SoloMachine
-	case ClientTypeTendermint:
-		return Tendermint
-	case ClientTypeLocalHost:
-		return Localhost
-	default:
-		return 0
-	}
 }

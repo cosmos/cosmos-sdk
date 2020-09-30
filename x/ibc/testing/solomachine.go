@@ -254,7 +254,7 @@ func (solo *Solomachine) GetClientStatePath(counterpartyClientIdentifier string)
 }
 
 // GetConsensusStatePath returns the commitment path for the consensus state.
-func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier string, consensusHeight clienttypes.Height) commitmenttypes.MerklePath {
+func (solo *Solomachine) GetConsensusStatePath(counterpartyClientIdentifier string, consensusHeight exported.Height) commitmenttypes.MerklePath {
 	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
 	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
 	require.NoError(solo.t, err)

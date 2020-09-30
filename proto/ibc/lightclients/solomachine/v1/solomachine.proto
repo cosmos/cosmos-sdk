@@ -86,7 +86,7 @@ message SignBytes {
   bytes data = 5;
 }
 
-// DataType defines the type of solo machine proof is being created. This is done to preserve uniqueness of different
+// DataType defines the type of solo machine proof being created. This is done to preserve uniqueness of different
 // data sign byte encodings.
 enum DataType {
   option (gogoproto.goproto_enum_prefix) = false;

@@ -28,7 +28,7 @@ func handleMsgChangePubKey(ctx sdk.Context, ak keeper.AccountKeeper, bk types.Ba
 	if acc == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s does not exist", msg.Address)
 	}
-	acc.SetPubKey(msg.PubKey)
+	acc.SetPubKey(msg.GetPubKey())
 	ak.SetAccount(ctx, acc)
 
 	// handle additional fee logic inside MsgChangePubKey handler

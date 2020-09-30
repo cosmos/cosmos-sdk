@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto"
@@ -14,11 +13,11 @@ var _ sdk.Msg = &MsgChangePubKey{}
 
 // NewMsgChangePubKey returns a reference to a new MsgChangePubKey.
 func NewMsgChangePubKey(address sdk.AccAddress, pubKey crypto.PubKey) *MsgChangePubKey {
-	return &MsgChangePubKey{
+	msg := MsgChangePubKey{
 		Address: address,
-		// TODO for now, we do force type conversion as it support only secp256k1 right now
-		PubKey: pubKey.(*secp256k1.PubKey),
 	}
+	msg.SetPubKey(pubKey)
+	return &msg
 }
 
 // Route returns the message route for a MsgChangePubKey.
@@ -48,4 +47,25 @@ func (msg MsgChangePubKey) GetSignBytes() []byte {
 // GetSigners returns the expected signers for a MsgChangePubKey.
 func (msg MsgChangePubKey) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Address}
+}
+
+// GetPubKey returns public key
+func (msg MsgChangePubKey) GetPubKey() (pk crypto.PubKey) {
+	if len(msg.PubKey) == 0 {
+		return nil
+	}
+
+	amino.MustUnmarshalBinaryBare(msg.PubKey, &pk)
+	return pk
+}
+
+// SetPubKey set public key
+func (msg *MsgChangePubKey) SetPubKey(pubKey crypto.PubKey) error {
+	if pubKey == nil {
+		msg.PubKey = nil
+	} else {
+		msg.PubKey = amino.MustMarshalBinaryBare(pubKey)
+	}
+
+	return nil
 }

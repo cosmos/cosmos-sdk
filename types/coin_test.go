@@ -24,6 +24,10 @@ func TestCoinTestSuite(t *testing.T) {
 	suite.Run(t, new(coinTestSuite))
 }
 
+func (s *coinTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 // ----------------------------------------------------------------------------
 // Coin tests
 
@@ -840,7 +844,7 @@ func (s *coinTestSuite) TestNewCoins() {
 	for _, tt := range tests {
 		if tt.wantPanic {
 			s.Require().Panics(func() { sdk.NewCoins(tt.coins...) })
-			return
+			continue
 		}
 		got := sdk.NewCoins(tt.coins...)
 		s.Require().True(got.IsEqual(tt.want))

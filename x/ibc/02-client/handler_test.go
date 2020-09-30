@@ -1,10 +1,13 @@
 package client_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
@@ -144,7 +147,23 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 			},
 			expPass: true,
 		},
+		{
+			name: "invalid upgrade: msg.ClientState does not contain valid clientstate",
+			setup: func() {
 
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+
+				consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
+				consAny, err := clienttypes.PackConsensusState(consState)
+				suite.Require().NoError(err)
+
+				msg = &types.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
+			},
+			expPass: false,
+		},
 		{
 			name: "invalid clientstate",
 			setup: func() {

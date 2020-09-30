@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -65,6 +66,10 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 
 	altClientState := &ibctmtypes.ClientState{ChainId: "ethermint"}
 	altCs, err := clienttypes.PackClientState(altClientState)
+	s.Require().NoError(err)
+
+	consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
+	consAny, err := clienttypes.PackConsensusState(consState)
 	s.Require().NoError(err)
 
 	cases := []struct {
@@ -199,6 +204,17 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 					Height: 123450000,
 				})
 			},
+			expPass: false,
+		},
+		{
+			name: "unsuccessful IBC schedule: UpgradedClientState is not valid client state",
+			plan: types.Plan{
+				Name:                "all-good",
+				Info:                "some text here",
+				Height:              123450000,
+				UpgradedClientState: consAny,
+			},
+			setup:   func() {},
 			expPass: false,
 		},
 	}

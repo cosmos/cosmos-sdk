@@ -214,8 +214,9 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	if len(msg.ProofUpgrade) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be empty")
 	}
-	if msg.Signer == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "signer address cannot be empty")
+	_, err = sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
 	}
 	return host.ClientIdentifierValidator(msg.ClientId)
 }

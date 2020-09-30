@@ -181,6 +181,14 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: false,
 		},
 		{
+			name: "unsuccessful upgrade to a new tendermint client: proof unmarshal failed",
+			setup: func() {
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false)
+				proofUpgrade = []byte("proof")
+			},
+			expPass: false,
+		},
+		{
 			name: "unsuccessful upgrade to a new tendermint client: proof verification failed",
 			setup: func() {
 				// create but do not store upgraded client
@@ -237,11 +245,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				suite.Require().True(found)
 
 				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
-
-				// SetClientState with nil upgrade path
-				tmClient, _ := cs.(*types.ClientState)
-				tmClient.UpgradePath = nil
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
 			},
 			expPass: false,
 		},

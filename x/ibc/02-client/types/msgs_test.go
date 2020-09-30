@@ -386,43 +386,40 @@ func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
 }
 
 func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
-	clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
-	msg, _ := types.NewMsgUpgradeClient("testclientid", clientState, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
-
 	cases := []struct {
 		name     string
-		malleate func()
+		malleate func(*types.MsgUpgradeClient)
 		expPass  bool
 	}{
 		{
 			name:     "success",
-			malleate: func() {},
+			malleate: func(msg *types.MsgUpgradeClient) {},
 			expPass:  true,
 		},
 		{
 			name: "client id empty",
-			malleate: func() {
+			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ClientId = ""
 			},
 			expPass: false,
 		},
 		{
 			name: "invalid client id",
-			malleate: func() {
+			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ClientId = "invalid~chain/id"
 			},
 			expPass: false,
 		},
 		{
 			name: "unpacking clientstate fails",
-			malleate: func() {
+			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ClientState = nil
 			},
 			expPass: false,
 		},
 		{
 			name: "invalid client state",
-			malleate: func() {
+			malleate: func(msg *types.MsgUpgradeClient) {
 				cs := &ibctmtypes.ClientState{}
 				var err error
 				msg.ClientState, err = types.PackClientState(cs)
@@ -432,15 +429,15 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 		},
 		{
 			name: "empty proof",
-			malleate: func() {
+			malleate: func(msg *types.MsgUpgradeClient) {
 				msg.ProofUpgrade = nil
 			},
 			expPass: false,
 		},
 		{
 			name: "empty signer",
-			malleate: func() {
-				msg.Signer = ""
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.Signer = "  "
 			},
 			expPass: false,
 		},
@@ -449,16 +446,16 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 	for _, tc := range cases {
 		tc := tc
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			tc.malleate()
-			err := msg.ValidateBasic()
-			if tc.expPass {
-				suite.Require().NoError(err)
-			} else {
-				suite.Require().Error(err)
-			}
-		})
+		clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+		msg, _ := types.NewMsgUpgradeClient("testclientid", clientState, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+
+		tc.malleate(msg)
+		err := msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case %s failed", tc.name)
+		} else {
+			suite.Require().Error(err, "invalid case %s passed", tc.name)
+		}
 	}
 
 }

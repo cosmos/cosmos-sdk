@@ -41,8 +41,11 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 )
 
-var testClientHeight = types.NewHeight(0, 5)
-var testClientHeightEpoch1 = types.NewHeight(1, 5)
+var (
+	testClientHeight       = types.NewHeight(0, 5)
+	testClientHeightEpoch1 = types.NewHeight(1, 5)
+	upgradeHeight          = types.NewHeight(1, 1)
+)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -146,6 +149,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		{
 			"success",
 			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			true,
+		},
+		{
+			"success with nil UpgradePath",
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), nil, false, false),
 			true,
 		},
 		{

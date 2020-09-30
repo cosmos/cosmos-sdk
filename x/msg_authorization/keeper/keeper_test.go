@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -59,13 +59,13 @@ func (s *TestSuite) TestKeeper() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := types.SendAuthorization{SpendLimit: newCoins}
-	s.app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
+	s.app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, &x, now.Add(-1*time.Hour))
 	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = types.SendAuthorization{SpendLimit: newCoins}
-	s.app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
+	s.app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, &x, now.Add(time.Hour))
 	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
@@ -109,30 +109,34 @@ func (s *TestSuite) TestKeeperFees() {
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 	//lotCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 4567))
 
-	msgs := types.MsgExecAuthorized{
-		Grantee: granteeAddr.String(),
-		Msgs: []sdk.Msg{
-			&banktypes.MsgSend{
-				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
-	}
+	})
 
 	s.T().Log("verify dispatch fails with invalid authorization")
-	result, error := s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
+	executeMsgs, err := msgs.GetMsgs()
+	s.Require().NoError(err)
+	result, error := s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
+
 	s.Require().Nil(result)
 	s.Require().NotNil(error)
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
-	s.app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{SpendLimit: smallCoin}, now)
+	s.app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
 	authorization, expiration := s.app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 	s.Require().Zero(expiration)
 	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
-	result, error = s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
+
+	executeMsgs, err = msgs.GetMsgs()
+	s.Require().NoError(err)
+
+	result, error = s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().NotNil(result)
 	s.Require().Nil(error)
 
@@ -142,18 +146,18 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.MsgExecAuthorized{
-		Grantee: granteeAddr.String(),
-		Msgs: []sdk.Msg{
-			&banktypes.MsgSend{
-				Amount:      someCoin,
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      someCoin,
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
-	}
+	})
 
-	result, error = s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, msgs.Msgs)
+	executeMsgs, err = msgs.GetMsgs()
+	s.Require().NoError(err)
+
+	result, error = s.app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().Nil(result)
 	s.Require().NotNil(error)
 

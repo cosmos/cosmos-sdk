@@ -11,7 +11,7 @@ var (
 
 func (cap GenericAuthorization) MsgType() string {
 	var msg sdk.Msg
-	ModuleCdc.UnpackAny(cap.Message, msg)
+	ModuleCdc.UnpackAny(cap.Message, &msg)
 	return msg.Type()
 }
 

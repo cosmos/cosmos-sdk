@@ -163,6 +163,21 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 	}
 }
 
+// GetMsgs Unpacks any messages
+func (msg MsgExecAuthorized) GetMsgs() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(msg.Msgs))
+	for i, msgAny := range msg.Msgs {
+		var msg1 sdk.Msg
+		err := ModuleCdc.UnpackAny(msgAny, &msg1)
+		if err != nil {
+			return nil, err
+		}
+		msgs[i] = msg1
+	}
+
+	return msgs, nil
+}
+
 // Route implements Msg
 func (msg MsgExecAuthorized) Route() string { return RouterKey }
 

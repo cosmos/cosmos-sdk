@@ -109,12 +109,14 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
 // time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
+func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
+
 	grant, err := types.NewAuthorizationGrant(authorization, expiration.Unix())
 	if err != nil {
-		sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can not be given to msg")
+		panic(err)
 	}
+
 	bz := k.cdc.MustMarshalBinaryBare(grant)
 	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)

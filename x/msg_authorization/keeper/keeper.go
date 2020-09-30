@@ -148,6 +148,6 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 
 	var authorization types.Authorization
-	types.ModuleCdc.UnpackAny(grant.Authorization, &authorization)
+	k.cdc.UnpackAny(grant.Authorization, &authorization)
 	return authorization, grant.Expiration
 }

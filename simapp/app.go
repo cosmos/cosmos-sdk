@@ -28,9 +28,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -321,7 +321,7 @@ func NewSimApp(
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		pubkey.NewAppModule(app.AccountKeeper),
+		changepubkey.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),

@@ -73,10 +73,10 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
+		return sdkerrors.Wrap(ErrInvalidGrantee, "missing grantee address")
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
-		return sdkerrors.Wrap(ErrInvalidGranter, "Time can't be in the past")
+		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (msg MsgRevokeAuthorization) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee == "" {
-		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
+		return sdkerrors.Wrap(ErrInvalidGrantee, "missing grantee address")
 	}
 	return nil
 }

@@ -97,7 +97,7 @@ func ClientStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	clientState exported.ClientState,
 ) ([]byte, error) {
 	dataBz, err := ClientStateDataBytes(cdc, path, clientState)
@@ -120,7 +120,7 @@ func ClientStateSignBytes(
 // SignBytes.
 func ClientStateDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	clientState exported.ClientState,
 ) ([]byte, error) {
 	any, err := clienttypes.PackClientState(clientState)
@@ -147,7 +147,7 @@ func ConsensusStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	consensusState exported.ConsensusState,
 ) ([]byte, error) {
 	dataBz, err := ConsensusStateDataBytes(cdc, path, consensusState)
@@ -170,7 +170,7 @@ func ConsensusStateSignBytes(
 // SignBytes.
 func ConsensusStateDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	consensusState exported.ConsensusState,
 ) ([]byte, error) {
 	any, err := clienttypes.PackConsensusState(consensusState)
@@ -197,7 +197,7 @@ func ConnectionStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	connectionEnd exported.ConnectionI,
 ) ([]byte, error) {
 	dataBz, err := ConnectionStateDataBytes(cdc, path, connectionEnd)
@@ -220,7 +220,7 @@ func ConnectionStateSignBytes(
 // SignBytes.
 func ConnectionStateDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	connectionEnd exported.ConnectionI,
 ) ([]byte, error) {
 	connection, ok := connectionEnd.(connectiontypes.ConnectionEnd)
@@ -250,7 +250,7 @@ func ChannelStateSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	channelEnd exported.ChannelI,
 ) ([]byte, error) {
 	dataBz, err := ChannelStateDataBytes(cdc, path, channelEnd)
@@ -273,7 +273,7 @@ func ChannelStateSignBytes(
 // SignBytes.
 func ChannelStateDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	channelEnd exported.ChannelI,
 ) ([]byte, error) {
 	channel, ok := channelEnd.(channeltypes.Channel)
@@ -302,7 +302,7 @@ func PacketCommitmentSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	commitmentBytes []byte,
 ) ([]byte, error) {
 	dataBz, err := PacketCommitmentDataBytes(cdc, path, commitmentBytes)
@@ -325,7 +325,7 @@ func PacketCommitmentSignBytes(
 // SignBytes.
 func PacketCommitmentDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	commitmentBytes []byte,
 ) ([]byte, error) {
 	data := &PacketCommitmentData{
@@ -347,7 +347,7 @@ func PacketAcknowledgementSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	acknowledgement []byte,
 ) ([]byte, error) {
 	dataBz, err := PacketAcknowledgementDataBytes(cdc, path, acknowledgement)
@@ -370,7 +370,7 @@ func PacketAcknowledgementSignBytes(
 // SignBytes.
 func PacketAcknowledgementDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	acknowledgement []byte,
 ) ([]byte, error) {
 	data := &PacketAcknowledgementData{
@@ -392,7 +392,7 @@ func PacketAcknowledgementAbsenceSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 ) ([]byte, error) {
 	dataBz, err := PacketAcknowledgementAbsenceDataBytes(cdc, path)
 	if err != nil {
@@ -414,7 +414,7 @@ func PacketAcknowledgementAbsenceSignBytes(
 // SignBytes.
 func PacketAcknowledgementAbsenceDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
 	data := &PacketAcknowledgementAbsenceData{
 		Path: []byte(path.String()),
@@ -434,7 +434,7 @@ func NextSequenceRecvSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
-	path commitmenttypes.MerklePath, // nolint: interfacer
+	path commitmenttypes.MerklePath,
 	nextSequenceRecv uint64,
 ) ([]byte, error) {
 	dataBz, err := NextSequenceRecvDataBytes(cdc, path, nextSequenceRecv)
@@ -457,7 +457,7 @@ func NextSequenceRecvSignBytes(
 // SignBytes.
 func NextSequenceRecvDataBytes(
 	cdc codec.BinaryMarshaler,
-	path commitmenttypes.MerklePath,
+	path commitmenttypes.MerklePath, // nolint: interfacer
 	nextSequenceRecv uint64,
 ) ([]byte, error) {
 	data := &NextSequenceRecvData{

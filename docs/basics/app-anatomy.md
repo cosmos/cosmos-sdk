@@ -212,12 +212,11 @@ The [module's REST interface](../building-modules/module-interfaces.md#rest) let
 
 [Interfaces](../interfaces/interfaces-intro.md) let end-users interact with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block.
 
-The main interface is the [Command-Line Interface](../interfaces/cli.md). The CLI of an SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application generally has the `-cli` suffix (e.g. `appcli`), and defined in a file called `cmd/appcli/main.go`. The file contains:
+The main interface is the [Command-Line Interface](../interfaces/cli.md). The CLI of an SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and defined in a file called `appd/main.go`. The file contains:
 
-- **A `main()` function**, which is executed to build the `appcli` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appCli`, the function adds generic commands like `status`, `keys` and `config`, query commands, tx commands and `rest-server`.
-- **Query commands** are added by calling the `queryCmd` function, also defined in `appcli/main.go`. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appcli query [query]` of the CLI.
-- **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appcli tx [tx]` of the CLI.
-- **A `registerRoutes` function**, which is called from the `main()` function when initializing the [application's light-client daemon (LCD)](../core/node.md#lcd) (i.e. `rest-server`). `registerRoutes` calls the `RegisterRoutes` function of each of the application's module, thereby registering the routes of the module to the lcd's router. The LCD can be started by running the following command `appcli rest-server`.
+- **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys` and `config`, query commands, tx commands and `rest-server`.
+- **Query commands** are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
+- **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
 
 See an example of an application's main command-line file from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice)
 
@@ -229,7 +228,7 @@ This section is optional, as developers are free to choose their dependency mana
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/go.mod#L1-L18
 
-For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appcli`](#application-interface). See an example of Makefile from the [nameservice tutorial]()
+For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appd`](#application-interface). See an example of Makefile from the [nameservice tutorial]()
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/Makefile
 

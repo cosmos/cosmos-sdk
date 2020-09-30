@@ -35,16 +35,17 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	s.app = simapp.Setup(false)
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.addrs = simapp.AddTestAddrsIncremental(s.app, s.ctx, 3, sdk.NewInt(20000001))
 
 	// s.ctx, s.accountKeeper, s.paramsKeeper, s.bankKeeper, s.keeper, s.router = SetupTestInput()
 }
 
 func (s *TestSuite) TestKeeper() {
-	app, ctx := s.app, s.ctx
+	app, ctx, addrs := s.app, s.ctx, s.addrs
 
-	granterAddr := sdk.AccAddress("")
-	granteeAddr := sdk.AccAddress("")
-	recipientAddr := sdk.AccAddress("")
+	granterAddr := addrs[0]
+	granteeAddr := addrs[1]
+	recipientAddr := addrs[2]
 	err := app.BankKeeper.SetBalances(ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	s.Require().Nil(err)
 	s.Require().True(app.BankKeeper.GetBalance(ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
@@ -59,35 +60,35 @@ func (s *TestSuite) TestKeeper() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := types.SendAuthorization{SpendLimit: newCoins}
-	s.app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, &x, now.Add(-1*time.Hour))
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, &x, now.Add(-1*time.Hour))
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = types.SendAuthorization{SpendLimit: newCoins}
-	s.app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, &x, now.Add(time.Hour))
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, &x, now.Add(time.Hour))
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("")
 
 	s.T().Log("verify revoke fails with wrong information")
-	s.app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
+	app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	s.app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
-	authorization, _ = s.app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
 
 }

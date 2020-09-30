@@ -26,7 +26,7 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router baseapp.
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
-		router:   router,
+		// router:   router,
 	}
 }
 
@@ -148,6 +148,6 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 
 	var authorization types.Authorization
-	k.cdc.UnpackAny(grant.Authorization, authorization)
+	types.ModuleCdc.UnpackAny(grant.Authorization, &authorization)
 	return authorization, grant.Expiration
 }

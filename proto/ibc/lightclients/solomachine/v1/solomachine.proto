@@ -3,7 +3,6 @@ package ibc.lightclients.solomachine.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
 
-import "cosmos/base/crypto/v1beta1/crypto.proto";
 import "ibc/connection/connection.proto";
 import "ibc/channel/channel.proto";
 import "gogoproto/gogo.proto";

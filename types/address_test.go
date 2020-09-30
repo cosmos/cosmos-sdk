@@ -26,6 +26,10 @@ func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(addressTestSuite))
 }
 
+func (s *addressTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
 var invalidStrs = []string{
 	"hello, world!",
 	"0xAA",

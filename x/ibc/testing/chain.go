@@ -396,7 +396,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:
-		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
+		solo := NewSolomachine(chain.t, chain.Codec, clientID, "", 1)
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:

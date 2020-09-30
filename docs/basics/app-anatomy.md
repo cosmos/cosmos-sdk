@@ -58,7 +58,7 @@ See an example of application type definition from [`gaia`](https://github.com/c
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L20
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/server/types/app.go#L42-L44
 
 Here are the main actions performed by this function:
 
@@ -90,7 +90,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 
 See an example of an `InitChainer` from [`gaia`](https://github.com/cosmos/gaia):
 
-+++ https://github.com/cosmos/gaia/blob/f41a660cdd5bea173139965ade55bd25d1ee3429/app/app.go#L235-L239
++++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L242-L248
 
 ### BeginBlocker and EndBlocker
 
@@ -102,17 +102,22 @@ As a sidenote, it is important to remember that application-specific blockchains
 
 See an example of `BeginBlocker` and `EndBlocker` functions from [`gaia`](https://github.com/cosmos/gaia)
 
-+++ https://github.com/cosmos/gaia/blob/f41a660cdd5bea173139965ade55bd25d1ee3429/app/app.go#L224-L232
++++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L232-L240
 
 ### Register Codec
 
-The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `cdc`](../core/encoding.md) (e.g. amino) initialize the codec of the SDK and each of the application's modules using the `RegisterLegacyAminoCodec` function.
+The `MakeCodecs` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `cdc`](../core/encoding.md) (e.g. Protobuf), and initialize the codec of the SDK and each of the application's modules using the `RegisterInterfaces` function.
 
-To register the application's modules, the `MakeCodec` function calls `RegisterLegacyAminoCodec` on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
+To register the application's modules, the `MakeCodecs` creates a codec which will be passed as argument into the `RegisterInterfaces` method on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
 
-See an example of a `MakeCodec` from [`gaia`](https://github.com/cosmos/gaia):
+Please note that in this version of the SDK, the `MakeCodecs` function actually creates two codecs:
 
-+++ https://github.com/cosmos/gaia/blob/f41a660cdd5bea173139965ade55bd25d1ee3429/app/app.go#L64-L70
+- an `appCodec`, which will be used by default across the SDK, defaults to Protocol Buffers,
+- a `legacyAmino` codec, as some legacy parts of the SDK still uses Amino for backwards-compatibility. This `legacyAmino` codec should not be used by app developers, and will be removed in the next release.
+
+See an example of a `MakeCodecs` from [`gaia`](https://github.com/cosmos/gaia):
+
++++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L71-L81
 
 ## Modules
 
@@ -139,7 +144,7 @@ For a more detailed look at a transaction lifecycle, click [here](./tx-lifecycle
 
 Module developers create custom message types when they build their own module. The general practice is to prefix the type declaration of the message with `Msg`. For example, the message type `MsgSend` allows users to transfer tokens:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/bank/internal/types/msgs.go#L10-L15
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/proto/cosmos/bank/v1beta1/tx.proto#L10-L19
 
 It is processed by the `handler` of the `bank` module, which ultimately calls the `keeper` of the `auth` module in order to update the state.
 
@@ -155,13 +160,13 @@ The `handler` of a module is generally defined in a file called `handler.go` and
 
 Handler functions return a result of type `sdk.Result`, which informs the application on whether the message was successfully processed:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/result.go#L15-L40
 
 ### Querier
 
 [`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#interfaces) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/abci.go#L395-L453
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/baseapp/abci.go#L395-L453
 
 The `Querier` of a module is defined in a file called `querier.go`, and consists of:
 
@@ -200,7 +205,7 @@ The [module's REST interface](../building-modules/module-interfaces.md#rest) let
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/rest/rest.go#L47-L60
+  +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/rest/rest.go#L47-L60
 - One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
 
 ## Application Interface

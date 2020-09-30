@@ -59,9 +59,23 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
+# DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 endif
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+endif
+# handle rocksdb
+ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  BUILD_TAGS += rocksdb
+endif
+# handle boltdb
+ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+  BUILD_TAGS += boltdb
+endif
+
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
@@ -84,7 +98,7 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-	go install -mod=readonly ./...
+	go build -mod=readonly ./...
 
 simd:
 	mkdir -p $(BUILDDIR)
@@ -122,7 +136,7 @@ build-simd-linux: go.sum
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build build-simd build-simd-linux cosmovisor
+.PHONY: build simd simd-linux build-simd-all build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -132,6 +146,7 @@ mocks: $(MOCKS_DIR)
 	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
 	mockgen -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
+	mockgen -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
 .PHONY: mocks
 
 $(MOCKS_DIR):
@@ -147,7 +162,8 @@ distclean: clean
 clean:
 	rm -rf \
     $(BUILDDIR)/ \
-    artifacts/
+    artifacts/ \
+    tmp-swagger-gen/
 
 .PHONY: distclean clean
 
@@ -309,9 +325,11 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run --out-format=tab --issues-exit-code=0
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -name '*.pb.go' | xargs gofmt -d -s
-.PHONY: lint
+	golangci-lint run --out-format=tab
+
+lint-fix:
+	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+.PHONY: lint lint-fix
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s

@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -360,9 +360,8 @@ func DefaultSigVerificationGasConsumer(
 	meter sdk.GasMeter, sig signing.SignatureV2, params types.Params,
 ) error {
 	pubkey := sig.PubKey
-
 	switch pubkey := pubkey.(type) {
-	case ed25519.PubKey:
+	case *ed25519.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 

@@ -4,69 +4,81 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
 func (suite *SoloMachineTestSuite) TestCheckProposedHeaderAndUpdateState() {
 	var header exported.Header
 
-	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
-	}{
-		{
-			"valid header", func() {
-				header = suite.solomachine.CreateHeader()
-			}, true,
-		},
-		{
-			"nil header", func() {
-				header = &ibctmtypes.Header{}
-			}, false,
-		},
-		{
-			"header does not update public key", func() {
-				header = &types.Header{
-					Sequence:     1,
-					NewPublicKey: suite.solomachine.ConsensusState().PublicKey,
-				}
-			}, false,
-		},
-	}
+	// test singlesig and multisig public keys
+	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-	for _, tc := range testCases {
-		tc := tc
+		testCases := []struct {
+			name     string
+			malleate func()
+			expPass  bool
+		}{
+			{
+				"valid header", func() {
+					header = solomachine.CreateHeader()
+				}, true,
+			},
+			{
+				"nil header", func() {
+					header = &ibctmtypes.Header{}
+				}, false,
+			},
+			{
+				"header does not update public key", func() {
+					header = &types.Header{
+						Sequence:     1,
+						NewPublicKey: solomachine.ConsensusState().PublicKey,
+					}
+				}, false,
+			},
+		}
 
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		for _, tc := range testCases {
+			tc := tc
 
-			clientState := suite.solomachine.ClientState()
+			suite.Run(tc.name, func() {
+				suite.SetupTest()
 
-			tc.malleate()
+				clientState := solomachine.ClientState()
 
-			clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), suite.solomachine.ClientID)
+				tc.malleate()
 
-			// all cases should always fail if the client has 'AllowUpdateAfterProposal' set to false
-			clientState.AllowUpdateAfterProposal = false
-			cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
-			suite.Require().Error(err)
-			suite.Require().Nil(cs)
-			suite.Require().Nil(consState)
+				clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), solomachine.ClientID)
 
-			clientState.AllowUpdateAfterProposal = true
-			cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(header.(*types.Header).GetPubKey(), consState.(*types.ConsensusState).GetPubKey())
-				suite.Require().Equal(cs.(*types.ClientState).ConsensusState, consState)
-				suite.Require().Equal(header.GetHeight().GetEpochHeight(), cs.(*types.ClientState).Sequence)
-			} else {
+				// all cases should always fail if the client has 'AllowUpdateAfterProposal' set to false
+				clientState.AllowUpdateAfterProposal = false
+				cs, consState, err := clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
 				suite.Require().Error(err)
 				suite.Require().Nil(cs)
 				suite.Require().Nil(consState)
-			}
-		})
-	}
 
+				clientState.AllowUpdateAfterProposal = true
+				cs, consState, err = clientState.CheckProposedHeaderAndUpdateState(suite.chainA.GetContext(), suite.chainA.App.AppCodec(), clientStore, header)
+
+				if tc.expPass {
+					suite.Require().NoError(err)
+
+					smConsState, ok := consState.(*types.ConsensusState)
+					suite.Require().True(ok)
+					smHeader, ok := header.(*types.Header)
+					suite.Require().True(ok)
+
+					suite.Require().Equal(cs.(*types.ClientState).ConsensusState, consState)
+					suite.Require().Equal(smHeader.GetPubKey(), smConsState.GetPubKey())
+					suite.Require().Equal(smHeader.NewDiversifier, smConsState.Diversifier)
+					suite.Require().Equal(smHeader.Timestamp, smConsState.Timestamp)
+					suite.Require().Equal(smHeader.GetHeight().GetEpochHeight(), cs.(*types.ClientState).Sequence)
+				} else {
+					suite.Require().Error(err)
+					suite.Require().Nil(cs)
+					suite.Require().Nil(consState)
+				}
+			})
+		}
+	}
 }

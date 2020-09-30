@@ -32,7 +32,15 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Remove all mature unbonding delegations from the ubd queue.
 	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
-		balances, err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddress, dvPair.ValidatorAddress)
+		addr, err := sdk.ValAddressFromBech32(dvPair.ValidatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		delegatorAddress, err := sdk.AccAddressFromBech32(dvPair.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		balances, err := k.CompleteUnbonding(ctx, delegatorAddress, addr)
 		if err != nil {
 			continue
 		}
@@ -41,8 +49,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			sdk.NewEvent(
 				types.EventTypeCompleteUnbonding,
 				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress.String()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, dvPair.ValidatorAddress),
+				sdk.NewAttribute(types.AttributeKeyDelegator, dvPair.DelegatorAddress),
 			),
 		)
 	}
@@ -50,11 +58,23 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Remove all mature redelegations from the red queue.
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
+		valSrcAddr, err := sdk.ValAddressFromBech32(dvvTriplet.ValidatorSrcAddress)
+		if err != nil {
+			panic(err)
+		}
+		valDstAddr, err := sdk.ValAddressFromBech32(dvvTriplet.ValidatorDstAddress)
+		if err != nil {
+			panic(err)
+		}
+		delegatorAddress, err := sdk.AccAddressFromBech32(dvvTriplet.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 		balances, err := k.CompleteRedelegation(
 			ctx,
-			dvvTriplet.DelegatorAddress,
-			dvvTriplet.ValidatorSrcAddress,
-			dvvTriplet.ValidatorDstAddress,
+			delegatorAddress,
+			valSrcAddr,
+			valDstAddr,
 		)
 		if err != nil {
 			continue
@@ -64,9 +84,9 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 			sdk.NewEvent(
 				types.EventTypeCompleteRedelegation,
 				sdk.NewAttribute(sdk.AttributeKeyAmount, balances.String()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress.String()),
-				sdk.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress.String()),
-				sdk.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyDelegator, dvvTriplet.DelegatorAddress),
+				sdk.NewAttribute(types.AttributeKeySrcValidator, dvvTriplet.ValidatorSrcAddress),
+				sdk.NewAttribute(types.AttributeKeyDstValidator, dvvTriplet.ValidatorDstAddress),
 			),
 		)
 	}
@@ -255,7 +275,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	k.DeleteValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBonded(ctx, validator.GetConsAddr(), validator.OperatorAddress)
+	k.AfterValidatorBonded(ctx, validator.GetConsAddr(), validator.GetOperator())
 
 	return validator
 }
@@ -286,7 +306,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.InsertUnbondingValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBeginUnbonding(ctx, validator.GetConsAddr(), validator.OperatorAddress)
+	k.AfterValidatorBeginUnbonding(ctx, validator.GetConsAddr(), validator.GetOperator())
 
 	return validator
 }

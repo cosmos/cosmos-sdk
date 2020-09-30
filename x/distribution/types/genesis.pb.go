@@ -4,7 +4,6 @@
 package types
 
 import (
-	bytes "bytes"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -26,13 +25,14 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// DelegatorWithdrawInfo is the address for where distributions rewards are withdrawn to by default
-// this struct is only used at genesis to feed in default withdraw addresses.
+// DelegatorWithdrawInfo is the address for where distributions rewards are
+// withdrawn to by default this struct is only used at genesis to feed in
+// default withdraw addresses.
 type DelegatorWithdrawInfo struct {
 	// delegator_address is the address of the delegator.
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	// withdraw_address is the address to withdraw the delegation rewards to.
-	WithdrawAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+	WithdrawAddress string `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
 }
 
 func (m *DelegatorWithdrawInfo) Reset()         { *m = DelegatorWithdrawInfo{} }
@@ -68,24 +68,10 @@ func (m *DelegatorWithdrawInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DelegatorWithdrawInfo proto.InternalMessageInfo
 
-func (m *DelegatorWithdrawInfo) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *DelegatorWithdrawInfo) GetWithdrawAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.WithdrawAddress
-	}
-	return nil
-}
-
 // ValidatorOutstandingRewardsRecord is used for import/export via genesis json.
 type ValidatorOutstandingRewardsRecord struct {
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// outstanding_rewards represents the oustanding rewards of a validator.
 	OutstandingRewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,2,rep,name=outstanding_rewards,json=outstandingRewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"outstanding_rewards" yaml:"outstanding_rewards"`
 }
@@ -123,24 +109,11 @@ func (m *ValidatorOutstandingRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorOutstandingRewardsRecord proto.InternalMessageInfo
 
-func (m *ValidatorOutstandingRewardsRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *ValidatorOutstandingRewardsRecord) GetOutstandingRewards() github_com_cosmos_cosmos_sdk_types.DecCoins {
-	if m != nil {
-		return m.OutstandingRewards
-	}
-	return nil
-}
-
-// ValidatorAccumulatedCommissionRecord is used for import / export via genesis json.
+// ValidatorAccumulatedCommissionRecord is used for import / export via genesis
+// json.
 type ValidatorAccumulatedCommissionRecord struct {
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// accumulated is the accumulated commission of a validator.
 	Accumulated ValidatorAccumulatedCommission `protobuf:"bytes,2,opt,name=accumulated,proto3" json:"accumulated" yaml:"accumulated"`
 }
@@ -178,24 +151,11 @@ func (m *ValidatorAccumulatedCommissionRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorAccumulatedCommissionRecord proto.InternalMessageInfo
 
-func (m *ValidatorAccumulatedCommissionRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *ValidatorAccumulatedCommissionRecord) GetAccumulated() ValidatorAccumulatedCommission {
-	if m != nil {
-		return m.Accumulated
-	}
-	return ValidatorAccumulatedCommission{}
-}
-
-// ValidatorHistoricalRewardsRecord is used for import / export via genesis json.
+// ValidatorHistoricalRewardsRecord is used for import / export via genesis
+// json.
 type ValidatorHistoricalRewardsRecord struct {
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// period defines the period the historical rewards apply to.
 	Period uint64 `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
 	// rewards defines the historical rewards of a validator.
@@ -235,31 +195,10 @@ func (m *ValidatorHistoricalRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorHistoricalRewardsRecord proto.InternalMessageInfo
 
-func (m *ValidatorHistoricalRewardsRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *ValidatorHistoricalRewardsRecord) GetPeriod() uint64 {
-	if m != nil {
-		return m.Period
-	}
-	return 0
-}
-
-func (m *ValidatorHistoricalRewardsRecord) GetRewards() ValidatorHistoricalRewards {
-	if m != nil {
-		return m.Rewards
-	}
-	return ValidatorHistoricalRewards{}
-}
-
 // ValidatorCurrentRewardsRecord is used for import / export via genesis json.
 type ValidatorCurrentRewardsRecord struct {
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// rewards defines the current rewards of a validator.
 	Rewards ValidatorCurrentRewards `protobuf:"bytes,2,opt,name=rewards,proto3" json:"rewards" yaml:"rewards"`
 }
@@ -297,26 +236,12 @@ func (m *ValidatorCurrentRewardsRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorCurrentRewardsRecord proto.InternalMessageInfo
 
-func (m *ValidatorCurrentRewardsRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *ValidatorCurrentRewardsRecord) GetRewards() ValidatorCurrentRewards {
-	if m != nil {
-		return m.Rewards
-	}
-	return ValidatorCurrentRewards{}
-}
-
 // DelegatorStartingInfoRecord used for import / export via genesis json.
 type DelegatorStartingInfoRecord struct {
 	// delegator_address is the address of the delegator.
-	DelegatorAddress github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_address,omitempty" yaml:"delegator_address"`
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// starting_info defines the starting info of a delegator.
 	StartingInfo DelegatorStartingInfo `protobuf:"bytes,3,opt,name=starting_info,json=startingInfo,proto3" json:"starting_info" yaml:"starting_info"`
 }
@@ -354,31 +279,10 @@ func (m *DelegatorStartingInfoRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DelegatorStartingInfoRecord proto.InternalMessageInfo
 
-func (m *DelegatorStartingInfoRecord) GetDelegatorAddress() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddress
-	}
-	return nil
-}
-
-func (m *DelegatorStartingInfoRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *DelegatorStartingInfoRecord) GetStartingInfo() DelegatorStartingInfo {
-	if m != nil {
-		return m.StartingInfo
-	}
-	return DelegatorStartingInfo{}
-}
-
 // ValidatorSlashEventRecord is used for import / export via genesis json.
 type ValidatorSlashEventRecord struct {
 	// validator_address is the address of the validator.
-	ValidatorAddress github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_address,omitempty" yaml:"validator_address"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty" yaml:"validator_address"`
 	// height defines the block height at which the slash event occured.
 	Height uint64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 	// period is the period of the slash event.
@@ -420,34 +324,6 @@ func (m *ValidatorSlashEventRecord) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ValidatorSlashEventRecord proto.InternalMessageInfo
 
-func (m *ValidatorSlashEventRecord) GetValidatorAddress() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
-func (m *ValidatorSlashEventRecord) GetHeight() uint64 {
-	if m != nil {
-		return m.Height
-	}
-	return 0
-}
-
-func (m *ValidatorSlashEventRecord) GetPeriod() uint64 {
-	if m != nil {
-		return m.Period
-	}
-	return 0
-}
-
-func (m *ValidatorSlashEventRecord) GetEvent() ValidatorSlashEvent {
-	if m != nil {
-		return m.Event
-	}
-	return ValidatorSlashEvent{}
-}
-
 // GenesisState defines the distribution module's genesis state.
 type GenesisState struct {
 	// params defines all the paramaters of the module.
@@ -457,7 +333,7 @@ type GenesisState struct {
 	// fee_pool defines the delegator withdraw infos at genesis.
 	DelegatorWithdrawInfos []DelegatorWithdrawInfo `protobuf:"bytes,3,rep,name=delegator_withdraw_infos,json=delegatorWithdrawInfos,proto3" json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
 	// fee_pool defines the previous proposer at genesis.
-	PreviousProposer github_com_cosmos_cosmos_sdk_types.ConsAddress `protobuf:"bytes,4,opt,name=previous_proposer,json=previousProposer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ConsAddress" json:"previous_proposer,omitempty" yaml:"previous_proposer"`
+	PreviousProposer string `protobuf:"bytes,4,opt,name=previous_proposer,json=previousProposer,proto3" json:"previous_proposer,omitempty" yaml:"previous_proposer"`
 	// fee_pool defines the outstanding rewards of all validators at genesis.
 	OutstandingRewards []ValidatorOutstandingRewardsRecord `protobuf:"bytes,5,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
 	// fee_pool defines the accumulated commisions of all validators at genesis.
@@ -505,76 +381,6 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetParams() Params {
-	if m != nil {
-		return m.Params
-	}
-	return Params{}
-}
-
-func (m *GenesisState) GetFeePool() FeePool {
-	if m != nil {
-		return m.FeePool
-	}
-	return FeePool{}
-}
-
-func (m *GenesisState) GetDelegatorWithdrawInfos() []DelegatorWithdrawInfo {
-	if m != nil {
-		return m.DelegatorWithdrawInfos
-	}
-	return nil
-}
-
-func (m *GenesisState) GetPreviousProposer() github_com_cosmos_cosmos_sdk_types.ConsAddress {
-	if m != nil {
-		return m.PreviousProposer
-	}
-	return nil
-}
-
-func (m *GenesisState) GetOutstandingRewards() []ValidatorOutstandingRewardsRecord {
-	if m != nil {
-		return m.OutstandingRewards
-	}
-	return nil
-}
-
-func (m *GenesisState) GetValidatorAccumulatedCommissions() []ValidatorAccumulatedCommissionRecord {
-	if m != nil {
-		return m.ValidatorAccumulatedCommissions
-	}
-	return nil
-}
-
-func (m *GenesisState) GetValidatorHistoricalRewards() []ValidatorHistoricalRewardsRecord {
-	if m != nil {
-		return m.ValidatorHistoricalRewards
-	}
-	return nil
-}
-
-func (m *GenesisState) GetValidatorCurrentRewards() []ValidatorCurrentRewardsRecord {
-	if m != nil {
-		return m.ValidatorCurrentRewards
-	}
-	return nil
-}
-
-func (m *GenesisState) GetDelegatorStartingInfos() []DelegatorStartingInfoRecord {
-	if m != nil {
-		return m.DelegatorStartingInfos
-	}
-	return nil
-}
-
-func (m *GenesisState) GetValidatorSlashEvents() []ValidatorSlashEventRecord {
-	if m != nil {
-		return m.ValidatorSlashEvents
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*DelegatorWithdrawInfo)(nil), "cosmos.distribution.v1beta1.DelegatorWithdrawInfo")
 	proto.RegisterType((*ValidatorOutstandingRewardsRecord)(nil), "cosmos.distribution.v1beta1.ValidatorOutstandingRewardsRecord")
@@ -591,367 +397,73 @@ func init() {
 }
 
 var fileDescriptor_76eed0f9489db580 = []byte{
-	// 1044 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0xae, 0xdb, 0xb4, 0x8c, 0x5d, 0xda, 0x2e, 0x69, 0xe2, 0xba, 0xa9, 0x9d, 0x4e, 0x8b,
-	0x08, 0xaa, 0xba, 0x6e, 0x02, 0x02, 0x54, 0x04, 0x52, 0x36, 0xe5, 0x97, 0x04, 0x34, 0x6c, 0xa4,
-	0x82, 0x10, 0x92, 0x35, 0xde, 0x1d, 0xdb, 0x23, 0xd6, 0x3b, 0xd6, 0xcc, 0xd8, 0x21, 0x70, 0xe4,
-	0xda, 0x03, 0x12, 0xe2, 0x84, 0x90, 0xe0, 0x80, 0x84, 0x10, 0x12, 0x7f, 0x02, 0x12, 0xa7, 0x1e,
-	0x7b, 0xe4, 0x64, 0x50, 0xf2, 0x1f, 0xe4, 0xc8, 0x09, 0xed, 0xcc, 0xec, 0x2f, 0xff, 0xaa, 0x1b,
-	0x24, 0xc8, 0x29, 0xf1, 0xee, 0x9b, 0xef, 0xfb, 0xe6, 0x9b, 0xf7, 0xde, 0xbc, 0x05, 0xcf, 0x7b,
-	0x94, 0x77, 0x29, 0xaf, 0xfb, 0x84, 0x0b, 0x46, 0x9a, 0x7d, 0x41, 0x68, 0x58, 0x1f, 0x6c, 0x34,
-	0xb1, 0x40, 0x1b, 0xf5, 0x36, 0x0e, 0x31, 0x27, 0xdc, 0xee, 0x31, 0x2a, 0xa8, 0x75, 0x45, 0x85,
-	0xda, 0xd9, 0x50, 0x5b, 0x87, 0x56, 0x96, 0xda, 0xb4, 0x4d, 0x65, 0x5c, 0x3d, 0xfa, 0x4f, 0x2d,
-	0xa9, 0x54, 0x35, 0x7a, 0x13, 0x71, 0x9c, 0xa0, 0x7a, 0x94, 0x84, 0xfa, 0xbd, 0x3d, 0x8b, 0x3d,
-	0xc7, 0x23, 0xe3, 0xe1, 0x03, 0x13, 0x5c, 0xba, 0x8b, 0x03, 0xdc, 0x46, 0x82, 0xb2, 0x0f, 0x89,
-	0xe8, 0xf8, 0x0c, 0xed, 0xbd, 0x13, 0xb6, 0xa8, 0xf5, 0x39, 0xb8, 0xe8, 0xc7, 0x2f, 0x1a, 0xc8,
-	0xf7, 0x19, 0xe6, 0xbc, 0x6c, 0xac, 0x19, 0xeb, 0x25, 0xe7, 0xbd, 0xa3, 0x61, 0xad, 0xbc, 0x8f,
-	0xba, 0xc1, 0x1d, 0x38, 0x16, 0x02, 0xff, 0x1e, 0xd6, 0x6e, 0xb5, 0x89, 0xe8, 0xf4, 0x9b, 0xb6,
-	0x47, 0xbb, 0x75, 0xad, 0x47, 0xfd, 0xb9, 0xc5, 0xfd, 0x4f, 0xeb, 0x62, 0xbf, 0x87, 0xb9, 0xbd,
-	0xe5, 0x79, 0x5b, 0x6a, 0x85, 0x7b, 0x21, 0x01, 0xd1, 0x4f, 0xac, 0x3d, 0x70, 0x61, 0x4f, 0x6b,
-	0x49, 0xa8, 0x4d, 0x49, 0xfd, 0xee, 0xd1, 0xb0, 0xb6, 0xa2, 0xa8, 0x47, 0x23, 0x8e, 0xc1, 0x7c,
-	0x3e, 0xc6, 0xd0, 0x0f, 0xe0, 0xef, 0x26, 0xb8, 0x76, 0x1f, 0x05, 0xc4, 0x8f, 0xd4, 0xdc, 0xeb,
-	0x0b, 0x2e, 0x50, 0xe8, 0x93, 0xb0, 0xed, 0xe2, 0x3d, 0xc4, 0x7c, 0xee, 0x62, 0x8f, 0x32, 0x3f,
-	0xb2, 0x66, 0x10, 0x07, 0x4d, 0xb7, 0x66, 0x2c, 0x64, 0x5e, 0x81, 0xf7, 0x51, 0x90, 0x58, 0x93,
-	0x80, 0xc4, 0xd6, 0x7c, 0x6f, 0x80, 0x67, 0x68, 0x2a, 0xac, 0xc1, 0x94, 0xb2, 0xb2, 0xb9, 0x56,
-	0x58, 0x2f, 0x6e, 0xae, 0xea, 0xf3, 0xb7, 0xa3, 0xfc, 0x88, 0x53, 0xc9, 0xbe, 0x8b, 0xbd, 0x6d,
-	0x4a, 0x42, 0xe7, 0x83, 0x87, 0xc3, 0xda, 0xc2, 0xd1, 0xb0, 0x56, 0x51, 0x02, 0x27, 0xc0, 0xc0,
-	0x9f, 0xff, 0xac, 0xdd, 0x9c, 0x43, 0xa2, 0x46, 0xe4, 0xae, 0x45, 0xc7, 0x4c, 0x82, 0xdf, 0x99,
-	0xe0, 0x46, 0x62, 0xe2, 0x96, 0xe7, 0xf5, 0xbb, 0xfd, 0x00, 0x09, 0xec, 0x6f, 0xd3, 0x6e, 0x97,
-	0x70, 0x4e, 0x68, 0x78, 0x02, 0x7c, 0xdc, 0x07, 0x45, 0x94, 0x4a, 0x93, 0xd9, 0x55, 0xdc, 0x7c,
-	0xd5, 0x9e, 0x51, 0x91, 0xf6, 0xec, 0x3d, 0x39, 0x15, 0xed, 0xae, 0xa5, 0x64, 0x67, 0xd0, 0xa1,
-	0x9b, 0xe5, 0x82, 0x3f, 0x98, 0x60, 0x2d, 0xc1, 0x7a, 0x9b, 0x70, 0x41, 0x19, 0xf1, 0x50, 0x70,
-	0x72, 0x72, 0x6c, 0x19, 0x2c, 0xf6, 0x30, 0x23, 0x54, 0xd9, 0x72, 0xca, 0xd5, 0xbf, 0x2c, 0x02,
-	0xce, 0xc4, 0xe9, 0x56, 0x90, 0x7e, 0xbd, 0x3c, 0x9f, 0x5f, 0x63, 0x7b, 0x74, 0x96, 0xb5, 0x57,
-	0x4f, 0xab, 0x6d, 0xc4, 0xd9, 0xe7, 0xc6, 0xf8, 0xf0, 0x4b, 0x13, 0x5c, 0x4d, 0xd6, 0x6f, 0xf7,
-	0x19, 0xc3, 0xa1, 0x38, 0x39, 0x06, 0xb5, 0x52, 0x23, 0x54, 0xe2, 0xbc, 0x38, 0x9f, 0x11, 0xf9,
-	0x8d, 0x3c, 0xde, 0x85, 0x07, 0x05, 0x70, 0x25, 0xe9, 0xce, 0xbb, 0x02, 0x31, 0x41, 0xc2, 0x76,
-	0xd4, 0x9d, 0x53, 0x0f, 0xfe, 0xb7, 0x1e, 0x3d, 0xd1, 0x7f, 0xf3, 0xbf, 0xf1, 0xbf, 0x0f, 0xce,
-	0x71, 0xed, 0x46, 0x83, 0x84, 0x2d, 0xaa, 0xd3, 0x71, 0x73, 0xe6, 0x29, 0x4c, 0x34, 0xd2, 0x59,
-	0xd5, 0x67, 0xb0, 0xa4, 0xf4, 0xe6, 0x60, 0xa1, 0x5b, 0xe2, 0x99, 0x58, 0xf8, 0xa3, 0x09, 0x2e,
-	0x27, 0x67, 0xb9, 0x1b, 0x20, 0xde, 0x79, 0x63, 0x20, 0x8f, 0xf3, 0x24, 0x54, 0x6c, 0x07, 0x93,
-	0x76, 0x47, 0xc4, 0x15, 0xab, 0x7e, 0x65, 0x2a, 0xb9, 0x90, 0xab, 0xe4, 0x4f, 0xc0, 0x69, 0x1c,
-	0x49, 0x2f, 0x9f, 0x92, 0xc6, 0xdd, 0x9e, 0x2f, 0x7d, 0xd3, 0x2d, 0x3b, 0x4b, 0xda, 0xb6, 0x92,
-	0xda, 0x95, 0x04, 0x83, 0xae, 0x02, 0x85, 0xbf, 0x16, 0x41, 0xe9, 0x2d, 0x35, 0xe9, 0xec, 0x0a,
-	0x24, 0xb0, 0xe5, 0x82, 0xc5, 0x1e, 0x62, 0xa8, 0xab, 0xfc, 0x28, 0x6e, 0x5e, 0x9f, 0xc9, 0xb7,
-	0x23, 0x43, 0x9d, 0x4b, 0x9a, 0xe2, 0x9c, 0xa2, 0x50, 0x00, 0xd0, 0xd5, 0x48, 0xd6, 0x47, 0xe0,
-	0x6c, 0x0b, 0xe3, 0x46, 0x8f, 0xd2, 0x40, 0x17, 0xe1, 0x8d, 0x99, 0xa8, 0x6f, 0x62, 0xbc, 0x43,
-	0x69, 0xe0, 0xac, 0x68, 0xd8, 0xf3, 0x0a, 0x36, 0xc6, 0x80, 0xee, 0x99, 0x96, 0x8a, 0xb0, 0xbe,
-	0x31, 0x40, 0x39, 0xad, 0x99, 0x64, 0xcc, 0x88, 0x32, 0x22, 0x6a, 0x7c, 0x85, 0xf9, 0x33, 0x2d,
-	0x3b, 0x50, 0x39, 0xcf, 0x69, 0xe2, 0xda, 0x68, 0x55, 0xe6, 0x19, 0xa0, 0xbb, 0xec, 0x4f, 0x5a,
-	0xcf, 0xad, 0x2f, 0xc0, 0xc5, 0x1e, 0xc3, 0x03, 0x42, 0xfb, 0xbc, 0xd1, 0x63, 0xb4, 0x47, 0x39,
-	0x66, 0xf2, 0x00, 0x4b, 0xce, 0xfb, 0x69, 0x82, 0x8d, 0x85, 0x44, 0x09, 0x66, 0xcf, 0x91, 0x60,
-	0xdb, 0x34, 0xe4, 0x49, 0x86, 0xc5, 0x28, 0x3b, 0x1a, 0xc4, 0xfa, 0x7a, 0xca, 0xdc, 0x71, 0x5a,
-	0xfa, 0xf1, 0xfa, 0x7c, 0x09, 0x34, 0x6d, 0xa2, 0x72, 0xe0, 0xe3, 0x27, 0x93, 0x49, 0xa3, 0x86,
-	0xf5, 0x9b, 0x01, 0xae, 0x65, 0x2a, 0x2a, 0xbd, 0x64, 0x1b, 0x5e, 0x72, 0x31, 0xf3, 0xf2, 0xa2,
-	0xd4, 0xb8, 0xf5, 0x2f, 0x2e, 0x77, 0x2d, 0xf3, 0xb6, 0x96, 0xb9, 0x3e, 0x56, 0xcb, 0x93, 0x99,
-	0xa1, 0x5b, 0x1b, 0xcc, 0xc4, 0xe5, 0xd6, 0x2f, 0x06, 0x58, 0x4d, 0x71, 0x3a, 0xc9, 0x4d, 0x99,
-	0x18, 0x7c, 0x46, 0x8a, 0x7f, 0xed, 0x98, 0x37, 0xad, 0x16, 0x7e, 0x53, 0x0b, 0xbf, 0x3e, 0x2a,
-	0x7c, 0x9c, 0x10, 0xba, 0x95, 0xc1, 0x54, 0xb8, 0x68, 0xfc, 0xbc, 0x9c, 0xae, 0xf6, 0xd4, 0x7d,
-	0x96, 0x68, 0x3d, 0x2b, 0xb5, 0xde, 0x39, 0xce, 0x65, 0xa8, 0x85, 0xae, 0x6b, 0xa1, 0x6b, 0xa3,
-	0x42, 0x47, 0xa8, 0xa0, 0xbb, 0x32, 0x98, 0x0c, 0x64, 0x7d, 0x9b, 0x2b, 0xdf, 0x5c, 0x43, 0xe7,
-	0xe5, 0xa7, 0xa4, 0xc2, 0x57, 0x9e, 0xfc, 0xa2, 0xd0, 0xfa, 0xa6, 0x16, 0x71, 0x9e, 0x27, 0x5b,
-	0xc4, 0x59, 0x14, 0x1e, 0xd5, 0xd1, 0x72, 0xba, 0x2b, 0x1e, 0x75, 0xd4, 0x86, 0xec, 0x9a, 0xbc,
-	0x0c, 0xa4, 0xb6, 0x97, 0x9e, 0xb4, 0x17, 0x6b, 0x65, 0xcf, 0x6a, 0x65, 0x57, 0x47, 0x9d, 0xcb,
-	0x72, 0x40, 0x77, 0x69, 0x30, 0x8e, 0xc0, 0x9d, 0x7b, 0x3f, 0x1d, 0x54, 0x8d, 0x87, 0x07, 0x55,
-	0xe3, 0xd1, 0x41, 0xd5, 0xf8, 0xeb, 0xa0, 0x6a, 0x7c, 0x75, 0x58, 0x5d, 0x78, 0x74, 0x58, 0x5d,
-	0xf8, 0xe3, 0xb0, 0xba, 0xf0, 0xf1, 0xc6, 0xcc, 0xee, 0xf1, 0x59, 0xfe, 0x63, 0x53, 0x36, 0x93,
-	0xe6, 0xa2, 0xfc, 0xbc, 0x7c, 0xe1, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x59, 0x32, 0x1e, 0xb6,
-	0x0e, 0x0f, 0x00, 0x00,
+	// 1022 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0xcd, 0x6f, 0x1b, 0x45,
+	0x1c, 0xf5, 0x3a, 0x6d, 0x92, 0x8e, 0x53, 0x1a, 0x96, 0x34, 0x71, 0x9d, 0xd4, 0x9b, 0x4e, 0x8b,
+	0x08, 0xaa, 0x58, 0x37, 0x01, 0x01, 0x0a, 0x02, 0x29, 0x9b, 0x52, 0xe8, 0xa9, 0x61, 0x22, 0x01,
+	0x42, 0x48, 0xd6, 0x7a, 0x77, 0x6c, 0x8f, 0xb0, 0x77, 0xac, 0x99, 0xb1, 0x43, 0xfe, 0x02, 0x38,
+	0x22, 0x21, 0x4e, 0xbd, 0xe4, 0x88, 0x10, 0xc7, 0xde, 0xb9, 0xf6, 0xd8, 0x23, 0x07, 0x14, 0x90,
+	0x73, 0xe1, 0x9c, 0x03, 0x07, 0x0e, 0x08, 0xed, 0xcc, 0xec, 0x97, 0xbf, 0x70, 0x42, 0x72, 0x4a,
+	0x3c, 0xfe, 0xed, 0x7b, 0xef, 0xf7, 0xe6, 0xf7, 0xb1, 0x06, 0xaf, 0x7b, 0x94, 0xb7, 0x29, 0xaf,
+	0xf8, 0x84, 0x0b, 0x46, 0x6a, 0x5d, 0x41, 0x68, 0x50, 0xe9, 0x6d, 0xd6, 0xb0, 0x70, 0x37, 0x2b,
+	0x0d, 0x1c, 0x60, 0x4e, 0xb8, 0xdd, 0x61, 0x54, 0x50, 0x73, 0x55, 0x85, 0xda, 0xe9, 0x50, 0x5b,
+	0x87, 0x96, 0x96, 0x1a, 0xb4, 0x41, 0x65, 0x5c, 0x25, 0xfc, 0x4f, 0x3d, 0x52, 0x2a, 0x6b, 0xf4,
+	0x9a, 0xcb, 0x71, 0x8c, 0xea, 0x51, 0x12, 0xe8, 0xef, 0xed, 0x49, 0xec, 0x19, 0x1e, 0x19, 0x0f,
+	0x9f, 0x19, 0xe0, 0xe6, 0x43, 0xdc, 0xc2, 0x0d, 0x57, 0x50, 0xf6, 0x19, 0x11, 0x4d, 0x9f, 0xb9,
+	0x07, 0x8f, 0x83, 0x3a, 0x35, 0x1f, 0x83, 0x97, 0xfd, 0xe8, 0x8b, 0xaa, 0xeb, 0xfb, 0x0c, 0x73,
+	0x5e, 0x34, 0xd6, 0x8d, 0x8d, 0x6b, 0xce, 0xda, 0xe9, 0xb1, 0x55, 0x3c, 0x74, 0xdb, 0xad, 0x6d,
+	0x38, 0x14, 0x02, 0xd1, 0x62, 0x7c, 0xb6, 0xa3, 0x8e, 0xcc, 0x47, 0x60, 0xf1, 0x40, 0x43, 0xc7,
+	0x48, 0x79, 0x89, 0xb4, 0x7a, 0x7a, 0x6c, 0xad, 0x28, 0xa4, 0xc1, 0x08, 0x88, 0x6e, 0x44, 0x47,
+	0x1a, 0x67, 0x7b, 0xfe, 0xdb, 0x23, 0x2b, 0xf7, 0xe7, 0x91, 0x95, 0x83, 0x4f, 0xf3, 0xe0, 0xce,
+	0xa7, 0x6e, 0x8b, 0xf8, 0x21, 0xcd, 0x93, 0xae, 0xe0, 0xc2, 0x0d, 0x7c, 0x12, 0x34, 0x10, 0x3e,
+	0x70, 0x99, 0xcf, 0x11, 0xf6, 0x28, 0xf3, 0xc3, 0x14, 0x7a, 0x51, 0xd0, 0xf8, 0x14, 0x86, 0x42,
+	0x20, 0x5a, 0x8c, 0xcf, 0xa2, 0x14, 0x8e, 0x0c, 0xf0, 0x0a, 0x4d, 0x78, 0xaa, 0x4c, 0x11, 0x15,
+	0xf3, 0xeb, 0x33, 0x1b, 0x85, 0xad, 0x35, 0x6d, 0xbb, 0x1d, 0x5e, 0x4b, 0x74, 0x83, 0xf6, 0x43,
+	0xec, 0xed, 0x52, 0x12, 0x38, 0x9f, 0x3c, 0x3f, 0xb6, 0x72, 0xa7, 0xc7, 0x56, 0x49, 0xf1, 0x8d,
+	0x80, 0x81, 0x3f, 0xfd, 0x6e, 0xdd, 0x6f, 0x10, 0xd1, 0xec, 0xd6, 0x6c, 0x8f, 0xb6, 0x2b, 0xfa,
+	0x12, 0xd5, 0x9f, 0x37, 0xb8, 0xff, 0x55, 0x45, 0x1c, 0x76, 0x30, 0x8f, 0x10, 0x39, 0x32, 0xe9,
+	0x50, 0xce, 0x29, 0x77, 0xfe, 0x32, 0xc0, 0xbd, 0xd8, 0x9d, 0x1d, 0xcf, 0xeb, 0xb6, 0xbb, 0x2d,
+	0x57, 0x60, 0x7f, 0x97, 0xb6, 0xdb, 0x84, 0x73, 0x42, 0x83, 0x8b, 0x37, 0xe8, 0x10, 0x14, 0xdc,
+	0x84, 0x49, 0x5e, 0x6f, 0x61, 0xeb, 0x3d, 0x7b, 0x42, 0x85, 0xdb, 0x93, 0x25, 0x3a, 0x25, 0x6d,
+	0x9b, 0xa9, 0x54, 0xa4, 0xd0, 0x21, 0x4a, 0x73, 0xa5, 0x12, 0xff, 0xdb, 0x00, 0xeb, 0x31, 0xea,
+	0xc7, 0x84, 0x0b, 0xca, 0x88, 0xe7, 0xb6, 0x2e, 0xad, 0x2a, 0x96, 0xc1, 0x6c, 0x07, 0x33, 0x42,
+	0x55, 0xbe, 0x57, 0x90, 0xfe, 0x64, 0x12, 0x30, 0x17, 0x15, 0xc8, 0x8c, 0x34, 0xe2, 0x9d, 0xe9,
+	0x8c, 0x18, 0x92, 0xec, 0x2c, 0x6b, 0x13, 0x5e, 0x52, 0xaa, 0xa2, 0x7a, 0x41, 0x11, 0x7e, 0x2a,
+	0xf9, 0xdf, 0x0c, 0x70, 0x3b, 0x46, 0xda, 0xed, 0x32, 0x86, 0x03, 0x71, 0x69, 0x99, 0xd7, 0x93,
+	0x0c, 0xd5, 0x55, 0xbf, 0x35, 0x5d, 0x86, 0x59, 0x5d, 0x67, 0x49, 0xef, 0x59, 0x1e, 0xac, 0xc6,
+	0x93, 0x6a, 0x5f, 0xb8, 0x4c, 0x90, 0xa0, 0x11, 0x4e, 0xaa, 0x24, 0xb9, 0x8b, 0x9a, 0x57, 0x23,
+	0x7d, 0xca, 0x9f, 0xcb, 0xa7, 0x2e, 0xb8, 0xce, 0xb5, 0xd6, 0x2a, 0x09, 0xea, 0x54, 0xd7, 0xc3,
+	0xd6, 0x44, 0xb7, 0x46, 0xa6, 0xe9, 0xac, 0x69, 0xaf, 0x96, 0x14, 0x7d, 0x06, 0x16, 0xa2, 0x05,
+	0x9e, 0x8a, 0x4d, 0xd9, 0xf6, 0x8f, 0x01, 0x6e, 0xc5, 0xee, 0xef, 0xb7, 0x5c, 0xde, 0xfc, 0xb0,
+	0x27, 0x2f, 0xe0, 0x12, 0x7a, 0xa1, 0x89, 0x49, 0xa3, 0x29, 0xa2, 0x5e, 0x50, 0x9f, 0x52, 0x3d,
+	0x32, 0x93, 0xe9, 0x91, 0x2f, 0xc1, 0x55, 0x1c, 0x2a, 0x29, 0x5e, 0x91, 0x8e, 0x3c, 0x98, 0xae,
+	0x7e, 0x92, 0x0c, 0x9c, 0x25, 0xed, 0xc7, 0x82, 0x12, 0x29, 0xc1, 0x20, 0x52, 0xa0, 0x29, 0x03,
+	0xbe, 0x29, 0x80, 0x85, 0x8f, 0xd4, 0xda, 0xdd, 0x17, 0xae, 0xc0, 0x26, 0x02, 0xb3, 0x1d, 0x97,
+	0xb9, 0x6d, 0x95, 0x68, 0x61, 0xeb, 0xee, 0x44, 0xe6, 0x3d, 0x19, 0xea, 0xdc, 0xd4, 0x64, 0xd7,
+	0x15, 0x99, 0x02, 0x80, 0x48, 0x23, 0x99, 0x9f, 0x83, 0xf9, 0x3a, 0xc6, 0xd5, 0x0e, 0xa5, 0x2d,
+	0xdd, 0x0f, 0xf7, 0x26, 0xa2, 0x3e, 0xc2, 0x78, 0x8f, 0xd2, 0x96, 0xb3, 0xa2, 0x61, 0x6f, 0x28,
+	0xd8, 0x08, 0x03, 0xa2, 0xb9, 0xba, 0x8a, 0x30, 0x7f, 0x30, 0x40, 0x31, 0x29, 0xda, 0x78, 0x49,
+	0x86, 0x97, 0x1e, 0x0e, 0x97, 0x99, 0xe9, 0x8b, 0x29, 0xbd, 0xdd, 0x9d, 0xd7, 0x34, 0xb1, 0x35,
+	0xd8, 0x16, 0x59, 0x06, 0x88, 0x96, 0xfd, 0x51, 0xcf, 0xcb, 0x1e, 0xe9, 0x30, 0xdc, 0x23, 0xb4,
+	0xcb, 0xab, 0x1d, 0x46, 0x3b, 0x94, 0x63, 0x26, 0xaf, 0x32, 0x53, 0x39, 0x43, 0x21, 0x10, 0x2d,
+	0x46, 0x67, 0x7b, 0xfa, 0xc8, 0xfc, 0x7e, 0xcc, 0x6e, 0xbd, 0x2a, 0xb3, 0xfb, 0x60, 0xba, 0xc2,
+	0x18, 0xf7, 0x12, 0xe0, 0xc0, 0xff, 0xde, 0xbe, 0xa3, 0xd6, 0xa9, 0xf9, 0x8b, 0x01, 0xee, 0xa4,
+	0x0a, 0x3f, 0xd9, 0x37, 0x55, 0x2f, 0xde, 0x51, 0xbc, 0x38, 0x2b, 0x35, 0xee, 0xfc, 0x8f, 0x3d,
+	0xa7, 0x65, 0x3e, 0xd0, 0x32, 0x37, 0x86, 0x5a, 0x6e, 0x34, 0x33, 0x44, 0x56, 0x6f, 0x22, 0x2e,
+	0x37, 0x7f, 0x36, 0xc0, 0x5a, 0x82, 0xd3, 0x8c, 0x77, 0x4b, 0x6c, 0xf0, 0x9c, 0x14, 0xff, 0xfe,
+	0x39, 0x77, 0x93, 0x16, 0x7e, 0x5f, 0x0b, 0xbf, 0x3b, 0x28, 0x7c, 0x98, 0x10, 0xa2, 0x52, 0x6f,
+	0x2c, 0x5c, 0xf8, 0x8a, 0x75, 0x2b, 0x79, 0xda, 0x53, 0x8b, 0x22, 0xd6, 0x3a, 0x2f, 0xb5, 0x6e,
+	0x9f, 0x67, 0xcb, 0x68, 0xa1, 0x1b, 0x5a, 0xe8, 0xfa, 0xa0, 0xd0, 0x01, 0x2a, 0x88, 0x56, 0x7a,
+	0xa3, 0x81, 0xcc, 0xa7, 0x99, 0x66, 0xcc, 0x4c, 0x60, 0x5e, 0xbc, 0x26, 0x15, 0xbe, 0x7b, 0xf6,
+	0xc9, 0xae, 0xf5, 0x8d, 0x6d, 0xc9, 0x2c, 0x4f, 0xba, 0x25, 0xd3, 0x28, 0x3c, 0xec, 0xa3, 0xe5,
+	0x24, 0x2b, 0x1e, 0x4e, 0xca, 0xaa, 0x9c, 0x86, 0xbc, 0x08, 0xa4, 0xb6, 0xb7, 0xcf, 0x3a, 0x63,
+	0xb5, 0xb2, 0x57, 0xb5, 0xb2, 0xdb, 0x83, 0xce, 0xa5, 0x39, 0x20, 0x5a, 0xea, 0x0d, 0x23, 0xa4,
+	0x36, 0xb8, 0xf3, 0xe4, 0xc7, 0x7e, 0xd9, 0x78, 0xde, 0x2f, 0x1b, 0x2f, 0xfa, 0x65, 0xe3, 0x8f,
+	0x7e, 0xd9, 0xf8, 0xee, 0xa4, 0x9c, 0x7b, 0x71, 0x52, 0xce, 0xfd, 0x7a, 0x52, 0xce, 0x7d, 0xb1,
+	0x39, 0xf1, 0xfd, 0xf7, 0xeb, 0xec, 0x2f, 0x1a, 0xf9, 0x3a, 0x5c, 0x9b, 0x95, 0xbf, 0x61, 0xde,
+	0xfc, 0x37, 0x00, 0x00, 0xff, 0xff, 0x47, 0x6c, 0x1c, 0x49, 0x73, 0x0d, 0x00, 0x00,
 }
 
-func (this *DelegatorWithdrawInfo) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*DelegatorWithdrawInfo)
-	if !ok {
-		that2, ok := that.(DelegatorWithdrawInfo)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.WithdrawAddress, that1.WithdrawAddress) {
-		return false
-	}
-	return true
-}
-func (this *ValidatorOutstandingRewardsRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorOutstandingRewardsRecord)
-	if !ok {
-		that2, ok := that.(ValidatorOutstandingRewardsRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if len(this.OutstandingRewards) != len(that1.OutstandingRewards) {
-		return false
-	}
-	for i := range this.OutstandingRewards {
-		if !this.OutstandingRewards[i].Equal(&that1.OutstandingRewards[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *ValidatorAccumulatedCommissionRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorAccumulatedCommissionRecord)
-	if !ok {
-		that2, ok := that.(ValidatorAccumulatedCommissionRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if !this.Accumulated.Equal(&that1.Accumulated) {
-		return false
-	}
-	return true
-}
-func (this *ValidatorHistoricalRewardsRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorHistoricalRewardsRecord)
-	if !ok {
-		that2, ok := that.(ValidatorHistoricalRewardsRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if this.Period != that1.Period {
-		return false
-	}
-	if !this.Rewards.Equal(&that1.Rewards) {
-		return false
-	}
-	return true
-}
-func (this *ValidatorCurrentRewardsRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorCurrentRewardsRecord)
-	if !ok {
-		that2, ok := that.(ValidatorCurrentRewardsRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if !this.Rewards.Equal(&that1.Rewards) {
-		return false
-	}
-	return true
-}
-func (this *DelegatorStartingInfoRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*DelegatorStartingInfoRecord)
-	if !ok {
-		that2, ok := that.(DelegatorStartingInfoRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.DelegatorAddress, that1.DelegatorAddress) {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if !this.StartingInfo.Equal(&that1.StartingInfo) {
-		return false
-	}
-	return true
-}
-func (this *ValidatorSlashEventRecord) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ValidatorSlashEventRecord)
-	if !ok {
-		that2, ok := that.(ValidatorSlashEventRecord)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !bytes.Equal(this.ValidatorAddress, that1.ValidatorAddress) {
-		return false
-	}
-	if this.Height != that1.Height {
-		return false
-	}
-	if this.Period != that1.Period {
-		return false
-	}
-	if !this.Event.Equal(&that1.Event) {
-		return false
-	}
-	return true
-}
-func (this *GenesisState) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*GenesisState)
-	if !ok {
-		that2, ok := that.(GenesisState)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Params.Equal(&that1.Params) {
-		return false
-	}
-	if !this.FeePool.Equal(&that1.FeePool) {
-		return false
-	}
-	if len(this.DelegatorWithdrawInfos) != len(that1.DelegatorWithdrawInfos) {
-		return false
-	}
-	for i := range this.DelegatorWithdrawInfos {
-		if !this.DelegatorWithdrawInfos[i].Equal(&that1.DelegatorWithdrawInfos[i]) {
-			return false
-		}
-	}
-	if !bytes.Equal(this.PreviousProposer, that1.PreviousProposer) {
-		return false
-	}
-	if len(this.OutstandingRewards) != len(that1.OutstandingRewards) {
-		return false
-	}
-	for i := range this.OutstandingRewards {
-		if !this.OutstandingRewards[i].Equal(&that1.OutstandingRewards[i]) {
-			return false
-		}
-	}
-	if len(this.ValidatorAccumulatedCommissions) != len(that1.ValidatorAccumulatedCommissions) {
-		return false
-	}
-	for i := range this.ValidatorAccumulatedCommissions {
-		if !this.ValidatorAccumulatedCommissions[i].Equal(&that1.ValidatorAccumulatedCommissions[i]) {
-			return false
-		}
-	}
-	if len(this.ValidatorHistoricalRewards) != len(that1.ValidatorHistoricalRewards) {
-		return false
-	}
-	for i := range this.ValidatorHistoricalRewards {
-		if !this.ValidatorHistoricalRewards[i].Equal(&that1.ValidatorHistoricalRewards[i]) {
-			return false
-		}
-	}
-	if len(this.ValidatorCurrentRewards) != len(that1.ValidatorCurrentRewards) {
-		return false
-	}
-	for i := range this.ValidatorCurrentRewards {
-		if !this.ValidatorCurrentRewards[i].Equal(&that1.ValidatorCurrentRewards[i]) {
-			return false
-		}
-	}
-	if len(this.DelegatorStartingInfos) != len(that1.DelegatorStartingInfos) {
-		return false
-	}
-	for i := range this.DelegatorStartingInfos {
-		if !this.DelegatorStartingInfos[i].Equal(&that1.DelegatorStartingInfos[i]) {
-			return false
-		}
-	}
-	if len(this.ValidatorSlashEvents) != len(that1.ValidatorSlashEvents) {
-		return false
-	}
-	for i := range this.ValidatorSlashEvents {
-		if !this.ValidatorSlashEvents[i].Equal(&that1.ValidatorSlashEvents[i]) {
-			return false
-		}
-	}
-	return true
-}
 func (m *DelegatorWithdrawInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1636,7 +1148,7 @@ func (m *DelegatorWithdrawInfo) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -1646,31 +1158,29 @@ func (m *DelegatorWithdrawInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -1680,25 +1190,23 @@ func (m *DelegatorWithdrawInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.WithdrawAddress = append(m.WithdrawAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.WithdrawAddress == nil {
-				m.WithdrawAddress = []byte{}
-			}
+			m.WithdrawAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1757,7 +1265,7 @@ func (m *ValidatorOutstandingRewardsRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -1767,25 +1275,23 @@ func (m *ValidatorOutstandingRewardsRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1878,7 +1384,7 @@ func (m *ValidatorAccumulatedCommissionRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -1888,25 +1394,23 @@ func (m *ValidatorAccumulatedCommissionRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1998,7 +1502,7 @@ func (m *ValidatorHistoricalRewardsRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2008,25 +1512,23 @@ func (m *ValidatorHistoricalRewardsRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
@@ -2137,7 +1639,7 @@ func (m *ValidatorCurrentRewardsRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2147,25 +1649,23 @@ func (m *ValidatorCurrentRewardsRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2257,7 +1757,7 @@ func (m *DelegatorStartingInfoRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2267,31 +1767,29 @@ func (m *DelegatorStartingInfoRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = append(m.DelegatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddress == nil {
-				m.DelegatorAddress = []byte{}
-			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2301,25 +1799,23 @@ func (m *DelegatorStartingInfoRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2411,7 +1907,7 @@ func (m *ValidatorSlashEventRecord) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2421,25 +1917,23 @@ func (m *ValidatorSlashEventRecord) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
@@ -2669,7 +2163,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PreviousProposer", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowGenesis
@@ -2679,25 +2173,23 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthGenesis
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthGenesis
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PreviousProposer = append(m.PreviousProposer[:0], dAtA[iNdEx:postIndex]...)
-			if m.PreviousProposer == nil {
-				m.PreviousProposer = []byte{}
-			}
+			m.PreviousProposer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {

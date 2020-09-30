@@ -83,7 +83,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 		}
 
 		accountBalance := types.Balance{
-			Address: addr,
+			Address: addr.String(),
 			Coins:   sdk.NewCoins(balance),
 		}
 		balances = append(balances, accountBalance)

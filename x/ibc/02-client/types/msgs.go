@@ -177,6 +177,7 @@ func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgUpgradeClient creates a new MsgUpgradeClient instance
+// nolint: interfacer
 func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, proofUpgrade []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
 	anyClient, err := PackClientState(clientState)
 	if err != nil {

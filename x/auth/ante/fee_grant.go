@@ -19,7 +19,7 @@ var _ types.AnteDecorator = DeductGrantedFeeDecorator{}
 
 func (d DeductGrantedFeeDecorator) AnteHandle(ctx types.Context, tx types.Tx, simulate bool, next types.AnteHandler) (newCtx types.Context, err error) {
 	feeTx, ok := tx.(types.FeeTx)
-	if ok && feeTx.FeeGranter() != nil {
+	if ok && len(feeTx.FeeGranter()) != 0 {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not supported")
 	}
 

@@ -144,6 +144,18 @@ func (w *wrapper) FeePayer() sdk.AccAddress {
 	return w.GetSigners()[0]
 }
 
+func (w *wrapper) FeeGranter() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return granterAddr
+	}
+	return nil
+}
+
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }

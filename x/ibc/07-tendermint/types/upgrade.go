@@ -45,7 +45,7 @@ func (cs ClientState) VerifyUpgrade(
 	committedClient := upgradedClient.ZeroCustomFields()
 	bz, err := codec.MarshalAny(cdc, committedClient)
 	if err != nil {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal clientstate: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "could not marshal client state: %v", err)
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan

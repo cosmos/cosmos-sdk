@@ -30,6 +30,7 @@ signBytes := &SignBytes{
 	Sequence:    sequence,
 	Timestamp:   timestamp,
 	Diversifier: diversifier,
+    DataType:    CLIENT,
 	Data:        dataBz,
 }
 
@@ -37,6 +38,8 @@ signBz, err := cdc.MarshalBinaryBare(signBytes)
 ```
 
 The helper functions in [proofs.go](../types/proofs.go) handle the above actions.
+The DataType field is used to disambiguate what type of data was signed because
+of potential proto encoding overlap.
 
 Sign the sign bytes. Embed the signatures into either `SingleSignatureData` or
 `MultiSignatureData`. Convert the `SignatureData` to proto and marshal it. 

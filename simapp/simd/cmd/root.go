@@ -29,7 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	pubkeycli "github.com/cosmos/cosmos-sdk/x/auth/pubkey/client/cli"
+	pubkeycli "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingcli "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

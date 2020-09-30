@@ -6,7 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	pubkey "github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
+	pubkey "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 

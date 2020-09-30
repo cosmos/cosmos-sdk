@@ -23,7 +23,6 @@ func NewTestCoins() sdk.Coins {
 
 // KeyTestPubAddr generates a test key pair
 func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	// TODO should use this function for pubkey generation
 	key := secp256k1.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())

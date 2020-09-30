@@ -13,7 +13,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestNewMsgChangePubKeyCmd() {
 		respType     proto.Message
 		expectedCode uint32
 	}{
-		// simd tx pubkey change-pubkey cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv --from validator --keyring-backend=test --chain-id=testing --home=$HOME/.simd
+		// simd tx changepubkey change-pubkey cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv --from validator --keyring-backend=test --chain-id=testing --home=$HOME/.simd
 		"try changing pubkey": {
 			args: []string{
 				"cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv",

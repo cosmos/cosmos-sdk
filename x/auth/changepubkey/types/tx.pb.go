@@ -72,10 +72,12 @@ func (m *MsgChangePubKey) GetAddress() github_com_cosmos_cosmos_sdk_types.AccAdd
 }
 
 func init() {
-	proto.RegisterType((*MsgChangePubKey)(nil), "cosmos.pubkey.v1beta1.MsgChangePubKey")
+	proto.RegisterType((*MsgChangePubKey)(nil), "cosmos.changepubkey.v1beta1.MsgChangePubKey")
 }
 
-func init() { proto.RegisterFile("cosmos/pubkey/v1beta1/tx.proto", fileDescriptor_a50a81a1f972bdae) }
+func init() {
+	proto.RegisterFile("cosmos/changepubkey/v1beta1/tx.proto", fileDescriptor_a50a81a1f972bdae)
+}
 
 var fileDescriptor_a50a81a1f972bdae = []byte{
 	// 261 bytes of a gzipped FileDescriptorProto

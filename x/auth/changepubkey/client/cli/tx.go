@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/pubkey/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 )
 
 // Transaction command flags
@@ -15,11 +15,11 @@ const (
 	FlagDelayed = "delayed"
 )
 
-// GetTxCmd returns pubkey module's transaction commands.
+// GetTxCmd returns changepubkey module's transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "pubkey transaction subcommands",
+		Short:                      "changepubkey transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

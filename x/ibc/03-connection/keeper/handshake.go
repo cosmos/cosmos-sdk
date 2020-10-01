@@ -30,6 +30,10 @@ func (k Keeper) ConnOpenInit(
 
 	versions := types.GetCompatibleEncodedVersions()
 	if version != "" {
+		if !types.IsSupportedVersion(version) {
+			return sdkerrors.Wrap(types.ErrInvalidVersion, "version is not supported")
+		}
+
 		versions = []string{version}
 	}
 

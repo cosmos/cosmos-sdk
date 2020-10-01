@@ -35,6 +35,10 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{"connection already exists", func() {
 			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 		}, false},
+		{"invalid version", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			version = "bad version"
+		}, false},
 		{"couldn't add connection to client", func() {
 			// swap client identifiers to result in client that does not exist
 			clientB, clientA = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)

@@ -2,6 +2,8 @@ package host
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 const (
@@ -33,6 +35,7 @@ const (
 	KeyNextSeqAckPrefix        = "seqAcks"
 	KeyPacketCommitmentPrefix  = "commitments"
 	KeyPacketAckPrefix         = "acks"
+	KeyPacketReceiptPrefix     = "receipts"
 )
 
 // KeyPrefixBytes return the key prefix bytes from a URL string format
@@ -69,8 +72,8 @@ func ClientTypePath() string {
 
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
-func ConsensusStatePath(height uint64) string {
-	return fmt.Sprintf("consensusState/%d", height)
+func ConsensusStatePath(height exported.Height) string {
+	return fmt.Sprintf("consensusState/%s", height)
 }
 
 // KeyClientState returns the store key for a particular client state
@@ -85,7 +88,7 @@ func KeyClientType() []byte {
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
-func KeyConsensusState(height uint64) []byte {
+func KeyConsensusState(height exported.Height) []byte {
 	return []byte(ConsensusStatePath(height))
 }
 
@@ -161,6 +164,11 @@ func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string
 	return fmt.Sprintf("%s/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }
 
+// PacketReceiptPath defines the packet receipt store path
+func PacketReceiptPath(portID, channelID string, sequence uint64) string {
+	return fmt.Sprintf("%s/", KeyPacketReceiptPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/receipts/%d", sequence)
+}
+
 // KeyChannel returns the store key for a particular channel
 func KeyChannel(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
@@ -194,6 +202,12 @@ func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
 // acknowledgement is stored
 func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte {
 	return []byte(PacketAcknowledgementPath(portID, channelID, sequence))
+}
+
+// KeyPacketReceipt returns the store key of under which a packet
+// receipt is stored
+func KeyPacketReceipt(portID, channelID string, sequence uint64) []byte {
+	return []byte(PacketReceiptPath(portID, channelID, sequence))
 }
 
 func channelPath(portID, channelID string) string {

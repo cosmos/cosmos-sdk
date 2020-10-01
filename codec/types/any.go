@@ -91,7 +91,7 @@ func (any *Any) Pack(x proto.Message) error {
 func UnsafePackAny(x interface{}) *Any {
 	if msg, ok := x.(proto.Message); ok {
 		any, err := NewAnyWithValue(msg)
-		if err != nil {
+		if err == nil {
 			return any
 		}
 	}
@@ -106,4 +106,9 @@ func (any *Any) GetCachedValue() interface{} {
 // ClearCachedValue clears the cached value from the Any
 func (any *Any) ClearCachedValue() {
 	any.cachedValue = nil
+}
+
+// IntoAny represents a type that can be wrapped into an Any.
+type IntoAny interface {
+	AsAny() *Any
 }

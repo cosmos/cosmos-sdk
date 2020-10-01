@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -20,8 +19,10 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -91,7 +92,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	for _, val := range valSet.Validators {
 		validator := stakingtypes.Validator{
-			OperatorAddress:   val.Address.Bytes(),
+			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
 			Jailed:            false,
 			Status:            sdk.Bonded,
@@ -269,7 +270,7 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+	err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
 	if err != nil {
 		panic(err)
 	}
@@ -420,7 +421,8 @@ func NewPubKeyFromHex(pk string) (res crypto.PubKey) {
 	if err != nil {
 		panic(err)
 	}
-	pkEd := make(ed25519.PubKey, ed25519.PubKeySize)
-	copy(pkEd, pkBytes)
-	return pkEd
+	if len(pkBytes) != ed25519.PubKeySize {
+		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+	}
+	return &ed25519.PubKey{Key: pkBytes}
 }

@@ -50,7 +50,7 @@ func SimulateFromSeed(
 	appStateFn simulation.AppStateFn,
 	randAccFn simulation.RandomAccountFn,
 	ops WeightedOperations,
-	blackListedAccs map[string]bool,
+	blockedAddrs map[string]bool,
 	config simulation.Config,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -83,7 +83,7 @@ func SimulateFromSeed(
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
-		if !blackListedAccs[acc.Address.String()] {
+		if !blockedAddrs[acc.Address.String()] {
 			tmpAccs = append(tmpAccs, acc)
 		}
 	}

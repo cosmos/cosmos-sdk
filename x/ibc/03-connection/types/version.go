@@ -136,6 +136,27 @@ func GetCompatibleEncodedVersions() []string {
 	return versions
 }
 
+// IsSupportedVersion returns true if the proposed version has a matching version
+// identifier and its entire feature set is supported or the version identifier
+// supports an empty feature set.
+func IsSupportedVersion(encodedProposedVersion string) bool {
+	proposedVersion, err := DecodeVersion(encodedProposedVersion)
+	if err != nil {
+		return false
+	}
+
+	supportedVersion, found := FindSupportedVersion(proposedVersion, GetCompatibleVersions())
+	if !found {
+		return false
+	}
+
+	if err := supportedVersion.VerifyProposedVersion(proposedVersion); err != nil {
+		return false
+	}
+
+	return true
+}
+
 // FindSupportedVersion returns the version with a matching version identifier
 // if it exists. The returned boolean is true if the version is found and
 // false otherwise.
@@ -156,12 +177,19 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 // not allowed for the chosen version identifier then the search for a
 // compatible version continues. This function is called in the ConnOpenTry
 // handshake procedure.
-func PickVersion(encodedCounterpartyVersions []string) (string, error) {
+//
+// CONTRACT: PickVersion must only provide a version that is in the
+// intersection of the supported versions and the counterparty versions.
+func PickVersion(encodedSupportedVersions, encodedCounterpartyVersions []string) (string, error) {
+	supportedVersions, err := DecodeVersions(encodedSupportedVersions)
+	if err != nil {
+		return "", sdkerrors.Wrapf(err, "failed to unmarshal supported versions (%s) when attempting to pick compatible version", encodedSupportedVersions)
+	}
+
 	counterpartyVersions, err := DecodeVersions(encodedCounterpartyVersions)
 	if err != nil {
 		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", encodedCounterpartyVersions)
 	}
-	supportedVersions := GetCompatibleVersions()
 
 	for _, supportedVersion := range supportedVersions {
 		// check if the source version is supported by the counterparty

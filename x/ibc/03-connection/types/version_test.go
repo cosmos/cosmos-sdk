@@ -59,6 +59,40 @@ func TestDecodeVersion(t *testing.T) {
 	}
 }
 
+func TestIsSupportedVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version types.Version
+		expPass bool
+	}{
+		{
+			"version is supported",
+			types.GetCompatibleVersions()[0],
+			true,
+		},
+		{
+			"version is not supported",
+			types.Version{},
+			false,
+		},
+		{
+			"version feature is not supported",
+			types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_DAG"}),
+			false,
+		},
+	}
+
+	// test that a version that cannot be decoded does not pass
+	require.False(t, types.IsSupportedVersion("1.0"))
+
+	for _, tc := range testCases {
+		encodedVersion, err := tc.version.Encode()
+		require.NoError(t, err)
+
+		require.Equal(t, tc.expPass, types.IsSupportedVersion(encodedVersion))
+	}
+}
+
 func TestFindSupportedVersion(t *testing.T) {
 	testCases := []struct {
 		name              string
@@ -86,22 +120,27 @@ func TestFindSupportedVersion(t *testing.T) {
 func TestPickVersion(t *testing.T) {
 	testCases := []struct {
 		name                 string
+		supportedVersions    []types.Version
 		counterpartyVersions []types.Version
 		expVer               types.Version
 		expPass              bool
 	}{
-		{"valid default ibc version", types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
-		{"valid version in counterparty versions", []types.Version{types.NewVersion("version1", nil), types.NewVersion("2.0.0", []string{"ORDER_UNORDERED-ZK"}), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
-		{"valid identifier match but empty feature set not allowed", []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"DAG", "ORDERED-ZK", "UNORDERED-zk]"})}, types.NewVersion(types.DefaultIBCVersionIdentifier, nil), false},
-		{"empty counterparty versions", []types.Version{}, types.Version{}, false},
-		{"non-matching counterparty versions", []types.Version{types.NewVersion("2.0.0", nil)}, types.Version{}, false},
+		{"valid default ibc version", types.GetCompatibleVersions(), types.GetCompatibleVersions(), types.DefaultIBCVersion, true},
+		{"valid version in counterparty versions", types.GetCompatibleVersions(), []types.Version{types.NewVersion("version1", nil), types.NewVersion("2.0.0", []string{"ORDER_UNORDERED-ZK"}), types.DefaultIBCVersion}, types.DefaultIBCVersion, true},
+		{"valid identifier match but empty feature set not allowed", types.GetCompatibleVersions(), []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"DAG", "ORDERED-ZK", "UNORDERED-zk]"})}, types.NewVersion(types.DefaultIBCVersionIdentifier, nil), false},
+		{"empty counterparty versions", types.GetCompatibleVersions(), []types.Version{}, types.Version{}, false},
+		{"non-matching counterparty versions", types.GetCompatibleVersions(), []types.Version{types.NewVersion("2.0.0", nil)}, types.Version{}, false},
+		{"non-matching counterparty versions (uses ordered channels only) contained in supported versions (uses unordered channels only)", []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED"})}, types.Version{}, false},
 	}
 
 	for i, tc := range testCases {
+		encodedSupportedVersions, err := types.EncodeVersions(tc.supportedVersions)
+		require.NoError(t, err)
+
 		encodedCounterpartyVersions, err := types.EncodeVersions(tc.counterpartyVersions)
 		require.NoError(t, err)
 
-		encodedVersion, err := types.PickVersion(encodedCounterpartyVersions)
+		encodedVersion, err := types.PickVersion(encodedSupportedVersions, encodedCounterpartyVersions)
 
 		if tc.expPass {
 			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)

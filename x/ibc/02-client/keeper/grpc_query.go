@@ -7,14 +7,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -43,9 +42,10 @@ func (q Keeper) ClientState(c context.Context, req *types.QueryClientStateReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	proofHeight := types.GetSelfHeight(ctx)
 	return &types.QueryClientStateResponse{
 		ClientState: any,
-		ProofHeight: uint64(ctx.BlockHeight()),
+		ProofHeight: proofHeight,
 	}, nil
 }
 
@@ -108,20 +108,21 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		found          bool
 	)
 
+	height := types.NewHeight(req.VersionNumber, req.VersionHeight)
 	if req.LatestHeight {
 		consensusState, found = q.GetLatestClientConsensusState(ctx, req.ClientId)
 	} else {
-		if req.Height == 0 {
+		if req.VersionHeight == 0 {
 			return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
 		}
 
-		consensusState, found = q.GetClientConsensusState(ctx, req.ClientId, req.Height)
+		consensusState, found = q.GetClientConsensusState(ctx, req.ClientId, height)
 	}
 
 	if !found {
 		return nil, status.Error(
 			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "client-id: %s, height: %d", req.ClientId, req.Height).Error(),
+			sdkerrors.Wrapf(types.ErrConsensusStateNotFound, "client-id: %s, height: %s", req.ClientId, height).Error(),
 		)
 	}
 
@@ -130,9 +131,10 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	proofHeight := types.GetSelfHeight(ctx)
 	return &types.QueryConsensusStateResponse{
 		ConsensusState: any,
-		ProofHeight:    uint64(ctx.BlockHeight()),
+		ProofHeight:    proofHeight,
 	}, nil
 }
 
@@ -148,21 +150,21 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consensusStates := []*codectypes.Any{}
+	consensusStates := []types.ConsensusStateWithHeight{}
 	store := prefix.NewStore(ctx.KVStore(q.storeKey), host.FullKeyClientPath(req.ClientId, []byte("consensusState/")))
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(key, value []byte) error {
+		height, err := types.ParseHeight(string(key))
+		if err != nil {
+			return err
+		}
+
 		consensusState, err := q.UnmarshalConsensusState(value)
 		if err != nil {
 			return err
 		}
 
-		any, err := types.PackConsensusState(consensusState)
-		if err != nil {
-			return err
-		}
-
-		consensusStates = append(consensusStates, any)
+		consensusStates = append(consensusStates, types.NewConsensusStateWithHeight(height, consensusState))
 		return nil
 	})
 

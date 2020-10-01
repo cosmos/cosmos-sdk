@@ -11,12 +11,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 // Query defines the gRPC querier service for gov module
 service Query {
   // Proposal queries proposal details based on ProposalID.
-  rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
+  rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}";
   }
 
   // Proposals queries all proposals based on given status.
-  rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {
+  rpc Proposals(QueryProposalsRequest) returns (QueryProposalsResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals";
   }
 
@@ -26,7 +26,7 @@ service Query {
   }
 
   // Votes queries votes of a given proposal.
-  rpc Votes (QueryVotesRequest) returns (QueryVotesResponse) {
+  rpc Votes(QueryVotesRequest) returns (QueryVotesResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/votes";
   }
 
@@ -64,20 +64,24 @@ message QueryProposalResponse {
 
 // QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 message QueryProposalsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // proposal_status defines the status of the proposals.
-  ProposalStatus proposal_status = 1 ;
-  
+  ProposalStatus proposal_status = 1;
+
   // voter defines the voter address for the proposals.
-  bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
+  string voter = 2;
 
   // depositor defines the deposit addresses from the proposals.
-  bytes depositor = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string depositor = 3;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
-// QueryProposalsResponse is the response type for the Query/Proposals RPC method.
+// QueryProposalsResponse is the response type for the Query/Proposals RPC
+// method.
 message QueryProposalsResponse {
   repeated Proposal proposals = 1 [(gogoproto.nullable) = false];
 
@@ -87,11 +91,14 @@ message QueryProposalsResponse {
 
 // QueryVoteRequest is the request type for the Query/Vote RPC method.
 message QueryVoteRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
-  
+
   // voter defines the oter address for the proposals.
-  bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"]; 
+  string voter = 2;
 }
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
@@ -119,8 +126,9 @@ message QueryVotesResponse {
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest { 
-  // params_type defines which parameters to query for, can be one of "voting", "tallying" or "deposit".
+message QueryParamsRequest {
+  // params_type defines which parameters to query for, can be one of "voting",
+  // "tallying" or "deposit".
   string params_type = 1;
 }
 
@@ -136,11 +144,14 @@ message QueryParamsResponse {
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
 message QueryDepositRequest {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
-  
+
   // depositor defines the deposit addresses from the proposals.
-  bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string depositor = 2;
 }
 
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.
@@ -176,4 +187,4 @@ message QueryTallyResultRequest {
 message QueryTallyResultResponse {
   // tally defines the requested tally.
   TallyResult tally = 1 [(gogoproto.nullable) = false];
-} 
+}

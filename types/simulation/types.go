@@ -135,9 +135,12 @@ type AppParams map[string]json.RawMessage
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value or default value (eg: in the
 // case of operation weights where Rand is not used).
-func (sp AppParams) GetOrGenerate(cdc codec.JSONMarshaler, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+func (sp AppParams) GetOrGenerate(_ codec.JSONMarshaler, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
-		cdc.MustUnmarshalJSON(v, ptr)
+		err := json.Unmarshal(v, ptr)
+		if err != nil {
+			panic(err)
+		}
 		return
 	}
 

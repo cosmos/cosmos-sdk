@@ -3,6 +3,7 @@ package simulation
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
@@ -18,7 +19,11 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeySendEnabled),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(RandomGenesisSendParams(r)))
+				paramsBytes, err := json.Marshal(RandomGenesisSendParams(r))
+				if err != nil {
+					panic(err)
+				}
+				return fmt.Sprintf("%s", paramsBytes)
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyDefaultSendEnabled),

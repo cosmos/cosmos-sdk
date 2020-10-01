@@ -8,6 +8,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
@@ -91,7 +92,6 @@ func (suite *AnteTestSuite) TestValidateMemo() {
 
 func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -100,66 +100,80 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-
-	privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
-
-	txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(cgtsd)
 
-	params := suite.app.AccountKeeper.GetParams(suite.ctx)
-	expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
+	testCases := []struct {
+		name  string
+		sigV2 signing.SignatureV2
+	}{
+		{"SingleSignatureData", signing.SignatureV2{PubKey: priv1.PubKey()}},
+		{"MultiSignatureData", signing.SignatureV2{PubKey: priv1.PubKey(), Data: multisig.NewMultisig(2)}},
+	}
 
-	// Set suite.ctx with TxBytes manually
-	suite.ctx = suite.ctx.WithTxBytes(txBytes)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+			suite.txBuilder.SetFeeAmount(feeAmount)
+			suite.txBuilder.SetGasLimit(gasLimit)
+			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
-	// track how much gas is necessary to retrieve parameters
-	beforeGas := suite.ctx.GasMeter().GasConsumed()
-	suite.app.AccountKeeper.GetParams(suite.ctx)
-	afterGas := suite.ctx.GasMeter().GasConsumed()
-	expectedGas += afterGas - beforeGas
+			privs, accNums, accSeqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+			suite.Require().NoError(err)
 
-	beforeGas = suite.ctx.GasMeter().GasConsumed()
-	suite.ctx, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
-	// require that decorator consumes expected amount of gas
-	consumedGas := suite.ctx.GasMeter().GasConsumed() - beforeGas
-	suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
+			params := suite.app.AccountKeeper.GetParams(suite.ctx)
+			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
-	// simulation must not underestimate gas of this decorator even with nil signatures
-	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
-	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures(signing.SignatureV2{
-		PubKey: priv1.PubKey(),
-	}))
-	tx = txBuilder.GetTx()
+			// Set suite.ctx with TxBytes manually
+			suite.ctx = suite.ctx.WithTxBytes(txBytes)
 
-	simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-	suite.Require().Nil(err, "Cannot marshal tx: %v", err)
-	// require that simulated tx is smaller than tx with signatures
-	suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
+			// track how much gas is necessary to retrieve parameters
+			beforeGas := suite.ctx.GasMeter().GasConsumed()
+			suite.app.AccountKeeper.GetParams(suite.ctx)
+			afterGas := suite.ctx.GasMeter().GasConsumed()
+			expectedGas += afterGas - beforeGas
 
-	// Set suite.ctx with smaller simulated TxBytes manually
-	suite.ctx = suite.ctx.WithTxBytes(txBytes)
+			beforeGas = suite.ctx.GasMeter().GasConsumed()
+			suite.ctx, err = antehandler(suite.ctx, tx, false)
+			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
-	beforeSimGas := suite.ctx.GasMeter().GasConsumed()
+			// require that decorator consumes expected amount of gas
+			consumedGas := suite.ctx.GasMeter().GasConsumed() - beforeGas
+			suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 
-	// run antehandler with simulate=true
-	suite.ctx, err = antehandler(suite.ctx, tx, true)
-	consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
+			// simulation must not underestimate gas of this decorator even with nil signatures
+			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+			suite.Require().NoError(err)
+			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
+			tx = txBuilder.GetTx()
 
-	// require that antehandler passes and does not underestimate decorator cost
-	suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
-	suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
+			// require that simulated tx is smaller than tx with signatures
+			suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
+
+			// Set suite.ctx with smaller simulated TxBytes manually
+			suite.ctx = suite.ctx.WithTxBytes(simTxBytes)
+
+			beforeSimGas := suite.ctx.GasMeter().GasConsumed()
+
+			// run antehandler with simulate=true
+			suite.ctx, err = antehandler(suite.ctx, tx, true)
+			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
+
+			// require that antehandler passes and does not underestimate decorator cost
+			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+
+		})
+	}
+
 }
 
 func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {

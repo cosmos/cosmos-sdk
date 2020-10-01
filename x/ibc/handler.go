@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -20,13 +20,14 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		// IBC client msg interface types
-		case clientexported.MsgCreateClient:
+		case *clienttypes.MsgCreateClient:
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
-		case clientexported.MsgUpdateClient:
+		case *clienttypes.MsgUpdateClient:
 			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		// Client Misbehaviour is handled by the evidence module
+		case *clienttypes.MsgSubmitMisbehaviour:
+			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
 
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:
@@ -191,9 +192,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrap(err, "receive packet callback failed")
 			}
 
-			// Set packet acknowledgement
-			if err = k.ChannelKeeper.PacketExecuted(ctx, cap, msg.Packet, ack); err != nil {
+			if err := k.ChannelKeeper.WriteReceipt(ctx, cap, msg.Packet); err != nil {
 				return nil, err
+			}
+
+			// Set packet acknowledgement only if the acknowledgement is not nil.
+			// NOTE: IBC applications modules may call the WriteAcknowledgement asynchronously if the
+			// acknowledgement is nil.
+			if ack != nil {
+				if err := k.ChannelKeeper.WriteAcknowledgement(ctx, msg.Packet, ack); err != nil {
+					return nil, err
+				}
 			}
 
 			return res, nil

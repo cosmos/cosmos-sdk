@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -158,9 +158,26 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
-			msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
+			queryClient := types.NewQueryClient(clientCtx)
+			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
 			if err != nil {
 				return err
+			}
+
+			validators := delValsRes.Validators
+			// build multi-message transaction
+			msgs := make([]sdk.Msg, 0, len(validators))
+			for _, valAddr := range validators {
+				val, err := sdk.ValAddressFromBech32(valAddr)
+				if err != nil {
+					return err
+				}
+
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
+				if err := msg.ValidateBasic(); err != nil {
+					return err
+				}
+				msgs = append(msgs, msg)
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
@@ -293,7 +310,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseCommunityPoolSpendProposalJSON(clientCtx.LegacyAmino, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalWithDeposit(clientCtx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}
@@ -309,7 +326,11 @@ Where proposal.json contains:
 			}
 
 			from := clientCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

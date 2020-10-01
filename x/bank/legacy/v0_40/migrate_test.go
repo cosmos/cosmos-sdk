@@ -15,9 +15,9 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v040Codec := codec.New()
+	v040Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v040Codec)
-	v039auth.RegisterCodec(v040Codec)
+	v039auth.RegisterLegacyAminoCodec(v040Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")

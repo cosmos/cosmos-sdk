@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // UnmarshalClientState attempts to decode and return an ClientState object from

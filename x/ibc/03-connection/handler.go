@@ -11,7 +11,7 @@ import (
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
 func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenInit) (*sdk.Result, error) {
 	if err := k.ConnOpenInit(
-		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty,
+		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty, msg.Version,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}
@@ -43,7 +43,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	}
 
 	if err := k.ConnOpenTry(
-		ctx, msg.ConnectionId, msg.Counterparty, msg.ClientId, targetClient,
+		ctx, msg.ConnectionId, msg.ProvedId, msg.Counterparty, msg.ClientId, targetClient,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
@@ -77,7 +77,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	}
 
 	if err := k.ConnOpenAck(
-		ctx, msg.ConnectionId, targetClient, msg.Version,
+		ctx, msg.ConnectionId, targetClient, msg.Version, msg.CounterpartyConnectionId,
 		msg.ProofTry, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {

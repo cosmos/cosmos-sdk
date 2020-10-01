@@ -1,28 +1,31 @@
 package types
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ sdk.Msg = &MsgConnectionOpenInit{}
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
+//nolint:interfacer
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	signer sdk.AccAddress,
+	version string, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenInit{
 		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
-		Signer:       signer,
+		Version:      version,
+		Signer:       signer.String(),
 	}
 }
 
@@ -36,7 +39,7 @@ func (msg MsgConnectionOpenInit) Type() string {
 	return "connection_open_init"
 }
 
-// ValidateBasic implements sdk.Msg
+// ValidateBasic implements sdk.Msg.
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
@@ -44,7 +47,12 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
-	if msg.Signer.Empty() {
+	if msg.Version != "" {
+		if err := ValidateVersion(msg.Version); err != nil {
+			return sdkerrors.Wrap(err, "basic validation of the provided version failed")
+		}
+	}
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return msg.Counterparty.ValidateBasic()
@@ -52,28 +60,34 @@ func (msg MsgConnectionOpenInit) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenInit) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
+//nolint:interfacer
 func NewMsgConnectionOpenTry(
-	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyClient clientexported.ClientState,
+	connectionID, provedID, clientID, counterpartyConnectionID,
+	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
+	proofHeight, consensusHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
 		ConnectionId:         connectionID,
+		ProvedId:             provedID,
 		ClientId:             clientID,
 		ClientState:          csAny,
 		Counterparty:         counterparty,
@@ -83,7 +97,7 @@ func NewMsgConnectionOpenTry(
 		ProofConsensus:       proofConsensus,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
-		Signer:               signer,
+		Signer:               signer.String(),
 	}
 }
 
@@ -101,6 +115,9 @@ func (msg MsgConnectionOpenTry) Type() string {
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	if msg.ProvedId != "" && msg.ProvedId != msg.ConnectionId {
+		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "proved identifier must be empty or equal to connection identifier")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
@@ -132,49 +149,71 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return msg.Counterparty.ValidateBasic()
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenTry) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var clientState exported.ClientState
+	err := unpacker.UnpackAny(msg.ClientState, &clientState)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
+//nolint:interfacer
 func NewMsgConnectionOpenAck(
-	connectionID string, counterpartyClient clientexported.ClientState,
+	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
-	proofHeight, consensusHeight uint64, version string,
+	proofHeight, consensusHeight clienttypes.Height, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenAck{
-		ConnectionId:    connectionID,
-		ClientState:     csAny,
-		ProofTry:        proofTry,
-		ProofClient:     proofClient,
-		ProofConsensus:  proofConsensus,
-		ProofHeight:     proofHeight,
-		ConsensusHeight: consensusHeight,
-		Version:         version,
-		Signer:          signer,
+		ConnectionId:             connectionID,
+		CounterpartyConnectionId: counterpartyConnectionID,
+		ClientState:              csAny,
+		ProofTry:                 proofTry,
+		ProofClient:              proofClient,
+		ProofConsensus:           proofConsensus,
+		ProofHeight:              proofHeight,
+		ConsensusHeight:          consensusHeight,
+		Version:                  version,
+		Signer:                   signer.String(),
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
 // Route implements sdk.Msg
@@ -191,6 +230,9 @@ func (msg MsgConnectionOpenAck) Type() string {
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if err := ValidateVersion(msg.Version); err != nil {
 		return err
@@ -214,13 +256,13 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if len(msg.ProofConsensus) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof of consensus state")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.ConsensusHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be > 0")
+	if msg.ConsensusHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "consensus height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
@@ -228,26 +270,31 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }
 
 var _ sdk.Msg = &MsgConnectionOpenConfirm{}
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
+//nolint:interfacer
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck []byte, proofHeight uint64,
+	connectionID string, proofAck []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenConfirm {
 	return &MsgConnectionOpenConfirm{
 		ConnectionId: connectionID,
 		ProofAck:     proofAck,
 		ProofHeight:  proofHeight,
-		Signer:       signer,
+		Signer:       signer.String(),
 	}
 }
 
@@ -269,10 +316,10 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if len(msg.ProofAck) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof ack")
 	}
-	if msg.ProofHeight == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be > 0")
+	if msg.ProofHeight.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "proof height must be non-zero")
 	}
-	if msg.Signer.Empty() {
+	if msg.Signer == "" {
 		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
@@ -280,10 +327,14 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 
 // GetSignBytes implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
+	accAddr, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{accAddr}
 }

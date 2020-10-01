@@ -10,26 +10,26 @@ import (
 
 // NewQueryClientStateResponse creates a new QueryClientStateResponse instance.
 func NewQueryClientStateResponse(
-	clientID string, clientStateAny *codectypes.Any, proof []byte, height int64,
+	clientID string, clientStateAny *codectypes.Any, proof []byte, height Height,
 ) *QueryClientStateResponse {
 	path := commitmenttypes.NewMerklePath(append([]string{clientID}, strings.Split(host.ClientStatePath(), "/")...))
 	return &QueryClientStateResponse{
 		ClientState: clientStateAny,
 		Proof:       proof,
 		ProofPath:   path.Pretty(),
-		ProofHeight: uint64(height),
+		ProofHeight: height,
 	}
 }
 
 // NewQueryConsensusStateResponse creates a new QueryConsensusStateResponse instance.
 func NewQueryConsensusStateResponse(
-	clientID string, consensusStateAny *codectypes.Any, proof []byte, height int64,
+	clientID string, consensusStateAny *codectypes.Any, proof []byte, height Height,
 ) *QueryConsensusStateResponse {
-	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(uint64(height))), "/"))
+	path := commitmenttypes.NewMerklePath(strings.Split(host.FullClientPath(clientID, host.ConsensusStatePath(height)), "/"))
 	return &QueryConsensusStateResponse{
 		ConsensusState: consensusStateAny,
 		Proof:          proof,
 		ProofPath:      path.Pretty(),
-		ProofHeight:    uint64(height),
+		ProofHeight:    height,
 	}
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func TestMarshalJSONMetaData(t *testing.T) {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 
 	testCases := []struct {
 		name      string

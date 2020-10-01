@@ -9,8 +9,8 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // var representing the proofspecs for a SDK chain
@@ -126,7 +126,7 @@ func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exporte
 	// VerifyMembership specific argument validation
 	mpath, ok := path.(MerklePath)
 	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerkleProof", path)
+		return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerklePath", path)
 	}
 	if len(mpath.KeyPath.Keys) != len(specs) {
 		return sdkerrors.Wrapf(ErrInvalidProof, "path length %d not same as proof %d",

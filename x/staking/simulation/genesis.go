@@ -3,11 +3,10 @@ package simulation
 // DONTCOVER
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -98,6 +97,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(types.ModuleCdc, stakingGenesis.Params))
+	bz, err := json.MarshalIndent(&stakingGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

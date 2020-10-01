@@ -21,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -49,12 +48,19 @@ const (
 	FlagPruningKeepEvery  = "pruning-keep-every"
 	FlagPruningInterval   = "pruning-interval"
 	FlagIndexEvents       = "index-events"
+	FlagMinRetainBlocks   = "min-retain-blocks"
 )
 
 // GRPC-related flags.
 const (
 	flagGRPCEnable  = "grpc.enable"
 	flagGRPCAddress = "grpc.address"
+)
+
+// State sync-related flags.
+const (
+	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
+	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -108,7 +114,7 @@ which accepts a path for the resulting pprof file.
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
 			// amino is needed here for backwards compatibility of REST routes
-			err := startInProcess(serverCtx, clientCtx.LegacyAmino, appCreator)
+			err := startInProcess(serverCtx, clientCtx, appCreator)
 			return err
 		},
 	}
@@ -130,9 +136,13 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint(FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
+	cmd.Flags().Uint64(FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune Tendermint blocks")
 
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, config.DefaultGRPCAddress, "the gRPC server address to listen on")
+
+	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
+	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -180,7 +190,7 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 }
 
 // legacyAminoCdc is used for the legacy REST API
-func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator types.AppCreator) error {
+func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
 
@@ -230,17 +240,13 @@ func startInProcess(ctx *Context, legacyAminoCdc *codec.LegacyAmino, appCreator 
 			return err
 		}
 
-		clientCtx := client.Context{}.
+		clientCtx := clientCtx.
 			WithHomeDir(home).
 			WithChainID(genDoc.ChainID).
-			WithJSONMarshaler(legacyAminoCdc).
-			// amino is needed here for backwards compatibility of REST routes
-			WithLegacyAmino(legacyAminoCdc).
 			WithClient(local.New(tmNode))
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv)
-
+		app.RegisterAPIRoutes(apiSrv, config.API)
 		errCh := make(chan error)
 
 		go func() {

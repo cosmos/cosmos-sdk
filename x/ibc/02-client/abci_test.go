@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -31,10 +32,10 @@ func TestClientTestSuite(t *testing.T) {
 }
 
 func (suite *ClientTestSuite) TestBeginBlocker() {
-	prevHeight := suite.chainA.GetContext().BlockHeight()
+	prevHeight := types.GetSelfHeight(suite.chainA.GetContext())
 
-	localHostClient := suite.chainA.GetClientState(exported.ClientTypeLocalHost)
-	suite.Require().Equal(prevHeight, int64(localHostClient.GetLatestHeight()))
+	localHostClient := suite.chainA.GetClientState(exported.Localhost)
+	suite.Require().Equal(prevHeight, localHostClient.GetLatestHeight())
 
 	for i := 0; i < 10; i++ {
 		// increment height
@@ -44,8 +45,8 @@ func (suite *ClientTestSuite) TestBeginBlocker() {
 			client.BeginBlocker(suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper)
 		}, "BeginBlocker shouldn't panic")
 
-		localHostClient = suite.chainA.GetClientState(exported.ClientTypeLocalHost)
-		suite.Require().Equal(prevHeight+1, int64(localHostClient.GetLatestHeight()))
-		prevHeight = int64(localHostClient.GetLatestHeight())
+		localHostClient = suite.chainA.GetClientState(exported.Localhost)
+		suite.Require().Equal(prevHeight.Increment(), localHostClient.GetLatestHeight())
+		prevHeight = localHostClient.GetLatestHeight().(types.Height)
 	}
 }

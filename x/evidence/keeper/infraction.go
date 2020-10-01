@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-// HandleDoubleSign implements an equivocation evidence handler. Assuming the
+// HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
 // evidence is valid, the validator committing the misbehavior will be slashed,
 // jailed and tombstoned. Once tombstoned, the validator will not be able to
 // recover. Note, the evidence contains the block time and height at the time of
@@ -22,7 +22,7 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
-func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence *types.Equivocation) {
+func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 

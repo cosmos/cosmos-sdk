@@ -10,9 +10,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel
@@ -62,14 +62,6 @@ func (k Keeper) SendPacket(
 		return sdkerrors.Wrap(connectiontypes.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
-	// NOTE: assume UNINITIALIZED is a closed connection
-	if connectionEnd.GetState() == int32(connectiontypes.UNINITIALIZED) {
-		return sdkerrors.Wrap(
-			connectiontypes.ErrInvalidConnectionState,
-			"connection is UNINITIALIZED",
-		)
-	}
-
 	clientState, found := k.clientKeeper.GetClientState(ctx, connectionEnd.GetClientID())
 	if !found {
 		return clienttypes.ErrConsensusStateNotFound
@@ -77,10 +69,11 @@ func (k Keeper) SendPacket(
 
 	// check if packet timeouted on the receiving chain
 	latestHeight := clientState.GetLatestHeight()
-	if packet.GetTimeoutHeight() != 0 && latestHeight >= packet.GetTimeoutHeight() {
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && latestHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"receiving chain block height >= packet timeout height (%d >= %d)", latestHeight, packet.GetTimeoutHeight(),
+			"receiving chain block height >= packet timeout height (%s >= %s)", latestHeight, timeoutHeight,
 		)
 	}
 
@@ -121,7 +114,7 @@ func (k Keeper) SendPacket(
 		sdk.NewEvent(
 			types.EventTypeSendPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, timeoutHeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -146,7 +139,7 @@ func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -191,10 +184,12 @@ func (k Keeper) RecvPacket(
 	}
 
 	// check if packet timeouted by comparing it with the latest height of the chain
-	if packet.GetTimeoutHeight() != 0 && uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+	selfHeight := clienttypes.GetSelfHeight(ctx)
+	timeoutHeight := packet.GetTimeoutHeight()
+	if !timeoutHeight.IsZero() && selfHeight.GTE(timeoutHeight) {
 		return sdkerrors.Wrapf(
 			types.ErrPacketTimeout,
-			"block height >= packet timeout height (%d >= %d)", uint64(ctx.BlockHeight()), packet.GetTimeoutHeight(),
+			"block height >= packet timeout height (%s >= %s)", selfHeight, timeoutHeight,
 		)
 	}
 
@@ -206,19 +201,19 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	// check if the packet acknowledgement has been received already for unordered channels
-	if channel.Ordering == types.UNORDERED {
-		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	switch channel.Ordering {
+	case types.UNORDERED:
+		// check if the packet receipt has been received already for unordered channels
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		if found {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidPacket,
 				"packet sequence (%d) already has been received", packet.GetSequence(),
 			)
 		}
-	}
 
-	// check if the packet is being received in order
-	if channel.Ordering == types.ORDERED {
+	case types.ORDERED:
+		// check if the packet is being received in order
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -243,19 +238,18 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the PacketExecuted function
+	// NOTE: the remaining code is located in the WriteReceipt function
 	return nil
 }
 
-// PacketExecuted writes the packet execution acknowledgement to the state,
-// which will be verified by the counterparty chain using AcknowledgePacket.
+// WriteReceipt updates the receive sequence in the case of an ordered channel or sets an empty receipt
+// if the channel is unordered.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) PacketExecuted(
+func (k Keeper) WriteReceipt(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
-	acknowledgement []byte,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -278,17 +272,8 @@ func (k Keeper) PacketExecuted(
 		)
 	}
 
-	if len(acknowledgement) == 0 {
-		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
-	}
-
-	// always set the acknowledgement so that it can be verified on the other side
-	k.SetPacketAcknowledgement(
-		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-		types.CommitAcknowledgement(acknowledgement),
-	)
-
-	if channel.Ordering == types.ORDERED {
+	switch channel.Ordering {
+	case types.ORDERED:
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -299,19 +284,34 @@ func (k Keeper) PacketExecuted(
 
 		nextSequenceRecv++
 
+		// incrementing nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+
+	case types.UNORDERED:
+		// For unordered channels we must set the receipt so it can be verified on the other side.
+		// This receipt does not contain any data, since the packet has not yet been processed,
+		// it's just a single store key set to an empty string to indicate that the packet has been received
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		if found {
+			return sdkerrors.Wrapf(
+				types.ErrPacketReceived,
+				"destination port: %s, destination channel: %s, sequence: %d", packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			)
+		}
+
+		k.SetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	}
 
 	// log that a packet has been received & executed
-	k.Logger(ctx).Info(fmt.Sprintf("packet received & executed: %v", packet))
+	k.Logger(ctx).Info("packet received", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),
@@ -319,6 +319,56 @@ func (k Keeper) PacketExecuted(
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
 			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return nil
+}
+
+// WriteAcknowledgement writes the packet execution acknowledgement to the state,
+// which will be verified by the counterparty chain using AcknowledgePacket.
+//
+// CONTRACT:
+//
+// 1) For synchronous execution, this function is be called in the IBC handler .
+// For async handling, it needs to be called directly by the module which originally
+// processed the packet.
+//
+// 2) Assumes that packet receipt has been writted previously by WriteReceipt.
+func (k Keeper) WriteAcknowledgement(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	acknowledgement []byte,
+) error {
+	// NOTE: IBC app modules might have written the acknowledgement synchronously on
+	// the OnRecvPacket callback so we need to check if the acknowledgement is already
+	// set on the store and return an error if so.
+	if k.HasPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()) {
+		return types.ErrAcknowledgementExists
+	}
+
+	if len(acknowledgement) == 0 {
+		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
+	}
+
+	// always set the acknowledgement so that it can be verified on the other side
+	k.SetPacketAcknowledgement(
+		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+		types.CommitAcknowledgement(acknowledgement),
+	)
+
+	// log that a packet has been acknowledged
+	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
+
+	// emit an event that the relayer can query for
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRecvPacket,
+			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -340,7 +390,7 @@ func (k Keeper) AcknowledgePacket(
 	packet exported.PacketI,
 	acknowledgement []byte,
 	proof []byte,
-	proofHeight uint64,
+	proofHeight exported.Height,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
@@ -403,11 +453,11 @@ func (k Keeper) AcknowledgePacket(
 
 	// assert packets acknowledged in order
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
@@ -452,17 +502,19 @@ func (k Keeper) AcknowledgementExecuted(
 
 	// increment NextSequenceAck
 	if channel.Ordering == types.ORDERED {
-		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		nextSequenceAck, found := k.GetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 		if !found {
 			return sdkerrors.Wrapf(
 				types.ErrSequenceAckNotFound,
-				"destination port: %s, destination channel: %s", packet.GetDestPort(), packet.GetDestChannel(),
+				"source port: %s, source channel: %s", packet.GetSourcePort(), packet.GetSourceChannel(),
 			)
 		}
 
 		nextSequenceAck++
 
-		k.SetNextSequenceAck(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceAck)
+		// incrementing NextSequenceAck and storing under this chain's channelEnd identifiers
+		// Since this is the original sending chain, our channelEnd is packet's source port and channel
+		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}
 
 	// log that a packet has been acknowledged
@@ -472,7 +524,7 @@ func (k Keeper) AcknowledgementExecuted(
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeAcknowledgePacket,
-			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, fmt.Sprintf("%d", packet.GetTimeoutHeight())),
+			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
 			sdk.NewAttribute(types.AttributeKeySrcPort, packet.GetSourcePort()),

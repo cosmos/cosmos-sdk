@@ -4,9 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
-
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 

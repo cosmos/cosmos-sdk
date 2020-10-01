@@ -189,9 +189,9 @@ The `keeper` type definition generally consists of:
 
 Along with the type definition, the next important component of the `keeper.go` file is the `keeper`'s constructor function, `NewKeeper`. This function instantiates a new `keeper` of the type defined above, with a `codec`, store `keys` and potentially references to other modules' `keeper`s as parameters. The `NewKeeper` function is called from the [application's constructor](#constructor-function). The rest of the file defines the `keeper`'s methods, primarily getters and setters.
 
-### Command-Line and REST Interfaces
+### Command-Line, gRPC Services and REST Interfaces
 
-Each module defines command-line commands and REST routes to be exposed to end-user via the [application's interfaces](#application-interfaces). This enables end-users to create messages of the types defined in the module, or to query the subset of the state managed by the module.
+Each module defines command-line commands, gRPC services and REST routes to be exposed to end-user via the [application's interfaces](#application-interfaces). This enables end-users to create messages of the types defined in the module, or to query the subset of the state managed by the module.
 
 #### CLI
 
@@ -200,14 +200,33 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 - Transactions commands let users generate new transactions so that they can be included in a block and eventually update the state. One command should be created for each [message type](#message-types) defined in the module. The command calls the constructor of the message with the parameters provided by the end-user, and wraps it into a transaction. The SDK handles signing and the addition of other transaction metadata.
 - Queries let users query the subset of the state defined by the module. Query commands forward queries to the [application's query router](../core/baseapp.md#query-routing), which routes them to the appropriate [querier](#querier) the `queryRoute` parameter supplied.
 
-#### REST
+#### gRPC
 
-The [module's REST interface](../building-modules/module-interfaces.md#rest) lets users generate transactions and query the state through REST calls to the application's [light client daemon](../core/node.md#lcd) (LCD). REST routes are defined in a file `client/rest/rest.go`, which is composed of:
+gRPC is a modern open source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
+
+Each module can expose gRPC endpoints, called [services](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the module's Protobuf files. A service is defined by its name, input arguments and output response. The module then needs to:
+
+- define a `RegisterGRPCRoutes` method on `AppModuleBasic` to wire up the services with the SDK.
+- for each service, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
+
+#### gRPC-gateway REST Endpoints
+
+Some external clients may not wish to use gRPC. The SDK provides in this case a gRPC gateway service, which exposes each gRPC service as a correspoding REST endpoint. Please refer to the [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) documentation to learn more.
+
+The REST endpoints are defined in the Protobuf files, along with the gRPC services, using Protobuf annotations. Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods. By default, all REST endpoints defined in the SDK have an URL starting with the `/cosmos/` prefix.
+
+The SDK also provides development tools to generate [Swagger](https://swagger.io/) definition files for these REST endpoints.
+
+#### Legacy API REST Endpoints
+
+The [module's Legacy REST interface](../building-modules/module-interfaces.md#rest) lets users generate transactions and query the state through REST calls to the application's Legacy API Service. REST routes are defined in a file `client/rest/rest.go`, which is composed of:
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/rest/rest.go#L47-L60
+  +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/rest/rest.go#L62-L76
 - One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
+
+These Legacy API endpoints are present in the SDK for backwards compatbility purposes, and will be removed in the next release.
 
 ## Application Interface
 

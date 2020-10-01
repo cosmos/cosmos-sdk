@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 

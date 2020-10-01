@@ -9,7 +9,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 )
 
 func (suite *MerkleTestSuite) TestVerifyMembership() {

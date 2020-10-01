@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"

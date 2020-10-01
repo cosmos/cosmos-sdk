@@ -44,10 +44,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
 
 var (
-	// SubModuleCdc references the global x/ibc/23-commitmentl module codec. Note, the codec should
+	// SubModuleCdc references the global x/ibc/core/23-commitmentl module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding.
 	//
-	// The actual codec used for serialization should be provided to x/ibc/23-commitmentl and
+	// The actual codec used for serialization should be provided to x/ibc/core/23-commitmentl and
 	// defined at the application level.
 	SubModuleCdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 )

@@ -6,8 +6,8 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	types2 "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"

@@ -9,9 +9,9 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"

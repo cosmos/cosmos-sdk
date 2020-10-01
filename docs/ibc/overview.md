@@ -47,7 +47,7 @@ correct for their respective counterparties. Connections, once established, are 
 facilitation all cross-chain verification of IBC state. A connection may be associated with any
 number of channels.
 
-### [Proofs](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/23-commitment) and [Paths](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/24-host)
+### [Proofs](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/23-commitment) and [Paths](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/24-host)
   
 In IBC, blockchains do not directly pass messages to each other over the network. Instead, to
 communicate, a blockchain will commit some state to a specifically defined path reserved for a

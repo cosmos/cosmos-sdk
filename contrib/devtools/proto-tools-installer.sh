@@ -87,7 +87,7 @@ f_install_protoc_gen_gocosmos() {
   f_print_installing_with_padding protoc-gen-gocosmos
 
   if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
-    echo -e "\tPlease run this command from the root folder."
+    echo -e "\tPlease run this command from somewhere inside the cosmos-sdk folder."
     return 1
   fi
 

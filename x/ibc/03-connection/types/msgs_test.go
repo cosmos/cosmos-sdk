@@ -123,6 +123,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 		expPass bool
 	}{
 		{"invalid connection ID", types.NewMsgConnectionOpenTry("test/conn1", provedID, "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
+		{"invalid connection ID", types.NewMsgConnectionOpenTry("ibcconntest", "test/conn1", "clienttotesta", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
 		{"invalid client ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "test/iris", "connectiontotest", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
 		{"invalid counterparty connection ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "ibc/test", "clienttotest", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},
 		{"invalid counterparty client ID", types.NewMsgConnectionOpenTry("ibcconntest", provedID, "clienttotesta", "connectiontotest", "test/conn1", clientState, prefix, []string{ibctesting.ConnectionVersion}, suite.proof, suite.proof, suite.proof, clientHeight, clientHeight, signer), false},

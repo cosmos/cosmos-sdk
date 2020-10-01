@@ -1,7 +1,7 @@
 syntax = "proto3";
 package ibc.lightclients.solomachine.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types";
 
 import "ibc/connection/connection.proto";
 import "ibc/channel/channel.proto";

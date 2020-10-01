@@ -65,6 +65,9 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 
 				version := types.NewVersion(versionIdentifier, features)
 				encodedVersion, err = version.Encode()
+				if err != nil {
+					return err
+				}
 			}
 
 			msg := types.NewMsgConnectionOpenInit(

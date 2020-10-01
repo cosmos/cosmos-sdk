@@ -88,11 +88,11 @@ A connection is initialized on a light client using the `MsgConnectionOpenInit`.
 
 ```go
 type MsgConnectionOpenInit struct {
-	ClientId     string                                       
-	ConnectionId string                                        
-	Counterparty Counterparty                                  
-    Version      string
-	Signer       sdk.AccAddress
+	ClientId     string
+	ConnectionId string
+	Counterparty Counterparty
+	Version      string
+	Signer       string
 }
 ```
 

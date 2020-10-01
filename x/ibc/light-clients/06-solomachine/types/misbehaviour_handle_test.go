@@ -56,7 +56,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
-				"invalid SignatureOne signature",
+				"invalid SignatureOne SignatureData",
 				func() {
 					clientState = solomachine.ClientState()
 					m := solomachine.CreateMisbehaviour()
@@ -66,7 +66,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				}, false,
 			},
 			{
-				"invalid SignatureTwo signature",
+				"invalid SignatureTwo SignatureData",
 				func() {
 					clientState = solomachine.ClientState()
 					m := solomachine.CreateMisbehaviour()
@@ -76,7 +76,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				}, false,
 			},
 			{
-				"invalid first signature",
+				"invalid first signature data",
 				func() {
 					clientState = solomachine.ClientState()
 
@@ -88,6 +88,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 						Sequence:    solomachine.Sequence + 1,
 						Timestamp:   solomachine.Time,
 						Diversifier: solomachine.Diversifier,
+						DataType:    types.CLIENT,
 						Data:        msg,
 					}
 
@@ -103,7 +104,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
-				"invalid second signature",
+				"invalid second signature data",
 				func() {
 					clientState = solomachine.ClientState()
 
@@ -115,6 +116,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 						Sequence:    solomachine.Sequence + 1,
 						Timestamp:   solomachine.Time,
 						Diversifier: solomachine.Diversifier,
+						DataType:    types.CLIENT,
 						Data:        msg,
 					}
 
@@ -130,6 +132,37 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				false,
 			},
 			{
+				"wrong pubkey generates first signature",
+				func() {
+					clientState = solomachine.ClientState()
+					badMisbehaviour := solomachine.CreateMisbehaviour()
+
+					// update public key to a new one
+					solomachine.CreateHeader()
+					m := solomachine.CreateMisbehaviour()
+
+					// set SignatureOne to use the wrong signature
+					m.SignatureOne = badMisbehaviour.SignatureOne
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"wrong pubkey generates second signature",
+				func() {
+					clientState = solomachine.ClientState()
+					badMisbehaviour := solomachine.CreateMisbehaviour()
+
+					// update public key to a new one
+					solomachine.CreateHeader()
+					m := solomachine.CreateMisbehaviour()
+
+					// set SignatureTwo to use the wrong signature
+					m.SignatureTwo = badMisbehaviour.SignatureTwo
+					misbehaviour = m
+				}, false,
+			},
+
+			{
 				"signatures sign over different sequence",
 				func() {
 					clientState = solomachine.ClientState()
@@ -141,8 +174,11 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					msg := []byte("DATA ONE")
 					// sequence used is plus 1
 					signBytes := &types.SignBytes{
-						Sequence: solomachine.Sequence + 1,
-						Data:     msg,
+						Sequence:    solomachine.Sequence + 1,
+						Timestamp:   solomachine.Time,
+						Diversifier: solomachine.Diversifier,
+						DataType:    types.CLIENT,
+						Data:        msg,
 					}
 
 					data, err := suite.chainA.Codec.MarshalBinaryBare(signBytes)
@@ -158,8 +194,11 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					// sequence used is minus 1
 
 					signBytes = &types.SignBytes{
-						Sequence: solomachine.Sequence - 1,
-						Data:     msg,
+						Sequence:    solomachine.Sequence - 1,
+						Timestamp:   solomachine.Time,
+						Diversifier: solomachine.Diversifier,
+						DataType:    types.CLIENT,
+						Data:        msg,
 					}
 					data, err = suite.chainA.Codec.MarshalBinaryBare(signBytes)
 					suite.Require().NoError(err)

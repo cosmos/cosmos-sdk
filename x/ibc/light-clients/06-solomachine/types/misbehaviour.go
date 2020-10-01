@@ -82,6 +82,9 @@ func (sd SignatureAndData) ValidateBasic() error {
 	if len(sd.Data) == 0 {
 		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data for signature cannot be empty")
 	}
+	if sd.DataType == UNSPECIFIED {
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data type cannot be UNSPECIFIED")
+	}
 
 	return nil
 }

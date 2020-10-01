@@ -6,7 +6,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/transfer/transfer.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
 
 // Query provides defines the gRPC querier service.
 service Query {

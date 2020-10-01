@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channelutils "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 )
 
 const (

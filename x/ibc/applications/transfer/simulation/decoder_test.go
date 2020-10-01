@@ -8,8 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 )
 
 func TestDecodeStore(t *testing.T) {

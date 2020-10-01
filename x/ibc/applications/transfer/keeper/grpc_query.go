@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 )
 
 var _ types.QueryServer = Keeper{}

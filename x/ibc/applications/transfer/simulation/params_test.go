@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc-transfer/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

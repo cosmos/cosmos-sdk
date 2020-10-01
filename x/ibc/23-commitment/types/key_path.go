@@ -7,7 +7,7 @@ import (
 
 // AppendKey appends a new key to a KeyPath
 func (pth KeyPath) AppendKey(key []byte, enc KeyEncoding) KeyPath {
-	pth.Keys = append(pth.Keys, &Key{name: key, enc: enc})
+	pth.Keys = append(pth.Keys, &Key{Name: key, Enc: enc})
 	return pth
 }
 
@@ -15,11 +15,11 @@ func (pth KeyPath) AppendKey(key []byte, enc KeyEncoding) KeyPath {
 func (pth *KeyPath) String() string {
 	res := ""
 	for _, key := range pth.Keys {
-		switch key.enc {
+		switch key.Enc {
 		case URL:
-			res += "/" + url.PathEscape(string(key.name))
+			res += "/" + url.PathEscape(string(key.Name))
 		case HEX:
-			res += "/x:" + fmt.Sprintf("%X", key.name)
+			res += "/x:" + fmt.Sprintf("%X", key.Name)
 		default:
 			panic("unexpected key encoding type")
 		}
@@ -36,5 +36,5 @@ func (pth *KeyPath) String() string {
 func (pth *KeyPath) GetKey(i int) []byte {
 	total := len(pth.Keys)
 	index := (total + i) % total
-	return pth.Keys[index].name
+	return pth.Keys[index].Name
 }

@@ -3,12 +3,12 @@ package ibc
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )

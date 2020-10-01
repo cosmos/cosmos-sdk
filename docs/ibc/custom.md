@@ -342,7 +342,7 @@ Thus, modules must agree on how to encode/decode acknowledgements. The process o
 acknowledgement struct along with encoding and decoding it, is very similar to the packet data
 example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope)
 specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
-[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/04-channel/types).
+[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel/types).
 
 #### Acknowledging Packets
 

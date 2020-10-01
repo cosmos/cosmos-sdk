@@ -22,11 +22,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )

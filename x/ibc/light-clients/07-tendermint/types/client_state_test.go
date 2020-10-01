@@ -3,8 +3,8 @@ package types_test
 import (
 	ics23 "github.com/confio/ics23/go"
 
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"

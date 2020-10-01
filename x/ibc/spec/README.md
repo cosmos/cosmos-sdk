@@ -38,7 +38,7 @@ in the SDK's `x/ibc` module:
 
 * [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics): Implemented in [`x/ibc/core/02-client`](https://github.com/cosmos/tree/master/ibc/core/02-client)
 * [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/core/03-connection`](https://github.com/cosmos/tree/master/ibc/core/03-connection)
-* [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/tree/master/ibc/04-channel)
+* [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/core/04-channel`](https://github.com/cosmos/tree/master/ibc/core/04-channel)
 * [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/core/05-port`](https://github.com/cosmos/tree/master/ibc/core/05-port)
 * [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/light-clients/06-solomachine`](https://github.com/cosmos/tree/master/ibc/solomachine)
 * [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/light-clients/07-tendermint`](https://github.com/cosmos/tree/master/ibc/light-clients/07-tendermint)

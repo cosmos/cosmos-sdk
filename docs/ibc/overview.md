@@ -91,7 +91,7 @@ binding a port will return a dynamic object capability. In order to take action 
 handler. This prevents a malicious module from opening channels with ports it does not own. Thus,
 IBC modules are responsible for claiming the capability that is returned on `BindPort`.
 
-### [Channels](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/04-channel)
+### [Channels](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
 
 An IBC channel can be established between 2 IBC ports. Currently, a port is exclusively owned by a
 single module. IBC packets are sent over channels. Just as IP packets contain the destination IP
@@ -126,7 +126,7 @@ that the module **must** claim so that they can pass in a capability to authenti
 like sending packets. The channel capability is passed into the callback on the first parts of the
 handshake; either `OnChanOpenInit` on the initializing chain or `OnChanOpenTry` on the other chain.
 
-### [Packets](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/04-channel)
+### [Packets](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
 
 Modules communicate with each other by sending packets over IBC channels. As mentioned above, all
 IBC packets contain the destination `portID` and `channelID` along with the source `portID` and

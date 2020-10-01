@@ -8,9 +8,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"

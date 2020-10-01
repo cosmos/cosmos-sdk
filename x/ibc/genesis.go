@@ -2,9 +2,9 @@ package ibc
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )

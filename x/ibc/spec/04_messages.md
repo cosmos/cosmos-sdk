@@ -91,6 +91,7 @@ type MsgConnectionOpenInit struct {
 	ClientId     string                                       
 	ConnectionId string                                        
 	Counterparty Counterparty                                  
+    Version      string
 	Signer       sdk.AccAddress
 }
 ```
@@ -99,11 +100,12 @@ This message is expected to fail if:
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
 - `Counterparty` is empty
+- 'Version' is not empty and invalid
 - `Signer` is empty
 - A Client hasn't been created for the given ID
 - A Connection for the given ID already exists
 
-The message creates a connection for the given ID with an INIT state.
+The message creates a connection for the given ID with an INIT state. 
 
 ### MsgConnectionOpenTry
 

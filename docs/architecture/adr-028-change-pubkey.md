@@ -31,7 +31,7 @@ message MsgChangePubKey {
 }
 ```
 
-As an example, msg that change pubkey of an accont can be defined as follows.
+As an example, account pubkey change message can be defined as follows.
 ```json
 {
     "type": "cosmos-sdk/StdTx",

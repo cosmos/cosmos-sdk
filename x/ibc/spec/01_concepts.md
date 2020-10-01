@@ -14,7 +14,7 @@ IBC Client Heights are represented by the struct:
 ```go
 type Height struct {
    EpochNumber uint64
-   EpocHeight  uint64
+   EpochHeight  uint64
 ```
 
 The `EpochNumber` represents the epoch of the chain that the height is representing.
@@ -46,10 +46,10 @@ Ex:
 Before upgrade ChainID: `gaiamainnet-3`
 After upgrade ChainID: `gaiamainnet-4`
 
-Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they 
+Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they
 need to return an IBC height when implementing IBC interfaces and use the `EpochHeight` exclusively.
 
-Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their Update, Misbehavior, and 
+Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their Update, Misbehavior, and
 Verify functions respectively.
 
 The IBC interfaces expect an `ibcexported.Height` interface, however all clients should use the concrete implementation provided in
@@ -77,7 +77,7 @@ Governance may then choose to override a frozen client and provide the correct,
 canonical Header so that the client can continue operating after the Misbehaviour 
 submission.
 
-## Connection Version Negotation
+## Connection Version Negotiation
 
 During the handshake procedure for connections a version string is agreed
 upon between the two parties. This occurs during the first 3 steps of the
@@ -116,7 +116,7 @@ with regards to version selection in `ConnOpenTry`. Each version in a set of
 versions should have a unique version identifier.
 :::
 
-## Channel Version Negotation
+## Channel Version Negotiation
 
 During the channel handshake procedure a version must be agreed upon between
 the two parties. The selection process is largely left to the callers and
@@ -171,4 +171,3 @@ latter flag can be used to unfreeze a client and if necessary it will also unexp
 It is advised to let a client expire if it has become frozen before proposing a new header. 
 This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
 expired. These boolean flags are set upon client creation and cannot be updated later.
-

@@ -101,7 +101,7 @@ func (k Keeper) TimeoutPacket(
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case types.UNORDERED:
-		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
+		err = k.connectionKeeper.VerifyPacketReceiptAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)
@@ -255,7 +255,7 @@ func (k Keeper) TimeoutOnClose(
 			packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv,
 		)
 	case types.UNORDERED:
-		err = k.connectionKeeper.VerifyPacketAcknowledgementAbsence(
+		err = k.connectionKeeper.VerifyPacketReceiptAbsence(
 			ctx, connectionEnd, proofHeight, proof,
 			packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 		)

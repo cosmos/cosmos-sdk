@@ -192,9 +192,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrap(err, "receive packet callback failed")
 			}
 
-			// Set packet acknowledgement
-			if err = k.ChannelKeeper.ReceiveExecuted(ctx, cap, msg.Packet, ack); err != nil {
+			if err := k.ChannelKeeper.WriteReceipt(ctx, cap, msg.Packet); err != nil {
 				return nil, err
+			}
+
+			// Set packet acknowledgement only if the acknowledgement is not nil.
+			// NOTE: IBC applications modules may call the WriteAcknowledgement asynchronously if the
+			// acknowledgement is nil.
+			if ack != nil {
+				if err := k.ChannelKeeper.WriteAcknowledgement(ctx, msg.Packet, ack); err != nil {
+					return nil, err
+				}
 			}
 
 			return res, nil

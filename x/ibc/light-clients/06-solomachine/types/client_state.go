@@ -396,10 +396,10 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (signing.SignatureData, uint64, uint64, error) {
-	if epoch := height.GetEpochNumber(); epoch != 0 {
-		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch must be 0 for solomachine, got epoch-number: %d", epoch)
+	if version := height.GetEpochNumber(); version != 0 {
+		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
 	}
-	// sequence is encoded in the epoch height of height struct
+	// sequence is encoded in the version height of height struct
 	sequence := height.GetEpochHeight()
 	if cs.IsFrozen() {
 		return nil, 0, 0, clienttypes.ErrClientFrozen

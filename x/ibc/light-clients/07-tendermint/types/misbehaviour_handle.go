@@ -56,14 +56,14 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 
 	var ageBlocks int64
-	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.EpochNumber {
-		// if the misbehaviour is in the same epoch as the client then
+	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.VersionNumber {
+		// if the misbehaviour is in the same version as the client then
 		// perform expiry check using block height in addition to time
 		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
-		ageBlocks = int64(cs.LatestHeight.EpochHeight - infractionHeight)
+		ageBlocks = int64(cs.LatestHeight.VersionHeight - infractionHeight)
 	} else {
-		// if the misbehaviour is from a different epoch, then the epoch-height
-		// of misbehaviour has no correlation with the current epoch-height
+		// if the misbehaviour is from a different version, then the version-height
+		// of misbehaviour has no correlation with the current version-height
 		// so we disable the block check by setting ageBlocks to 0 and only
 		// rely on the time expiry check with ageDuration
 		ageBlocks = 0
@@ -142,7 +142,7 @@ func checkMisbehaviourHeader(
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in epoch format, then set epoch number of chainID with the epoch number
+	// If chainID is in version format, then set version number of chainID with the version number
 	// of the misbehaviour header
 	if clienttypes.IsEpochFormat(chainID) {
 		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())

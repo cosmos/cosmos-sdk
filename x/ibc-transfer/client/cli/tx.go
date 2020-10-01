@@ -85,8 +85,8 @@ to the counterparty channel. Any timeout set to 0 is disabled.`),
 
 				if !timeoutHeight.IsZero() {
 					absoluteHeight := height
-					absoluteHeight.EpochNumber += timeoutHeight.EpochNumber
-					absoluteHeight.EpochHeight += timeoutHeight.EpochHeight
+					absoluteHeight.VersionNumber += timeoutHeight.VersionNumber
+					absoluteHeight.VersionHeight += timeoutHeight.VersionHeight
 					timeoutHeight = absoluteHeight
 				}
 

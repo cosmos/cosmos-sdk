@@ -15,7 +15,7 @@ import (
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
-	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
 
 	misbehaviour := &types.Misbehaviour{
 		Header1:  suite.header,
@@ -34,9 +34,9 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	epochHeight := int64(height.EpochHeight)
+	versionHeight := int64(height.VersionHeight)
 
-	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), epochHeight)
+	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), versionHeight)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -51,7 +51,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
 
 	testCases := []struct {
 		name                 string
@@ -86,7 +86,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour with different trusted headers",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, clienttypes.NewHeight(0, height.EpochHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, clienttypes.NewHeight(0, height.VersionHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},

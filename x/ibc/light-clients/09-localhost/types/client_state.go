@@ -58,8 +58,8 @@ func (cs ClientState) Validate() error {
 	if strings.TrimSpace(cs.ChainId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be blank")
 	}
-	if cs.Height.EpochHeight == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local epoch height cannot be zero")
+	if cs.Height.VersionHeight == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "local version height cannot be zero")
 	}
 	return nil
 }
@@ -80,8 +80,8 @@ func (cs *ClientState) CheckHeaderAndUpdateState(
 ) (exported.ClientState, exported.ConsensusState, error) {
 	// use the chain ID from context since the localhost client is from the running chain (i.e self).
 	cs.ChainId = ctx.ChainID()
-	epoch := clienttypes.ParseChainID(cs.ChainId)
-	cs.Height = clienttypes.NewHeight(epoch, uint64(ctx.BlockHeight()))
+	version := clienttypes.ParseChainID(cs.ChainId)
+	cs.Height = clienttypes.NewHeight(version, uint64(ctx.BlockHeight()))
 	return cs, nil, nil
 }
 

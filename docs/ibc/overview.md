@@ -82,7 +82,7 @@ IBC will correctly route all packets to the relevant module using the (channelID
 IBC module may also communicate with another IBC module over multiple ports, with each
 `(portID<->portID)` packet stream being sent on a different unique channel.
 
-### [Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/05-port)
+### [Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port)
 
 An IBC module may bind to any number of ports. Each port must be identified by a unique `portID`.
 Since IBC is designed to be secure with mutually-distrusted modules operating on the same ledger,

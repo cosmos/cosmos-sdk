@@ -4,7 +4,7 @@ order: 5
 
 # Callbacks
 
-Application modules implementing the IBC module must implement the following callbacks as found in [05-port](../05-port/types/module.go).
+Application modules implementing the IBC module must implement the following callbacks as found in [05-port](../core/05-port/types/module.go).
 
 ```go
 // IBCModule defines an interface that implements all the callbacks

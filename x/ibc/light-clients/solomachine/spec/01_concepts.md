@@ -30,7 +30,7 @@ signBytes := &SignBytes{
 	Sequence:    sequence,
 	Timestamp:   timestamp,
 	Diversifier: diversifier,
-    DataType:    CLIENT,
+	DataType:    CLIENT,
 	Data:        dataBz,
 }
 

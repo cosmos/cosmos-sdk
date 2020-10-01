@@ -32,8 +32,8 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 			buf := bufio.NewReader(cmd.InOrStdin())
 
 			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-			kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+			keyringDir, _ := flags.GetKeyringDir(cmd.Flags())
+			kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, buf)
 			if err != nil {
 				return err
 			}

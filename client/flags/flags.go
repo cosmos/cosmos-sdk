@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -56,6 +57,7 @@ const (
 	FlagSkipConfirmation = "yes"
 	FlagProve            = "prove"
 	FlagKeyringBackend   = "keyring-backend"
+	FlagKeyringDir       = "keyring-dir"
 	FlagPage             = "page"
 	FlagLimit            = "limit"
 	FlagSignMode         = "sign-mode"
@@ -99,6 +101,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagOffline, false, "Offline mode (does not allow any online functionality")
 	cmd.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	cmd.Flags().String(FlagKeyringDir, "", "Keyring's key storage directory")
 	cmd.Flags().String(FlagSignMode, "", "Choose sign mode (direct|amino-json), this is an advanced feature")
 	cmd.Flags().Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
 
@@ -109,6 +112,16 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
+}
+
+// GetKeyringDir finds the directory for the keyring storage
+func GetKeyringDir(pflags *pflag.FlagSet) (string, error) {
+	keyringDir, err := pflags.GetString(FlagKeyringDir)
+	if keyringDir == "" {
+		// Default to the node's home directory.
+		keyringDir, err = pflags.GetString(FlagHome)
+	}
+	return keyringDir, err
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

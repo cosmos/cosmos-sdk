@@ -190,7 +190,9 @@ be used to retrieve the actual proposal `Content`. Also the `NewMsgSubmitProposa
 * (store) [\#6390](https://github.com/cosmos/cosmos-sdk/pull/6390) `RootMulti` store query proofs now return `CommitmentOp` which wraps `CommitmentProofs`
   * `store.Query` now only returns chained `ics23.CommitmentProof` wrapped in `merkle.Proof`
   * `ProofRuntime` only decodes and verifies `ics23.CommitmentProof`
-* (x/auth) [\6350](https://github.com/cosmos/cosmos-sdk/pull/6350) New sign-batch command to sign StdTx batch files.
+* (x/auth) [\#6350](https://github.com/cosmos/cosmos-sdk/pull/6350) New sign-batch command to sign StdTx batch files.
+* (x/staking) [\#7436](https://github.com/cosmos/cosmos-sdk/pull/7436) New
+  `--keyring-dir=...` flag to enable keystore and server config in separate directories.
 
 ### Bug Fixes
 
@@ -2844,7 +2846,7 @@ FEATURES:
 * Better key output, pubkey go-amino hex bytes now output by default
 * gaiad init overhaul
   * Create genesis transactions with `gaiad init gen-tx`
-  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
+  * New genesis account keys are automatically added to the client keybase (introduce `--home-client` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
 * Add (non-proof) subspace query helper functions

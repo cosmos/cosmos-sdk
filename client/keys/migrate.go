@@ -40,11 +40,11 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 }
 
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
-	rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+	keyringDir, _ := flags.GetKeyringDir(cmd.Flags())
 
 	// instantiate legacy keybase
 	var legacyKb keyring.LegacyKeybase
-	legacyKb, err := NewLegacyKeyBaseFromDir(rootDir)
+	legacyKb, err := NewLegacyKeyBaseFromDir(keyringDir)
 	if err != nil {
 		return err
 	}
@@ -76,13 +76,13 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		migrator, err = keyring.NewInfoImporter(keyringServiceName, "test", tmpDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		migrator, err = keyring.NewInfoImporter(keyringServiceName, backend, rootDir, buf)
+		migrator, err = keyring.NewInfoImporter(keyringServiceName, backend, keyringDir, buf)
 	}
 
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
 			"failed to initialize keybase for service %s at directory %s",
-			keyringServiceName, rootDir,
+			keyringServiceName, keyringDir,
 		))
 	}
 

@@ -85,8 +85,8 @@ the flag --nosort is set.
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagHome)
+	keyringDir, _ := flags.GetKeyringDir(cmd.Flags())
+	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 
 	var (
 		kr  keyring.Keyring
@@ -94,10 +94,10 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	)
 
 	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, keyringDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), backend, keyringDir, buf)
 	}
 
 	if err != nil {

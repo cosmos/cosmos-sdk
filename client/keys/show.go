@@ -55,8 +55,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
 
 	backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-	kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, cmd.InOrStdin())
+	keyringDir, _ := flags.GetKeyringDir(cmd.Flags())
+	kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

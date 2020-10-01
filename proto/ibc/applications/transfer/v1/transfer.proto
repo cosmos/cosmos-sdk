@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ibc.transfer;
+package ibc.applications.transfer.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
 

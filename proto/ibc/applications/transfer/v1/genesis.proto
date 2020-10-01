@@ -1,14 +1,14 @@
 syntax = "proto3";
-package ibc.transfer;
+package ibc.applications.transfer.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types";
 
 import "gogoproto/gogo.proto";
-import "ibc/transfer/transfer.proto";
+import "ibc/applications/transfer/v1/transfer.proto";
 
 // GenesisState defines the ibc-transfer genesis state
 message GenesisState {
-  string   port_id                 = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string              port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   repeated DenomTrace denom_traces = 2 [
     (gogoproto.castrepeated) = "Traces",
     (gogoproto.nullable)     = false,

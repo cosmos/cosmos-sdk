@@ -25,6 +25,7 @@ import (
 const (
 	flagTrustLevel                   = "trust-level"
 	flagProofSpecs                   = "proof-specs"
+	flagUpgradePath                  = "upgrade-path"
 	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
 	flagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
 )
@@ -37,8 +38,10 @@ func NewCreateClientCmd() *cobra.Command {
 		Short: "create new tendermint client",
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
-  - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+  - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'
+  - 'upgrade-path' flag is a string specifying the upgrade path for this chain where a future upgraded client will be stored. The path represents a keypath for the store with each key separated by a '/'. Any slash within a key must be escaped.
+  e.g. 'upgrade/upgradedClient'`,
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -116,15 +119,24 @@ func NewCreateClientCmd() *cobra.Command {
 			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
 			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
 
+			upgradePath, _ := cmd.Flags().GetString(flagUpgradePath)
+			keyPath := strings.Split(upgradePath, "/")
+			if keyPath[0] == upgradePath {
+				return fmt.Errorf("invalid merkle path %s", upgradePath)
+			}
+
+			merklePath := commitmenttypes.NewMerklePath(keyPath)
+
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
 				return err
 			}
 
 			height := header.GetHeight().(clienttypes.Height)
+
 			clientState := types.NewClientState(
 				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
-				height, specs, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
+				height, specs, &merklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
 
 			consensusState := header.ConsensusState()

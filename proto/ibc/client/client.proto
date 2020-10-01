@@ -78,6 +78,18 @@ message MsgUpdateClient {
   string signer = 3;
 }
 
+// MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+message MsgUpgradeClient {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // upgraded client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // proof that old chain committed to new client
+  bytes proof_upgrade = 3 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];
+  // signer address
+  string signer = 4;
+}
+
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
 // light client misbehaviour.
 message MsgSubmitMisbehaviour {

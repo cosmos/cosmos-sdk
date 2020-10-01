@@ -49,13 +49,12 @@ message KeyPath {
 message Key {
   option (gogoproto.goproto_getters) = false;
 
-  bytes       name = 1 [(gogoproto.customname) = "name"];
-  KeyEncoding enc  = 2 [(gogoproto.customname) = "enc"];
+  bytes       name = 1;
+  KeyEncoding enc  = 2;
 }
 
 // KeyEncoding defines the encoding format of a key's bytes.
 enum KeyEncoding {
-  option (gogoproto.goproto_enum_stringer) = false;
   option (gogoproto.goproto_enum_prefix)   = false;
 
   // URL encoding

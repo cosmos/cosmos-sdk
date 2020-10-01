@@ -65,6 +65,33 @@ func HandleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdat
 	}, nil
 }
 
+// HandleMsgUpgradeClient defines the sdk.Handler for MsgUpgradeClient
+func HandleMsgUpgradeClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpgradeClient) (*sdk.Result, error) {
+	upgradedClient, err := types.UnpackClientState(msg.ClientState)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := upgradedClient.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err = k.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.ProofUpgrade); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
+}
+
 // HandleMsgSubmitMisbehaviour defines the Evidence module handler for submitting a
 // light client misbehaviour.
 func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSubmitMisbehaviour) (*sdk.Result, error) {

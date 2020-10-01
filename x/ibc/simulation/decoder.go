@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/02-client/simulation"
 	connectionsim "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
 	channelsim "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 

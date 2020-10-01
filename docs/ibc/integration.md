@@ -204,7 +204,7 @@ past historical info at any given height in order to verify the light client `Co
 connection handhake.
 
 The IBC module also has
-[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/02-client/abci.go) logic as
+[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/core/02-client/abci.go) logic as
 well. This is optional as it is only required if your application uses the [localhost
 client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
 different modules from the same chain.

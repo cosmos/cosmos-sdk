@@ -26,7 +26,7 @@ module correctly.
 
 ## Components Overview
 
-### [Clients](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/02-client)
+### [Clients](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/02-client)
 
 IBC Clients are light clients (identified by a unique client-id) that track the consensus states of
 other blockchains, along with the proof spec necessary to properly verify proofs against the

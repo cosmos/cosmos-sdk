@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	solomachine "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint"
 )

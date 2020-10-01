@@ -49,24 +49,18 @@ func LoadStore(db dbm.DB, id types.CommitID, lazyLoading bool) (types.CommitKVSt
 		return nil, err
 	}
 
-	// Set initial versions for new stores
-	hasBeenAddedNow := false
-	if tree.Version() == 0 {
-		tree.SetInitialVersion(uint64(id.Version))
-		hasBeenAddedNow = true
-	}
-
 	if lazyLoading {
 		_, err = tree.LazyLoadVersion(id.Version)
 	} else {
 		_, err = tree.LoadVersion(id.Version)
-		if hasBeenAddedNow && err != nil {
-			err = nil
-		}
 	}
 
 	if err != nil {
 		return nil, err
+	}
+
+	if tree.Version() == 0 {
+		tree.SetInitialVersion(uint64(id.Version))
 	}
 
 	return &Store{

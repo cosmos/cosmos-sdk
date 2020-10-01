@@ -36,17 +36,17 @@ transaction routing through `Handlers`.
 The following list is a mapping from each Interchain Standard to their implementation
 in the SDK's `x/ibc` module:
 
-* [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics): Implemented in [`x/ibc/02-client`](https://github.com/cosmos/x/ibc/02-client)
-* [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/x/ibc/03-connection)
-* [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/x/ibc/04-channel)
-* [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/x/ibc/05-port)
-* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/light-clients/06-solomachine`](https://github.com/cosmos/x/ibc/solomachine)
-* [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/light-clients/07-tendermint`](https://github.com/cosmos/x/ibc/light-clients/07-tendermint)
-* [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  Implemented in [`x/ibc/light-clients/09-localhost`](https://github.com/cosmos/x/ibc/light-clients/09-localhost)
+* [ICS 002 - Client Semantics](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics): Implemented in [`x/ibc/02-client`](https://github.com/cosmos/tree/master/ibc/02-client)
+* [ICS 003 - Connection Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-003-connection-semantics): Implemented in [`x/ibc/03-connection`](https://github.com/cosmos/tree/master/ibc/03-connection)
+* [ICS 004 - Channel and Packet Semantics](https://github.com/cosmos/ics/blob/master/spec/ics-004-channel-and-packet-semantics): Implemented in [`x/ibc/04-channel`](https://github.com/cosmos/tree/master/ibc/04-channel)
+* [ICS 005 - Port Allocation](https://github.com/cosmos/ics/blob/master/spec/ics-005-port-allocation): Implemented in [`x/ibc/05-port`](https://github.com/cosmos/tree/master/ibc/05-port)
+* [ICS 006 - Solo Machine Client](https://github.com/cosmos/ics/blob/master/spec/ics-006-solo-machine-client): Implemented in [`x/ibc/light-clients/06-solomachine`](https://github.com/cosmos/tree/master/ibc/solomachine)
+* [ICS 007 - Tendermint Client](https://github.com/cosmos/ics/blob/master/spec/ics-007-tendermint-client): Implemented in [`x/ibc/light-clients/07-tendermint`](https://github.com/cosmos/tree/master/ibc/light-clients/07-tendermint)
+* [ICS 009 - Loopback Client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client):  Implemented in [`x/ibc/light-clients/09-localhost`](https://github.com/cosmos/tree/master/ibc/light-clients/09-localhost)
 * [ICS 018- Relayer Algorithms](https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms): Implemented in it's own [relayer repository](https://github.com/cosmos/relayer)
-* [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/ibc-transfer`](https://github.com/cosmos/x/ibc-transfer)
-* [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments): Implemented in [`x/ibc/23-commitment`](https://github.com/cosmos/x/ibc/23-commitment)
-* [ICS 024 - Host Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements): Implemented in [`x/ibc/24-host`](https://github.com/cosmos/x/ibc/24-host)
+* [ICS 020 - Fungible Token Transfer](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer): Implemented in [`x/ibc/applications/transfer`](https://github.com/cosmos/tree/master/ibc/applications/transfer)
+* [ICS 023 - Vector Commitments](https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments): Implemented in [`x/ibc/23-commitment`](https://github.com/cosmos/tree/master/ibc/23-commitment)
+* [ICS 024 - Host Requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements): Implemented in [`x/ibc/24-host`](https://github.com/cosmos/tree/master/ibc/24-host)
 * [ICS 025 - Handler Interface](https://github.com/cosmos/ics/tree/master/spec/ics-025-handler-interface): Handler interfaces are implemented at the top level in `x/ibc/handler.go`,
 which call each ICS submodule's handlers (i.e `x/ibc/{XX-ICS}/handler.go`).
 * [ICS 026 - Routing Module](https://github.com/cosmos/ics/blob/master/spec/ics-026-routing-module): Replaced by [ADR 15 - IBC Packet Receiver](../../../docs/architecture/adr-015-ibc-packet-receiver.md).
@@ -81,30 +81,31 @@ specification. The following tree describes the architecture of the directories 
 the `ibc` (TAO) and `ibc-transfer` ([ICS20](https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer)) modules:
 
 ```shell
-x/
-├── ibc/
-│  ├── 02-client/
-│  ├── 03-connection/
-│  ├── 04-channel/
-│  ├── 05-port/
-│  ├── light-clients/
-│  │   ├── 06-solomachine/
-│  │   ├── 07-tendermint/
-│  │   └── 09-localhost/
-│  ├── 23-commitment/
-│  ├── 24-host/
-│  ├── client
-│  │   ├── cli
-│  │   │   └── cli.go
-│  │   └── rest
-│  │       └── rest.go
-│  ├── keeper
-│  │   ├── keeper.go
-│  │   └── querier.go
-│  ├── types
-│  │   ├── errors.go
-│  │   └── keys.go
-│  ├── handler.go
-│  └── module.go
-└── ibc-transfer/
+x/ibc
+├── applications/
+│   └──ibc-transfer/
+├── 02-client/
+├── 02-client/
+├── 03-connection/
+├── 04-channel/
+├── 05-port/
+├── light-clients/
+│   ├── 06-solomachine/
+│   ├── 07-tendermint/
+│   └── 09-localhost/
+├── 23-commitment/
+├── 24-host/
+├── client
+│   ├── cli
+│   │   └── cli.go
+│   └── rest
+│       └── rest.go
+├── keeper
+│   ├── keeper.go
+│   └── querier.go
+├── types
+│   ├── errors.go
+│   └── keys.go
+├── handler.go
+└── module.go
 ```

@@ -563,7 +563,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, counterpartyConnection.ID, connection.ClientID,
+		connection.ID, connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,

@@ -16,15 +16,22 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+const (
+	flagVersionIdentifier = "version-identifier"
+	flagVersionFeatures   = "version-features"
+)
+
 // NewConnectionOpenInitCmd defines the command to initialize a connection on
 // chain A with a given counterparty chain B
 func NewConnectionOpenInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
 		Short: "Initialize connection on chain A",
-		Long:  "Initialize a connection on chain A with a given counterparty chain B",
+		Long: `Initialize a connection on chain A with a given counterparty chain B.
+	- 'version-identifier' flag can be a single pre-selected version identifier to be used in the handshake.
+	- 'version-features' flag can be a list of features separated by commas to accompany the version identifier.`,
 		Example: fmt.Sprintf(
-			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]",
+			"%s tx %s %s open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] --version-identifier=\"1.0\" --version-features=\"ORDER_UNORDERED\"",
 			version.AppName, host.ModuleName, types.SubModuleName,
 		),
 		Args: cobra.ExactArgs(5),
@@ -45,9 +52,24 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 				return err
 			}
 
+			var encodedVersion string
+			versionIdentifier, _ := cmd.Flags().GetString(flagVersionIdentifier)
+
+			if versionIdentifier != "" {
+				var features []string
+
+				versionFeatures, _ := cmd.Flags().GetString(flagVersionFeatures)
+				if versionFeatures != "" {
+					features = strings.Split(versionFeatures, ",")
+				}
+
+				version := types.NewVersion(versionIdentifier, features)
+				encodedVersion, err = version.Encode()
+			}
+
 			msg := types.NewMsgConnectionOpenInit(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, clientCtx.GetFromAddress(),
+				counterpartyPrefix, encodedVersion, clientCtx.GetFromAddress(),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -58,6 +80,10 @@ func NewConnectionOpenInitCmd() *cobra.Command {
 		},
 	}
 
+	// NOTE: we should use empty default values since the user may not want to select a version
+	// at this step in the handshake.
+	cmd.Flags().String(flagVersionIdentifier, "", "version identifier to be used in the connection handshake version negotiation")
+	cmd.Flags().String(flagVersionFeatures, "", "version features list separated by commas without spaces. The features must function with the version identifier.")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -16,13 +16,14 @@ var _ sdk.Msg = &MsgConnectionOpenInit{}
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitmenttypes.MerklePrefix,
-	signer sdk.AccAddress,
+	version string, signer sdk.AccAddress,
 ) *MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	return &MsgConnectionOpenInit{
 		ConnectionId: connectionID,
 		ClientId:     clientID,
 		Counterparty: counterparty,
+		Version:      version,
 		Signer:       signer,
 	}
 }
@@ -37,13 +38,18 @@ func (msg MsgConnectionOpenInit) Type() string {
 	return "connection_open_init"
 }
 
-// ValidateBasic implements sdk.Msg
+// ValidateBasic implements sdk.Msg.
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
+	}
+	if msg.Version != "" {
+		if err := ValidateVersion(msg.Version); err != nil {
+			return sdkerrors.Wrap(err, "basic validation of the provided version failed")
+		}
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

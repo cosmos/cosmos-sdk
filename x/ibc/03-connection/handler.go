@@ -11,7 +11,7 @@ import (
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
 func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg *types.MsgConnectionOpenInit) (*sdk.Result, error) {
 	if err := k.ConnOpenInit(
-		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty,
+		ctx, msg.ConnectionId, msg.ClientId, msg.Counterparty, msg.Version,
 	); err != nil {
 		return nil, sdkerrors.Wrap(err, "connection handshake open init failed")
 	}

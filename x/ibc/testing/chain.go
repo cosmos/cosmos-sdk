@@ -48,8 +48,9 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	DefaultChannelVersion = ibctransfertypes.Version
-	InvalidID             = "IDisInvalid"
+	DefaultChannelVersion  = ibctransfertypes.Version
+	DefaultOpenInitVersion = ""
+	InvalidID              = "IDisInvalid"
 
 	ConnectionIDPrefix = "conn"
 	ChannelIDPrefix    = "chan"
@@ -543,7 +544,7 @@ func (chain *TestChain) ConnectionOpenInit(
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, connection.CounterpartyClientID,
-		counterparty.GetPrefix(),
+		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)

@@ -14,7 +14,8 @@ message MsgConnectionOpenInit {
   string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
-  bytes        signer        = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string       version       = 4;
+  bytes        signer        = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a

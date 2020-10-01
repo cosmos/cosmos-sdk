@@ -21,14 +21,20 @@ func (k Keeper) ConnOpenInit(
 	connectionID, // identifier
 	clientID string,
 	counterparty types.Counterparty, // desiredCounterpartyConnectionIdentifier, counterpartyPrefix, counterpartyClientIdentifier
+	version string,
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
 		return types.ErrConnectionExists
 	}
 
+	versions := types.GetCompatibleEncodedVersions()
+	if version != "" {
+		versions = []string{version}
+	}
+
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleEncodedVersions())
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, versions)
 	k.SetConnection(ctx, connectionID, connection)
 
 	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {

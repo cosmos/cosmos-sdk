@@ -67,37 +67,31 @@ func TestMsgTestSuite(t *testing.T) {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenInit() {
 	prefix := commitmenttypes.NewMerklePrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
-
-	testMsgs := []*types.MsgConnectionOpenInit{
-		types.NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, signer),
-		types.NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, signer),
-		types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, signer),
-		types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, signer),
-		types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", emptyPrefix, signer),
-		types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, nil),
-		types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, signer),
-	}
+	// empty versions are considered valid, the default compatible versions
+	// will be used in protocol.
+	version := ""
 
 	var testCases = []struct {
+		name    string
 		msg     *types.MsgConnectionOpenInit
 		expPass bool
-		errMsg  string
 	}{
-		{testMsgs[0], false, "invalid connection ID"},
-		{testMsgs[1], false, "invalid client ID"},
-		{testMsgs[2], false, "invalid counterparty client ID"},
-		{testMsgs[3], false, "invalid counterparty connection ID"},
-		{testMsgs[4], false, "empty counterparty prefix"},
-		{testMsgs[5], false, "empty singer"},
-		{testMsgs[6], true, "success"},
+		{"invalid connection ID", types.NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, version, signer), false},
+		{"invalid client ID", types.NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, version, signer), false},
+		{"invalid counterparty client ID", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, version, signer), false},
+		{"invalid counterparty connection ID", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, version, signer), false},
+		{"empty counterparty prefix", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", emptyPrefix, version, signer), false},
+		{"supplied version fails basic validation", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, "bad version", signer), false},
+		{"empty singer", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, version, nil), false},
+		{"success", types.NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, version, signer), true},
 	}
 
-	for i, tc := range testCases {
+	for _, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			suite.Require().NoError(err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, tc.name)
 		} else {
-			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, tc.name)
 		}
 	}
 }

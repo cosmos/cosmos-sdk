@@ -17,6 +17,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 	var (
 		clientA string
 		clientB string
+		version string
 	)
 
 	testCases := []struct {
@@ -26,6 +27,10 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 	}{
 		{"success", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+		}, true},
+		{"success with non empty version", func() {
+			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			version = types.GetCompatibleEncodedVersions()[0]
 		}, true},
 		{"connection already exists", func() {
 			clientA, clientB, _, _ = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -40,6 +45,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		tc := tc
 		suite.Run(tc.msg, func() {
 			suite.SetupTest() // reset
+			version = ""      // must be explicitly changed
 
 			tc.malleate()
 
@@ -47,7 +53,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 			counterparty := types.NewCounterparty(clientB, connB.ID, suite.chainB.GetPrefix())
 
-			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), connA.ID, clientA, counterparty)
+			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.chainA.GetContext(), connA.ID, clientA, counterparty, version)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

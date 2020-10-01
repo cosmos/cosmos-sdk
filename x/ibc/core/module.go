@@ -25,9 +25,9 @@ import (
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
 var (

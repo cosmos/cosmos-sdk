@@ -14,10 +14,10 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 func (suite *IBCTestSuite) TestValidateGenesis() {

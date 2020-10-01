@@ -10,7 +10,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
 )
 
 // NewHandler defines the IBC handler

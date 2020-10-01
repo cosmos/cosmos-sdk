@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/simulation"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

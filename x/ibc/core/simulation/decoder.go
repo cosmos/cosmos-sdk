@@ -8,7 +8,7 @@ import (
 	connectionsim "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/simulation"
 	channelsim "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/simulation"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

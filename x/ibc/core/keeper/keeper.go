@@ -10,7 +10,7 @@ import (
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/keeper"
 	portkeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/keeper"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
 var _ types.QueryServer = (*Keeper)(nil)

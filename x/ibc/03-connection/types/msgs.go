@@ -110,8 +110,8 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if msg.ProvedId != "" && msg.ProvedID != msg.ConnectionId {
-		return sdkerrors.Wrap(types.ErrInvalidConnectionIdentifier, "proved identifier must be empty or equal to connection identifier")
+	if msg.ProvedId != "" && msg.ProvedId != msg.ConnectionId {
+		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "proved identifier must be empty or equal to connection identifier")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
@@ -180,34 +180,29 @@ var _ sdk.Msg = &MsgConnectionOpenAck{}
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, counterpartyClient exported.ClientState,
+	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
 	proofTry, proofClient, proofConsensus []byte,
 	proofHeight, consensusHeight clienttypes.Height, version string,
 	signer sdk.AccAddress,
 ) *MsgConnectionOpenAck {
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenAck{
-		ConnectionId:    connectionID,
-		ClientState:     csAny,
-		ProofTry:        proofTry,
-		ProofClient:     proofClient,
-		ProofConsensus:  proofConsensus,
-		ProofHeight:     proofHeight,
-		ConsensusHeight: consensusHeight,
-		Version:         version,
-		Signer:          signer,
+		ConnectionId:             connectionID,
+		CounterpartyConnectionId: counterpartyConnectionID,
+		ClientState:              csAny,
+		ProofTry:                 proofTry,
+		ProofClient:              proofClient,
+		ProofConsensus:           proofConsensus,
+		ProofHeight:              proofHeight,
+		ConsensusHeight:          consensusHeight,
+		Version:                  version,
+		Signer:                   signer,
 	}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgConnectionOpenAck) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(msg.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return unpacker.UnpackAny(msg.ClientState, new(exported.ClientState))
 }
 
 // Route implements sdk.Msg
@@ -224,6 +219,9 @@ func (msg MsgConnectionOpenAck) Type() string {
 func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty conneciton ID")
 	}
 	if err := ValidateVersion(msg.Version); err != nil {
 		return err

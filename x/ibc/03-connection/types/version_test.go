@@ -130,7 +130,7 @@ func TestPickVersion(t *testing.T) {
 		{"valid identifier match but empty feature set not allowed", types.GetCompatibleVersions(), []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"DAG", "ORDERED-ZK", "UNORDERED-zk]"})}, types.NewVersion(types.DefaultIBCVersionIdentifier, nil), false},
 		{"empty counterparty versions", types.GetCompatibleVersions(), []types.Version{}, types.Version{}, false},
 		{"non-matching counterparty versions", types.GetCompatibleVersions(), []types.Version{types.NewVersion("2.0.0", nil)}, types.Version{}, false},
-		{"non-matching counterparty versions (uses ordered channels only) contained in supported versions (uses unordered channels only)", []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, false},
+		{"non-matching counterparty versions (uses ordered channels only) contained in supported versions (uses unordered channels only)", []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_UNORDERED"})}, []types.Version{types.NewVersion(types.DefaultIBCVersionIdentifier, []string{"ORDER_ORDERED"})}, types.Version{}, false},
 	}
 
 	for i, tc := range testCases {

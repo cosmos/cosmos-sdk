@@ -74,6 +74,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	var (
 		clientA            string
 		clientB            string
+		provedID           string
 		versions           []string
 		consensusHeight    exported.Height
 		counterpartyClient exported.ClientState
@@ -263,7 +264,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), connB.ID, counterparty, clientB, counterpartyClient,
+				suite.chainB.GetContext(), connB.ID, provedID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)
@@ -529,6 +530,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			connA := suite.chainA.GetFirstTestConnection(clientA, clientB)
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 
+			counterpartyConnectionID := connA.ID
+
 			connectionKey := host.KeyConnection(connB.ID)
 			proofTry, proofHeight := suite.chainB.QueryProof(connectionKey)
 
@@ -545,7 +548,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			proofClient, _ := suite.chainB.QueryProof(clientKey)
 
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
-				suite.chainA.GetContext(), connA.ID, counterpartyClient, version,
+				suite.chainA.GetContext(), connA.ID, counterpartyClient, version, counterpartyConnectionID,
 				proofTry, proofClient, proofConsensus, proofHeight, consensusHeight,
 			)
 

@@ -166,7 +166,8 @@ func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
 	clientState exported.ClientState, // client state for chainA on chainB
-	encodedVersion string, // version that ChainB chose in ConnOpenTry
+	encodedVersion, // version that ChainB chose in ConnOpenTry
+	counterpartyConnectionID string,
 	proofTry []byte, // proof that connectionEnd was added to ChainB state in ConnOpenTry
 	proofClient []byte, // proof of client state on chainB for chainA
 	proofConsensus []byte, // proof that chainB has stored ConsensusState of chainA on its client
@@ -186,6 +187,13 @@ func (k Keeper) ConnOpenAck(
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
+	}
+
+	if counterpartyConnectionID != connection.Counterparty.ConnectionId && connection.Counterparty.ConnectionId != "" {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionIdentifier,
+			"counterparty conenction identifier (%s) must be empty or equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
+		)
 	}
 
 	// Verify the provided version against the previously set connection state
@@ -230,7 +238,7 @@ func (k Keeper) ConnOpenAck(
 
 	// Ensure that ChainB stored expected connectionEnd in its state during ConnOpenTry
 	if err := k.VerifyConnectionState(
-		ctx, connection, proofHeight, proofTry, connection.Counterparty.ConnectionId,
+		ctx, connection, proofHeight, proofTry, counterpartyConnectionID,
 		expectedConnection,
 	); err != nil {
 		return err
@@ -253,6 +261,7 @@ func (k Keeper) ConnOpenAck(
 	// Update connection state to Open
 	connection.State = types.OPEN
 	connection.Versions = []string{encodedVersion}
+	connection.Counterparty.ConnectionId = counterpartyConnectionID
 	k.SetConnection(ctx, connectionID, connection)
 	return nil
 }

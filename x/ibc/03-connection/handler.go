@@ -77,7 +77,7 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	}
 
 	if err := k.ConnOpenAck(
-		ctx, msg.ConnectionId, targetClient, msg.Version,
+		ctx, msg.ConnectionId, targetClient, msg.Version, msg.CounterpartyConnectionId,
 		msg.ProofTry, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {

@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 

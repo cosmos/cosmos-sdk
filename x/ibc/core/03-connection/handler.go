@@ -3,9 +3,9 @@ package connection
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/keeper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit

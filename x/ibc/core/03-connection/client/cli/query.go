@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 )
 
 // GetCmdQueryConnections defines the command to query all the connection ends

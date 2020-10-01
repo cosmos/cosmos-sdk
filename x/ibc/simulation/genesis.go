@@ -8,13 +8,13 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
-	connectionsims "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/simulation"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelsims "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	clientsims "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/simulation"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	connectionsims "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/simulation"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 

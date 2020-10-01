@@ -38,7 +38,7 @@ chains. The supported IBC clients are:
 * [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/09-localhost): Useful for
 testing, simulation and relaying packets to modules on the same application.
 
-### [Connections](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/03-connection)
+### [Connections](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/03-connection)
 
 Connections encapsulate two `ConnectionEnd` objects on two seperate blockchains. Each
 `ConnectionEnd` is associated with a client of the other blockchain (ie counterparty blockchain).

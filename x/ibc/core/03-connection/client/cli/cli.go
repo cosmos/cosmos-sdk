@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 )
 
 // GetQueryCmd returns the query commands for IBC connections

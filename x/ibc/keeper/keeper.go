@@ -4,12 +4,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	channelkeeper "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	portkeeper "github.com/cosmos/cosmos-sdk/x/ibc/05-port/keeper"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	clientkeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/keeper"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	connectionkeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 

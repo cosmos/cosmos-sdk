@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	"github.com/stretchr/testify/require"
@@ -24,6 +26,11 @@ func TestMsgExecAuthorized(t *testing.T) {
 	}{
 		{"nil grantee address", nil, []sdk.Msg{}, false},
 		{"valid test", grantee, []sdk.Msg{}, true},
+		{"", grantee, []sdk.Msg{&banktypes.MsgSend{
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			FromAddress: granter.String(),
+			ToAddress:   grantee.String(),
+		}}, true},
 	}
 	for i, tc := range tests {
 		msg := types.NewMsgExecAuthorized(tc.grantee, tc.msgs)

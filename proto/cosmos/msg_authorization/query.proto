@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos.msg_authorization;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/msg_authorization/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns any `Capability` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.
+  rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
+    option (google.api.http).get = "/cosmos/msg_authorization/v1beta1/authorizations/{granter_address}/{grantee_address}";
+  }
+
+}
+
+// QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
+message QueryAuthorizationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string granter_address = 1;
+  string grantee_address = 2;
+
+  // address defines the address to query for.
+  google.protobuf.Any msg_type = 3 [(cosmos_proto.accepts_interface) = "github.com/cosmos/cosmos-sdk/types.Msg"];
+}
+
+// QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
+message QueryAuthorizationResponse {
+  // account defines the account of the corresponding address.
+  google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+}

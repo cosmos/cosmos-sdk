@@ -146,7 +146,6 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 		k.Revoke(ctx, grantee, granter, msgType)
 		return nil, 0
 	}
-
 	var authorization types.Authorization
 	k.cdc.UnpackAny(grant.Authorization, &authorization)
 	return authorization, grant.Expiration

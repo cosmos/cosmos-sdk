@@ -12113,11 +12113,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -12472,11 +12472,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -12917,11 +12917,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -13144,7 +13144,7 @@ paths:
           type: string
       tags:
         - Query
-  ? "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/{epoch_number}/height/{epoch_height}"
+  ? "/ibc/channel/v1beta1/channels/{channel_id}/ports/{port_id}/consensus_state/version/{version_number}/height/{version_height}"
   : get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
@@ -13342,11 +13342,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -13567,13 +13567,13 @@ paths:
           in: path
           required: true
           type: string
-        - name: epoch_number
+        - name: version_number
           description: version number of the consensus state
           in: path
           required: true
           type: string
           format: uint64
-        - name: epoch_height
+        - name: version_height
           description: version height of the consensus state
           in: path
           required: true
@@ -13608,11 +13608,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -13860,11 +13860,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -14168,11 +14168,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -14466,11 +14466,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -14727,11 +14727,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -14989,11 +14989,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -15351,11 +15351,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -16287,11 +16287,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -16535,11 +16535,11 @@ paths:
                       title: consensus state height
                       type: object
                       properties:
-                        epoch_number:
+                        version_number:
                           type: string
                           format: uint64
                           title: the version that the client is currently on
-                        epoch_height:
+                        version_height:
                           type: string
                           format: uint64
                           title: the height within the given version
@@ -17015,7 +17015,7 @@ paths:
           format: boolean
       tags:
         - Query
-  ? "/ibc/client/v1beta1/consensus_states/{client_id}/version/{epoch_number}/height/{epoch_height}"
+  ? "/ibc/client/v1beta1/consensus_states/{client_id}/version/{version_number}/height/{version_height}"
   : get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -17214,11 +17214,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -17436,13 +17436,13 @@ paths:
           in: path
           required: true
           type: string
-        - name: epoch_number
+        - name: version_number
           description: consensus state version number
           in: path
           required: true
           type: string
           format: uint64
-        - name: epoch_height
+        - name: version_height
           description: consensus state version height
           in: path
           required: true
@@ -17488,11 +17488,11 @@ paths:
                 title: height at which the proof was generated
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -17812,11 +17812,11 @@ paths:
                 title: query block height
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -18157,11 +18157,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -18595,11 +18595,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -18817,7 +18817,7 @@ paths:
           type: string
       tags:
         - Query
-  ? "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/version/{epoch_number}/height/{epoch_height}"
+  ? "/ibc/connection/v1beta1/connections/{connection_id}/consensus_state/version/{version_number}/height/{version_height}"
   : get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
@@ -19015,11 +19015,11 @@ paths:
                 title: height at which the proof was retrieved
                 type: object
                 properties:
-                  epoch_number:
+                  version_number:
                     type: string
                     format: uint64
                     title: the version that the client is currently on
-                  epoch_height:
+                  version_height:
                     type: string
                     format: uint64
                     title: the height within the given version
@@ -19235,12 +19235,12 @@ paths:
           in: path
           required: true
           type: string
-        - name: epoch_number
+        - name: version_number
           in: path
           required: true
           type: string
           format: uint64
-        - name: epoch_height
+        - name: version_height
           in: path
           required: true
           type: string
@@ -26116,11 +26116,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26318,11 +26318,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26426,11 +26426,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26563,11 +26563,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26696,11 +26696,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26739,11 +26739,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26782,11 +26782,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26826,11 +26826,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26913,11 +26913,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26951,11 +26951,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -26989,11 +26989,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -27037,11 +27037,11 @@ definitions:
   ibc.client.Height:
     type: object
     properties:
-      epoch_number:
+      version_number:
         type: string
         format: uint64
         title: the version that the client is currently on
-      epoch_height:
+      version_height:
         type: string
         format: uint64
         title: the height within the given version
@@ -27240,11 +27240,11 @@ definitions:
         title: consensus state height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -27599,11 +27599,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -28022,11 +28022,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -28061,11 +28061,11 @@ definitions:
               title: consensus state height
               type: object
               properties:
-                epoch_number:
+                version_number:
                   type: string
                   format: uint64
                   title: the version that the client is currently on
-                epoch_height:
+                version_height:
                   type: string
                   format: uint64
                   title: the height within the given version
@@ -28453,11 +28453,11 @@ definitions:
         title: height at which the proof was generated
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -28668,11 +28668,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -28870,11 +28870,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -28967,11 +28967,11 @@ definitions:
         title: height at which the proof was retrieved
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version
@@ -29087,11 +29087,11 @@ definitions:
         title: query block height
         type: object
         properties:
-          epoch_number:
+          version_number:
             type: string
             format: uint64
             title: the version that the client is currently on
-          epoch_height:
+          version_height:
             type: string
             format: uint64
             title: the height within the given version

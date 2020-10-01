@@ -24,10 +24,10 @@ func ZeroHeight() Height {
 }
 
 // NewHeight is a constructor for the IBC height type
-func NewHeight(epochNumber, epochHeight uint64) Height {
+func NewHeight(versionNumber, versionHeight uint64) Height {
 	return Height{
-		VersionNumber: epochNumber,
-		VersionHeight: epochHeight,
+		VersionNumber: versionNumber,
+		VersionHeight: versionHeight,
 	}
 }
 
@@ -138,15 +138,15 @@ func ParseHeight(heightStr string) (Height, error) {
 	if len(splitStr) != 2 {
 		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {version}-{height}. Got: %s", heightStr)
 	}
-	epochNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
+	versionNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
 	if err != nil {
 		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version number. parse err: %s", err)
 	}
-	epochHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
+	versionHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
 	if err != nil {
 		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version height. parse err: %s", err)
 	}
-	return NewHeight(epochNumber, epochHeight), nil
+	return NewHeight(versionNumber, versionHeight), nil
 }
 
 // SetEpochNumber takes a chainID in valid version format and swaps the version number

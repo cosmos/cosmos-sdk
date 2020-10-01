@@ -1,13 +1,20 @@
 package client_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func (suite *ClientTestSuite) TestNewClientUpdateProposalHandler() {
@@ -72,4 +79,153 @@ func (suite *ClientTestSuite) TestNewClientUpdateProposalHandler() {
 		})
 	}
 
+}
+
+func (suite *ClientTestSuite) TestUpgradeClient() {
+	var (
+		clientA        string
+		upgradedClient exported.ClientState
+		msg            *clienttypes.MsgUpgradeClient
+	)
+
+	upgradeHeight := clienttypes.NewHeight(1, 1)
+
+	cases := []struct {
+		name    string
+		setup   func()
+		expPass bool
+	}{
+		{
+			name: "successful upgrade",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: true,
+		},
+		{
+			name: "successful upgrade to different client type",
+			setup: func() {
+
+				// previous chain committed to the change
+				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.chainA.App.AppCodec(), clientA, "diversifier", 1).ClientState()
+				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
+				// change sequence to be higher height than latest current client height
+				soloClient.Sequence = 100000000000
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), soloClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: true,
+		},
+		{
+			name: "invalid upgrade: msg.ClientState does not contain valid clientstate",
+			setup: func() {
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+
+				consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
+				consAny, err := clienttypes.PackConsensusState(consState)
+				suite.Require().NoError(err)
+
+				msg = &types.MsgUpgradeClient{ClientId: clientA, ClientState: consAny, ProofUpgrade: proofUpgrade, Signer: suite.chainA.SenderAccount.GetAddress().String()}
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid clientstate",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+		{
+			name: "VerifyUpgrade fails",
+			setup: func() {
+
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, nil, suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+
+		tc.setup()
+
+		_, err := client.HandleMsgUpgradeClient(
+			suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper, msg,
+		)
+
+		if tc.expPass {
+			suite.Require().NoError(err, "upgrade handler failed on valid case: %s", tc.name)
+			newClient, ok := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+			suite.Require().True(ok)
+			suite.Require().Equal(upgradedClient, newClient)
+		} else {
+			suite.Require().Error(err, "upgrade handler passed on invalid case: %s", tc.name)
+		}
+	}
 }

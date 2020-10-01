@@ -17,6 +17,8 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -52,6 +54,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
+// ScheduleUpgrade will also write the upgraded client to the upgraded client path
+// if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
@@ -69,11 +73,46 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store := ctx.KVStore(k.storeKey)
+
+	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
+	if plan.UpgradedClientState != nil {
+		clientState, err := clienttypes.UnpackClientState(plan.UpgradedClientState)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
+		}
+		return k.SetUpgradedClient(ctx, clientState)
+	}
+	// delete upgraded client key to remove any upgraded client set by outdated plan
+	store.Delete(types.UpgradedClientKey())
 	return nil
+}
+
+// SetUpgradedClient sets the expected upgraded client for the next version of this chain
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) error {
+	// zero out any custom fields before setting
+	cs = cs.ZeroCustomFields()
+	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.UpgradedClientKey(), bz)
+	return nil
+}
+
+// GetUpgradedClient gets the expected upgraded client for the next version of this chain
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, error) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.UpgradedClientKey())
+	if len(bz) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no upgraded client in store")
+	}
+
+	return clienttypes.UnmarshalClientState(k.cdc, bz)
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed

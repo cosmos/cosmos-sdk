@@ -34,12 +34,7 @@ func NewIdentifiedClientState(clientID string, clientState exported.ClientState)
 
 // UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
 func (ics IdentifiedClientState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var clientState exported.ClientState
-	err := unpacker.UnpackAny(ics.ClientState, &clientState)
-	if err != nil {
-		return err
-	}
-	return nil
+	return unpacker.UnpackAny(ics.ClientState, new(exported.ClientState))
 }
 
 // NewConsensusStateWithHeight creates a new ConsensusStateWithHeight instance
@@ -62,10 +57,5 @@ func NewConsensusStateWithHeight(height Height, consensusState exported.Consensu
 
 // UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
 func (cswh ConsensusStateWithHeight) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var consensusState exported.ConsensusState
-	err := unpacker.UnpackAny(cswh.ConsensusState, &consensusState)
-	if err != nil {
-		return err
-	}
-	return nil
+	return unpacker.UnpackAny(cswh.ConsensusState, new(exported.ConsensusState))
 }

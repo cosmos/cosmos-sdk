@@ -1,9 +1,9 @@
 syntax = "proto3";
-package ibc.client;
+package ibc.core.client.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 
-import "ibc/client/client.proto";
+import "ibc/core/client/v1/client.proto";
 import "gogoproto/gogo.proto";
 
 // GenesisState defines the ibc client submodule's genesis state.

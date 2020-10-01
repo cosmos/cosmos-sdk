@@ -1,10 +1,10 @@
 syntax = "proto3";
-package ibc.channel;
+package ibc.core.channel.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types";
 
 import "gogoproto/gogo.proto";
-import "ibc/client/client.proto";
+import "ibc/core/client/v1/client.proto";
 
 // MsgChannelOpenInit defines an sdk.Msg to initialize a channel handshake. It
 // is called by a relayer on Chain A.
@@ -24,13 +24,14 @@ message MsgChannelOpenTry {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string            port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  string            channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  Channel           channel              = 3 [(gogoproto.nullable) = false];
-  string            counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  bytes             proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  ibc.client.Height proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer       = 7;
+  string                    port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string                    channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  Channel                   channel              = 3 [(gogoproto.nullable) = false];
+  string                    counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  bytes                     proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  ibc.core.client.v1.Height proof_height         = 6
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 7;
 }
 
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -39,12 +40,13 @@ message MsgChannelOpenAck {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string            port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  string            channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  string            counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  bytes             proof_try            = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  ibc.client.Height proof_height = 5 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer       = 6;
+  string                    port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string                    channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  string                    counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  bytes                     proof_try            = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
+  ibc.core.client.v1.Height proof_height         = 5
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 6;
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to
@@ -53,11 +55,12 @@ message MsgChannelOpenConfirm {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string            port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  string            channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  bytes             proof_ack    = 3 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
-  ibc.client.Height proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer       = 5;
+  string                    port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string                    channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  bytes                     proof_ack    = 3 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
+  ibc.core.client.v1.Height proof_height = 4
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 5;
 }
 
 // MsgChannelCloseInit defines a msg sent by a Relayer to Chain A
@@ -77,11 +80,12 @@ message MsgChannelCloseConfirm {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string            port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  string            channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  bytes             proof_init   = 3 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  ibc.client.Height proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer       = 5;
+  string                    port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string                    channel_id   = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  bytes                     proof_init   = 3 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  ibc.core.client.v1.Height proof_height = 4
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 5;
 }
 
 // MsgRecvPacket receives incoming IBC packet
@@ -89,10 +93,11 @@ message MsgRecvPacket {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Packet            packet       = 1 [(gogoproto.nullable) = false];
-  bytes             proof        = 2;
-  ibc.client.Height proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer       = 4;
+  Packet                    packet       = 1 [(gogoproto.nullable) = false];
+  bytes                     proof        = 2;
+  ibc.core.client.v1.Height proof_height = 3
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 4;
 }
 
 // MsgTimeout receives timed-out packet
@@ -100,11 +105,12 @@ message MsgTimeout {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Packet            packet       = 1 [(gogoproto.nullable) = false];
-  bytes             proof        = 2;
-  ibc.client.Height proof_height = 3 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  uint64            next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  string            signer             = 5;
+  Packet                    packet       = 1 [(gogoproto.nullable) = false];
+  bytes                     proof        = 2;
+  ibc.core.client.v1.Height proof_height = 3
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  uint64 next_sequence_recv = 4 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
+  string signer             = 5;
 }
 
 // MsgTimeoutOnClose timed-out packet upon counterparty channel closure.
@@ -112,12 +118,13 @@ message MsgTimeoutOnClose {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Packet            packet       = 1 [(gogoproto.nullable) = false];
-  bytes             proof        = 2;
-  bytes             proof_close  = 3 [(gogoproto.moretags) = "yaml:\"proof_close\""];
-  ibc.client.Height proof_height = 4 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  uint64            next_sequence_recv = 5 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
-  string            signer             = 6;
+  Packet                    packet       = 1 [(gogoproto.nullable) = false];
+  bytes                     proof        = 2;
+  bytes                     proof_close  = 3 [(gogoproto.moretags) = "yaml:\"proof_close\""];
+  ibc.core.client.v1.Height proof_height = 4
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  uint64 next_sequence_recv = 5 [(gogoproto.moretags) = "yaml:\"next_sequence_recv\""];
+  string signer             = 6;
 }
 
 // MsgAcknowledgement receives incoming IBC acknowledgement
@@ -125,11 +132,12 @@ message MsgAcknowledgement {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Packet            packet          = 1 [(gogoproto.nullable) = false];
-  bytes             acknowledgement = 2;
-  bytes             proof           = 3;
-  ibc.client.Height proof_height    = 4 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string            signer          = 5;
+  Packet                    packet          = 1 [(gogoproto.nullable) = false];
+  bytes                     acknowledgement = 2;
+  bytes                     proof           = 3;
+  ibc.core.client.v1.Height proof_height    = 4
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 5;
 }
 
 // Channel defines pipeline for exactly-once packet delivery between specific
@@ -234,7 +242,8 @@ message Packet {
   // actual opaque bytes transferred directly to the application module
   bytes data = 6;
   // block height after which the packet times out
-  ibc.client.Height timeout_height = 7 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  ibc.core.client.v1.Height timeout_height = 7
+      [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
   // block timestamp (in nanoseconds) after which the packet times out
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }

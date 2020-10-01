@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ibc.client;
+package ibc.core.client.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types";
 

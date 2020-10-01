@@ -30,61 +30,52 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		return nil, sdkerrors.Wrapf(clienttypes.ErrClientFrozen, "client is already frozen")
 	}
 
-	if err := checkMisbehaviour(cdc, cs, soloMisbehaviour); err != nil {
-		return nil, err
+	// NOTE: a check that the misbehaviour message data are not equal is done by
+	// misbehaviour.ValidateBasic which is called by the 02-client keeper.
+
+	// verify first signature
+	if err := verifySignatureAndData(cdc, cs, soloMisbehaviour, soloMisbehaviour.SignatureOne); err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to verify signature one")
+	}
+
+	// verify second signature
+	if err := verifySignatureAndData(cdc, cs, soloMisbehaviour, soloMisbehaviour.SignatureTwo); err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to verify signature two")
 	}
 
 	cs.FrozenSequence = soloMisbehaviour.Sequence
 	return cs, nil
 }
 
-// checkMisbehaviour checks if the currently registered public key has signed
-// over two different messages at the same sequence.
-//
-// NOTE: a check that the misbehaviour message data are not equal is done by
-// misbehaviour.ValidateBasic which is called by the 02-client keeper.
-func checkMisbehaviour(cdc codec.BinaryMarshaler, clientState ClientState, soloMisbehaviour *Misbehaviour) error {
-	pubKey := clientState.ConsensusState.GetPubKey()
+// verifySignatureAndData verifies that the currently registered public key has signed
+// over the provided data and that the data is valid. The data is valid if it can be
+// unmarshaled into the specified data type.
+func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, misbehaviour *Misbehaviour, sigAndData *SignatureAndData) error {
+	// ensure data can be unmarshaled to the specified data type
+	if _, err := UnmarshalDataByType(cdc, sigAndData.DataType, sigAndData.Data); err != nil {
+		return err
+	}
 
 	data, err := MisbehaviourSignBytes(
 		cdc,
-		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
+		misbehaviour.Sequence, clientState.ConsensusState.Timestamp,
 		clientState.ConsensusState.Diversifier,
-		soloMisbehaviour.SignatureOne.Data,
+		sigAndData.DataType,
+		sigAndData.Data,
 	)
 	if err != nil {
 		return err
 	}
 
-	sigData, err := UnmarshalSignatureData(cdc, soloMisbehaviour.SignatureOne.Signature)
+	sigData, err := UnmarshalSignatureData(cdc, sigAndData.Signature)
 	if err != nil {
 		return err
 	}
 
-	// check first signature
-	if err := VerifySignature(pubKey, data, sigData); err != nil {
-		return sdkerrors.Wrap(err, "misbehaviour signature one failed to be verified")
-	}
-
-	data, err = MisbehaviourSignBytes(
-		cdc,
-		soloMisbehaviour.Sequence, clientState.ConsensusState.Timestamp,
-		clientState.ConsensusState.Diversifier,
-		soloMisbehaviour.SignatureTwo.Data,
-	)
-	if err != nil {
+	if err := VerifySignature(clientState.ConsensusState.GetPubKey(), data, sigData); err != nil {
 		return err
-	}
-
-	sigData, err = UnmarshalSignatureData(cdc, soloMisbehaviour.SignatureTwo.Signature)
-	if err != nil {
-		return err
-	}
-
-	// check second signature
-	if err := VerifySignature(pubKey, data, sigData); err != nil {
-		return sdkerrors.Wrap(err, "misbehaviour signature two failed to be verified")
 	}
 
 	return nil
+
 }

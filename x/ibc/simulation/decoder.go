@@ -5,9 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	channelsim "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	clientsim "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/simulation"
 	connectionsim "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/simulation"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 )
 

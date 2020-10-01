@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )

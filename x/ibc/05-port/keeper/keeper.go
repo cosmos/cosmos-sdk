@@ -9,7 +9,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 // Keeper defines the IBC connection keeper

@@ -5,7 +5,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 // NewQueryClientStateResponse creates a new QueryClientStateResponse instance.

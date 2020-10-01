@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 const (

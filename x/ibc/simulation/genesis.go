@@ -10,11 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	channelsims "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/simulation"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	clientsims "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/simulation"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connectionsims "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/simulation"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 

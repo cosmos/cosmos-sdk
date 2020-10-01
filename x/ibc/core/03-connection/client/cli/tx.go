@@ -10,10 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 )
 
 // NewConnectionOpenInitCmd defines the command to initialize a connection on

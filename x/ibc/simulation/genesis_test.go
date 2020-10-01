@@ -11,7 +11,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/simulation"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )

@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 

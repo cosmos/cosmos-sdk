@@ -38,7 +38,7 @@ signBz, err := cdc.MarshalBinaryBare(signBytes)
 ```
 
 The helper functions in [proofs.go](../types/proofs.go) handle the above actions.
-The DataType field is used to disambiguate what type of data was signed because
+The `DataType` field is used to disambiguate what type of data was signed because
 of potential proto encoding overlap.
 
 Sign the sign bytes. Embed the signatures into either `SingleSignatureData` or

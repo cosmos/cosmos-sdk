@@ -201,11 +201,14 @@ godocs:
 
 build-docs:
 	@cd docs && \
-	while read p; do \
-		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
-		mkdir -p ~/output/$${p} ; \
-		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		cp ~/output/$${p}/index.html ~/output ; \
+	while read -a p; do \
+		branch=$${p[0]} ; \
+		path_prefix=$${p[1]} ; \
+		(git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+		mkdir -p ~/output/$${path_prefix} ; \
+		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
+		# Note: the last entry inside the `versions` file will be the default root index.html.
+		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
 
 sync-docs:

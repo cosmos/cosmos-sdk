@@ -10,7 +10,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.

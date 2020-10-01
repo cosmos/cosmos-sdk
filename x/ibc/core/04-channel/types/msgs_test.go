@@ -17,7 +17,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // define constants used for testing

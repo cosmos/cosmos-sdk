@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // QueryPacketCommitment returns a packet commitment.

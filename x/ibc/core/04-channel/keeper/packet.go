@@ -12,7 +12,7 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // SendPacket is called by a module in order to send an IBC packet on a channel

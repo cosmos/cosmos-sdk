@@ -16,7 +16,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/core/client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // QueryConnection returns a connection end.

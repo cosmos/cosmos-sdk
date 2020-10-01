@@ -17,8 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -107,7 +107,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -119,7 +119,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenTry{
@@ -179,7 +179,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenTry() {
 func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 	clientState := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false,
 	)
 
 	// Pack consensus state into any to test unpacking error
@@ -190,7 +190,7 @@ func (suite *MsgTestSuite) TestNewMsgConnectionOpenAck() {
 
 	// invalidClientState fails validateBasic
 	invalidClient := ibctmtypes.NewClientState(
-		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false,
+		chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clienttypes.ZeroHeight(), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false,
 	)
 
 	testMsgs := []*types.MsgConnectionOpenAck{

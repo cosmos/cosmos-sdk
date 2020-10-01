@@ -11,11 +11,11 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -37,7 +37,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
@@ -100,7 +100,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
@@ -169,7 +169,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),

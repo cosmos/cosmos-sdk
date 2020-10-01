@@ -84,6 +84,18 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 				},
 				false,
 			},
+			{
+				"data type for SignatureOne is unspecified",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.DataType = types.UNSPECIFIED
+				}, false,
+			},
+			{
+				"data type for SignatureTwo is unspecified",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.DataType = types.UNSPECIFIED
+				}, false,
+			},
 		}
 
 		for _, tc := range testCases {

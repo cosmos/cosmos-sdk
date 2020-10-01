@@ -19,10 +19,10 @@ func TestCompareHeights(t *testing.T) {
 		height2     types.Height
 		compareSign int64
 	}{
-		{"epoch number 1 is lesser", types.NewHeight(1, 3), types.NewHeight(3, 4), -1},
-		{"epoch number 1 is greater", types.NewHeight(7, 5), types.NewHeight(4, 5), 1},
-		{"epoch height 1 is lesser", types.NewHeight(3, 4), types.NewHeight(3, 9), -1},
-		{"epoch height 1 is greater", types.NewHeight(3, 8), types.NewHeight(3, 3), 1},
+		{"version number 1 is lesser", types.NewHeight(1, 3), types.NewHeight(3, 4), -1},
+		{"version number 1 is greater", types.NewHeight(7, 5), types.NewHeight(4, 5), 1},
+		{"version height 1 is lesser", types.NewHeight(3, 4), types.NewHeight(3, 9), -1},
+		{"version height 1 is greater", types.NewHeight(3, 8), types.NewHeight(3, 3), 1},
 		{"height is equal", types.NewHeight(4, 4), types.NewHeight(4, 4), 0},
 	}
 
@@ -63,11 +63,11 @@ func TestString(t *testing.T) {
 	_, err := types.ParseHeight("height")
 	require.Error(t, err, "invalid height string passed")
 
-	_, err = types.ParseHeight("epoch-10")
-	require.Error(t, err, "invalid epoch string passed")
+	_, err = types.ParseHeight("version-10")
+	require.Error(t, err, "invalid version string passed")
 
 	_, err = types.ParseHeight("3-height")
-	require.Error(t, err, "invalid epoch-height string passed")
+	require.Error(t, err, "invalid version-height string passed")
 
 	height := types.NewHeight(3, 4)
 	recovered, err := types.ParseHeight(height.String())
@@ -97,7 +97,7 @@ func (suite *TypesTestSuite) TestMustParseHeight() {
 func TestParseChainID(t *testing.T) {
 	cases := []struct {
 		chainID   string
-		epoch     uint64
+		version   uint64
 		formatted bool
 	}{
 		{"gaiamainnet-3", 3, true},
@@ -113,8 +113,8 @@ func TestParseChainID(t *testing.T) {
 	for i, tc := range cases {
 		require.Equal(t, tc.formatted, types.IsEpochFormat(tc.chainID), "case %d does not match expected format", i)
 
-		epoch := types.ParseChainID(tc.chainID)
-		require.Equal(t, tc.epoch, epoch, "case %d returns incorrect epoch", i)
+		version := types.ParseChainID(tc.chainID)
+		require.Equal(t, tc.version, version, "case %d returns incorrect version", i)
 	}
 
 }
@@ -122,25 +122,25 @@ func TestParseChainID(t *testing.T) {
 func TestSetEpochNumber(t *testing.T) {
 	// Test SetEpochNumber
 	chainID, err := types.SetEpochNumber("gaiamainnet", 3)
-	require.Error(t, err, "invalid epoch format passed SetEpochNumber")
-	require.Equal(t, "", chainID, "invalid epoch format returned non-empty string on SetEpochNumber")
+	require.Error(t, err, "invalid version format passed SetEpochNumber")
+	require.Equal(t, "", chainID, "invalid version format returned non-empty string on SetEpochNumber")
 	chainID = "gaiamainnet-3"
 
 	chainID, err = types.SetEpochNumber(chainID, 4)
-	require.NoError(t, err, "valid epoch format failed SetEpochNumber")
-	require.Equal(t, "gaiamainnet-4", chainID, "valid epoch format returned incorrect string on SetEpochNumber")
+	require.NoError(t, err, "valid version format failed SetEpochNumber")
+	require.Equal(t, "gaiamainnet-4", chainID, "valid version format returned incorrect string on SetEpochNumber")
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {
 	ctx := suite.chainA.GetContext()
 
-	// Test default epoch
+	// Test default version
 	ctx = ctx.WithChainID("gaiamainnet")
 	ctx = ctx.WithBlockHeight(10)
 	height := types.GetSelfHeight(ctx)
 	suite.Require().Equal(types.NewHeight(0, 10), height, "default self height failed")
 
-	// Test successful epoch format
+	// Test successful version format
 	ctx = ctx.WithChainID("gaiamainnet-3")
 	ctx = ctx.WithBlockHeight(18)
 	height = types.GetSelfHeight(ctx)

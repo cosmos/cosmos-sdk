@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// modify connA to set counterparty connection identifer to empty string
+			// modify connA to set counterparty connection identifier to empty string
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			suite.Require().True(found)
 
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// modify connA to set counterparty connection identifer to invalid identifier
+			// modify connA to set counterparty connection identifier to invalid identifier
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			suite.Require().True(found)
 
@@ -372,7 +372,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			// modify connA to set counterparty connection identifer to empty string
+			// modify connA to set counterparty connection identifier to empty string
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			suite.Require().True(found)
 
@@ -492,7 +492,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
 			suite.Require().NoError(err)
 
-			// modify connB to set counterparty connection identifer to wrong identifier
+			// modify connB to set counterparty connection identifier to wrong identifier
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			suite.Require().True(found)
 

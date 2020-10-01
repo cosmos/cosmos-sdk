@@ -232,7 +232,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.ConnectionIdentifierValidator(msg.CounterpartyConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty conneciton ID")
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if err := ValidateVersion(msg.Version); err != nil {
 		return err

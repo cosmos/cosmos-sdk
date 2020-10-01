@@ -89,7 +89,7 @@ func (k Keeper) ConnOpenTry(
 	if provedID != connectionID && provedID != "" {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionIdentifier,
-			"proved identifer (%s) must equal connection identifier (%s) or be empty", provedID, connectionID,
+			"proved identifier (%s) must equal connection identifier (%s) or be empty", provedID, connectionID,
 		)
 	}
 
@@ -192,7 +192,7 @@ func (k Keeper) ConnOpenAck(
 	if counterpartyConnectionID != connection.Counterparty.ConnectionId && connection.Counterparty.ConnectionId != "" {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionIdentifier,
-			"counterparty conenction identifier (%s) must be empty or equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
+			"counterparty connection identifier (%s) must be empty or equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
 		)
 	}
 

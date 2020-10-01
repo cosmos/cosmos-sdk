@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ibc.localhost;
+package ibc.lightclients.localhost.v1;
 
 import "gogoproto/gogo.proto";
 import "ibc/client/client.proto";

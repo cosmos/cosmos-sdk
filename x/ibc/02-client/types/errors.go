@@ -23,7 +23,7 @@ var (
 	ErrFailedChannelStateVerification         = sdkerrors.Register(SubModuleName, 16, "channel state verification failed")
 	ErrFailedPacketCommitmentVerification     = sdkerrors.Register(SubModuleName, 17, "packet commitment verification failed")
 	ErrFailedPacketAckVerification            = sdkerrors.Register(SubModuleName, 18, "packet acknowledgement verification failed")
-	ErrFailedPacketAckAbsenceVerification     = sdkerrors.Register(SubModuleName, 19, "packet acknowledgement absence verification failed")
+	ErrFailedPacketReceiptVerification        = sdkerrors.Register(SubModuleName, 19, "packet receipt verification failed")
 	ErrFailedNextSeqRecvVerification          = sdkerrors.Register(SubModuleName, 20, "next sequence receive verification failed")
 	ErrSelfConsensusStateNotFound             = sdkerrors.Register(SubModuleName, 21, "self consensus state not found")
 	ErrUpdateClientFailed                     = sdkerrors.Register(SubModuleName, 22, "unable to update light client")

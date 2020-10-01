@@ -336,7 +336,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.WriteAcknowledgement(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
@@ -361,10 +364,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
-// TestVerifyPacketAcknowledgementAbsence has chainA verify the acknowledgement
+// TestVerifyPacketReceiptAbsence has chainA verify the receipt
 // absence on channelB. The channels on chainA and chainB are fully opened and
 // a packet is sent from chainA to chainB and not received.
-func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *KeeperTestSuite) TestVerifyPacketReceiptAbsence() {
 	cases := []struct {
 		msg            string
 		changeClientID bool
@@ -396,7 +399,7 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 			suite.Require().NoError(err)
 
 			if tc.recvAck {
-				err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+				err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 				suite.Require().NoError(err)
 			} else {
 				// need to update height to prove absence
@@ -404,10 +407,10 @@ func (suite *KeeperTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 				suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
 			}
 
-			packetAckKey := host.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
-			proof, proofHeight := suite.chainB.QueryProof(packetAckKey)
+			packetReceiptKey := host.KeyPacketReceipt(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+			proof, proofHeight := suite.chainB.QueryProof(packetReceiptKey)
 
-			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketAcknowledgementAbsence(
+			err = suite.chainA.App.IBCKeeper.ConnectionKeeper.VerifyPacketReceiptAbsence(
 				suite.chainA.GetContext(), connection, malleateHeight(proofHeight, tc.heightDiff), proof,
 				packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
 			)
@@ -455,7 +458,7 @@ func (suite *KeeperTestSuite) TestVerifyNextSequenceRecv() {
 			err := suite.coordinator.SendPacket(suite.chainA, suite.chainB, packet, clientB)
 			suite.Require().NoError(err)
 
-			err = suite.coordinator.ReceiveExecuted(suite.chainB, suite.chainA, packet, clientA)
+			err = suite.coordinator.WriteReceipt(suite.chainB, suite.chainA, packet, clientA)
 			suite.Require().NoError(err)
 
 			nextSeqRecvKey := host.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())

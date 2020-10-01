@@ -410,13 +410,13 @@ func PacketAcknowledgementAbsenceSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
-// PacketAcknowledgementAbsenceDataBytes returns the packet acknowledgement absence data bytes used in constructing
-// SignBytes.
-func PacketAcknowledgementAbsenceDataBytes(
+// PacketReceiptAbsenceSignBytes returns the packet receipt absence data bytes
+// used in constructing SignBytes.
+func PacketReceiptAbsenceSignBytes(
 	cdc codec.BinaryMarshaler,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
-	data := &PacketAcknowledgementAbsenceData{
+	data := &PacketReceiptAbsenceData{
 		Path: []byte(path.String()),
 	}
 

@@ -109,7 +109,7 @@ type ClientState interface {
 		sequence uint64,
 		acknowledgement []byte,
 	) error
-	VerifyPacketAcknowledgementAbsence(
+	VerifyPacketReceiptAbsence(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,

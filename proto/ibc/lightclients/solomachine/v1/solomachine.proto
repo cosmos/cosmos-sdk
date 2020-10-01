@@ -172,9 +172,9 @@ message PacketAcknowledgementData {
   bytes acknowledgement = 2;
 }
 
-// PacketAcknowledgementAbsenceData returns the SignBytes data for
-// acknowledgement absence verification.
-message PacketAcknowledgementAbsenceData {
+// PacketReceiptAbsenceData returns the SignBytes data for
+// packet receipt absence verification.
+message PacketReceiptAbsenceData {
   bytes path = 1;
 }
 

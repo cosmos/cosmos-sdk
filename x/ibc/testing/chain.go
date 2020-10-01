@@ -29,11 +29,11 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -819,14 +819,31 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
-func (chain *TestChain) ReceiveExecuted(
+// WriteReceipt simulates receiving and writing a receipt to the chain.
+func (chain *TestChain) WriteReceipt(
 	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteReceipt(chain.GetContext(), channelCap, packet)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// WriteAcknowledgement simulates writing an acknowledgement to the chain.
+func (chain *TestChain) WriteAcknowledgement(
+	packet exported.PacketI,
+) error {
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), packet, TestHash)
 	if err != nil {
 		return err
 	}

@@ -90,7 +90,7 @@ func TestMsgTransferGetSignBytes(t *testing.T) {
 	msg := NewMsgTransfer(validPort, validChannel, coin, addr1, addr2, clienttypes.NewHeight(0, 110), 10)
 	res := msg.GetSignBytes()
 
-	expected := fmt.Sprintf(`{"receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"epoch_height":"110","epoch_number":"0"},"timeout_timestamp":"10","token":{"amount":"100","denom":"atom"}}`, addr1.String())
+	expected := fmt.Sprintf(`{"receiver":"cosmos1w3jhxarpv3j8yvs7f9y7g","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"version_height":"110","version_number":"0"},"timeout_timestamp":"10","token":{"amount":"100","denom":"atom"}}`, addr1.String())
 	require.Equal(t, expected, string(res))
 }
 

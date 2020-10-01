@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 		}, false},
 		{"valid past update before client was frozen", func() error {
 			clientState = ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
-			clientState.FrozenHeight = types.NewHeight(0, testClientHeight.EpochHeight-1)
+			clientState.FrozenHeight = types.NewHeight(0, testClientHeight.VersionHeight-1)
 			err := suite.keeper.CreateClient(suite.ctx, testClientID, clientState, suite.consensusState)
 			suite.Require().NoError(err)
 

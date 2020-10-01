@@ -13,44 +13,50 @@ IBC Client Heights are represented by the struct:
 
 ```go
 type Height struct {
-   EpochNumber uint64
-   EpochHeight  uint64
+   VersionNumber uint64
+   VersionHeight  uint64
+}
 ```
 
-The `EpochNumber` represents the epoch of the chain that the height is representing.
-An epoch typically represents a continuous, monotonically increasing range of block-heights.
-The `EpochHeight` represents the height of the chain within the given epoch.
+The `VersionNumber` represents the version of the chain that the height is representing.
+An version typically represents a continuous, monotonically increasing range of block-heights.
+The `VersionHeight` represents the height of the chain within the given version.
 
-On any reset of the `EpochHeight`, for example, when hard-forking a Tendermint chain,
-the `EpochNumber` will get incremented. This allows IBC clients to distinguish between a
-block-height `n` of a previous version of the chain (at epoch `p`) and block-height `n` of the current
-version of the chain (at epoch `e`).
+On any reset of the `VersionHeight`, for example, when hard-forking a Tendermint chain,
+the `VersionNumber` will get incremented. This allows IBC clients to distinguish between a
+block-height `n` of a previous version of the chain (at version `p`) and block-height `n` of the current
+version of the chain (at version `e`).
 
-`Heights` that share the same epoch number can be compared by simply comparing their respective `EpochHeights`.
-Heights that do not share the same epoch number will only be compared using their respective `EpochNumbers`.
-Thus a height `h` with epoch number `e+1` will always be greater than a height `g` with epoch number `e`,
-**REGARDLESS** of the difference in epoch heights.
+`Heights` that share the same version number can be compared by simply comparing their respective `EpochHeights`.
+Heights that do not share the same version number will only be compared using their respective `EpochNumbers`.
+Thus a height `h` with version number `e+1` will always be greater than a height `g` with version number `e`,
+**REGARDLESS** of the difference in version heights.
 
-Ex: `Height{EpochNumber: 3, EpochHeight: 0} > Height{EpochNumber: 2, EpochHeight: 100000000000}`
+Ex:
 
-When a Tendermint chain is running a particular version, relayers can simply submit headers and proofs with the epoch number
-given by the chain's chainID, and the epoch height given by the Tendermint block height. When a chain updates using a hard-fork 
-and resets its block-height, it is responsible for updating its chain-id to increment the epoch number.
-IBC Tendermint clients then verifies the epoch number against their `ChainId` and treat the `EpochHeight` as the Tendermint block-height.
+```go
+Height{VersionNumber: 3, VersionHeight: 0} > Height{VersionNumber: 2, VersionHeight: 100000000000}
+```
+
+When a Tendermint chain is running a particular version, relayers can simply submit headers and proofs with the version number
+given by the chain's chainID, and the version height given by the Tendermint block height. When a chain updates using a hard-fork 
+and resets its block-height, it is responsible for updating its chain-id to increment the version number.
+IBC Tendermint clients then verifies the version number against their `ChainId` and treat the `VersionHeight` as the Tendermint block-height.
 
 Tendermint chains wishing to use epochs to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
-in the following manner: `{chainID}-{version}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher epoch number
+in the following manner: `{chainID}-{version_number}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher version number
 than the previous value.
 
 Ex:
-Before upgrade ChainID: `gaiamainnet-3`
-After upgrade ChainID: `gaiamainnet-4`
 
-Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the epoch number whenever they
-need to return an IBC height when implementing IBC interfaces and use the `EpochHeight` exclusively.
+- Before upgrade ChainID: `gaiamainnet-3`
+- After upgrade ChainID: `gaiamainnet-4`
 
-Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their Update, Misbehavior, and
-Verify functions respectively.
+Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the version number whenever they
+need to return an IBC height when implementing IBC interfaces and use the `VersionHeight` exclusively.
+
+Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their `Update`, `Misbehavior`, and
+`Verify` functions respectively.
 
 The IBC interfaces expect an `ibcexported.Height` interface, however all clients should use the concrete implementation provided in
 `02-client/types` and reproduced above.

@@ -136,7 +136,7 @@ func (suite *TendermintTestSuite) TestVerifyClientConsensusState() {
 		},
 		{
 			name:        "client is frozen",
-			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.EpochNumber, height.EpochHeight-1)},
+			clientState: &types.ClientState{LatestHeight: height, FrozenHeight: clienttypes.NewHeight(height.VersionNumber, height.VersionHeight-1)},
 			consensusState: types.ConsensusState{
 				Root: commitmenttypes.NewMerkleRoot(suite.header.Header.GetAppHash()),
 			},

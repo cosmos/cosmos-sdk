@@ -31,7 +31,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clienttypes.Height, 
 		trustedVals *tmproto.ValidatorSet
 	)
 	vsetHash := tmValSet.Hash()
-	blockHeight := int64(height.EpochHeight)
+	blockHeight := int64(height.VersionHeight)
 	tmHeader := tmtypes.Header{
 		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,

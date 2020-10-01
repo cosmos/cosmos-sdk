@@ -95,8 +95,8 @@ func (cs ClientState) Validate() error {
 	if cs.MaxClockDrift == 0 {
 		return sdkerrors.Wrap(ErrInvalidMaxClockDrift, "max clock drift cannot be zero")
 	}
-	if cs.LatestHeight.EpochHeight == 0 {
-		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint epoch height cannot be zero")
+	if cs.LatestHeight.VersionHeight == 0 {
+		return sdkerrors.Wrapf(ErrInvalidHeaderHeight, "tendermint version height cannot be zero")
 	}
 	if cs.TrustingPeriod >= cs.UnbondingPeriod {
 		return sdkerrors.Wrapf(

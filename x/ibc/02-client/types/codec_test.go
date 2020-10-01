@@ -3,10 +3,10 @@ package types_test
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -25,12 +25,12 @@ func (suite *TypesTestSuite) TestPackClientState() {
 	}{
 		{
 			"solo machine client",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ClientState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ClientState(),
 			true,
 		},
 		{
 			"tendermint client",
-			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			true,
 		},
 		{
@@ -77,7 +77,7 @@ func (suite *TypesTestSuite) TestPackConsensusState() {
 	}{
 		{
 			"solo machine consensus",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").ConsensusState(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).ConsensusState(),
 			true,
 		},
 		{
@@ -123,7 +123,7 @@ func (suite *TypesTestSuite) TestPackHeader() {
 	}{
 		{
 			"solo machine header",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateHeader(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).CreateHeader(),
 			true,
 		},
 		{
@@ -170,7 +170,7 @@ func (suite *TypesTestSuite) TestPackMisbehaviour() {
 	}{
 		{
 			"solo machine misbehaviour",
-			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "").CreateMisbehaviour(),
+			ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 2).CreateMisbehaviour(),
 			true,
 		},
 		{

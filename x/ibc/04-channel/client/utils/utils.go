@@ -140,10 +140,10 @@ func QueryChannelConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryChannelConsensusStateRequest{
-		PortId:      portID,
-		ChannelId:   channelID,
-		EpochNumber: height.EpochNumber,
-		EpochHeight: height.EpochHeight,
+		PortId:        portID,
+		ChannelId:     channelID,
+		VersionNumber: height.VersionNumber,
+		VersionHeight: height.VersionHeight,
 	}
 
 	res, err := queryClient.ChannelConsensusState(context.Background(), req)

@@ -24,21 +24,21 @@ func ZeroHeight() Height {
 }
 
 // NewHeight is a constructor for the IBC height type
-func NewHeight(epochNumber, epochHeight uint64) Height {
+func NewHeight(versionNumber, versionHeight uint64) Height {
 	return Height{
-		EpochNumber: epochNumber,
-		EpochHeight: epochHeight,
+		VersionNumber: versionNumber,
+		VersionHeight: versionHeight,
 	}
 }
 
-// GetEpochNumber returns the epoch-number of the height
+// GetEpochNumber returns the version-number of the height
 func (h Height) GetEpochNumber() uint64 {
-	return h.EpochNumber
+	return h.VersionNumber
 }
 
-// GetEpochHeight returns the epoch-height of the height
+// GetEpochHeight returns the version-height of the height
 func (h Height) GetEpochHeight() uint64 {
-	return h.EpochHeight
+	return h.VersionHeight
 }
 
 // Compare implements a method to compare two heights. When comparing two heights a, b
@@ -47,18 +47,18 @@ func (h Height) GetEpochHeight() uint64 {
 // 0  if a = b
 // 1  if a > b
 //
-// It first compares based on epoch numbers, whichever has the higher epoch number is the higher height
-// If epoch number is the same, then the epoch height is compared
+// It first compares based on version numbers, whichever has the higher version number is the higher height
+// If version number is the same, then the version height is compared
 func (h Height) Compare(other exported.Height) int64 {
 	height, ok := other.(Height)
 	if !ok {
 		panic(fmt.Sprintf("cannot compare against invalid height type: %T. expected height type: %T", other, h))
 	}
 	var cmp int64
-	if h.EpochNumber != height.EpochNumber {
-		cmp = int64(h.EpochNumber) - int64(height.EpochNumber)
+	if h.VersionNumber != height.VersionNumber {
+		cmp = int64(h.VersionNumber) - int64(height.VersionNumber)
 	} else {
-		cmp = int64(h.EpochHeight) - int64(height.EpochHeight)
+		cmp = int64(h.VersionHeight) - int64(height.VersionHeight)
 	}
 	if cmp < 0 {
 		return -1
@@ -97,27 +97,27 @@ func (h Height) EQ(other exported.Height) bool {
 
 // String returns a string representation of Height
 func (h Height) String() string {
-	return fmt.Sprintf("%d-%d", h.EpochNumber, h.EpochHeight)
+	return fmt.Sprintf("%d-%d", h.VersionNumber, h.VersionHeight)
 }
 
-// Decrement will return a new height with the EpochHeight decremented
-// If the EpochHeight is already at lowest value (1), then false success flag is returend
+// Decrement will return a new height with the VersionHeight decremented
+// If the VersionHeight is already at lowest value (1), then false success flag is returend
 func (h Height) Decrement() (decremented exported.Height, success bool) {
-	if h.EpochHeight == 0 {
+	if h.VersionHeight == 0 {
 		return Height{}, false
 	}
-	return NewHeight(h.EpochNumber, h.EpochHeight-1), true
+	return NewHeight(h.VersionNumber, h.VersionHeight-1), true
 }
 
-// Increment will return a height with the same epoch number but an
-// incremented epoch height
+// Increment will return a height with the same version number but an
+// incremented version height
 func (h Height) Increment() Height {
-	return NewHeight(h.EpochNumber, h.EpochHeight+1)
+	return NewHeight(h.VersionNumber, h.VersionHeight+1)
 }
 
-// IsZero returns true if height epoch and epoch-height are both 0
+// IsZero returns true if height version and version-height are both 0
 func (h Height) IsZero() bool {
-	return h.EpochNumber == 0 && h.EpochHeight == 0
+	return h.VersionNumber == 0 && h.VersionHeight == 0
 }
 
 // MustParseHeight will attempt to parse a string representation of a height and panic if
@@ -136,55 +136,55 @@ func MustParseHeight(heightStr string) Height {
 func ParseHeight(heightStr string) (Height, error) {
 	splitStr := strings.Split(heightStr, "-")
 	if len(splitStr) != 2 {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {epoch}-{height}. Got: %s", heightStr)
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "expected height string format: {version}-{height}. Got: %s", heightStr)
 	}
-	epochNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
+	versionNumber, err := strconv.ParseUint(splitStr[0], 10, 64)
 	if err != nil {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid epoch number. parse err: %s", err)
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version number. parse err: %s", err)
 	}
-	epochHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
+	versionHeight, err := strconv.ParseUint(splitStr[1], 10, 64)
 	if err != nil {
-		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid epoch height. parse err: %s", err)
+		return Height{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid version height. parse err: %s", err)
 	}
-	return NewHeight(epochNumber, epochHeight), nil
+	return NewHeight(versionNumber, versionHeight), nil
 }
 
-// SetEpochNumber takes a chainID in valid epoch format and swaps the epoch number
-// in the chainID with the given epoch number.
-func SetEpochNumber(chainID string, epoch uint64) (string, error) {
+// SetEpochNumber takes a chainID in valid version format and swaps the version number
+// in the chainID with the given version number.
+func SetEpochNumber(chainID string, version uint64) (string, error) {
 	if !IsEpochFormat(chainID) {
 		return "", sdkerrors.Wrapf(
-			sdkerrors.ErrInvalidChainID, "chainID is not in epoch format: %s", chainID,
+			sdkerrors.ErrInvalidChainID, "chainID is not in version format: %s", chainID,
 		)
 	}
 
 	splitStr := strings.Split(chainID, "-")
-	// swap out epoch number with given epoch
-	splitStr[len(splitStr)-1] = strconv.Itoa(int(epoch))
+	// swap out version number with given version
+	splitStr[len(splitStr)-1] = strconv.Itoa(int(version))
 	return strings.Join(splitStr, "-"), nil
 }
 
-// ParseChainID is a utility function that returns an epoch number from the given ChainID.
+// ParseChainID is a utility function that returns an version number from the given ChainID.
 // ParseChainID attempts to parse a chain id in the format: `{chainID}-{version}`
 // and return the epochnumber as a uint64.
-// If the chainID is not in the expected format, a default epoch value of 0 is returned.
+// If the chainID is not in the expected format, a default version value of 0 is returned.
 func ParseChainID(chainID string) uint64 {
 	if !IsEpochFormat(chainID) {
-		// chainID is not in epoch format, return 0 as default
+		// chainID is not in version format, return 0 as default
 		return 0
 	}
 	splitStr := strings.Split(chainID, "-")
-	epoch, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
+	version, err := strconv.ParseUint(splitStr[len(splitStr)-1], 10, 64)
 	// sanity check: error should always be nil since regex only allows numbers in last element
 	if err != nil {
 		panic(fmt.Sprintf("regex allowed non-number value as last split element for chainID: %s", chainID))
 	}
-	return epoch
+	return version
 }
 
 // GetSelfHeight is a utility function that returns self height given context
 // Epoch number is retrieved from ctx.ChainID()
 func GetSelfHeight(ctx sdk.Context) Height {
-	epoch := ParseChainID(ctx.ChainID())
-	return NewHeight(epoch, uint64(ctx.BlockHeight()))
+	version := ParseChainID(ctx.ChainID())
+	return NewHeight(version, uint64(ctx.BlockHeight()))
 }

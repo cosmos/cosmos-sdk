@@ -13,5 +13,5 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the sdk message type.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterInterface("cosmos.v1beta1.Msg", (*Msg)(nil))
+	registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*Msg)(nil))
 }

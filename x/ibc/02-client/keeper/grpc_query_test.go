@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -188,10 +188,10 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 			"invalid height",
 			func() {
 				req = &types.QueryConsensusStateRequest{
-					ClientId:     testClientID,
-					EpochNumber:  0,
-					EpochHeight:  0,
-					LatestHeight: false,
+					ClientId:      testClientID,
+					VersionNumber: 0,
+					VersionHeight: 0,
+					LatestHeight:  false,
 				}
 			},
 			false,
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)
@@ -240,9 +240,9 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 				suite.Require().NoError(err)
 
 				req = &types.QueryConsensusStateRequest{
-					ClientId:    testClientID,
-					EpochNumber: 0,
-					EpochHeight: height,
+					ClientId:      testClientID,
+					VersionNumber: 0,
+					VersionHeight: height,
 				}
 			},
 			true,

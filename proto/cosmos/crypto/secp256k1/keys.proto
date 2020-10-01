@@ -11,12 +11,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1";
 // the x-coordinate. Otherwise the first byte is a 0x03.
 // This prefix is followed with the x-coordinate.
 message PubKey {
-    option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = false;
 
-    bytes key = 1;
+  bytes key = 1;
 }
 
 // PrivKey defines a secp256k1 private key.
 message PrivKey {
-    bytes key = 1;
+  bytes key = 1;
 }

@@ -18,24 +18,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
+	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -68,6 +70,8 @@ var (
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+
+	UpgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
@@ -117,7 +121,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 	signers := []tmtypes.PrivValidator{privVal}
 
@@ -125,7 +129,7 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
-		Address: acc.GetAddress(),
+		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
@@ -188,12 +192,37 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
 	require.NoError(chain.t, err)
 
-	epoch := clienttypes.ParseChainID(chain.ChainID)
+	version := clienttypes.ParseChainID(chain.ChainID)
 
 	// proof height + 1 is returned as the proof created corresponds to the height the proof
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
-	return proof, clienttypes.NewHeight(epoch, uint64(res.Height)+1)
+	return proof, clienttypes.NewHeight(version, uint64(res.Height)+1)
+}
+
+// QueryUpgradeProof performs an abci query with the given key and returns the proto encoded merkle proof
+// for the query and the height at which the proof will succeed on a tendermint verifier.
+func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, clienttypes.Height) {
+	res := chain.App.Query(abci.RequestQuery{
+		Path:   "store/upgrade/key",
+		Height: int64(height - 1),
+		Data:   upgradetypes.UpgradedClientKey(),
+		Prove:  true,
+	})
+
+	merkleProof := commitmenttypes.MerkleProof{
+		Proof: res.ProofOps,
+	}
+
+	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
+	require.NoError(chain.t, err)
+
+	version := clienttypes.ParseChainID(chain.ChainID)
+
+	// proof height + 1 is returned as the proof created corresponds to the height the proof
+	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
+	// have heights 1 above the IAVL tree. Thus we return proof height + 1
+	return proof, clienttypes.NewHeight(version, uint64(res.Height+1))
 }
 
 // QueryClientStateProof performs and abci query for a client state
@@ -392,11 +421,11 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, commitmenttypes.GetSDKSpecs(),
-			false, false,
+			&UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:
-		solo := NewSolomachine(chain.t, chain.Codec, clientID, "")
+		solo := NewSolomachine(chain.t, chain.Codec, clientID, "", 1)
 		clientState = solo.ClientState()
 		consensusState = solo.ConsensusState()
 	default:
@@ -454,13 +483,13 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 		// since the last trusted validators for a header at height h
 		// is the NextValidators at h+1 committed to in header h by
 		// NextValidatorsHash
-		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.EpochHeight + 1))
+		tmTrustedVals, ok = counterparty.GetValsAtHeight(int64(trustedHeight.VersionHeight + 1))
 		if !ok {
 			return nil, sdkerrors.Wrapf(ibctmtypes.ErrInvalidHeaderHeight, "could not retrieve trusted validators at trustedHeight: %d", trustedHeight)
 		}
 	}
 	// inject trusted fields into last header
-	// for now assume epoch number is 0
+	// for now assume version number is 0
 	header.TrustedHeight = trustedHeight
 
 	trustedVals, err := tmTrustedVals.ToProto()
@@ -791,14 +820,31 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
-func (chain *TestChain) ReceiveExecuted(
+// WriteReceipt simulates receiving and writing a receipt to the chain.
+func (chain *TestChain) WriteReceipt(
 	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteReceipt(chain.GetContext(), channelCap, packet)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// WriteAcknowledgement simulates writing an acknowledgement to the chain.
+func (chain *TestChain) WriteAcknowledgement(
+	packet exported.PacketI,
+) error {
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), packet, TestHash)
 	if err != nil {
 		return err
 	}

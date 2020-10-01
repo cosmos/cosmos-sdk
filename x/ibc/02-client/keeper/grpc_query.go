@@ -108,11 +108,11 @@ func (q Keeper) ConsensusState(c context.Context, req *types.QueryConsensusState
 		found          bool
 	)
 
-	height := types.NewHeight(req.EpochNumber, req.EpochHeight)
+	height := types.NewHeight(req.VersionNumber, req.VersionHeight)
 	if req.LatestHeight {
 		consensusState, found = q.GetLatestClientConsensusState(ctx, req.ClientId)
 	} else {
-		if req.EpochHeight == 0 {
+		if req.VersionHeight == 0 {
 			return nil, status.Error(codes.InvalidArgument, "consensus state height cannot be 0")
 		}
 

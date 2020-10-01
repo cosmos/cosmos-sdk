@@ -23,8 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Capability defines an implementation of an object capability. The index provided to
-// a Capability must be globally unique.
+// Capability defines an implementation of an object capability. The index
+// provided to a Capability must be globally unique.
 type Capability struct {
 	Index uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty" yaml:"index"`
 }

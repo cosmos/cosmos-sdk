@@ -13,10 +13,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -156,7 +157,7 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 
 // GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
 // less than or equal to the given height
-// It will only search for heights within the same epoch
+// It will only search for heights within the same version
 func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
 	h := maxHeight
 	ok := true
@@ -172,18 +173,18 @@ func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, max
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-// For now, can only retrieve self consensus states for the current epoch
+// For now, can only retrieve self consensus states for the current version
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
 	selfHeight, ok := height.(types.Height)
 	if !ok {
 		return nil, false
 	}
-	// check that height epoch matches chainID epoch
-	epoch := types.ParseChainID(ctx.ChainID())
-	if epoch != height.GetEpochNumber() {
+	// check that height version matches chainID version
+	version := types.ParseChainID(ctx.ChainID())
+	if version != height.GetEpochNumber() {
 		return nil, false
 	}
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.EpochHeight))
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))
 	if !found {
 		return nil, false
 	}
@@ -198,7 +199,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 
 // ValidateSelfClient validates the client parameters for a client of the running chain
 // This function is only used to validate the client state the counterparty stores for this chain
-// Client must be in same epoch as the executing chain
+// Client must be in same version as the executing chain
 func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
 	tmClient, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
@@ -215,15 +216,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 			ctx.ChainID(), tmClient.ChainId)
 	}
 
-	epoch := types.ParseChainID(ctx.ChainID())
+	version := types.ParseChainID(ctx.ChainID())
 
-	// client must be in the same epoch as executing chain
-	if tmClient.LatestHeight.EpochNumber != epoch {
-		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same epoch as the chain. expected epoch: %d, got: %d",
-			tmClient.LatestHeight.EpochNumber, epoch)
+	// client must be in the same version as executing chain
+	if tmClient.LatestHeight.VersionNumber != version {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same version as the chain. expected version: %d, got: %d",
+			tmClient.LatestHeight.VersionNumber, version)
 	}
 
-	selfHeight := types.NewHeight(epoch, uint64(ctx.BlockHeight()))
+	selfHeight := types.NewHeight(version, uint64(ctx.BlockHeight()))
 	if tmClient.LatestHeight.GT(selfHeight) {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
 			tmClient.LatestHeight, ctx.BlockHeight())
@@ -248,6 +249,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 	if tmClient.UnbondingPeriod < tmClient.TrustingPeriod {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "unbonding period must be greater than trusting period. unbonding period (%d) < trusting period (%d)",
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
+	}
+
+	if tmClient.UpgradePath != nil {
+		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
+		expectedUpgradePath := fmt.Sprintf("/%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedClient)
+		if tmClient.UpgradePath.String() != expectedUpgradePath {
+			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
+				expectedUpgradePath, tmClient.UpgradePath)
+		}
 	}
 	return nil
 }

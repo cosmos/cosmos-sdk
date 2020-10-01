@@ -323,6 +323,7 @@ func (am AppModule) OnRecvPacket(
 		),
 	)
 
+	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),
 	}, acknowledgement.GetBytes(), nil

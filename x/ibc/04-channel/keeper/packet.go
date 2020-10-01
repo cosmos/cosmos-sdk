@@ -201,19 +201,19 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	// check if the packet acknowledgement has been received already for unordered channels
-	if channel.Ordering == types.UNORDERED {
-		_, found := k.GetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+	switch channel.Ordering {
+	case types.UNORDERED:
+		// check if the packet receipt has been received already for unordered channels
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 		if found {
 			return sdkerrors.Wrapf(
 				types.ErrInvalidPacket,
 				"packet sequence (%d) already has been received", packet.GetSequence(),
 			)
 		}
-	}
 
-	// check if the packet is being received in order
-	if channel.Ordering == types.ORDERED {
+	case types.ORDERED:
+		// check if the packet is being received in order
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -238,19 +238,18 @@ func (k Keeper) RecvPacket(
 		return sdkerrors.Wrap(err, "couldn't verify counterparty packet commitment")
 	}
 
-	// NOTE: the remaining code is located in the ReceiveExecuted function
+	// NOTE: the remaining code is located in the WriteReceipt function
 	return nil
 }
 
-// ReceiveExecuted writes the packet execution acknowledgement to the state,
-// which will be verified by the counterparty chain using AcknowledgePacket.
+// WriteReceipt updates the receive sequence in the case of an ordered channel or sets an empty receipt
+// if the channel is unordered.
 //
 // CONTRACT: this function must be called in the IBC handler
-func (k Keeper) ReceiveExecuted(
+func (k Keeper) WriteReceipt(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
-	acknowledgement []byte,
 ) error {
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -273,17 +272,8 @@ func (k Keeper) ReceiveExecuted(
 		)
 	}
 
-	if len(acknowledgement) == 0 {
-		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
-	}
-
-	// always set the acknowledgement so that it can be verified on the other side
-	k.SetPacketAcknowledgement(
-		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-		types.CommitAcknowledgement(acknowledgement),
-	)
-
-	if channel.Ordering == types.ORDERED {
+	switch channel.Ordering {
+	case types.ORDERED:
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
 			return sdkerrors.Wrapf(
@@ -294,20 +284,33 @@ func (k Keeper) ReceiveExecuted(
 
 		nextSequenceRecv++
 
-		// incrementng nextSequenceRecv and storing under this chain's channelEnd identifiers
+		// incrementing nextSequenceRecv and storing under this chain's channelEnd identifiers
 		// Since this is the receiving chain, our channelEnd is packet's destination port and channel
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+
+	case types.UNORDERED:
+		// For unordered channels we must set the receipt so it can be verified on the other side.
+		// This receipt does not contain any data, since the packet has not yet been processed,
+		// it's just a single store key set to an empty string to indicate that the packet has been received
+		_, found := k.GetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
+		if found {
+			return sdkerrors.Wrapf(
+				types.ErrPacketReceived,
+				"destination port: %s, destination channel: %s, sequence: %d", packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			)
+		}
+
+		k.SetPacketReceipt(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 	}
 
 	// log that a packet has been received & executed
-	k.Logger(ctx).Info(fmt.Sprintf("packet received & executed: %v", packet))
+	k.Logger(ctx).Info("packet received", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event that the relayer can query for
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRecvPacket,
 			sdk.NewAttribute(types.AttributeKeyData, string(packet.GetData())),
-			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 			sdk.NewAttribute(types.AttributeKeyTimeoutHeight, packet.GetTimeoutHeight().String()),
 			sdk.NewAttribute(types.AttributeKeyTimeoutTimestamp, fmt.Sprintf("%d", packet.GetTimeoutTimestamp())),
 			sdk.NewAttribute(types.AttributeKeySequence, fmt.Sprintf("%d", packet.GetSequence())),
@@ -316,6 +319,56 @@ func (k Keeper) ReceiveExecuted(
 			sdk.NewAttribute(types.AttributeKeyDstPort, packet.GetDestPort()),
 			sdk.NewAttribute(types.AttributeKeyDstChannel, packet.GetDestChannel()),
 			sdk.NewAttribute(types.AttributeKeyChannelOrdering, channel.Ordering.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
+	return nil
+}
+
+// WriteAcknowledgement writes the packet execution acknowledgement to the state,
+// which will be verified by the counterparty chain using AcknowledgePacket.
+//
+// CONTRACT:
+//
+// 1) For synchronous execution, this function is be called in the IBC handler .
+// For async handling, it needs to be called directly by the module which originally
+// processed the packet.
+//
+// 2) Assumes that packet receipt has been writted previously by WriteReceipt.
+func (k Keeper) WriteAcknowledgement(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	acknowledgement []byte,
+) error {
+	// NOTE: IBC app modules might have written the acknowledgement synchronously on
+	// the OnRecvPacket callback so we need to check if the acknowledgement is already
+	// set on the store and return an error if so.
+	if k.HasPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()) {
+		return types.ErrAcknowledgementExists
+	}
+
+	if len(acknowledgement) == 0 {
+		return sdkerrors.Wrap(types.ErrInvalidAcknowledgement, "acknowledgement cannot be empty")
+	}
+
+	// always set the acknowledgement so that it can be verified on the other side
+	k.SetPacketAcknowledgement(
+		ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+		types.CommitAcknowledgement(acknowledgement),
+	)
+
+	// log that a packet has been acknowledged
+	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
+
+	// emit an event that the relayer can query for
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRecvPacket,
+			sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -459,7 +512,7 @@ func (k Keeper) AcknowledgementExecuted(
 
 		nextSequenceAck++
 
-		// incrementng NextSequenceAck and storing under this chain's channelEnd identifiers
+		// incrementing NextSequenceAck and storing under this chain's channelEnd identifiers
 		// Since this is the original sending chain, our channelEnd is packet's source port and channel
 		k.SetNextSequenceAck(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceAck)
 	}

@@ -407,21 +407,21 @@ func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
-func (suite *LocalhostTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *LocalhostTestSuite) TestVerifyPacketReceiptAbsence() {
 	clientState := types.NewClientState("chainID", clientHeight)
 
-	err := clientState.VerifyPacketAcknowledgementAbsence(
+	err := clientState.VerifyPacketReceiptAbsence(
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
 
-	suite.Require().NoError(err, "ack absence failed")
+	suite.Require().NoError(err, "receipt absence failed")
 
-	suite.store.Set(host.KeyPacketAcknowledgement(testPortID, testChannelID, testSequence), []byte("ack"))
+	suite.store.Set(host.KeyPacketReceipt(testPortID, testChannelID, testSequence), []byte("receipt"))
 
-	err = clientState.VerifyPacketAcknowledgementAbsence(
+	err = clientState.VerifyPacketReceiptAbsence(
 		suite.store, suite.cdc, clientHeight, nil, nil, testPortID, testChannelID, testSequence,
 	)
-	suite.Require().Error(err, "ack exists in store")
+	suite.Require().Error(err, "receipt exists in store")
 }
 
 func (suite *LocalhostTestSuite) TestVerifyNextSeqRecv() {

@@ -287,15 +287,15 @@ func PacketAcknowledgementSignBytes(
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verification
-// of the absence of an acknowledgement.
-func PacketAcknowledgementAbsenceSignBytes(
+// PacketReceiptAbsenceSignBytes returns the sign bytes for verification
+// of the absence of a receipt.
+func PacketReceiptAbsenceSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {
-	data := &PacketAcknowledgementAbsenseData{
+	data := &PacketReceiptAbsenseData{
 		Path: []byte(path.String()),
 	}
 

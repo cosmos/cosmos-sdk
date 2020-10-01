@@ -819,14 +819,31 @@ func (chain *TestChain) SendPacket(
 	return nil
 }
 
-// ReceiveExecuted simulates receiving and writing an acknowledgement to the chain.
-func (chain *TestChain) ReceiveExecuted(
+// WriteReceipt simulates receiving and writing a receipt to the chain.
+func (chain *TestChain) WriteReceipt(
 	packet exported.PacketI,
 ) error {
 	channelCap := chain.GetChannelCapability(packet.GetDestPort(), packet.GetDestChannel())
 
 	// no need to send message, acting as a handler
-	err := chain.App.IBCKeeper.ChannelKeeper.ReceiveExecuted(chain.GetContext(), channelCap, packet, TestHash)
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteReceipt(chain.GetContext(), channelCap, packet)
+	if err != nil {
+		return err
+	}
+
+	// commit changes
+	chain.App.Commit()
+	chain.NextBlock()
+
+	return nil
+}
+
+// WriteAcknowledgement simulates writing an acknowledgement to the chain.
+func (chain *TestChain) WriteAcknowledgement(
+	packet exported.PacketI,
+) error {
+	// no need to send message, acting as a handler
+	err := chain.App.IBCKeeper.ChannelKeeper.WriteAcknowledgement(chain.GetContext(), packet, TestHash)
 	if err != nil {
 		return err
 	}

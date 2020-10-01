@@ -697,14 +697,14 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	}
 }
 
-func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
+func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, solomachine.Sequence))
+		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(testPortID, testChannelID, solomachine.Sequence))
 		suite.Require().NoError(err)
 
-		value, err := types.PacketAcknowledgementAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)
+		value, err := types.PacketReceiptAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
@@ -770,7 +770,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgementAbsence() {
 
 			expSeq := tc.clientState.Sequence + 1
 
-			err := tc.clientState.VerifyPacketAcknowledgementAbsence(
+			err := tc.clientState.VerifyPacketReceiptAbsence(
 				suite.store, suite.chainA.Codec, solomachine.GetHeight(), tc.prefix, tc.proof, testPortID, testChannelID, solomachine.Sequence,
 			)
 

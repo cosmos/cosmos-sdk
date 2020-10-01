@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ibc.commitment;
+package ibc.core.commitment.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types";
 
@@ -55,7 +55,7 @@ message Key {
 
 // KeyEncoding defines the encoding format of a key's bytes.
 enum KeyEncoding {
-  option (gogoproto.goproto_enum_prefix)   = false;
+  option (gogoproto.goproto_enum_prefix) = false;
 
   // URL encoding
   KEY_ENCODING_URL_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "URL"];

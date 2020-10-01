@@ -1,9 +1,9 @@
 syntax = "proto3";
-package ibc.channel;
+package ibc.core.channel.v1;
 
-import "ibc/client/client.proto";
+import "ibc/core/client/v1/client.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "ibc/channel/channel.proto";
+import "ibc/core/channel/v1/channel.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
@@ -91,13 +91,13 @@ message QueryChannelRequest {
 // proof was retrieved.
 message QueryChannelResponse {
   // channel associated with the request identifiers
-  ibc.channel.Channel channel = 1;
+  ibc.core.channel.v1.Channel channel = 1;
   // merkle proof of existence
   bytes proof = 2;
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelsRequest is the request type for the Query/Channels RPC method
@@ -109,11 +109,11 @@ message QueryChannelsRequest {
 // QueryChannelsResponse is the response type for the Query/Channels RPC method.
 message QueryChannelsResponse {
   // list of stored channels of the chain.
-  repeated ibc.channel.IdentifiedChannel channels = 1;
+  repeated ibc.core.channel.v1.IdentifiedChannel channels = 1;
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionChannelsRequest is the request type for the
@@ -129,11 +129,11 @@ message QueryConnectionChannelsRequest {
 // Query/QueryConnectionChannels RPC method
 message QueryConnectionChannelsResponse {
   // list of channels associated with a connection.
-  repeated ibc.channel.IdentifiedChannel channels = 1;
+  repeated ibc.core.channel.v1.IdentifiedChannel channels = 1;
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelClientStateRequest is the request type for the Query/ClientState
@@ -149,13 +149,13 @@ message QueryChannelClientStateRequest {
 // Query/QueryChannelClientState RPC method
 message QueryChannelClientStateResponse {
   // client state associated with the channel
-  ibc.client.IdentifiedClientState identified_client_state = 1;
+  ibc.core.client.v1.IdentifiedClientState identified_client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryChannelConsensusStateRequest is the request type for the
@@ -183,7 +183,7 @@ message QueryChannelConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 5 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 5 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentRequest is the request type for the
@@ -208,7 +208,7 @@ message QueryPacketCommitmentResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketCommitmentsRequest is the request type for the
@@ -225,11 +225,11 @@ message QueryPacketCommitmentsRequest {
 // QueryPacketCommitmentsResponse is the request type for the
 // Query/QueryPacketCommitments RPC method
 message QueryPacketCommitmentsResponse {
-  repeated ibc.channel.PacketAckCommitment commitments = 1;
+  repeated ibc.core.channel.v1.PacketAckCommitment commitments = 1;
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryPacketAcknowledgementRequest is the request type for the
@@ -254,7 +254,7 @@ message QueryPacketAcknowledgementResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryUnreceivedPacketsRequest is the request type for the
@@ -274,7 +274,7 @@ message QueryUnreceivedPacketsResponse {
   // list of unreceived packet sequences
   repeated uint64 sequences = 1;
   // query block height
-  ibc.client.Height height = 2 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }
 
 // QueryUnrelayedAcksRequest is the request type for the
@@ -294,7 +294,7 @@ message QueryUnrelayedAcksResponse {
   // list of unrelayed acknowledgement sequences
   repeated uint64 sequences = 1;
   // query block height
-  ibc.client.Height height = 2 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 2 [(gogoproto.nullable) = false];
 }
 
 // QueryNextSequenceReceiveRequest is the request type for the
@@ -316,5 +316,5 @@ message QueryNextSequenceReceiveResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }

@@ -5,7 +5,6 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -85,10 +84,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 	// create client for tendermint so we can use client state for verification
 	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA)
-
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ClientStatePath()
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
-	suite.Require().NoError(err)
+	path := suite.solomachine.GetClientStatePath(counterpartyClientIdentifier)
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
@@ -217,9 +213,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 	consensusState, found := suite.chainA.GetConsensusState(clientA, clientState.GetLatestHeight())
 	suite.Require().True(found)
 
-	clientPrefixedPath := "clients/" + counterpartyClientIdentifier + "/" + host.ConsensusStatePath(consensusHeight)
-	path, err := commitmenttypes.ApplyPrefix(prefix, clientPrefixedPath)
-	suite.Require().NoError(err)
+	path := suite.solomachine.GetConsensusStatePath(counterpartyClientIdentifier, consensusHeight)
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
@@ -344,8 +338,7 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 	counterparty := connectiontypes.NewCounterparty("clientB", testConnectionID, prefix)
 	conn := connectiontypes.NewConnectionEnd(connectiontypes.OPEN, "clientA", counterparty, []string{"1.0.0"})
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ConnectionPath(testConnectionID))
-	suite.Require().NoError(err)
+	path := suite.solomachine.GetConnectionStatePath(testConnectionID)
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
@@ -434,8 +427,7 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 	counterparty := channeltypes.NewCounterparty(testPortID, testChannelID)
 	ch := channeltypes.NewChannel(channeltypes.OPEN, channeltypes.ORDERED, counterparty, []string{testConnectionID}, "1.0.0")
 
-	path, err := commitmenttypes.ApplyPrefix(prefix, host.ChannelPath(testPortID, testChannelID))
-	suite.Require().NoError(err)
+	path := suite.solomachine.GetChannelStatePath(testPortID, testChannelID)
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
@@ -526,8 +518,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketCommitmentPath(testPortID, testChannelID, solomachine.Sequence))
-		suite.Require().NoError(err)
+		path := solomachine.GetPacketCommitmentPath(testPortID, testChannelID)
 
 		value, err := types.PacketCommitmentSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path, commitmentBytes)
 		suite.Require().NoError(err)
@@ -614,8 +605,7 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(testPortID, testChannelID, solomachine.Sequence))
-		suite.Require().NoError(err)
+		path := solomachine.GetPacketAcknowledgementPath(testPortID, testChannelID)
 
 		value, err := types.PacketAcknowledgementSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path, ack)
 		suite.Require().NoError(err)
@@ -701,8 +691,8 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(testPortID, testChannelID, solomachine.Sequence))
-		suite.Require().NoError(err)
+		// absence uses receipt path as well
+		path := solomachine.GetPacketReceiptPath(testPortID, testChannelID)
 
 		value, err := types.PacketReceiptAbsenceSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path)
 		suite.Require().NoError(err)
@@ -789,8 +779,7 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
 
 		nextSeqRecv := solomachine.Sequence + 1
-		path, err := commitmenttypes.ApplyPrefix(prefix, host.NextSequenceRecvPath(testPortID, testChannelID))
-		suite.Require().NoError(err)
+		path := solomachine.GetNextSequenceRecvPath(testPortID, testChannelID)
 
 		value, err := types.NextSequenceRecvSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path, nextSeqRecv)
 		suite.Require().NoError(err)

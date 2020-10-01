@@ -2,19 +2,22 @@ package keeper
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -57,25 +60,8 @@ func (k Keeper) SetClientState(ctx sdk.Context, clientID string, clientState exp
 	store.Set(host.KeyClientState(), k.MustMarshalClientState(clientState))
 }
 
-// GetClientType gets the consensus type for a specific client
-func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
-	store := k.ClientStore(ctx, clientID)
-	bz := store.Get(host.KeyClientType())
-	if bz == nil {
-		return 0, false
-	}
-
-	return exported.ClientType(bz[0]), true
-}
-
-// SetClientType sets the specific client consensus type to the provable store
-func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
-	store := k.ClientStore(ctx, clientID)
-	store.Set(host.KeyClientType(), []byte{byte(clientType)})
-}
-
 // GetClientConsensusState gets the stored consensus state from a client at a given height.
-func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
+func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height) (exported.ConsensusState, bool) {
 	store := k.ClientStore(ctx, clientID)
 	bz := store.Get(host.KeyConsensusState(height))
 	if bz == nil {
@@ -88,7 +74,7 @@ func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string, height
 
 // SetClientConsensusState sets a ConsensusState to a particular client at the given
 // height
-func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
+func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height exported.Height, consensusState exported.ConsensusState) {
 	store := k.ClientStore(ctx, clientID)
 	store.Set(host.KeyConsensusState(height), k.MustMarshalConsensusState(consensusState))
 }
@@ -96,7 +82,7 @@ func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, height
 // IterateConsensusStates provides an iterator over all stored consensus states.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs exported.ConsensusState) bool) {
+func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string, cs types.ConsensusStateWithHeight) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, host.KeyClientStorePrefix)
 
@@ -108,18 +94,21 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 			continue
 		}
 		clientID := keySplit[1]
+		height := types.MustParseHeight(keySplit[3])
 		consensusState := k.MustUnmarshalConsensusState(iterator.Value())
 
-		if cb(clientID, consensusState) {
+		consensusStateWithHeight := types.NewConsensusStateWithHeight(height, consensusState)
+
+		if cb(clientID, consensusStateWithHeight) {
 			break
 		}
 	}
 }
 
-// GetAllGenesisClients returns all the clients in state with their client ids returned as GenesisClientState
-func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.GenesisClientState) {
+// GetAllGenesisClients returns all the clients in state with their client ids returned as IdentifiedClientState
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (genClients []types.IdentifiedClientState) {
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
-		genClients = append(genClients, types.NewGenesisClientState(clientID, cs))
+		genClients = append(genClients, types.NewIdentifiedClientState(clientID, cs))
 		return false
 	})
 	return
@@ -130,18 +119,16 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 	clientConsStates := make(types.ClientsConsensusStates, 0)
 	mapClientIDToConsStateIdx := make(map[string]int)
 
-	k.IterateConsensusStates(ctx, func(clientID string, cs exported.ConsensusState) bool {
-		anyConsensusState := types.MustPackConsensusState(cs)
-
+	k.IterateConsensusStates(ctx, func(clientID string, cs types.ConsensusStateWithHeight) bool {
 		idx, ok := mapClientIDToConsStateIdx[clientID]
 		if ok {
-			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, anyConsensusState)
+			clientConsStates[idx].ConsensusStates = append(clientConsStates[idx].ConsensusStates, cs)
 			return false
 		}
 
 		clientConsState := types.ClientConsensusStates{
-			ClientID:        clientID,
-			ConsensusStates: []*codectypes.Any{anyConsensusState},
+			ClientId:        clientID,
+			ConsensusStates: []types.ConsensusStateWithHeight{cs},
 		}
 
 		clientConsStates = append(clientConsStates, clientConsState)
@@ -154,7 +141,7 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular
 // client at the given height
-func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height uint64) bool {
+func (k Keeper) HasClientConsensusState(ctx sdk.Context, clientID string, height exported.Height) bool {
 	store := k.ClientStore(ctx, clientID)
 	return store.Has(host.KeyConsensusState(height))
 }
@@ -170,31 +157,109 @@ func (k Keeper) GetLatestClientConsensusState(ctx sdk.Context, clientID string) 
 
 // GetClientConsensusStateLTE will get the latest ConsensusState of a particular client at the latest height
 // less than or equal to the given height
-func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight uint64) (exported.ConsensusState, bool) {
-	for i := maxHeight; i > 0; i-- {
-		found := k.HasClientConsensusState(ctx, clientID, i)
+// It will only search for heights within the same epoch
+func (k Keeper) GetClientConsensusStateLTE(ctx sdk.Context, clientID string, maxHeight exported.Height) (exported.ConsensusState, bool) {
+	h := maxHeight
+	ok := true
+	for ok {
+		found := k.HasClientConsensusState(ctx, clientID, h)
 		if found {
-			return k.GetClientConsensusState(ctx, clientID, i)
+			return k.GetClientConsensusState(ctx, clientID, h)
 		}
+		h, ok = h.Decrement()
 	}
 	return nil, false
 }
 
 // GetSelfConsensusState introspects the (self) past historical info at a given height
 // and returns the expected consensus state at that height.
-func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height uint64) (exported.ConsensusState, bool) {
-	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(height))
+// For now, can only retrieve self consensus states for the current epoch
+func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (exported.ConsensusState, bool) {
+	selfHeight, ok := height.(types.Height)
+	if !ok {
+		return nil, false
+	}
+	// check that height epoch matches chainID epoch
+	epoch := types.ParseChainID(ctx.ChainID())
+	if epoch != height.GetEpochNumber() {
+		return nil, false
+	}
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.EpochHeight))
 	if !found {
 		return nil, false
 	}
 
 	consensusState := &ibctmtypes.ConsensusState{
-		Height:             height,
 		Timestamp:          histInfo.Header.Time,
-		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.AppHash),
+		Root:               commitmenttypes.NewMerkleRoot(histInfo.Header.GetAppHash()),
 		NextValidatorsHash: histInfo.Header.NextValidatorsHash,
 	}
 	return consensusState, true
+}
+
+// ValidateSelfClient validates the client parameters for a client of the running chain
+// This function is only used to validate the client state the counterparty stores for this chain
+// Client must be in same epoch as the executing chain
+func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientState) error {
+	tmClient, ok := clientState.(*ibctmtypes.ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client must be a Tendermint client, expected: %T, got: %T",
+			&ibctmtypes.ClientState{}, tmClient)
+	}
+
+	if clientState.IsFrozen() {
+		return types.ErrClientFrozen
+	}
+
+	if ctx.ChainID() != tmClient.ChainId {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid chain-id. expected: %s, got: %s",
+			ctx.ChainID(), tmClient.ChainId)
+	}
+
+	epoch := types.ParseChainID(ctx.ChainID())
+
+	// client must be in the same epoch as executing chain
+	if tmClient.LatestHeight.EpochNumber != epoch {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client is not in the same epoch as the chain. expected epoch: %d, got: %d",
+			tmClient.LatestHeight.EpochNumber, epoch)
+	}
+
+	selfHeight := types.NewHeight(epoch, uint64(ctx.BlockHeight()))
+	if tmClient.LatestHeight.GT(selfHeight) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has LatestHeight %d greater than chain height %d",
+			tmClient.LatestHeight, ctx.BlockHeight())
+	}
+
+	expectedProofSpecs := commitmenttypes.GetSDKSpecs()
+	if !reflect.DeepEqual(expectedProofSpecs, tmClient.ProofSpecs) {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "client has invalid proof specs. expected: %v got: %v",
+			expectedProofSpecs, tmClient.ProofSpecs)
+	}
+
+	if err := light.ValidateTrustLevel(tmClient.TrustLevel.ToTendermint()); err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "trust-level invalid: %v", err)
+	}
+
+	expectedUbdPeriod := k.stakingKeeper.UnbondingTime(ctx)
+	if expectedUbdPeriod != tmClient.UnbondingPeriod {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "invalid unbonding period. expected: %s, got: %s",
+			expectedUbdPeriod, tmClient.UnbondingPeriod)
+	}
+
+	if tmClient.UnbondingPeriod < tmClient.TrustingPeriod {
+		return sdkerrors.Wrapf(types.ErrInvalidClient, "unbonding period must be greater than trusting period. unbonding period (%d) < trusting period (%d)",
+			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
+	}
+
+	if tmClient.UpgradePath != nil {
+		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
+		expectedUpgradePath := fmt.Sprintf("/%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedClient)
+		if tmClient.UpgradePath.String() != expectedUpgradePath {
+			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
+				expectedUpgradePath, tmClient.UpgradePath)
+		}
+	}
+	return nil
 }
 
 // IterateClients provides an iterator over all stored light client State

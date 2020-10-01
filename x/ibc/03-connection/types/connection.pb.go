@@ -5,8 +5,9 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	types2 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -66,10 +67,10 @@ func (State) EnumDescriptor() ([]byte, []int) {
 // MsgConnectionOpenInit defines the msg sent by an account on Chain A to
 // initialize a connection with Chain B.
 type MsgConnectionOpenInit struct {
-	ClientID     string                                        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	ConnectionID string                                        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	Counterparty Counterparty                                  `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	Signer       github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ClientId     string       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ConnectionId string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	Counterparty Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
+	Signer       string       `protobuf:"bytes,4,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenInit) Reset()         { *m = MsgConnectionOpenInit{} }
@@ -105,49 +106,24 @@ func (m *MsgConnectionOpenInit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenInit proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenInit) GetClientID() string {
-	if m != nil {
-		return m.ClientID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenInit) GetConnectionID() string {
-	if m != nil {
-		return m.ConnectionID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenInit) GetCounterparty() Counterparty {
-	if m != nil {
-		return m.Counterparty
-	}
-	return Counterparty{}
-}
-
-func (m *MsgConnectionOpenInit) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
 // connection on Chain B.
 type MsgConnectionOpenTry struct {
-	ClientID             string       `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
-	ConnectionID         string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	Counterparty         Counterparty `protobuf:"bytes,3,opt,name=counterparty,proto3" json:"counterparty"`
-	CounterpartyVersions []string     `protobuf:"bytes,4,rep,name=counterparty_versions,json=counterpartyVersions,proto3" json:"counterparty_versions,omitempty" yaml:"counterparty_versions"`
+	ClientId             string        `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ConnectionId         string        `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ClientState          *types.Any    `protobuf:"bytes,3,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
+	Counterparty         Counterparty  `protobuf:"bytes,4,opt,name=counterparty,proto3" json:"counterparty"`
+	CounterpartyVersions []string      `protobuf:"bytes,5,rep,name=counterparty_versions,json=counterpartyVersions,proto3" json:"counterparty_versions,omitempty" yaml:"counterparty_versions"`
+	ProofHeight          types1.Height `protobuf:"bytes,6,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height" yaml:"proof_height"`
 	// proof of the initialization the connection on Chain A: `UNITIALIZED ->
 	// INIT`
-	ProofInit   []byte `protobuf:"bytes,5,opt,name=proof_init,json=proofInit,proto3" json:"proof_init,omitempty" yaml:"proof_init"`
-	ProofHeight uint64 `protobuf:"varint,6,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty"`
+	ProofInit []byte `protobuf:"bytes,7,opt,name=proof_init,json=proofInit,proto3" json:"proof_init,omitempty" yaml:"proof_init"`
+	// proof of client state included in message
+	ProofClient []byte `protobuf:"bytes,8,opt,name=proof_client,json=proofClient,proto3" json:"proof_client,omitempty" yaml:"proof_client"`
 	// proof of client consensus state
-	ProofConsensus  []byte                                        `protobuf:"bytes,7,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus,omitempty" yaml:"proof_consensus"`
-	ConsensusHeight uint64                                        `protobuf:"varint,8,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty" yaml:"consensus_height"`
-	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,9,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ProofConsensus  []byte        `protobuf:"bytes,9,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus,omitempty" yaml:"proof_consensus"`
+	ConsensusHeight types1.Height `protobuf:"bytes,10,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
+	Signer          string        `protobuf:"bytes,11,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenTry) Reset()         { *m = MsgConnectionOpenTry{} }
@@ -183,82 +159,22 @@ func (m *MsgConnectionOpenTry) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenTry proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenTry) GetClientID() string {
-	if m != nil {
-		return m.ClientID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenTry) GetConnectionID() string {
-	if m != nil {
-		return m.ConnectionID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenTry) GetCounterparty() Counterparty {
-	if m != nil {
-		return m.Counterparty
-	}
-	return Counterparty{}
-}
-
-func (m *MsgConnectionOpenTry) GetCounterpartyVersions() []string {
-	if m != nil {
-		return m.CounterpartyVersions
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenTry) GetProofInit() []byte {
-	if m != nil {
-		return m.ProofInit
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenTry) GetProofHeight() uint64 {
-	if m != nil {
-		return m.ProofHeight
-	}
-	return 0
-}
-
-func (m *MsgConnectionOpenTry) GetProofConsensus() []byte {
-	if m != nil {
-		return m.ProofConsensus
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenTry) GetConsensusHeight() uint64 {
-	if m != nil {
-		return m.ConsensusHeight
-	}
-	return 0
-}
-
-func (m *MsgConnectionOpenTry) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
 // acknowledge the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
-	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	Version      string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	ConnectionId string        `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	Version      string        `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	ClientState  *types.Any    `protobuf:"bytes,3,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
+	ProofHeight  types1.Height `protobuf:"bytes,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height" yaml:"proof_height"`
 	// proof of the initialization the connection on Chain B: `UNITIALIZED ->
 	// TRYOPEN`
-	ProofTry    []byte `protobuf:"bytes,3,opt,name=proof_try,json=proofTry,proto3" json:"proof_try,omitempty" yaml:"proof_try"`
-	ProofHeight uint64 `protobuf:"varint,4,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
+	ProofTry []byte `protobuf:"bytes,5,opt,name=proof_try,json=proofTry,proto3" json:"proof_try,omitempty" yaml:"proof_try"`
+	// proof of client state included in message
+	ProofClient []byte `protobuf:"bytes,6,opt,name=proof_client,json=proofClient,proto3" json:"proof_client,omitempty" yaml:"proof_client"`
 	// proof of client consensus state
-	ProofConsensus  []byte                                        `protobuf:"bytes,5,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus,omitempty" yaml:"proof_consensus"`
-	ConsensusHeight uint64                                        `protobuf:"varint,6,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height,omitempty" yaml:"consensus_height"`
-	Signer          github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,7,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ProofConsensus  []byte        `protobuf:"bytes,7,opt,name=proof_consensus,json=proofConsensus,proto3" json:"proof_consensus,omitempty" yaml:"proof_consensus"`
+	ConsensusHeight types1.Height `protobuf:"bytes,8,opt,name=consensus_height,json=consensusHeight,proto3" json:"consensus_height" yaml:"consensus_height"`
+	Signer          string        `protobuf:"bytes,9,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenAck) Reset()         { *m = MsgConnectionOpenAck{} }
@@ -294,63 +210,14 @@ func (m *MsgConnectionOpenAck) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenAck proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenAck) GetConnectionID() string {
-	if m != nil {
-		return m.ConnectionID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenAck) GetVersion() string {
-	if m != nil {
-		return m.Version
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenAck) GetProofTry() []byte {
-	if m != nil {
-		return m.ProofTry
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenAck) GetProofHeight() uint64 {
-	if m != nil {
-		return m.ProofHeight
-	}
-	return 0
-}
-
-func (m *MsgConnectionOpenAck) GetProofConsensus() []byte {
-	if m != nil {
-		return m.ProofConsensus
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenAck) GetConsensusHeight() uint64 {
-	if m != nil {
-		return m.ConsensusHeight
-	}
-	return 0
-}
-
-func (m *MsgConnectionOpenAck) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
 // acknowledge the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
-	ConnectionID string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 	// proof for the change of the connection state on Chain A: `INIT -> OPEN`
-	ProofAck    []byte                                        `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack,omitempty" yaml:"proof_ack"`
-	ProofHeight uint64                                        `protobuf:"varint,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height,omitempty" yaml:"proof_height"`
-	Signer      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	ProofAck    []byte        `protobuf:"bytes,2,opt,name=proof_ack,json=proofAck,proto3" json:"proof_ack,omitempty" yaml:"proof_ack"`
+	ProofHeight types1.Height `protobuf:"bytes,3,opt,name=proof_height,json=proofHeight,proto3" json:"proof_height" yaml:"proof_height"`
+	Signer      string        `protobuf:"bytes,4,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgConnectionOpenConfirm) Reset()         { *m = MsgConnectionOpenConfirm{} }
@@ -386,40 +253,12 @@ func (m *MsgConnectionOpenConfirm) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgConnectionOpenConfirm proto.InternalMessageInfo
 
-func (m *MsgConnectionOpenConfirm) GetConnectionID() string {
-	if m != nil {
-		return m.ConnectionID
-	}
-	return ""
-}
-
-func (m *MsgConnectionOpenConfirm) GetProofAck() []byte {
-	if m != nil {
-		return m.ProofAck
-	}
-	return nil
-}
-
-func (m *MsgConnectionOpenConfirm) GetProofHeight() uint64 {
-	if m != nil {
-		return m.ProofHeight
-	}
-	return 0
-}
-
-func (m *MsgConnectionOpenConfirm) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // ConnectionEnd defines a stateful object on a chain connected to another
 // separate one. NOTE: there must only be 2 defined ConnectionEnds to establish
 // a connection between two chains.
 type ConnectionEnd struct {
 	// client associated with this connection.
-	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	// IBC version which can be utilised to determine encodings or protocols for
 	// channels or packets utilising this connection
 	Versions []string `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
@@ -466,9 +305,9 @@ var xxx_messageInfo_ConnectionEnd proto.InternalMessageInfo
 // identifier field.
 type IdentifiedConnection struct {
 	// connection identifier.
-	ID string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" yaml:"id"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" yaml:"id"`
 	// client associated with this connection.
-	ClientID string `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	// IBC version which can be utilised to determine encodings or protocols for
 	// channels or packets utilising this connection
 	Versions []string `protobuf:"bytes,3,rep,name=versions,proto3" json:"versions,omitempty"`
@@ -515,12 +354,12 @@ var xxx_messageInfo_IdentifiedConnection proto.InternalMessageInfo
 type Counterparty struct {
 	// identifies the client on the counterparty chain associated with a given
 	// connection.
-	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	// identifies the connection end on the counterparty chain associated with a
 	// given connection.
-	ConnectionID string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 	// commitment merkle prefix of the counterparty chain
-	Prefix types.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix"`
+	Prefix types2.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix"`
 }
 
 func (m *Counterparty) Reset()         { *m = Counterparty{} }
@@ -605,7 +444,7 @@ func (m *ClientPaths) GetPaths() []string {
 // ConnectionPaths define all the connection paths for a given client state.
 type ConnectionPaths struct {
 	// client state unique identifier
-	ClientID string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	// list of connection paths
 	Paths []string `protobuf:"bytes,2,rep,name=paths,proto3" json:"paths,omitempty"`
 }
@@ -643,9 +482,9 @@ func (m *ConnectionPaths) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ConnectionPaths proto.InternalMessageInfo
 
-func (m *ConnectionPaths) GetClientID() string {
+func (m *ConnectionPaths) GetClientId() string {
 	if m != nil {
-		return m.ClientID
+		return m.ClientId
 	}
 	return ""
 }
@@ -716,66 +555,70 @@ func init() {
 func init() { proto.RegisterFile("ibc/connection/connection.proto", fileDescriptor_3bf62bacf5a27ee9) }
 
 var fileDescriptor_3bf62bacf5a27ee9 = []byte{
-	// 936 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0x4f, 0x6f, 0xe3, 0x44,
-	0x14, 0x8f, 0x1d, 0xe7, 0xdf, 0x6b, 0xda, 0x66, 0xbd, 0x29, 0x6b, 0x85, 0x95, 0x6d, 0xbc, 0x97,
-	0x08, 0xd4, 0x84, 0xdd, 0x45, 0x7b, 0xa8, 0xc4, 0x21, 0x49, 0x53, 0x61, 0x41, 0xbb, 0x91, 0x9b,
-	0x22, 0xb1, 0x97, 0x28, 0xb5, 0x27, 0xe9, 0x28, 0x8d, 0x1d, 0xd9, 0x53, 0xb4, 0xfd, 0x06, 0xab,
-	0x9e, 0xe0, 0xc8, 0xa1, 0x12, 0xd2, 0x7e, 0x09, 0x3e, 0x01, 0xda, 0xe3, 0x1e, 0x39, 0x59, 0x28,
-	0x15, 0x5f, 0x20, 0xe2, 0xc4, 0x09, 0x79, 0xc6, 0xb1, 0xdd, 0xb4, 0x80, 0xa8, 0x7b, 0x40, 0x9c,
-	0xf2, 0xfe, 0xfc, 0xe6, 0xbd, 0x79, 0xef, 0xf7, 0xf2, 0x3c, 0xa0, 0xe0, 0x63, 0xb3, 0x69, 0x3a,
-	0xb6, 0x8d, 0x4c, 0x82, 0x1d, 0x3b, 0x21, 0x36, 0x66, 0xae, 0x43, 0x1c, 0x71, 0x03, 0x1f, 0x9b,
-	0x8d, 0xd8, 0x5a, 0xab, 0x8e, 0x9d, 0xb1, 0x43, 0x5d, 0xcd, 0x40, 0x62, 0xa8, 0x5a, 0x18, 0x66,
-	0x3a, 0xc5, 0x64, 0x8a, 0x6c, 0x92, 0x10, 0x19, 0x40, 0xfb, 0x89, 0x87, 0xad, 0x7d, 0x6f, 0xdc,
-	0x89, 0x02, 0xbd, 0x9c, 0x21, 0x5b, 0xb7, 0x31, 0x11, 0x3f, 0x87, 0x92, 0x79, 0x8a, 0x91, 0x4d,
-	0x06, 0xd8, 0x92, 0x38, 0x95, 0xab, 0x97, 0xda, 0xea, 0xdc, 0x57, 0x8a, 0x1d, 0x6a, 0xd4, 0x77,
-	0x17, 0xbe, 0x52, 0x39, 0x1f, 0x4e, 0x4f, 0x77, 0xb4, 0x08, 0xa6, 0x19, 0x45, 0x26, 0xeb, 0x96,
-	0xb8, 0x0f, 0xeb, 0xf1, 0xed, 0x82, 0x10, 0x3c, 0x0d, 0x51, 0x9f, 0xfb, 0x4a, 0x39, 0xce, 0x46,
-	0xc3, 0x54, 0xc3, 0x30, 0x49, 0xb8, 0x66, 0x94, 0x63, 0x5d, 0xb7, 0xc4, 0x3d, 0x28, 0x9b, 0xce,
-	0x99, 0x4d, 0x90, 0x3b, 0x1b, 0xba, 0xe4, 0x5c, 0xca, 0xaa, 0x5c, 0x7d, 0xed, 0xd9, 0xe3, 0xc6,
-	0xf5, 0x2e, 0x34, 0x3a, 0x09, 0x4c, 0x5b, 0x78, 0xe7, 0x2b, 0x19, 0xe3, 0xda, 0x39, 0x51, 0x87,
-	0xbc, 0x87, 0xc7, 0x36, 0x72, 0x25, 0x41, 0xe5, 0xea, 0xe5, 0xf6, 0xd3, 0x3f, 0x7c, 0x65, 0x7b,
-	0x8c, 0xc9, 0xc9, 0xd9, 0x71, 0xc3, 0x74, 0xa6, 0x4d, 0xd3, 0xf1, 0xa6, 0x8e, 0x17, 0xfe, 0x6c,
-	0x7b, 0xd6, 0xa4, 0x49, 0xce, 0x67, 0xc8, 0x6b, 0xb4, 0x4c, 0xb3, 0x65, 0x59, 0x2e, 0xf2, 0x3c,
-	0x23, 0x0c, 0xa0, 0xfd, 0x2e, 0x40, 0xf5, 0x46, 0xeb, 0xfa, 0xee, 0xf9, 0xff, 0xb4, 0x73, 0x47,
-	0xb0, 0x95, 0xd4, 0x07, 0xdf, 0x22, 0xd7, 0xc3, 0x8e, 0xed, 0x49, 0x82, 0x9a, 0x0d, 0x2a, 0x5c,
-	0xf8, 0xca, 0xe3, 0xe5, 0x75, 0x6e, 0x81, 0x69, 0x46, 0x35, 0x69, 0xff, 0x3a, 0x34, 0x8b, 0x9f,
-	0x01, 0xcc, 0x5c, 0xc7, 0x19, 0x0d, 0xb0, 0x8d, 0x89, 0x94, 0xa3, 0xa4, 0x6c, 0x2d, 0x7c, 0xe5,
-	0x01, 0x8b, 0x15, 0xfb, 0x34, 0xa3, 0x44, 0x15, 0x3a, 0x9c, 0x1f, 0x41, 0x99, 0x79, 0x4e, 0x10,
-	0x1e, 0x9f, 0x10, 0x29, 0xaf, 0x72, 0x75, 0xc1, 0x58, 0xa3, 0xb6, 0x2f, 0xa8, 0x49, 0xec, 0xc0,
-	0x26, 0x83, 0x98, 0x8e, 0xed, 0x21, 0xdb, 0x3b, 0xf3, 0xa4, 0x02, 0x8d, 0x5e, 0x5b, 0xf8, 0xca,
-	0x07, 0xc9, 0xe8, 0x11, 0x40, 0x33, 0x36, 0xa8, 0xa5, 0xb3, 0x34, 0x88, 0x7b, 0x50, 0x89, 0xbc,
-	0xcb, 0x5c, 0xc5, 0x20, 0x57, 0xfb, 0xc3, 0x85, 0xaf, 0x3c, 0x8a, 0xda, 0x7f, 0x0d, 0xa1, 0x19,
-	0x9b, 0x91, 0x29, 0xbc, 0x4c, 0x3c, 0x76, 0xa5, 0xb4, 0x63, 0xf7, 0x73, 0xf6, 0x96, 0xb1, 0x6b,
-	0x99, 0x93, 0x9b, 0x73, 0xc3, 0xa5, 0x9a, 0x1b, 0x09, 0x0a, 0x21, 0x77, 0x6c, 0x00, 0x8d, 0xa5,
-	0x2a, 0x3e, 0x05, 0xc6, 0xc4, 0x80, 0xb8, 0x6c, 0x9c, 0xca, 0xed, 0x6a, 0x3c, 0xd3, 0x91, 0x4b,
-	0x33, 0x8a, 0x54, 0x0e, 0xfe, 0x12, 0x3b, 0x2b, 0x7c, 0x09, 0xb4, 0x87, 0x8f, 0x16, 0xbe, 0xf2,
-	0x30, 0x79, 0x6a, 0xd9, 0xbf, 0x7f, 0x22, 0x32, 0x77, 0x2f, 0x44, 0xe6, 0x53, 0x11, 0x59, 0x48,
-	0x4b, 0xe4, 0x5b, 0x1e, 0xa4, 0x1b, 0x44, 0x76, 0x1c, 0x7b, 0x84, 0xdd, 0xe9, 0x7d, 0x93, 0x19,
-	0x51, 0x36, 0x34, 0x27, 0x94, 0xce, 0x5b, 0x28, 0x1b, 0x9a, 0x93, 0x25, 0x65, 0xc1, 0x38, 0xad,
-	0x52, 0x96, 0xfd, 0x17, 0x94, 0xdd, 0xe3, 0x96, 0xfd, 0x8d, 0x83, 0xf5, 0xb8, 0xe0, 0xae, 0x6d,
-	0xa5, 0x5d, 0xaf, 0x35, 0x28, 0x46, 0xab, 0x8b, 0x0f, 0x56, 0x97, 0x11, 0xe9, 0xe2, 0x27, 0x90,
-	0xf3, 0xc8, 0x90, 0x20, 0x5a, 0xec, 0xc6, 0xb3, 0xad, 0xd5, 0x25, 0x79, 0x18, 0x38, 0x0d, 0x86,
-	0xb9, 0xb1, 0x58, 0x85, 0xbb, 0x2d, 0xd6, 0x1d, 0xe1, 0xcd, 0x8f, 0x4a, 0x46, 0xfb, 0x9e, 0x87,
-	0xaa, 0x6e, 0x21, 0x9b, 0xe0, 0x11, 0x46, 0x56, 0x5c, 0xb1, 0xf8, 0x04, 0xf8, 0xa8, 0xce, 0x87,
-	0x73, 0x5f, 0xe1, 0x69, 0x85, 0x25, 0x56, 0x61, 0x50, 0x1a, 0x8f, 0x57, 0x7a, 0xc2, 0xa7, 0xea,
-	0x49, 0xf6, 0xaf, 0x7a, 0x22, 0xdc, 0xa1, 0x27, 0xb9, 0x54, 0x3d, 0xf1, 0x39, 0x28, 0x27, 0xa1,
-	0xff, 0xb1, 0x2f, 0xeb, 0x0e, 0xe4, 0x67, 0x2e, 0x1a, 0xe1, 0xd7, 0x2b, 0xdf, 0xd4, 0xe8, 0x89,
-	0xb5, 0x8f, 0xdc, 0xc9, 0x29, 0xea, 0x51, 0x4c, 0x58, 0x66, 0x78, 0x22, 0x2c, 0xf0, 0x09, 0xac,
-	0xb1, 0xab, 0xf7, 0x86, 0xe4, 0xc4, 0x13, 0xab, 0x90, 0x9b, 0x05, 0x82, 0xc4, 0x51, 0x0e, 0x98,
-	0xa2, 0x8d, 0x60, 0x33, 0xbe, 0x1c, 0x03, 0xa6, 0xec, 0x43, 0x94, 0x87, 0x4f, 0xe6, 0xf9, 0x12,
-	0x0a, 0xe1, 0x57, 0x59, 0x94, 0x01, 0xf0, 0x72, 0x16, 0x5d, 0x96, 0xc0, 0x48, 0x58, 0x82, 0x79,
-	0x19, 0xa1, 0x21, 0x39, 0x73, 0x51, 0xf4, 0x1f, 0x5a, 0xea, 0xac, 0xb2, 0x8f, 0x7f, 0xe0, 0x20,
-	0x47, 0x27, 0x43, 0x7c, 0x01, 0xca, 0x61, 0xbf, 0xd5, 0xef, 0x0e, 0x8e, 0x0e, 0xf4, 0x03, 0xbd,
-	0xaf, 0xb7, 0xbe, 0xd2, 0x5f, 0x75, 0x77, 0x07, 0x47, 0x07, 0x87, 0xbd, 0x6e, 0x47, 0xdf, 0xd3,
-	0xbb, 0xbb, 0x95, 0x4c, 0xed, 0xc1, 0xc5, 0xa5, 0xba, 0x7e, 0x0d, 0x20, 0x4a, 0x00, 0xec, 0x5c,
-	0x60, 0xac, 0x70, 0xb5, 0xe2, 0xc5, 0xa5, 0x2a, 0x04, 0xb2, 0x28, 0xc3, 0x3a, 0xf3, 0xf4, 0x8d,
-	0x6f, 0x5e, 0xf6, 0xba, 0x07, 0x15, 0xbe, 0xb6, 0x76, 0x71, 0xa9, 0x16, 0x42, 0x35, 0x3e, 0x49,
-	0x9d, 0x59, 0x76, 0x32, 0x90, 0x6b, 0xc2, 0x9b, 0xb7, 0x72, 0xa6, 0xdd, 0x7b, 0x37, 0x97, 0xb9,
-	0xf7, 0x73, 0x99, 0xfb, 0x75, 0x2e, 0x73, 0xdf, 0x5d, 0xc9, 0x99, 0xf7, 0x57, 0x72, 0xe6, 0x97,
-	0x2b, 0x39, 0xf3, 0xea, 0xc5, 0xdf, 0xee, 0xa8, 0xd7, 0xcd, 0xe0, 0x35, 0xfd, 0xe9, 0xf3, 0xed,
-	0xc4, 0xbb, 0x9c, 0xee, 0xad, 0xe3, 0x3c, 0x7d, 0x4c, 0x3f, 0xff, 0x33, 0x00, 0x00, 0xff, 0xff,
-	0x7a, 0xce, 0x37, 0x62, 0xb6, 0x0b, 0x00, 0x00,
+	// 995 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4b, 0x6f, 0x1a, 0x57,
+	0x14, 0x66, 0x60, 0x78, 0x1d, 0xc0, 0x26, 0x53, 0x1c, 0x4f, 0x69, 0x3a, 0x83, 0xa6, 0x1b, 0xab,
+	0x55, 0xa0, 0x49, 0xaa, 0x2c, 0x90, 0xba, 0x30, 0x84, 0xa8, 0xa3, 0x36, 0x0e, 0x1a, 0xe3, 0x4a,
+	0xf5, 0xa2, 0x08, 0x86, 0x0b, 0xbe, 0xc2, 0xcc, 0xa0, 0x99, 0xa1, 0x0a, 0xdb, 0x2e, 0xaa, 0xc8,
+	0xab, 0x6e, 0xbb, 0xb0, 0x14, 0xa9, 0xff, 0xa4, 0xab, 0x48, 0xdd, 0x64, 0xd9, 0x6e, 0x50, 0x65,
+	0x6f, 0xba, 0xa6, 0x3f, 0xa0, 0xd5, 0x7d, 0xcc, 0x03, 0x6c, 0xab, 0x8a, 0xed, 0x28, 0x2b, 0xce,
+	0xb9, 0xe7, 0x7c, 0x73, 0xef, 0x77, 0xce, 0x77, 0x1f, 0x80, 0x8a, 0xfb, 0x66, 0xcd, 0xb4, 0x2d,
+	0x0b, 0x99, 0x1e, 0xb6, 0xad, 0x88, 0x59, 0x9d, 0x3a, 0xb6, 0x67, 0x4b, 0x1b, 0xb8, 0x6f, 0x56,
+	0xc3, 0xd1, 0x72, 0x69, 0x64, 0x8f, 0x6c, 0x1a, 0xaa, 0x11, 0x8b, 0x65, 0x95, 0x3f, 0x1c, 0xd9,
+	0xf6, 0xe8, 0x18, 0xd5, 0xa8, 0xd7, 0x9f, 0x0d, 0x6b, 0x3d, 0x6b, 0xce, 0x43, 0x7c, 0x86, 0xc9,
+	0x04, 0x7b, 0x13, 0x64, 0x79, 0x11, 0x93, 0x27, 0x6c, 0xd3, 0x84, 0x63, 0x4c, 0x83, 0xf4, 0x87,
+	0x05, 0xb4, 0x7f, 0x04, 0xd8, 0x7a, 0xe6, 0x8e, 0x9a, 0xc1, 0xe4, 0xcf, 0xa7, 0xc8, 0xd2, 0x2d,
+	0xec, 0x49, 0x0f, 0x20, 0xcb, 0x32, 0xbb, 0x78, 0x20, 0x0b, 0x15, 0x61, 0x27, 0xdb, 0x28, 0x2d,
+	0x17, 0x6a, 0x71, 0xde, 0x9b, 0x1c, 0xd7, 0xb5, 0x20, 0xa4, 0x19, 0x19, 0x66, 0xeb, 0x03, 0xe9,
+	0x4b, 0x28, 0x84, 0x2c, 0x08, 0x2c, 0x4e, 0x61, 0xf2, 0x72, 0xa1, 0x96, 0x38, 0x2c, 0x1a, 0xd6,
+	0x8c, 0x7c, 0xe8, 0xeb, 0x03, 0xe9, 0x29, 0xe4, 0x4d, 0x7b, 0x66, 0x79, 0xc8, 0x99, 0xf6, 0x1c,
+	0x6f, 0x2e, 0x27, 0x2a, 0xc2, 0x4e, 0xee, 0xe1, 0xbd, 0xea, 0x6a, 0x75, 0xaa, 0xcd, 0x48, 0x4e,
+	0x43, 0x7c, 0xbd, 0x50, 0x63, 0xc6, 0x0a, 0x4e, 0xba, 0x0b, 0x29, 0x17, 0x8f, 0x2c, 0xe4, 0xc8,
+	0x22, 0x99, 0xdf, 0xe0, 0x5e, 0x3d, 0xf3, 0xf2, 0x95, 0x1a, 0xfb, 0xfb, 0x95, 0x1a, 0xd3, 0x7e,
+	0x4a, 0x41, 0xe9, 0x02, 0xeb, 0x8e, 0x33, 0x7f, 0x0f, 0xa4, 0xdb, 0x90, 0xe7, 0x9f, 0x75, 0xbd,
+	0x9e, 0x87, 0x38, 0xe9, 0x52, 0x95, 0x35, 0xbb, 0xea, 0x37, 0xbb, 0xba, 0x6b, 0xcd, 0x1b, 0xdb,
+	0xcb, 0x85, 0xfa, 0xc1, 0xca, 0x52, 0x28, 0x46, 0x33, 0x72, 0xcc, 0xdd, 0x27, 0xde, 0x85, 0x32,
+	0x8a, 0xd7, 0x2c, 0xe3, 0x01, 0x6c, 0x45, 0xfd, 0xee, 0x0f, 0xc8, 0x71, 0xb1, 0x6d, 0xb9, 0x72,
+	0xb2, 0x92, 0xd8, 0xc9, 0x36, 0x2a, 0xcb, 0x85, 0x7a, 0xcf, 0x27, 0x78, 0x49, 0x9a, 0x66, 0x94,
+	0xa2, 0xe3, 0xdf, 0xf2, 0x61, 0xc9, 0x80, 0xfc, 0xd4, 0xb1, 0xed, 0x61, 0xf7, 0x08, 0xe1, 0xd1,
+	0x91, 0x27, 0xa7, 0xe8, 0xf2, 0x24, 0xb6, 0x3c, 0x26, 0xcd, 0xaf, 0x68, 0xa4, 0xf1, 0x11, 0x59,
+	0x54, 0x48, 0x39, 0x8a, 0xd2, 0x8c, 0x1c, 0x75, 0x59, 0xa6, 0xf4, 0x05, 0x00, 0x8b, 0x62, 0x0b,
+	0x7b, 0x72, 0xba, 0x22, 0xec, 0xe4, 0x1b, 0x5b, 0xcb, 0x85, 0x7a, 0x27, 0x8a, 0x24, 0x31, 0xcd,
+	0xc8, 0x52, 0x87, 0x2a, 0xbc, 0xee, 0xaf, 0x84, 0x4d, 0x2b, 0x67, 0x28, 0x6e, 0x7b, 0x7d, 0x46,
+	0x16, 0xf5, 0x67, 0x6c, 0x52, 0x4f, 0x6a, 0xc2, 0x26, 0x8f, 0xda, 0x96, 0x8b, 0x2c, 0x77, 0xe6,
+	0xca, 0x59, 0x0a, 0x2f, 0x2f, 0x17, 0xea, 0xdd, 0x15, 0xb8, 0x9f, 0xa0, 0x19, 0x1b, 0xec, 0x0b,
+	0xfe, 0x80, 0xf4, 0x3d, 0x14, 0x83, 0xa8, 0x5f, 0x0e, 0xb8, 0xb2, 0x1c, 0x2a, 0x2f, 0xc7, 0x76,
+	0xa0, 0xaa, 0x15, 0xa4, 0x66, 0x6c, 0x06, 0x43, 0xbc, 0x2c, 0xe1, 0x46, 0xc8, 0x5d, 0xb1, 0x11,
+	0x7e, 0x17, 0x2f, 0xd9, 0x08, 0xbb, 0xe6, 0xf8, 0xa2, 0xaa, 0x85, 0xb7, 0x52, 0xb5, 0x0c, 0x69,
+	0xae, 0x03, 0xb6, 0x1d, 0x0c, 0xdf, 0x7d, 0x07, 0x7a, 0x5f, 0x17, 0x94, 0x78, 0x0b, 0x82, 0x7a,
+	0x00, 0x4c, 0x27, 0x5d, 0xcf, 0x99, 0xcb, 0x49, 0xda, 0xd8, 0xc8, 0x39, 0x10, 0x84, 0x34, 0x23,
+	0x43, 0x6d, 0x72, 0x74, 0xac, 0xab, 0x29, 0x75, 0x33, 0x35, 0xa5, 0x6f, 0x45, 0x4d, 0x99, 0x77,
+	0xa2, 0xa6, 0xec, 0x15, 0x6a, 0xfa, 0x31, 0x0e, 0xf2, 0x05, 0x35, 0x35, 0x6d, 0x6b, 0x88, 0x9d,
+	0xc9, 0x4d, 0x15, 0x15, 0x74, 0xa4, 0x67, 0x8e, 0xa9, 0xa6, 0x2e, 0xe9, 0x48, 0xcf, 0x1c, 0xfb,
+	0x1d, 0x21, 0x1a, 0x5e, 0x17, 0x46, 0xe2, 0x16, 0x84, 0xf1, 0xff, 0x77, 0xcb, 0x9f, 0x02, 0x14,
+	0xc2, 0x0a, 0xb4, 0xac, 0xc1, 0x75, 0x2e, 0x95, 0x32, 0x64, 0x82, 0xe3, 0x36, 0x4e, 0x8e, 0x5b,
+	0x23, 0xf0, 0xa5, 0xcf, 0x20, 0x19, 0x6e, 0x9d, 0x8d, 0x87, 0x5b, 0xeb, 0x07, 0x3b, 0xdd, 0x15,
+	0x06, 0xcb, 0xb9, 0xad, 0xcb, 0xa0, 0x2e, 0x12, 0x7e, 0xda, 0xbf, 0x02, 0x94, 0xf4, 0x01, 0xb2,
+	0x3c, 0x3c, 0xc4, 0x68, 0x10, 0xb2, 0x94, 0x3e, 0x86, 0x78, 0xc0, 0xad, 0xb0, 0x5c, 0xa8, 0x59,
+	0xc6, 0x8d, 0x90, 0x8a, 0xe3, 0xb5, 0x0a, 0xc4, 0xdf, 0xba, 0x02, 0x89, 0xab, 0x2a, 0x20, 0x5e,
+	0xa3, 0x02, 0xc9, 0x1b, 0x55, 0xe0, 0x37, 0x01, 0xf2, 0xd1, 0xd4, 0xf7, 0xf0, 0x62, 0xa8, 0x43,
+	0x6a, 0xea, 0xa0, 0x21, 0x7e, 0xb1, 0xf6, 0x40, 0x0a, 0x9e, 0x7c, 0xcf, 0x90, 0x33, 0x3e, 0x46,
+	0x6d, 0x9a, 0xc3, 0xa9, 0x70, 0x04, 0x27, 0xf1, 0x09, 0xe4, 0xd8, 0xc1, 0xd3, 0xee, 0x79, 0x47,
+	0xae, 0x54, 0x82, 0xe4, 0x94, 0x18, 0xb2, 0x40, 0xeb, 0xcc, 0x1c, 0xed, 0x10, 0x36, 0xc3, 0x06,
+	0xb3, 0xc4, 0x6b, 0x70, 0x0d, 0xbe, 0x1d, 0x8f, 0x7e, 0xfb, 0x6b, 0x48, 0xf3, 0xf7, 0x80, 0xa4,
+	0x00, 0x60, 0x5f, 0x51, 0x0e, 0xfb, 0xa8, 0x11, 0x19, 0x21, 0x3a, 0x18, 0xa2, 0x9e, 0x37, 0x73,
+	0x50, 0xb0, 0x13, 0x7c, 0x9f, 0xb1, 0xf9, 0xf4, 0x17, 0x01, 0x92, 0xec, 0x26, 0x78, 0x0c, 0xea,
+	0x7e, 0x67, 0xb7, 0xd3, 0xea, 0x1e, 0xec, 0xe9, 0x7b, 0x7a, 0x47, 0xdf, 0xfd, 0x46, 0x3f, 0x6c,
+	0x3d, 0xe9, 0x1e, 0xec, 0xed, 0xb7, 0x5b, 0x4d, 0xfd, 0xa9, 0xde, 0x7a, 0x52, 0x8c, 0x95, 0xef,
+	0x9c, 0x9c, 0x56, 0x0a, 0x2b, 0x09, 0x92, 0x0c, 0xc0, 0x70, 0x64, 0xb0, 0x28, 0x94, 0x33, 0x27,
+	0xa7, 0x15, 0x91, 0xd8, 0x92, 0x02, 0x05, 0x16, 0xe9, 0x18, 0xdf, 0x3d, 0x6f, 0xb7, 0xf6, 0x8a,
+	0xf1, 0x72, 0xee, 0xe4, 0xb4, 0x92, 0xe6, 0x6e, 0x88, 0xa4, 0xc1, 0x04, 0x43, 0x12, 0xbb, 0x2c,
+	0xbe, 0xfc, 0x55, 0x89, 0x35, 0xda, 0xaf, 0xcf, 0x14, 0xe1, 0xcd, 0x99, 0x22, 0xfc, 0x75, 0xa6,
+	0x08, 0x3f, 0x9f, 0x2b, 0xb1, 0x37, 0xe7, 0x4a, 0xec, 0x8f, 0x73, 0x25, 0x76, 0xf8, 0x78, 0x84,
+	0xbd, 0xa3, 0x59, 0x9f, 0xf4, 0xad, 0x66, 0xda, 0xee, 0xc4, 0x76, 0xf9, 0xcf, 0x7d, 0x77, 0x30,
+	0xae, 0xbd, 0xa8, 0x91, 0x07, 0xfb, 0xe7, 0x8f, 0xee, 0x47, 0xfe, 0x36, 0x78, 0xf3, 0x29, 0x72,
+	0xfb, 0x29, 0x7a, 0x43, 0x3e, 0xfa, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x86, 0xc8, 0x16, 0xfc, 0x55,
+	0x0c, 0x00, 0x00,
 }
 
 func (m *MsgConnectionOpenInit) Marshal() (dAtA []byte, err error) {
@@ -815,17 +658,17 @@ func (m *MsgConnectionOpenInit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionID)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -857,39 +700,56 @@ func (m *MsgConnectionOpenTry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Signer)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.Signer)))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x5a
 	}
-	if m.ConsensusHeight != 0 {
-		i = encodeVarintConnection(dAtA, i, uint64(m.ConsensusHeight))
-		i--
-		dAtA[i] = 0x40
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintConnection(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x52
 	if len(m.ProofConsensus) > 0 {
 		i -= len(m.ProofConsensus)
 		copy(dAtA[i:], m.ProofConsensus)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofConsensus)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x4a
 	}
-	if m.ProofHeight != 0 {
-		i = encodeVarintConnection(dAtA, i, uint64(m.ProofHeight))
+	if len(m.ProofClient) > 0 {
+		i -= len(m.ProofClient)
+		copy(dAtA[i:], m.ProofClient)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofClient)))
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x42
 	}
 	if len(m.ProofInit) > 0 {
 		i -= len(m.ProofInit)
 		copy(dAtA[i:], m.ProofInit)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofInit)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
+	{
+		size, err := m.ProofHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintConnection(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
 	if len(m.CounterpartyVersions) > 0 {
 		for iNdEx := len(m.CounterpartyVersions) - 1; iNdEx >= 0; iNdEx-- {
 			i -= len(m.CounterpartyVersions[iNdEx])
 			copy(dAtA[i:], m.CounterpartyVersions[iNdEx])
 			i = encodeVarintConnection(dAtA, i, uint64(len(m.CounterpartyVersions[iNdEx])))
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x2a
 		}
 	}
 	{
@@ -901,18 +761,30 @@ func (m *MsgConnectionOpenTry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintConnection(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionID)))
+	dAtA[i] = 0x22
+	if m.ClientState != nil {
+		{
+			size, err := m.ClientState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConnection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -944,29 +816,58 @@ func (m *MsgConnectionOpenAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Signer)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.Signer)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x4a
 	}
-	if m.ConsensusHeight != 0 {
-		i = encodeVarintConnection(dAtA, i, uint64(m.ConsensusHeight))
-		i--
-		dAtA[i] = 0x30
+	{
+		size, err := m.ConsensusHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintConnection(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x42
 	if len(m.ProofConsensus) > 0 {
 		i -= len(m.ProofConsensus)
 		copy(dAtA[i:], m.ProofConsensus)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofConsensus)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
-	if m.ProofHeight != 0 {
-		i = encodeVarintConnection(dAtA, i, uint64(m.ProofHeight))
+	if len(m.ProofClient) > 0 {
+		i -= len(m.ProofClient)
+		copy(dAtA[i:], m.ProofClient)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofClient)))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x32
 	}
 	if len(m.ProofTry) > 0 {
 		i -= len(m.ProofTry)
 		copy(dAtA[i:], m.ProofTry)
 		i = encodeVarintConnection(dAtA, i, uint64(len(m.ProofTry)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	{
+		size, err := m.ProofHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintConnection(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.ClientState != nil {
+		{
+			size, err := m.ClientState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintConnection(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -977,10 +878,10 @@ func (m *MsgConnectionOpenAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionID)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1014,11 +915,16 @@ func (m *MsgConnectionOpenConfirm) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.ProofHeight != 0 {
-		i = encodeVarintConnection(dAtA, i, uint64(m.ProofHeight))
-		i--
-		dAtA[i] = 0x18
+	{
+		size, err := m.ProofHeight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintConnection(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.ProofAck) > 0 {
 		i -= len(m.ProofAck)
 		copy(dAtA[i:], m.ProofAck)
@@ -1026,10 +932,10 @@ func (m *MsgConnectionOpenConfirm) MarshalToSizedBuffer(dAtA []byte) (int, error
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionID)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1080,10 +986,10 @@ func (m *ConnectionEnd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 		}
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1134,17 +1040,17 @@ func (m *IdentifiedConnection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x1a
 		}
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ID) > 0 {
-		i -= len(m.ID)
-		copy(dAtA[i:], m.ID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ID)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1181,17 +1087,17 @@ func (m *Counterparty) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionID)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1259,10 +1165,10 @@ func (m *ConnectionPaths) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x12
 		}
 	}
-	if len(m.ClientID) > 0 {
-		i -= len(m.ClientID)
-		copy(dAtA[i:], m.ClientID)
-		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientID)))
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintConnection(dAtA, i, uint64(len(m.ClientId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1325,11 +1231,11 @@ func (m *MsgConnectionOpenInit) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1348,12 +1254,16 @@ func (m *MsgConnectionOpenTry) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
+		n += 1 + l + sovConnection(uint64(l))
+	}
+	if m.ClientState != nil {
+		l = m.ClientState.Size()
 		n += 1 + l + sovConnection(uint64(l))
 	}
 	l = m.Counterparty.Size()
@@ -1364,20 +1274,22 @@ func (m *MsgConnectionOpenTry) Size() (n int) {
 			n += 1 + l + sovConnection(uint64(l))
 		}
 	}
+	l = m.ProofHeight.Size()
+	n += 1 + l + sovConnection(uint64(l))
 	l = len(m.ProofInit)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	if m.ProofHeight != 0 {
-		n += 1 + sovConnection(uint64(m.ProofHeight))
+	l = len(m.ProofClient)
+	if l > 0 {
+		n += 1 + l + sovConnection(uint64(l))
 	}
 	l = len(m.ProofConsensus)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	if m.ConsensusHeight != 0 {
-		n += 1 + sovConnection(uint64(m.ConsensusHeight))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovConnection(uint64(l))
 	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
@@ -1391,7 +1303,7 @@ func (m *MsgConnectionOpenAck) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1399,20 +1311,26 @@ func (m *MsgConnectionOpenAck) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
+	if m.ClientState != nil {
+		l = m.ClientState.Size()
+		n += 1 + l + sovConnection(uint64(l))
+	}
+	l = m.ProofHeight.Size()
+	n += 1 + l + sovConnection(uint64(l))
 	l = len(m.ProofTry)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	if m.ProofHeight != 0 {
-		n += 1 + sovConnection(uint64(m.ProofHeight))
+	l = len(m.ProofClient)
+	if l > 0 {
+		n += 1 + l + sovConnection(uint64(l))
 	}
 	l = len(m.ProofConsensus)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	if m.ConsensusHeight != 0 {
-		n += 1 + sovConnection(uint64(m.ConsensusHeight))
-	}
+	l = m.ConsensusHeight.Size()
+	n += 1 + l + sovConnection(uint64(l))
 	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
@@ -1426,7 +1344,7 @@ func (m *MsgConnectionOpenConfirm) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1434,9 +1352,8 @@ func (m *MsgConnectionOpenConfirm) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	if m.ProofHeight != 0 {
-		n += 1 + sovConnection(uint64(m.ProofHeight))
-	}
+	l = m.ProofHeight.Size()
+	n += 1 + l + sovConnection(uint64(l))
 	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
@@ -1450,7 +1367,7 @@ func (m *ConnectionEnd) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1474,11 +1391,11 @@ func (m *IdentifiedConnection) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ID)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1502,11 +1419,11 @@ func (m *Counterparty) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1536,7 +1453,7 @@ func (m *ConnectionPaths) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClientID)
+	l = len(m.ClientId)
 	if l > 0 {
 		n += 1 + l + sovConnection(uint64(l))
 	}
@@ -1605,7 +1522,7 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1633,11 +1550,11 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1665,7 +1582,7 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1704,7 +1621,7 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -1714,25 +1631,23 @@ func (m *MsgConnectionOpenInit) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthConnection
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthConnection
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
-			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1789,7 +1704,7 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1817,11 +1732,11 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1849,9 +1764,45 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientState == nil {
+				m.ClientState = &types.Any{}
+			}
+			if err := m.ClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Counterparty", wireType)
 			}
@@ -1884,7 +1835,7 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CounterpartyVersions", wireType)
 			}
@@ -1916,7 +1867,40 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 			}
 			m.CounterpartyVersions = append(m.CounterpartyVersions, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 5:
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ProofHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofInit", wireType)
 			}
@@ -1950,11 +1934,11 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 				m.ProofInit = []byte{}
 			}
 			iNdEx = postIndex
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofClient", wireType)
 			}
-			m.ProofHeight = 0
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -1964,12 +1948,27 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ProofHeight |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 7:
+			if byteLen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProofClient = append(m.ProofClient[:0], dAtA[iNdEx:postIndex]...)
+			if m.ProofClient == nil {
+				m.ProofClient = []byte{}
+			}
+			iNdEx = postIndex
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofConsensus", wireType)
 			}
@@ -2003,11 +2002,11 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 				m.ProofConsensus = []byte{}
 			}
 			iNdEx = postIndex
-		case 8:
-			if wireType != 0 {
+		case 10:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusHeight", wireType)
 			}
-			m.ConsensusHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -2017,44 +2016,56 @@ func (m *MsgConnectionOpenTry) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ConsensusHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowConnection
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthConnection
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthConnection
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
+			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2111,7 +2122,7 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2139,7 +2150,7 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2175,6 +2186,75 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientState == nil {
+				m.ClientState = &types.Any{}
+			}
+			if err := m.ClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ProofHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofTry", wireType)
 			}
 			var byteLen int
@@ -2207,11 +2287,11 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 				m.ProofTry = []byte{}
 			}
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofClient", wireType)
 			}
-			m.ProofHeight = 0
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -2221,12 +2301,27 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ProofHeight |= uint64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 5:
+			if byteLen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProofClient = append(m.ProofClient[:0], dAtA[iNdEx:postIndex]...)
+			if m.ProofClient == nil {
+				m.ProofClient = []byte{}
+			}
+			iNdEx = postIndex
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofConsensus", wireType)
 			}
@@ -2260,11 +2355,11 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 				m.ProofConsensus = []byte{}
 			}
 			iNdEx = postIndex
-		case 6:
-			if wireType != 0 {
+		case 8:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusHeight", wireType)
 			}
-			m.ConsensusHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -2274,44 +2369,56 @@ func (m *MsgConnectionOpenAck) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ConsensusHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowConnection
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthConnection
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthConnection
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
+			if err := m.ConsensusHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2368,7 +2475,7 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2396,7 +2503,7 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2433,10 +2540,10 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ProofHeight", wireType)
 			}
-			m.ProofHeight = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowConnection
@@ -2446,44 +2553,56 @@ func (m *MsgConnectionOpenConfirm) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ProofHeight |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowConnection
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthConnection
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthConnection
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
+			if err := m.ProofHeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowConnection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthConnection
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthConnection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2540,7 +2659,7 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2568,7 +2687,7 @@ func (m *ConnectionEnd) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2709,7 +2828,7 @@ func (m *IdentifiedConnection) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2737,11 +2856,11 @@ func (m *IdentifiedConnection) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ID = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2769,7 +2888,7 @@ func (m *IdentifiedConnection) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2910,7 +3029,7 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2938,11 +3057,11 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2970,7 +3089,7 @@ func (m *Counterparty) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -3145,7 +3264,7 @@ func (m *ConnectionPaths) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClientID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3173,7 +3292,7 @@ func (m *ConnectionPaths) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClientID = string(dAtA[iNdEx:postIndex])
+			m.ClientId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {

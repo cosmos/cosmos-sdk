@@ -49,7 +49,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app App, cdc *codec.LegacyAmino, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app App, cdc codec.JSONMarshaler, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -61,7 +61,10 @@ func SimulationOperations(app App, cdc *codec.LegacyAmino, config simtypes.Confi
 			panic(err)
 		}
 
-		app.LegacyAmino().MustUnmarshalJSON(bz, &simState.AppParams)
+		err = json.Unmarshal(bz, &simState.AppParams)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)
@@ -76,12 +79,12 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		appState, _, _, err := app.ExportAppStateAndValidators(false, nil)
+		exported, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			return err
 		}
 
-		if err := ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0600); err != nil {
+		if err := ioutil.WriteFile(config.ExportStatePath, []byte(exported.AppState), 0600); err != nil {
 			return err
 		}
 	}

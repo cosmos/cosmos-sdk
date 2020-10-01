@@ -94,7 +94,7 @@ func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceP
 		return nil, fmt.Errorf("cannot make existence proof if key is not in map")
 	}
 
-	_, ics23, _ := sdkmaps.SimpleProofsFromMap(data)
+	_, ics23, _ := sdkmaps.ProofsFromMap(data)
 	proof := ics23[string(key)]
 	if proof == nil {
 		return nil, fmt.Errorf("returned no proof for key")

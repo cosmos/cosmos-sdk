@@ -3,12 +3,11 @@ package ibc_test
 import (
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -16,6 +15,7 @@ import (
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -23,7 +23,7 @@ import (
 func (suite *IBCTestSuite) TestValidateGenesis() {
 	testCases := []struct {
 		name     string
-		genState types.GenesisState
+		genState *types.GenesisState
 		expPass  bool
 	}{
 		{
@@ -33,22 +33,25 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "valid genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
-						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						clienttypes.NewIdentifiedClientState(
+							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
 							clientID,
-							[]clientexported.ConsensusState{
-								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.NextValidatorsHash,
+							[]clienttypes.ConsensusStateWithHeight{
+								clienttypes.NewConsensusStateWithHeight(
+									suite.header.GetHeight().(clienttypes.Height),
+									ibctmtypes.NewConsensusState(
+										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+									),
 								),
 							},
 						),
@@ -93,14 +96,14 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid client genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
-						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("(chaindID)", 0),
+						clienttypes.NewIdentifiedClientState(
+							exported.Localhost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
 						),
 					},
 					nil,
@@ -112,7 +115,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid connection genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.NewGenesisState(
 					[]connectiontypes.IdentifiedConnection{
@@ -127,7 +130,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 		},
 		{
 			name: "invalid channel genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis:     clienttypes.DefaultGenesisState(),
 				ConnectionGenesis: connectiontypes.DefaultGenesisState(),
 				ChannelGenesis: channeltypes.GenesisState{
@@ -154,7 +157,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 func (suite *IBCTestSuite) TestInitGenesis() {
 	testCases := []struct {
 		name     string
-		genState types.GenesisState
+		genState *types.GenesisState
 	}{
 		{
 			name:     "default",
@@ -162,22 +165,25 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 		},
 		{
 			name: "valid genesis",
-			genState: types.GenesisState{
+			genState: &types.GenesisState{
 				ClientGenesis: clienttypes.NewGenesisState(
-					[]clienttypes.GenesisClientState{
-						clienttypes.NewGenesisClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs()),
+					[]clienttypes.IdentifiedClientState{
+						clienttypes.NewIdentifiedClientState(
+							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 						),
-						clienttypes.NewGenesisClientState(
-							clientexported.ClientTypeLocalHost, localhosttypes.NewClientState("chaindID", 10),
+						clienttypes.NewIdentifiedClientState(
+							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
 						),
 					},
 					[]clienttypes.ClientConsensusStates{
 						clienttypes.NewClientConsensusStates(
 							clientID,
-							[]clientexported.ConsensusState{
-								ibctmtypes.NewConsensusState(
-									suite.header.Time, commitmenttypes.NewMerkleRoot(suite.header.AppHash), suite.header.GetHeight(), suite.header.ValidatorSet.Hash(),
+							[]clienttypes.ConsensusStateWithHeight{
+								clienttypes.NewConsensusStateWithHeight(
+									suite.header.GetHeight().(clienttypes.Height),
+									ibctmtypes.NewConsensusState(
+										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+									),
 								),
 							},
 						),
@@ -225,7 +231,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 		app := simapp.Setup(false)
 
 		suite.NotPanics(func() {
-			ibc.InitGenesis(app.BaseApp.NewContext(false, abci.Header{Height: 1}), *app.IBCKeeper, true, tc.genState)
+			ibc.InitGenesis(app.BaseApp.NewContext(false, tmproto.Header{Height: 1}), *app.IBCKeeper, true, tc.genState)
 		})
 	}
 }
@@ -240,10 +246,10 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 			"success",
 			func() {
 				// creates clients
-				suite.coordinator.Setup(suite.chainA, suite.chainB)
+				suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 				// create extra clients
-				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
-				suite.coordinator.CreateClient(suite.chainA, suite.chainB, clientexported.Tendermint)
+				suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
+				suite.coordinator.CreateClient(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			},
 		},
 	}
@@ -254,7 +260,7 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			tc.malleate()
 
-			var gs types.GenesisState
+			var gs *types.GenesisState
 			suite.NotPanics(func() {
 				gs = ibc.ExportGenesis(suite.chainA.GetContext(), *suite.chainA.App.IBCKeeper)
 			})
@@ -266,8 +272,8 @@ func (suite *HandlerTestSuite) TestExportGenesis() {
 
 			suite.NotPanics(func() {
 				cdc := codec.NewProtoCodec(suite.chainA.App.InterfaceRegistry())
-				genState := cdc.MustMarshalJSON(&gs)
-				cdc.MustUnmarshalJSON(genState, &gs)
+				genState := cdc.MustMarshalJSON(gs)
+				cdc.MustUnmarshalJSON(genState, gs)
 			})
 
 			// init genesis based on marshal and unmarshal

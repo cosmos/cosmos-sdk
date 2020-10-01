@@ -6,11 +6,11 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -143,7 +143,7 @@ func (m *QueryValidatorsResponse) GetPagination() *query.PageResponse {
 // QueryValidatorRequest is response type for the Query/Validator RPC method
 type QueryValidatorRequest struct {
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 }
 
 func (m *QueryValidatorRequest) Reset()         { *m = QueryValidatorRequest{} }
@@ -179,11 +179,11 @@ func (m *QueryValidatorRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryValidatorRequest proto.InternalMessageInfo
 
-func (m *QueryValidatorRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
+func (m *QueryValidatorRequest) GetValidatorAddr() string {
 	if m != nil {
 		return m.ValidatorAddr
 	}
-	return nil
+	return ""
 }
 
 // QueryValidatorResponse is response type for the Query/Validator RPC method
@@ -232,10 +232,11 @@ func (m *QueryValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryValidatorDelegationsRequest is request type for the Query/ValidatorDelegations RPC method
+// QueryValidatorDelegationsRequest is request type for the
+// Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsRequest struct {
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -273,11 +274,11 @@ func (m *QueryValidatorDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryValidatorDelegationsRequest proto.InternalMessageInfo
 
-func (m *QueryValidatorDelegationsRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
+func (m *QueryValidatorDelegationsRequest) GetValidatorAddr() string {
 	if m != nil {
 		return m.ValidatorAddr
 	}
-	return nil
+	return ""
 }
 
 func (m *QueryValidatorDelegationsRequest) GetPagination() *query.PageRequest {
@@ -287,7 +288,8 @@ func (m *QueryValidatorDelegationsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryValidatorDelegationsRequest is response type for the Query/ValidatorDelegations RPC method
+// QueryValidatorDelegationsResponse is response type for the
+// Query/ValidatorDelegations RPC method
 type QueryValidatorDelegationsResponse struct {
 	DelegationResponses DelegationResponses `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3,castrepeated=DelegationResponses" json:"delegation_responses"`
 	// pagination defines the pagination in the response.
@@ -341,10 +343,11 @@ func (m *QueryValidatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsRequest is required type for the Query/ValidatorUnbondingDelegations RPC method
+// QueryValidatorUnbondingDelegationsRequest is required type for the
+// Query/ValidatorUnbondingDelegations RPC method
 type QueryValidatorUnbondingDelegationsRequest struct {
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -386,11 +389,11 @@ func (m *QueryValidatorUnbondingDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryValidatorUnbondingDelegationsRequest proto.InternalMessageInfo
 
-func (m *QueryValidatorUnbondingDelegationsRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
+func (m *QueryValidatorUnbondingDelegationsRequest) GetValidatorAddr() string {
 	if m != nil {
 		return m.ValidatorAddr
 	}
-	return nil
+	return ""
 }
 
 func (m *QueryValidatorUnbondingDelegationsRequest) GetPagination() *query.PageRequest {
@@ -400,7 +403,8 @@ func (m *QueryValidatorUnbondingDelegationsRequest) GetPagination() *query.PageR
 	return nil
 }
 
-// QueryValidatorUnbondingDelegationsResponse is response type for the Query/ValidatorUnbondingDelegations RPC method.
+// QueryValidatorUnbondingDelegationsResponse is response type for the
+// Query/ValidatorUnbondingDelegations RPC method.
 type QueryValidatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
 	// pagination defines the pagination in the response.
@@ -461,9 +465,9 @@ func (m *QueryValidatorUnbondingDelegationsResponse) GetPagination() *query.Page
 // QueryDelegationRequest is request type for the Query/Delegation RPC method.
 type QueryDelegationRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 }
 
 func (m *QueryDelegationRequest) Reset()         { *m = QueryDelegationRequest{} }
@@ -498,20 +502,6 @@ func (m *QueryDelegationRequest) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_QueryDelegationRequest proto.InternalMessageInfo
-
-func (m *QueryDelegationRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryDelegationRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddr
-	}
-	return nil
-}
 
 // QueryDelegationResponse is response type for the Query/Delegation RPC method.
 type QueryDelegationResponse struct {
@@ -559,12 +549,13 @@ func (m *QueryDelegationResponse) GetDelegationResponse() *DelegationResponse {
 	return nil
 }
 
-// QueryUnbondingDelegationRequest is request type for the Query/UnbondingDelegation RPC method.
+// QueryUnbondingDelegationRequest is request type for the
+// Query/UnbondingDelegation RPC method.
 type QueryUnbondingDelegationRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 }
 
 func (m *QueryUnbondingDelegationRequest) Reset()         { *m = QueryUnbondingDelegationRequest{} }
@@ -600,21 +591,8 @@ func (m *QueryUnbondingDelegationRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryUnbondingDelegationRequest proto.InternalMessageInfo
 
-func (m *QueryUnbondingDelegationRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryUnbondingDelegationRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddr
-	}
-	return nil
-}
-
-// QueryDelegationResponse is response type for the Query/UnbondingDelegation RPC method.
+// QueryDelegationResponse is response type for the Query/UnbondingDelegation
+// RPC method.
 type QueryUnbondingDelegationResponse struct {
 	// unbond defines the unbonding information of a delegation.
 	Unbond UnbondingDelegation `protobuf:"bytes,1,opt,name=unbond,proto3" json:"unbond"`
@@ -660,10 +638,11 @@ func (m *QueryUnbondingDelegationResponse) GetUnbond() UnbondingDelegation {
 	return UnbondingDelegation{}
 }
 
-// QueryDelegatorDelegationsRequest is request type for the Query/DelegatorDelegations RPC method.
+// QueryDelegatorDelegationsRequest is request type for the
+// Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -701,21 +680,8 @@ func (m *QueryDelegatorDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorDelegationsRequest proto.InternalMessageInfo
 
-func (m *QueryDelegatorDelegationsRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryDelegatorDelegationsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryDelegatorDelegationsResponse is response type for the Query/DelegatorDelegations RPC method.
+// QueryDelegatorDelegationsResponse is response type for the
+// Query/DelegatorDelegations RPC method.
 type QueryDelegatorDelegationsResponse struct {
 	// delegation_responses defines all the delegations' info of a delegator.
 	DelegationResponses []DelegationResponse `protobuf:"bytes,1,rep,name=delegation_responses,json=delegationResponses,proto3" json:"delegation_responses"`
@@ -770,10 +736,11 @@ func (m *QueryDelegatorDelegationsResponse) GetPagination() *query.PageResponse 
 	return nil
 }
 
-// QueryDelegatorUnbondingDelegationsRequest is request type for the Query/DelegatorUnbondingDelegations RPC method.
+// QueryDelegatorUnbondingDelegationsRequest is request type for the
+// Query/DelegatorUnbondingDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -815,21 +782,8 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorUnbondingDelegationsRequest proto.InternalMessageInfo
 
-func (m *QueryDelegatorUnbondingDelegationsRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryDelegatorUnbondingDelegationsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryUnbondingDelegatorDelegationsResponse is response type for the Query/UnbondingDelegatorDelegations RPC method.
+// QueryUnbondingDelegatorDelegationsResponse is response type for the
+// Query/UnbondingDelegatorDelegations RPC method.
 type QueryDelegatorUnbondingDelegationsResponse struct {
 	UnbondingResponses []UnbondingDelegation `protobuf:"bytes,1,rep,name=unbonding_responses,json=unbondingResponses,proto3" json:"unbonding_responses"`
 	// pagination defines the pagination in the response.
@@ -887,14 +841,15 @@ func (m *QueryDelegatorUnbondingDelegationsResponse) GetPagination() *query.Page
 	return nil
 }
 
-// QueryRedelegationsRequest is request type for the Query/Redelegations RPC method.
+// QueryRedelegationsRequest is request type for the Query/Redelegations RPC
+// method.
 type QueryRedelegationsRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// src_validator_addr defines the validator address to redelegate from.
-	SrcValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=src_validator_addr,json=srcValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"src_validator_addr,omitempty"`
+	SrcValidatorAddr string `protobuf:"bytes,2,opt,name=src_validator_addr,json=srcValidatorAddr,proto3" json:"src_validator_addr,omitempty"`
 	// dst_validator_addr defines the validator address to redelegate to.
-	DstValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,3,opt,name=dst_validator_addr,json=dstValidatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"dst_validator_addr,omitempty"`
+	DstValidatorAddr string `protobuf:"bytes,3,opt,name=dst_validator_addr,json=dstValidatorAddr,proto3" json:"dst_validator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -932,35 +887,8 @@ func (m *QueryRedelegationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryRedelegationsRequest proto.InternalMessageInfo
 
-func (m *QueryRedelegationsRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryRedelegationsRequest) GetSrcValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.SrcValidatorAddr
-	}
-	return nil
-}
-
-func (m *QueryRedelegationsRequest) GetDstValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.DstValidatorAddr
-	}
-	return nil
-}
-
-func (m *QueryRedelegationsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryRedelegationsResponse is response type for the Query/Redelegations RPC method.
+// QueryRedelegationsResponse is response type for the Query/Redelegations RPC
+// method.
 type QueryRedelegationsResponse struct {
 	RedelegationResponses []RedelegationResponse `protobuf:"bytes,1,rep,name=redelegation_responses,json=redelegationResponses,proto3" json:"redelegation_responses"`
 	// pagination defines the pagination in the response.
@@ -1014,10 +942,11 @@ func (m *QueryRedelegationsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorsRequest is request type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsRequest is request type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -1055,21 +984,8 @@ func (m *QueryDelegatorValidatorsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorsRequest proto.InternalMessageInfo
 
-func (m *QueryDelegatorValidatorsRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryDelegatorValidatorsRequest) GetPagination() *query.PageRequest {
-	if m != nil {
-		return m.Pagination
-	}
-	return nil
-}
-
-// QueryDelegatorValidatorsResponse is response type for the Query/DelegatorValidators RPC method.
+// QueryDelegatorValidatorsResponse is response type for the
+// Query/DelegatorValidators RPC method.
 type QueryDelegatorValidatorsResponse struct {
 	// validators defines the the validators' info of a delegator.
 	Validators []Validator `protobuf:"bytes,1,rep,name=validators,proto3" json:"validators"`
@@ -1124,12 +1040,13 @@ func (m *QueryDelegatorValidatorsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryDelegatorValidatorRequest is request type for the Query/DelegatorValidator RPC method.
+// QueryDelegatorValidatorRequest is request type for the
+// Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorRequest struct {
 	// delegator_addr defines the delegator address to query for.
-	DelegatorAddr github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"delegator_addr,omitempty"`
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// validator_addr defines the validator address to query for.
-	ValidatorAddr github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"validator_addr,omitempty"`
+	ValidatorAddr string `protobuf:"bytes,2,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
 }
 
 func (m *QueryDelegatorValidatorRequest) Reset()         { *m = QueryDelegatorValidatorRequest{} }
@@ -1165,21 +1082,8 @@ func (m *QueryDelegatorValidatorRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorRequest proto.InternalMessageInfo
 
-func (m *QueryDelegatorValidatorRequest) GetDelegatorAddr() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.DelegatorAddr
-	}
-	return nil
-}
-
-func (m *QueryDelegatorValidatorRequest) GetValidatorAddr() github_com_cosmos_cosmos_sdk_types.ValAddress {
-	if m != nil {
-		return m.ValidatorAddr
-	}
-	return nil
-}
-
-// QueryDelegatorValidatorResponse response type for the Query/DelegatorValidator RPC method.
+// QueryDelegatorValidatorResponse response type for the
+// Query/DelegatorValidator RPC method.
 type QueryDelegatorValidatorResponse struct {
 	// validator defines the the validator info.
 	Validator Validator `protobuf:"bytes,1,opt,name=validator,proto3" json:"validator"`
@@ -1225,7 +1129,8 @@ func (m *QueryDelegatorValidatorResponse) GetValidator() Validator {
 	return Validator{}
 }
 
-// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC method.
+// QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
+// method.
 type QueryHistoricalInfoRequest struct {
 	// height defines at which height to query the historical info.
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
@@ -1271,7 +1176,8 @@ func (m *QueryHistoricalInfoRequest) GetHeight() int64 {
 	return 0
 }
 
-// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC method.
+// QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
+// method.
 type QueryHistoricalInfoResponse struct {
 	// hist defines the historical info at the given height.
 	Hist *HistoricalInfo `protobuf:"bytes,1,opt,name=hist,proto3" json:"hist,omitempty"`
@@ -1519,77 +1425,89 @@ func init() {
 }
 
 var fileDescriptor_f270127f442bbcd8 = []byte{
-	// 1118 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0x5f, 0x6f, 0xdb, 0x54,
-	0x14, 0xcf, 0x6d, 0x43, 0xa4, 0x9e, 0xb1, 0x6a, 0xdc, 0x74, 0xa5, 0x78, 0x90, 0x76, 0x16, 0x1a,
-	0x5d, 0xb7, 0x3a, 0x6a, 0x87, 0xb6, 0x82, 0x78, 0x69, 0x34, 0x06, 0x13, 0x2f, 0xc3, 0x88, 0x8a,
-	0x3f, 0x42, 0x91, 0x63, 0x1b, 0xc7, 0x5a, 0x9a, 0x9b, 0xfa, 0x3a, 0x55, 0x07, 0x1f, 0x00, 0x09,
-	0x09, 0x89, 0x8f, 0x81, 0x80, 0x47, 0xbe, 0x01, 0x3c, 0xec, 0x01, 0xa4, 0x22, 0x81, 0x04, 0x2f,
-	0x03, 0xb5, 0x2f, 0x7c, 0x06, 0x5e, 0x40, 0xb6, 0x8f, 0x6f, 0xe2, 0xfa, 0x6f, 0xb2, 0x64, 0x5a,
-	0x9e, 0x92, 0x5c, 0x9f, 0xf3, 0x3b, 0xff, 0xcf, 0x3d, 0x27, 0x06, 0x59, 0x67, 0x7c, 0x9f, 0xf1,
-	0x3a, 0x77, 0xb5, 0xfb, 0x76, 0xd7, 0xaa, 0x1f, 0x6e, 0xb5, 0x4c, 0x57, 0xdb, 0xaa, 0x1f, 0xf4,
-	0x4d, 0xe7, 0x81, 0xd2, 0x73, 0x98, 0xcb, 0xe8, 0x72, 0x40, 0xa3, 0x20, 0x8d, 0x82, 0x34, 0xd2,
-	0x06, 0xf2, 0xb6, 0x34, 0x6e, 0x06, 0x0c, 0x82, 0xbd, 0xa7, 0x59, 0x76, 0x57, 0x73, 0x6d, 0xd6,
-	0x0d, 0x30, 0xa4, 0x25, 0x8b, 0x59, 0xcc, 0xff, 0x5a, 0xf7, 0xbe, 0xe1, 0xe9, 0xcb, 0x29, 0xd2,
-	0x43, 0x49, 0x3e, 0x95, 0x7c, 0x04, 0xcb, 0xef, 0x7a, 0xe8, 0x7b, 0x5a, 0xc7, 0x36, 0x34, 0x97,
-	0x39, 0x5c, 0x35, 0x0f, 0xfa, 0x26, 0x77, 0xe9, 0x32, 0x54, 0xb8, 0xab, 0xb9, 0x7d, 0xbe, 0x42,
-	0xd6, 0xc8, 0xfa, 0x82, 0x8a, 0xbf, 0xe8, 0x1d, 0x80, 0x81, 0x06, 0x2b, 0x73, 0x6b, 0x64, 0xfd,
-	0xdc, 0xf6, 0x15, 0x05, 0xcd, 0xf0, 0xd4, 0x55, 0x02, 0xfb, 0x50, 0x9e, 0x72, 0x4f, 0xb3, 0x4c,
-	0xc4, 0x54, 0x87, 0x38, 0xe5, 0xef, 0x08, 0x3c, 0x1f, 0x13, 0xcd, 0x7b, 0xac, 0xcb, 0x4d, 0xfa,
-	0x16, 0xc0, 0xa1, 0x38, 0x5d, 0x21, 0x6b, 0xf3, 0xeb, 0xe7, 0xb6, 0x2f, 0x2b, 0xc9, 0xae, 0x52,
-	0x04, 0x7f, 0xa3, 0xfc, 0xf0, 0xd1, 0x6a, 0x49, 0x1d, 0x62, 0xf5, 0x80, 0x62, 0xca, 0xbe, 0x92,
-	0xab, 0x6c, 0xa0, 0x45, 0x44, 0xdb, 0x03, 0xb8, 0x18, 0x55, 0x36, 0x74, 0xd3, 0x07, 0xb0, 0x28,
-	0xe4, 0x35, 0x35, 0xc3, 0x70, 0x7c, 0x77, 0x3d, 0xdb, 0xd8, 0xfa, 0xf7, 0xd1, 0xea, 0xa6, 0x65,
-	0xbb, 0xed, 0x7e, 0x4b, 0xd1, 0xd9, 0x7e, 0x1d, 0xa3, 0x11, 0x7c, 0x6c, 0x72, 0xe3, 0x7e, 0xdd,
-	0x7d, 0xd0, 0x33, 0xb9, 0xa7, 0xfd, 0xae, 0x61, 0x38, 0x26, 0xe7, 0xea, 0x79, 0x01, 0xe4, 0x9d,
-	0xc8, 0xcd, 0xb3, 0xa1, 0x11, 0xee, 0x79, 0x13, 0x16, 0x04, 0xa9, 0x2f, 0x6e, 0x04, 0xef, 0x0c,
-	0x38, 0xe5, 0x9f, 0x08, 0xac, 0x45, 0x25, 0xdc, 0x36, 0x3b, 0xa6, 0xe5, 0x1b, 0xcc, 0xa7, 0x6e,
-	0xdf, 0xc4, 0x12, 0xe9, 0x1f, 0x02, 0x97, 0x33, 0xcc, 0x40, 0x9f, 0x7d, 0x06, 0x4b, 0x86, 0x38,
-	0x6e, 0x3a, 0x78, 0x1c, 0x26, 0xd7, 0x46, 0x9a, 0xfb, 0x06, 0x50, 0x21, 0x52, 0xe3, 0x92, 0xe7,
-	0xc7, 0x6f, 0xff, 0x5a, 0xad, 0xc6, 0x9f, 0x71, 0xb5, 0x6a, 0xc4, 0x0f, 0x27, 0x97, 0x85, 0xbf,
-	0x10, 0xb8, 0x1a, 0x35, 0xf5, 0xfd, 0x6e, 0x8b, 0x75, 0x0d, 0xbb, 0x6b, 0xcd, 0x64, 0xe8, 0xfe,
-	0x24, 0xb0, 0x51, 0xc4, 0x1e, 0x8c, 0x61, 0x0b, 0xaa, 0xfd, 0xf0, 0x79, 0x2c, 0x84, 0xd7, 0xd2,
-	0x42, 0x98, 0x00, 0x89, 0xb5, 0x40, 0x05, 0xda, 0x14, 0x62, 0xf5, 0x33, 0xc1, 0xfa, 0x1d, 0x4e,
-	0x13, 0x11, 0x18, 0x4c, 0x93, 0xf1, 0x02, 0xb3, 0xab, 0xeb, 0x22, 0x30, 0x02, 0xc8, 0x0f, 0x4c,
-	0x3c, 0xe4, 0x73, 0x13, 0xea, 0x46, 0x87, 0xd8, 0xad, 0xe3, 0x49, 0x4f, 0x3f, 0x86, 0x6a, 0x42,
-	0x69, 0x61, 0x63, 0x1a, 0xa1, 0xb2, 0x54, 0x1a, 0x2f, 0x1e, 0xf9, 0x77, 0x02, 0xab, 0xbe, 0xe0,
-	0x84, 0x30, 0xce, 0xb2, 0x3f, 0xf7, 0xb1, 0xf7, 0x26, 0x9a, 0x85, 0x8e, 0xbd, 0x0b, 0x95, 0x20,
-	0x43, 0xd1, 0x97, 0x63, 0xa4, 0x38, 0x02, 0x0c, 0x7a, 0xfd, 0xed, 0xd0, 0xbe, 0xe4, 0x86, 0x31,
-	0x25, 0x3f, 0x4e, 0xaa, 0x61, 0xfc, 0x1a, 0xf6, 0xfa, 0x64, 0x33, 0xd0, 0x6f, 0xfa, 0xc4, 0x7a,
-	0x7d, 0xe0, 0xc4, 0x27, 0xd4, 0xd4, 0x85, 0x4d, 0x39, 0x4d, 0xfd, 0x29, 0x8f, 0x91, 0x68, 0xea,
-	0x39, 0xf6, 0xcc, 0x62, 0x53, 0xff, 0x6f, 0x0e, 0x5e, 0xf0, 0x6d, 0x53, 0x4d, 0xe3, 0x49, 0xc6,
-	0xa6, 0x09, 0x94, 0x3b, 0x7a, 0x73, 0x52, 0xbd, 0xe8, 0x02, 0x77, 0xf4, 0xbd, 0xc8, 0x8d, 0xde,
-	0x04, 0x6a, 0x70, 0xf7, 0xac, 0x80, 0xf9, 0xb1, 0x05, 0x18, 0xdc, 0xdd, 0xcb, 0x18, 0x19, 0xca,
-	0x63, 0x67, 0xd7, 0x31, 0x01, 0x29, 0x29, 0x02, 0x98, 0x4d, 0x36, 0x2c, 0x3b, 0x66, 0x46, 0xf1,
-	0x5f, 0x4f, 0x4b, 0xa8, 0x61, 0xb8, 0x33, 0xe5, 0x7f, 0xd1, 0x31, 0xa7, 0xda, 0x00, 0x7e, 0x0c,
-	0xaf, 0x38, 0x51, 0x30, 0xf1, 0x6d, 0xec, 0xe9, 0x2f, 0xfb, 0x1f, 0x62, 0x37, 0xcc, 0x4c, 0x2c,
-	0x76, 0xbf, 0x11, 0xa8, 0xa5, 0xa8, 0x3d, 0xcb, 0xe3, 0x45, 0x3b, 0x35, 0xa5, 0x26, 0xbd, 0x45,
-	0xbe, 0x8a, 0xf5, 0xf8, 0xb6, 0xcd, 0x5d, 0xe6, 0xd8, 0xba, 0xd6, 0xb9, 0xdb, 0xfd, 0x94, 0x0d,
-	0xfd, 0x8b, 0xd0, 0x36, 0x6d, 0xab, 0xed, 0xfa, 0x12, 0xe6, 0x55, 0xfc, 0x25, 0x7f, 0x08, 0x97,
-	0x12, 0xb9, 0x50, 0xb7, 0xd7, 0xa1, 0xdc, 0xb6, 0xb9, 0x8b, 0x6a, 0x5d, 0x49, 0x53, 0xeb, 0x0c,
-	0xb7, 0xcf, 0x23, 0x53, 0xb8, 0xe0, 0x43, 0xdf, 0x63, 0xac, 0x83, 0x6a, 0xc8, 0xef, 0xc0, 0x73,
-	0x43, 0x67, 0x28, 0xe4, 0x26, 0x94, 0x7b, 0x8c, 0x75, 0x50, 0xc8, 0x8b, 0x69, 0x42, 0x3c, 0x1e,
-	0x34, 0xdb, 0xa7, 0x97, 0x97, 0x80, 0x06, 0x60, 0x9a, 0xa3, 0xed, 0x87, 0x15, 0x2a, 0xbf, 0x07,
-	0xd5, 0xc8, 0x29, 0x0a, 0x79, 0x03, 0x2a, 0x3d, 0xff, 0x04, 0xc5, 0xd4, 0x52, 0xc5, 0xf8, 0x54,
-	0xe1, 0xd8, 0x16, 0xf0, 0x6c, 0x7f, 0xbf, 0x08, 0xcf, 0xf8, 0xa8, 0x94, 0x01, 0x0c, 0xea, 0x89,
-	0x2a, 0x69, 0x28, 0xc9, 0x7f, 0xe6, 0x48, 0xf5, 0xc2, 0xf4, 0x38, 0x76, 0x97, 0x68, 0x07, 0x16,
-	0xc4, 0x39, 0xdd, 0x2c, 0xc6, 0x1f, 0x8a, 0x53, 0x8a, 0x92, 0x0b, 0x69, 0x5f, 0x11, 0x58, 0x4a,
-	0xda, 0xdf, 0xe9, 0x4e, 0x31, 0xa8, 0xf8, 0xa4, 0x24, 0xbd, 0x36, 0x06, 0xa7, 0xd0, 0xe7, 0x1b,
-	0x02, 0x2f, 0x65, 0x2e, 0xa5, 0x74, 0xb7, 0x18, 0x7c, 0xc6, 0x2c, 0x27, 0x35, 0x1e, 0x07, 0x42,
-	0xa8, 0xca, 0x00, 0x06, 0x0f, 0x72, 0x32, 0x23, 0xb6, 0x3b, 0xe5, 0x64, 0x46, 0x7c, 0x24, 0x96,
-	0x4b, 0xf4, 0x4b, 0x02, 0xd5, 0x04, 0x9d, 0xe8, 0xad, 0x4c, 0xa8, 0xf4, 0xfd, 0x4d, 0xda, 0x19,
-	0x9d, 0x31, 0x92, 0x38, 0x49, 0xcb, 0x40, 0x4e, 0xe2, 0x64, 0xac, 0x41, 0x39, 0x89, 0x93, 0xb5,
-	0x79, 0x60, 0xe2, 0x64, 0x0e, 0xbe, 0x39, 0x89, 0x53, 0x64, 0x09, 0xc8, 0x49, 0x9c, 0x42, 0x73,
-	0xb7, 0x5c, 0xa2, 0x47, 0x70, 0x3e, 0x32, 0x44, 0xd1, 0xad, 0x4c, 0xd8, 0xa4, 0x91, 0x57, 0xda,
-	0x1e, 0x85, 0x25, 0x92, 0x41, 0x09, 0x63, 0x42, 0x4e, 0x06, 0xa5, 0x8f, 0x47, 0xd2, 0xce, 0xe8,
-	0x8c, 0x42, 0x99, 0x2f, 0x08, 0xd0, 0x38, 0x05, 0xbd, 0x39, 0x22, 0x64, 0xa8, 0xca, 0xad, 0x91,
-	0xf9, 0x84, 0x26, 0x9f, 0xc3, 0x62, 0xf4, 0x46, 0xa3, 0xd9, 0xee, 0x4d, 0xbc, 0x72, 0xa5, 0x1b,
-	0x23, 0xf1, 0x08, 0xe1, 0x9f, 0x40, 0xd9, 0xbb, 0xe9, 0xe8, 0x7a, 0x26, 0xfb, 0xd0, 0xa5, 0x2a,
-	0x5d, 0x2d, 0x40, 0x29, 0xe0, 0x75, 0xa8, 0x04, 0x37, 0x1c, 0xdd, 0xc8, 0x66, 0x1b, 0xbe, 0x54,
-	0xa5, 0x6b, 0x85, 0x68, 0x43, 0x21, 0x8d, 0x3b, 0x0f, 0x4f, 0x6a, 0xe4, 0xf8, 0xa4, 0x46, 0xfe,
-	0x3e, 0xa9, 0x91, 0xaf, 0x4f, 0x6b, 0xa5, 0xe3, 0xd3, 0x5a, 0xe9, 0x8f, 0xd3, 0x5a, 0xe9, 0xa3,
-	0xeb, 0x99, 0xd3, 0xd4, 0x91, 0x78, 0x4b, 0xe2, 0xcf, 0x55, 0xad, 0x8a, 0xff, 0x72, 0xe4, 0xc6,
-	0xff, 0x01, 0x00, 0x00, 0xff, 0xff, 0xca, 0x49, 0x76, 0x50, 0xc2, 0x19, 0x00, 0x00,
+	// 1303 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcf, 0x4f, 0x1c, 0x75,
+	0x14, 0xdf, 0x2f, 0x20, 0x91, 0xd7, 0xb4, 0xa9, 0xdf, 0x05, 0xc4, 0x29, 0xee, 0xd2, 0x09, 0x22,
+	0xa5, 0x74, 0x46, 0xa0, 0x52, 0xac, 0x4d, 0x15, 0xac, 0x54, 0xd2, 0x83, 0xb0, 0x46, 0xfc, 0x75,
+	0x20, 0xb3, 0x3b, 0xd3, 0xd9, 0x49, 0x97, 0x99, 0xed, 0xcc, 0x40, 0x40, 0xc2, 0x41, 0x4f, 0x7a,
+	0xd3, 0x78, 0x52, 0x2f, 0x3d, 0x98, 0x98, 0xe8, 0x51, 0xff, 0x01, 0x4f, 0xd6, 0x1b, 0x46, 0x0f,
+	0x7a, 0xa9, 0x06, 0x3c, 0x34, 0x9e, 0xbc, 0x19, 0x6f, 0x66, 0xbf, 0xf3, 0x66, 0x76, 0x86, 0xf9,
+	0xb9, 0xcb, 0x12, 0xd2, 0x13, 0xbb, 0xdf, 0x7d, 0x3f, 0x3e, 0x9f, 0xf7, 0xbe, 0xef, 0x7d, 0xdf,
+	0x0b, 0xc0, 0x57, 0x0c, 0x6b, 0xdd, 0xb0, 0x44, 0xcb, 0x96, 0xee, 0x68, 0xba, 0x2a, 0x6e, 0x4e,
+	0x95, 0x15, 0x5b, 0x9a, 0x12, 0xef, 0x6e, 0x28, 0xe6, 0xb6, 0x50, 0x37, 0x0d, 0xdb, 0xa0, 0x83,
+	0x8e, 0x8c, 0x80, 0x32, 0x02, 0xca, 0x70, 0x13, 0xa8, 0x5b, 0x96, 0x2c, 0xc5, 0x51, 0xf0, 0xd4,
+	0xeb, 0x92, 0xaa, 0xe9, 0x92, 0xad, 0x19, 0xba, 0x63, 0x83, 0xeb, 0x57, 0x0d, 0xd5, 0x60, 0x1f,
+	0xc5, 0xc6, 0x27, 0x3c, 0x1d, 0x56, 0x0d, 0x43, 0xad, 0x29, 0xa2, 0x54, 0xd7, 0x44, 0x49, 0xd7,
+	0x0d, 0x9b, 0xa9, 0x58, 0xf8, 0xeb, 0x68, 0x0c, 0x36, 0x17, 0x07, 0x93, 0xe2, 0xb7, 0x60, 0x70,
+	0xa5, 0xe1, 0x7b, 0x55, 0xaa, 0x69, 0xb2, 0x64, 0x1b, 0xa6, 0x55, 0x52, 0xee, 0x6e, 0x28, 0x96,
+	0x4d, 0x07, 0xa1, 0xd7, 0xb2, 0x25, 0x7b, 0xc3, 0x1a, 0x22, 0x23, 0x64, 0xbc, 0xaf, 0x84, 0xdf,
+	0xe8, 0x22, 0x40, 0x13, 0xdf, 0x50, 0xd7, 0x08, 0x19, 0x3f, 0x35, 0x3d, 0x26, 0x20, 0xc9, 0x06,
+	0x19, 0xc1, 0x61, 0x8f, 0xfe, 0x84, 0x65, 0x49, 0x55, 0xd0, 0x66, 0xc9, 0xa7, 0xc9, 0x7f, 0x4b,
+	0xe0, 0xc9, 0x90, 0x6b, 0xab, 0x6e, 0xe8, 0x96, 0x42, 0x6f, 0x02, 0x6c, 0x7a, 0xa7, 0x43, 0x64,
+	0xa4, 0x7b, 0xfc, 0xd4, 0xf4, 0x79, 0x21, 0x3a, 0x90, 0x82, 0xa7, 0xbf, 0xd0, 0x73, 0xff, 0x41,
+	0x31, 0x57, 0xf2, 0xa9, 0x36, 0x0c, 0x85, 0xc0, 0x3e, 0x9b, 0x0a, 0xd6, 0x41, 0x11, 0x40, 0x7b,
+	0x1d, 0x06, 0x82, 0x60, 0xdd, 0x30, 0x3d, 0x03, 0x67, 0x3c, 0x7f, 0x6b, 0x92, 0x2c, 0x9b, 0x18,
+	0xae, 0xd3, 0xde, 0xe9, 0xbc, 0x2c, 0x9b, 0xfc, 0xda, 0xe1, 0x38, 0x7b, 0x5c, 0x5f, 0x85, 0x3e,
+	0x4f, 0x94, 0xe9, 0xb6, 0x40, 0xb5, 0xa9, 0xc9, 0x7f, 0x4a, 0x60, 0x24, 0xe8, 0xe1, 0x86, 0x52,
+	0x53, 0x54, 0xe7, 0x4a, 0xb4, 0x06, 0xb6, 0x63, 0x29, 0x7e, 0x48, 0xe0, 0x7c, 0x02, 0x26, 0x0c,
+	0xc0, 0xfb, 0xd0, 0x2f, 0x7b, 0xc7, 0x6b, 0x26, 0x1e, 0xbb, 0x69, 0x9f, 0x88, 0x8b, 0x45, 0xd3,
+	0x94, 0x6b, 0x69, 0xe1, 0x5c, 0x23, 0x28, 0xdf, 0xfc, 0x51, 0xcc, 0x87, 0x7f, 0xb3, 0x4a, 0x79,
+	0x39, 0x7c, 0xd8, 0xb9, 0xfb, 0xf1, 0x05, 0x81, 0x0b, 0x41, 0xaa, 0x6f, 0xea, 0x65, 0x43, 0x97,
+	0x35, 0x5d, 0x3d, 0xf9, 0x3c, 0xfc, 0x4e, 0x60, 0x22, 0x0b, 0x38, 0x4c, 0x48, 0x19, 0xf2, 0x1b,
+	0xee, 0xef, 0xa1, 0x7c, 0x5c, 0x8c, 0xcb, 0x47, 0x84, 0x49, 0xbc, 0xa5, 0xd4, 0xb3, 0x76, 0x0c,
+	0x81, 0xaf, 0x63, 0x61, 0xf9, 0x53, 0xee, 0x05, 0x19, 0x53, 0x7e, 0x28, 0xc8, 0xde, 0x29, 0x0b,
+	0x72, 0x38, 0x17, 0x5d, 0x11, 0xb9, 0xb8, 0xfa, 0xf8, 0x47, 0xf7, 0x8a, 0xb9, 0x87, 0xf7, 0x8a,
+	0x39, 0x7e, 0x13, 0xfb, 0x56, 0xf8, 0x92, 0xd1, 0xf7, 0x20, 0x1f, 0x71, 0x95, 0xb1, 0xaa, 0x5b,
+	0xb8, 0xc9, 0x25, 0x1a, 0xbe, 0xac, 0xfc, 0x36, 0x14, 0x99, 0xdf, 0x88, 0x40, 0x1f, 0x37, 0xe5,
+	0x75, 0xec, 0x2d, 0x91, 0xae, 0x91, 0xfb, 0x12, 0xf4, 0x3a, 0x79, 0x46, 0xba, 0x6d, 0x5c, 0x14,
+	0x34, 0xc0, 0x7f, 0xe9, 0xf6, 0xb2, 0x1b, 0x2e, 0xec, 0xe8, 0x1a, 0xca, 0xc2, 0xb5, 0x43, 0x35,
+	0xe4, 0x0b, 0xc6, 0xcf, 0x6e, 0x57, 0x8b, 0x46, 0x87, 0xe1, 0xa8, 0x74, 0xac, 0xab, 0x39, 0xb1,
+	0x39, 0xde, 0xf6, 0xf5, 0x95, 0xdb, 0xbe, 0x3c, 0x4e, 0x29, 0xed, 0xeb, 0x64, 0x42, 0xef, 0x35,
+	0xb2, 0x14, 0x98, 0x8f, 0x62, 0x23, 0xfb, 0x87, 0xc0, 0x53, 0x8c, 0x5b, 0x49, 0x91, 0xdb, 0x0e,
+	0xf9, 0x24, 0x50, 0xcb, 0xac, 0xac, 0x45, 0x56, 0xf7, 0x59, 0xcb, 0xac, 0xac, 0x06, 0xde, 0x97,
+	0x49, 0xa0, 0xb2, 0x65, 0x1f, 0x96, 0xee, 0x76, 0xa4, 0x65, 0xcb, 0x5e, 0x4d, 0x78, 0x8d, 0x7a,
+	0x3a, 0x90, 0xce, 0x3d, 0x02, 0x5c, 0x14, 0x65, 0x4c, 0x9f, 0x06, 0x83, 0xa6, 0x92, 0x50, 0x44,
+	0x93, 0x71, 0x19, 0xf4, 0x9b, 0x3b, 0x54, 0x46, 0x03, 0xa6, 0x72, 0xdc, 0x73, 0x40, 0x31, 0x78,
+	0x43, 0xc3, 0x93, 0xf5, 0x89, 0x95, 0xcf, 0xf7, 0xa1, 0xbe, 0xfa, 0x48, 0xcc, 0xde, 0x5b, 0x50,
+	0x88, 0x41, 0x7d, 0xdc, 0xef, 0x5e, 0x35, 0x36, 0x99, 0x9d, 0x1e, 0xdf, 0x2f, 0x63, 0x25, 0xbc,
+	0xa6, 0x59, 0xb6, 0x61, 0x6a, 0x15, 0xa9, 0xb6, 0xa4, 0xdf, 0x36, 0x7c, 0xbb, 0x58, 0x55, 0xd1,
+	0xd4, 0xaa, 0xcd, 0x3c, 0x74, 0x97, 0xf0, 0x1b, 0xff, 0x0e, 0x9c, 0x8b, 0xd4, 0x42, 0x6c, 0x57,
+	0xa1, 0xa7, 0xaa, 0x59, 0x36, 0xc2, 0x1a, 0x8b, 0x83, 0x75, 0x48, 0x9b, 0xe9, 0xf0, 0x14, 0xce,
+	0x32, 0xd3, 0xcb, 0x86, 0x51, 0x43, 0x18, 0xfc, 0x2d, 0x78, 0xc2, 0x77, 0x86, 0x4e, 0x66, 0xa1,
+	0xa7, 0x6e, 0x18, 0x35, 0x74, 0x32, 0x1c, 0xe7, 0xa4, 0xa1, 0x83, 0xb4, 0x99, 0x3c, 0xdf, 0x0f,
+	0xd4, 0x31, 0x26, 0x99, 0xd2, 0xba, 0x5b, 0x1b, 0xfc, 0x1b, 0x90, 0x0f, 0x9c, 0xa2, 0x93, 0x6b,
+	0xd0, 0x5b, 0x67, 0x27, 0xe8, 0xa6, 0x10, 0xeb, 0x86, 0x49, 0xb9, 0xf3, 0x84, 0xa3, 0x33, 0xfd,
+	0xf7, 0x00, 0x3c, 0xc6, 0xac, 0xd2, 0xcf, 0x09, 0x40, 0xf3, 0xce, 0x53, 0x21, 0xce, 0x4c, 0xf4,
+	0x4e, 0xcc, 0x89, 0x99, 0xe5, 0x71, 0x66, 0x9b, 0xf8, 0xf0, 0x97, 0xbf, 0x3e, 0xeb, 0x1a, 0xa5,
+	0xbc, 0x18, 0xb3, 0x8d, 0xfb, 0xea, 0xe5, 0x6b, 0x02, 0x7d, 0x9e, 0x09, 0x7a, 0x29, 0x9b, 0x2b,
+	0x17, 0x99, 0x90, 0x55, 0x1c, 0x81, 0xbd, 0xc8, 0x80, 0x3d, 0x4f, 0x67, 0xd2, 0x81, 0x89, 0x3b,
+	0xc1, 0xa2, 0xd9, 0xa5, 0xbf, 0x12, 0xe8, 0x8f, 0x5a, 0xe9, 0xe8, 0x5c, 0x36, 0x14, 0xe1, 0x91,
+	0x82, 0x7b, 0xa1, 0x0d, 0x4d, 0xa4, 0x72, 0x93, 0x51, 0x99, 0xa7, 0x2f, 0xb5, 0x41, 0x45, 0xf4,
+	0xbd, 0x3b, 0xf4, 0x3f, 0x02, 0x4f, 0x27, 0x6e, 0x48, 0x74, 0x3e, 0x1b, 0xca, 0x84, 0xd9, 0x89,
+	0x5b, 0x38, 0x8a, 0x09, 0x64, 0xbc, 0xc2, 0x18, 0xdf, 0xa2, 0x4b, 0xed, 0x30, 0x6e, 0x4e, 0x44,
+	0x7e, 0xee, 0x3f, 0x12, 0x80, 0xa6, 0xab, 0x94, 0xc2, 0x08, 0x2d, 0x1e, 0x29, 0x85, 0x11, 0x1e,
+	0x6a, 0xf9, 0xb7, 0x19, 0x85, 0x12, 0x5d, 0x3e, 0x62, 0xd2, 0xc4, 0x9d, 0x60, 0xe3, 0xdf, 0xa5,
+	0xff, 0x12, 0xc8, 0x47, 0x44, 0x8f, 0x5e, 0x49, 0x84, 0x18, 0xbf, 0x54, 0x71, 0x73, 0xad, 0x2b,
+	0x22, 0xc9, 0x75, 0x46, 0x52, 0xa5, 0x4a, 0xa7, 0x49, 0x46, 0x26, 0x91, 0xfe, 0x44, 0xa0, 0x3f,
+	0x6a, 0x27, 0x49, 0x29, 0xcb, 0x84, 0x25, 0x2b, 0xa5, 0x2c, 0x93, 0x16, 0x20, 0xfe, 0x1a, 0x23,
+	0x3f, 0x4b, 0x2f, 0xc7, 0x91, 0x4f, 0xcc, 0x62, 0xa3, 0x16, 0x13, 0x87, 0xfc, 0x94, 0x5a, 0xcc,
+	0xb2, 0xc7, 0xa4, 0xd4, 0x62, 0xa6, 0x1d, 0x23, 0xbd, 0x16, 0x3d, 0x66, 0x19, 0xd3, 0x68, 0xd1,
+	0x1f, 0x08, 0x9c, 0x0e, 0x4c, 0xc4, 0x74, 0x2a, 0x11, 0x68, 0xd4, 0xc2, 0xc0, 0x4d, 0xb7, 0xa2,
+	0x82, 0x5c, 0x96, 0x18, 0x97, 0x57, 0xe8, 0x7c, 0x3b, 0x5c, 0xcc, 0x00, 0xe2, 0x3d, 0x02, 0xf9,
+	0x88, 0x29, 0x33, 0xa5, 0x0a, 0xe3, 0x87, 0x66, 0x6e, 0xae, 0x75, 0x45, 0x64, 0xb5, 0xc8, 0x58,
+	0xbd, 0x4c, 0xaf, 0xb7, 0xc3, 0xca, 0xf7, 0x3e, 0x3f, 0x20, 0x40, 0xc3, 0x7e, 0xe8, 0x6c, 0x8b,
+	0xc0, 0x5c, 0x42, 0x57, 0x5a, 0xd6, 0x43, 0x3e, 0x6f, 0x31, 0x3e, 0x2b, 0xf4, 0xf5, 0xa3, 0xf1,
+	0x09, 0x3f, 0xeb, 0xdf, 0x11, 0x38, 0x13, 0x9c, 0x05, 0x69, 0xf2, 0x2d, 0x8a, 0x1c, 0x56, 0xb9,
+	0x99, 0x96, 0x74, 0x90, 0xd4, 0x1c, 0x23, 0x35, 0x4d, 0x9f, 0x8b, 0x23, 0x55, 0xf5, 0xf4, 0xd6,
+	0x34, 0xfd, 0xb6, 0x21, 0xee, 0x38, 0x23, 0xf0, 0x2e, 0xfd, 0x80, 0x40, 0x4f, 0x63, 0xb8, 0xa4,
+	0xe3, 0x89, 0x7e, 0x7d, 0x73, 0x2c, 0x77, 0x21, 0x83, 0x24, 0xe2, 0x1a, 0x65, 0xb8, 0x0a, 0x74,
+	0x38, 0x0e, 0x57, 0x63, 0x96, 0xa5, 0x1f, 0x13, 0xe8, 0x75, 0x26, 0x4f, 0x3a, 0x91, 0x6c, 0xdb,
+	0x3f, 0xec, 0x72, 0x17, 0x33, 0xc9, 0x22, 0x92, 0x31, 0x86, 0x64, 0x84, 0x16, 0x62, 0x91, 0x38,
+	0xa3, 0xef, 0xe2, 0xfd, 0xfd, 0x02, 0xd9, 0xdb, 0x2f, 0x90, 0x3f, 0xf7, 0x0b, 0xe4, 0x93, 0x83,
+	0x42, 0x6e, 0xef, 0xa0, 0x90, 0xfb, 0xed, 0xa0, 0x90, 0x7b, 0x77, 0x52, 0xd5, 0xec, 0xea, 0x46,
+	0x59, 0xa8, 0x18, 0xeb, 0xae, 0x0d, 0xe7, 0xcf, 0x25, 0x4b, 0xbe, 0x23, 0x6e, 0x79, 0x06, 0xed,
+	0xed, 0xba, 0x62, 0x95, 0x7b, 0xd9, 0x3f, 0x88, 0x66, 0xfe, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x4b,
+	0x6e, 0xeb, 0x7f, 0xe4, 0x1a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1614,17 +1532,21 @@ type QueryClient interface {
 	ValidatorUnbondingDelegations(ctx context.Context, in *QueryValidatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorUnbondingDelegationsResponse, error)
 	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(ctx context.Context, in *QueryDelegationRequest, opts ...grpc.CallOption) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for given validator delegator pair.
+	// UnbondingDelegation queries unbonding info for given validator delegator
+	// pair.
 	UnbondingDelegation(ctx context.Context, in *QueryUnbondingDelegationRequest, opts ...grpc.CallOption) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
+	// delegator address.
 	DelegatorUnbondingDelegations(ctx context.Context, in *QueryDelegatorUnbondingDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(ctx context.Context, in *QueryRedelegationsRequest, opts ...grpc.CallOption) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator
+	// address.
 	DelegatorValidators(ctx context.Context, in *QueryDelegatorValidatorsRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair.
+	// DelegatorValidator queries validator info for given delegator validator
+	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
@@ -1780,17 +1702,21 @@ type QueryServer interface {
 	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
 	// Delegation queries delegate info for given validator delegator pair.
 	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
-	// UnbondingDelegation queries unbonding info for given validator delegator pair.
+	// UnbondingDelegation queries unbonding info for given validator delegator
+	// pair.
 	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// DelegatorUnbondingDelegations queries all unbonding delegations of a give delegator address.
+	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
+	// delegator address.
 	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
 	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
-	// DelegatorValidators queries all validator info for given delegator address.
+	// DelegatorValidators queries all validators info for given delegator
+	// address.
 	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
-	// DelegatorValidator queries validator info for given delegator validator pair.
+	// DelegatorValidator queries validator info for given delegator validator
+	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
@@ -3998,7 +3924,7 @@ func (m *QueryValidatorRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4008,25 +3934,23 @@ func (m *QueryValidatorRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4171,7 +4095,7 @@ func (m *QueryValidatorDelegationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4181,25 +4105,23 @@ func (m *QueryValidatorDelegationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -4417,7 +4339,7 @@ func (m *QueryValidatorUnbondingDelegationsRequest) Unmarshal(dAtA []byte) error
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4427,25 +4349,23 @@ func (m *QueryValidatorUnbondingDelegationsRequest) Unmarshal(dAtA []byte) error
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -4663,7 +4583,7 @@ func (m *QueryDelegationRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4673,31 +4593,29 @@ func (m *QueryDelegationRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4707,25 +4625,23 @@ func (m *QueryDelegationRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4873,7 +4789,7 @@ func (m *QueryUnbondingDelegationRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4883,31 +4799,29 @@ func (m *QueryUnbondingDelegationRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -4917,25 +4831,23 @@ func (m *QueryUnbondingDelegationRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5080,7 +4992,7 @@ func (m *QueryDelegatorDelegationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5090,25 +5002,23 @@ func (m *QueryDelegatorDelegationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -5326,7 +5236,7 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) Unmarshal(dAtA []byte) error
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5336,25 +5246,23 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) Unmarshal(dAtA []byte) error
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -5572,7 +5480,7 @@ func (m *QueryRedelegationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5582,31 +5490,29 @@ func (m *QueryRedelegationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SrcValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5616,31 +5522,29 @@ func (m *QueryRedelegationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SrcValidatorAddr = append(m.SrcValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.SrcValidatorAddr == nil {
-				m.SrcValidatorAddr = []byte{}
-			}
+			m.SrcValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DstValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5650,25 +5554,23 @@ func (m *QueryRedelegationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DstValidatorAddr = append(m.DstValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DstValidatorAddr == nil {
-				m.DstValidatorAddr = []byte{}
-			}
+			m.DstValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -5886,7 +5788,7 @@ func (m *QueryDelegatorValidatorsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5896,25 +5798,23 @@ func (m *QueryDelegatorValidatorsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -6132,7 +6032,7 @@ func (m *QueryDelegatorValidatorRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -6142,31 +6042,29 @@ func (m *QueryDelegatorValidatorRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddr = append(m.DelegatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.DelegatorAddr == nil {
-				m.DelegatorAddr = []byte{}
-			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -6176,25 +6074,23 @@ func (m *QueryDelegatorValidatorRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValidatorAddr = append(m.ValidatorAddr[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddr == nil {
-				m.ValidatorAddr = []byte{}
-			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

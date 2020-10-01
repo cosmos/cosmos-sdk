@@ -34,11 +34,20 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgSend) (*sdk.R
 		return nil, err
 	}
 
-	if k.BlockedAddr(msg.ToAddress) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", msg.ToAddress)
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, err
 	}
 
-	err := k.SendCoins(ctx, msg.FromAddress, msg.ToAddress, msg.Amount)
+	if k.BlockedAddr(to) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	err = k.SendCoins(ctx, from, to, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +82,11 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg *types.MsgMultiSen
 	}
 
 	for _, out := range msg.Outputs {
-		if k.BlockedAddr(out.Address) {
+		accAddr, err := sdk.AccAddressFromBech32(out.Address)
+		if err != nil {
+			panic(err)
+		}
+		if k.BlockedAddr(accAddr) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
 		}
 	}

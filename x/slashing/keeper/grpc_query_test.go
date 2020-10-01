@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -29,7 +29,7 @@ type SlashingTestSuite struct {
 
 func (suite *SlashingTestSuite) SetupTest() {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
@@ -66,7 +66,7 @@ func (suite *SlashingTestSuite) TestGRPCQueryParams() {
 func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	queryClient := suite.queryClient
 
-	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: nil})
+	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &types.QuerySigningInfoRequest{ConsAddress: ""})
 	suite.Error(err)
 	suite.Nil(infoResp)
 
@@ -75,7 +75,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfo() {
 	suite.True(found)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&types.QuerySigningInfoRequest{ConsAddress: consAddr})
+		&types.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
 	suite.NoError(err)
 	suite.Equal(info, infoResp.ValSigningInfo)
 }

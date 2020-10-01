@@ -4,14 +4,12 @@ import (
 	"sort"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestHistoricalInfo(t *testing.T) {
@@ -55,11 +53,11 @@ func TestTrackHistoricalInfo(t *testing.T) {
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
-	h4 := abci.Header{
+	h4 := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  4,
 	}
-	h5 := abci.Header{
+	h5 := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}
@@ -81,15 +79,15 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	// Set last validators in keeper
 	val1 := types.NewValidator(addrVals[2], PKs[2], types.Description{})
 	app.StakingKeeper.SetValidator(ctx, val1)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val1.OperatorAddress, 10)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := types.NewValidator(addrVals[3], PKs[3], types.Description{})
 	vals := []types.Validator{val1, val2}
 	sort.Sort(types.Validators(vals))
 	app.StakingKeeper.SetValidator(ctx, val2)
-	app.StakingKeeper.SetLastValidatorPower(ctx, val2.OperatorAddress, 8)
+	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 8)
 
 	// Set Header for BeginBlock context
-	header := abci.Header{
+	header := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  10,
 	}
@@ -126,9 +124,9 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 		types.NewValidator(addrVals[1], PKs[1], types.Description{}),
 	}
 
-	header1 := abci.Header{ChainID: "HelloChain", Height: 10}
-	header2 := abci.Header{ChainID: "HelloChain", Height: 11}
-	header3 := abci.Header{ChainID: "HelloChain", Height: 12}
+	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}
+	header2 := tmproto.Header{ChainID: "HelloChain", Height: 11}
+	header3 := tmproto.Header{ChainID: "HelloChain", Height: 12}
 
 	hist1 := types.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := types.HistoricalInfo{Header: header2, Valset: valSet}

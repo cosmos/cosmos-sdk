@@ -14,7 +14,8 @@ var _ exported.GenesisBalance = (*Balance)(nil)
 
 // GetAddress returns the account address of the Balance object.
 func (b Balance) GetAddress() sdk.AccAddress {
-	return b.Address
+	addr1, _ := sdk.AccAddressFromBech32(b.Address)
+	return addr1
 }
 
 // GetAddress returns the account coins of the Balance object.
@@ -25,7 +26,9 @@ func (b Balance) GetCoins() sdk.Coins {
 // SanitizeGenesisAccounts sorts addresses and coin sets.
 func SanitizeGenesisBalances(balances []Balance) []Balance {
 	sort.Slice(balances, func(i, j int) bool {
-		return bytes.Compare(balances[i].Address.Bytes(), balances[j].Address.Bytes()) < 0
+		addr1, _ := sdk.AccAddressFromBech32(balances[i].Address)
+		addr2, _ := sdk.AccAddressFromBech32(balances[j].Address)
+		return bytes.Compare(addr1.Bytes(), addr2.Bytes()) < 0
 	})
 
 	for _, balance := range balances {
@@ -46,8 +49,8 @@ func ValidateGenesis(data GenesisState) error {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) GenesisState {
-	return GenesisState{
+func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomMetaData []Metadata) *GenesisState {
+	return &GenesisState{
 		Params:        params,
 		Balances:      balances,
 		Supply:        supply,
@@ -56,20 +59,20 @@ func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomM
 }
 
 // DefaultGenesisState returns a default bank module genesis state.
-func DefaultGenesisState() GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
 // genesis state.
-func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) GenesisState {
+func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
 	if appState[ModuleName] != nil {
 		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
 	}
 
-	return genesisState
+	return &genesisState
 }
 
 // GenesisAccountIterator implements genesis account iteration.

@@ -146,7 +146,7 @@ func (m *DelayedVestingAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DelayedVestingAccount proto.InternalMessageInfo
 
-// Period defines a length of time and amount of coins that will vest
+// Period defines a length of time and amount of coins that will vest.
 type Period struct {
 	Length int64                                    `protobuf:"varint,1,opt,name=length,proto3" json:"length,omitempty"`
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
@@ -199,7 +199,7 @@ func (m *Period) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 }
 
 // PeriodicVestingAccount implements the VestingAccount interface. It
-// periodically vests by unlocking coins during each specified period
+// periodically vests by unlocking coins during each specified period.
 type PeriodicVestingAccount struct {
 	*BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`
 	StartTime           int64    `protobuf:"varint,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`

@@ -106,9 +106,9 @@ See an example of `BeginBlocker` and `EndBlocker` functions from [`gaia`](https:
 
 ### Register Codec
 
-The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `cdc`](../core/encoding.md) (e.g. amino) initialize the codec of the SDK and each of the application's modules using the `RegisterCodec` function.
+The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `cdc`](../core/encoding.md) (e.g. amino) initialize the codec of the SDK and each of the application's modules using the `RegisterLegacyAminoCodec` function.
 
-To register the application's modules, the `MakeCodec` function calls `RegisterCodec` on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
+To register the application's modules, the `MakeCodec` function calls `RegisterLegacyAminoCodec` on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
 
 See an example of a `MakeCodec` from [`gaia`](https://github.com/cosmos/gaia):
     

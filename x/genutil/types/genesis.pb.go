@@ -24,8 +24,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// GenesisState defines the raw genesis transaction in JSON
+// GenesisState defines the raw genesis transaction in JSON.
 type GenesisState struct {
+	// gen_txs defines the genesis transactions.
 	GenTxs []encoding_json.RawMessage `protobuf:"bytes,1,rep,name=gen_txs,json=genTxs,proto3,casttype=encoding/json.RawMessage" json:"gentxs" yaml:"gentxs"`
 }
 

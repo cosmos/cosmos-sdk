@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -110,19 +111,18 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 }
 
 func TestQueries(t *testing.T) {
-	cdc := codec.New()
-	types.RegisterCodec(cdc)
-	banktypes.RegisterCodec(cdc)
-	legacyQuerierCdc := codec.NewAminoCodec(cdc)
+	cdc := codec.NewLegacyAmino()
+	types.RegisterLegacyAminoCodec(cdc)
+	banktypes.RegisterLegacyAminoCodec(cdc)
 
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
 	valOpAddr1 := valAddrs[0]
 
-	querier := keeper.NewQuerier(app.DistrKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(app.DistrKeeper, cdc)
 
 	// test param queries
 	params := types.Params{

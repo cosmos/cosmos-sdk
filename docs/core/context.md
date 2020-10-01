@@ -19,7 +19,7 @@ The SDK `Context` is a custom data structure that contains Go's stdlib [`context
 type Context struct {
   ctx           context.Context
   ms            MultiStore
-  header        abci.Header
+  header        tmproto.Header
   chainID       string
   txBytes       []byte
   logger        log.Logger

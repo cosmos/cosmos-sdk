@@ -2,10 +2,9 @@ package types
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
 
 var _ exported.ConnectionI = (*ConnectionEnd)(nil)
@@ -13,7 +12,7 @@ var _ exported.ConnectionI = (*ConnectionEnd)(nil)
 // NewConnectionEnd creates a new ConnectionEnd instance.
 func NewConnectionEnd(state State, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
-		ClientID:     clientID,
+		ClientId:     clientID,
 		Versions:     versions,
 		State:        state,
 		Counterparty: counterparty,
@@ -27,11 +26,11 @@ func (c ConnectionEnd) GetState() int32 {
 
 // GetClientID implements the Connection interface
 func (c ConnectionEnd) GetClientID() string {
-	return c.ClientID
+	return c.ClientId
 }
 
 // GetCounterparty implements the Connection interface
-func (c ConnectionEnd) GetCounterparty() exported.CounterpartyI {
+func (c ConnectionEnd) GetCounterparty() exported.CounterpartyConnectionI {
 	return c.Counterparty
 }
 
@@ -44,7 +43,7 @@ func (c ConnectionEnd) GetVersions() []string {
 // NOTE: the protocol supports that the connection and client IDs match the
 // counterparty's.
 func (c ConnectionEnd) ValidateBasic() error {
-	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(c.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(c.Versions) == 0 {
@@ -58,38 +57,38 @@ func (c ConnectionEnd) ValidateBasic() error {
 	return c.Counterparty.ValidateBasic()
 }
 
-var _ exported.CounterpartyI = (*Counterparty)(nil)
+var _ exported.CounterpartyConnectionI = (*Counterparty)(nil)
 
 // NewCounterparty creates a new Counterparty instance.
 func NewCounterparty(clientID, connectionID string, prefix commitmenttypes.MerklePrefix) Counterparty {
 	return Counterparty{
-		ClientID:     clientID,
-		ConnectionID: connectionID,
+		ClientId:     clientID,
+		ConnectionId: connectionID,
 		Prefix:       prefix,
 	}
 }
 
-// GetClientID implements the CounterpartyI interface
+// GetClientID implements the CounterpartyConnectionI interface
 func (c Counterparty) GetClientID() string {
-	return c.ClientID
+	return c.ClientId
 }
 
-// GetConnectionID implements the CounterpartyI interface
+// GetConnectionID implements the CounterpartyConnectionI interface
 func (c Counterparty) GetConnectionID() string {
-	return c.ConnectionID
+	return c.ConnectionId
 }
 
-// GetPrefix implements the CounterpartyI interface
-func (c Counterparty) GetPrefix() commitmentexported.Prefix {
+// GetPrefix implements the CounterpartyConnectionI interface
+func (c Counterparty) GetPrefix() exported.Prefix {
 	return &c.Prefix
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(c.ConnectionID); err != nil {
+	if err := host.ConnectionIdentifierValidator(c.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
-	if err := host.ClientIdentifierValidator(c.ClientID); err != nil {
+	if err := host.ClientIdentifierValidator(c.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	if c.Prefix.Empty() {
@@ -101,8 +100,8 @@ func (c Counterparty) ValidateBasic() error {
 // NewIdentifiedConnection creates a new IdentifiedConnection instance
 func NewIdentifiedConnection(connectionID string, conn ConnectionEnd) IdentifiedConnection {
 	return IdentifiedConnection{
-		ID:           connectionID,
-		ClientID:     conn.ClientID,
+		Id:           connectionID,
+		ClientId:     conn.ClientId,
 		Versions:     conn.Versions,
 		State:        conn.State,
 		Counterparty: conn.Counterparty,
@@ -111,9 +110,9 @@ func NewIdentifiedConnection(connectionID string, conn ConnectionEnd) Identified
 
 // ValidateBasic performs a basic validation of the connection identifier and connection fields.
 func (ic IdentifiedConnection) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(ic.ID); err != nil {
+	if err := host.ConnectionIdentifierValidator(ic.Id); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	connection := NewConnectionEnd(ic.State, ic.ClientID, ic.Counterparty, ic.Versions)
+	connection := NewConnectionEnd(ic.State, ic.ClientId, ic.Counterparty, ic.Versions)
 	return connection.ValidateBasic()
 }

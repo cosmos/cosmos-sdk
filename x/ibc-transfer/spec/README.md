@@ -20,3 +20,4 @@ For the general specification please refer to the [ICS20 Specification](https://
 3. **[State Transitions](03_state_transitions.md)**
 4. **[Messages](04_messages.md)**
 5. **[Events](05_events.md)**
+6. **[Parameters](06_params.md)**

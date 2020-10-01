@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 )
+
+var _ ClientUnmarshaler = (*keeper.Keeper)(nil)
 
 // ClientUnmarshaler defines an interface for unmarshaling ICS02 interfaces.
 type ClientUnmarshaler interface {

@@ -165,8 +165,8 @@ func (gi *gasIterator) Value() (value []byte) {
 }
 
 // Implements Iterator.
-func (gi *gasIterator) Close() {
-	gi.parent.Close()
+func (gi *gasIterator) Close() error {
+	return gi.parent.Close()
 }
 
 // Error delegates the Error call to the parent iterator.

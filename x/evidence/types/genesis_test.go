@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -59,7 +59,7 @@ func TestNewGenesisState(t *testing.T) {
 
 func TestGenesisStateValidate(t *testing.T) {
 	var (
-		genesisState types.GenesisState
+		genesisState *types.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)
@@ -78,7 +78,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						Height:           int64(i + 1),
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)
@@ -94,7 +94,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						Height:           int64(i),
 						Power:            100,
 						Time:             time.Now().UTC(),
-						ConsensusAddress: pk.PubKey().Address().Bytes(),
+						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
 				genesisState = types.NewGenesisState(testEvidence)
@@ -104,7 +104,7 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			"expected evidence",
 			func() {
-				genesisState = types.GenesisState{
+				genesisState = &types.GenesisState{
 					Evidence: []*codectypes.Any{{}},
 				}
 			},
@@ -142,7 +142,7 @@ func TestUnpackInterfaces(t *testing.T) {
 		},
 		{
 			"error",
-			codec.New(),
+			codec.NewLegacyAmino(),
 			false,
 		},
 	}

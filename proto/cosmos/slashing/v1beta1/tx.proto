@@ -6,11 +6,12 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 
-// MsgUnjail - struct for unjailing jailed validator
+// MsgUnjail is an sdk.Msg used for unjailing a jailed validator, thus returning
+// them into the bonded validator set, so they can begin receiving provisions
+// and rewards again.
 message MsgUnjail {
-  bytes validator_addr = 1 [
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress",
-    (gogoproto.moretags) = "yaml:\"address\"",
-    (gogoproto.jsontag)  = "address"
-  ];
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  string validator_addr = 1 [(gogoproto.moretags) = "yaml:\"address\"", (gogoproto.jsontag) = "address"];
 }

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -20,7 +20,7 @@ var (
 // to avoid messing with the hooks.
 func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, abci.Header{})
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	appCodec := app.AppCodec()
 
@@ -32,7 +32,7 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 		app.GetSubspace(types.ModuleName),
 	)
 
-	return codec.New(), app, ctx
+	return codec.NewLegacyAmino(), app, ctx
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))

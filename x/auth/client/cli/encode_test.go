@@ -20,8 +20,8 @@ func TestGetCommandEncode(t *testing.T) {
 	cmd := GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	authtypes.RegisterCodec(encodingConfig.Amino)
-	sdk.RegisterCodec(encodingConfig.Amino)
+	authtypes.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
 
 	txCfg := encodingConfig.TxConfig
 
@@ -58,7 +58,7 @@ func TestGetCommandDecode(t *testing.T) {
 	cmd := GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	sdk.RegisterCodec(encodingConfig.Amino)
+	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
 
 	txCfg := encodingConfig.TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)

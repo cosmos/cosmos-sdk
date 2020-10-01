@@ -10,7 +10,7 @@ a prefix to the path to be able to aggregate the values for querying purposes.
 | Prefix | Path                                                                   | Value type     |
 |--------|------------------------------------------------------------------------|----------------|
 | "0/"   | "clients/{identifier}"                                                 | ClientState    |
-| "0/"   | "clients/{identifier}/consensusState"                                  | ConsensusState |
+| "0/"   | "clients/{identifier}/consensusState/{height}"                         | ConsensusState |
 | "0/"   | "clients/{identifier}/type"                                            | ClientType     |
 | "0/"   | "connections/{identifier}"                                             | ConnectionEnd  |
 | "0/"   | "ports/{identifier}"                                                   | CapabilityKey  |

@@ -44,9 +44,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 	}
 
 	// client id is always "localhost"
-	epoch := types.ParseChainID(ctx.ChainID())
+	version := types.ParseChainID(ctx.ChainID())
 	clientState := localhosttypes.NewClientState(
-		ctx.ChainID(), types.NewHeight(epoch, uint64(ctx.BlockHeight())),
+		ctx.ChainID(), types.NewHeight(version, uint64(ctx.BlockHeight())),
 	)
 
 	if err := k.CreateClient(ctx, exported.Localhost, clientState, nil); err != nil {

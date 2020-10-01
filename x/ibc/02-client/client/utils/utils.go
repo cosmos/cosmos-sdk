@@ -77,10 +77,10 @@ func QueryConsensusState(
 
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConsensusStateRequest{
-		ClientId:     clientID,
-		EpochNumber:  height.GetEpochNumber(),
-		EpochHeight:  height.GetEpochHeight(),
-		LatestHeight: latestHeight,
+		ClientId:      clientID,
+		VersionNumber: height.GetEpochNumber(),
+		VersionHeight: height.GetEpochHeight(),
+		LatestHeight:  latestHeight,
 	}
 
 	return queryClient.ConsensusState(context.Background(), req)

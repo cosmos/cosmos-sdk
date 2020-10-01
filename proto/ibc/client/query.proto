@@ -24,8 +24,8 @@ service Query {
   // ConsensusState queries a consensus state associated with a client state at
   // a given height.
   rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
-    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/epoch/{epoch_number}/"
-                                   "height/{epoch_height}";
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/version/{version_number}/"
+                                   "height/{version_height}";
   }
 
   // ConsensusStates queries all the consensus state associated with a given
@@ -78,10 +78,10 @@ message QueryClientStatesResponse {
 message QueryConsensusStateRequest {
   // client identifier
   string client_id = 1;
-  // consensus state epoch number
-  uint64 epoch_number = 2;
-  // consensus state epoch height
-  uint64 epoch_height = 3;
+  // consensus state version number
+  uint64 version_number = 2;
+  // consensus state version height
+  uint64 version_height = 3;
   // latest_height overrrides the height field and queries the latest stored
   // ConsensusState
   bool latest_height = 4;

@@ -173,11 +173,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		},
 		{
 			"invalid client height",
-			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.NewHeight(0, testClientHeight.EpochHeight+10), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.NewHeight(0, testClientHeight.VersionHeight+10), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			false,
 		},
 		{
-			"invalid client epoch",
+			"invalid client version",
 			ibctmtypes.NewClientState(testChainIDEpoch1, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightEpoch1, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			false,
 		},

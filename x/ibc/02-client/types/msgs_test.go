@@ -56,7 +56,7 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 		},
 		{
 			"tendermint client", func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -108,7 +108,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"valid - tendermint client",
 			func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
@@ -132,7 +132,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"failed to unpack consensus state",
 			func() {
-				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false)
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 				msg.ConsensusState = nil
@@ -331,6 +331,133 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 			suite.Require().Error(err, tc.name)
 		}
 	}
+}
+
+func (suite *TypesTestSuite) TestMarshalMsgUpgradeClient() {
+	var (
+		msg *types.MsgUpgradeClient
+		err error
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+	}{
+		{
+			"client upgrades to new tendermint client",
+			func() {
+				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				msg, err = types.NewMsgUpgradeClient("clientid", tendermintClient, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+		{
+			"client upgrades to new solomachine client",
+			func() {
+				soloMachine := ibctesting.NewSolomachine(suite.T(), suite.chainA.Codec, "solomachine", "", 1)
+				msg, err = types.NewMsgUpgradeClient("clientid", soloMachine.ClientState(), []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+				suite.Require().NoError(err)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			tc.malleate()
+
+			cdc := suite.chainA.App.AppCodec()
+
+			// marshal message
+			bz, err := cdc.MarshalJSON(msg)
+			suite.Require().NoError(err)
+
+			// unmarshal message
+			newMsg := &types.MsgUpgradeClient{}
+			err = cdc.UnmarshalJSON(bz, newMsg)
+			suite.Require().NoError(err)
+
+			suite.Require().True(proto.Equal(msg, newMsg))
+		})
+	}
+}
+
+func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
+	cases := []struct {
+		name     string
+		malleate func(*types.MsgUpgradeClient)
+		expPass  bool
+	}{
+		{
+			name:     "success",
+			malleate: func(msg *types.MsgUpgradeClient) {},
+			expPass:  true,
+		},
+		{
+			name: "client id empty",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.ClientId = ""
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid client id",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.ClientId = "invalid~chain/id"
+			},
+			expPass: false,
+		},
+		{
+			name: "unpacking clientstate fails",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.ClientState = nil
+			},
+			expPass: false,
+		},
+		{
+			name: "invalid client state",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				cs := &ibctmtypes.ClientState{}
+				var err error
+				msg.ClientState, err = types.PackClientState(cs)
+				suite.Require().NoError(err)
+			},
+			expPass: false,
+		},
+		{
+			name: "empty proof",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.ProofUpgrade = nil
+			},
+			expPass: false,
+		},
+		{
+			name: "empty signer",
+			malleate: func(msg *types.MsgUpgradeClient) {
+				msg.Signer = "  "
+			},
+			expPass: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		clientState := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+		msg, _ := types.NewMsgUpgradeClient("testclientid", clientState, []byte("proofUpgrade"), suite.chainA.SenderAccount.GetAddress())
+
+		tc.malleate(msg)
+		err := msg.ValidateBasic()
+		if tc.expPass {
+			suite.Require().NoError(err, "valid case %s failed", tc.name)
+		} else {
+			suite.Require().Error(err, "invalid case %s passed", tc.name)
+		}
+	}
+
 }
 
 // tests that different misbehaviours within MsgSubmitMisbehaviour can be marshaled

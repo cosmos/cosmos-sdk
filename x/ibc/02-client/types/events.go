@@ -17,6 +17,7 @@ const (
 var (
 	EventTypeCreateClient         = "create_client"
 	EventTypeUpdateClient         = "update_client"
+	EventTypeUpgradeClient        = "upgrade_client"
 	EventTypeSubmitMisbehaviour   = "client_misbehaviour"
 	EventTypeUpdateClientProposal = "update_client_proposal"
 

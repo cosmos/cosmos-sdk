@@ -14,9 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -29,7 +31,11 @@ const (
 	maxClockDrift  time.Duration = time.Second * 10
 )
 
-var height = clienttypes.NewHeight(0, 4)
+var (
+	height        = clienttypes.NewHeight(0, 4)
+	upgradeHeight = clienttypes.NewHeight(1, 1)
+	upgradePath   = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+)
 
 type TendermintTestSuite struct {
 	suite.Suite

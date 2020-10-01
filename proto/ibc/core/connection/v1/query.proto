@@ -1,10 +1,10 @@
 syntax = "proto3";
-package ibc.connection;
+package ibc.core.connection.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "ibc/client/client.proto";
-import "ibc/connection/connection.proto";
+import "ibc/core/client/v1/client.proto";
+import "ibc/core/connection/v1/connection.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 
@@ -54,13 +54,13 @@ message QueryConnectionRequest {
 // which the proof was retrieved.
 message QueryConnectionResponse {
   // connection associated with the request identifier
-  ibc.connection.ConnectionEnd connection = 1;
+  ibc.core.connection.v1.ConnectionEnd connection = 1;
   // merkle proof of existence
   bytes proof = 2;
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionsRequest is the request type for the Query/Connections RPC
@@ -73,11 +73,11 @@ message QueryConnectionsRequest {
 // method.
 message QueryConnectionsResponse {
   // list of stored connections of the chain.
-  repeated ibc.connection.IdentifiedConnection connections = 1;
+  repeated ibc.core.connection.v1.IdentifiedConnection connections = 1;
   // pagination response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
   // query block height
-  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryClientConnectionsRequest is the request type for the
@@ -97,7 +97,7 @@ message QueryClientConnectionsResponse {
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was generated
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionClientStateRequest is the request type for the
@@ -111,13 +111,13 @@ message QueryConnectionClientStateRequest {
 // Query/ConnectionClientState RPC method
 message QueryConnectionClientStateResponse {
   // client state associated with the channel
-  ibc.client.IdentifiedClientState identified_client_state = 1;
+  ibc.core.client.v1.IdentifiedClientState identified_client_state = 1;
   // merkle proof of existence
   bytes proof = 2;
   // merkle proof path
   string proof_path = 3;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 4 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
 }
 
 // QueryConnectionConsensusStateRequest is the request type for the
@@ -141,5 +141,5 @@ message QueryConnectionConsensusStateResponse {
   // merkle proof path
   string proof_path = 4;
   // height at which the proof was retrieved
-  ibc.client.Height proof_height = 5 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height proof_height = 5 [(gogoproto.nullable) = false];
 }

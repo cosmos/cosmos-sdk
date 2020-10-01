@@ -11,11 +11,11 @@ import (
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.connection.ConnectionI",
+		"ibc.core.connection.v1.ConnectionI",
 		(*exported.ConnectionI)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.connection.CounterpartyConnectionI",
+		"ibc.core.connection.v1.CounterpartyConnectionI",
 		(*exported.CounterpartyConnectionI)(nil),
 	)
 	registry.RegisterImplementations(

@@ -291,13 +291,14 @@ func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
 	seq := uint64(10)
 
 	storedAckHash, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ID, seq)
-	suite.False(found)
-	suite.Nil(storedAckHash)
+	suite.Require().False(found)
+	suite.Require().Nil(storedAckHash)
 
 	ackHash := []byte("ackhash")
 	suite.chainA.App.IBCKeeper.ChannelKeeper.SetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ID, seq, ackHash)
 
 	storedAckHash, found = suite.chainA.App.IBCKeeper.ChannelKeeper.GetPacketAcknowledgement(ctxA, channelA.PortID, channelA.ID, seq)
-	suite.True(found)
-	suite.Equal(ackHash, storedAckHash)
+	suite.Require().True(found)
+	suite.Require().Equal(ackHash, storedAckHash)
+	suite.Require().True(suite.chainA.App.IBCKeeper.ChannelKeeper.HasPacketAcknowledgement(ctxA, channelA.PortID, channelA.ID, seq))
 }

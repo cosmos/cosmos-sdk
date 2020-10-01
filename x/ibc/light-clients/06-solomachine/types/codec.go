@@ -117,13 +117,13 @@ func UnmarshalDataByType(cdc codec.BinaryMarshaler, dataType DataType, data []by
 
 		return ackData, nil
 
-	case PACKETACKNOWLEDGEMENTABSENCE:
-		ackAbsenceData := &PacketAcknowledgementAbsenceData{}
-		if err := cdc.UnmarshalBinaryBare(data, ackAbsenceData); err != nil {
+	case PACKETRECEIPTABSENCE:
+		receiptAbsenceData := &PacketReceiptAbsenceData{}
+		if err := cdc.UnmarshalBinaryBare(data, receiptAbsenceData); err != nil {
 			return nil, err
 		}
 
-		return ackAbsenceData, nil
+		return receiptAbsenceData, nil
 
 	case NEXTSEQUENCERECV:
 		nextSeqRecvData := &NextSequenceRecvData{}

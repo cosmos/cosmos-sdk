@@ -105,8 +105,8 @@ enum DataType {
   DATA_TYPE_PACKET_COMMITMENT = 5 [(gogoproto.enumvalue_customname) = "PACKETCOMMITMENT"];
   // Data type for packet acknowledgement verification
   DATA_TYPE_PACKET_ACKNOWLEDGEMENT = 6 [(gogoproto.enumvalue_customname) = "PACKETACKNOWLEDGEMENT"];
-  // Data type for packet acknowledgement absence verification
-  DATA_TYPE_PACKET_ACKNOWLEDGEMENT_ABSENCE = 7 [(gogoproto.enumvalue_customname) = "PACKETACKNOWLEDGEMENTABSENCE"];
+  // Data type for packet receipt absence verification
+  DATA_TYPE_PACKET_RECEIPT_ABSENCE = 7 [(gogoproto.enumvalue_customname) = "PACKETRECEIPTABSENCE"];
   // Data type for next sequence recv verification
   DATA_TYPE_NEXT_SEQUENCE_RECV = 8 [(gogoproto.enumvalue_customname) = "NEXTSEQUENCERECV"];
   // Data type for header verification

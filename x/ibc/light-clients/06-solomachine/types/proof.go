@@ -386,15 +386,15 @@ func PacketAcknowledgementDataBytes(
 	return dataBz, nil
 }
 
-// PacketAcknowledgementAbsenceSignBytes returns the sign bytes for verification
-// of the absence of an acknowledgement.
-func PacketAcknowledgementAbsenceSignBytes(
+// PacketReceiptAbsenceSignBytes returns the sign bytes for verification
+// of the absence of an receipt.
+func PacketReceiptAbsenceSignBytes(
 	cdc codec.BinaryMarshaler,
 	sequence, timestamp uint64,
 	diversifier string,
 	path commitmenttypes.MerklePath,
 ) ([]byte, error) {
-	dataBz, err := PacketAcknowledgementAbsenceDataBytes(cdc, path)
+	dataBz, err := PacketReceiptAbsenceDataBytes(cdc, path)
 	if err != nil {
 		return nil, err
 	}
@@ -403,16 +403,16 @@ func PacketAcknowledgementAbsenceSignBytes(
 		Sequence:    sequence,
 		Timestamp:   timestamp,
 		Diversifier: diversifier,
-		DataType:    PACKETACKNOWLEDGEMENTABSENCE,
+		DataType:    PACKETRECEIPTABSENCE,
 		Data:        dataBz,
 	}
 
 	return cdc.MarshalBinaryBare(signBytes)
 }
 
-// PacketReceiptAbsenceSignBytes returns the packet receipt absence data bytes
+// PacketReceiptAbsenceDataBytes returns the packet receipt absence data bytes
 // used in constructing SignBytes.
-func PacketReceiptAbsenceSignBytes(
+func PacketReceiptAbsenceDataBytes(
 	cdc codec.BinaryMarshaler,
 	path commitmenttypes.MerklePath, // nolint: interfacer
 ) ([]byte, error) {

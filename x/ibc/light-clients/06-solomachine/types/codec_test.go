@@ -142,11 +142,10 @@ func (suite SoloMachineTestSuite) TestUnmarshalDataByType() {
 				}, false,
 			},
 			{
-				"packet acknowledgement absence", types.PACKETACKNOWLEDGEMENTABSENCE, func() {
-					commitment := []byte("packet acknowledgement")
-					path := solomachine.GetPacketAcknowledgementPath("portID", "channelID")
+				"packet acknowledgement absence", types.PACKETRECEIPTABSENCE, func() {
+					path := solomachine.GetPacketReceiptPath("portID", "channelID")
 
-					data, err = types.PacketAcknowledgementDataBytes(cdc, path, commitment)
+					data, err = types.PacketReceiptAbsenceDataBytes(cdc, path)
 					suite.Require().NoError(err)
 				}, true,
 			},

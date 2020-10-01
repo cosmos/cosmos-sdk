@@ -286,10 +286,18 @@ func (solo *Solomachine) GetPacketCommitmentPath(portID, channelID string) commi
 	return path
 }
 
-// GetPacketAcknowledgementPath returns the commitment path for a packet acknowledgement
-// and an absent acknowledgement.
+// GetPacketAcknowledgementPath returns the commitment path for a packet acknowledgement.
 func (solo *Solomachine) GetPacketAcknowledgementPath(portID, channelID string) commitmenttypes.MerklePath {
 	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketAcknowledgementPath(portID, channelID, solo.Sequence))
+	require.NoError(solo.t, err)
+
+	return path
+}
+
+// GetPacketReceiptPath returns the commitment path for a packet receipt
+// and an absent receipts.
+func (solo *Solomachine) GetPacketReceiptPath(portID, channelID string) commitmenttypes.MerklePath {
+	path, err := commitmenttypes.ApplyPrefix(prefix, host.PacketReceiptPath(portID, channelID, solo.Sequence))
 	require.NoError(solo.t, err)
 
 	return path

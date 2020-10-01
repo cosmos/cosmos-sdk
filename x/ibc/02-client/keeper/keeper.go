@@ -17,6 +17,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Keeper represents a type that grants read and write permissions to any client
@@ -248,6 +249,15 @@ func (k Keeper) ValidateSelfClient(ctx sdk.Context, clientState exported.ClientS
 	if tmClient.UnbondingPeriod < tmClient.TrustingPeriod {
 		return sdkerrors.Wrapf(types.ErrInvalidClient, "unbonding period must be greater than trusting period. unbonding period (%d) < trusting period (%d)",
 			tmClient.UnbondingPeriod, tmClient.TrustingPeriod)
+	}
+
+	if tmClient.UpgradePath != nil {
+		// For now, SDK IBC implementation assumes that upgrade path (if defined) is defined by SDK upgrade module
+		expectedUpgradePath := fmt.Sprintf("/%s/%s", upgradetypes.StoreKey, upgradetypes.KeyUpgradedClient)
+		if tmClient.UpgradePath.String() != expectedUpgradePath {
+			return sdkerrors.Wrapf(types.ErrInvalidClient, "upgrade path must be the upgrade path defined by upgrade module. expected %s, got %s",
+				expectedUpgradePath, tmClient.UpgradePath)
+		}
 	}
 	return nil
 }

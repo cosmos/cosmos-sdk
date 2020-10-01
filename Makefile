@@ -59,9 +59,23 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
+# DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 endif
+ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+endif
+# handle rocksdb
+ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+  CGO_ENABLED=1
+  BUILD_TAGS += rocksdb
+endif
+# handle boltdb
+ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+  BUILD_TAGS += boltdb
+endif
+
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
@@ -84,7 +98,7 @@ include contrib/devtools/Makefile
 ###############################################################################
 
 build: go.sum
-	go install -mod=readonly ./...
+	go build -mod=readonly ./...
 
 simd:
 	mkdir -p $(BUILDDIR)
@@ -122,7 +136,7 @@ build-simd-linux: go.sum
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build build-simd build-simd-linux cosmovisor
+.PHONY: build simd simd-linux build-simd-all build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -132,6 +146,7 @@ mocks: $(MOCKS_DIR)
 	mockgen -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	mockgen -source=types/handler.go -package mocks -destination tests/mocks/types_handler.go
 	mockgen -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server
+	mockgen -package mocks -destination tests/mocks/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
 .PHONY: mocks
 
 $(MOCKS_DIR):
@@ -184,13 +199,18 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
+# This builds a docs site for each branch/tag in `./docs/versions`
+# and copies each site to a version prefixed path. The last entry inside
+# the `versions` file will be the default root index.html.
 build-docs:
 	@cd docs && \
-	while read p; do \
-		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
-		mkdir -p ~/output/$${p} ; \
-		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		cp ~/output/$${p}/index.html ~/output ; \
+	while read -a p; do \
+		branch=$${p[0]} ; \
+		path_prefix=$${p[1]} ; \
+		(git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
+		mkdir -p ~/output/$${path_prefix} ; \
+		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
+		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
 
 sync-docs:

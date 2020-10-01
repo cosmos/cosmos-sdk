@@ -175,10 +175,10 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	return nil
 }
 
-// VerifyPacketAcknowledgementAbsence verifies a proof of the absence of an
-// incoming packet acknowledgement at the specified port, specified channel, and
+// VerifyPacketReceiptAbsence verifies a proof of the absence of an
+// incoming packet receipt at the specified port, specified channel, and
 // specified sequence.
-func (k Keeper) VerifyPacketAcknowledgementAbsence(
+func (k Keeper) VerifyPacketReceiptAbsence(
 	ctx sdk.Context,
 	connection exported.ConnectionI,
 	height exported.Height,
@@ -192,12 +192,12 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 		return sdkerrors.Wrap(clienttypes.ErrClientNotFound, connection.GetClientID())
 	}
 
-	if err := clientState.VerifyPacketAcknowledgementAbsence(
+	if err := clientState.VerifyPacketReceiptAbsence(
 		k.clientKeeper.ClientStore(ctx, connection.GetClientID()), k.cdc, height,
 		connection.GetCounterparty().GetPrefix(), proof, portID, channelID,
 		sequence,
 	); err != nil {
-		return sdkerrors.Wrapf(err, "failed packet acknowledgement absence verification for client (%s)", connection.GetClientID())
+		return sdkerrors.Wrapf(err, "failed packet receipt absence verification for client (%s)", connection.GetClientID())
 	}
 
 	return nil

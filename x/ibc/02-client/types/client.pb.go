@@ -6,7 +6,6 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -249,7 +248,7 @@ type MsgCreateClient struct {
 	// height.
 	ConsensusState *types.Any `protobuf:"bytes,3,opt,name=consensus_state,json=consensusState,proto3" json:"consensus_state,omitempty" yaml:"consensus_state"`
 	// signer address
-	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,4,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer string `protobuf:"bytes,4,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgCreateClient) Reset()         { *m = MsgCreateClient{} }
@@ -285,34 +284,6 @@ func (m *MsgCreateClient) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateClient proto.InternalMessageInfo
 
-func (m *MsgCreateClient) GetClientId() string {
-	if m != nil {
-		return m.ClientId
-	}
-	return ""
-}
-
-func (m *MsgCreateClient) GetClientState() *types.Any {
-	if m != nil {
-		return m.ClientState
-	}
-	return nil
-}
-
-func (m *MsgCreateClient) GetConsensusState() *types.Any {
-	if m != nil {
-		return m.ConsensusState
-	}
-	return nil
-}
-
-func (m *MsgCreateClient) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // MsgUpdateClient defines an sdk.Msg to update a IBC client state using
 // the given header.
 type MsgUpdateClient struct {
@@ -321,7 +292,7 @@ type MsgUpdateClient struct {
 	// header to update the light client
 	Header *types.Any `protobuf:"bytes,2,opt,name=header,proto3" json:"header,omitempty"`
 	// signer address
-	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgUpdateClient) Reset()         { *m = MsgUpdateClient{} }
@@ -357,25 +328,77 @@ func (m *MsgUpdateClient) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateClient proto.InternalMessageInfo
 
-func (m *MsgUpdateClient) GetClientId() string {
+// MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+type MsgUpgradeClient struct {
+	// client unique identifier
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
+	// upgraded client state
+	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
+	// proof that old chain committed to new client
+	ProofUpgrade []byte `protobuf:"bytes,3,opt,name=proof_upgrade,json=proofUpgrade,proto3" json:"proof_upgrade,omitempty" yaml:"proof_upgrade"`
+	// signer address
+	Signer string `protobuf:"bytes,4,opt,name=signer,proto3" json:"signer,omitempty"`
+}
+
+func (m *MsgUpgradeClient) Reset()         { *m = MsgUpgradeClient{} }
+func (m *MsgUpgradeClient) String() string { return proto.CompactTextString(m) }
+func (*MsgUpgradeClient) ProtoMessage()    {}
+func (*MsgUpgradeClient) Descriptor() ([]byte, []int) {
+	return fileDescriptor_226f80e576f20abd, []int{6}
+}
+func (m *MsgUpgradeClient) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpgradeClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpgradeClient.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpgradeClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpgradeClient.Merge(m, src)
+}
+func (m *MsgUpgradeClient) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpgradeClient) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpgradeClient.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpgradeClient proto.InternalMessageInfo
+
+func (m *MsgUpgradeClient) GetClientId() string {
 	if m != nil {
 		return m.ClientId
 	}
 	return ""
 }
 
-func (m *MsgUpdateClient) GetHeader() *types.Any {
+func (m *MsgUpgradeClient) GetClientState() *types.Any {
 	if m != nil {
-		return m.Header
+		return m.ClientState
 	}
 	return nil
 }
 
-func (m *MsgUpdateClient) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
+func (m *MsgUpgradeClient) GetProofUpgrade() []byte {
+	if m != nil {
+		return m.ProofUpgrade
+	}
+	return nil
+}
+
+func (m *MsgUpgradeClient) GetSigner() string {
 	if m != nil {
 		return m.Signer
 	}
-	return nil
+	return ""
 }
 
 // MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
@@ -386,14 +409,14 @@ type MsgSubmitMisbehaviour struct {
 	// misbehaviour used for freezing the light client
 	Misbehaviour *types.Any `protobuf:"bytes,2,opt,name=misbehaviour,proto3" json:"misbehaviour,omitempty"`
 	// signer address
-	Signer github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=signer,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"signer,omitempty"`
+	Signer string `protobuf:"bytes,3,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (m *MsgSubmitMisbehaviour) Reset()         { *m = MsgSubmitMisbehaviour{} }
 func (m *MsgSubmitMisbehaviour) String() string { return proto.CompactTextString(m) }
 func (*MsgSubmitMisbehaviour) ProtoMessage()    {}
 func (*MsgSubmitMisbehaviour) Descriptor() ([]byte, []int) {
-	return fileDescriptor_226f80e576f20abd, []int{6}
+	return fileDescriptor_226f80e576f20abd, []int{7}
 }
 func (m *MsgSubmitMisbehaviour) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -422,47 +445,26 @@ func (m *MsgSubmitMisbehaviour) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitMisbehaviour proto.InternalMessageInfo
 
-func (m *MsgSubmitMisbehaviour) GetClientId() string {
-	if m != nil {
-		return m.ClientId
-	}
-	return ""
-}
-
-func (m *MsgSubmitMisbehaviour) GetMisbehaviour() *types.Any {
-	if m != nil {
-		return m.Misbehaviour
-	}
-	return nil
-}
-
-func (m *MsgSubmitMisbehaviour) GetSigner() github_com_cosmos_cosmos_sdk_types.AccAddress {
-	if m != nil {
-		return m.Signer
-	}
-	return nil
-}
-
 // Height is a monotonically increasing data type
 // that can be compared against another Height for the purposes of updating and
 // freezing clients
 //
-// Normally the EpochHeight is incremented at each height while keeping epoch
+// Normally the VersionHeight is incremented at each height while keeping version
 // number the same However some consensus algorithms may choose to reset the
 // height in certain conditions e.g. hard forks, state-machine breaking changes
-// In these cases, the epoch number is incremented so that height continues to
-// be monitonically increasing even as the EpochHeight gets reset
+// In these cases, the version number is incremented so that height continues to
+// be monitonically increasing even as the VersionHeight gets reset
 type Height struct {
-	// the epoch that the client is currently on
-	EpochNumber uint64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty" yaml:"epoch_number"`
-	// the height within the given epoch
-	EpochHeight uint64 `protobuf:"varint,2,opt,name=epoch_height,json=epochHeight,proto3" json:"epoch_height,omitempty" yaml:"epoch_height"`
+	// the version that the client is currently on
+	VersionNumber uint64 `protobuf:"varint,1,opt,name=version_number,json=versionNumber,proto3" json:"version_number,omitempty" yaml:"version_number"`
+	// the height within the given version
+	VersionHeight uint64 `protobuf:"varint,2,opt,name=version_height,json=versionHeight,proto3" json:"version_height,omitempty" yaml:"version_height"`
 }
 
 func (m *Height) Reset()      { *m = Height{} }
 func (*Height) ProtoMessage() {}
 func (*Height) Descriptor() ([]byte, []int) {
-	return fileDescriptor_226f80e576f20abd, []int{7}
+	return fileDescriptor_226f80e576f20abd, []int{8}
 }
 func (m *Height) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -498,6 +500,7 @@ func init() {
 	proto.RegisterType((*ClientUpdateProposal)(nil), "ibc.client.ClientUpdateProposal")
 	proto.RegisterType((*MsgCreateClient)(nil), "ibc.client.MsgCreateClient")
 	proto.RegisterType((*MsgUpdateClient)(nil), "ibc.client.MsgUpdateClient")
+	proto.RegisterType((*MsgUpgradeClient)(nil), "ibc.client.MsgUpgradeClient")
 	proto.RegisterType((*MsgSubmitMisbehaviour)(nil), "ibc.client.MsgSubmitMisbehaviour")
 	proto.RegisterType((*Height)(nil), "ibc.client.Height")
 }
@@ -505,48 +508,50 @@ func init() {
 func init() { proto.RegisterFile("ibc/client/client.proto", fileDescriptor_226f80e576f20abd) }
 
 var fileDescriptor_226f80e576f20abd = []byte{
-	// 649 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0x3f, 0x6f, 0xd3, 0x4e,
-	0x18, 0xce, 0x25, 0xf9, 0x45, 0xed, 0x25, 0xfa, 0xb5, 0x32, 0x09, 0x4d, 0x3b, 0xc4, 0xd1, 0x89,
-	0xa1, 0x03, 0xb5, 0xdb, 0xb0, 0xa0, 0x6c, 0x4d, 0x17, 0x2a, 0x51, 0x54, 0xb9, 0x42, 0xfc, 0x59,
-	0x2a, 0xfb, 0x7c, 0x75, 0x4e, 0xc4, 0x3e, 0xcb, 0x77, 0x46, 0xe4, 0x1b, 0x20, 0x26, 0x46, 0x06,
-	0x86, 0x4e, 0x7c, 0x03, 0xb6, 0xb2, 0x77, 0xa3, 0x23, 0x93, 0x85, 0xda, 0x6f, 0x90, 0x91, 0x09,
-	0xf9, 0xce, 0x25, 0x76, 0xff, 0x51, 0x05, 0x06, 0x26, 0xdf, 0xbd, 0xf7, 0xbe, 0xcf, 0xfb, 0x3c,
-	0xcf, 0x7b, 0xb6, 0xe1, 0x12, 0x75, 0xb0, 0x89, 0x47, 0x94, 0x04, 0x22, 0x7b, 0x18, 0x61, 0xc4,
-	0x04, 0xd3, 0x20, 0x75, 0xb0, 0xa1, 0x22, 0x2b, 0x4d, 0x8f, 0x79, 0x4c, 0x86, 0xcd, 0x74, 0xa5,
-	0x32, 0x56, 0x96, 0x3d, 0xc6, 0xbc, 0x11, 0x31, 0xe5, 0xce, 0x89, 0x0f, 0x4c, 0x3b, 0x18, 0xab,
-	0x23, 0xf4, 0x11, 0xc0, 0xd6, 0xb6, 0x4b, 0x02, 0x41, 0x0f, 0x28, 0x71, 0xb7, 0x24, 0xca, 0x9e,
-	0xb0, 0x05, 0xd1, 0x36, 0xe0, 0xbc, 0x02, 0xdd, 0xa7, 0x6e, 0x1b, 0x74, 0xc1, 0xea, 0xfc, 0xa0,
-	0x39, 0x49, 0xf4, 0xc5, 0xb1, 0xed, 0x8f, 0xfa, 0xe8, 0xd7, 0x11, 0xb2, 0xe6, 0xd4, 0x7a, 0xdb,
-	0xd5, 0x76, 0x61, 0x23, 0x8b, 0xf3, 0x14, 0xa2, 0x5d, 0xee, 0x82, 0xd5, 0x7a, 0xaf, 0x69, 0xa8,
-	0xf6, 0xc6, 0x79, 0x7b, 0x63, 0x33, 0x18, 0x0f, 0x96, 0x26, 0x89, 0x7e, 0xa7, 0x80, 0x25, 0x6b,
-	0x90, 0x55, 0xc7, 0x53, 0x12, 0xe8, 0x13, 0x80, 0xed, 0x2d, 0x16, 0x70, 0x12, 0xf0, 0x98, 0xcb,
-	0xd0, 0x33, 0x2a, 0x86, 0x8f, 0x08, 0xf5, 0x86, 0x42, 0x5b, 0x87, 0xb5, 0xa1, 0x5c, 0x49, 0x7a,
-	0xf5, 0x9e, 0x66, 0x4c, 0x9d, 0x30, 0x54, 0xce, 0xa0, 0x7a, 0x9c, 0xe8, 0x25, 0x2b, 0xcb, 0xd3,
-	0x9e, 0xc3, 0x05, 0x7c, 0x8e, 0x76, 0x0b, 0x8e, 0xcb, 0x93, 0x44, 0x6f, 0xa5, 0x1c, 0xd1, 0x85,
-	0x2a, 0x64, 0xfd, 0x8f, 0x0b, 0xac, 0xd0, 0x11, 0x80, 0x2d, 0xe5, 0x5e, 0x91, 0x2e, 0x9f, 0xc5,
-	0xc7, 0x10, 0x2e, 0x5e, 0x68, 0xc8, 0xdb, 0xe5, 0x6e, 0x65, 0xb5, 0xde, 0xbb, 0x97, 0x97, 0x78,
-	0x9d, 0x31, 0x03, 0x3d, 0x15, 0x3d, 0x49, 0xf4, 0xa5, 0xac, 0xc7, 0x05, 0x2c, 0x64, 0x2d, 0x14,
-	0xd9, 0x73, 0xf4, 0x19, 0xc0, 0xa6, 0xa2, 0xff, 0x34, 0x74, 0x6d, 0x41, 0x76, 0x23, 0x16, 0x32,
-	0x6e, 0x8f, 0xb4, 0x26, 0xfc, 0x4f, 0x50, 0x31, 0x22, 0x8a, 0xb9, 0xa5, 0x36, 0x5a, 0x17, 0xd6,
-	0x5d, 0xc2, 0x71, 0x44, 0x43, 0x41, 0x59, 0x20, 0x3d, 0x9c, 0xb7, 0xf2, 0xa1, 0xa2, 0xea, 0xca,
-	0xad, 0x54, 0xdf, 0x4f, 0xc7, 0x69, 0xbb, 0x24, 0x6a, 0x57, 0xaf, 0x9f, 0x89, 0x95, 0xe5, 0xf4,
-	0xab, 0x6f, 0x0f, 0xf5, 0x12, 0x3a, 0x2a, 0xc3, 0x85, 0x1d, 0xee, 0x6d, 0x45, 0xc4, 0x16, 0x44,
-	0x09, 0xf8, 0x27, 0x2e, 0xae, 0xf6, 0xe2, 0xf2, 0x4d, 0xab, 0xdc, 0x00, 0xba, 0x32, 0x49, 0xf4,
-	0xbb, 0x57, 0x4e, 0xeb, 0xd2, 0x55, 0xd3, 0xb6, 0x61, 0x8d, 0x53, 0x2f, 0xc8, 0x7c, 0x6a, 0x0c,
-	0x36, 0x7e, 0x24, 0xfa, 0x9a, 0x47, 0xc5, 0x30, 0x76, 0x0c, 0xcc, 0x7c, 0x13, 0x33, 0xee, 0x33,
-	0x9e, 0x3d, 0xd6, 0xb8, 0xfb, 0xca, 0x14, 0xe3, 0x90, 0x70, 0x63, 0x13, 0xe3, 0x4d, 0xd7, 0x8d,
-	0x08, 0xe7, 0x56, 0x06, 0x80, 0xbe, 0x00, 0x69, 0x9f, 0x9a, 0xf9, 0xec, 0xf6, 0x4d, 0x27, 0x57,
-	0xfe, 0xfd, 0xe4, 0x72, 0xfc, 0x2b, 0x7f, 0xca, 0xff, 0x2b, 0x80, 0xad, 0x1d, 0xee, 0xed, 0xc5,
-	0x8e, 0x4f, 0xc5, 0x0e, 0xe5, 0x0e, 0x19, 0xda, 0xaf, 0x29, 0x8b, 0xa3, 0x59, 0x54, 0x3c, 0x84,
-	0x0d, 0x3f, 0x07, 0x71, 0xa3, 0x96, 0x42, 0xe6, 0xdf, 0x54, 0xf4, 0x0e, 0xc0, 0x5a, 0xf6, 0x79,
-	0xeb, 0xc3, 0x06, 0x09, 0x19, 0x1e, 0xee, 0x07, 0xb1, 0xef, 0x90, 0x48, 0xaa, 0xa8, 0xe6, 0xaf,
-	0x5f, 0xfe, 0x14, 0x59, 0x75, 0xb9, 0x7d, 0x22, 0x77, 0xd3, 0xda, 0xec, 0x03, 0x59, 0xbe, 0xba,
-	0x56, 0x9d, 0x9e, 0xd7, 0xaa, 0xbe, 0xfd, 0xb9, 0xf4, 0xcd, 0xfa, 0x70, 0xa8, 0x97, 0x06, 0x8f,
-	0x8f, 0x4f, 0x3b, 0xe0, 0xe4, 0xb4, 0x03, 0xbe, 0x9f, 0x76, 0xc0, 0xfb, 0xb3, 0x4e, 0xe9, 0xe4,
-	0xac, 0x53, 0xfa, 0x76, 0xd6, 0x29, 0xbd, 0xec, 0xdd, 0xa8, 0xee, 0x8d, 0x99, 0xfe, 0xab, 0xd6,
-	0x7b, 0x6b, 0xd9, 0xef, 0x4a, 0xaa, 0x75, 0x6a, 0xd2, 0xc1, 0x07, 0x3f, 0x03, 0x00, 0x00, 0xff,
-	0xff, 0xea, 0x4c, 0x79, 0x2a, 0xc9, 0x06, 0x00, 0x00,
+	// 679 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0x3d, 0x6f, 0xd3, 0x40,
+	0x18, 0xce, 0x25, 0x21, 0x6a, 0x2e, 0xe9, 0x87, 0x4c, 0xd2, 0xa6, 0x1d, 0xe2, 0xe8, 0xc4, 0xd0,
+	0x81, 0xda, 0x25, 0x2c, 0x28, 0x12, 0x12, 0xa4, 0x0b, 0x95, 0x28, 0xaa, 0x5c, 0x21, 0x3e, 0x96,
+	0xca, 0x1f, 0x57, 0xe7, 0x44, 0xe2, 0xb3, 0x7c, 0xe7, 0x8a, 0xfc, 0x03, 0x46, 0x24, 0x10, 0x62,
+	0x60, 0xe8, 0xc4, 0x3f, 0x60, 0xe3, 0x07, 0x74, 0xec, 0xc8, 0x64, 0xa1, 0x76, 0x61, 0x62, 0xc8,
+	0x2f, 0x40, 0xbe, 0xbb, 0x92, 0xb8, 0x25, 0xa5, 0xca, 0xd4, 0xc9, 0xf7, 0x7e, 0xdc, 0x73, 0xcf,
+	0xfb, 0x3c, 0xa7, 0x33, 0x5c, 0x21, 0x8e, 0x6b, 0xba, 0x7d, 0x82, 0x03, 0xae, 0x3e, 0x46, 0x18,
+	0x51, 0x4e, 0x35, 0x48, 0x1c, 0xd7, 0x90, 0x99, 0xb5, 0x9a, 0x4f, 0x7d, 0x2a, 0xd2, 0x66, 0xba,
+	0x92, 0x1d, 0x6b, 0xab, 0x3e, 0xa5, 0x7e, 0x1f, 0x9b, 0x22, 0x72, 0xe2, 0x03, 0xd3, 0x0e, 0x86,
+	0xb2, 0x84, 0xbe, 0x00, 0x58, 0xdf, 0xf6, 0x70, 0xc0, 0xc9, 0x01, 0xc1, 0xde, 0x96, 0x40, 0xd9,
+	0xe3, 0x36, 0xc7, 0xda, 0x3d, 0x58, 0x96, 0xa0, 0xfb, 0xc4, 0x6b, 0x80, 0x16, 0x58, 0x2f, 0x77,
+	0x6b, 0xa3, 0x44, 0x5f, 0x1a, 0xda, 0x83, 0x7e, 0x07, 0xfd, 0x2d, 0x21, 0x6b, 0x4e, 0xae, 0xb7,
+	0x3d, 0x6d, 0x17, 0x56, 0x55, 0x9e, 0xa5, 0x10, 0x8d, 0x7c, 0x0b, 0xac, 0x57, 0xda, 0x35, 0x43,
+	0x1e, 0x6f, 0x9c, 0x1f, 0x6f, 0x3c, 0x0e, 0x86, 0xdd, 0x95, 0x51, 0xa2, 0xdf, 0xce, 0x60, 0x89,
+	0x3d, 0xc8, 0xaa, 0xb8, 0x63, 0x12, 0xe8, 0x2b, 0x80, 0x8d, 0x2d, 0x1a, 0x30, 0x1c, 0xb0, 0x98,
+	0x89, 0xd4, 0x0b, 0xc2, 0x7b, 0x4f, 0x30, 0xf1, 0x7b, 0x5c, 0xdb, 0x84, 0xa5, 0x9e, 0x58, 0x09,
+	0x7a, 0x95, 0xb6, 0x66, 0x8c, 0x95, 0x30, 0x64, 0x4f, 0xb7, 0x78, 0x9c, 0xe8, 0x39, 0x4b, 0xf5,
+	0x69, 0x2f, 0xe1, 0xa2, 0x7b, 0x8e, 0x76, 0x0d, 0x8e, 0xab, 0xa3, 0x44, 0xaf, 0xa7, 0x1c, 0xd1,
+	0x85, 0x5d, 0xc8, 0x5a, 0x70, 0x33, 0xac, 0xd0, 0x77, 0x00, 0xeb, 0x52, 0xbd, 0x2c, 0x5d, 0x36,
+	0x8b, 0x8e, 0x21, 0x5c, 0xba, 0x70, 0x20, 0x6b, 0xe4, 0x5b, 0x85, 0xf5, 0x4a, 0xfb, 0xce, 0xe4,
+	0x88, 0xd3, 0x84, 0xe9, 0xea, 0xe9, 0xd0, 0xa3, 0x44, 0x5f, 0x51, 0x67, 0x5c, 0xc0, 0x42, 0xd6,
+	0x62, 0x96, 0x3d, 0x43, 0xdf, 0x00, 0xac, 0x49, 0xfa, 0xcf, 0x43, 0xcf, 0xe6, 0x78, 0x37, 0xa2,
+	0x21, 0x65, 0x76, 0x5f, 0xab, 0xc1, 0x5b, 0x9c, 0xf0, 0x3e, 0x96, 0xcc, 0x2d, 0x19, 0x68, 0x2d,
+	0x58, 0xf1, 0x30, 0x73, 0x23, 0x12, 0x72, 0x42, 0x03, 0xa1, 0x61, 0xd9, 0x9a, 0x4c, 0x65, 0xa7,
+	0x2e, 0x5c, 0x6b, 0xea, 0xbb, 0xa9, 0x9d, 0xb6, 0x87, 0xa3, 0x46, 0x71, 0xba, 0x27, 0x96, 0xea,
+	0xe9, 0x14, 0xdf, 0x1d, 0xe9, 0x39, 0xf4, 0x21, 0x0f, 0x17, 0x77, 0x98, 0xbf, 0x15, 0x61, 0x9b,
+	0x63, 0x39, 0xc0, 0x8d, 0xb8, 0xb8, 0xda, 0xab, 0xcb, 0x37, 0xad, 0x70, 0x05, 0xe8, 0xda, 0x28,
+	0xd1, 0x97, 0xff, 0xe9, 0xd6, 0xa5, 0xab, 0xa6, 0x2d, 0xc3, 0x12, 0x23, 0x7e, 0xa0, 0x74, 0x2a,
+	0x5b, 0x2a, 0xea, 0xcc, 0xa5, 0x8a, 0xfc, 0x4a, 0x55, 0xf9, 0x08, 0x84, 0x2a, 0xd2, 0xca, 0xd9,
+	0x55, 0x19, 0x1b, 0x92, 0xff, 0xbf, 0x21, 0x13, 0xb4, 0x0a, 0x53, 0x68, 0xfd, 0x06, 0x70, 0x49,
+	0xd0, 0xf2, 0x23, 0xdb, 0xbb, 0x51, 0x6e, 0x3d, 0x84, 0xf3, 0x61, 0x44, 0xe9, 0xc1, 0x7e, 0x2c,
+	0xb9, 0x89, 0x11, 0xaa, 0xdd, 0xc6, 0x28, 0xd1, 0x6b, 0x72, 0x73, 0xa6, 0x8c, 0xac, 0xaa, 0x88,
+	0xd5, 0x24, 0xd3, 0x1c, 0x49, 0x5f, 0xaf, 0xfa, 0x0e, 0xf3, 0xf7, 0x62, 0x67, 0x40, 0xf8, 0x0e,
+	0x61, 0x0e, 0xee, 0xd9, 0x87, 0x84, 0xc6, 0xd1, 0x2c, 0x53, 0x3f, 0x80, 0xd5, 0xc1, 0x04, 0xc4,
+	0x95, 0x9e, 0x64, 0x3a, 0xaf, 0xe1, 0xcc, 0x27, 0x00, 0x4b, 0xea, 0x51, 0x7d, 0x04, 0x17, 0x0e,
+	0x71, 0xc4, 0x08, 0x0d, 0xf6, 0x83, 0x78, 0xe0, 0xe0, 0x48, 0xd0, 0x2b, 0x8e, 0xdf, 0xc2, 0x0e,
+	0xca, 0xd6, 0x91, 0x35, 0xaf, 0x12, 0xcf, 0x44, 0x3c, 0x89, 0xa0, 0x9e, 0xe7, 0xfc, 0x34, 0x04,
+	0x59, 0x1f, 0x23, 0x48, 0x0e, 0x92, 0xd8, 0xe7, 0x23, 0x3d, 0xd7, 0x7d, 0x7a, 0x7c, 0xda, 0x04,
+	0x27, 0xa7, 0x4d, 0xf0, 0xf3, 0xb4, 0x09, 0xde, 0x9f, 0x35, 0x73, 0x27, 0x67, 0xcd, 0xdc, 0x8f,
+	0xb3, 0x66, 0xee, 0x75, 0xdb, 0x27, 0xbc, 0x17, 0x3b, 0x86, 0x4b, 0x07, 0xa6, 0x4b, 0xd9, 0x80,
+	0x32, 0xf5, 0xd9, 0x60, 0xde, 0x1b, 0xf3, 0xad, 0x99, 0xfe, 0x2d, 0x37, 0xdb, 0x1b, 0xea, 0x87,
+	0xc9, 0x87, 0x21, 0x66, 0x4e, 0x49, 0x88, 0x74, 0xff, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xcc,
+	0xaf, 0x5c, 0x74, 0x4b, 0x07, 0x00, 0x00,
 }
 
 func (m *IdentifiedClientState) Marshal() (dAtA []byte, err error) {
@@ -846,6 +851,62 @@ func (m *MsgUpdateClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpgradeClient) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpgradeClient) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpgradeClient) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ProofUpgrade) > 0 {
+		i -= len(m.ProofUpgrade)
+		copy(dAtA[i:], m.ProofUpgrade)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ProofUpgrade)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ClientState != nil {
+		{
+			size, err := m.ClientState.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintClient(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClientId) > 0 {
+		i -= len(m.ClientId)
+		copy(dAtA[i:], m.ClientId)
+		i = encodeVarintClient(dAtA, i, uint64(len(m.ClientId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgSubmitMisbehaviour) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -915,13 +976,13 @@ func (m *Height) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.EpochHeight != 0 {
-		i = encodeVarintClient(dAtA, i, uint64(m.EpochHeight))
+	if m.VersionHeight != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.VersionHeight))
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.EpochNumber != 0 {
-		i = encodeVarintClient(dAtA, i, uint64(m.EpochNumber))
+	if m.VersionNumber != 0 {
+		i = encodeVarintClient(dAtA, i, uint64(m.VersionNumber))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1061,6 +1122,31 @@ func (m *MsgUpdateClient) Size() (n int) {
 	return n
 }
 
+func (m *MsgUpgradeClient) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClientId)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	if m.ClientState != nil {
+		l = m.ClientState.Size()
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.ProofUpgrade)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovClient(uint64(l))
+	}
+	return n
+}
+
 func (m *MsgSubmitMisbehaviour) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1088,11 +1174,11 @@ func (m *Height) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.EpochNumber != 0 {
-		n += 1 + sovClient(uint64(m.EpochNumber))
+	if m.VersionNumber != 0 {
+		n += 1 + sovClient(uint64(m.VersionNumber))
 	}
-	if m.EpochHeight != 0 {
-		n += 1 + sovClient(uint64(m.EpochHeight))
+	if m.VersionHeight != 0 {
+		n += 1 + sovClient(uint64(m.VersionHeight))
 	}
 	return n
 }
@@ -1787,7 +1873,7 @@ func (m *MsgCreateClient) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowClient
@@ -1797,25 +1883,23 @@ func (m *MsgCreateClient) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthClient
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthClient
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
-			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1942,6 +2026,159 @@ func (m *MsgUpdateClient) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpgradeClient) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpgradeClient: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpgradeClient: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClientId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientState", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientState == nil {
+				m.ClientState = &types.Any{}
+			}
+			if err := m.ClientState.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProofUpgrade", wireType)
+			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
@@ -1967,10 +2204,42 @@ func (m *MsgUpdateClient) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
+			m.ProofUpgrade = append(m.ProofUpgrade[:0], dAtA[iNdEx:postIndex]...)
+			if m.ProofUpgrade == nil {
+				m.ProofUpgrade = []byte{}
 			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2097,7 +2366,7 @@ func (m *MsgSubmitMisbehaviour) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowClient
@@ -2107,25 +2376,23 @@ func (m *MsgSubmitMisbehaviour) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthClient
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthClient
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signer = append(m.Signer[:0], dAtA[iNdEx:postIndex]...)
-			if m.Signer == nil {
-				m.Signer = []byte{}
-			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2182,9 +2449,9 @@ func (m *Height) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochNumber", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field VersionNumber", wireType)
 			}
-			m.EpochNumber = 0
+			m.VersionNumber = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowClient
@@ -2194,16 +2461,16 @@ func (m *Height) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EpochNumber |= uint64(b&0x7F) << shift
+				m.VersionNumber |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EpochHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field VersionHeight", wireType)
 			}
-			m.EpochHeight = 0
+			m.VersionHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowClient
@@ -2213,7 +2480,7 @@ func (m *Height) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.EpochHeight |= uint64(b&0x7F) << shift
+				m.VersionHeight |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

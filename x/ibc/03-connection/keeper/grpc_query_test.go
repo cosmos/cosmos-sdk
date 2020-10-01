@@ -338,9 +338,9 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"invalid connection ID",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId: "",
-					EpochNumber:  0,
-					EpochHeight:  1,
+					ConnectionId:  "",
+					VersionNumber: 0,
+					VersionHeight: 1,
 				}
 			},
 			false,
@@ -349,9 +349,9 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 			"connection not found",
 			func() {
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId: "test-connection-id",
-					EpochNumber:  0,
-					EpochHeight:  1,
+					ConnectionId:  "test-connection-id",
+					VersionNumber: 0,
+					VersionHeight: 1,
 				}
 			},
 			false,
@@ -362,9 +362,9 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				_, _, connA, _, _, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, channeltypes.UNORDERED)
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId: connA.ID,
-					EpochNumber:  0,
-					EpochHeight:  uint64(suite.chainA.GetContext().BlockHeight()), // use current height
+					ConnectionId:  connA.ID,
+					VersionNumber: 0,
+					VersionHeight: uint64(suite.chainA.GetContext().BlockHeight()), // use current height
 				}
 			}, false,
 		},
@@ -379,9 +379,9 @@ func (suite *KeeperTestSuite) TestQueryConnectionConsensusState() {
 				expClientID = clientA
 
 				req = &types.QueryConnectionConsensusStateRequest{
-					ConnectionId: connA.ID,
-					EpochNumber:  clientState.GetLatestHeight().GetEpochNumber(),
-					EpochHeight:  clientState.GetLatestHeight().GetEpochHeight(),
+					ConnectionId:  connA.ID,
+					VersionNumber: clientState.GetLatestHeight().GetEpochNumber(),
+					VersionHeight: clientState.GetLatestHeight().GetEpochHeight(),
 				}
 			},
 			true,

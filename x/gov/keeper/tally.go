@@ -35,14 +35,20 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	keeper.IterateVotes(ctx, proposal.ProposalId, func(vote types.Vote) bool {
 		// if validator, just record it in the map
-		valAddrStr := sdk.ValAddress(vote.Voter).String()
+		voter, err := sdk.AccAddressFromBech32(vote.Voter)
+
+		if err != nil {
+			panic(err)
+		}
+
+		valAddrStr := sdk.ValAddress(voter.Bytes()).String()
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Option
 			currValidators[valAddrStr] = val
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation exported.DelegationI) (stop bool) {
+		keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation exported.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr().String()
 
 			if val, ok := currValidators[valAddrStr]; ok {
@@ -61,7 +67,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 			return false
 		})
 
-		keeper.deleteVote(ctx, vote.ProposalId, vote.Voter)
+		keeper.deleteVote(ctx, vote.ProposalId, voter)
 		return false
 	})
 

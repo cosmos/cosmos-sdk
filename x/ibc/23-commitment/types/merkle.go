@@ -126,7 +126,7 @@ func (proof MerkleProof) VerifyMembership(specs []*ics23.ProofSpec, root exporte
 	// VerifyMembership specific argument validation
 	mpath, ok := path.(MerklePath)
 	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerkleProof", path)
+		return sdkerrors.Wrapf(ErrInvalidProof, "path %v is not of type MerklePath", path)
 	}
 	if len(mpath.KeyPath.Keys) != len(specs) {
 		return sdkerrors.Wrapf(ErrInvalidProof, "path length %d not same as proof %d",

@@ -13,6 +13,7 @@ const (
 )
 
 // NewMsgTransfer creates a new MsgTransfer instance
+//nolint:interfacer
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,
 	token sdk.Coin, sender sdk.AccAddress, receiver string,
@@ -22,7 +23,7 @@ func NewMsgTransfer(
 		SourcePort:       sourcePort,
 		SourceChannel:    sourceChannel,
 		Token:            token,
-		Sender:           sender,
+		Sender:           sender.String(),
 		Receiver:         receiver,
 		TimeoutHeight:    timeoutHeight,
 		TimeoutTimestamp: timeoutTimestamp,
@@ -54,7 +55,7 @@ func (msg MsgTransfer) ValidateBasic() error {
 	if !msg.Token.IsPositive() {
 		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
 	}
-	if msg.Sender.Empty() {
+	if msg.Sender == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if msg.Receiver == "" {
@@ -70,5 +71,9 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Sender}
+	valAddr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr}
 }

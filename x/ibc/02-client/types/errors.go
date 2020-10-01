@@ -28,4 +28,5 @@ var (
 	ErrSelfConsensusStateNotFound             = sdkerrors.Register(SubModuleName, 21, "self consensus state not found")
 	ErrUpdateClientFailed                     = sdkerrors.Register(SubModuleName, 22, "unable to update light client")
 	ErrInvalidUpdateClientProposal            = sdkerrors.Register(SubModuleName, 23, "invalid update client proposal")
+	ErrInvalidUpgradeClient                   = sdkerrors.Register(SubModuleName, 24, "invalid client upgrade")
 )

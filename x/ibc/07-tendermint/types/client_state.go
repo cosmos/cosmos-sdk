@@ -28,7 +28,7 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
-	allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
+	upgradePath *commitmenttypes.MerklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
 		ChainId:                      chainID,
@@ -39,6 +39,7 @@ func NewClientState(
 		LatestHeight:                 latestHeight,
 		FrozenHeight:                 clienttypes.ZeroHeight(),
 		ProofSpecs:                   specs,
+		UpgradePath:                  upgradePath,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
 		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,
 	}
@@ -119,6 +120,20 @@ func (cs ClientState) Validate() error {
 // as a string array specifying the proof type for each position in chained proof
 func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return cs.ProofSpecs
+}
+
+// ZeroCustomFields returns a ClientState that is a copy of the current ClientState
+// with all client customizable fields zeroed out
+func (cs ClientState) ZeroCustomFields() exported.ClientState {
+	// copy over all chain-specified fields
+	// and leave custom fields empty
+	return &ClientState{
+		ChainId:         cs.ChainId,
+		UnbondingPeriod: cs.UnbondingPeriod,
+		LatestHeight:    cs.LatestHeight,
+		ProofSpecs:      cs.ProofSpecs,
+		UpgradePath:     cs.UpgradePath,
+	}
 }
 
 // VerifyClientState verifies a proof of the client state of the running chain

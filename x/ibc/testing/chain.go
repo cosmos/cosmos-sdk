@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -68,6 +69,8 @@ var (
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+
+	UpgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
@@ -194,6 +197,31 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
 	// have heights 1 above the IAVL tree. Thus we return proof height + 1
 	return proof, clienttypes.NewHeight(epoch, uint64(res.Height)+1)
+}
+
+// QueryUpgradeProof performs an abci query with the given key and returns the proto encoded merkle proof
+// for the query and the height at which the proof will succeed on a tendermint verifier.
+func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, clienttypes.Height) {
+	res := chain.App.Query(abci.RequestQuery{
+		Path:   "store/upgrade/key",
+		Height: int64(height - 1),
+		Data:   upgradetypes.UpgradedClientKey(),
+		Prove:  true,
+	})
+
+	merkleProof := commitmenttypes.MerkleProof{
+		Proof: res.ProofOps,
+	}
+
+	proof, err := chain.App.AppCodec().MarshalBinaryBare(&merkleProof)
+	require.NoError(chain.t, err)
+
+	epoch := clienttypes.ParseChainID(chain.ChainID)
+
+	// proof height + 1 is returned as the proof created corresponds to the height the proof
+	// was created in the IAVL tree. Tendermint and subsequently the clients that rely on it
+	// have heights 1 above the IAVL tree. Thus we return proof height + 1
+	return proof, clienttypes.NewHeight(epoch, uint64(res.Height+1))
 }
 
 // QueryClientStateProof performs and abci query for a client state
@@ -392,7 +420,7 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
 			height, commitmenttypes.GetSDKSpecs(),
-			false, false,
+			&UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:

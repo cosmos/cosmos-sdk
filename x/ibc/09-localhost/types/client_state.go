@@ -69,6 +69,11 @@ func (cs ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	return nil
 }
 
+// ZeroCustomFields returns the same client state since there are no custom fields in localhost
+func (cs ClientState) ZeroCustomFields() exported.ClientState {
+	return &cs
+}
+
 // CheckHeaderAndUpdateState updates the localhost client. It only needs access to the context
 func (cs *ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
@@ -95,6 +100,14 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore, _ exported.Header,
 ) (exported.ClientState, exported.ConsensusState, error) {
 	return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "cannot update localhost client with a proposal")
+}
+
+// VerifyUpgrade returns an error since localhost cannot be upgraded
+func (cs ClientState) VerifyUpgrade(
+	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
+	_ exported.ClientState, _ []byte,
+) error {
+	return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade localhost client")
 }
 
 // VerifyClientState verifies that the localhost client state is stored locally

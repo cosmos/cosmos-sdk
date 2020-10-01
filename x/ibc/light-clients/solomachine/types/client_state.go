@@ -68,6 +68,22 @@ func (cs ClientState) Validate() error {
 	return cs.ConsensusState.ValidateBasic()
 }
 
+// ZeroCustomFields returns solomachine client state with client-specific fields FrozenSequence,
+// and AllowUpdateAfterProposal zeroed out
+func (cs ClientState) ZeroCustomFields() exported.ClientState {
+	return NewClientState(
+		cs.Sequence, cs.ConsensusState, false,
+	)
+}
+
+// VerifyUpgrade returns an error since solomachine client does not support upgrades
+func (cs ClientState) VerifyUpgrade(
+	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
+	_ exported.ClientState, _ []byte,
+) error {
+	return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade solomachine client")
+}
+
 // VerifyClientState verifies a proof of the client state of the running chain
 // stored on the solo machine.
 func (cs ClientState) VerifyClientState(

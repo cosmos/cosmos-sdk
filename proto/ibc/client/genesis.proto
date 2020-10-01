@@ -13,7 +13,7 @@ message GenesisState {
   // consensus states from each client
   repeated ClientConsensusStates clients_consensus = 2 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "ClientsConsensusStates",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types.ClientsConsensusStates",
     (gogoproto.moretags)     = "yaml:\"clients_consensus\""
   ];
   // create localhost on initialization

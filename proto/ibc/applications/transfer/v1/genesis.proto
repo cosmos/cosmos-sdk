@@ -10,7 +10,7 @@ import "ibc/applications/transfer/v1/transfer.proto";
 message GenesisState {
   string              port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   repeated DenomTrace denom_traces = 2 [
-    (gogoproto.castrepeated) = "Traces",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types.Traces",
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"denom_traces\""
   ];

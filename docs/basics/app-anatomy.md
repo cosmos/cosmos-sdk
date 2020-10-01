@@ -51,9 +51,9 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 - **A reference to a [`legacyAmino`](../core/encoding.md) codec.** Some parts of the SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicity use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
 - **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering [`routes`](../core/baseapp.md#routing), [gRPC routes and Tendermint query routes](../core/baseapp.md#query-routing) or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
-See an example of application type definition from [`gaia`](https://github.com/cosmos/gaia)
+See an example of application type definition from `simapp`, the SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L83-L108
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/app.go#L140-L179
 
 ### Constructor Function
 
@@ -79,9 +79,9 @@ Here are the main actions performed by this function:
 
 Note that this function only creates an instance of the app, while the actual state is either carried over from the `~/.appd/data` folder if the node is restarted, or generated from the genesis file if the node is started for the first time.
 
-See an example of application constructor from [`gaia`](https://github.com/cosmos/gaia):
+See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L110-L230
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/app.go#L190-L427
 
 ### InitChainer
 
@@ -89,9 +89,9 @@ The `InitChainer` is a function that initializes the state of the application fr
 
 In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn will call the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../building-modules/module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#application-constructor), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
 
-See an example of an `InitChainer` from [`gaia`](https://github.com/cosmos/gaia):
+See an example of an `InitChainer` from `simapp`:
 
-+++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L242-L248
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/app.go#L450-L455
 
 ### BeginBlocker and EndBlocker
 
@@ -101,9 +101,9 @@ In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of
 
 As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./gas-fees.md) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
-See an example of `BeginBlocker` and `EndBlocker` functions from [`gaia`](https://github.com/cosmos/gaia)
+See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
-+++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L232-L240
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/app.go#L440-L448
 
 ### Register Codec
 
@@ -116,9 +116,9 @@ Please note that in this version of the SDK, the `MakeCodecs` function actually 
 - an `appCodec`, which will be used by default across the SDK, defaults to Protocol Buffers,
 - a `legacyAmino` codec, as some legacy parts of the SDK still uses Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `legacyAmino` codec should not be used by app developers anymore, and will be removed in the next releases.
 
-See an example of a `MakeCodecs` from [`gaia`](https://github.com/cosmos/gaia):
+See an example of a `MakeCodecs` from `simapp`:
 
-+++ https://github.com/cosmos/gaia/blob/d00db033d861c4f59e07038e61bcaf39274ff6da/app/app.go#L71-L81
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/app.go#L429-L435
 
 ## Modules
 

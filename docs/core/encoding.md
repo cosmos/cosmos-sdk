@@ -113,13 +113,18 @@ type UnpackInterfacesMessage interface {
 
 2. How to create modules using protobuf encoding?
 
+**Defining module types**
 TODO
-- conventions: cf. ADR 023
-- module types:
   - state
   - sdk Msg
   - queries
   - genesis
+  
+**Naming and conventions**
+
+We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
+and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../architecture/adr-023-protobuf-naming.md)
+
 
 #### Transaction Encoding
 

@@ -17,16 +17,20 @@ type PubKey interface {
 	Type() string
 }
 
-// PrivKey defines a private key and
-// extends proto.Message.
-type PrivKey interface {
-	proto.Message
-
+// BasePrivKey defines a private key
+type BasePrivKey interface {
 	Bytes() []byte
 	Sign(msg []byte) ([]byte, error)
 	PubKey() PubKey
-	Equals(PrivKey) bool
+	Equals(BasePrivKey) bool
 	Type() string
+}
+
+// PrivKey extends proto.Message and
+// BasePrivKey.
+type PrivKey interface {
+	proto.Message
+	BasePrivKey
 }
 
 type (

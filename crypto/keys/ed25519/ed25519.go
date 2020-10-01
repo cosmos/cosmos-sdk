@@ -78,7 +78,7 @@ func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
-func (privKey *PrivKey) Equals(other cryptotypes.PrivKey) bool {
+func (privKey *PrivKey) Equals(other cryptotypes.BasePrivKey) bool {
 	if privKey.Type() != other.Type() {
 		return false
 	}

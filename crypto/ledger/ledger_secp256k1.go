@@ -36,6 +36,16 @@ type (
 		// Signs a message (requires user confirmation)
 		SignSECP256K1([]uint32, []byte) ([]byte, error)
 	}
+
+	// PrivKeyLedgerSecp256K1 implements PrivKey, calling the ledger nano we
+	// cache the PubKey from the first call to use it later.
+	PrivKeyLedgerSecp256K1 struct {
+		// CachedPubKey should be private, but we want to encode it via
+		// go-amino so we can view the address later, even without having the
+		// ledger attached.
+		CachedPubKey types.PubKey
+		Path         hd.BIP44Params
+	}
 )
 
 // NewPrivKeySecp256k1Unsafe will generate a new key and store the public key for later use.
@@ -43,7 +53,7 @@ type (
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.PrivKey, error) {
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.BasePrivKey, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -55,12 +65,12 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.PrivKey, error) {
 		return nil, err
 	}
 
-	return &PrivKeyLedgerSecp256K1{pubKey.(*secp256k1.PubKey), &path}, nil
+	return PrivKeyLedgerSecp256K1{pubKey, path}, nil
 }
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.PrivKey, string, error) {
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.BasePrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
@@ -72,23 +82,23 @@ func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.PrivKey, string
 		return nil, "", err
 	}
 
-	return &PrivKeyLedgerSecp256K1{pubKey.(*secp256k1.PubKey), &path}, addr, nil
+	return PrivKeyLedgerSecp256K1{pubKey, path}, addr, nil
 }
 
 // PubKey returns the cached public key.
-func (pkl *PrivKeyLedgerSecp256K1) PubKey() types.PubKey {
+func (pkl PrivKeyLedgerSecp256K1) PubKey() types.PubKey {
 	return pkl.CachedPubKey
 }
 
 // Sign returns a secp256k1 signature for the corresponding message
-func (pkl *PrivKeyLedgerSecp256K1) Sign(message []byte) ([]byte, error) {
+func (pkl PrivKeyLedgerSecp256K1) Sign(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
 	}
 	defer warnIfErrors(device.Close)
 
-	return sign(device, *pkl, message)
+	return sign(device, pkl, message)
 }
 
 // ShowAddress triggers a ledger device to show the corresponding address.
@@ -138,20 +148,20 @@ func (pkl *PrivKeyLedgerSecp256K1) AssertIsPrivKeyInner() {}
 
 // Bytes implements the PrivKey interface. It stores the cached public key so
 // we can verify the same key when we reconnect to a ledger.
-func (pkl *PrivKeyLedgerSecp256K1) Bytes() []byte {
+func (pkl PrivKeyLedgerSecp256K1) Bytes() []byte {
 	return cdc.MustMarshalBinaryBare(pkl)
 }
 
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
-func (pkl *PrivKeyLedgerSecp256K1) Equals(other types.PrivKey) bool {
-	if otherKey, ok := other.(*PrivKeyLedgerSecp256K1); ok {
+func (pkl PrivKeyLedgerSecp256K1) Equals(other types.BasePrivKey) bool {
+	if otherKey, ok := other.(PrivKeyLedgerSecp256K1); ok {
 		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}
 	return false
 }
 
-func (pkl *PrivKeyLedgerSecp256K1) Type() string { return "PrivKeyLedgerSecp256K1" }
+func (pkl PrivKeyLedgerSecp256K1) Type() string { return "PrivKeyLedgerSecp256K1" }
 
 // warnIfErrors wraps a function and writes a warning to stderr. This is required
 // to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
@@ -184,7 +194,7 @@ func getDevice() (SECP256K1, error) {
 }
 
 func validateKey(device SECP256K1, pkl PrivKeyLedgerSecp256K1) error {
-	pub, err := getPubKeyUnsafe(device, *pkl.Path)
+	pub, err := getPubKeyUnsafe(device, pkl.Path)
 	if err != nil {
 		return err
 	}

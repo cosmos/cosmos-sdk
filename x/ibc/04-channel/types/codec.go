@@ -11,15 +11,15 @@ import (
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.channel.ChannelI",
+		"ibc.core.channel.v1.ChannelI",
 		(*exported.ChannelI)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.channel.CounterpartyChannelI",
+		"ibc.core.channel.v1.CounterpartyChannelI",
 		(*exported.CounterpartyChannelI)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.channel.PacketI",
+		"ibc.core.channel.v1.PacketI",
 		(*exported.PacketI)(nil),
 	)
 	registry.RegisterImplementations(

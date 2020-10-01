@@ -23,20 +23,21 @@ message MsgConnectionOpenInit {
 message MsgConnectionOpenTry {
   string              client_id           = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   string              connection_id       = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  google.protobuf.Any client_state        = 3 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  Counterparty        counterparty        = 4 [(gogoproto.nullable) = false];
-  repeated string   counterparty_versions = 5 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
-  ibc.client.Height proof_height = 6 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string              proved_id           = 3 [(gogoproto.moretags) = "yaml:\"proved_id\""];
+  google.protobuf.Any client_state        = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty        counterparty        = 5 [(gogoproto.nullable) = false];
+  repeated string   counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.client.Height proof_height = 7 [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
   // proof of the initialization the connection on Chain A: `UNITIALIZED ->
   // INIT`
-  bytes proof_init = 7 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  bytes proof_init = 8 [(gogoproto.moretags) = "yaml:\"proof_init\""];
   // proof of client state included in message
-  bytes proof_client = 8 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  bytes proof_client = 9 [(gogoproto.moretags) = "yaml:\"proof_client\""];
   // proof of client consensus state
-  bytes             proof_consensus  = 9 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
-  ibc.client.Height consensus_height = 10
+  bytes             proof_consensus  = 10 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.client.Height consensus_height = 11
       [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
-  bytes signer = 11 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes signer = 12 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to

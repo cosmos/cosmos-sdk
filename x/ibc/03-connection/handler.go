@@ -43,7 +43,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	}
 
 	if err := k.ConnOpenTry(
-		ctx, msg.ConnectionId, msg.Counterparty, msg.ClientId, targetClient,
+		ctx, msg.ConnectionId, msg.ProvedId, msg.Counterparty, msg.ClientId, targetClient,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {

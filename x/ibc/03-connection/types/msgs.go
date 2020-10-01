@@ -71,7 +71,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
-	connectionID, clientID, counterpartyConnectionID,
+	connectionID, provedID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
@@ -81,6 +81,7 @@ func NewMsgConnectionOpenTry(
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
 		ConnectionId:         connectionID,
+		ProvedId:             provedID,
 		ClientId:             clientID,
 		ClientState:          csAny,
 		Counterparty:         counterparty,
@@ -108,6 +109,9 @@ func (msg MsgConnectionOpenTry) Type() string {
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	if msg.ProvedId != "" && msg.ProvedID != msg.ConnectionId {
+		return sdkerrors.Wrap(types.ErrInvalidConnectionIdentifier, "proved identifier must be empty or equal to connection identifier")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")

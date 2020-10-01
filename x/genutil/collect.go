@@ -99,18 +99,16 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 	var addressesIPs []string
 
 	for _, fo := range fos {
-		if fo.IsDir() { // TODO: Should we continually traverse this directory?
+		if fo.IsDir() {
 			continue
 		}
 		if !strings.HasSuffix(fo.Name(), ".json") {
 			continue
 		}
 
-		fullPath := filepath.Join(genTxsDir, fo.Name())
 		// get the genTx
-		var jsonRawTx []byte
-
-		if jsonRawTx, err = ioutil.ReadFile(fullPath); err != nil {
+		jsonRawTx, err := ioutil.ReadFile(filepath.Join(genTxsDir, fo.Name()))
+		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

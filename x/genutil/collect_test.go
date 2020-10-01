@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -14,14 +18,13 @@ import (
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	gtypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type doNothingUnmarshalJSON struct {
 	codec.JSONMarshaler
 }
 
-func (dnj *doNothingUnmarshalJSON) UnmarshalJSON(b []byte, recv interface{}) error {
+func (dnj *doNothingUnmarshalJSON) UnmarshalJSON(_ []byte, _ proto.Message) error {
 	return nil
 }
 

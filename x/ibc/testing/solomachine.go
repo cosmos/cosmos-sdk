@@ -102,7 +102,7 @@ func (solo *Solomachine) ConsensusState() *solomachinetypes.ConsensusState {
 	}
 }
 
-// GetHeight returns an exported.Height with Sequence as EpochHeight
+// GetHeight returns an exported.Height with Sequence as VersionHeight
 func (solo *Solomachine) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, solo.Sequence)
 }

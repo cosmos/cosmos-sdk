@@ -22,7 +22,7 @@ import (
 // - the client or header provided are not parseable to tendermint types
 // - the header is invalid
 // - header height is less than or equal to the trusted header height
-// - header epoch is not equal to trusted header epoch
+// - header version is not equal to trusted header version
 // - header valset commit verification fails
 // - header timestamp is past the trusting period in relation to the consensus state
 // - header timestamp is less than or equal to the consensus state timestamp
@@ -33,8 +33,8 @@ import (
 // If we are updating to a past height, a consensus state is created for that height to be persisted in client store
 // If we are updating to a future height, the consensus state is created and the client state is updated to reflect
 // the new latest height
-// UpdateClient must only be used to update within a single epoch, thus header epoch number and trusted height's epoch
-// number must be the same. To update to a new epoch, use a separate upgrade path
+// UpdateClient must only be used to update within a single version, thus header version number and trusted height's version
+// number must be the same. To update to a new version, use a separate upgrade path
 // Tendermint client validity checking uses the bisection algorithm described
 // in the [Tendermint spec](https://github.com/tendermint/spec/blob/master/spec/consensus/light-client.md).
 func (cs ClientState) CheckHeaderAndUpdateState(
@@ -94,13 +94,13 @@ func checkValidity(
 		return err
 	}
 
-	// UpdateClient only accepts updates with a header at the same epoch
+	// UpdateClient only accepts updates with a header at the same version
 	// as the trusted consensus state
-	if header.GetHeight().GetEpochNumber() != header.TrustedHeight.EpochNumber {
+	if header.GetHeight().GetEpochNumber() != header.TrustedHeight.VersionNumber {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
-			"header height epoch %d does not match trusted header epoch %d",
-			header.GetHeight().GetEpochNumber(), header.TrustedHeight.EpochNumber,
+			"header height version %d does not match trusted header version %d",
+			header.GetHeight().GetEpochNumber(), header.TrustedHeight.VersionNumber,
 		)
 	}
 
@@ -128,12 +128,12 @@ func checkValidity(
 	}
 
 	chainID := clientState.GetChainID()
-	// If chainID is in epoch format, then set epoch number of chainID with the epoch number
+	// If chainID is in version format, then set version number of chainID with the version number
 	// of the header we are verifying
-	// This is useful if the update is at a previous epoch rather than an update to the latest epoch
+	// This is useful if the update is at a previous version rather than an update to the latest version
 	// of the client.
-	// The chainID must be set correctly for the previous epoch before attempting verification.
-	// Updates for previous epochs are not supported if the chainID is not in epoch format.
+	// The chainID must be set correctly for the previous version before attempting verification.
+	// Updates for previous epochs are not supported if the chainID is not in version format.
 	if clienttypes.IsEpochFormat(chainID) {
 		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
 	}
@@ -142,7 +142,7 @@ func checkValidity(
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
 	trustedHeader := tmtypes.Header{
 		ChainID:            chainID,
-		Height:             int64(header.TrustedHeight.EpochHeight),
+		Height:             int64(header.TrustedHeight.VersionHeight),
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}

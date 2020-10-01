@@ -65,7 +65,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated height %d", clientID, consensusHeight))
+	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight)
 
 	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
@@ -74,6 +74,41 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
+		),
+	)
+
+	return nil
+}
+
+// UpgradeClient upgrades the client to a new client state if this new client was committed to
+// by the old client at the specified upgrade height
+func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient exported.ClientState, proofUpgrade []byte) error {
+	clientState, found := k.GetClientState(ctx, clientID)
+	if !found {
+		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
+	}
+
+	// prevent upgrade if current client is frozen
+	if clientState.IsFrozen() {
+		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
+	}
+
+	err := clientState.VerifyUpgrade(ctx, k.cdc, k.ClientStore(ctx, clientID), upgradedClient, proofUpgrade)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "cannot upgrade client with ID: %s", clientID)
+	}
+
+	k.SetClientState(ctx, clientID, upgradedClient)
+
+	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", upgradedClient.GetLatestHeight())
+
+	// emitting events in the keeper emits for client upgrades
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeUpgradeClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
+			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, upgradedClient.GetLatestHeight().String()),
 		),
 	)
 

@@ -3,7 +3,7 @@ package types_test
 import (
 	"time"
 
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 

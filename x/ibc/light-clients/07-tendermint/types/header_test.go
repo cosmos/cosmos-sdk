@@ -5,7 +5,7 @@ import (
 
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 

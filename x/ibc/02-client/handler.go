@@ -76,7 +76,7 @@ func HandleMsgUpgradeClient(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpgr
 		return nil, err
 	}
 
-	if err = k.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.ProofUpgrade); err != nil {
+	if err = k.UpgradeClient(ctx, msg.ClientId, upgradedClient, msg.UpgradeHeight, msg.ProofUpgrade); err != nil {
 		return nil, err
 	}
 

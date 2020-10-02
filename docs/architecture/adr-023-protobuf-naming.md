@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020 April 27: Initial Draft
+- 2020 August 5: Update guidelines
 
 ## Status
 
@@ -122,10 +123,6 @@ way to do this. In that case, there are really just two different, but similar m
 * we want to add a new revamped API for an existing module and it's just too cumbersome to add it to the existing package,
 so putting it in `v2` is cleaner for users. In this case, care should be made to not deprecate support for
 `v1` if it is actively used in immutable smart contracts.
-
-An alternative to creating `v2` packages is creating `v2` messages and RPC methods. For instance say we found a better API
-for sending coins, then we could add `MsgSendV2` to the existing bank package without needing to change `MsgSend`
-or create a `bank.v2` package.
 
 #### Guidelines on unstable (alpha and beta) package versions
 

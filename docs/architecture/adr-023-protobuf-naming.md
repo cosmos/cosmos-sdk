@@ -137,7 +137,6 @@ or significantly alter the package in the near future
 * a package *should* be marked as `beta` *if and only if* there is an active discussion to 
 significantly refactor/rework the functionality in the near future but not remove it
 * modules *can and should* have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
-Experimental functionality to existing stable packages could be added as `alpha` for instance.
 
 *`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility.*
 Whenever code is released into the wild, especially on a blockchain, there is a high cost to changing things. In some

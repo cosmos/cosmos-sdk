@@ -40,7 +40,7 @@ func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer)
 
 	defer func() {
 		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", "ibc", "transfer"},
+			[]string{"tx", "msg", "ibc", msg.Type()},
 			float32(msg.Token.Amount.Int64()),
 			[]metrics.Label{telemetry.NewLabel("denom", msg.Token.Denom)},
 		)

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -44,7 +43,7 @@ func (k Keeper) ConnOpenInit(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
 	return nil
 }
 
@@ -154,7 +153,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> TRYOPEN ", connectionID, previousConnection.State))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
 	return nil
 }
 
@@ -256,7 +255,7 @@ func (k Keeper) ConnOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> OPEN ", connectionID, connection.State))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", connection.State.String(), "new-state", "OPEN")
 
 	// Update connection state to Open
 	connection.State = types.OPEN
@@ -305,6 +304,6 @@ func (k Keeper) ConnOpenConfirm(
 	// Update ChainB's connection to Open
 	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "TRYOPEN", "new-state", "OPEN")
 	return nil
 }

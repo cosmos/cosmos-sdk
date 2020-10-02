@@ -39,11 +39,13 @@ func handleMsgTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTransfer)
 	k.Logger(ctx).Info("IBC fungible token transfer", "token", msg.Token, "sender", msg.Sender, "receiver", msg.Receiver)
 
 	defer func() {
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", "ibc", msg.Type()},
-			float32(msg.Token.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Token.Denom)},
-		)
+		if msg.Token.Amount.IsInt64() {
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", "ibc", msg.Type()},
+				float32(msg.Token.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Token.Denom)},
+			)
+		}
 	}()
 
 	ctx.EventManager().EmitEvents(sdk.Events{

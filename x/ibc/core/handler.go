@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
@@ -205,6 +207,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				}
 			}
 
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"tx", "msg", "ibc", msg.Type()},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+					},
+				)
+			}()
+
 			return res, nil
 
 		case *channeltypes.MsgAcknowledgement:
@@ -236,6 +251,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, err
 			}
 
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"tx", "msg", "ibc", msg.Type()},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+					},
+				)
+			}()
+
 			return res, nil
 
 		case *channeltypes.MsgTimeout:
@@ -266,6 +294,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
+
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"tx", "msg", "ibc", msg.Type()},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+					},
+				)
+			}()
 
 			return res, nil
 
@@ -299,6 +340,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
+
+			defer func() {
+				telemetry.IncrCounter(1, "tx", "msg", "ibc", msg.Type())
+			}()
 
 			return res, nil
 

@@ -3,8 +3,6 @@ package keeper
 import (
 	"bytes"
 
-	"github.com/armon/go-metrics"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -49,11 +47,7 @@ func (k Keeper) ConnOpenInit(
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
 
 	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{"ibc", "connection", "open-init"},
-			1,
-			[]metrics.Label{telemetry.NewLabel("client-id", clientID)},
-		)
+		telemetry.IncrCounter(1, "ibc", "connection", "open-init")
 	}()
 
 	return nil

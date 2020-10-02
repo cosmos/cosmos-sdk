@@ -75,6 +75,13 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	store := ctx.KVStore(k.storeKey)
 
+	// remove any upgraded client previously set
+	oldPlan, ok := k.GetUpgradePlan(ctx)
+	if ok {
+		// delete upgraded client key to remove upgraded client set by outdated plan
+		store.Delete(types.UpgradedClientKey(oldPlan.Height))
+	}
+
 	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
@@ -83,15 +90,13 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
-		return k.SetUpgradedClient(ctx, clientState)
+		return k.SetUpgradedClient(ctx, plan.Height, clientState)
 	}
-	// delete upgraded client key to remove any upgraded client set by outdated plan
-	store.Delete(types.UpgradedClientKey())
 	return nil
 }
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain
-func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) error {
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ClientState) error {
 	// zero out any custom fields before setting
 	cs = cs.ZeroCustomFields()
 	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
@@ -100,14 +105,15 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) e
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.UpgradedClientKey(), bz)
+	store.Set(types.UpgradedClientKey(upgradeHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, error) {
+// given the planned upgrade height
+func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) (ibcexported.ClientState, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.UpgradedClientKey())
+	bz := store.Get(types.UpgradedClientKey(height))
 	if len(bz) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no upgraded client in store")
 	}

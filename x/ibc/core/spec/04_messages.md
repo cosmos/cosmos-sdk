@@ -116,6 +116,7 @@ using the `MsgConnectionOpenTry`.
 type MsgConnectionOpenTry struct {
 	ClientId             string
 	ConnectionId         string
+	ProvedId             string
 	ClientState          *types.Any // proto-packed counterparty client
 	Counterparty         Counterparty
 	CounterpartyVersions []string
@@ -132,6 +133,7 @@ This message is expected to fail if:
 
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
+- `ProvedId` is not empty and doesn't match `ConnectionId`
 - `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty
@@ -147,7 +149,9 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an TRYOPEN State.
+The message creates a connection for the given ID with an TRYOPEN State. The `provedID` 
+represents the connection ID the counterparty set under `connection.Counterparty.ConnectionID`
+to represent the connection ID this chain should use.
 
 ### MsgConnectionOpenAck
 
@@ -156,21 +160,23 @@ using the `MsgConnectionOpenAck`.
 
 ```go
 type MsgConnectionOpenAck struct {
-	ConnectionId    string
-	Version         string
-	ClientState     *types.Any // proto-packed counterparty client
-	ProofHeight     Height
-	ProofTry        []byte
-	ProofClient     []byte
-	ProofConsensus  []byte
-	ConsensusHeight Height
-	Signer          sdk.AccAddress
+	ConnectionId             string
+	CounterpartyConnectionId string 
+	Version                  string
+	ClientState              *types.Any // proto-packed counterparty client
+	ProofHeight              Height
+	ProofTry                 []byte
+	ProofClient              []byte
+	ProofConsensus           []byte
+	ConsensusHeight          Height
+	Signer                   sdk.AccAddress
 }
 ```
 
 This message is expected to fail if:
 
 - `ConnectionId` is invalid (see naming requirements)
+- `CounterpartyConnectionId` is invalid (see naming requirements)
 - `Version` is empty
 - `ClientState` is not a valid client of the executing chain
 - `ProofHeight` is zero
@@ -183,7 +189,8 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided by message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message sets the connection state for the given ID to OPEN.
+The message sets the connection state for the given ID to OPEN. `CounterpartyConnectionId`
+should be the `ConnectionId` used by the counterparty connection.
 
 ### MsgConnectionOpenConfirm
 

@@ -101,7 +101,6 @@ func updateValidators(
 			delete(current, str)
 		} else if _, ok := current[str]; ok {
 			// validator already exists
-			// mVal.val = update
 			event("end_block", "validator_updates", "updated")
 
 		} else {

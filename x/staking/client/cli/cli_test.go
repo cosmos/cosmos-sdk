@@ -1269,7 +1269,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 

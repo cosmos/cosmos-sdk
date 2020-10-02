@@ -153,7 +153,7 @@ func (k Keeper) ChanOpenTry(
 	if provedChannelID != channelID && provedChannelID != "" {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelIdentifier,
-			"proved channelidentifier (%s) must equal channel identifier (%s) or be empty", provedChannelID, channelID,
+			"proved channel identifier (%s) must equal channel identifier (%s) or be empty", provedChannelID, channelID,
 		)
 	}
 

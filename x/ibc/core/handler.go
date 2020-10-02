@@ -297,13 +297,14 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 			defer func() {
 				telemetry.IncrCounterWithLabels(
-					[]string{"tx", "msg", "ibc", msg.Type()},
+					[]string{"ibc", "timeout", "packet"},
 					1,
 					[]metrics.Label{
 						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
 						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
 						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
 						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+						telemetry.NewLabel("timeout-type", "height"),
 					},
 				)
 			}()
@@ -342,7 +343,17 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			}
 
 			defer func() {
-				telemetry.IncrCounter(1, "tx", "msg", "ibc", msg.Type())
+				telemetry.IncrCounterWithLabels(
+					[]string{"ibc", "timeout", "packet"},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+						telemetry.NewLabel("timeout-type", "channel-closed"),
+					},
+				)
 			}()
 
 			return res, nil

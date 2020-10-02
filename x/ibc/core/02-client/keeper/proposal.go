@@ -39,9 +39,13 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
-			[]string{"ibc", "client", "update", "proposal"},
+			[]string{"ibc", "client", "update"},
 			1,
-			[]metrics.Label{telemetry.NewLabel("type", clientState.ClientType())},
+			[]metrics.Label{
+				telemetry.NewLabel("client-type", clientState.ClientType()),
+				telemetry.NewLabel("client-id", p.ClientId),
+				telemetry.NewLabel("update-type", "proposal"),
+			},
 		)
 	}()
 

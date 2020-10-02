@@ -12,6 +12,10 @@ option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 option (gogoproto.goproto_getters_all)  = false;
 
+service Msg {
+  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse) {}
+}
+
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 message MsgSubmitProposal {
@@ -24,6 +28,10 @@ message MsgSubmitProposal {
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
   string proposer = 3;
+}
+
+message MsgSubmitProposalResponse {
+  uint64 proposal_id = 1;
 }
 
 // MsgVote defines a message to cast a vote.

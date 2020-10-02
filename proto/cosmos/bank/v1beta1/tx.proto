@@ -7,6 +7,10 @@ import "cosmos/bank/v1beta1/bank.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
+service Msg {
+  rpc Send(MsgSend) returns (MsgSendResponse);
+}
+
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
   option (gogoproto.equal)           = false;
@@ -17,6 +21,8 @@ message MsgSend {
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
+
+message MsgSendResponse {}
 
 // MsgMultiSend represents an arbitrary multi-in, multi-out send message.
 message MsgMultiSend {

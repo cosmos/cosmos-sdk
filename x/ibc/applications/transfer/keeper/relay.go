@@ -158,8 +158,13 @@ func (k Keeper) SendTransfer(
 		return err
 	}
 
-	// TODO: add receiving chain-id?
 	defer func() {
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", "ibc", "transfer"},
+			float32(token.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", fullDenomPath)},
+		)
+
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", types.ModuleName, "send"},
 			1,

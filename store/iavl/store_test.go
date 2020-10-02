@@ -93,17 +93,17 @@ func TestLoadStore(t *testing.T) {
 	// Querying a new store at some previous non-pruned height H
 	newHStore, err := LoadStore(db, cIDH, false)
 	require.NoError(t, err)
-	require.Nil(t, string(newHStore.Get([]byte("aloha"))))
+	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
 
 	// Querying a new store at some previous pruned height Hp
 	newHpStore, err := LoadStore(db, cIDHp, false)
 	require.NoError(t, err)
-	require.Nil(t, string(newHpStore.Get([]byte("aloha"))))
+	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
 
 	// Querying a new store at current height H
 	newHcStore, err := LoadStore(db, cIDHc, false)
 	require.NoError(t, err)
-	require.Nil(t, string(newHcStore.Get([]byte("aloha"))))
+	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
 }
 
 func TestGetImmutable(t *testing.T) {

@@ -43,7 +43,6 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, uint64(0x8c), authGenesis.Params.GetMaxMemoCharacters())
 	require.Equal(t, uint64(0x2b6), authGenesis.Params.GetSigVerifyCostED25519())
 	require.Equal(t, uint64(0x1ff), authGenesis.Params.GetSigVerifyCostSecp256k1())
-	// TODO should check PubKeyChangeCost here?
 	require.Equal(t, uint64(9), authGenesis.Params.GetTxSigLimit())
 	require.Equal(t, uint64(5), authGenesis.Params.GetTxSizeCostPerByte())
 

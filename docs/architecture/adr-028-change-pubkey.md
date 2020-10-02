@@ -45,7 +45,7 @@ Here `PubKey` is bech32-encoded one where it has prefix for secp256k1 or ed25519
 
 In addition, bonus gas amount for changing pubkey is configured as parameter `PubKeyChangeCost`.
 ```go
-	amount := GetParams(ctx).PubKeyChangeCost
+	amount := pk.GetParams(ctx).PubKeyChangeCost
 	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
 ```
 Bonus gas is paid inside handler, using `ConsumeGas` function.

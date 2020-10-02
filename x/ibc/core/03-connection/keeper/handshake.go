@@ -3,6 +3,9 @@ package keeper
 import (
 	"bytes"
 
+	"github.com/armon/go-metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -23,7 +26,7 @@ func (k Keeper) ConnOpenInit(
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return types.ErrConnectionExists
+		return sdkerrors.Wrap(types.ErrConnectionExists, connectionID)
 	}
 
 	versions := types.GetCompatibleEncodedVersions()
@@ -44,6 +47,15 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "connection", "open-init"},
+			1,
+			[]metrics.Label{telemetry.NewLabel("client-id", clientID)},
+		)
+	}()
+
 	return nil
 }
 
@@ -82,7 +94,7 @@ func (k Keeper) ConnOpenTry(
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return clienttypes.ErrSelfConsensusStateNotFound
+		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
 	if provedID != connectionID && provedID != "" {
@@ -154,6 +166,11 @@ func (k Keeper) ConnOpenTry(
 
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
+	}()
+
 	return nil
 }
 
@@ -257,6 +274,10 @@ func (k Keeper) ConnOpenAck(
 
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", connection.State.String(), "new-state", "OPEN")
 
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-ack")
+	}()
+
 	// Update connection state to Open
 	connection.State = types.OPEN
 	connection.Versions = []string{encodedVersion}
@@ -305,5 +326,10 @@ func (k Keeper) ConnOpenConfirm(
 	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "TRYOPEN", "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-confirm")
+	}()
+
 	return nil
 }

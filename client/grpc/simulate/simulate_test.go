@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -93,7 +92,7 @@ func (s IntegrationTestSuite) TestSimulateService() {
 	// 2nd round: actually sign
 	sigV2, err = tx.SignWithPrivKey(
 		s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
-		authsigning.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
+		signing.SignerData{ChainID: s.sdkCtx.ChainID(), AccountNumber: accNum, Sequence: accSeq},
 		txBuilder, priv1, s.clientCtx.TxConfig, accSeq,
 	)
 	txBuilder.SetSignatures(sigV2)

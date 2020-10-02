@@ -254,7 +254,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{
+		signerData := signing.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),

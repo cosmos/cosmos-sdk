@@ -11,8 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct
@@ -100,14 +99,14 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 
 	// set SignatureV2 without actual signature bytes
 	seq1 := uint64(2) // Arbitrary account sequence
-	sigData1 := &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
-	sig1 := signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
+	sigData1 := &signing.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}
+	sig1 := signing.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
 
 	mseq := uint64(4) // Arbitrary account sequence
 	msigData := multisig.NewMultisig(2)
-	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
-	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
-	msig := signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
+	multisig.AddSignature(msigData, &signing.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 0)
+	multisig.AddSignature(msigData, &signing.SingleSignatureData{SignMode: signModeHandler.DefaultMode()}, 1)
+	msig := signing.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 
 	// fail validation without required signers
 	err = txBuilder.SetSignatures(sig1)
@@ -149,15 +148,15 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	mSigBz2, err := privKey2.Sign(mSignBytes)
 	s.Require().NoError(err)
 	msigData = multisig.NewMultisig(2)
-	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
+	multisig.AddSignature(msigData, &signing.SingleSignatureData{
 		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz1}, 0)
-	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
+	multisig.AddSignature(msigData, &signing.SingleSignatureData{
 		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz2}, 0)
 
 	// set signature
 	sigData1.Signature = sigBz
-	sig1 = signingtypes.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
-	msig = signingtypes.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
+	sig1 = signing.SignatureV2{PubKey: pubkey, Data: sigData1, Sequence: seq1}
+	msig = signing.SignatureV2{PubKey: multisigPk, Data: msigData, Sequence: mseq}
 	err = txBuilder.SetSignatures(sig1, msig)
 	s.Require().NoError(err)
 	sigTx = txBuilder.GetTx()
@@ -170,7 +169,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(sigTx.ValidateBasic())
 }
 
-func sigEquals(sig1, sig2 signingtypes.SignatureV2) bool {
+func sigEquals(sig1, sig2 signing.SignatureV2) bool {
 	if !sig1.PubKey.Equals(sig2.PubKey) {
 		return false
 	}
@@ -182,10 +181,10 @@ func sigEquals(sig1, sig2 signingtypes.SignatureV2) bool {
 	return sigDataEquals(sig1.Data, sig2.Data)
 }
 
-func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
+func sigDataEquals(data1, data2 signing.SignatureData) bool {
 	switch data1 := data1.(type) {
-	case *signingtypes.SingleSignatureData:
-		data2, ok := data2.(*signingtypes.SingleSignatureData)
+	case *signing.SingleSignatureData:
+		data2, ok := data2.(*signing.SingleSignatureData)
 		if !ok {
 			return false
 		}
@@ -195,8 +194,8 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 		}
 
 		return bytes.Equal(data1.Signature, data2.Signature)
-	case *signingtypes.MultiSignatureData:
-		data2, ok := data2.(*signingtypes.MultiSignatureData)
+	case *signing.MultiSignatureData:
+		data2, ok := data2.(*signing.MultiSignatureData)
 		if !ok {
 			return false
 		}
@@ -233,10 +232,10 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	memo := "foomemo"
 	msg := testdata.NewTestMsg(addr)
 	dummySig := []byte("dummySig")
-	sig := signingtypes.SignatureV2{
+	sig := signing.SignatureV2{
 		PubKey: pubkey,
-		Data: &signingtypes.SingleSignatureData{
-			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: dummySig,
 		},
 	}
@@ -259,7 +258,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	tx2, err := s.TxConfig.TxDecoder()(txBytes)
 
 	s.Require().NoError(err)
-	tx3, ok := tx2.(signing.Tx)
+	tx3, ok := tx2.(signing.FullTx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -267,7 +266,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	tx3Sigs, err := tx3.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
+	s.Require().Equal([]signing.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 
 	log("JSON encode transaction")
@@ -278,7 +277,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
 	s.Require().NoError(err)
-	tx3, ok = tx2.(signing.Tx)
+	tx3, ok = tx2.(signing.FullTx)
 	s.Require().True(ok)
 	s.Require().Equal([]sdk.Msg{msg}, tx3.GetMsgs())
 	s.Require().Equal(feeAmount, tx3.GetFee())
@@ -286,7 +285,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal(memo, tx3.GetMemo())
 	tx3Sigs, err = tx3.GetSignaturesV2()
 	s.Require().NoError(err)
-	s.Require().Equal([]signingtypes.SignatureV2{sig}, tx3Sigs)
+	s.Require().Equal([]signing.SignatureV2{sig}, tx3Sigs)
 	s.Require().Equal([]crypto.PubKey{pubkey}, tx3.GetPubKeys())
 }
 

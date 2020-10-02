@@ -4,18 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestDefaultTxDecoderError(t *testing.T) {
@@ -109,7 +106,7 @@ func TestUnknownFields(t *testing.T) {
 			authInfoBz, err := tt.authInfo.Marshal()
 			require.NoError(t, err)
 
-			txRaw := &tx.TxRaw{
+			txRaw := &sdktx.TxRaw{
 				BodyBytes:     bodyBz,
 				AuthInfoBytes: authInfoBz,
 			}
@@ -128,7 +125,7 @@ func TestUnknownFields(t *testing.T) {
 				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 				theTx, err := decoder(txBz)
 				require.NoError(t, err)
-				_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)
+				_, err = handler.GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)
 				require.EqualError(t, err, tt.shouldAminoErr)
 			}
 		})

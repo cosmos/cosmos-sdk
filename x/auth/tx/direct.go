@@ -3,11 +3,9 @@ package tx
 import (
 	"fmt"
 
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // signModeDirectHandler defines the SIGN_MODE_DIRECT SignModeHandler
@@ -16,19 +14,19 @@ type signModeDirectHandler struct{}
 var _ signing.SignModeHandler = signModeDirectHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (signModeDirectHandler) DefaultMode() signingtypes.SignMode {
-	return signingtypes.SignMode_SIGN_MODE_DIRECT
+func (signModeDirectHandler) DefaultMode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_DIRECT
 }
 
 // Modes implements SignModeHandler.Modes
-func (signModeDirectHandler) Modes() []signingtypes.SignMode {
-	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT}
+func (signModeDirectHandler) Modes() []signing.SignMode {
+	return []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT}
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
-	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT {
-		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
+func (signModeDirectHandler) GetSignBytes(mode signing.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+	if mode != signing.SignMode_SIGN_MODE_DIRECT {
+		return nil, fmt.Errorf("expected %s, got %s", signing.SignMode_SIGN_MODE_DIRECT, mode)
 	}
 
 	protoTx, ok := tx.(*wrapper)
@@ -45,7 +43,7 @@ func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signi
 // DirectSignBytes returns the SIGN_MODE_DIRECT sign bytes for the provided TxBody bytes, AuthInfo bytes, chain ID,
 // account number and sequence.
 func DirectSignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum uint64) ([]byte, error) {
-	signDoc := types.SignDoc{
+	signDoc := sdktx.SignDoc{
 		BodyBytes:     bodyBytes,
 		AuthInfoBytes: authInfoBytes,
 		ChainId:       chainID,

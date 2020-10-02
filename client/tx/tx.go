@@ -190,7 +190,7 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	stdTx, err := TxToStdTx(ctx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -341,7 +341,7 @@ func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 // SignWithPrivKey signs a given tx with the given private key, and returns the
 // corresponding SignatureV2 if the signing is successful.
 func SignWithPrivKey(
-	signMode signing.SignMode, signerData client.SignerData,
+	signMode signing.SignMode, signerData signing.SignerData,
 	txBuilder client.TxBuilder, priv crypto.PrivKey, txConfig client.TxConfig,
 	accSeq uint64,
 ) (signing.SignatureV2, error) {
@@ -394,7 +394,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 	}
 
 	pubKey := key.GetPubKey()
-	signerData := client.SignerData{
+	signerData := sining.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
@@ -457,9 +457,10 @@ func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
 }
 
-// TODO: maybe we don't need this. It's used for serialization
-// Renamed from ConvertTxToStdTx
-func TxToStdTx(tx Tx) legacytx.StdTx {
+// Converts FullTx to a legacy StdTx
+// [Deprecated]. After amino removal we should only use FullTx
+// TODO: move somewhere else. Renamed from ConvertTxToStdTx
+func TxToStdTx(tx sdk.FullTx) legacytx.StdTx {
 	if stdTx, ok := tx.(legacytx.StdTx); ok {
 		return stdTx, nil
 	}

@@ -8,9 +8,8 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -49,7 +48,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		AccountNumber: accNum,
 		Sequence:      seqNum,
 	}
-	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	expectedSignBz := legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{
@@ -60,7 +59,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = handler.GetSignBytes(signing.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 
 	// expect error with extension options
@@ -70,7 +69,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.NoError(t, err)
 	bldr.tx.Body.ExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()
-	signBz, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err = handler.GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
@@ -78,16 +77,16 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()
-	signBz, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err = handler.GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
 }
 
 func TestLegacyAminoJSONHandler_DefaultMode(t *testing.T) {
 	handler := signModeLegacyAminoJSONHandler{}
-	require.Equal(t, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
+	require.Equal(t, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, handler.DefaultMode())
 }
 
 func TestLegacyAminoJSONHandler_Modes(t *testing.T) {
 	handler := signModeLegacyAminoJSONHandler{}
-	require.Equal(t, []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
+	require.Equal(t, []signing.SignMode{signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}, handler.Modes())
 }

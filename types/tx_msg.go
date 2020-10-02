@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -67,15 +68,36 @@ type (
 	// Tx must have GetMemo() method to use ValidateMemoDecorator
 	TxWithMemo interface {
 		Tx
-		GetMemo() string
+		GetMemo() string // TODO: check if we can move it to `Tx`
 	}
 
 	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
 	// set a height timeout.
 	TxWithTimeoutHeight interface {
 		Tx
-
 		GetTimeoutHeight() uint64
+	}
+
+	// SigVerifiableTx defines a transaction interface for all signature verification
+	// handlers. It extends the sdk.Tx type.
+	// FIXME: moved from x/auth/signing/sig_verifiable_tx.go
+	SigVerifiableTx interface {
+		Tx
+		GetSigners() []AccAddress
+		GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
+		GetSignaturesV2() ([]signing.SignatureV2, error)
+	}
+
+	// Tx defines a transaction interface that supports all standard message, signature
+	// fee, memo, and auxiliary interfaces.
+	// It extends the sdk.Tx type (through tx.WithMemo)
+	// FIXME: moved from x/auth/signing/sig_verifiable_tx.go
+	FullTx interface {
+		SigVerifiableTx
+
+		TxWithMemo
+		FeeTx
+		TxWithTimeoutHeight
 	}
 )
 

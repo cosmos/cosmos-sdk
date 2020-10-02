@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	tx2 "github.com/cosmos/cosmos-sdk/client/tx"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
@@ -68,10 +68,10 @@ func (s *TestSuite) TestCopyTx() {
 	protoBuilder := s.protoCfg.NewTxBuilder()
 	buildTestTx(s.T(), protoBuilder)
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
-	err := tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder)
+	err := clienttx.CopyTx(protoBuilder.GetTx(), aminoBuilder)
 	s.Require().NoError(err)
 	protoBuilder2 := s.protoCfg.NewTxBuilder()
-	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder2)
+	err = clienttx.CopyTx(aminoBuilder.GetTx(), protoBuilder2)
 	s.Require().NoError(err)
 	bz, err := s.protoCfg.TxEncoder()(protoBuilder.GetTx())
 	s.Require().NoError(err)
@@ -83,10 +83,10 @@ func (s *TestSuite) TestCopyTx() {
 	aminoBuilder = s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	protoBuilder = s.protoCfg.NewTxBuilder()
-	err = tx2.CopyTx(aminoBuilder.GetTx(), protoBuilder)
+	err = clienttx.CopyTx(aminoBuilder.GetTx(), protoBuilder)
 	s.Require().NoError(err)
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	err = tx2.CopyTx(protoBuilder.GetTx(), aminoBuilder2)
+	err = clienttx.CopyTx(protoBuilder.GetTx(), aminoBuilder2)
 	s.Require().NoError(err)
 	bz, err = s.aminoCfg.TxEncoder()(aminoBuilder.GetTx())
 	s.Require().NoError(err)
@@ -95,11 +95,11 @@ func (s *TestSuite) TestCopyTx() {
 	s.Require().Equal(bz, bz2)
 }
 
-func (s *TestSuite) TestConvertTxToStdTx() {
+func (s *TestSuite) TestTxToStdTx() {
 	// proto tx
 	protoBuilder := s.protoCfg.NewTxBuilder()
 	buildTestTx(s.T(), protoBuilder)
-	stdTx, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
+	stdTx, err := clienttx.TxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
 	s.Require().NoError(err)
 	s.Require().Equal(memo, stdTx.Memo)
 	s.Require().Equal(gas, stdTx.Fee.Gas)
@@ -112,7 +112,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	stdTx = aminoBuilder.GetTx().(legacytx.StdTx)
-	stdTx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
+	stdTx2, err := clienttx.TxToStdTx(s.encCfg.Amino, stdTx)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, stdTx2)
 }
@@ -122,16 +122,16 @@ func (s *TestSuite) TestConvertAndEncodeStdTx() {
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	stdTx := aminoBuilder.GetTx().(legacytx.StdTx)
-	txBz, err := tx2.ConvertAndEncodeStdTx(s.protoCfg, stdTx)
+	txBz, err := clienttx.ConvertAndEncodeStdTx(s.protoCfg, stdTx)
 	s.Require().NoError(err)
 	decodedTx, err := s.protoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)
 	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.Tx), aminoBuilder2))
+	s.Require().NoError(clienttx.CopyTx(decodedTx.(signing.Tx), aminoBuilder2))
 	s.Require().Equal(stdTx, aminoBuilder2.GetTx())
 
 	// just use amino everywhere
-	txBz, err = tx2.ConvertAndEncodeStdTx(s.aminoCfg, stdTx)
+	txBz, err = clienttx.ConvertAndEncodeStdTx(s.aminoCfg, stdTx)
 	s.Require().NoError(err)
 	decodedTx, err = s.aminoCfg.TxDecoder()(txBz)
 	s.Require().NoError(err)

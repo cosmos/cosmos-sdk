@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -107,7 +108,7 @@ func printAndValidateSigs(
 				return false
 			}
 
-			signingData := authsigning.SignerData{
+			signingData := signing.SignerData{
 				ChainID:       chainID,
 				AccountNumber: accNum,
 				Sequence:      accSeq,

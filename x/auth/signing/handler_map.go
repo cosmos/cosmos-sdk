@@ -3,6 +3,7 @@ package signing
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -12,10 +13,10 @@ import (
 type SignModeHandlerMap struct {
 	defaultMode      signing.SignMode
 	modes            []signing.SignMode
-	signModeHandlers map[signing.SignMode]SignModeHandler
+	signModeHandlers map[signing.SignMode]client.SignModeHandler
 }
 
-var _ SignModeHandler = SignModeHandlerMap{}
+var _ client.SignModeHandler = SignModeHandlerMap{}
 
 // NewSignModeHandlerMap returns a new SignModeHandlerMap with the provided defaultMode and handlers
 func NewSignModeHandlerMap(defaultMode signing.SignMode, handlers []SignModeHandler) SignModeHandlerMap {

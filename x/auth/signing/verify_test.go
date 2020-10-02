@@ -13,9 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -46,7 +47,7 @@ func TestVerifySignature(t *testing.T) {
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	signerData := signing.SignerData{
+	signerData := authsigning.SignerData{
 		ChainID:       chainId,
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
@@ -62,7 +63,7 @@ func TestVerifySignature(t *testing.T) {
 	handler := MakeTestHandlerMap()
 	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo)
 	stdTx.TimeoutHeight = 10
-	err = signing.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
+	err = authsigning.VerifySignature(pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 
 	pkSet := []crypto.PubKey{pubKey, pubKey1}

@@ -73,7 +73,7 @@ func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []b
 		return legacytx.StdTx{}, false
 	}
 
-	stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
+	stdTx, err := clienttx.TxToStdTx(clientCtx.LegacyAmino, tx)
 	if rest.CheckBadRequestError(w, err) {
 		return legacytx.StdTx{}, false
 	}

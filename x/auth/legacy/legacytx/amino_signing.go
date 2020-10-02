@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -22,13 +21,13 @@ func NewStdTxSignModeHandler() signing.SignModeHandler {
 var _ signing.SignModeHandler = stdTxSignModeHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
-func (h stdTxSignModeHandler) DefaultMode() signingtypes.SignMode {
-	return signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (h stdTxSignModeHandler) DefaultMode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // Modes implements SignModeHandler.Modes
-func (stdTxSignModeHandler) Modes() []signingtypes.SignMode {
-	return []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
+func (stdTxSignModeHandler) Modes() []signing.SignMode {
+	return []signing.SignMode{signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes

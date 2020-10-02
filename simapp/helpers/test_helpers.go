@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -57,7 +56,7 @@ func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		signerData := authsign.SignerData{
+		signerData := signing.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],

@@ -180,12 +180,16 @@ func FindSupportedVersion(version Version, supportedVersions []Version) (Version
 //
 // CONTRACT: PickVersion must only provide a version that is in the
 // intersection of the supported versions and the counterparty versions.
-func PickVersion(encodedCounterpartyVersions []string) (string, error) {
+func PickVersion(encodedSupportedVersions, encodedCounterpartyVersions []string) (string, error) {
+	supportedVersions, err := DecodeVersions(encodedSupportedVersions)
+	if err != nil {
+		return "", sdkerrors.Wrapf(err, "failed to unmarshal supported versions (%s) when attempting to pick compatible version", encodedSupportedVersions)
+	}
+
 	counterpartyVersions, err := DecodeVersions(encodedCounterpartyVersions)
 	if err != nil {
 		return "", sdkerrors.Wrapf(err, "failed to unmarshal counterparty versions (%s) when attempting to pick compatible version", encodedCounterpartyVersions)
 	}
-	supportedVersions := GetCompatibleVersions()
 
 	for _, supportedVersion := range supportedVersions {
 		// check if the source version is supported by the counterparty

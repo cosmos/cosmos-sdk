@@ -1,3 +1,5 @@
+// +build norace
+
 package rest_test
 
 import (
@@ -9,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -34,32 +37,32 @@ func (s *IntegrationTestSuite) TestCoinSend() {
 	s.Require().Nil(stdTx.Signatures)
 	s.Require().Equal([]types.Msg{
 		&banktypes.MsgSend{
-			FromAddress: account.GetAddress(),
-			ToAddress:   account.GetAddress(),
+			FromAddress: account.GetAddress().String(),
+			ToAddress:   account.GetAddress().String(),
 			Amount:      sendReq.Amount,
 		},
 	}, stdTx.GetMsgs())
 }
 
-func submitSendReq(val *network.Validator, req bankrest.SendReq) (authtypes.StdTx, error) {
+func submitSendReq(val *network.Validator, req bankrest.SendReq) (legacytx.StdTx, error) {
 	url := fmt.Sprintf("%s/bank/accounts/%s/transfers", val.APIAddress, val.Address)
 
 	// NOTE: this uses amino explicitly, don't migrate it!
-	bz, err := val.ClientCtx.Codec.MarshalJSON(req)
+	bz, err := val.ClientCtx.LegacyAmino.MarshalJSON(req)
 	if err != nil {
-		return authtypes.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
+		return legacytx.StdTx{}, errors.Wrap(err, "error encoding SendReq to json")
 	}
 
 	res, err := rest.PostRequest(url, "application/json", bz)
 	if err != nil {
-		return authtypes.StdTx{}, err
+		return legacytx.StdTx{}, err
 	}
 
-	var tx authtypes.StdTx
+	var tx legacytx.StdTx
 	// NOTE: this uses amino explicitly, don't migrate it!
-	err = val.ClientCtx.Codec.UnmarshalJSON(res, &tx)
+	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(res, &tx)
 	if err != nil {
-		return authtypes.StdTx{}, errors.Wrap(err, "error unmarshaling to StdTx SendReq response")
+		return legacytx.StdTx{}, errors.Wrap(err, "error unmarshaling to StdTx SendReq response")
 	}
 
 	return tx, nil
@@ -93,13 +96,13 @@ func getAccountInfo(val *network.Validator) (authtypes.AccountI, error) {
 		return nil, err
 	}
 
-	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.JSONMarshaler, resp)
+	bz, err := rest.ParseResponseWithHeight(val.ClientCtx.LegacyAmino, resp)
 	if err != nil {
 		return nil, err
 	}
 
 	var acc authtypes.AccountI
-	err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(bz, &acc)
+	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(bz, &acc)
 	if err != nil {
 		return nil, err
 	}

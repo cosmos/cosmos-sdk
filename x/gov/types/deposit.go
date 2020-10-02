@@ -9,8 +9,9 @@ import (
 )
 
 // NewDeposit creates a new Deposit instance
+//nolint:interfacer
 func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
-	return Deposit{proposalID, depositor, amount}
+	return Deposit{proposalID, depositor.String(), amount}
 }
 
 func (d Deposit) String() string {
@@ -28,7 +29,7 @@ func (d Deposits) Equal(other Deposits) bool {
 	}
 
 	for i, deposit := range d {
-		if !deposit.Equal(other[i]) {
+		if deposit.String() != other[i].String() {
 			return false
 		}
 	}
@@ -40,7 +41,7 @@ func (d Deposits) String() string {
 	if len(d) == 0 {
 		return "[]"
 	}
-	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
+	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalId)
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}
@@ -49,5 +50,5 @@ func (d Deposits) String() string {
 
 // Empty returns whether a deposit is empty.
 func (d Deposit) Empty() bool {
-	return d.Equal(Deposit{})
+	return d.String() == Deposit{}.String()
 }

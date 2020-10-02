@@ -1,0 +1,111 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Balance queries the balance of a single coin for a single account.
+  rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}/{denom}";
+  }
+
+  // AllBalances queries the balance of all coins for a single account.
+  rpc AllBalances(QueryAllBalancesRequest) returns (QueryAllBalancesResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/balances/{address}";
+  }
+
+  // TotalSupply queries the total supply of all coins.
+  rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply";
+  }
+
+  // SupplyOf queries the supply of a single coin.
+  rpc SupplyOf(QuerySupplyOfRequest) returns (QuerySupplyOfResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/supply/{denom}";
+  }
+
+  // Params queries the parameters of x/bank module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/params";
+  }
+}
+
+// QueryBalanceRequest is the request type for the Query/Balance RPC method.
+message QueryBalanceRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the address to query balances for.
+  string address = 1;
+
+  // denom is the coin denom to query balances for.
+  string denom = 2;
+}
+
+// QueryBalanceResponse is the response type for the Query/Balance RPC method.
+message QueryBalanceResponse {
+  // balance is the balance of the coin.
+  cosmos.base.v1beta1.Coin balance = 1;
+}
+
+// QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
+message QueryAllBalancesRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the address to query balances for.
+  string address = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+// method.
+message QueryAllBalancesResponse {
+  // balances is the balances of all the coins.
+  repeated cosmos.base.v1beta1.Coin balances = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
+// method.
+message QueryTotalSupplyRequest {}
+
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+// method
+message QueryTotalSupplyResponse {
+  // supply is the supply of the coins
+  repeated cosmos.base.v1beta1.Coin supply = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
+message QuerySupplyOfRequest {
+  // denom is the coin denom to query balances for.
+  string denom = 1;
+}
+
+// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
+message QuerySupplyOfResponse {
+  // amount is the supply of the coin.
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryParamsRequest defines the request type for querying x/bank parameters.
+message QueryParamsRequest {}
+
+// QueryParamsResponse defines the response type for querying x/bank parameters.
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

@@ -31,7 +31,7 @@ func NewSendRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var req SendReq
-		if !rest.ReadRESTReq(w, r, clientCtx.JSONMarshaler, &req) {
+		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			return
 		}
 

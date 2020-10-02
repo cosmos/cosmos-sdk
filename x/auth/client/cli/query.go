@@ -64,7 +64,7 @@ $ <appcli> query auth params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 
@@ -93,18 +93,12 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key.String()})
 			if err != nil {
 				return err
 			}
 
-			var account types.AccountI
-			err = clientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintOutput(account)
+			return clientCtx.PrintOutput(res.Account)
 		},
 	}
 
@@ -173,13 +167,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				return err
 			}
 
-			output, err := clientCtx.JSONMarshaler.MarshalJSON(txs)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(string(output))
-			return nil
+			return clientCtx.PrintOutput(txs)
 		},
 	}
 
@@ -219,8 +207,7 @@ func QueryTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

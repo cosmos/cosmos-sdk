@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -45,18 +46,18 @@ func ValidatorCommand() *cobra.Command {
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			result, err := GetValidators(clientCtx, height, page, limit)
+			result, err := GetValidators(clientCtx, height, &page, &limit)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(result)
+			return clientCtx.PrintOutputLegacy(result)
 		},
 	}
 
 	cmd.Flags().StringP(flags.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
-	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
 
 	return cmd
@@ -112,14 +113,14 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(clientCtx client.Context, height *int64, page, limit int) (ResultValidatorsOutput, error) {
+func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(height, page, limit)
+	validatorsRes, err := node.Validators(context.Background(), height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
@@ -167,7 +168,7 @@ func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(clientCtx, &height, page, limit)
+		output, err := GetValidators(clientCtx, &height, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -184,7 +185,7 @@ func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFu
 			return
 		}
 
-		output, err := GetValidators(clientCtx, nil, page, limit)
+		output, err := GetValidators(clientCtx, nil, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

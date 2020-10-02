@@ -82,7 +82,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetProposal())
+			return clientCtx.PrintOutput(&res.Proposal)
 		},
 	}
 
@@ -114,23 +114,32 @@ $ %s query gov proposals --page=2 --limit=100
 			bechVoterAddr, _ := cmd.Flags().GetString(flagVoter)
 			strProposalStatus, _ := cmd.Flags().GetString(flagStatus)
 
-			depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
-			if err != nil {
-				return err
+			var proposalStatus types.ProposalStatus
+
+			if len(bechDepositorAddr) != 0 {
+				_, err := sdk.AccAddressFromBech32(bechDepositorAddr)
+				if err != nil {
+					return err
+				}
 			}
 
-			voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
-			if err != nil {
-				return err
+			if len(bechVoterAddr) != 0 {
+				_, err := sdk.AccAddressFromBech32(bechVoterAddr)
+				if err != nil {
+					return err
+				}
 			}
 
-			proposalStatus, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
-			if err != nil {
-				return err
+			if len(strProposalStatus) != 0 {
+				proposalStatus1, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus = proposalStatus1
+				if err != nil {
+					return err
+				}
 			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err = client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -145,8 +154,8 @@ $ %s query gov proposals --page=2 --limit=100
 				context.Background(),
 				&types.QueryProposalsRequest{
 					ProposalStatus: proposalStatus,
-					Voter:          voterAddr,
-					Depositor:      depositorAddr,
+					Voter:          bechVoterAddr,
+					Depositor:      bechDepositorAddr,
 					Pagination:     pageReq,
 				},
 			)
@@ -155,10 +164,10 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			if len(res.GetProposals()) == 0 {
-				return fmt.Errorf("no matching proposals found")
+				return fmt.Errorf("no proposals found")
 			}
 
-			return clientCtx.PrintOutput(res.GetProposals())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -217,7 +226,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			res, err := queryClient.Vote(
 				context.Background(),
-				&types.QueryVoteRequest{ProposalId: proposalID, Voter: voterAddr},
+				&types.QueryVoteRequest{ProposalId: proposalID, Voter: args[1]},
 			)
 			if err != nil {
 				return err
@@ -237,7 +246,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			return clientCtx.PrintOutput(res.GetVote())
+			return clientCtx.PrintOutput(&res.Vote)
 		},
 	}
 
@@ -297,8 +306,10 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				}
 
 				var votes types.Votes
-				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &votes)
-				return clientCtx.PrintOutput(votes)
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &votes)
+				return clientCtx.PrintOutputLegacy(votes)
 
 			}
 
@@ -311,11 +322,12 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				context.Background(),
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetVotes())
+			return clientCtx.PrintOutput(res)
 
 		},
 	}
@@ -372,7 +384,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			res, err := queryClient.Deposit(
 				context.Background(),
-				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: depositorAddr},
+				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
 			)
 			if err != nil {
 				return err
@@ -388,7 +400,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
 			}
 
-			return clientCtx.PrintOutput(deposit)
+			return clientCtx.PrintOutput(&deposit)
 		},
 	}
 
@@ -445,8 +457,11 @@ $ %s query gov deposits 1
 				}
 
 				var dep types.Deposits
-				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &dep)
-				return clientCtx.PrintOutput(dep)
+				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// or wrap lists of proto.Message in some other message)
+				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
+
+				return clientCtx.PrintOutputLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -458,11 +473,12 @@ $ %s query gov deposits 1
 				context.Background(),
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
+
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetDeposits())
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -520,7 +536,7 @@ $ %s query gov tally 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.GetTally())
+			return clientCtx.PrintOutput(&res.Tally)
 		},
 	}
 
@@ -577,11 +593,13 @@ $ %s query gov params
 				return err
 			}
 
-			return clientCtx.PrintOutput(types.NewParams(
+			params := types.NewParams(
 				votingRes.GetVotingParams(),
 				tallyRes.GetTallyParams(),
 				depositRes.GetDepositParams(),
-			))
+			)
+
+			return clientCtx.PrintOutputLegacy(params)
 		},
 	}
 
@@ -636,7 +654,7 @@ $ %s query gov param deposit
 				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			return clientCtx.PrintOutput(out)
+			return clientCtx.PrintOutputLegacy(out)
 		},
 	}
 
@@ -678,7 +696,7 @@ $ %s query gov proposer 1
 				return err
 			}
 
-			return clientCtx.PrintOutput(prop)
+			return clientCtx.PrintOutputLegacy(prop)
 		},
 	}
 

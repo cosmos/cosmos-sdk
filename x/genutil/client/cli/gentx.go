@@ -88,7 +88,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			var genesisState map[string]json.RawMessage
-			if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
+			if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 

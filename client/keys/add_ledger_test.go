@@ -37,9 +37,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
 
 	cmd.SetArgs([]string{
 		"keyname1",
@@ -49,7 +47,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		fmt.Sprintf("--%s=0", flagIndex),
 		fmt.Sprintf("--%s=330", flagCoinType),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -86,18 +84,14 @@ func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-
-	// Prepare a keybase
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
+	kbHome := t.TempDir()
 
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})

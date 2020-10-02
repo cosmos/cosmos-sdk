@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,20 +19,18 @@ func TestTxBuilder(t *testing.T) {
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
-
-	cdc := std.DefaultPublicKeyCodec{}
+	txBuilder := newBuilder()
 
 	memo := "sometestmemo"
-
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
+	accSeq := uint64(2) // Arbitrary account sequence
 
-	pk, err := cdc.Encode(pubkey)
+	any, err := PubKeyToAny(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
 	signerInfo = append(signerInfo, &txtypes.SignerInfo{
-		PublicKey: pk,
+		PublicKey: any,
 		ModeInfo: &txtypes.ModeInfo{
 			Sum: &txtypes.ModeInfo_Single_{
 				Single: &txtypes.ModeInfo_Single{
@@ -40,6 +38,7 @@ func TestTxBuilder(t *testing.T) {
 				},
 			},
 		},
+		Sequence: accSeq,
 	})
 
 	var sig signing.SignatureV2
@@ -47,8 +46,9 @@ func TestTxBuilder(t *testing.T) {
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubkey.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubkey),
 		},
+		Sequence: accSeq,
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
@@ -106,9 +106,16 @@ func TestTxBuilder(t *testing.T) {
 
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
 	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
-	require.Equal(t, pubkey.Bytes(), txBuilder.GetPubKeys()[0].Bytes())
+	require.Equal(t, legacy.Cdc.MustMarshalBinaryBare(pubkey), legacy.Cdc.MustMarshalBinaryBare(txBuilder.GetPubKeys()[0]))
 
-	txBuilder = &builder{}
+	any, err = codectypes.NewAnyWithValue(testdata.NewTestMsg())
+	require.NoError(t, err)
+	txBuilder.SetExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetExtensionOptions())
+	txBuilder.SetNonCriticalExtensionOptions(any)
+	require.Equal(t, []*codectypes.Any{any}, txBuilder.GetNonCriticalExtensionOptions())
+
+	txBuilder = &wrapper{}
 	require.NotPanics(t, func() {
 		_ = txBuilder.GetMsgs()
 	})
@@ -127,23 +134,25 @@ func TestBuilderValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFeeAmount := testdata.NewTestFeeAmount()
 	badFeeAmount[0].Amount = sdk.NewInt(-5)
-	txBuilder := newBuilder(std.DefaultPublicKeyCodec{})
+	txBuilder := newBuilder()
 
 	var sig1, sig2 signing.SignatureV2
 	sig1 = signing.SignatureV2{
 		PubKey: pubKey1,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey1.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey1),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	sig2 = signing.SignatureV2{
 		PubKey: pubKey2,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
-			Signature: pubKey2.Bytes(),
+			Signature: legacy.Cdc.MustMarshalBinaryBare(pubKey2),
 		},
+		Sequence: 0, // Arbitrary account sequence
 	}
 
 	err := txBuilder.SetMsgs(msgs...)
@@ -189,10 +198,10 @@ func TestBuilderValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	// gas limit too high
-	txBuilder.SetGasLimit(MaxGasWanted + 1)
+	txBuilder.SetGasLimit(txtypes.MaxGasWanted + 1)
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
-	txBuilder.SetGasLimit(MaxGasWanted - 1)
+	txBuilder.SetGasLimit(txtypes.MaxGasWanted - 1)
 	err = txBuilder.ValidateBasic()
 	require.NoError(t, err)
 
@@ -229,4 +238,54 @@ func TestBuilderValidateBasic(t *testing.T) {
 	txBuilder.tx = nil
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
+}
+
+func TestBuilderFeePayer(t *testing.T) {
+	// keys and addresses
+	_, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	_, _, addr3 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	feeAmount := testdata.NewTestFeeAmount()
+	msgs := []sdk.Msg{msg1}
+
+	cases := map[string]struct {
+		txFeePayer      sdk.AccAddress
+		expectedSigners []sdk.AccAddress
+		expectedPayer   sdk.AccAddress
+	}{
+		"no fee payer specified": {
+			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedPayer:   addr1,
+		},
+		"secondary signer set as fee payer": {
+			txFeePayer:      addr2,
+			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedPayer:   addr2,
+		},
+		"outside signer set as fee payer": {
+			txFeePayer:      addr3,
+			expectedSigners: []sdk.AccAddress{addr1, addr2, addr3},
+			expectedPayer:   addr3,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// setup basic tx
+			txBuilder := newBuilder()
+			err := txBuilder.SetMsgs(msgs...)
+			require.NoError(t, err)
+			txBuilder.SetGasLimit(200000)
+			txBuilder.SetFeeAmount(feeAmount)
+
+			// set fee payer
+			txBuilder.SetFeePayer(tc.txFeePayer)
+			// and check it updates fields properly
+			require.Equal(t, tc.expectedSigners, txBuilder.GetSigners())
+			require.Equal(t, tc.expectedPayer, txBuilder.FeePayer())
+		})
+	}
 }

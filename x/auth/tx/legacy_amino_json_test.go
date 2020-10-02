@@ -3,37 +3,37 @@ package tx
 import (
 	"testing"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/std"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
 	_, _, addr1 = testdata.KeyTestPubAddr()
 	_, _, addr2 = testdata.KeyTestPubAddr()
 
-	coins = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	gas   = uint64(10000)
-	msg   = testdata.NewTestMsg(addr1, addr2)
-	memo  = "foo"
+	coins   = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	gas     = uint64(10000)
+	msg     = testdata.NewTestMsg(addr1, addr2)
+	memo    = "foo"
+	timeout = uint64(10)
 )
 
-func buildTx(t *testing.T, bldr *builder) {
+func buildTx(t *testing.T, bldr *wrapper) {
 	bldr.SetFeeAmount(coins)
 	bldr.SetGasLimit(gas)
 	bldr.SetMemo(memo)
+	bldr.SetTimeoutHeight(timeout)
 	require.NoError(t, bldr.SetMsgs(msg))
 }
 
 func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
-	bldr := newBuilder(std.DefaultPublicKeyCodec{})
+	bldr := newBuilder()
 	buildTx(t, bldr)
 	tx := bldr.GetTx()
 
@@ -45,14 +45,14 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 
 	handler := signModeLegacyAminoJSONHandler{}
 	signingData := signing.SignerData{
-		ChainID:         chainId,
-		AccountNumber:   accNum,
-		AccountSequence: seqNum,
+		ChainID:       chainId,
+		AccountNumber: accNum,
+		Sequence:      seqNum,
 	}
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := types.StdSignBytes(chainId, accNum, seqNum, types.StdFee{
+	expectedSignBz := legacytx.StdSignBytes(chainId, accNum, seqNum, timeout, legacytx.StdFee{
 		Amount: coins,
 		Gas:    gas,
 	}, []sdk.Msg{msg}, memo)
@@ -63,16 +63,8 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 
-	// expect error with timeout height
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
-	buildTx(t, bldr)
-	bldr.tx.Body.TimeoutHeight = 10
-	tx = bldr.GetTx()
-	signBz, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
-	require.Error(t, err)
-
 	// expect error with extension options
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
+	bldr = newBuilder()
 	buildTx(t, bldr)
 	any, err := cdctypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)
@@ -82,7 +74,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
-	bldr = newBuilder(std.DefaultPublicKeyCodec{})
+	bldr = newBuilder()
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()

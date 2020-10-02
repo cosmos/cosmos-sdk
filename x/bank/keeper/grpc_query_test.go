@@ -1,12 +1,13 @@
+// +build norace
+
 package keeper_test
 
 import (
 	gocontext "context"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -17,7 +18,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	_, err := queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{})
 	suite.Require().Error(err)
 
-	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr})
+	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr.String()})
 	suite.Require().Error(err)
 
 	req := types.NewQueryBalanceRequest(addr, fooDenom)
@@ -110,4 +111,11 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 	suite.Require().NotNil(res)
 
 	suite.Require().Equal(test1Supply, res.Amount)
+}
+
+func (suite *IntegrationTestSuite) TestQueryParams() {
+	res, err := suite.queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().Equal(suite.app.BankKeeper.GetParams(suite.ctx), res.GetParams())
 }

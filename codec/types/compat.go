@@ -25,7 +25,7 @@ func anyCompatError(errType string, x interface{}) error {
 	}
 	return fmt.Errorf(
 		"%s marshaling error for %+v, this is likely because "+
-			"amino is being used directly (instead of codec.Codec which is preferred) "+
+			"amino is being used directly (instead of codec.LegacyAmino which is preferred) "+
 			"or UnpackInterfacesMessage is not defined for some type which contains "+
 			"a protobuf Any either directly or via one of its members. To see a "+
 			"stacktrace of where the error is coming from, set the var Debug = true "+
@@ -50,7 +50,7 @@ func (any *Any) UnmarshalAmino(bz []byte) error {
 	return nil
 }
 
-func (any Any) MarshalJSON() ([]byte, error) {
+func (any *Any) MarshalJSON() ([]byte, error) {
 	ac := any.compat
 	if ac == nil {
 		return nil, anyCompatError("JSON marshal", any)

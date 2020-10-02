@@ -15,9 +15,9 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-	v039Codec := codec.New()
+	v039Codec := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(v039Codec)
-	v039auth.RegisterCodec(v039Codec)
+	v039auth.RegisterLegacyAminoCodec(v039Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")
@@ -51,7 +51,7 @@ func TestMigrate(t *testing.T) {
   },
   "accounts": [
     {
-      "type": "cosmos-sdk/BaseAccount",
+      "type": "cosmos-sdk/Account",
       "value": {
         "address": "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u",
         "public_key": null,

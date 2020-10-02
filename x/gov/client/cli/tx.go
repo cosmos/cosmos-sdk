@@ -61,6 +61,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 
 	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range propCmds {
+		flags.AddTxFlagsToCmd(propCmd)
 		cmdSubmitProp.AddCommand(propCmd)
 	}
 

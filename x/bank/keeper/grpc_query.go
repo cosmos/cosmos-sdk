@@ -15,12 +15,12 @@ import (
 var _ types.QueryServer = BaseKeeper{}
 
 // Balance implements the Query/Balance gRPC method
-func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address.Empty() {
+	if req.Address == "" {
 		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
@@ -28,33 +28,38 @@ func (q BaseKeeper) Balance(c context.Context, req *types.QueryBalanceRequest) (
 		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	balance := q.GetBalance(ctx, req.Address, req.Denom)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	address, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	balance := k.GetBalance(sdkCtx, address, req.Denom)
 
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
 
 // AllBalances implements the Query/AllBalances gRPC method
-func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr := req.Address
-	if addr.Empty() {
-		return nil, status.Errorf(codes.InvalidArgument, "address cannot be empty")
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	balances := sdk.NewCoins()
-	store := ctx.KVStore(q.storeKey)
+	store := sdkCtx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key []byte, value []byte) error {
 		var result sdk.Coin
-		err := q.cdc.UnmarshalBinaryBare(value, &result)
+		err := k.cdc.UnmarshalBinaryBare(value, &result)
 		if err != nil {
 			return err
 		}
@@ -70,15 +75,15 @@ func (q BaseKeeper) AllBalances(c context.Context, req *types.QueryAllBalancesRe
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
-func (q BaseKeeper) TotalSupply(c context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	totalSupply := q.GetSupply(ctx).GetTotal()
+func (k BaseKeeper) TotalSupply(ctx context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalSupply := k.GetSupply(sdkCtx).GetTotal()
 
 	return &types.QueryTotalSupplyResponse{Supply: totalSupply}, nil
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method
-func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
+func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -88,7 +93,19 @@ func (q BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	supply := q.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
+	supply := k.GetSupply(ctx).GetTotal().AmountOf(req.Denom)
 
 	return &types.QuerySupplyOfResponse{Amount: sdk.NewCoin(req.Denom, supply)}, nil
+}
+
+// Params implements the gRPC service handler for querying x/bank parameters.
+func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := k.GetParams(sdkCtx)
+
+	return &types.QueryParamsResponse{Params: params}, nil
 }

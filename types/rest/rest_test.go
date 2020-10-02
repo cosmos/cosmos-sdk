@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -200,17 +200,17 @@ func TestProcessPostResponse(t *testing.T) {
 	sequence := uint64(32)
 
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
-	ctx = ctx.WithCodec(cdc)
+	ctx = ctx.WithLegacyAmino(cdc)
 
 	// setup expected results
-	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
+	jsonNoIndent, err := ctx.LegacyAmino.MarshalJSON(acc)
 	require.Nil(t, err)
 
 	respNoIndent := rest.NewResponseWithHeight(height, jsonNoIndent)
-	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
+	expectedNoIndent, err := ctx.LegacyAmino.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 
 	// check that negative height writes an error
@@ -232,7 +232,7 @@ func TestReadRESTReq(t *testing.T) {
 	var br rest.BaseReq
 
 	// test OK
-	rest.ReadRESTReq(w, req, codec.New(), &br)
+	rest.ReadRESTReq(w, req, codec.NewLegacyAmino(), &br)
 	res := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, rest.BaseReq{ChainID: "alessio", Memo: "text"}, br)
@@ -243,7 +243,7 @@ func TestReadRESTReq(t *testing.T) {
 	req = &http.Request{Body: reqBody}
 	br = rest.BaseReq{}
 	w = httptest.NewRecorder()
-	rest.ReadRESTReq(w, req, codec.New(), &br)
+	rest.ReadRESTReq(w, req, codec.NewLegacyAmino(), &br)
 	require.Equal(t, br, br)
 	res = w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
@@ -253,7 +253,7 @@ func TestReadRESTReq(t *testing.T) {
 func TestWriteSimulationResponse(t *testing.T) {
 	t.Parallel()
 	w := httptest.NewRecorder()
-	rest.WriteSimulationResponse(w, codec.New(), 10)
+	rest.WriteSimulationResponse(w, codec.NewLegacyAmino(), 10)
 	res := w.Result() //nolint:bodyclose
 	t.Cleanup(func() { res.Body.Close() })
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -310,7 +310,7 @@ func TestPostProcessResponseBare(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithJSONMarshaler(encodingConfig.Marshaler)
+		WithLegacyAmino(encodingConfig.Amino) // amino used intentionally here
 	// write bytes
 	w := httptest.NewRecorder()
 	bs := []byte("text string")
@@ -402,7 +402,7 @@ func runPostProcessResponse(t *testing.T, ctx client.Context, obj interface{}, e
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
 
-	marshalled, err := ctx.Codec.MarshalJSON(obj)
+	marshalled, err := ctx.LegacyAmino.MarshalJSON(obj)
 	require.NoError(t, err)
 
 	// test using marshalled struct

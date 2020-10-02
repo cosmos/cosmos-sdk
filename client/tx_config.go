@@ -34,12 +34,13 @@ type (
 	// signatures, and provide canonical bytes to sign over. The transaction must
 	// also know how to encode itself.
 	TxBuilder interface {
-		GetTx() signing.SigFeeMemoTx
+		GetTx() signing.Tx
 
 		SetMsgs(msgs ...sdk.Msg) error
 		SetSignatures(signatures ...signingtypes.SignatureV2) error
 		SetMemo(memo string)
 		SetFeeAmount(amount sdk.Coins)
 		SetGasLimit(limit uint64)
+		SetTimeoutHeight(height uint64)
 	}
 )

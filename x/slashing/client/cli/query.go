@@ -59,13 +59,13 @@ $ <appcli> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdge
 			}
 
 			consAddr := sdk.ConsAddress(pk.Address())
-			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr}
+			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr.String()}
 			res, err := queryClient.SigningInfo(context.Background(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.ValSigningInfo)
+			return clientCtx.PrintOutput(&res.ValSigningInfo)
 		},
 	}
 
@@ -104,7 +104,7 @@ $ <appcli> query slashing signing-infos
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Info)
+			return clientCtx.PrintOutput(res)
 		},
 	}
 
@@ -139,7 +139,7 @@ $ <appcli> query slashing params
 				return err
 			}
 
-			return clientCtx.PrintOutput(res.Params)
+			return clientCtx.PrintOutput(&res.Params)
 		},
 	}
 

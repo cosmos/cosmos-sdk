@@ -21,18 +21,25 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          make build
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - run: make build
 
   install-runsim:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v2-beta
-      - name: install runsim
-        run: |
-          export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - name: Install runsim
+        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - uses: actions/cache@v2.1.1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -42,7 +49,12 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - uses: technote-space/get-diff-action@v3
         with:
           SUFFIX_FILTER: |
             .go
@@ -50,7 +62,7 @@ jobs:
             .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2.1.1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -65,7 +77,12 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - uses: technote-space/get-diff-action@v3
         with:
           SUFFIX_FILTER: |
             .go
@@ -73,7 +90,7 @@ jobs:
             .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2.1.1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -88,7 +105,12 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - uses: technote-space/get-diff-action@v3
         with:
           SUFFIX_FILTER: |
             .go
@@ -96,7 +118,7 @@ jobs:
             .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2.1.1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -111,7 +133,12 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.15
+      - name: Display go version
+        run: go version
+      - uses: technote-space/get-diff-action@v3
         with:
           SUFFIX_FILTER: |
             .go
@@ -119,7 +146,7 @@ jobs:
             .sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2.1.1
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

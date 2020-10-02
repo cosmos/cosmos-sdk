@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp authtypes.StdTx
+	DecodeResp legacytx.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -37,7 +37,7 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		// NOTE: amino is used intentionally here, don't migrate it
-		err = clientCtx.Codec.UnmarshalJSON(body, &req)
+		err = clientCtx.LegacyAmino.UnmarshalJSON(body, &req)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -47,26 +47,36 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		tx, err := clientCtx.TxConfig.TxDecoder()(txBytes)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		sigFeeMemoTx, ok := tx.(signing.SigFeeMemoTx)
+		stdTx, ok := convertToStdTx(w, clientCtx, txBytes)
 		if !ok {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, authtypes.StdTx{}))
-			return
-		}
-
-		stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.Codec, sigFeeMemoTx)
-		if rest.CheckBadRequestError(w, err) {
 			return
 		}
 
 		response := DecodeResp(stdTx)
 
-		// NOTE: amino is set intentionally here, don't migrate it
-		clientCtx = clientCtx.WithJSONMarshaler(clientCtx.Codec)
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
+}
+
+// convertToStdTx converts tx proto binary bytes retrieved from Tendermint into
+// a StdTx. Returns the StdTx, as well as a flag denoting if the function
+// successfully converted or not.
+func convertToStdTx(w http.ResponseWriter, clientCtx client.Context, txBytes []byte) (legacytx.StdTx, bool) {
+	txI, err := clientCtx.TxConfig.TxDecoder()(txBytes)
+	if rest.CheckBadRequestError(w, err) {
+		return legacytx.StdTx{}, false
+	}
+
+	tx, ok := txI.(signing.Tx)
+	if !ok {
+		rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%+v is not backwards compatible with %T", tx, legacytx.StdTx{}))
+		return legacytx.StdTx{}, false
+	}
+
+	stdTx, err := clienttx.ConvertTxToStdTx(clientCtx.LegacyAmino, tx)
+	if rest.CheckBadRequestError(w, err) {
+		return legacytx.StdTx{}, false
+	}
+
+	return stdTx, true
 }

@@ -26,31 +26,31 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.
 	prt := DefaultProofRuntime()
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY", []byte("MYVALUE"))
 	require.Nil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY_NOT", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY_NOT", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY/MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY", []byte("MYVALUE_NOT"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY", []byte("MYVALUE_NOT"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY", []byte(nil))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY", []byte(nil))
 	require.NotNil(t, err)
 }
 
@@ -73,39 +73,39 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.
 	prt := DefaultProofRuntime()
-	err := prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
+	err := prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
 	require.Nil(t, err)
 
 	// Verify proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE"))
 	require.Nil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY_NOT", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY_NOT", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY/MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "iavlStoreKey/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "iavlStoreKey/MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/MYKEY", []byte("MYVALUE"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/MYKEY", []byte("MYVALUE"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE_NOT"))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte("MYVALUE_NOT"))
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYKEY", []byte(nil))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYKEY", []byte(nil))
 	require.NotNil(t, err)
 }
 
@@ -129,20 +129,20 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,
 	})
-	require.NotNil(t, res.Proof)
+	require.NotNil(t, res.ProofOps)
 
 	// Verify proof.
 	prt := DefaultProofRuntime()
-	err = prt.VerifyAbsence(res.Proof, cid.Hash, "/iavlStoreKey/MYABSENTKEY")
+	err = prt.VerifyAbsence(res.ProofOps, cid.Hash, "/iavlStoreKey/MYABSENTKEY")
 	require.Nil(t, err)
 
 	// Verify (bad) proof.
 	prt = DefaultProofRuntime()
-	err = prt.VerifyAbsence(res.Proof, cid.Hash, "/MYABSENTKEY")
+	err = prt.VerifyAbsence(res.ProofOps, cid.Hash, "/MYABSENTKEY")
 	require.NotNil(t, err)
 
 	// Verify (bad) proof.
 	prt = DefaultProofRuntime()
-	err = prt.VerifyValue(res.Proof, cid.Hash, "/iavlStoreKey/MYABSENTKEY", []byte(""))
+	err = prt.VerifyValue(res.ProofOps, cid.Hash, "/iavlStoreKey/MYABSENTKEY", []byte(""))
 	require.NotNil(t, err)
 }

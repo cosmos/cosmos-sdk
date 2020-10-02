@@ -8,10 +8,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simapparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,7 +22,7 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simtypes.AppStateFn {
+func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 
@@ -56,7 +57,10 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simtypes
 				panic(err)
 			}
 
-			cdc.MustUnmarshalJSON(bz, &appParams)
+			err = json.Unmarshal(bz, &appParams)
+			if err != nil {
+				panic(err)
+			}
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
@@ -71,7 +75,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simtypes
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params
 func AppStateRandomizedFn(
-	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
+	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONMarshaler,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
@@ -115,7 +119,7 @@ func AppStateRandomizedFn(
 
 	simManager.GenerateGenesisStates(simState)
 
-	appState, err := cdc.MarshalJSON(genesisState)
+	appState, err := json.Marshal(genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -125,17 +129,24 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONMarshaler, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
 	var genesis tmtypes.GenesisDoc
-	cdc.MustUnmarshalJSON(bytes, &genesis)
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err = tmjson.Unmarshal(bytes, &genesis)
+	if err != nil {
+		panic(err)
+	}
 
 	var appState GenesisState
-	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	err = json.Unmarshal(genesis.AppState, &appState)
+	if err != nil {
+		panic(err)
+	}
 
 	var authGenesis authtypes.GenesisState
 	if appState[authtypes.ModuleName] != nil {
@@ -152,7 +163,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string
 			panic(err)
 		}
 
-		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
 		a, ok := acc.GetCachedValue().(authtypes.AccountI)
 		if !ok {

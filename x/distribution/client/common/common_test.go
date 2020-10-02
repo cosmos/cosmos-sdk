@@ -10,7 +10,7 @@ import (
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
-	clientCtx := client.Context{}.WithJSONMarshaler(types.ModuleCdc)
+	clientCtx := client.Context{}.WithLegacyAmino(types.ModuleCdc.LegacyAmino)
 
 	type args struct {
 		delAddr string

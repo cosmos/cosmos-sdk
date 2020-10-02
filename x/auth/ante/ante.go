@@ -16,8 +16,10 @@ func NewAnteHandler(
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		NewRejectExtensionOptionsDecorator(),
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
+		TxTimeoutHeightDecorator{},
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
 		NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators

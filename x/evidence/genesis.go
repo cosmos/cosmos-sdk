@@ -3,17 +3,18 @@ package evidence
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/gogo/protobuf/proto"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 	if err := gs.Validate(); err != nil {
 		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types.ModuleName, err))
 	}
@@ -32,7 +33,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	e := k.GetAllEvidence(ctx)
 	evidence := make([]*codectypes.Any, len(e))
 	for i, evi := range e {
@@ -46,7 +47,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		}
 		evidence[i] = any
 	}
-	return types.GenesisState{
+	return &types.GenesisState{
 		Evidence: evidence,
 	}
 }

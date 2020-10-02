@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -77,6 +77,8 @@ func newSplitAndApply(
 }
 
 func NewWithdrawRewardsCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards [validator-addr]",
 		Short: "Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
@@ -85,10 +87,10 @@ func NewWithdrawRewardsCmd() *cobra.Command {
 and optionally withdraw validator commission if the delegation address given is a validator operator.
 
 Example:
-$ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
-$ %s tx distribution withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
+$ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+$ %s tx distribution withdraw-rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
 `,
-				version.AppName, version.AppName,
+				version.AppName, bech32PrefixValAddr, version.AppName, bech32PrefixValAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -156,9 +158,26 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 				return fmt.Errorf("cannot generate tx in offline mode")
 			}
 
-			msgs, err := common.WithdrawAllDelegatorRewards(clientCtx, delAddr)
+			queryClient := types.NewQueryClient(clientCtx)
+			delValsRes, err := queryClient.DelegatorValidators(context.Background(), &types.QueryDelegatorValidatorsRequest{DelegatorAddress: delAddr.String()})
 			if err != nil {
 				return err
+			}
+
+			validators := delValsRes.Validators
+			// build multi-message transaction
+			msgs := make([]sdk.Msg, 0, len(validators))
+			for _, valAddr := range validators {
+				val, err := sdk.ValAddressFromBech32(valAddr)
+				if err != nil {
+					return err
+				}
+
+				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
+				if err := msg.ValidateBasic(); err != nil {
+					return err
+				}
+				msgs = append(msgs, msg)
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
@@ -173,6 +192,8 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 }
 
 func NewSetWithdrawAddrCmd() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
@@ -180,9 +201,9 @@ func NewSetWithdrawAddrCmd() *cobra.Command {
 			fmt.Sprintf(`Set the withdraw address for rewards associated with a delegator address.
 
 Example:
-$ %s tx distribution set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
+$ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -256,6 +277,8 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 
 // GetCmdSubmitProposal implements the command to submit a community-pool-spend proposal
 func GetCmdSubmitProposal() *cobra.Command {
+	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
 	cmd := &cobra.Command{
 		Use:   "community-pool-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -272,12 +295,12 @@ Where proposal.json contains:
 {
   "title": "Community Pool Spend",
   "description": "Pay me some Atoms!",
-  "recipient": "cosmos1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
+  "recipient": "%s1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
   "amount": "1000stake",
   "deposit": "1000stake"
 }
 `,
-				version.AppName,
+				version.AppName, bech32PrefixAccAddr,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -287,7 +310,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseCommunityPoolSpendProposalJSON(clientCtx.JSONMarshaler, args[0])
+			proposal, err := ParseCommunityPoolSpendProposalWithDeposit(clientCtx.JSONMarshaler, args[0])
 			if err != nil {
 				return err
 			}
@@ -303,7 +326,11 @@ Where proposal.json contains:
 			}
 
 			from := clientCtx.GetFromAddress()
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount)
+			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
+			if err != nil {
+				return err
+			}
+			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -317,8 +344,6 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -155,11 +155,14 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 
 // RandomParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.ConsensusParams {
-	cdc := codec.New()
+	cdc := params.MakeEncodingConfig().Marshaler
 
 	var genesisState map[string]json.RawMessage
 
-	cdc.UnmarshalJSON(appState, &genesisState)
+	err := json.Unmarshal(appState, &genesisState)
+	if err != nil {
+		panic(err)
+	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
 
@@ -168,15 +171,20 @@ func RandomConsensusParams(r *rand.Rand, appState json.RawMessage) *abci.Consens
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   -1,
 		},
-		Validator: &abci.ValidatorParams{
-			PubKeyTypes: []string{types.ABCIPubKeyTypeSecp256k1, types.ABCIPubKeyTypeEd25519},
+		Validator: &tmproto.ValidatorParams{
+			PubKeyTypes: []string{types.ABCIPubKeyTypeEd25519},
 		},
-		Evidence: &abci.EvidenceParams{
+		Evidence: &tmproto.EvidenceParams{
 			MaxAgeNumBlocks: int64(stakingGenesisState.Params.UnbondingTime / AverageBlockTime),
 			MaxAgeDuration:  stakingGenesisState.Params.UnbondingTime,
 		},
 	}
-	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, consensusParams))
+
+	bz, err := json.MarshalIndent(&consensusParams, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Selected randomly generated consensus parameters:\n%s\n", bz)
 
 	return consensusParams
 }

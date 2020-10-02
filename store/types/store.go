@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -20,8 +21,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	// TODO: Deprecate after 0.38.5
 	SetPruning(PruningOptions)
+	GetPruning() PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -131,6 +132,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
+	snapshottypes.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
@@ -165,6 +167,10 @@ type CommitMultiStore interface {
 	// Set an inter-block (persistent) cache that maintains a mapping from
 	// StoreKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
+
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64) error
 }
 
 //---------subsp-------------------------------
@@ -245,15 +251,6 @@ type CacheWrapper interface {
 
 	// CacheWrapWithTrace cache wraps with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-}
-
-//----------------------------------------
-// CommitID
-
-// CommitID contains the tree version number and its merkle root.
-type CommitID struct {
-	Version int64
-	Hash    []byte
 }
 
 func (cid CommitID) IsZero() bool {
@@ -402,4 +399,12 @@ type MultiStorePersistentCache interface {
 
 	// Reset the entire set of internal caches.
 	Reset()
+}
+
+// StoreWithInitialVersion is a store that can have an arbitrary initial
+// version.
+type StoreWithInitialVersion interface {
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64)
 }

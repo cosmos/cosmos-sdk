@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -11,19 +13,24 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codec2 "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -54,7 +61,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := multisig.NewPubKeyMultisigThreshold(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	multi := kmultisig.NewLegacyAminoPubKey(2, []tmcrypto.PubKey{account1.GetPubKey(), account2.GetPubKey()})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
@@ -159,6 +166,73 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
+func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	// Send coins.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	out, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with invalid hash",
+			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"with valid and not existing hash",
+			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"happy case",
+			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var result sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result.Height)
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 
@@ -187,7 +261,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(flags.DefaultGasLimit))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err := txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
 	// Test generate sendTx with --gas=$amount
 	limitedGasGeneratedTx, err := bankcli.MsgSendExec(
@@ -209,15 +285,17 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().Equal(txBuilder.GetTx().GetGas(), uint64(100))
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(0, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(0, len(sigs))
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	var balRes banktypes.QueryAllBalancesResponse
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	startTokens := coins.AmountOf(s.cfg.BondDenom)
+	startTokens := balRes.Balances.AmountOf(s.cfg.BondDenom)
 
 	// Test generate sendTx, estimate gas
 	finalGeneratedTx, err := bankcli.MsgSendExec(
@@ -268,7 +346,9 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	txBuilder, err = val1.ClientCtx.TxConfig.WrapTxBuilder(signedFinalTx)
 	s.Require().NoError(err)
 	s.Require().Equal(len(txBuilder.GetTx().GetMsgs()), 1)
-	s.Require().Equal(1, len(txBuilder.GetTx().GetSignatures()))
+	sigs, err = txBuilder.GetTx().GetSignaturesV2()
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(sigs))
 	s.Require().Equal(val1.Address.String(), txBuilder.GetTx().GetSigners()[0].String())
 
 	// Write the output to disk
@@ -281,12 +361,12 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
 	// Ensure foo has right amount of funds
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().Equal(startTokens, coins.AmountOf(s.cfg.BondDenom))
+	s.Require().Equal(startTokens, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Test broadcast
 
@@ -304,28 +384,28 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Ensure destiny account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), account.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
+	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Ensure origin account state
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), val1.Address)
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -433,10 +513,10 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -448,13 +528,13 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
-	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	var balRes banktypes.QueryAllBalancesResponse
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	intialCoins := coins
+	intialCoins := balRes.Balances
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -472,12 +552,12 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	diff, _ := coins.SafeSub(intialCoins)
+	diff, _ := balRes.Balances.SafeSub(intialCoins)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
@@ -534,10 +614,10 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 func (s *IntegrationTestSuite) TestCLIMultisign() {
 	val1 := s.network.Validators[0]
 
-	codec := codec2.New()
-	sdk.RegisterCodec(codec)
-	banktypes.RegisterCodec(codec)
-	val1.ClientCtx.Codec = codec
+	codec := codec2.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(codec)
+	banktypes.RegisterLegacyAminoCodec(codec)
+	val1.ClientCtx.LegacyAmino = codec
 
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
@@ -564,13 +644,13 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx.WithOutputFormat("json"), multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
-	var coins sdk.Coins
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &coins)
+	var balRes banktypes.QueryAllBalancesResponse
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, coins.AmountOf(s.cfg.BondDenom))
+	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
@@ -608,7 +688,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Does not work in offline mode.
 	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, "couldn't verify signature")
+	s.Require().EqualError(err, "couldn't verify signature: unable to verify single signer signature")
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
@@ -626,6 +706,50 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
+}
+
+func (s *IntegrationTestSuite) TestGetAccountCmd() {
+	val := s.network.Validators[0]
+	_, _, addr1 := testdata.KeyTestPubAddr()
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"invalid address",
+			[]string{addr1.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"valid address",
+			[]string{val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.GetAccountCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var any types.Any
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
+				var acc authtypes.AccountI
+				s.Require().NoError(val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().Equal(val.Address, acc.GetAddress())
+			}
+		})
+	}
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
@@ -649,9 +773,7 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 
 	cmd := authcli.GetBroadcastCommand()
 	_, out := testutil.ApplyMockIO(cmd)
-
-	testDir, cleanFunc := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanFunc)
+	testDir := t.TempDir()
 
 	// Create new file with tx
 	builder := txCfg.NewTxBuilder()
@@ -670,6 +792,45 @@ func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
 	cmd.SetArgs([]string{txFileName})
 	require.Error(t, cmd.ExecuteContext(ctx))
 	require.Contains(t, out.String(), "unsupported return type ; supported types: sync, async, block")
+}
+
+func (s *IntegrationTestSuite) TestQueryParamsCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"happy case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+		{
+			"with specific height",
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryParamsCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var authParams authtypes.Params
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &authParams))
+				s.Require().NotNil(authParams.MaxMemoCharacters)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

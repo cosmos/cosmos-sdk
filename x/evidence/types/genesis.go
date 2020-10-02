@@ -3,15 +3,16 @@ package types
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates a new genesis state for the evidence module.
-func NewGenesisState(e []exported.Evidence) GenesisState {
+func NewGenesisState(e []exported.Evidence) *GenesisState {
 	evidence := make([]*types.Any, len(e))
 	for i, evi := range e {
 		msg, ok := evi.(proto.Message)
@@ -24,14 +25,14 @@ func NewGenesisState(e []exported.Evidence) GenesisState {
 		}
 		evidence[i] = any
 	}
-	return GenesisState{
+	return &GenesisState{
 		Evidence: evidence,
 	}
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.
-func DefaultGenesisState() GenesisState {
-	return GenesisState{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		Evidence: []*types.Any{},
 	}
 }

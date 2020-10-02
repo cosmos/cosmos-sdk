@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -41,7 +40,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	if val, ok := k.validatorCache[strValue]; ok {
 		valToReturn := val.val
 		// Doesn't mutate the cache's value
-		valToReturn.OperatorAddress = addr
+		valToReturn.OperatorAddress = addr.String()
 
 		return valToReturn, true
 	}
@@ -97,13 +96,13 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalValidator(k.cdc, validator)
-	store.Set(types.GetValidatorKey(validator.OperatorAddress), bz)
+	store.Set(types.GetValidatorKey(validator.GetOperator()), bz)
 }
 
 // validator index
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorByConsAddrKey(validator.GetConsAddr()), validator.OperatorAddress)
+	store.Set(types.GetValidatorByConsAddrKey(validator.GetConsAddr()), validator.GetOperator())
 }
 
 // validator index
@@ -114,7 +113,7 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.OperatorAddress)
+	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.GetOperator())
 }
 
 // validator index
@@ -126,7 +125,7 @@ func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.OperatorAddress)
+	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.GetOperator())
 }
 
 // Update the tokens of an existing validator, update the validators power index key
@@ -205,7 +204,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator))
 
 	// call hooks
-	k.AfterValidatorRemoved(ctx, valConsAddr, validator.OperatorAddress)
+	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
 }
 
 // get groups of validators
@@ -360,15 +359,15 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 
 // GetUnbondingValidators returns a slice of mature validator addresses that
 // complete their unbonding at a given time and height.
-func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHeight int64) []sdk.ValAddress {
+func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHeight int64) []string {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.GetValidatorQueueKey(endTime, endHeight))
 	if bz == nil {
-		return []sdk.ValAddress{}
+		return []string{}
 	}
 
-	addrs := sdk.ValAddresses{}
+	addrs := types.ValAddresses{}
 	k.cdc.MustUnmarshalBinaryBare(bz, &addrs)
 
 	return addrs.Addresses
@@ -376,9 +375,9 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 
 // SetUnbondingValidatorsQueue sets a given slice of validator addresses into
 // the unbonding validator queue by a given height and time.
-func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []sdk.ValAddress) {
+func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&sdk.ValAddresses{Addresses: addrs})
+	bz := k.cdc.MustMarshalBinaryBare(&types.ValAddresses{Addresses: addrs})
 	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }
 
@@ -401,10 +400,10 @@ func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, endTime time.Time
 // indexed by a given height and time.
 func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	addrs := k.GetUnbondingValidators(ctx, val.UnbondingTime, val.UnbondingHeight)
-	newAddrs := []sdk.ValAddress{}
+	newAddrs := []string{}
 
 	for _, addr := range addrs {
-		if !bytes.Equal(addr, val.OperatorAddress) {
+		if addr != val.OperatorAddress {
 			newAddrs = append(newAddrs, addr)
 		}
 	}
@@ -450,11 +449,15 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 		// We only unbond if the height and time are less than the current height
 		// and time.
 		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
-			addrs := sdk.ValAddresses{}
+			addrs := types.ValAddresses{}
 			k.cdc.MustUnmarshalBinaryBare(unbondingValIterator.Value(), &addrs)
 
 			for _, valAddr := range addrs.Addresses {
-				val, found := k.GetValidator(ctx, valAddr)
+				addr, err := sdk.ValAddressFromBech32(valAddr)
+				if err != nil {
+					panic(err)
+				}
+				val, found := k.GetValidator(ctx, addr)
 				if !found {
 					panic("validator in the unbonding queue was not found")
 				}
@@ -465,7 +468,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 
 				val = k.UnbondingToUnbonded(ctx, val)
 				if val.GetDelegatorShares().IsZero() {
-					k.RemoveValidator(ctx, val.OperatorAddress)
+					k.RemoveValidator(ctx, val.GetOperator())
 				}
 			}
 

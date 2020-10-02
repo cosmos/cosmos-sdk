@@ -2,7 +2,7 @@ syntax = "proto3";
 package ibc.lightclients.localhost.v1;
 
 import "gogoproto/gogo.proto";
-import "ibc/client/client.proto";
+import "ibc/core/client/v1/client.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types";
 
@@ -15,5 +15,5 @@ message ClientState {
   // self chain ID
   string chain_id = 2 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   // self latest block height
-  ibc.client.Height height = 3 [(gogoproto.nullable) = false];
+  ibc.core.client.v1.Height height = 3 [(gogoproto.nullable) = false];
 }

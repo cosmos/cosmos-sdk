@@ -1,0 +1,119 @@
+syntax = "proto3";
+package ibc.core.client.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/core/client/v1/client.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
+
+// Query provides defines the gRPC querier service
+service Query {
+  // ClientState queries an IBC light client.
+  rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/client_states/{client_id}";
+  }
+
+  // ClientStates queries all the IBC light clients of a chain.
+  rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/client_states";
+  }
+
+  // ConsensusState queries a consensus state associated with a client state at
+  // a given height.
+  rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}/version/{version_number}/"
+                                   "height/{version_height}";
+  }
+
+  // ConsensusStates queries all the consensus state associated with a given
+  // client.
+  rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse) {
+    option (google.api.http).get = "/ibc/client/v1beta1/consensus_states/{client_id}";
+  }
+}
+
+// QueryClientStateRequest is the request type for the Query/ClientState RPC
+// method
+message QueryClientStateRequest {
+  // client state unique identifier
+  string client_id = 1;
+}
+
+// QueryClientStateResponse is the response type for the Query/ClientState RPC
+// method. Besides the client state, it includes a proof and the height from
+// which the proof was retrieved.
+message QueryClientStateResponse {
+  // client state associated with the request identifier
+  google.protobuf.Any client_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+}
+
+// QueryClientStatesRequest is the request type for the Query/ClientStates RPC
+// method
+message QueryClientStatesRequest {
+  // pagination request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryClientStatesResponse is the response type for the Query/ClientStates RPC
+// method.
+message QueryClientStatesResponse {
+  // list of stored ClientStates of the chain.
+  repeated IdentifiedClientState client_states = 1;
+  // pagination response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryConsensusStateRequest is the request type for the Query/ConsensusState
+// RPC method. Besides the consensus state, it includes a proof and the height
+// from which the proof was retrieved.
+message QueryConsensusStateRequest {
+  // client identifier
+  string client_id = 1;
+  // consensus state version number
+  uint64 version_number = 2;
+  // consensus state version height
+  uint64 version_height = 3;
+  // latest_height overrrides the height field and queries the latest stored
+  // ConsensusState
+  bool latest_height = 4;
+}
+
+// QueryConsensusStateResponse is the response type for the Query/ConsensusState
+// RPC method
+message QueryConsensusStateResponse {
+  // consensus state associated with the client identifier at the given height
+  google.protobuf.Any consensus_state = 1;
+  // merkle proof of existence
+  bytes proof = 2;
+  // merkle proof path
+  string proof_path = 3;
+  // height at which the proof was retrieved
+  ibc.core.client.v1.Height proof_height = 4 [(gogoproto.nullable) = false];
+}
+
+// QueryConsensusStatesRequest is the request type for the Query/ConsensusStates
+// RPC method.
+message QueryConsensusStatesRequest {
+  // client identifier
+  string client_id = 1;
+  // pagination request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryConsensusStatesResponse is the response type for the
+// Query/ConsensusStates RPC method
+message QueryConsensusStatesResponse {
+  // consensus states associated with the identifier
+  repeated ConsensusStateWithHeight consensus_states = 1 [(gogoproto.nullable) = false];
+  // pagination response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

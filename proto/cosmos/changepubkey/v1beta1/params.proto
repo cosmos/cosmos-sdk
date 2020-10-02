@@ -7,6 +7,6 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types";
 
 // Params defines the parameters for the changepubkey module.
 message Params {
-  uint64 pubkey_change_cost = 6
+  uint64 pubkey_change_cost = 1
     [(gogoproto.customname) = "PubKeyChangeCost", (gogoproto.moretags) = "yaml:\"pubkey_change_cost\""];
 }

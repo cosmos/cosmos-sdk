@@ -7,13 +7,14 @@ import (
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/09-localhost/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
@@ -50,7 +51,7 @@ func TestValidateGenesis(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	val := tmtypes.NewValidator(pubKey, 10)
+	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 
 	heightMinus1 := types.NewHeight(0, height-1)
@@ -71,7 +72,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
-						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+						clientID, ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 					),
 					types.NewIdentifiedClientState(
 						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
@@ -99,7 +100,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
-						"/~@$*", ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+						"/~@$*", ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 					),
 					types.NewIdentifiedClientState(
 						exported.Localhost, localhosttypes.NewClientState("chainID", clientHeight),
@@ -127,7 +128,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
-						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 					),
 					types.NewIdentifiedClientState(exported.Localhost, localhosttypes.NewClientState("chaindID", types.ZeroHeight())),
 				},
@@ -141,7 +142,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
-						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 					),
 					types.NewIdentifiedClientState(
 						exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
@@ -169,7 +170,7 @@ func TestValidateGenesis(t *testing.T) {
 			genState: types.NewGenesisState(
 				[]types.IdentifiedClientState{
 					types.NewIdentifiedClientState(
-						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), false, false),
+						clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 					),
 					types.NewIdentifiedClientState(
 						exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),

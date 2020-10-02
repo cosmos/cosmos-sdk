@@ -3,7 +3,6 @@
 package rest_test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -151,8 +150,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	voterAddressBase64 := base64.URLEncoding.EncodeToString(val.Address)
+	voterAddressBase64 := val.Address.String()
 
 	testCases := []struct {
 		name   string
@@ -243,9 +241,6 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	val := s.network.Validators[0]
 
-	// TODO: need to pass bech32 string instead of base64 encoding string
-	DepositerAddrBase64 := base64.URLEncoding.EncodeToString(val.Address)
-
 	testCases := []struct {
 		name   string
 		url    string
@@ -253,12 +248,12 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	}{
 		{
 			"get deposit with empty proposal id",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "", DepositerAddrBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "", val.Address.String()),
 			true,
 		},
 		{
 			"get deposit of non existing proposal",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "10", DepositerAddrBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "10", val.Address.String()),
 			true,
 		},
 		{
@@ -268,7 +263,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 		},
 		{
 			"get deposit valid request",
-			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "1", DepositerAddrBase64),
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/deposits/%s", val.APIAddress, "1", val.Address.String()),
 			false,
 		},
 	}

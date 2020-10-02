@@ -32,6 +32,19 @@ type ClientState interface {
 	CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Misbehaviour) (ClientState, error)
 	CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, Header) (ClientState, ConsensusState, error)
 
+	// Upgrade functions
+	VerifyUpgrade(
+		ctx sdk.Context,
+		cdc codec.BinaryMarshaler,
+		store sdk.KVStore,
+		newClient ClientState,
+		proofUpgrade []byte,
+	) error
+	// Utility function that zeroes out any client customizable fields in client state
+	// Ledger enforced fields are maintained while all custom fields are zero values
+	// Used to verify upgrades
+	ZeroCustomFields() ClientState
+
 	// State verification functions
 
 	VerifyClientState(
@@ -96,7 +109,7 @@ type ClientState interface {
 		sequence uint64,
 		acknowledgement []byte,
 	) error
-	VerifyPacketAcknowledgementAbsence(
+	VerifyPacketReceiptAbsence(
 		store sdk.KVStore,
 		cdc codec.BinaryMarshaler,
 		height Height,

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+//nolint:interfacer
 func NewGenesisState(
 	params Params, fp FeePool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r []ValidatorOutstandingRewardsRecord,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
@@ -14,7 +15,7 @@ func NewGenesisState(
 		Params:                          params,
 		FeePool:                         fp,
 		DelegatorWithdrawInfos:          dwis,
-		PreviousProposer:                pp,
+		PreviousProposer:                pp.String(),
 		OutstandingRewards:              r,
 		ValidatorAccumulatedCommissions: acc,
 		ValidatorHistoricalRewards:      historical,
@@ -30,7 +31,7 @@ func DefaultGenesisState() *GenesisState {
 		FeePool:                         InitialFeePool(),
 		Params:                          DefaultParams(),
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
-		PreviousProposer:                nil,
+		PreviousProposer:                "",
 		OutstandingRewards:              []ValidatorOutstandingRewardsRecord{},
 		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
 		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},

@@ -3,7 +3,7 @@ go 1.15
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/99designs/keyring v1.1.5
+	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.3.4
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta
@@ -27,7 +27,7 @@ require (
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/common v0.13.0
+	github.com/prometheus/common v0.14.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.0
 	github.com/spf13/afero v1.2.2 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.34.0-rc3.0.20200923104252-a2bbc2984bcc
+	github.com/tendermint/tendermint v0.34.0-rc4
 	github.com/tendermint/tm-db v0.6.2
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987

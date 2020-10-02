@@ -93,7 +93,7 @@ func GetAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key})
+			res, err := queryClient.Account(context.Background(), &types.QueryAccountRequest{Address: key.String()})
 			if err != nil {
 				return err
 			}

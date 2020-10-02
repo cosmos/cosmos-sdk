@@ -13,19 +13,19 @@ import (
 // RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.client.ClientState",
+		"ibc.core.client.v1.ClientState",
 		(*exported.ClientState)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.client.ConsensusState",
+		"ibc.core.client.v1.ConsensusState",
 		(*exported.ConsensusState)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.client.Header",
+		"ibc.core.client.v1.Header",
 		(*exported.Header)(nil),
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.client.Height",
+		"ibc.core.client.v1.Height",
 		(*exported.Height)(nil),
 	)
 	registry.RegisterImplementations(
@@ -33,7 +33,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&Height{},
 	)
 	registry.RegisterInterface(
-		"cosmos_sdk.ibc.v1.client.Misbehaviour",
+		"ibc.core.client.v1.Misbehaviour",
 		(*exported.Misbehaviour)(nil),
 	)
 	registry.RegisterImplementations(

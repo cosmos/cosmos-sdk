@@ -13,9 +13,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 

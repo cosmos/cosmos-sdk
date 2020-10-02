@@ -8,7 +8,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )

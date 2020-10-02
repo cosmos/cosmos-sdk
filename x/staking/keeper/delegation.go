@@ -626,7 +626,7 @@ func (k Keeper) Delegate(
 	return newShares, nil
 }
 
-// Unbond a particular delegation and perform associated store operations
+// Unbond a particular delegation and perform associated store operations.
 func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (amount sdk.Int, err error) {

@@ -149,9 +149,10 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an TRYOPEN State. The `provedID` 
-represents the connection ID the counterparty set under `connection.Counterparty.ConnectionID`
-to represent the connection ID this chain should use.
+The message creates a connection for the given ID with an TRYOPEN State. The `ProvedID` 
+represents the connection ID the counterparty set under `connection.Counterparty.ConnectionId`
+to represent the connection ID this chain should use. An empty string indicates the connection
+identifier is flexible and gives this chain an opportunity to choose its own identifier.
 
 ### MsgConnectionOpenAck
 
@@ -253,6 +254,7 @@ the `MsgChannelOpenTry` message.
 type MsgChannelOpenTry struct {
 	PortId              string    
 	ChannelId           string   
+	ProvedChannelId     string 
 	Channel             Channel 
 	CounterpartyVersion string 
 	ProofInit           []byte
@@ -265,6 +267,7 @@ This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
 - `ChannelId` is invalid (see naming requirements)
+- `ProvedId` is not empty and not equal to `ChannelId`
 - `Channel` is empty
 - `CounterpartyVersion` is empty
 - `ProofInit` is empty
@@ -274,7 +277,11 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty's Channel state is in INIT
 
 The message creates a channel on chain B with an TRYOPEN state for the given Channel ID 
-and Port ID.
+and Port ID. The `ProvedChannelId` represents the channel ID the counterparty set under
+`connection.Counterparty.ChannelId` to represent the channel ID this chain should use.
+An empty string indicates the channel identifier is flexible and gives this chain an
+opportunity to choose its own identifier.
+
 
 ### MsgChannelOpenAck
 
@@ -282,12 +289,13 @@ A channel handshake is opened by a chain A using the `MsgChannelOpenAck` message
 
 ```go
 type MsgChannelOpenAck struct {
-	PortId              string
-	ChannelId           string
-	CounterpartyVersion string
-	ProofTry            []byte
-	ProofHeight         Height
-	Signer              sdk.AccAddress
+	PortId                string
+	ChannelId             string
+	CounterpartyChannelId string 
+	CounterpartyVersion   string
+	ProofTry              []byte
+	ProofHeight           Height
+	Signer                sdk.AccAddress
 }
 ```
 
@@ -295,6 +303,7 @@ This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
 - `ChannelId` is invalid (see naming requirements)
+- `CounterpartyChannelId` is invalid (see naming requirements)
 - `CounterpartyVersion` is empty
 - `ProofTry` is empty
 - `ProofHeight` is zero
@@ -302,6 +311,7 @@ This message is expected to fail if:
 - `ProofTry` does not prove that the counterparty's Channel state is in TRYOPEN
 
 The message sets a channel on chain A to state OPEN for the given Channel ID and Port ID.
+`CounterpartyChannelId` should be the `ChannelId` used by the counterparty channel.
 
 ### MsgChannelOpenConfirm
 

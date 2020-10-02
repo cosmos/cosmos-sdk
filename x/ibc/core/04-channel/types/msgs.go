@@ -69,7 +69,7 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 //nolint:interfacer
 func NewMsgChannelOpenTry(
-	portID, channelID, version string, channelOrder Order, connectionHops []string,
+	portID, channelID, provedChannelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
@@ -78,6 +78,7 @@ func NewMsgChannelOpenTry(
 	return &MsgChannelOpenTry{
 		PortId:              portID,
 		ChannelId:           channelID,
+		ProvedChannelId:     provedChannelID,
 		Channel:             channel,
 		CounterpartyVersion: counterpartyVersion,
 		ProofInit:           proofInit,
@@ -103,6 +104,9 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	}
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
+	}
+	if msg.ProvedChannelId != "" && msg.ProvedChannelId != msg.ChannelId {
+		return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "proved channel identifier must be empty or equal to channel identifier")
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")
@@ -133,16 +137,17 @@ var _ sdk.Msg = &MsgChannelOpenAck{}
 // NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
 //nolint:interfacer
 func NewMsgChannelOpenAck(
-	portID, channelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
+	portID, channelID, counterpartyChannelID string, cpv string, proofTry []byte, proofHeight clienttypes.Height,
 	signer sdk.AccAddress,
 ) *MsgChannelOpenAck {
 	return &MsgChannelOpenAck{
-		PortId:              portID,
-		ChannelId:           channelID,
-		CounterpartyVersion: cpv,
-		ProofTry:            proofTry,
-		ProofHeight:         proofHeight,
-		Signer:              signer.String(),
+		PortId:                portID,
+		ChannelId:             channelID,
+		CounterpartyChannelId: counterpartyChannelID,
+		CounterpartyVersion:   cpv,
+		ProofTry:              proofTry,
+		ProofHeight:           proofHeight,
+		Signer:                signer.String(),
 	}
 }
 
@@ -163,6 +168,9 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 	}
 	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
 		return sdkerrors.Wrap(err, "invalid channel ID")
+	}
+	if err := host.ChannelIdentifierValidator(msg.CounterpartyChannelId); err != nil {
+		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
 	}
 	if len(msg.ProofTry) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof try")

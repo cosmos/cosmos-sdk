@@ -120,7 +120,7 @@ IBC needs to know which module is bound to which port so that it can route packe
 appropriate module and call the appropriate callbacks. The port to module name mapping is handled by
 IBC's port `Keeper`. However, the mapping from module name to the relevant callbacks is accomplished
 by the port
-[`Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//05-port/types/router.go) on the
+[`Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//core/05-port/types/router.go) on the
 IBC module.
 
 Adding the module routes allows the IBC handler to call the appropriate callback when processing a
@@ -204,7 +204,7 @@ past historical info at any given height in order to verify the light client `Co
 connection handhake.
 
 The IBC module also has
-[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/02-client/abci.go) logic as
+[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/core/02-client/abci.go) logic as
 well. This is optional as it is only required if your application uses the [localhost
 client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
 different modules from the same chain.

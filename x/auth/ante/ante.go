@@ -22,7 +22,7 @@ func NewAnteHandler(
 		TxTimeoutHeightDecorator{},
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
-		NewDeductGrantedFeeDecorator(),
+		NewRejectFeeGranterDecorator(),
 		NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(ak),
 		NewDeductFeeDecorator(ak, bankKeeper),

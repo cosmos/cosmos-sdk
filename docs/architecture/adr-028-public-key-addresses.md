@@ -11,7 +11,7 @@ Proposed
 ## Context
 
 Issue [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685) identified that public key
-addresses are currently overlapping. One initial proposal was extending the address length and
+address spaces are currently overlapping. One initial proposal was extending the address length and
 adding prefixes for different types of addresses. 
 
 @ethanfrey explained an alternate approach originally used in https://github.com/iov-one/weave:

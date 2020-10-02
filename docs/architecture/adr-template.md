@@ -10,10 +10,10 @@
 > {Deprecated|Proposed|Accepted} {Implemented|Not Implemented}
 
 
-## Summary
+## Abstract
 
-> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the EIP.
-> A short (~200 word) description of the technical issue being addressed.
+> "If you can't explain it simply, you don't understand it well enough." Provide a simplified and layman-accessible explanation of the ADR.
+> A short (~200 word) description of the issue being addressed.
 
 
 ## Context

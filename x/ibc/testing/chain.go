@@ -205,7 +205,7 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   "store/upgrade/key",
 		Height: int64(height - 1),
-		Data:   upgradetypes.UpgradedClientKey(),
+		Data:   key,
 		Prove:  true,
 	})
 

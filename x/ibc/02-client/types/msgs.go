@@ -178,17 +178,23 @@ func (msg MsgUpdateClient) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 
 // NewMsgUpgradeClient creates a new MsgUpgradeClient instance
 // nolint: interfacer
-func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, proofUpgrade []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
+func NewMsgUpgradeClient(clientID string, clientState exported.ClientState, upgradeHeight exported.Height, proofUpgrade []byte, signer sdk.AccAddress) (*MsgUpgradeClient, error) {
 	anyClient, err := PackClientState(clientState)
 	if err != nil {
 		return nil, err
 	}
 
+	height, ok := upgradeHeight.(Height)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "invalid height type. expected: %T, got: %T", &Height{}, upgradeHeight)
+	}
+
 	return &MsgUpgradeClient{
-		ClientId:     clientID,
-		ClientState:  anyClient,
-		ProofUpgrade: proofUpgrade,
-		Signer:       signer.String(),
+		ClientId:      clientID,
+		ClientState:   anyClient,
+		ProofUpgrade:  proofUpgrade,
+		UpgradeHeight: &height,
+		Signer:        signer.String(),
 	}, nil
 }
 
@@ -213,6 +219,12 @@ func (msg MsgUpgradeClient) ValidateBasic() error {
 	}
 	if len(msg.ProofUpgrade) == 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "proof of upgrade cannot be empty")
+	}
+	if msg.UpgradeHeight == nil {
+		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be nil")
+	}
+	if msg.UpgradeHeight.IsZero() {
+		return sdkerrors.Wrap(ErrInvalidUpgradeClient, "upgrade height cannot be zero")
 	}
 	_, err = sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {

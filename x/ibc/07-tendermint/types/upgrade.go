@@ -31,10 +31,10 @@ func (cs ClientState) VerifyUpgrade(
 	// construct MerklePath from upgradePath
 	upgradeKeys := strings.Split(cs.UpgradePath, "/")
 	// append upgradeHeight to last key in merkle path
-	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%s", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
+	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
 	upgradePath := commitmenttypes.NewMerklePath(upgradeKeys)
 
-	if cs.GetLatestHeight().GetEpochNumber() == upgradeHeight.GetEpochNumber() {
+	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch at which upgrade occurs must be same as current client epoch. expected epoch %d, got %d",
 			cs.GetLatestHeight().GetEpochNumber(), upgradeHeight.GetEpochNumber())
 	}

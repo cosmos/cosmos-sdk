@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"context"
 	json "encoding/json"
 	"fmt"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -1257,6 +1259,72 @@ func (s *IntegrationTestSuite) TestNewCmdUnbond() {
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
+	}
+}
+
+// TestBlockResults tests that the validator updates correctly show when
+// calling the /block_results RPC endpoint.
+// ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
+func (s *IntegrationTestSuite) TestBlockResults() {
+	val := s.network.Validators[0]
+
+	// Create new account in the keyring.
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	// Send some funds to the new account.
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	// Use CLI to create a delegation from the new account to validator `val`.
+	s.Require().NoError(err)
+	delHeight, err := s.network.LatestHeight()
+	s.Require().NoError(err)
+	cmd := cli.NewDelegateCmd()
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
+		val.ValAddress.String(),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	s.Require().NoError(err)
+
+	// Loop until we find a block result with the correct validator updates.
+	// By experience, it happens around 2 blocks after `delHeight`.
+	for {
+		latestHeight, err := s.network.LatestHeight()
+		s.Require().NoError(err)
+
+		// Wait maximum 10 blocks, or else fail test.
+		if latestHeight > delHeight+10 {
+			s.Fail("timeout reached")
+		}
+
+		res, err := val.RPCClient.BlockResults(context.Background(), &latestHeight)
+		s.Require().NoError(err)
+
+		if len(res.ValidatorUpdates) > 0 {
+			valUpdate := res.ValidatorUpdates[0]
+			s.Require().Equal(
+				valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+				val.PubKey.Bytes(),
+			)
+
+			// We got our validator update, test passed.
+			break
+		}
+
+		s.network.WaitForNextBlock()
 	}
 }
 

@@ -34,21 +34,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## v0.40.0-rc1 - YYYY-MM-DD
 
 ### Client Breaking Changes
 
 * __CLI__
   * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) remove `keys update` command.
-  * (server) [\#5982](https://github.com/cosmos/cosmos-sdk/pull/5982) `--pruning` now must be set to `custom` if you want to customise the granular options.
-  * (x/auth) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) the `tx encode/decode` commands, due to change on encoding break compatibility with older clients.
   * (x/auth) [\#5844](https://github.com/cosmos/cosmos-sdk/pull/5844) `tx sign` command now returns an error when signing is attempted with offline/multisig keys.
   * (x/auth) [\#6108](https://github.com/cosmos/cosmos-sdk/pull/6108) `tx sign` command's `--validate-signatures` flag is migrated into a `tx validate-signatures` standalone command.
   * (x/genutil) [\#6651](https://github.com/cosmos/cosmos-sdk/pull/6651) The `gentx` command has been improved. No longer are `--from` and `--name` flags required. Instead, a single argument, `name`, is required which refers to the key pair in the Keyring. In addition, an optional
   `--moniker` flag can be provided to override the moniker found in `config.toml`.
 * __REST / Queriers__
   * (api) [\#6426](https://github.com/cosmos/cosmos-sdk/pull/6426) The ability to start an out-of-process API REST server has now been removed. Instead, the API server is now started in-process along with the application and Tendermint. Configuration options have been added to `app.toml` to enable/disable the API server along with additional HTTP server options.
-  * (client) [\#5640](https://github.com/cosmos/cosmos-sdk/pull/5640) The rest server endpoint `/swagger-ui/` is replaced by ´/´.
+  * (client) [\#7246](https://github.com/cosmos/cosmos-sdk/pull/7246) The rest server endpoint `/swagger-ui/` is replaced by `/swagger/`, and contains swagger documentation for gRPC Gateway routes in addition to legacy REST routes. Swagger API is exposed only if set in `app.toml`.
   * (x/auth) [\#5702](https://github.com/cosmos/cosmos-sdk/pull/5702) The `x/auth` querier route has changed from `"acc"` to `"auth"`.
   * (x/bank) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) The `/bank/balances/{address}` endpoint now returns all account balances or a single balance by denom when the `denom` query parameter is present.
   * (x/evidence) [\#5952](https://github.com/cosmos/cosmos-sdk/pull/5952) Remove CLI and REST handlers for querying `x/evidence` parameters.
@@ -75,7 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * (client/input) [\#5904](https://github.com/cosmos/cosmos-sdk/pull/5904) Removal of unnecessary `GetCheckPassword`, `PrintPrefixed` functions.
   * (client/keys) [\#5889](https://github.com/cosmos/cosmos-sdk/pull/5889) Rename `NewKeyBaseFromDir()` -> `NewLegacyKeyBaseFromDir()`.
   * (client/keys) [\#5820](https://github.com/cosmos/cosmos-sdk/pull/5820/) Removed method CloseDB from Keybase interface.
-  * (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `RegisterRoutes` of rpc is moved from package client to client/rpc and client/rpc.RegisterRPCRoutes is removed.
+  * (client/rpc) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `client` package and subdirs reorganization.
   * (client/lcd) [\#6290](https://github.com/cosmos/cosmos-sdk/pull/6290) `CliCtx` of struct `RestServer` in package client/lcd has been renamed to `ClientCtx`.
   * (codec) [\#6330](https://github.com/cosmos/cosmos-sdk/pull/6330) `codec.RegisterCrypto` has been moved to the `crypto/codec` package and the global `codec.Cdc` Amino instance has been deprecated and moved to the `codec/legacy_global` package.
   * (crypto) [\#6780](https://github.com/cosmos/cosmos-sdk/issues/6780) Move ledger code to its own package.
@@ -146,8 +144,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
     
 ### State Machine Breaking
 
-* __General__
-  * (codec) [\#5799](https://github.com/cosmos/cosmos-sdk/pull/5799) / [\#5814](https://github.com/cosmos/cosmos-sdk/pull/5814) Now we favor the use of `(Un)MarshalBinaryBare` instead of `(Un)MarshalBinaryLengthPrefixed` in all cases that are not needed.
 * __Modules__
   * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
     * Account balances are now persisted and retrieved via the `x/bank` module.

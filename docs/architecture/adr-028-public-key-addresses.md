@@ -89,8 +89,9 @@ message PubKey {
 }
 ```
 
-Each nested public key has its own address, so we can use that address as a starting
-point for forming the multisig address. Let's create an array of strings, `hexAddresses []string`,
+Each nested public key has its own address defined using the the algorithm described here 
+(either Canonica or Multisig address). We can use to recursively define the multisig address format. 
+Let's create an array of strings, `hexAddresses []string`,
 which is the hex-encoded address of each nested pubkey. We join these hex encoded addresses
 with a `/`, i.e. `joinedHexAddresses := strings.Join(hexAddresses, "/")`. We then form the address of the multisig pubkey,
 using `Sha256(fmt.Sprintf("cosmos.crypto.multisig.PubKey/%d/%s", pk.Threshold, joinedHexAddresses)[:20]`.

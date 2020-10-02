@@ -8,6 +8,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -132,7 +133,7 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := authcli.QueryParamsCmd()
+			cmd := cli.QueryParamsCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -140,9 +141,9 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
+				s.Require().NoError(err, fmt.Sprintln("err", err))
 				var changePubKeyParams changepubkeytypes.Params
 				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &changePubKeyParams))
-				s.Require().NotNil(changePubKeyParams.MaxMemoCharacters)
 			}
 		})
 	}

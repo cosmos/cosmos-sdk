@@ -25,17 +25,17 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc-transfer/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -50,8 +50,9 @@ const (
 	UnbondingPeriod time.Duration = time.Hour * 24 * 7 * 3
 	MaxClockDrift   time.Duration = time.Second * 10
 
-	DefaultChannelVersion = ibctransfertypes.Version
-	InvalidID             = "IDisInvalid"
+	DefaultChannelVersion  = ibctransfertypes.Version
+	DefaultOpenInitVersion = ""
+	InvalidID              = "IDisInvalid"
 
 	ConnectionIDPrefix = "conn"
 	ChannelIDPrefix    = "chan"
@@ -572,7 +573,7 @@ func (chain *TestChain) ConnectionOpenInit(
 	msg := connectiontypes.NewMsgConnectionOpenInit(
 		connection.ID, connection.ClientID,
 		counterpartyConnection.ID, connection.CounterpartyClientID,
-		counterparty.GetPrefix(),
+		counterparty.GetPrefix(), DefaultOpenInitVersion,
 		chain.SenderAccount.GetAddress(),
 	)
 	return chain.sendMsgs(msg)
@@ -591,7 +592,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, connection.ClientID,
+		connection.ID, connection.ID, connection.ClientID,
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
@@ -614,7 +615,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connection.ID, counterpartyClient,
+		connection.ID, counterpartyConnection.ID, counterpartyClient,
 		proofTry, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		ConnectionVersion,

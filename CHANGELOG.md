@@ -36,6 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.40.0-rc1 - YYYY-MM-DD
 
+v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases
+of the Cosmos SDK since launch. Please read through this changelog and [release notes](./RELEASE_NOTES.md) to make sure you are aware of any relevant breaking changes.
+
 ### Client Breaking Changes
 
 * __CLI__
@@ -144,6 +147,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
     
 ### State Machine Breaking
 
+* __General__
+  * (client) [\#7268](https://github.com/cosmos/cosmos-sdk/pull/7268) / [\#7147](https://github.com/cosmos/cosmos-sdk/pull/7147) Introduce new protobuf based PubKeys, and migrate PubKey in BaseAccount to use this new protobuf based PubKey format
+
 * __Modules__
   * (modules) [\#5572](https://github.com/cosmos/cosmos-sdk/pull/5572) Separate balance from accounts per ADR 004.
     * Account balances are now persisted and retrieved via the `x/bank` module.
@@ -222,8 +228,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * __Baseapp / Client / REST__
+  * (x/auth) [\#6213](https://github.com/cosmos/cosmos-sdk/issues/6213) Introduce new protobuf based path for transaction signing, see [ADR020](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md) for more details
   * (x/auth) [\#6350](https://github.com/cosmos/cosmos-sdk/pull/6350) New sign-batch command to sign StdTx batch files.
   * (baseapp) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added support for taking state snapshots at regular height intervals, via options `snapshot-interval` and `snapshot-keep-recent`.
+  * (client) [\#5921](https://github.com/cosmos/cosmos-sdk/issues/5921) Introduce new gRPC and gRPC Gateway based APIs for querying app & module data. See [ADR021](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-021-protobuf-query-encoding.md) for more details
   * (config) [\#7265](https://github.com/cosmos/cosmos-sdk/pull/7265) Support Tendermint block pruning through a new `min-retain-blocks` configuration that can be set in either `app.toml` or via the CLI. This parameter is used in conjunction with other criteria to determine the height at which Tendermint should prune blocks.
   * (events) [\#7121](https://github.com/cosmos/cosmos-sdk/pull/7121) The application now derives what events are indexed by Tendermint via the `index-events` configuration in `app.toml`, which is a list of events taking the form `{eventType}.{attributeKey}`.
   * (tx) [\#6089](https://github.com/cosmos/cosmos-sdk/pull/6089) Transactions can now have a `TimeoutHeight` set which allows the transaction to be rejected if it's committed at a height greater than the timeout.
@@ -238,6 +246,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `store.Query` now only returns chained `ics23.CommitmentProof` wrapped in `merkle.Proof`
     * `ProofRuntime` only decodes and verifies `ics23.CommitmentProof`
 * __Modules__
+  * (modules) [\#5921](https://github.com/cosmos/cosmos-sdk/issues/5921) Introduction of Query gRPC service definitions along with REST annotations for gRPC Gateway for each module
   * (x/auth/vesting) [\#7209](https://github.com/cosmos/cosmos-sdk/pull/7209) Create new `MsgCreateVestingAccount` message type along with CLI handler that allows for the creation of delayed and continuous vesting types.
   * (x/capability) [\#5828](https://github.com/cosmos/cosmos-sdk/pull/5828) Capability module integration as outlined in [ADR 3 - Dynamic Capability Store](https://github.com/cosmos/tree/master/docs/architecture/adr-003-dynamic-capability-store.md).
   * (x/ibc) [\#5277](https://github.com/cosmos/cosmos-sdk/pull/5277) `x/ibc` changes from IBC alpha. For more details check the the  [`x/ibc/spec`](https://github.com/cosmos/tree/master/x/ibc/spec) directory:
@@ -301,6 +310,7 @@ falling below their minimum self-delegation and never having been bonded. The va
   * (x/staking) [\#6163](https://github.com/cosmos/cosmos-sdk/pull/6163) CLI and REST call to unbonding delegations and delegations now accept
   pagination.
 * __General__
+  * (tendermint) [\#6365](https://github.com/cosmos/cosmos-sdk/issues/6365) Update tendermint version to v0.34, and make necessary upgrades to the SDK
   * (simulation) [\#6002](https://github.com/cosmos/cosmos-sdk/pull/6002) Add randomized consensus params into simulation.
   * (store) [\#6481](https://github.com/cosmos/cosmos-sdk/pull/6481) Move `SimpleProofsFromMap` from Tendermint into the SDK.
   * (store) [\#6719](https://github.com/cosmos/cosmos-sdk/6754) Add validity checks to stores for nil and empty keys.

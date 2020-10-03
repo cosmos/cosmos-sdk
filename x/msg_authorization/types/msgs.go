@@ -87,17 +87,6 @@ func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) er
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	for _, msgAny := range msg.Msgs {
-		var msg1 sdk.Msg
-		err := unpacker.UnpackAny(msgAny, &msg1)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 // String implements the Stringer interface
 func (msg MsgGrantAuthorization) String() string {

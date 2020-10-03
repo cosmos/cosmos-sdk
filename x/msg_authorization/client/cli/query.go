@@ -66,7 +66,7 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 				context.Background(),
 				&types.QueryAuthorizationRequest{
 					GranterAddress: granterAddr,
-					GranteeAddress: granteeAddr, MsgType: msgAuthorized
+					GranteeAddress: granteeAddr, MsgType: msgAuthorized,
 				},
 			)
 			if err != nil {

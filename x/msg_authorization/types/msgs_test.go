@@ -26,7 +26,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 	}{
 		{"nil grantee address", nil, []sdk.Msg{}, false},
 		{"valid test", grantee, []sdk.Msg{}, true},
-		{"", grantee, []sdk.Msg{&banktypes.MsgSend{
+		{"valid test: msg type", grantee, []sdk.Msg{&banktypes.MsgSend{
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 			FromAddress: granter.String(),
 			ToAddress:   grantee.String(),

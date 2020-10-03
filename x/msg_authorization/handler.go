@@ -89,10 +89,7 @@ func handleMsgExecAuthorized(ctx sdk.Context, msg *types.MsgExecAuthorized, k ke
 		return nil, err
 	}
 
-	msgs, err := msg.GetMsgs()
-	if err != nil {
-		return nil, err
-	}
+	msgs := msg.GetMsgs()
 
 	return k.DispatchActions(ctx, grantee, msgs)
 }

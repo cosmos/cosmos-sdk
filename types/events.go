@@ -1,10 +1,13 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -37,6 +40,41 @@ func (em *EventManager) EmitEvents(events Events) {
 // ABCIEvents returns all stored Event objects as abci.Event objects.
 func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
+}
+
+func (em *EventManager) EmitTypedEvent(event proto.Message) error {
+	evtType := proto.MessageName(event)
+	evtJSON, err := codec.ProtoMarshalJSON(event)
+	if err != nil {
+		return err
+	}
+
+	var attrMap map[string]json.RawMessage
+	err = json.Unmarshal(evtJSON, &attrMap)
+	if err != nil {
+		return err
+	}
+
+	var attrs []abci.EventAttribute
+	for k, v := range attrMap {
+		attrs = append(attrs, abci.EventAttribute{
+			Key:   []byte(k),
+			Value: v,
+		})
+	}
+
+	em.EmitEvent(Event{
+		Type:       evtType,
+		Attributes: attrs,
+	})
+
+	return nil
+}
+
+func ParseTypedEvent(event abci.Event) (proto.Message, error) {
+	// look up proto.Message type by event.Type
+	// populate attributes into map[string]json.RawMessage and marshal that to a json string
+	// unmarshal the json string to the proto.Message
 }
 
 // ----------------------------------------------------------------------------

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -83,9 +82,8 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify revoke executes with correct information")
 	err = app.MsgAuthKeeper.Revoke(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NoError(err)
-	authorization, xx := app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
-	fmt.Println(xx)
-	s.Require().NotNil(authorization)
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	s.Require().Nil(authorization)
 
 }
 

@@ -61,6 +61,9 @@ const (
 	FlagPage             = "page"
 	FlagLimit            = "limit"
 	FlagSignMode         = "sign-mode"
+	FlagPageKey          = "page-key"
+	FlagOffset           = "offset"
+	FlagCountTotal       = "count-total"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -121,6 +124,14 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	viper.BindPFlag(FlagUseLedger, cmd.Flags().Lookup(FlagUseLedger))
 	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
 	viper.BindPFlag(FlagKeyringBackend, cmd.Flags().Lookup(FlagKeyringBackend))
+}
+
+// AddPaginationFlagsToCmd adds common paginations flags to command
+func AddPaginationFlagsToCmd(cmd *cobra.Command, query string) {
+	cmd.Flags().String(FlagPageKey, "", fmt.Sprintf("pagination page-key of %s to query for", query))
+	cmd.Flags().Uint64(FlagOffset, 0, fmt.Sprintf("pagination offset of %s to query for", query))
+	cmd.Flags().Uint64(FlagLimit, 100, fmt.Sprintf("pagination limit of %s to query for", query))
+	cmd.Flags().Bool(FlagCountTotal, false, fmt.Sprintf("count total number of records in %s to query for", query))
 }
 
 // GasSetting encapsulates the possible values passed through the --gas flag.

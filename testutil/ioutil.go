@@ -16,7 +16,7 @@ import (
 // Returns the directory path and a cleanup function.
 // nolint: errcheck
 func NewTestCaseDir(t testing.TB) (string, func()) {
-	dir, err := ioutil.TempDir("", t.Name()+"_")
+	dir, err := ioutil.TempDir("", strings.ReplaceAll(t.Name(), "/", "_")+"_")
 	require.NoError(t, err)
 	return dir, func() { os.RemoveAll(dir) }
 }

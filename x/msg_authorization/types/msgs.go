@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"time"
-
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -88,6 +87,18 @@ func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) er
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, msgAny := range msg.Msgs {
+		var msg1 sdk.Msg
+		err := unpacker.UnpackAny(msgAny, &msg1)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // String implements the Stringer interface
 func (msg MsgGrantAuthorization) String() string {
 	out, _ := yaml.Marshal(msg)
@@ -164,18 +175,16 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 }
 
 // GetMsgs Unpacks any messages
-func (msg MsgExecAuthorized) GetMsgs() ([]sdk.Msg, error) {
+func (msg MsgExecAuthorized) GetMsgs() []sdk.Msg {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		var msg1 sdk.Msg
-		err := ModuleCdc.UnpackAny(msgAny, &msg1)
-		if err != nil {
-			return nil, err
+		msg1, ok := msgAny.GetCachedValue().(sdk.Msg)
+		if !ok {
+			return nil
 		}
 		msgs[i] = msg1
 	}
-
-	return msgs, nil
+	return msgs
 }
 
 // Route implements Msg

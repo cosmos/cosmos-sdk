@@ -128,7 +128,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
 	store.Delete(actor)
 
@@ -144,9 +144,8 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 	if grant.Expiration != 0 && grant.Expiration < (ctx.BlockHeader().Time.Unix()) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil, 0
+		return nil, 
 	}
-	var authorization types.Authorization
-	k.cdc.UnpackAny(grant.Authorization, &authorization)
-	return authorization, grant.Expiration
+
+	return grant.GetAuthorizationa(), grant.Expiration
 }

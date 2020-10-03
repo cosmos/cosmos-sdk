@@ -23,6 +23,7 @@ var (
 	_ sdk.Msg = &MsgExecAuthorized{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorization{}
+	_ types.UnpackInterfacesMessage = &MsgExecAuthorized{}
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
@@ -76,6 +77,18 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
+	}
+
+	return nil
+}
+
+func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, x := range msg.Msgs {
+		var msgExecAuthorized sdk.Msg
+		err := unpacker.UnpackAny(x, &msgExecAuthorized)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -164,16 +177,16 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 }
 
 // GetMsgs Unpacks any messages
-func (msg MsgExecAuthorized) GetMsgs() []sdk.Msg {
+func (msg MsgExecAuthorized) GetMsgs() ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
 		msg1, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
-			return nil
+			return nil, fmt.Errorf("cannot proto marshal %T", msg1)
 		}
 		msgs[i] = msg1
 	}
-	return msgs
+	return msgs, nil
 }
 
 // Route implements Msg

@@ -39,3 +39,20 @@ func NewAuthorizationGrant(authorization Authorization, expiration int64) (*Auth
 
 	return &auth, nil
 }
+
+var (
+	_ types.UnpackInterfacesMessage = &AuthorizationGrant{}
+)
+
+func (auth AuthorizationGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var authorization Authorization
+	return unpacker.UnpackAny(auth.Authorization, &authorization)
+}
+
+func (auth AuthorizationGrant) GetAuthorizationa() Authorization {
+	authorization, ok := auth.Authorization.GetCachedValue().(Authorization)
+	if !ok {
+		return nil
+	}
+	return authorization
+}

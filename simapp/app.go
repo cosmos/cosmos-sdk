@@ -282,7 +282,11 @@ func NewSimApp(
 		appCodec, keys[ibchost.StoreKey], app.StakingKeeper, scopedIBCKeeper,
 	)
 
-	app.MsgAuthKeeper = msgauthkeeper.NewKeeper(keys[msgauthtypes.StoreKey], appCodec, baseapp.Router{})
+	// TODO: Add rest of the modules' routes(at the moment only bank routers added).
+	msgAuthRouter := msgauthtypes.NewRouter()
+	msgAuthRouter.AddRoute(banktypes.RouterKey, bank.NewHandler(app.BankKeeper))
+
+	app.MsgAuthKeeper = msgauthkeeper.NewKeeper(keys[msgauthtypes.StoreKey], appCodec, msgAuthRouter)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()

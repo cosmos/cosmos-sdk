@@ -7,7 +7,6 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,15 +17,15 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryMarshaler
-	router   baseapp.Router
+	router   types.Router
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router baseapp.Router) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Router) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
-		// router:   router,
+		router:   router,
 	}
 }
 
@@ -92,7 +91,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		handler := k.router.Route(ctx, msg.Route())
+		handler := k.router.GetRoute(msg.Route())
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
 		}

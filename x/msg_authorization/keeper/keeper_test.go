@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 )
@@ -114,25 +114,25 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with invalid authorization")
 	executeMsgs, err := msgs.GetMsgs()
 	s.Require().NoError(err)
-	result, error := app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
+	result, err := app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 
 	s.Require().Nil(result)
-	s.Require().NotNil(error)
+	s.Require().NotNil(err)
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
 	app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
 	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
-	s.Require().Zero(expiration)
+	s.Require().NotZero(expiration)
 	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
 
 	executeMsgs, err = msgs.GetMsgs()
 	s.Require().NoError(err)
 
-	result, error = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
+	result, err = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().NotNil(result)
-	s.Require().Nil(error)
+	s.Require().Nil(err)
 
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)
@@ -151,9 +151,9 @@ func (s *TestSuite) TestKeeperFees() {
 	executeMsgs, err = msgs.GetMsgs()
 	s.Require().NoError(err)
 
-	result, error = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
+	result, err = app.MsgAuthKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().Nil(result)
-	s.Require().NotNil(error)
+	s.Require().NotNil(err)
 
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
 	s.Require().NotNil(authorization)

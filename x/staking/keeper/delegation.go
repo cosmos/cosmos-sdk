@@ -542,7 +542,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	return matureRedelegations
 }
 
-// Perform a delegation, set/update everything necessary within the store.
+// Delegate performs a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdk.BondStatus,
@@ -614,7 +614,7 @@ func (k Keeper) Delegate(
 		}
 	}
 
-	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
+	_, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
@@ -626,7 +626,7 @@ func (k Keeper) Delegate(
 	return newShares, nil
 }
 
-// unbond a particular delegation and perform associated store operations
+// Unbond a particular delegation and perform associated store operations.
 func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (amount sdk.Int, err error) {

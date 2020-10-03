@@ -144,7 +144,7 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 	if grant.Expiration != 0 && grant.Expiration < (ctx.BlockHeader().Time.Unix()) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil, 
+		return nil, 0
 	}
 
 	return grant.GetAuthorizationa(), grant.Expiration

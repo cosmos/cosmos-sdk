@@ -50,7 +50,7 @@ Details of the CLI refactor can be found [here](https://github.com/cosmos/cosmos
 
 ## Test Network Testing Framework [#6489](https://github.com/cosmos/cosmos-sdk/pull/6489)
 
-Introduction of the testutil package. This package allows the creation of an entirely in-process testing cluster with fully operational Tendermint nodes constructed with SimApp. Each node has an RPC & API exposed. In addition, the network exposes a Local client that can be used to directly interface with Tendermint's RPC. The test network is entirely configurable. In the future, we should explore how to pass dynamic app constructors so other applications/projects can utilize this.
+Introduction of the testutil package. This package allows the creation of an entirely in-process testing cluster with fully operational Tendermint nodes constructed with SimApp. Each node has an RPC & API exposed. In addition, the network exposes a Local client that can be used to directly interface with Tendermint's RPC. The test network is entirely configurable.
 
 ## Tendermint 0.34 [#6365](https://github.com/cosmos/cosmos-sdk/issues/6365)
 

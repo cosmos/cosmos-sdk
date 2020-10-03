@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-
 )
 
 type TestSuite struct {

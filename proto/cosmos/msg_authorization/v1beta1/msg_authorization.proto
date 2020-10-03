@@ -34,8 +34,9 @@ message GenericAuthorization{
 }
 
 message AuthorizationGrant{
-  google.protobuf.Any authorization = 1 [
-      (cosmos_proto.accepts_interface) = "Authorization"
-  ];
-  int64 expiration = 2;
+    option (gogoproto.goproto_getters)  = false;
+    google.protobuf.Any authorization = 1 [
+        (cosmos_proto.accepts_interface) = "Authorization"
+    ];
+    int64 expiration = 2;
 }

@@ -147,5 +147,5 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 		return nil, 0
 	}
 
-	return grant.GetAuthorizationa(), grant.Expiration
+	return grant.GetAuthorization(), grant.Expiration
 }

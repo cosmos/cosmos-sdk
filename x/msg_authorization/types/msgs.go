@@ -24,6 +24,7 @@ var (
 	_ sdk.Msg = &MsgExecAuthorized{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorization{}
+	_ types.UnpackInterfacesMessage = &MsgExecAuthorized{}
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
@@ -77,6 +78,18 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
 		return sdkerrors.Wrap(ErrInvalidGranter, "Time can't be in the past")
+	}
+
+	return nil
+}
+
+func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, x := range msg.Msgs {
+		var msgExecAuthorized sdk.Msg
+		err := unpacker.UnpackAny(x, &msgExecAuthorized)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -167,10 +180,9 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 func (msg MsgExecAuthorized) GetMsgs() ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		var msg1 sdk.Msg
-		err := ModuleCdc.UnpackAny(msgAny, &msg1)
-		if err != nil {
-			return nil, err
+		msg1, ok := msgAny.GetCachedValue().(sdk.Msg)
+		if !ok {
+			return nil, fmt.Errorf("cannot proto marshal %T", msg1)
 		}
 		msgs[i] = msg1
 	}

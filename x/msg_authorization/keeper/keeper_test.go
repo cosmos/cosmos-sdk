@@ -14,16 +14,6 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
-// type TestSuite struct {
-// 	suite.Suite
-// 	ctx           sdk.Context
-// 	accountKeeper authkeeper.AccountKeeper
-// 	paramsKeeper  params.Keeper
-// 	bankKeeper    bankkeeper.Keeper
-// 	keeper        Keeper
-// 	router        baseapp.Router
-// }
-
 type TestSuite struct {
 	suite.Suite
 

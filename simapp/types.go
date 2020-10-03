@@ -1,12 +1,10 @@
 package simapp
 
 import (
-	"encoding/json"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -19,7 +17,7 @@ type App interface {
 
 	// The application types codec.
 	// NOTE: This shoult be sealed before being returned.
-	Codec() *codec.Codec
+	LegacyAmino() *codec.LegacyAmino
 
 	// Application updates every begin block.
 	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
@@ -35,8 +33,8 @@ type App interface {
 
 	// Exports the state of the application for a genesis file.
 	ExportAppStateAndValidators(
-		forZeroHeight bool, jailWhiteList []string,
-	) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error)
+		forZeroHeight bool, jailAllowedAddrs []string,
+	) (types.ExportedApp, error)
 
 	// All the registered module account addreses.
 	ModuleAccountAddrs() map[string]bool

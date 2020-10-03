@@ -6,8 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -25,7 +24,7 @@ type UpgradeTestSuite struct {
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
@@ -46,7 +45,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 		{
 			"without current upgrade plan",
 			func() {
-				req = types.NewQueryCurrentPlanRequest()
+				req = &types.QueryCurrentPlanRequest{}
 				expResponse = types.QueryCurrentPlanResponse{}
 			},
 			true,
@@ -57,7 +56,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 				plan := types.Plan{Name: "test-plan", Height: 5}
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
-				req = types.NewQueryCurrentPlanRequest()
+				req = &types.QueryCurrentPlanRequest{}
 				expResponse = types.QueryCurrentPlanResponse{Plan: &plan}
 			},
 			true,
@@ -97,7 +96,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 		{
 			"with non-existent upgrade plan",
 			func() {
-				req = types.NewQueryAppliedPlanRequest("foo")
+				req = &types.QueryAppliedPlanRequest{Name: "foo"}
 			},
 			true,
 		},
@@ -114,7 +113,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan) {})
 				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
 
-				req = types.NewQueryAppliedPlanRequest(planName)
+				req = &types.QueryAppliedPlanRequest{Name: planName}
 			},
 			true,
 		},

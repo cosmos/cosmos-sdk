@@ -139,7 +139,7 @@ additional lifting required by modules to leverage profiling metrics. To do so, 
 
 ```go
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
-  defer metrics.MeasureSince([]string{"MintCoins"}, time.Now().UTC())
+  defer metrics.MeasureSince(time.Now(), "MintCoins")
   // ...
 }
 ```

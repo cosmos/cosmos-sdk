@@ -17,15 +17,12 @@ import (
 
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-
-	kbHome, kbCleanUp := testutil.NewTestCaseDir(t)
-	require.NotNil(t, kbHome)
-	t.Cleanup(kbCleanUp)
-
+	kbHome := t.TempDir()
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")
@@ -36,7 +33,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("y\n")
@@ -49,7 +46,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname2",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -63,7 +60,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		"keyname4",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
@@ -75,8 +72,39 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
-		fmt.Sprintf("--%s=%s", flagKeyAlgo, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 	})
 
 	require.NoError(t, cmd.Execute())
+
+	// In recovery mode
+	cmd.SetArgs([]string{
+		"keyname6",
+		fmt.Sprintf("--%s=true", flagRecover),
+	})
+
+	// use valid mnemonic and complete recovery key generation successfully
+	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
+	require.NoError(t, cmd.Execute())
+
+	// use invalid mnemonic and fail recovery key generation
+	mockIn.Reset("invalid mnemonic\n")
+	require.Error(t, cmd.Execute())
+
+	// In interactive mode
+	cmd.SetArgs([]string{
+		"keyname7",
+		"-i",
+		fmt.Sprintf("--%s=false", flagRecover),
+	})
+
+	const password = "password1!"
+
+	// set password and complete interactive key generation successfully
+	mockIn.Reset("\n" + password + "\n" + password + "\n")
+	require.NoError(t, cmd.Execute())
+
+	// passwords don't match and fail interactive key generation
+	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
+	require.Error(t, cmd.Execute())
 }

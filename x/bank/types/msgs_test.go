@@ -20,33 +20,36 @@ func TestMsgSendRoute(t *testing.T) {
 }
 
 func TestMsgSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("from"))
-	addr2 := sdk.AccAddress([]byte("to"))
+	addr1 := sdk.AccAddress([]byte("from________________"))
+	addr2 := sdk.AccAddress([]byte("to__________________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 	atom123eth123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 123))
 	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
 
-	var emptyAddr sdk.AccAddress
-
 	cases := []struct {
-		valid bool
-		tx    *MsgSend
+		expectedErr string // empty means no error expected
+		msg         *MsgSend
 	}{
-		{true, NewMsgSend(addr1, addr2, atom123)},       // valid send
-		{true, NewMsgSend(addr1, addr2, atom123eth123)}, // valid send with multiple coins
-		{false, NewMsgSend(addr1, addr2, atom0)},        // non positive coin
-		{false, NewMsgSend(addr1, addr2, atom123eth0)},  // non positive coin in multicoins
-		{false, NewMsgSend(emptyAddr, addr2, atom123)},  // empty from addr
-		{false, NewMsgSend(addr1, emptyAddr, atom123)},  // empty to addr
+		{"", NewMsgSend(addr1, addr2, atom123)},                                // valid send
+		{"", NewMsgSend(addr1, addr2, atom123eth123)},                          // valid send with multiple coins
+		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
+		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
+		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"Invalid sender address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addrTooLong, addr2, atom123)},
+		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"Invalid recipient address (incorrect address length (expected: 20, actual: 33)): invalid address", NewMsgSend(addr1, addrTooLong, atom123)},
 	}
 
 	for _, tc := range cases {
-		err := tc.tx.ValidateBasic()
-		if tc.valid {
+		err := tc.msg.ValidateBasic()
+		if tc.expectedErr == "" {
 			require.Nil(t, err)
 		} else {
-			require.NotNil(t, err)
+			require.EqualError(t, err, tc.expectedErr)
 		}
 	}
 }
@@ -63,10 +66,10 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgSendGetSigners(t *testing.T) {
-	var msg = NewMsgSend(sdk.AccAddress([]byte("input1")), sdk.AccAddress{}, sdk.NewCoins())
+	var msg = NewMsgSend(sdk.AccAddress([]byte("input111111111111111")), sdk.AccAddress{}, sdk.NewCoins())
 	res := msg.GetSigners()
 	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431]")
+	require.Equal(t, fmt.Sprintf("%v", res), "[696E707574313131313131313131313131313131]")
 }
 
 func TestMsgMultiSendRoute(t *testing.T) {
@@ -85,84 +88,90 @@ func TestMsgMultiSendRoute(t *testing.T) {
 }
 
 func TestInputValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
 
-	var emptyAddr sdk.AccAddress
 	emptyCoins := sdk.NewCoins()
 	emptyCoins2 := sdk.NewCoins(sdk.NewInt64Coin("eth", 0))
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
-		valid bool
-		txIn  Input
+		expectedErr string // empty means no error expected
+		txIn        Input
 	}{
 		// auth works with different apps
-		{true, NewInput(addr1, someCoins)},
-		{true, NewInput(addr2, someCoins)},
-		{true, NewInput(addr2, multiCoins)},
+		{"", NewInput(addr1, someCoins)},
+		{"", NewInput(addr2, someCoins)},
+		{"", NewInput(addr2, multiCoins)},
 
-		{false, NewInput(emptyAddr, someCoins)},  // empty address
-		{false, NewInput(addr1, emptyCoins)},     // invalid coins
-		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
-		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
+		{"empty address string is not allowed", NewInput(addrEmpty, someCoins)},
+		{"incorrect address length (expected: 20, actual: 33)", NewInput(addrTooLong, someCoins)},
+		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
+		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
+		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
+		{"1eth,1atom: invalid coins", NewInput(addr1, unsortedCoins)},   // unsorted coins
 	}
 
 	for i, tc := range cases {
 		err := tc.txIn.ValidateBasic()
-		if tc.valid {
+		if tc.expectedErr == "" {
 			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			require.NotNil(t, err, "%d", i)
+			require.EqualError(t, err, tc.expectedErr, "%d", i)
 		}
 	}
 }
 
 func TestOutputValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
+	addrEmpty := sdk.AccAddress([]byte(""))
+	addrTooLong := sdk.AccAddress([]byte("Accidentally used 33 bytes pubkey"))
+
 	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	multiCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 20))
 
-	var emptyAddr sdk.AccAddress
 	emptyCoins := sdk.NewCoins()
 	emptyCoins2 := sdk.NewCoins(sdk.NewInt64Coin("eth", 0))
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
-		valid bool
-		txOut Output
+		expectedErr string // empty means no error expected
+		txOut       Output
 	}{
 		// auth works with different apps
-		{true, NewOutput(addr1, someCoins)},
-		{true, NewOutput(addr2, someCoins)},
-		{true, NewOutput(addr2, multiCoins)},
+		{"", NewOutput(addr1, someCoins)},
+		{"", NewOutput(addr2, someCoins)},
+		{"", NewOutput(addr2, multiCoins)},
 
-		{false, NewOutput(emptyAddr, someCoins)},  // empty address
-		{false, NewOutput(addr1, emptyCoins)},     // invalid coins
-		{false, NewOutput(addr1, emptyCoins2)},    // invalid coins
-		{false, NewOutput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewOutput(addr1, unsortedCoins)},  // unsorted coins
+		{"Invalid output address (empty address string is not allowed): invalid address", NewOutput(addrEmpty, someCoins)},
+		{"Invalid output address (incorrect address length (expected: 20, actual: 33)): invalid address", NewOutput(addrTooLong, someCoins)},
+		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
+		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
+		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins
+		{"1eth,1atom: invalid coins", NewOutput(addr1, unsortedCoins)},   // unsorted coins
 	}
 
 	for i, tc := range cases {
 		err := tc.txOut.ValidateBasic()
-		if tc.valid {
+		if tc.expectedErr == "" {
 			require.Nil(t, err, "%d: %+v", i, err)
 		} else {
-			require.NotNil(t, err, "%d", i)
+			require.EqualError(t, err, tc.expectedErr, "%d", i)
 		}
 	}
 }
 
 func TestMsgMultiSendValidation(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte{1, 2})
-	addr2 := sdk.AccAddress([]byte{7, 8})
+	addr1 := sdk.AccAddress([]byte("_______alice________"))
+	addr2 := sdk.AccAddress([]byte("________bob_________"))
 	atom123 := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
 	atom124 := sdk.NewCoins(sdk.NewInt64Coin("atom", 124))
 	eth123 := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
@@ -188,7 +197,7 @@ func TestMsgMultiSendValidation(t *testing.T) {
 			Outputs: []Output{output1}}},
 		{false, MsgMultiSend{
 			Inputs:  []Input{input1},
-			Outputs: []Output{{emptyAddr, atom123}}}, // invalid output
+			Outputs: []Output{{emptyAddr.String(), atom123}}}, // invalid output
 		},
 		{false, MsgMultiSend{
 			Inputs:  []Input{input1},
@@ -231,14 +240,15 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 func TestMsgMultiSendGetSigners(t *testing.T) {
 	var msg = MsgMultiSend{
 		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input1")), nil),
-			NewInput(sdk.AccAddress([]byte("input2")), nil),
-			NewInput(sdk.AccAddress([]byte("input3")), nil),
+			NewInput(sdk.AccAddress([]byte("input111111111111111")), nil),
+			NewInput(sdk.AccAddress([]byte("input222222222222222")), nil),
+			NewInput(sdk.AccAddress([]byte("input333333333333333")), nil),
 		},
 	}
+
 	res := msg.GetSigners()
 	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
+	require.Equal(t, "[696E707574313131313131313131313131313131 696E707574323232323232323232323232323232 696E707574333333333333333333333333333333]", fmt.Sprintf("%v", res))
 }
 
 /*

@@ -5,12 +5,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestSortJSON(t *testing.T) {
+type utilsTestSuite struct {
+	suite.Suite
+}
+
+func TestUtilsTestSuite(t *testing.T) {
+	suite.Run(t, new(utilsTestSuite))
+}
+
+func (s *utilsTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *utilsTestSuite) TestSortJSON() {
 	cases := []struct {
 		unsortedJSON string
 		want         string
@@ -37,19 +49,19 @@ func TestSortJSON(t *testing.T) {
 		tc := tc
 		got, err := sdk.SortJSON([]byte(tc.unsortedJSON))
 		if tc.wantErr {
-			require.NotNil(t, err, "tc #%d", tcIndex)
-			require.Panics(t, func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
+			s.Require().NotNil(err, "tc #%d", tcIndex)
+			s.Require().Panics(func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
 		} else {
-			require.Nil(t, err, "tc #%d, err=%s", tcIndex, err)
-			require.NotPanics(t, func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
-			require.Equal(t, got, sdk.MustSortJSON([]byte(tc.unsortedJSON)))
+			s.Require().Nil(err, "tc #%d, err=%s", tcIndex, err)
+			s.Require().NotPanics(func() { sdk.MustSortJSON([]byte(tc.unsortedJSON)) })
+			s.Require().Equal(got, sdk.MustSortJSON([]byte(tc.unsortedJSON)))
 		}
 
-		require.Equal(t, string(got), tc.want)
+		s.Require().Equal(string(got), tc.want)
 	}
 }
 
-func TestTimeFormatAndParse(t *testing.T) {
+func (s *utilsTestSuite) TestTimeFormatAndParse() {
 	cases := []struct {
 		RFC3339NanoStr     string
 		SDKSortableTimeStr string
@@ -61,43 +73,39 @@ func TestTimeFormatAndParse(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		timeFromRFC, err := time.Parse(time.RFC3339Nano, tc.RFC3339NanoStr)
-		require.Nil(t, err)
+		s.Require().Nil(err)
 		timeFromSDKFormat, err := time.Parse(sdk.SortableTimeFormat, tc.SDKSortableTimeStr)
-		require.Nil(t, err)
+		s.Require().Nil(err)
 
-		require.True(t, timeFromRFC.Equal(timeFromSDKFormat))
-		require.Equal(t, timeFromRFC.Format(sdk.SortableTimeFormat), tc.SDKSortableTimeStr)
+		s.Require().True(timeFromRFC.Equal(timeFromSDKFormat))
+		s.Require().Equal(timeFromRFC.Format(sdk.SortableTimeFormat), tc.SDKSortableTimeStr)
 	}
 }
 
-func TestCopyBytes(t *testing.T) {
-	t.Parallel()
-	require.Nil(t, sdk.CopyBytes(nil))
-	require.Equal(t, 0, len(sdk.CopyBytes([]byte{})))
+func (s *utilsTestSuite) TestCopyBytes() {
+	s.Require().Nil(sdk.CopyBytes(nil))
+	s.Require().Equal(0, len(sdk.CopyBytes([]byte{})))
 	bs := []byte("test")
 	bsCopy := sdk.CopyBytes(bs)
-	require.True(t, bytes.Equal(bs, bsCopy))
+	s.Require().True(bytes.Equal(bs, bsCopy))
 }
 
-func TestUint64ToBigEndian(t *testing.T) {
-	t.Parallel()
-	require.Equal(t, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, sdk.Uint64ToBigEndian(uint64(0)))
-	require.Equal(t, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa}, sdk.Uint64ToBigEndian(uint64(10)))
+func (s *utilsTestSuite) TestUint64ToBigEndian() {
+	s.Require().Equal([]byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, sdk.Uint64ToBigEndian(uint64(0)))
+	s.Require().Equal([]byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa}, sdk.Uint64ToBigEndian(uint64(10)))
 }
 
-func TestFormatTimeBytes(t *testing.T) {
-	t.Parallel()
+func (s *utilsTestSuite) TestFormatTimeBytes() {
 	tm, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Mar 3, 2020 at 7:54pm (UTC)")
-	require.NoError(t, err)
-	require.Equal(t, "2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
+	s.Require().NoError(err)
+	s.Require().Equal("2020-03-03T19:54:00.000000000", string(sdk.FormatTimeBytes(tm)))
 }
 
-func TestParseTimeBytes(t *testing.T) {
-	t.Parallel()
+func (s *utilsTestSuite) TestParseTimeBytes() {
 	tm, err := sdk.ParseTimeBytes([]byte("2020-03-03T19:54:00.000000000"))
-	require.NoError(t, err)
-	require.True(t, tm.Equal(time.Date(2020, 3, 3, 19, 54, 0, 0, time.UTC)))
+	s.Require().NoError(err)
+	s.Require().True(tm.Equal(time.Date(2020, 3, 3, 19, 54, 0, 0, time.UTC)))
 
 	_, err = sdk.ParseTimeBytes([]byte{})
-	require.Error(t, err)
+	s.Require().Error(err)
 }

@@ -5,25 +5,40 @@ import (
 	"fmt"
 	"sort"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// GenesisState - all auth state that must be provided at genesis
-type GenesisState struct {
-	Params   Params          `json:"params" yaml:"params"`
-	Accounts GenesisAccounts `json:"accounts" yaml:"accounts"`
-}
+var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts GenesisAccounts) GenesisState {
-	return GenesisState{
+func NewGenesisState(params Params, accounts GenesisAccounts) *GenesisState {
+	genAccounts, err := PackAccounts(accounts)
+	if err != nil {
+		panic(err)
+	}
+	return &GenesisState{
 		Params:   params,
-		Accounts: accounts,
+		Accounts: genAccounts,
 	}
 }
 
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	for _, any := range g.Accounts {
+		var account GenesisAccount
+		err := unpacker.UnpackAny(any, &account)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // DefaultGenesisState - Return a default genesis state
-func DefaultGenesisState() GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(DefaultParams(), GenesisAccounts{})
 }
 
@@ -46,7 +61,12 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return ValidateGenAccounts(data.Accounts)
+	genAccs, err := UnpackAccounts(data.Accounts)
+	if err != nil {
+		return err
+	}
+
+	return ValidateGenAccounts(genAccs)
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.
@@ -89,8 +109,44 @@ func (GenesisAccountIterator) IterateGenesisAccounts(
 	cdc codec.Marshaler, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
 ) {
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
-		if cb(genAcc) {
+		acc, ok := genAcc.GetCachedValue().(AccountI)
+		if !ok {
+			panic("expected account")
+		}
+		if cb(acc) {
 			break
 		}
 	}
+}
+
+// PackAccounts converts GenesisAccounts to Any slice
+func PackAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
+	accountsAny := make([]*types.Any, len(accounts))
+	for i, acc := range accounts {
+		msg, ok := acc.(proto.Message)
+		if !ok {
+			return nil, fmt.Errorf("cannot proto marshal %T", acc)
+		}
+		any, err := types.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		accountsAny[i] = any
+	}
+
+	return accountsAny, nil
+}
+
+// UnpackAccounts converts Any slice to GenesisAccounts
+func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
+	accounts := make(GenesisAccounts, len(accountsAny))
+	for i, any := range accountsAny {
+		acc, ok := any.GetCachedValue().(GenesisAccount)
+		if !ok {
+			return nil, fmt.Errorf("expected genesis account")
+		}
+		accounts[i] = acc
+	}
+
+	return accounts, nil
 }

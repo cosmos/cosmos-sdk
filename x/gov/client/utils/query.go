@@ -52,20 +52,20 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 	var deposits []types.Deposit
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			if msg.Type() == types.TypeMsgDeposit {
 				depMsg := msg.(*types.MsgDeposit)
 
 				deposits = append(deposits, types.Deposit{
 					Depositor:  depMsg.Depositor,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
 				})
 			}
 		}
 	}
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposits)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(deposits)
 	if err != nil {
 		return nil, err
 	}
@@ -94,13 +94,13 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		}
 		nextTxPage++
 		for _, info := range searchResult.Txs {
-			for _, msg := range info.Tx.GetMsgs() {
+			for _, msg := range info.GetTx().GetMsgs() {
 				if msg.Type() == types.TypeMsgVote {
 					voteMsg := msg.(*types.MsgVote)
 
 					votes = append(votes, types.Vote{
 						Voter:      voteMsg.Voter,
-						ProposalID: params.ProposalID,
+						ProposalId: params.ProposalID,
 						Option:     voteMsg.Option,
 					})
 				}
@@ -117,7 +117,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		votes = votes[start:end]
 	}
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(votes)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(votes)
 	if err != nil {
 		return nil, err
 	}
@@ -140,18 +140,18 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 		return nil, err
 	}
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single vote under the given conditions
 			if msg.Type() == types.TypeMsgVote {
 				voteMsg := msg.(*types.MsgVote)
 
 				vote := types.Vote{
 					Voter:      voteMsg.Voter,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Option:     voteMsg.Option,
 				}
 
-				bz, err := clientCtx.JSONMarshaler.MarshalJSON(vote)
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&vote)
 				if err != nil {
 					return nil, err
 				}
@@ -181,18 +181,18 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 	}
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single deposit under the given conditions
 			if msg.Type() == types.TypeMsgDeposit {
 				depMsg := msg.(*types.MsgDeposit)
 
 				deposit := types.Deposit{
 					Depositor:  depMsg.Depositor,
-					ProposalID: params.ProposalID,
+					ProposalId: params.ProposalID,
 					Amount:     depMsg.Amount,
 				}
 
-				bz, err := clientCtx.JSONMarshaler.MarshalJSON(deposit)
+				bz, err := clientCtx.JSONMarshaler.MarshalJSON(&deposit)
 				if err != nil {
 					return nil, err
 				}
@@ -221,11 +221,11 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	}
 
 	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
+		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == types.TypeMsgSubmitProposal {
 				subMsg := msg.(*types.MsgSubmitProposal)
-				return NewProposer(proposalID, subMsg.Proposer.String()), nil
+				return NewProposer(proposalID, subMsg.Proposer), nil
 			}
 		}
 	}
@@ -236,7 +236,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute string) ([]byte, error) {
 	params := types.NewQueryProposalParams(proposalID)
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+	bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 	if err != nil {
 		return nil, err
 	}

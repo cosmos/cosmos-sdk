@@ -29,22 +29,23 @@ func (dvv DVVTriplet) String() string {
 }
 
 // NewDelegation creates a new delegation object
+//nolint:interfacer
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
 	return Delegation{
-		DelegatorAddress: delegatorAddr,
-		ValidatorAddress: validatorAddr,
+		DelegatorAddress: delegatorAddr.String(),
+		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
 	}
 }
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
-func MustMarshalDelegation(cdc codec.Marshaler, delegation Delegation) []byte {
+func MustMarshalDelegation(cdc codec.BinaryMarshaler, delegation Delegation) []byte {
 	return cdc.MustMarshalBinaryBare(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
 // Panics if fails.
-func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
+func MustUnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
 		panic(err)
@@ -54,14 +55,26 @@ func MustUnmarshalDelegation(cdc codec.Marshaler, value []byte) Delegation {
 }
 
 // return the delegation
-func UnmarshalDelegation(cdc codec.Marshaler, value []byte) (delegation Delegation, err error) {
+func UnmarshalDelegation(cdc codec.BinaryMarshaler, value []byte) (delegation Delegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &delegation)
 	return delegation, err
 }
 
-func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
-func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
-func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
+	delAddr, err := sdk.AccAddressFromBech32(d.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return delAddr
+}
+func (d Delegation) GetValidatorAddr() sdk.ValAddress {
+	addr, err := sdk.ValAddressFromBech32(d.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+func (d Delegation) GetShares() sdk.Dec { return d.Shares }
 
 // String returns a human readable string representation of a Delegation.
 func (d Delegation) String() string {
@@ -101,13 +114,14 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 }
 
 // NewUnbondingDelegation - create a new unbonding delegation object
+//nolint:interfacer
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) UnbondingDelegation {
 	return UnbondingDelegation{
-		DelegatorAddress: delegatorAddr,
-		ValidatorAddress: validatorAddr,
+		DelegatorAddress: delegatorAddr.String(),
+		ValidatorAddress: validatorAddr.String(),
 		Entries: []UnbondingDelegationEntry{
 			NewUnbondingDelegationEntry(creationHeight, minTime, balance),
 		},
@@ -126,12 +140,12 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 }
 
 // return the unbonding delegation
-func MustMarshalUBD(cdc codec.Marshaler, ubd UnbondingDelegation) []byte {
+func MustMarshalUBD(cdc codec.BinaryMarshaler, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshalBinaryBare(&ubd)
 }
 
 // unmarshal a unbonding delegation from a store value
-func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
+func MustUnmarshalUBD(cdc codec.BinaryMarshaler, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
 		panic(err)
@@ -141,7 +155,7 @@ func MustUnmarshalUBD(cdc codec.Marshaler, value []byte) UnbondingDelegation {
 }
 
 // unmarshal a unbonding delegation from a store value
-func UnmarshalUBD(cdc codec.Marshaler, value []byte) (ubd UnbondingDelegation, err error) {
+func UnmarshalUBD(cdc codec.BinaryMarshaler, value []byte) (ubd UnbondingDelegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &ubd)
 	return ubd, err
 }
@@ -194,14 +208,15 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
 }
 
+//nolint:interfacer
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance sdk.Int, sharesDst sdk.Dec,
 ) Redelegation {
 	return Redelegation{
-		DelegatorAddress:    delegatorAddr,
-		ValidatorSrcAddress: validatorSrcAddr,
-		ValidatorDstAddress: validatorDstAddr,
+		DelegatorAddress:    delegatorAddr.String(),
+		ValidatorSrcAddress: validatorSrcAddr.String(),
+		ValidatorDstAddress: validatorDstAddr.String(),
 		Entries: []RedelegationEntry{
 			NewRedelegationEntry(creationHeight, minTime, balance, sharesDst),
 		},
@@ -220,12 +235,12 @@ func (red *Redelegation) RemoveEntry(i int64) {
 }
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
-func MustMarshalRED(cdc codec.Marshaler, red Redelegation) []byte {
+func MustMarshalRED(cdc codec.BinaryMarshaler, red Redelegation) []byte {
 	return cdc.MustMarshalBinaryBare(&red)
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
-func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
+func MustUnmarshalRED(cdc codec.BinaryMarshaler, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
 		panic(err)
@@ -235,7 +250,7 @@ func MustUnmarshalRED(cdc codec.Marshaler, value []byte) Redelegation {
 }
 
 // UnmarshalRED unmarshals a redelegation from a store value
-func UnmarshalRED(cdc codec.Marshaler, value []byte) (red Redelegation, err error) {
+func UnmarshalRED(cdc codec.BinaryMarshaler, value []byte) (red Redelegation, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &red)
 	return red, err
 }
@@ -320,14 +335,15 @@ func (d DelegationResponses) String() (out string) {
 }
 
 // NewRedelegationResponse crates a new RedelegationEntryResponse instance.
+//nolint:interfacer
 func NewRedelegationResponse(
 	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
 ) RedelegationResponse {
 	return RedelegationResponse{
 		Redelegation: Redelegation{
-			DelegatorAddress:    delegatorAddr,
-			ValidatorSrcAddress: validatorSrc,
-			ValidatorDstAddress: validatorDst,
+			DelegatorAddress:    delegatorAddr.String(),
+			ValidatorSrcAddress: validatorSrc.String(),
+			ValidatorDstAddress: validatorDst.String(),
 		},
 		Entries: entries,
 	}

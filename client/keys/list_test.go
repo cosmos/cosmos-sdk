@@ -16,13 +16,10 @@ import (
 
 func Test_runListCmd(t *testing.T) {
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
-	kbHome1, cleanUp1 := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp1)
-
-	kbHome2, cleanUp2 := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp2)
+	kbHome1 := t.TempDir()
+	kbHome2 := t.TempDir()
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn)

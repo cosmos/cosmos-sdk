@@ -7,16 +7,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
-	_, pub1, addr1 := types.KeyTestPubAddr()
-	_, pub2, addr2 := types.KeyTestPubAddr()
+	_, pub1, addr1 := testdata.KeyTestPubAddr()
+	_, pub2, addr2 := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
@@ -47,8 +48,8 @@ func TestBaseAddressPubKey(t *testing.T) {
 	require.EqualValues(t, addr2, acc2.GetAddress())
 }
 
-func TestBaseAccountSequence(t *testing.T) {
-	_, _, addr := types.KeyTestPubAddr()
+func TestBaseSequence(t *testing.T) {
+	_, _, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
 
@@ -58,7 +59,7 @@ func TestBaseAccountSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
-	_, pub, addr := types.KeyTestPubAddr()
+	_, pub, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
 

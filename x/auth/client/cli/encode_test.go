@@ -20,24 +20,26 @@ func TestGetCommandEncode(t *testing.T) {
 	cmd := GetEncodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	authtypes.RegisterCodec(encodingConfig.Amino)
-	sdk.RegisterCodec(encodingConfig.Amino)
+	authtypes.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
+	txCfg := encodingConfig.TxConfig
 
 	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
-	JSONEncoded, err := txGen.TxJSONEncoder()(stdTx)
+	builder := txCfg.NewTxBuilder()
+	builder.SetGasLimit(50000)
+	builder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	builder.SetMemo("foomemo")
+	jsonEncoded, err := txCfg.TxJSONEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
-	txFile, cleanup := testutil.WriteToNewTempFile(t, string(JSONEncoded))
+	txFile, cleanup := testutil.WriteToNewTempFile(t, string(jsonEncoded))
 	txFileName := txFile.Name()
 	t.Cleanup(cleanup)
 
 	ctx := context.Background()
 	clientCtx := client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
+		WithTxConfig(encodingConfig.TxConfig).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
@@ -50,23 +52,25 @@ func TestGetCommandDecode(t *testing.T) {
 	encodingConfig := simappparams.MakeEncodingConfig()
 
 	clientCtx := client.Context{}.
-		WithTxGenerator(encodingConfig.TxGenerator).
+		WithTxConfig(encodingConfig.TxConfig).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
 	cmd := GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	sdk.RegisterCodec(encodingConfig.Amino)
+	sdk.RegisterLegacyAminoCodec(encodingConfig.Amino)
 
-	txGen := encodingConfig.TxGenerator
-	clientCtx = clientCtx.WithTxGenerator(txGen)
+	txCfg := encodingConfig.TxConfig
+	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	// Build a test transaction
-	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	builder := txCfg.NewTxBuilder()
+	builder.SetGasLimit(50000)
+	builder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
+	builder.SetMemo("foomemo")
 
 	// Encode transaction
-	txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
 
 	// Convert the transaction into base64 encoded string

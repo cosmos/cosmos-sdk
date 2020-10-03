@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func createTestInterfaceRegistry() types.InterfaceRegistry {
@@ -121,26 +122,6 @@ func TestProtoCodec(t *testing.T) {
 	}
 }
 
-func TestProtoCodecMarshalAnyNonProtoErrors(t *testing.T) {
-	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	input := "this one that one"
-	_, err := cdc.MarshalJSON(input)
-	require.Error(t, err)
-	require.Equal(t, err, errors.New("cannot protobuf JSON encode unsupported type: string"))
-
-	require.Panics(t, func() { cdc.MustMarshalJSON(input) })
-}
-
-func TestProtoCodecUnmarshalAnyNonProtoErrors(t *testing.T) {
-	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
-
-	recv := new(int)
-	err := cdc.UnmarshalJSON([]byte("foo"), recv)
-	require.Error(t, err)
-	require.Equal(t, err, errors.New("cannot protobuf JSON decode unsupported type: *int"))
-}
-
 type lyingProtoMarshaler struct {
 	codec.ProtoMarshaler
 	falseSize int
@@ -192,4 +173,46 @@ func TestProtoCodecUnmarshalBinaryLengthPrefixedChecks(t *testing.T) {
 
 		require.Panics(t, func() { cdc.MustUnmarshalBinaryLengthPrefixed(crafted, recv) })
 	})
+}
+
+func mustAny(msg proto.Message) *types.Any {
+	any, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return any
+}
+
+func BenchmarkProtoCodecMarshalBinaryLengthPrefixed(b *testing.B) {
+	var pCdc = codec.NewProtoCodec(types.NewInterfaceRegistry())
+	var msg = &testdata.HasAnimal{
+		X: 1000,
+		Animal: mustAny(&testdata.HasAnimal{
+			X: 2000,
+			Animal: mustAny(&testdata.HasAnimal{
+				X: 3000,
+				Animal: mustAny(&testdata.HasAnimal{
+					X: 4000,
+					Animal: mustAny(&testdata.HasAnimal{
+						X: 5000,
+						Animal: mustAny(&testdata.Cat{
+							Moniker: "Garfield",
+							Lives:   6,
+						}),
+					}),
+				}),
+			}),
+		}),
+	}
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		blob, err := pCdc.MarshalBinaryLengthPrefixed(msg)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.SetBytes(int64(len(blob)))
+	}
 }

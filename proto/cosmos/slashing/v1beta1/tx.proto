@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.slashing.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+
+// MsgUnjail is an sdk.Msg used for unjailing a jailed validator, thus returning
+// them into the bonded validator set, so they can begin receiving provisions
+// and rewards again.
+message MsgUnjail {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  string validator_addr = 1 [(gogoproto.moretags) = "yaml:\"address\"", (gogoproto.jsontag) = "address"];
+}

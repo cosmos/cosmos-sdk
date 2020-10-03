@@ -19,7 +19,7 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(
 	ctx sdk.Context, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, data types.GenesisState,
+	bankKeeper types.BankKeeper, data *types.GenesisState,
 ) (res []abci.ValidatorUpdate) {
 	bondedTokens := sdk.ZeroInt()
 	notBondedTokens := sdk.ZeroInt()
@@ -43,12 +43,12 @@ func InitGenesis(
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
+			keeper.AfterValidatorCreated(ctx, validator.GetOperator())
 		}
 
 		// update timeslice if necessary
 		if validator.IsUnbonding() {
-			keeper.InsertValidatorQueue(ctx, validator)
+			keeper.InsertUnbondingValidatorQueue(ctx, validator)
 		}
 
 		switch validator.GetStatus() {
@@ -62,15 +62,20 @@ func InitGenesis(
 	}
 
 	for _, delegation := range data.Delegations {
+		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 	}
 
@@ -126,8 +131,12 @@ func InitGenesis(
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
-			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
-			validator, found := keeper.GetValidator(ctx, lv.Address)
+			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			if err != nil {
+				panic(err)
+			}
+			keeper.SetLastValidatorPower(ctx, valAddr, lv.Power)
+			validator, found := keeper.GetValidator(ctx, valAddr)
 
 			if !found {
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
@@ -147,7 +156,7 @@ func InitGenesis(
 // ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	var unbondingDelegations []types.UnbondingDelegation
 
 	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
@@ -165,11 +174,11 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
 	var lastValidatorPowers []types.LastValidatorPower
 
 	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr, Power: power})
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr.String(), Power: power})
 		return false
 	})
 
-	return types.GenesisState{
+	return &types.GenesisState{
 		Params:               keeper.GetParams(ctx),
 		LastTotalPower:       keeper.GetLastTotalPower(ctx),
 		LastValidatorPowers:  lastValidatorPowers,
@@ -199,7 +208,7 @@ func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.Gene
 
 // ValidateGenesis validates the provided staking genesis state to ensure the
 // expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
-func ValidateGenesis(data types.GenesisState) error {
+func ValidateGenesis(data *types.GenesisState) error {
 	if err := validateGenesisStateValidators(data.Validators); err != nil {
 		return err
 	}

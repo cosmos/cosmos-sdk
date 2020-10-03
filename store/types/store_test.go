@@ -75,6 +75,14 @@ func TestKVStoreKey(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("KVStoreKey{%p, test}", key), key.String())
 }
 
+func TestNilKVStoreKey(t *testing.T) {
+	t.Parallel()
+
+	require.Panics(t, func() {
+		_ = NewKVStoreKey("")
+	}, "setting an empty key should panic")
+}
+
 func TestTransientStoreKey(t *testing.T) {
 	t.Parallel()
 	key := NewTransientStoreKey("test")

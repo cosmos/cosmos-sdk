@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.changepubkey.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types";
+
+// MsgChangePubKey defines a message that enables changing a pubkey
+// of an account.
+message MsgChangePubKey {
+  bytes address = 1 [
+    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+  ];
+  bytes pub_key = 2 [
+    (gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""
+  ];
+}

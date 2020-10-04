@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	changepubkeycmd "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -124,6 +125,7 @@ func queryCommand() *cobra.Command {
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		changepubkeycmd.GetQueryCmd(),
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd)
@@ -152,6 +154,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
 		vestingcli.GetTxCmd(),
+		changepubkeycmd.GetTxCmd(),
 	)
 
 	simapp.ModuleBasics.AddTxCommands(cmd)

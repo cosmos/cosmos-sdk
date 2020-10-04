@@ -97,6 +97,7 @@ func TestCustomValidation(t *testing.T) {
 	for i, tc := range cases {
 		require.Equal(t, tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
+	CoinDenomRegex = DefaultCoinDenomRegex
 }
 
 func TestAddCoin(t *testing.T) {

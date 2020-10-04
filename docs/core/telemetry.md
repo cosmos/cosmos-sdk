@@ -20,7 +20,7 @@ Example:
 
 ```go
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-  defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.MetricKeyEndBlocker)
+  defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
   // ...
 }

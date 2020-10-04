@@ -3,6 +3,9 @@ package tx
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -101,4 +104,49 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
 	}
 	return multisig.Signatures, nil
+}
+
+func (g config) MarshalSignatureJSON(sigs []signing.SignatureV2) ([]byte, error) {
+	descs := make([]*signing.SignatureDescriptor, len(sigs))
+
+	for i, sig := range sigs {
+		descData := signing.SignatureDataToProto(sig.Data)
+
+		any, err := PubKeyToAny(sig.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		descs[i] = &signing.SignatureDescriptor{
+			PublicKey: any,
+			Data:      descData,
+		}
+	}
+
+	toJSON := &signing.SignatureDescriptors{Signatures: descs}
+
+	return codec.ProtoMarshalJSON(toJSON)
+}
+
+func (g config) UnmarshalSignatureJSON(bz []byte) ([]signing.SignatureV2, error) {
+	var sigDescs signing.SignatureDescriptors
+	err := g.protoCodec.UnmarshalJSON(bz, &sigDescs)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := make([]signing.SignatureV2, len(sigDescs.Signatures))
+	for i, desc := range sigDescs.Signatures {
+		pubKey, _ := desc.PublicKey.GetCachedValue().(crypto.PubKey)
+
+		data := signing.SignatureDataFromProto(desc.Data)
+
+		sigs[i] = signing.SignatureV2{
+			PubKey:   pubKey,
+			Data:     data,
+			Sequence: desc.Sequence,
+		}
+	}
+
+	return sigs, nil
 }

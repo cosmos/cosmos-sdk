@@ -1,0 +1,48 @@
+syntax = "proto3";
+package cosmos.distribution.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// MsgSetWithdrawAddress sets the withdraw address for
+// a delegator (or validator self-delegation).
+message MsgSetWithdrawAddress {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+}
+
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a single validator.
+message MsgWithdrawDelegatorReward {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgWithdrawValidatorCommission withdraws the full commission to the validator
+// address.
+message MsgWithdrawValidatorCommission {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgFundCommunityPool allows an account to directly
+// fund the community pool.
+message MsgFundCommunityPool {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string depositor = 2;
+}

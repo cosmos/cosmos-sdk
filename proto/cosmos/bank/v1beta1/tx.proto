@@ -1,0 +1,27 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+// MsgSend represents a message to send coins from one account to another.
+message MsgSend {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
+  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// MsgMultiSend represents an arbitrary multi-in, multi-out send message.
+message MsgMultiSend {
+  option (gogoproto.equal) = false;
+
+  repeated Input inputs   = 1 [(gogoproto.nullable) = false];
+  repeated Output outputs = 2 [(gogoproto.nullable) = false];
+}

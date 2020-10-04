@@ -5,8 +5,10 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type Store interface {
@@ -19,8 +21,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	// TODO: Deprecate after 0.38.5
 	SetPruning(PruningOptions)
+	GetPruning() PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -130,6 +132,7 @@ type CacheMultiStore interface {
 type CommitMultiStore interface {
 	Committer
 	MultiStore
+	snapshottypes.Snapshotter
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
@@ -164,6 +167,10 @@ type CommitMultiStore interface {
 	// Set an inter-block (persistent) cache that maintains a mapping from
 	// StoreKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
+
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64) error
 }
 
 //---------subsp-------------------------------
@@ -246,15 +253,6 @@ type CacheWrapper interface {
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
-//----------------------------------------
-// CommitID
-
-// CommitID contains the tree version number and its merkle root.
-type CommitID struct {
-	Version int64
-	Hash    []byte
-}
-
 func (cid CommitID) IsZero() bool {
 	return cid.Version == 0 && len(cid.Hash) == 0
 }
@@ -320,6 +318,9 @@ type KVStoreKey struct {
 // NewKVStoreKey returns a new pointer to a KVStoreKey.
 // Use a pointer so keys don't collide.
 func NewKVStoreKey(name string) *KVStoreKey {
+	if name == "" {
+		panic("empty key name not allowed")
+	}
 	return &KVStoreKey{
 		name: name,
 	}
@@ -378,7 +379,7 @@ func (key *MemoryStoreKey) String() string {
 //----------------------------------------
 
 // key-value result for iterator queries
-type KVPair tmkv.Pair
+type KVPair kv.Pair
 
 //----------------------------------------
 
@@ -398,4 +399,12 @@ type MultiStorePersistentCache interface {
 
 	// Reset the entire set of internal caches.
 	Reset()
+}
+
+// StoreWithInitialVersion is a store that can have an arbitrary initial
+// version.
+type StoreWithInitialVersion interface {
+	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	// starting a new chain at an arbitrary height.
+	SetInitialVersion(version int64)
 }

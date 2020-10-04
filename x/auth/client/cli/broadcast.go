@@ -36,7 +36,7 @@ $ <appcli> tx broadcast ./mytxn.json
 				return err
 			}
 
-			txBytes, err := clientCtx.TxGenerator.TxEncoder()(stdTx)
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
 			if err != nil {
 				return err
 			}

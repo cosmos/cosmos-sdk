@@ -33,12 +33,6 @@ func RegisterHandlers(clientCtx client.Context, r *mux.Router, phs []ProposalRES
 	registerTxHandlers(clientCtx, r, phs)
 }
 
-// RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(clientCtx client.Context, r *mux.Router, phs []ProposalRESTHandler) {
-	registerQueryRoutes(clientCtx, r)
-	registerTxRoutes(clientCtx, r, phs)
-}
-
 // PostProposalReq defines the properties of a proposal request's body.
 type PostProposalReq struct {
 	BaseReq        rest.BaseReq   `json:"base_req" yaml:"base_req"`

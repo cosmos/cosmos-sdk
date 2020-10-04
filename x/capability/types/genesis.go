@@ -8,25 +8,9 @@ import (
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
 
-// GenesisOwners defines the capability owners with their corresponding index.
-type GenesisOwners struct {
-	Index  uint64           `json:"index" yaml:"index"`
-	Owners CapabilityOwners `json:"index_owners" yaml:"index_owners"`
-}
-
-// GenesisState represents the Capability module genesis state
-type GenesisState struct {
-	// capability global index
-	Index uint64 `json:"index" yaml:"index"`
-
-	// map from index to owners of the capability index
-	// index key is string to allow amino marshalling
-	Owners []GenesisOwners `json:"owners" yaml:"owners"`
-}
-
 // DefaultGenesis returns the default Capability genesis state
-func DefaultGenesis() GenesisState {
-	return GenesisState{
+func DefaultGenesis() *GenesisState {
+	return &GenesisState{
 		Index:  DefaultIndex,
 		Owners: []GenesisOwners{},
 	}
@@ -41,7 +25,7 @@ func (gs GenesisState) Validate() error {
 	}
 
 	for _, genOwner := range gs.Owners {
-		if len(genOwner.Owners.Owners) == 0 {
+		if len(genOwner.IndexOwners.Owners) == 0 {
 			return fmt.Errorf("empty owners in genesis")
 		}
 
@@ -50,7 +34,7 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("owners exist for index %d outside of valid range: %d-%d", genOwner.Index, 1, gs.Index-1)
 		}
 
-		for _, owner := range genOwner.Owners.Owners {
+		for _, owner := range genOwner.IndexOwners.Owners {
 			if strings.TrimSpace(owner.Module) == "" {
 				return fmt.Errorf("owner's module cannot be blank: %s", owner)
 			}

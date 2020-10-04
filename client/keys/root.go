@@ -9,7 +9,7 @@ import (
 
 // Commands registers a sub-tree of commands to interact with
 // local private key storage.
-func Commands() *cobra.Command {
+func Commands(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "keys",
 		Short: "Manage your application's keys",
@@ -50,7 +50,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 		MigrateCommand(),
 	)
 
-	cmd.PersistentFlags().String(flags.FlagHome, "", "The application home directory")
+	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
 

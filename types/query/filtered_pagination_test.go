@@ -117,7 +117,7 @@ func ExampleFilteredPaginate() {
 	accountStore := prefix.NewStore(balancesStore, addr1.Bytes())
 
 	var balResult sdk.Coins
-	res, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
 		err := appCodec.UnmarshalBinaryBare(value, &bal)
 		if err != nil {
@@ -139,9 +139,9 @@ func ExampleFilteredPaginate() {
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
-	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Res: res})
+	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Pagination: pageRes})
 	// Output:
-	// balances:<denom:"test0denom" amount:"250" > res:<next_key:"test1denom" total:5 >
+	// balances:<denom:"test0denom" amount:"250" > pagination:<next_key:"test1denom" total:5 >
 }
 
 func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {

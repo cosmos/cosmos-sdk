@@ -16,14 +16,13 @@ import (
 
 func Test_runImportCmd(t *testing.T) {
 	cmd := ImportKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Now add a temporary keybase
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
-
+	kbHome := t.TempDir()
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("keyname1") // nolint:errcheck

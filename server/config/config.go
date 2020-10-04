@@ -13,6 +13,9 @@ import (
 
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultGRPCAddress is the default address the gRPC server binds to.
+	DefaultGRPCAddress = "0.0.0.0:9090"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -40,8 +43,28 @@ type BaseConfig struct {
 	// Note: Commitment of state will be attempted on the corresponding block.
 	HaltTime uint64 `mapstructure:"halt-time"`
 
+	// MinRetainBlocks defines the minimum block height offset from the current
+	// block being committed, such that blocks past this offset may be pruned
+	// from Tendermint. It is used as part of the process of determining the
+	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+	// that no blocks should be pruned.
+	//
+	// This configuration value is only responsible for pruning Tendermint blocks.
+	// It has no bearing on application state pruning which is determined by the
+	// "pruning-*" configurations.
+	//
+	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// with the unbonding (safety threshold) period, state pruning and state sync
+	// snapshot parameters to determine the correct minimum value of
+	// ResponseCommit.RetainHeight.
+	MinRetainBlocks uint64 `mapstructure:"min-retain-blocks"`
+
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	IndexEvents []string `mapstructure:"index-events"`
 }
 
 // APIConfig defines the API listener configuration.
@@ -75,6 +98,26 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// GRPCConfig defines configuration for the gRPC server.
+type GRPCConfig struct {
+	// Enable defines if the gRPC server should be enabled.
+	Enable bool `mapstructure:"enable"`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address"`
+}
+
+// StateSyncConfig defines the state sync snapshot configuration.
+type StateSyncConfig struct {
+	// SnapshotInterval sets the interval at which state sync snapshots are taken.
+	// 0 disables snapshots. Must be a multiple of PruningKeepEvery.
+	SnapshotInterval uint64 `mapstructure:"snapshot-interval"`
+
+	// SnapshotKeepRecent sets the number of recent state sync snapshots to keep.
+	// 0 keeps all snapshots.
+	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -82,6 +125,8 @@ type Config struct {
 	// Telemetry defines the application telemetry configuration
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
+	GRPC      GRPCConfig       `mapstructure:"grpc"`
+	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -121,6 +166,8 @@ func DefaultConfig() *Config {
 			PruningKeepRecent: "0",
 			PruningKeepEvery:  "0",
 			PruningInterval:   "0",
+			MinRetainBlocks:   0,
+			IndexEvents:       make([]string, 0),
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -133,6 +180,14 @@ func DefaultConfig() *Config {
 			MaxOpenConnections: 1000,
 			RPCReadTimeout:     10,
 			RPCMaxBodyBytes:    1000000,
+		},
+		GRPC: GRPCConfig{
+			Enable:  true,
+			Address: DefaultGRPCAddress,
+		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   0,
+			SnapshotKeepRecent: 2,
 		},
 	}
 }
@@ -158,6 +213,8 @@ func GetConfig(v *viper.Viper) Config {
 			PruningInterval:   v.GetString("pruning-interval"),
 			HaltHeight:        v.GetUint64("halt-height"),
 			HaltTime:          v.GetUint64("halt-time"),
+			IndexEvents:       v.GetStringSlice("index-events"),
+			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
 		},
 		Telemetry: telemetry.Config{
 			ServiceName:             v.GetString("telemetry.service-name"),
@@ -170,12 +227,21 @@ func GetConfig(v *viper.Viper) Config {
 		},
 		API: APIConfig{
 			Enable:             v.GetBool("api.enable"),
+			Swagger:            v.GetBool("api.swagger"),
 			Address:            v.GetString("api.address"),
 			MaxOpenConnections: v.GetUint("api.max-open-connections"),
 			RPCReadTimeout:     v.GetUint("api.rpc-read-timeout"),
 			RPCWriteTimeout:    v.GetUint("api.rpc-write-timeout"),
 			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
 			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
+		},
+		GRPC: GRPCConfig{
+			Enable:  v.GetBool("grpc.enable"),
+			Address: v.GetString("grpc.address"),
+		},
+		StateSync: StateSyncConfig{
+			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),
+			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
 		},
 	}
 }

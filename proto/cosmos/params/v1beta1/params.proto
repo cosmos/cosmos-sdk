@@ -1,0 +1,27 @@
+syntax = "proto3";
+package cosmos.params.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+
+// ParameterChangeProposal defines a proposal to change one or more parameters.
+message ParameterChangeProposal {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string   title               = 1;
+  string   description         = 2;
+  repeated ParamChange changes = 3 [(gogoproto.nullable) = false];
+}
+
+// ParamChange defines an individual parameter change, for use in
+// ParameterChangeProposal.
+message ParamChange {
+  option (gogoproto.goproto_stringer) = false;
+
+  string subspace = 1;
+  string key      = 2;
+  string value    = 3;
+}

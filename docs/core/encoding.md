@@ -56,7 +56,7 @@ for their types, they may use an Amino codec directly.
 
 Every module uses an Amino codec to serialize types and interfaces. This codec typically
 has types and interfaces registered in that module's domain only (e.g. messages),
-but there are exceptions like `x/gov`. Each module exposes a `RegisterCodec` function
+but there are exceptions like `x/gov`. Each module exposes a `RegisterLegacyAminoCodec` function
 that allows a user to provide a codec and have all the types registered. An application
 will call this method for each necessary module.
 

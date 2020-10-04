@@ -1,11 +1,13 @@
 package evidence
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -30,7 +32,6 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.InterfaceModule     = AppModuleBasic{}
 )
 
 // ----------------------------------------------------------------------------
@@ -54,9 +55,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the evidence module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
@@ -65,7 +66,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -85,23 +86,28 @@ func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Ro
 	rest.RegisterRoutes(clientCtx, rtr, evidenceRESTHandlers)
 }
 
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the evidence module.
+func (a AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+}
+
 // GetTxCmd returns the evidence module's root tx command.
-func (a AppModuleBasic) GetTxCmd(clientCtx client.Context) *cobra.Command {
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
-		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler(clientCtx)
+		evidenceCLIHandlers[i] = evidenceHandler.CLIHandler()
 	}
 
-	return cli.GetTxCmd(clientCtx, evidenceCLIHandlers)
+	return cli.GetTxCmd(evidenceCLIHandlers)
 }
 
-// GetTxCmd returns the evidence module's root query command.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey, clientCtx.Codec)
+// GetQueryCmd returns the evidence module's root query command.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -138,12 +144,16 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// NewQuerierHandler returns the evidence module's Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
+// LegacyQuerierHandler returns the evidence module's Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterQueryService(server grpc.Server) {
+	types.RegisterQueryServer(server, am.keeper)
+}
 
 // RegisterInvariants registers the evidence module's invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
@@ -157,7 +167,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz jso
 		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
 	}
 
-	InitGenesis(ctx, am.keeper, gs)
+	InitGenesis(ctx, am.keeper, &gs)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -32,9 +33,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the crisis module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the crisis
@@ -44,29 +45,32 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the crisis module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return types.ValidateGenesis(&data)
 }
 
 // RegisterRESTRoutes registers no REST routes for the crisis module.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.
+func (AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {}
+
 // GetTxCmd returns the root tx command for the crisis module.
-func (b AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command {
+func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the crisis module.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
-// RegisterInterfaceTypes registers interfaces and implementations of the crisis
+// RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
-func (AppModuleBasic) RegisterInterfaceTypes(registry codectypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
@@ -106,9 +110,11 @@ func (am AppModule) Route() sdk.Route {
 // QuerierRoute returns no querier route.
 func (AppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns no sdk.Querier.
-func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns no sdk.Querier.
+func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
@@ -116,7 +122,7 @@ func (am AppModule) RegisterQueryService(grpc.Server) {}
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	am.keeper.InitGenesis(ctx, genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
 	am.keeper.AssertInvariants(ctx)
 	return []abci.ValidatorUpdate{}
 }

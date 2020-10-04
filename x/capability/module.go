@@ -7,11 +7,14 @@ import (
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -44,10 +47,11 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the capability module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
-}
+// RegisterLegacyAminoCodec does nothing. Capability does not support amino.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+
+// RegisterInterfaces registers the module's interface types
+func (a AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns the capability module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
@@ -55,7 +59,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the capability module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -66,11 +70,15 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, bz json.RawMessag
 // RegisterRESTRoutes registers the capability module's REST service handlers.
 func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+}
+
 // GetTxCmd returns the capability module's root tx command.
-func (a AppModuleBasic) GetTxCmd(_ client.Context) *cobra.Command { return nil }
+func (a AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 
 // GetQueryCmd returns the capability module's root query command.
-func (AppModuleBasic) GetQueryCmd(clientCtx client.Context) *cobra.Command { return nil }
+func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
 // ----------------------------------------------------------------------------
 // AppModule
@@ -101,9 +109,11 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler returns the capability module's Querier.
-func (am AppModule) NewQuerierHandler() sdk.Querier { return nil }
+// LegacyQuerierHandler returns the capability module's Querier.
+func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
+// RegisterQueryService registers a GRPC query service to respond to the
+// module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(grpc.Server) {}
 
 // RegisterInvariants registers the capability module's invariants.

@@ -1,7 +1,8 @@
+// +build norace
+
 package cli_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,8 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 )
@@ -49,11 +49,12 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 		expectedOutput string
 	}{
 		{
-			"default output",
+			"json output",
 			[]string{
 				"staking", "MaxValidators",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			`{"Subspace":"staking","Key":"MaxValidators","Value":"100"}`,
+			`{"subspace":"staking","key":"MaxValidators","value":"100"}`,
 		},
 		{
 			"text output",
@@ -61,9 +62,9 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 				"staking", "MaxValidators",
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 			},
-			`Key: MaxValidators
-Subspace: staking
-Value: "100"`,
+			`key: MaxValidators
+subspace: staking
+value: "100"`,
 		},
 	}
 
@@ -72,17 +73,10 @@ Value: "100"`,
 
 		s.Run(tc.name, func() {
 			cmd := cli.NewQuerySubspaceParamsCmd()
-			_, out := testutil.ApplyMockIO(cmd)
+			clientCtx := val.ClientCtx
 
-			clientCtx := val.ClientCtx.WithOutput(out)
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-			out.Reset()
-			cmd.SetArgs(tc.args)
-
-			s.Require().NoError(cmd.ExecuteContext(ctx))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
 		})
 	}

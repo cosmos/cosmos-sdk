@@ -25,8 +25,8 @@ func Test_validateSendEnabledParam(t *testing.T) {
 		{"valid denom send enabled", args{*NewSendEnabled(sdk.DefaultBondDenom, true)}, false},
 		{"valid denom send disabled", args{*NewSendEnabled(sdk.DefaultBondDenom, false)}, false},
 
-		{"invalid denom send enabled", args{*NewSendEnabled("FOO", true)}, true},
-		{"invalid denom send disabled", args{*NewSendEnabled("FOO", false)}, true},
+		{"invalid denom send enabled", args{*NewSendEnabled("0FOO", true)}, true},
+		{"invalid denom send disabled", args{*NewSendEnabled("0FOO", false)}, true},
 	}
 	for _, tt := range tests {
 		tt := tt

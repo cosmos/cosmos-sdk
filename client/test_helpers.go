@@ -18,7 +18,7 @@ type TestAccountRetriever struct {
 var _ AccountRetriever = TestAccountRetriever{}
 
 // EnsureExists implements AccountRetriever.EnsureExists
-func (t TestAccountRetriever) EnsureExists(_ NodeQuerier, addr sdk.AccAddress) error {
+func (t TestAccountRetriever) EnsureExists(_ Context, addr sdk.AccAddress) error {
 	_, ok := t.Accounts[addr.String()]
 	if !ok {
 		return fmt.Errorf("account %s not found", addr)
@@ -27,7 +27,7 @@ func (t TestAccountRetriever) EnsureExists(_ NodeQuerier, addr sdk.AccAddress) e
 }
 
 // GetAccountNumberSequence implements AccountRetriever.GetAccountNumberSequence
-func (t TestAccountRetriever) GetAccountNumberSequence(_ NodeQuerier, addr sdk.AccAddress) (accNum uint64, accSeq uint64, err error) {
+func (t TestAccountRetriever) GetAccountNumberSequence(_ Context, addr sdk.AccAddress) (accNum uint64, accSeq uint64, err error) {
 	acc, ok := t.Accounts[addr.String()]
 	if !ok {
 		return 0, 0, fmt.Errorf("account %s not found", addr)

@@ -9,7 +9,7 @@ import (
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator exported.ValidatorI) bool {
 			keeper.AddPubkey(ctx, validator.GetConsPubKey())
@@ -17,20 +17,20 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 		},
 	)
 
-	for addr, info := range data.SigningInfos {
-		address, err := sdk.ConsAddressFromBech32(addr)
+	for _, info := range data.SigningInfos {
+		address, err := sdk.ConsAddressFromBech32(info.Address)
 		if err != nil {
 			panic(err)
 		}
-		keeper.SetValidatorSigningInfo(ctx, address, info)
+		keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
 	}
 
-	for addr, array := range data.MissedBlocks {
-		address, err := sdk.ConsAddressFromBech32(addr)
+	for _, array := range data.MissedBlocks {
+		address, err := sdk.ConsAddressFromBech32(array.Address)
 		if err != nil {
 			panic(err)
 		}
-		for _, missed := range array {
+		for _, missed := range array.MissedBlocks {
 			keeper.SetValidatorMissedBlockBitArray(ctx, address, missed.Index, missed.Missed)
 		}
 	}
@@ -41,20 +41,23 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data types.GenesisState) {
+func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisState) {
 	params := keeper.GetParams(ctx)
-	signingInfos := make(map[string]types.ValidatorSigningInfo)
-	missedBlocks := make(map[string][]types.MissedBlock)
+	signingInfos := make([]types.SigningInfo, 0)
+	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
 	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
-		signingInfos[bechAddr] = info
-		localMissedBlocks := []types.MissedBlock{}
-
-		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			localMissedBlocks = append(localMissedBlocks, types.NewMissedBlock(index, missed))
-			return false
+		signingInfos = append(signingInfos, types.SigningInfo{
+			Address:              bechAddr,
+			ValidatorSigningInfo: info,
 		})
-		missedBlocks[bechAddr] = localMissedBlocks
+
+		localMissedBlocks := keeper.GetValidatorMissedBlocks(ctx, address)
+
+		missedBlocks = append(missedBlocks, types.ValidatorMissedBlocks{
+			Address:      bechAddr,
+			MissedBlocks: localMissedBlocks,
+		})
 
 		return false
 	})

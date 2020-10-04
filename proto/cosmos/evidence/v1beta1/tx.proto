@@ -1,0 +1,19 @@
+syntax = "proto3";
+package cosmos.evidence.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+// MsgSubmitEvidence represents a message that supports submitting arbitrary
+// Evidence of misbehavior such as equivocation or counterfactual signing.
+message MsgSubmitEvidence {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string              submitter = 1;
+  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
+}

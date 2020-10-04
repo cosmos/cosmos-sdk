@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
-func createTestCodec() *codec.Codec {
-	cdc := codec.New()
+func createTestCodec() *codec.LegacyAmino {
+	cdc := codec.NewLegacyAmino()
 
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
 	cdc.RegisterConcrete(testdata.Dog{}, "testdata/Dog", nil)
@@ -29,7 +29,7 @@ func TestAminoCodec(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		codec        codec.Marshaler
+		codec        *codec.AminoCodec
 		input        codec.ProtoMarshaler
 		recv         codec.ProtoMarshaler
 		marshalErr   bool
@@ -175,7 +175,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 
 			if tc.marshalErr {
 				require.Error(t, err)
-				require.Panics(t, func() { codec.MustMarshalJSONIndent(cdc, tc.input) })
+				require.Panics(t, func() { codec.MustMarshalJSONIndent(cdc.LegacyAmino, tc.input) })
 				return
 			}
 
@@ -184,7 +184,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 			require.Equal(t, bz, []byte(tc.wantJSON))
 
 			var bz2 []byte
-			require.NotPanics(t, func() { bz2 = codec.MustMarshalJSONIndent(cdc, tc.input) })
+			require.NotPanics(t, func() { bz2 = codec.MustMarshalJSONIndent(cdc.LegacyAmino, tc.input) })
 			require.Equal(t, bz2, []byte(tc.wantJSON))
 		})
 	}

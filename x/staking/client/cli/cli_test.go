@@ -1,195 +1,1265 @@
-// +build cli_test
+// +build norace
 
 package cli_test
 
 import (
+	json "encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/cosmos/cosmos-sdk/tests/cli"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankclienttestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestCLICreateValidator(t *testing.T) {
-	t.SkipNow() // Recreate when using CLI tests.
+type IntegrationTestSuite struct {
+	suite.Suite
 
-	t.Parallel()
-	f := cli.InitFixtures(t)
+	cfg     network.Config
+	network *network.Network
+}
 
-	// start simd server
-	proc := f.SDStart()
-	t.Cleanup(func() { proc.Stop(false) })
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
 
-	barAddr := f.KeyAddress(cli.KeyBar)
-	barVal := sdk.ValAddress(barAddr)
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 2
 
-	// Check for the params
-	params := testutil.QueryStakingParameters(f)
-	require.NotEmpty(t, params)
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
 
-	// Query for the staking pool
-	pool := testutil.QueryStakingPool(f)
-	require.NotEmpty(t, pool)
+	_, err := s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
-	consPubKey := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, ed25519.GenPrivKey().PubKey())
+	unbond, err := sdk.ParseCoin("10stake")
+	s.Require().NoError(err)
 
-	sendTokens := sdk.TokensFromConsensusPower(10)
-	bankclienttestutil.TxSend(f, cli.KeyFoo, barAddr, sdk.NewCoin(cli.Denom, sendTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
-	require.Equal(t, sendTokens.String(), bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom).String())
+	// redelegate
+	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 
-	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewInt64Coin(cli.Denom, 2), "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
+	// unbonding
+	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
 
-	msg := cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
-	// Test --dry-run
-	newValTokens := sdk.TokensFromConsensusPower(2)
-	success, _, _ = testutil.TxStakingCreateValidator(f, barAddr.String(), consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "--dry-run")
-	require.True(t, success)
+func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+	val := s.network.Validators[0]
 
-	// Create the validator
-	testutil.TxStakingCreateValidator(f, cli.KeyBar, consPubKey, sdk.NewCoin(cli.Denom, newValTokens), "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	consPrivKey := ed25519.GenPrivKey()
+	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
+	s.Require().NoError(err)
 
-	// Ensure funds were deducted properly
-	require.Equal(t, sendTokens.Sub(newValTokens), bankclienttestutil.QueryBalances(f, barAddr).AmountOf(cli.Denom))
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
 
-	// Ensure that validator state is as expected
-	validator := testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, validator.OperatorAddress, barVal)
-	require.True(sdk.IntEq(t, newValTokens, validator.Tokens))
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-	// Query delegations to the validator
-	validatorDelegations := testutil.QueryStakingDelegationsTo(f, barVal)
-	require.Len(t, validatorDelegations, 1)
-	require.NotNil(t, validatorDelegations[0].Shares)
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
 
-	// Edit validator
-	// params to be changed in edit validator (NOTE: a validator can only change its commission once per day)
-	newMoniker := "test-moniker"
-	newWebsite := "https://cosmos.network"
-	newIdentity := "6A0D65E29A4CBC8D"
-	newDetails := "To-infinity-and-beyond!"
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"invalid transaction (missing amount)",
+			[]string{
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid transaction (missing pubkey)",
+			[]string{
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"invalid transaction (missing moniker)",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction",
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
+				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
+				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
+				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
+				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=0.5", cli.FlagCommissionRate),
+				fmt.Sprintf("--%s=1.0", cli.FlagCommissionMaxRate),
+				fmt.Sprintf("--%s=0.1", cli.FlagCommissionMaxChangeRate),
+				fmt.Sprintf("--%s=1", cli.FlagMinSelfDelegation),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
 
-	// Test --generate-only"
-	success, stdout, stderr = testutil.TxStakingEditValidator(f, barAddr.String(), newMoniker, newWebsite, newIdentity, newDetails, "--generate-only")
-	require.True(t, success)
-	require.True(t, success)
-	require.Empty(t, stderr)
+	for _, tc := range testCases {
+		tc := tc
 
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+		s.Run(tc.name, func() {
+			cmd := cli.NewCreateValidatorCmd()
+			clientCtx := val.ClientCtx
 
-	success, _, _ = testutil.TxStakingEditValidator(f, cli.KeyBar, newMoniker, newWebsite, newIdentity, newDetails, "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-	udpatedValidator := testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, udpatedValidator.Description.Moniker, newMoniker)
-	require.Equal(t, udpatedValidator.Description.Identity, newIdentity)
-	require.Equal(t, udpatedValidator.Description.Website, newWebsite)
-	require.Equal(t, udpatedValidator.Description.Details, newDetails)
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
 
-	// unbond a single share
-	validators := testutil.QueryStakingValidators(f)
-	require.Len(t, validators, 2)
+func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with invalid address ",
+			[]string{"somethinginvalidaddress", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"with valid and not existing address",
+			[]string{"cosmosvaloper15jkng8hytwt22lllv6mw4k89qkqehtahd84ptu", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			true,
+		},
+		{
+			"happy case",
+			[]string{fmt.Sprintf("%s", val.ValAddress), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidator()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var result types.Validator
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().Equal(val.ValAddress.String(), result.OperatorAddress)
+			}
+		})
+	}
+}
 
-	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(1))
-	success = testutil.TxStakingUnbond(f, cli.KeyBar, unbondAmt.String(), barVal, "-y")
-	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
+	val := s.network.Validators[0]
 
-	// Ensure bonded staking is correct
-	remainingTokens := newValTokens.Sub(unbondAmt.Amount)
-	validator = testutil.QueryStakingValidator(f, barVal)
-	require.Equal(t, remainingTokens, validator.Tokens)
+	testCases := []struct {
+		name              string
+		args              []string
+		minValidatorCount int
+	}{
+		{
+			"one validator case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			1,
+		},
+		{
+			"multi validator case",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			len(s.network.Validators),
+		},
+	}
 
-	// Query for historical info
-	require.NotEmpty(t, testutil.QueryStakingHistoricalInfo(f, 1))
+	for _, tc := range testCases {
+		tc := tc
 
-	// Get unbonding delegations from the validator
-	validatorUbds := testutil.QueryStakingUnbondingDelegationsFrom(f, barVal)
-	require.Len(t, validatorUbds, 1)
-	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidators()
+			clientCtx := val.ClientCtx
 
-	// Query staking unbonding delegation
-	ubd := testutil.QueryStakingUnbondingDelegation(f, barAddr.String(), barVal.String())
-	require.NotEmpty(t, ubd)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 
-	// Query staking unbonding delegations
-	ubds := testutil.QueryStakingUnbondingDelegations(f, barAddr.String())
-	require.Len(t, ubds, 1)
+			var result []types.Validator
+			s.Require().NoError(json.Unmarshal(out.Bytes(), &result))
+			s.Require().Equal(len(s.network.Validators), len(result))
+		})
+	}
+}
 
-	fooAddr := f.KeyAddress(cli.KeyFoo)
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 
-	delegateTokens := sdk.TokensFromConsensusPower(2)
-	delegateAmount := sdk.NewCoin(cli.Denom, delegateTokens)
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, nil,
+		},
+		{
+			"with wrong validator address",
+			[]string{
+				val.Address.String(),
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, nil, nil,
+		},
+		{
+			"with json output",
+			[]string{
+				val.Address.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.DelegationResponse{},
+			&types.DelegationResponse{
+				Delegation: types.Delegation{
+					DelegatorAddress: val.Address.String(),
+					ValidatorAddress: val2.ValAddress.String(),
+					Shares:           sdk.NewDec(10),
+				},
+				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+			},
+		},
+	}
 
-	// Delegate txn
-	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr = testutil.TxStakingDelegate(f, fooAddr.String(), barVal.String(), delegateAmount, "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegation()
+			clientCtx := val.ClientCtx
 
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
 
-	// Delegate
-	success, _, err := testutil.TxStakingDelegate(f, cli.KeyFoo, barVal.String(), delegateAmount, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	require.Empty(t, err)
-	require.True(t, success)
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
+	val := s.network.Validators[0]
 
-	// Query the delegation from foo address to barval
-	delegation := testutil.QueryStakingDelegation(f, fooAddr.String(), barVal)
-	require.NotZero(t, delegation.Shares)
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with no delegator address",
+			[]string{},
+			true, nil, nil,
+		},
+		{
+			"with wrong delegator address",
+			[]string{"wrongDelAddr"},
+			true, nil, nil,
+		},
+		{
+			"valid request (height specific)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&types.QueryDelegatorDelegationsResponse{},
+			&types.QueryDelegatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+	}
 
-	// Query the delegations from foo address to barval
-	delegations := testutil.QueryStakingDelegations(f, barAddr.String())
-	require.Len(t, delegations, 1)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegations()
+			clientCtx := val.ClientCtx
 
-	fooVal := sdk.ValAddress(fooAddr)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
 
-	// Redelegate
-	success, stdout, stderr = testutil.TxStakingRedelegate(f, fooAddr.String(), barVal.String(), fooVal.String(), delegateAmount, "--generate-only")
-	require.True(t, success)
-	require.Empty(t, stderr)
+func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
+	val := s.network.Validators[0]
 
-	msg = cli.UnmarshalStdTx(t, f.Cdc, stdout)
-	require.NotZero(t, msg.Fee.Gas)
-	require.Len(t, msg.Msgs, 1)
-	require.Len(t, msg.GetSignatures(), 0)
+	testCases := []struct {
+		name     string
+		args     []string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"with no validator address",
+			[]string{},
+			true, nil, nil,
+		},
+		{
+			"wrong validator address",
+			[]string{"wrongValAddr"},
+			true, nil, nil,
+		},
+		{
+			"valid request(height specific)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			false,
+			&types.QueryValidatorDelegationsResponse{},
+			&types.QueryValidatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{
+					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDec(100000000), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+	}
 
-	success, _, err = testutil.TxStakingRedelegate(f, cli.KeyFoo, barVal.String(), fooVal.String(), delegateAmount, "-y")
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	require.Empty(t, err)
-	require.True(t, success)
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryDelegations()
+			clientCtx := val.ClientCtx
 
-	redelegation := testutil.QueryStakingRedelegation(f, fooAddr.String(), barVal.String(), fooVal.String())
-	require.Len(t, redelegation, 1)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
 
-	redelegations := testutil.QueryStakingRedelegations(f, fooAddr.String())
-	require.Len(t, redelegations, 1)
+func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
+	val := s.network.Validators[0]
 
-	redelegationsFrom := testutil.QueryStakingRedelegationsFrom(f, barVal.String())
-	require.Len(t, redelegationsFrom, 1)
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
 
-	f.Cleanup()
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryUnbondingDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubds types.QueryDelegatorUnbondingDelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+
+				s.Require().NoError(err)
+				s.Require().Len(ubds.UnbondingResponses, 1)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongDelAddr",
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong validator address",
+			[]string{
+				val.Address.String(),
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryUnbondingDelegation()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubd types.UnbondingDelegation
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubd)
+				s.Require().NoError(err)
+				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
+				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
+				s.Require().Len(ubd.Entries, 1)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong validator address",
+			[]string{
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorUnbondingDelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var ubds types.QueryValidatorUnbondingDelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+
+				s.Require().NoError(err)
+				s.Require().Len(ubds.UnbondingResponses, 1)
+				s.Require().Equal(ubds.UnbondingResponses[0].DelegatorAddress, val.Address.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongdeladdr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryRedelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong delegator address",
+			[]string{
+				"wrongdeladdr",
+				val.ValAddress.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong source validator address address",
+			[]string{
+				val.Address.String(),
+				"wrongSrcValAddress",
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"wrong destination validator address address",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				"wrongDestValAddress",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryRedelegation()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name   string
+		args   []string
+		expErr bool
+	}{
+		{
+			"wrong validator address",
+			[]string{
+				"wrongValAddr",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryValidatorRedelegations()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expErr {
+				s.Require().Error(err)
+			} else {
+				var redelegations types.QueryRedelegationsResponse
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name  string
+		args  []string
+		error bool
+	}{
+		{
+			"wrong height",
+			[]string{
+				"-1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+		{
+			"valid request",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryHistoricalInfo()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.error {
+				s.Require().Error(err)
+			} else {
+				var historical_info types.HistoricalInfo
+
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &historical_info)
+				s.Require().NoError(err)
+				s.Require().NotNil(historical_info)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"with text output",
+			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			`bond_denom: stake
+historical_entries: 100
+max_entries: 7
+max_validators: 100
+unbonding_time: 1814400s`,
+		},
+		{
+			"with json output",
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":100,"bond_denom":"stake"}`,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryParams()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
+	val := s.network.Validators[0]
+	testCases := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+	}{
+		{
+			"with text",
+			[]string{
+				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			`bonded_tokens: "200000000"
+not_bonded_tokens: "0"`,
+		},
+		{
+			"with json",
+			[]string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=1", flags.FlagHeight),
+			},
+			`{"not_bonded_tokens":"0","bonded_tokens":"200000000"}`,
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdQueryPool()
+			clientCtx := val.ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
+	val := s.network.Validators[0]
+
+	details := "bio"
+	identity := "test identity"
+	securityContact := "test contact"
+	website := "https://test.com"
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"with no edit flag (since all are optional)",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, "with wrong from address"),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"with no edit flag (since all are optional)",
+			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"edit validator details",
+			[]string{
+				fmt.Sprintf("--details=%s", details),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"edit validator identity",
+			[]string{
+				fmt.Sprintf("--identity=%s", identity),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"edit validator security-contact",
+			[]string{
+				fmt.Sprintf("--security-contact=%s", securityContact),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"edit validator website",
+			[]string{
+				fmt.Sprintf("--website=%s", website),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+		{
+			"with all edit flags",
+			[]string{
+				fmt.Sprintf("--details=%s", details),
+				fmt.Sprintf("--identity=%s", identity),
+				fmt.Sprintf("--security-contact=%s", securityContact),
+				fmt.Sprintf("--website=%s", website),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewEditValidatorCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdDelegate() {
+	val := s.network.Validators[0]
+
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"without delegate amount",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"without validator address",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction of delegate",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewDelegateCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"without amount",
+			[]string{
+				val.ValAddress.String(),  // src-validator-addr
+				val2.ValAddress.String(), // dst-validator-addr
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"with wrong source validator address",
+			[]string{
+				`cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`, // src-validator-addr
+				val2.ValAddress.String(),                               // dst-validator-addr
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 4,
+		},
+		{
+			"with wrong destination validator address",
+			[]string{
+				val.ValAddress.String(),                                // dst-validator-addr
+				`cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj`, // src-validator-addr
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 39,
+		},
+		{
+			"valid transaction of delegate",
+			[]string{
+				val.ValAddress.String(),                                // src-validator-addr
+				val2.ValAddress.String(),                               // dst-validator-addr
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewRedelegateCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestNewCmdUnbond() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"Without unbond amount",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"Without validator address",
+			[]string{
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			true, nil, 0,
+		},
+		{
+			"valid transaction of unbond",
+			[]string{
+				val.ValAddress.String(),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			cmd := cli.NewUnbondCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

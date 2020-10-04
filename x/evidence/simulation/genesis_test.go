@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
@@ -17,10 +18,8 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
-	// Make sure to register cdc.
-	// Otherwise RandomizedGenState will panic!
-	types.RegisterCodec(cdc)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -41,26 +40,4 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &evidenceGenesis)
 
 	require.Len(t, evidenceGenesis.Evidence, 0)
-}
-
-// TestRandomizedGenState tests the execution of RandomizedGenState
-// without registering the evidence interfaces.
-// We expect the test to panic.
-func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
-
-	s := rand.NewSource(1)
-	r := rand.New(s)
-
-	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
-		GenState:     make(map[string]json.RawMessage),
-	}
-
-	require.Panicsf(t, func() { simulation.RandomizedGenState(&simState) }, "failed to marshal JSON: Unregistered interface exported.Evidence")
 }

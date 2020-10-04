@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -83,7 +83,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 		info = keyring.NewMultiInfo(defaultMultiSigKeyName, multikey)
 	}
 
@@ -140,7 +140,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			return nil
 		}
 
-		return crypto.LedgerShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
+		return ledger.ShowAddress(*hdpath, info.GetPubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix())
 	}
 
 	return nil

@@ -27,11 +27,11 @@ message MsgConnectionOpenTry {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                    client_id             = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
-  string                    connection_id         = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  string                    proved_id             = 3 [(gogoproto.moretags) = "yaml:\"proved_id\""];
-  google.protobuf.Any       client_state          = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  Counterparty              counterparty          = 5 [(gogoproto.nullable) = false];
+  string client_id                         = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string desired_connection_id             = 2 [(gogoproto.moretags) = "yaml:\"desired_connection_id\""];
+  string counterparty_chosen_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_chosen_connection_id\""];
+  google.protobuf.Any client_state         = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty        counterparty         = 5 [(gogoproto.nullable) = false];
   repeated string           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
   ibc.core.client.v1.Height proof_height          = 7
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];

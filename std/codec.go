@@ -12,14 +12,17 @@ import (
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
+// Temporary to solve https://github.com/cosmos/cosmos-sdk/pull/7442
+func init() {
+	tmjson.RegisterType((*tmcrypto.PublicKey)(nil), "tendermint.crypto.PublicKey")
+	tmjson.RegisterType((*tmcrypto.PublicKey_Ed25519)(nil), "tendermint.crypto.PublicKey_Ed25519")
+}
+
 // RegisterLegacyAminoCodec registers types with the Amino codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	vesting.RegisterLegacyAminoCodec(cdc)
-
-	// Also register some TM types.
-	tmjson.RegisterType((*tmcrypto.PublicKey_Ed25519)(nil), "tendermint.crypto.PublicKey_Ed25519")
 }
 
 // RegisterInterfaces registers Interfaces from sdk/types, vesting, crypto, tx.

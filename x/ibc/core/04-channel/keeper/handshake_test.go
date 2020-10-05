@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 		}, true},
-		{"success with empty proved channel id", func() {
+		{"success with empty counterparty chosen channel id", func() {
 			var clientA, clientB string
 			clientA, clientB, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			heightDiff = 3 // consensus state doesn't exist at this height
 		}, false},
-		{"invalid proved channel id", func() {
+		{"counterparty chosen channel id does not match desired channel id", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
 			suite.Require().NoError(err)
@@ -280,11 +280,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			channelB := connB.FirstOrNextTestChannel(ibctesting.MockPort)
 			counterparty := types.NewCounterparty(channelA.PortID, channelA.ID)
 
-			// get provedChannelID
-			var provedChannelID string
+			// get counterpartyChosenChannelID
+			var counterpartyChosenChannelID string
 			channel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
 			if found {
-				provedChannelID = channel.Counterparty.ChannelId
+				counterpartyChosenChannelID = channel.Counterparty.ChannelId
 			}
 
 			channelKey := host.KeyChannel(counterparty.PortId, counterparty.ChannelId)
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
-				channelB.PortID, channelB.ID, provedChannelID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
+				channelB.PortID, channelB.ID, counterpartyChosenChannelID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
 				proof, malleateHeight(proofHeight, heightDiff),
 			)
 

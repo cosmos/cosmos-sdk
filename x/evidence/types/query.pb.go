@@ -124,7 +124,8 @@ func (m *QueryEvidenceResponse) GetEvidence() *types.Any {
 	return nil
 }
 
-// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC method.
+// QueryEvidenceRequest is the request type for the Query/AllEvidence RPC
+// method.
 type QueryAllEvidenceRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -170,7 +171,8 @@ func (m *QueryAllEvidenceRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC method.
+// QueryAllEvidenceResponse is the response type for the Query/AllEvidence RPC
+// method.
 type QueryAllEvidenceResponse struct {
 	// evidence returns all evidences.
 	Evidence []*types.Any `protobuf:"bytes,1,rep,name=evidence,proto3" json:"evidence,omitempty"`

@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,12 +47,12 @@ func TestSlashingMsgs(t *testing.T) {
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1,
+		Address: addr1.String(),
 	}
 	accs := authtypes.GenesisAccounts{acc1}
 	balances := []banktypes.Balance{
 		{
-			Address: addr1,
+			Address: addr1.String(),
 			Coins:   sdk.Coins{genCoin},
 		},
 	}
@@ -77,10 +77,10 @@ func TestSlashingMsgs(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	validator := checkValidator(t, app, addr1, true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddress)
+	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
-	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1)}
+	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(valAddr), true)
 

@@ -3,7 +3,7 @@
 ## Changelog
 
 - 2020/06/23: Initial version
-- 2020/08/06: Revisions per review & to reference epoch
+- 2020/08/06: Revisions per review & to reference version
 
 ## Status
 

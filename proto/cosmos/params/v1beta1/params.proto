@@ -16,7 +16,8 @@ message ParameterChangeProposal {
   repeated ParamChange changes = 3 [(gogoproto.nullable) = false];
 }
 
-// ParamChange defines an individual parameter change, for use in ParameterChangeProposal.
+// ParamChange defines an individual parameter change, for use in
+// ParameterChangeProposal.
 message ParamChange {
   option (gogoproto.goproto_stringer) = false;
 

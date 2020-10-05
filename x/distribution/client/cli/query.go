@@ -97,7 +97,7 @@ $ %s query distribution validator-outstanding-rewards %s1lwjmdnks33xwnmfayc64ycp
 
 			res, err := queryClient.ValidatorOutstandingRewards(
 				context.Background(),
-				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr},
+				&types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
 				return err
@@ -143,7 +143,7 @@ $ %s query distribution commission %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 
 			res, err := queryClient.ValidatorCommission(
 				context.Background(),
-				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr},
+				&types.QueryValidatorCommissionRequest{ValidatorAddress: validatorAddr.String()},
 			)
 			if err != nil {
 				return err
@@ -205,7 +205,7 @@ $ %s query distribution slashes %svaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 			res, err := queryClient.ValidatorSlashes(
 				context.Background(),
 				&types.QueryValidatorSlashesRequest{
-					ValidatorAddress: validatorAddr,
+					ValidatorAddress: validatorAddr.String(),
 					StartingHeight:   startHeight,
 					EndingHeight:     endHeight,
 					Pagination:       pageReq,
@@ -265,7 +265,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 
 				res, err := queryClient.DelegationRewards(
 					context.Background(),
-					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr, ValidatorAddress: validatorAddr},
+					&types.QueryDelegationRewardsRequest{DelegatorAddress: delegatorAddr.String(), ValidatorAddress: validatorAddr.String()},
 				)
 				if err != nil {
 					return err
@@ -276,7 +276,7 @@ $ %s query distribution rewards %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p %s1ggh
 
 			res, err := queryClient.DelegationTotalRewards(
 				context.Background(),
-				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr},
+				&types.QueryDelegationTotalRewardsRequest{DelegatorAddress: delegatorAddr.String()},
 			)
 			if err != nil {
 				return err

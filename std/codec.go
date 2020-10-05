@@ -1,6 +1,9 @@
 package std
 
 import (
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -14,6 +17,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	vesting.RegisterLegacyAminoCodec(cdc)
+
+	// Also register some TM types.
+	tmjson.RegisterType((*tmcrypto.PublicKey_Ed25519)(nil), "tendermint.crypto.PublicKey_Ed25519")
 }
 
 // RegisterInterfaces registers Interfaces from sdk/types, vesting, crypto, tx.

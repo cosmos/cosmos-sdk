@@ -238,6 +238,20 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	s4, _ = restore.getStoreByName("store4").(types.KVStore)
 	require.NotNil(t, s4)
 
+	iterator := s4.Iterator(nil, nil)
+
+	values := 0
+	for ; iterator.Valid(); iterator.Next() {
+		values += 1
+	}
+	require.Zero(t, values)
+
+	require.NoError(t, iterator.Close())
+
+	// write something inside store4
+	k4, v4 := []byte("fourth"), []byte("created")
+	s4.Set(k4, v4)
+
 	// store2 is no longer mounted
 	st2 := restore.getStoreByName("store2")
 	require.Nil(t, st2)
@@ -264,6 +278,10 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	rl2, _ := reload.getStoreByName("restore2").(types.KVStore)
 	require.NotNil(t, rl2)
 	require.Equal(t, v2, rl2.Get(k2))
+
+	rl4, _ := reload.getStoreByName("store4").(types.KVStore)
+	require.NotNil(t, rl4)
+	require.Equal(t, v4, rl4.Get(k4))
 
 	// check commitInfo in storage
 	ci, err = getCommitInfo(db, 2)

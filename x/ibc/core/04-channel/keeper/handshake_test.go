@@ -153,6 +153,26 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 		}, true},
+		{"success with empty proved channel id", func() {
+			var clientA, clientB string
+			clientA, clientB, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			suite.Require().NoError(err)
+
+			// set the channel's counterparty channel identifier to empty string
+			channel := suite.chainA.GetChannel(channelA)
+			channel.Counterparty.ChannelId = ""
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+
+			err = suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.UpdateClient(suite.chainB, suite.chainA, clientB, ibctesting.Tendermint)
+			suite.Require().NoError(err)
+
+			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+		}, true},
 		{"previous channel with invalid state", func() {
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
 
@@ -186,6 +206,19 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 
 			heightDiff = 3 // consensus state doesn't exist at this height
+		}, false},
+		{"invalid proved channel id", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			channelA, _, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			suite.Require().NoError(err)
+
+			// set the channel's counterparty channel identifier to empty string
+			channel := suite.chainA.GetChannel(channelA)
+			channel.Counterparty.ChannelId = "otherchannel"
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
+
+			suite.chainB.CreatePortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
+			portCap = suite.chainB.GetPortCapability(connB.NextTestChannel(ibctesting.MockPort).PortID)
 		}, false},
 		{"channel verification failed", func() {
 			// not creating a channel on chainA will result in an invalid proof of existence
@@ -243,15 +276,23 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 			heightDiff = 0    // must be explicitly changed in malleate
 
 			tc.malleate()
-			counterparty := types.NewCounterparty(connA.FirstOrNextTestChannel(ibctesting.MockPort).PortID, connA.FirstOrNextTestChannel(ibctesting.MockPort).ID)
+			channelA := connA.FirstOrNextTestChannel(ibctesting.MockPort)
 			channelB := connB.FirstOrNextTestChannel(ibctesting.MockPort)
+			counterparty := types.NewCounterparty(channelA.PortID, channelA.ID)
+
+			// get provedChannelID
+			var provedChannelID string
+			channel, found := suite.chainA.App.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID)
+			if found {
+				provedChannelID = channel.Counterparty.ChannelId
+			}
 
 			channelKey := host.KeyChannel(counterparty.PortId, counterparty.ChannelId)
 			proof, proofHeight := suite.chainA.QueryProof(channelKey)
 
 			cap, err := suite.chainB.App.IBCKeeper.ChannelKeeper.ChanOpenTry(
 				suite.chainB.GetContext(), types.ORDERED, []string{connB.ID},
-				channelB.PortID, channelB.ID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
+				channelB.PortID, channelB.ID, provedChannelID, portCap, counterparty, channelB.Version, connA.FirstOrNextTestChannel(ibctesting.MockPort).Version,
 				proof, malleateHeight(proofHeight, heightDiff),
 			)
 
@@ -277,10 +318,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 // call is occurring on chainA.
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	var (
-		connA      *ibctesting.TestConnection
-		connB      *ibctesting.TestConnection
-		channelCap *capabilitytypes.Capability
-		heightDiff uint64
+		connA                 *ibctesting.TestConnection
+		connB                 *ibctesting.TestConnection
+		counterpartyChannelID string
+		channelCap            *capabilitytypes.Capability
+		heightDiff            uint64
 	)
 
 	testCases := []testCase{
@@ -291,6 +333,25 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			err = suite.coordinator.ChanOpenTry(suite.chainB, suite.chainA, channelB, channelA, connB, types.ORDERED)
 			suite.Require().NoError(err)
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+		}, true},
+		{"success with empty stored counterparty channel ID", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ChanOpenTry(suite.chainB, suite.chainA, channelB, channelA, connB, types.ORDERED)
+			suite.Require().NoError(err)
+
+			// set the channel's counterparty channel identifier to empty string
+			channel := suite.chainA.GetChannel(channelA)
+			channel.Counterparty.ChannelId = ""
+
+			// use a different channel identifier
+			counterpartyChannelID = channelB.ID
+
+			suite.chainA.App.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), channelA.PortID, channelA.ID, channel)
 
 			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 		}, true},
@@ -342,6 +403,18 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 			heightDiff = 3 // consensus state doesn't exist at this height
 		}, false},
+		{"invalid counterparty channel identifier", func() {
+			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
+			channelA, channelB, err := suite.coordinator.ChanOpenInit(suite.chainA, suite.chainB, connA, connB, ibctesting.MockPort, ibctesting.MockPort, types.ORDERED)
+			suite.Require().NoError(err)
+
+			err = suite.coordinator.ChanOpenTry(suite.chainB, suite.chainA, channelB, channelA, connB, types.ORDERED)
+			suite.Require().NoError(err)
+
+			counterpartyChannelID = "otheridentifier"
+
+			channelCap = suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
+		}, false},
 		{"channel verification failed", func() {
 			// chainB is INIT, chainA in TRYOPEN
 			_, _, connA, connB = suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -367,19 +440,24 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
-			heightDiff = 0    // must be explicitly changed
+			suite.SetupTest()          // reset
+			counterpartyChannelID = "" // must be explicitly changed in malleate
+			heightDiff = 0             // must be explicitly changed
 
 			tc.malleate()
 
 			channelA := connA.FirstOrNextTestChannel(ibctesting.MockPort)
 			channelB := connB.FirstOrNextTestChannel(ibctesting.MockPort)
 
+			if counterpartyChannelID == "" {
+				counterpartyChannelID = channelB.ID
+			}
+
 			channelKey := host.KeyChannel(channelB.PortID, channelB.ID)
 			proof, proofHeight := suite.chainB.QueryProof(channelKey)
 
 			err := suite.chainA.App.IBCKeeper.ChannelKeeper.ChanOpenAck(
-				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, channelB.Version,
+				suite.chainA.GetContext(), channelA.PortID, channelA.ID, channelCap, channelB.Version, counterpartyChannelID,
 				proof, malleateHeight(proofHeight, heightDiff),
 			)
 

@@ -96,8 +96,10 @@ func (c Counterparty) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(c.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid counterparty port ID")
 	}
-	if err := host.ChannelIdentifierValidator(c.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty channel ID")
+	if c.ChannelId != "" {
+		if err := host.ChannelIdentifierValidator(c.ChannelId); err != nil {
+			return sdkerrors.Wrap(err, "invalid counterparty channel ID")
+		}
 	}
 	return nil
 }

@@ -13,8 +13,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
@@ -23,8 +23,8 @@ import (
 
 const (
 	chainID                      = "gaia"
-	chainIDEpoch0                = "gaia-epoch-0"
-	chainIDEpoch1                = "gaia-epoch-1"
+	chainIDEpoch0                = "gaia-version-0"
+	chainIDEpoch1                = "gaia-version-1"
 	clientID                     = "gaiamainnet"
 	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
 	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
@@ -81,7 +81,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	pubKey, err := suite.privVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
 
 	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})

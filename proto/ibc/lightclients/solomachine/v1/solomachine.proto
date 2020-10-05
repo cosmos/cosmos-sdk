@@ -3,8 +3,8 @@ package ibc.lightclients.solomachine.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types";
 
-import "ibc/connection/connection.proto";
-import "ibc/channel/channel.proto";
+import "ibc/core/connection/v1/connection.proto";
+import "ibc/core/channel/v1/channel.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
@@ -145,8 +145,8 @@ message ConsensusStateData {
 message ConnectionStateData {
   option (gogoproto.goproto_getters) = false;
 
-  bytes                        path       = 1;
-  ibc.connection.ConnectionEnd connection = 2;
+  bytes                                path       = 1;
+  ibc.core.connection.v1.ConnectionEnd connection = 2;
 }
 
 // ChannelStateData returns the SignBytes data for channel state
@@ -154,8 +154,8 @@ message ConnectionStateData {
 message ChannelStateData {
   option (gogoproto.goproto_getters) = false;
 
-  bytes               path    = 1;
-  ibc.channel.Channel channel = 2;
+  bytes                       path    = 1;
+  ibc.core.channel.v1.Channel channel = 2;
 }
 
 // PacketCommitmentData returns the SignBytes data for packet commitment

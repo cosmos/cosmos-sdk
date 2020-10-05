@@ -10,7 +10,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/version"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 )
 
 // MakeBlockID is a copied unimported test function from tmtypes to use here
@@ -31,7 +31,7 @@ func CreateTestHeader(chainID string, height, trustedHeight clienttypes.Height, 
 		trustedVals *tmproto.ValidatorSet
 	)
 	vsetHash := tmValSet.Hash()
-	blockHeight := int64(height.EpochHeight)
+	blockHeight := int64(height.VersionHeight)
 	tmHeader := tmtypes.Header{
 		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,

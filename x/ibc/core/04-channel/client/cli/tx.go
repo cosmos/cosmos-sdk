@@ -64,9 +64,9 @@ func NewChannelOpenInitCmd() *cobra.Command {
 // NewChannelOpenTryCmd returns the command to create a MsgChannelOpenTry transaction
 func NewChannelOpenTryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-try [port-id] [channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops] [/path/to/proof_init.json] [proof-height]",
+		Use:   "open-try [port-id] [channel-id] [proved-channel-id] [counterparty-port-id] [counterparty-channel-id] [connection-hops] [/path/to/proof_init.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenTry message",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -76,26 +76,27 @@ func NewChannelOpenTryCmd() *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			counterpartyPortID := args[2]
-			counterpartyChannelID := args[3]
-			hops := strings.Split(args[4], "/")
+			provedChannelID := args[2]
+			counterpartyPortID := args[3]
+			counterpartyChannelID := args[4]
+			hops := strings.Split(args[5], "/")
 			order := channelOrder(cmd.Flags())
 
 			// TODO: Differentiate between channel and counterparty versions.
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
-			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[5])
+			proofInit, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[6])
 			if err != nil {
 				return err
 			}
 
-			proofHeight, err := clienttypes.ParseHeight(args[6])
+			proofHeight, err := clienttypes.ParseHeight(args[7])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgChannelOpenTry(
-				portID, channelID, version, order, hops,
+				portID, channelID, provedChannelID, version, order, hops,
 				counterpartyPortID, counterpartyChannelID, version,
 				proofInit, proofHeight, clientCtx.GetFromAddress(),
 			)
@@ -117,9 +118,9 @@ func NewChannelOpenTryCmd() *cobra.Command {
 // NewChannelOpenAckCmd returns the command to create a MsgChannelOpenAck transaction
 func NewChannelOpenAckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-ack [port-id] [channel-id] [/path/to/proof_try.json] [proof-height]",
+		Use:   "open-ack [port-id] [channel-id] [counterparty-channel-id] [/path/to/proof_try.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenAck message",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -129,22 +130,23 @@ func NewChannelOpenAckCmd() *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
+			counterpartyChannelID := args[2]
 
 			// TODO: Differentiate between channel and counterparty versions.
 			version, _ := cmd.Flags().GetString(FlagIBCVersion)
 
-			proofTry, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[2])
+			proofTry, err := connectionutils.ParseProof(clientCtx.LegacyAmino, args[3])
 			if err != nil {
 				return err
 			}
 
-			proofHeight, err := clienttypes.ParseHeight(args[3])
+			proofHeight, err := clienttypes.ParseHeight(args[4])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgChannelOpenAck(
-				portID, channelID, version, proofTry, proofHeight, clientCtx.GetFromAddress(),
+				portID, channelID, counterpartyChannelID, version, proofTry, proofHeight, clientCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

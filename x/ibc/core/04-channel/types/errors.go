@@ -24,4 +24,5 @@ var (
 	ErrPacketCommitmentNotFound  = sdkerrors.Register(SubModuleName, 17, "packet commitment not found")
 	ErrPacketReceived            = sdkerrors.Register(SubModuleName, 18, "packet already received")
 	ErrAcknowledgementExists     = sdkerrors.Register(SubModuleName, 19, "acknowledgement for packet already exists")
+	ErrInvalidChannelIdentifier  = sdkerrors.Register(SubModuleName, 20, "invalid channel identifier")
 )

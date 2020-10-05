@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -75,6 +76,33 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	// look up proto.Message type by event.Type
 	// populate attributes into map[string]json.RawMessage and marshal that to a json string
 	// unmarshal the json string to the proto.Message
+	concreteGoType := proto.MessageType(event.Type)
+	if concreteGoType == nil {
+		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
+	}
+
+	value := reflect.New(concreteGoType).Elem()
+	protoMsg, ok := value.Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
+	}
+
+	attrMap := make(map[string]json.RawMessage)
+	for _, attr := range event.Attributes {
+		attrMap[string(attr.Key)] = attr.Value
+	}
+
+	attrBytes, err := json.Marshal(attrMap)
+	if err != nil {
+		return nil, err
+	}
+
+	err = proto.Unmarshal(attrBytes, protoMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return protoMsg, nil
 }
 
 // ----------------------------------------------------------------------------

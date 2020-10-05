@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -13,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -1299,6 +1298,9 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	})
 	s.Require().NoError(err)
 
+	// Create a HTTP rpc client.
+	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
 	for {
@@ -1310,7 +1312,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 			s.Fail("timeout reached")
 		}
 
-		res, err := val.RPCClient.BlockResults(context.Background(), &latestHeight)
+		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)
 		s.Require().NoError(err)
 
 		if len(res.ValidatorUpdates) > 0 {

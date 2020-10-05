@@ -198,7 +198,7 @@ func (k Keeper) ChanOpenTry(
 	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
 	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
 
-	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", "NONE", "new-state", "TRYOPEN")
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "channel", "open-try")

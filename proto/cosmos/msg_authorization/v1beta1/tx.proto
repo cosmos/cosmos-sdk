@@ -1,0 +1,54 @@
+syntax = "proto3";
+package cosmos.msg_authorization.v1beta1;
+
+import "cosmos_proto/cosmos.proto"; 
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/msg_authorization/types";
+option (gogoproto.equal_all) = true;
+
+// MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
+// account with the provided expiration time.
+message MsgGrantAuthorization{
+    option (gogoproto.equal) = true;
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.goproto_stringer) = false;
+
+    string granter = 1;
+    string grantee = 2;
+
+    google.protobuf.Any authorization = 3 [
+        (cosmos_proto.accepts_interface) = "Authorization"
+    ];
+    google.protobuf.Timestamp expiration = 4 [
+        (gogoproto.nullable) = false,
+        (gogoproto.stdtime)  = true
+    ];
+}
+
+// MsgExecAuthorized attempts to execute the provided messages using
+// authorizations granted to the grantee. Each message should have only
+// one signer corresponding to the granter of the authorization.
+message MsgExecAuthorized {
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.goproto_stringer) = false;
+
+    string grantee = 1;
+    repeated google.protobuf.Any msgs = 2 [
+        (cosmos_proto.accepts_interface) = "github.com/cosmos/cosmos-sdk/types.Msg",
+        (gogoproto.moretags) = "yaml:\"msgs\""
+    ];
+}
+
+// MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
+// granter's account with that has been granted to the grantee.
+message MsgRevokeAuthorization{
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string granter = 1;
+  string grantee = 2;
+  string authorization_msg_type = 3 [(gogoproto.moretags)  = "yaml:\"authorization_msg_type\""];
+}

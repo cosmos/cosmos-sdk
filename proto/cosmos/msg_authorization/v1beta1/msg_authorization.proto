@@ -1,0 +1,42 @@
+syntax = "proto3";
+package cosmos.msg_authorization.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto"; 
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/msg_authorization/types";
+
+message SendAuthorization{
+    option (gogoproto.equal) = true;
+    option (gogoproto.goproto_getters)  = false;
+    option (cosmos_proto.implements_interface) = "Authorization";
+
+    repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
+        (gogoproto.nullable)     = false,
+        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+        (gogoproto.moretags) = "yaml:\"spend_limit\""
+    ];
+}
+
+// GenericAuthorization grants the permission to execute any transaction of the provided
+// sdk.Msg type without restrictions
+message GenericAuthorization{
+    option (gogoproto.equal) = true;
+    option (gogoproto.goproto_getters)  = false;
+    option (cosmos_proto.implements_interface) = "Authorization";
+
+    google.protobuf.Any message = 1 [
+        (cosmos_proto.accepts_interface) = "github.com/cosmos/cosmos-sdk/types.Msg",
+        (gogoproto.moretags) = "yaml:\"message\""
+    ];
+}
+
+message AuthorizationGrant{
+    option (gogoproto.goproto_getters)  = false;
+    google.protobuf.Any authorization = 1 [
+        (cosmos_proto.accepts_interface) = "Authorization"
+    ];
+    int64 expiration = 2;
+}

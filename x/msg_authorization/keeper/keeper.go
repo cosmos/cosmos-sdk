@@ -5,21 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      *codec.Codec
-	router   baseapp.Router
+	cdc      codec.BinaryMarshaler
+	router   types.Router
 }
 
-// NewKeeper constructs a message authorisation Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router baseapp.Router) Keeper {
+// NewKeeper constructs a message authorization Keeper
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Router) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -47,9 +49,20 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	if !found {
 		return
 	}
-	grant.Authorization = updated
+
+	msg, ok := updated.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("cannot proto marshal %T", updated))
+	}
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(actor, k.cdc.MustMarshalBinaryBare(grant))
+	store.Set(actor, k.cdc.MustMarshalBinaryBare(&grant))
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
@@ -78,7 +91,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		handler := k.router.Route(ctx, msg.Route())
+		handler := k.router.GetRoute(msg.Route())
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
 		}
@@ -95,9 +108,15 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
 // time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
+func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(types.AuthorizationGrant{Authorization: authorization, Expiration: expiration.Unix()})
+
+	grant, err := types.NewAuthorizationGrant(authorization, expiration.Unix())
+	if err != nil {
+		panic(err)
+	}
+
+	bz := k.cdc.MustMarshalBinaryBare(grant)
 	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
 }
@@ -108,7 +127,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
 	}
 	store.Delete(actor)
 
@@ -126,5 +145,6 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 		k.Revoke(ctx, grantee, granter, msgType)
 		return nil, 0
 	}
-	return grant.Authorization, grant.Expiration
+
+	return grant.GetAuthorization(), grant.Expiration
 }

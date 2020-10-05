@@ -120,7 +120,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: true,
 		},
 		{
-			name: "unsuccessful upgrade to a new tendermint client: chain-specified paramaters do not match committed client",
+			name: "unsuccessful upgrade to a new tendermint client: chain-specified parameters do not match committed client",
 			setup: func() {
 
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false)
@@ -143,7 +143,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		},
 		{
 
-			name: "unsuccessful upgrade to a new solomachine client: chain-specified paramaters do not match committed client",
+			name: "unsuccessful upgrade to a new solomachine client: chain-specified parameters do not match committed client",
 			setup: func() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)

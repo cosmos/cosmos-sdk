@@ -10,6 +10,12 @@ var (
 	_ Authorization = &SendAuthorization{}
 )
 
+func NewSendAuthorization (spendLimit sdk.Coins) *SendAuthorization {
+	return &SendAuthorization{
+		SpendLimit: spendLimit,
+	}
+}
+
 func (authorization SendAuthorization) MsgType() string {
 	return bank.MsgSend{}.Type()
 }

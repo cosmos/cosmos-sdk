@@ -9,6 +9,12 @@ var (
 	_ Authorization = &GenericAuthorization{}
 )
 
+func NewGenericAuthorization (msgType string) *GenericAuthorization {
+	// var msg sdk.Msg
+	// TODO handle generic msg type
+	return nil
+}
+
 func (cap GenericAuthorization) MsgType() string {
 	var msg sdk.Msg
 	ModuleCdc.UnpackAny(cap.Message, &msg)

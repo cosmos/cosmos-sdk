@@ -1,4 +1,4 @@
-# ADR 031
+# ADR 031: Protobuf Msg Services
 
 ## Changelog
 

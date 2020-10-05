@@ -3,6 +3,7 @@ package msg_authorization
 import (
 	"encoding/json"
 	"math/rand"
+	"context"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -22,13 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
-
-// module codec
-// var moduleCdc = codec.New()
-
-// func init() {
-// 	RegisterCodec(moduleCdc)
-// }
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -73,19 +68,17 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Rou
 // RegisterGRPCRoutes registers the gRPC Gateway routes for the staking module.
 func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	// TODO: Add grpc querier
-	// types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 //GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// TODO
-	return nil
+	return cli.GetQueryCmd("StoreKey")
 }
 
 // GetTxCmd returns the transaction commands for this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	// TODO
-	return nil
+	return cli.GetTxCmd("StoreKey")
 }
 
 // AppModule implements the sdk.AppModule interface
@@ -127,13 +120,7 @@ func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // LegacyQuerierHandler returns the staking module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
-/// NewQuerierHandler registers a query handler to respond to the module-specific queries
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	//return NewQuerier(am.keeper)
-	return nil
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the

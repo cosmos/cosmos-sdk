@@ -18,7 +18,6 @@ type TestSuite struct {
 
 	app *simapp.SimApp
 	ctx sdk.Context
-	// queryClient types.QueryClient
 	addrs []sdk.AccAddress
 }
 
@@ -29,8 +28,6 @@ func (s *TestSuite) SetupTest() {
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	s.ctx = ctx
 	s.addrs = simapp.AddTestAddrsIncremental(s.app, s.ctx, 3, sdk.NewInt(20000001))
-
-	// s.ctx, s.accountKeeper, s.paramsKeeper, s.bankKeeper, s.keeper, s.router = SetupTestInput()
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -101,7 +98,6 @@ func (s *TestSuite) TestKeeperFees() {
 
 	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
-	//lotCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 4567))
 
 	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
 		&banktypes.MsgSend{

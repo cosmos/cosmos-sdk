@@ -7,6 +7,7 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,12 +23,30 @@ type Keeper struct {
 
 // NewKeeper constructs a message authorization Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Router) Keeper {
+	
+	
+	// It is vital to seal the msg_authorization proposal router here as to not allow
+	// further handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
+	router.Seal()
+
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
 		router:   router,
 	}
 }
+
+// Logger returns a module-specific logger.
+func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// Router returns the gov Keeper's Router
+func (keeper Keeper) Router() types.Router {
+	return keeper.router
+}
+
 
 func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return []byte(fmt.Sprintf("c/%x/%x/%s", grantee, granter, msgType))

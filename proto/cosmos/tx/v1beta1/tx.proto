@@ -174,4 +174,9 @@ message Fee {
   // the payer must be a tx signer (and thus have signed this field in AuthInfo).
   // setting this field does *not* change the ordering of required signers for the transaction.
   string payer = 3;
+
+  // if set, the fee payer (either the first signer or the value of the payer field) requests that a fee grant be used
+  // to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does
+  // not support fee grants, this will fail
+  string granter = 4;
 }

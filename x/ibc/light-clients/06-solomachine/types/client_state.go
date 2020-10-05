@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 var _ exported.ClientState = (*ClientState)(nil)
@@ -396,10 +396,10 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (signing.SignatureData, uint64, uint64, error) {
-	if epoch := height.GetEpochNumber(); epoch != 0 {
-		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch must be 0 for solomachine, got epoch-number: %d", epoch)
+	if version := height.GetEpochNumber(); version != 0 {
+		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
 	}
-	// sequence is encoded in the epoch height of height struct
+	// sequence is encoded in the version height of height struct
 	sequence := height.GetEpochHeight()
 	if cs.IsFrozen() {
 		return nil, 0, 0, clienttypes.ErrClientFrozen
@@ -418,18 +418,18 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 
-	timestampedSignature := &TimestampedSignature{}
-	if err := cdc.UnmarshalBinaryBare(proof, timestampedSignature); err != nil {
-		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSignature)
+	timestampedSigData := &TimestampedSignatureData{}
+	if err := cdc.UnmarshalBinaryBare(proof, timestampedSigData); err != nil {
+		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSigData)
 	}
 
-	timestamp := timestampedSignature.Timestamp
+	timestamp := timestampedSigData.Timestamp
 
-	if len(timestampedSignature.Signature) == 0 {
+	if len(timestampedSigData.SignatureData) == 0 {
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 
-	sigData, err := UnmarshalSignatureData(cdc, timestampedSignature.Signature)
+	sigData, err := UnmarshalSignatureData(cdc, timestampedSigData.SignatureData)
 	if err != nil {
 		return nil, 0, 0, err
 	}

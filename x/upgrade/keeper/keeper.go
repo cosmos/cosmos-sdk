@@ -124,6 +124,9 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		count++
+		if count > 1 {
+			panic("more than 1 upgrade client stored in state")
+		}
 
 		keySplit := strings.Split(string(iterator.Key()), "/")
 		var err error
@@ -137,8 +140,6 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int
 
 	if count == 0 {
 		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade client not found in store")
-	} else if count > 1 {
-		panic("more than 1 upgrade client stored in state")
 	}
 
 	clientState, err := clienttypes.UnmarshalClientState(k.cdc, bz)

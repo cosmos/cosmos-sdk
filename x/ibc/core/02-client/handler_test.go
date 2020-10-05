@@ -99,7 +99,7 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 			name: "successful upgrade",
 			setup: func() {
 
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, suite.chainA.App.GetConsensusParams(suite.chainA.GetContext()), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
 
@@ -168,7 +168,7 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 			name: "invalid clientstate",
 			setup: func() {
 
-				upgradedClient = ibctmtypes.NewClientState("", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				upgradedClient = ibctmtypes.NewClientState("", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, suite.chainA.App.GetConsensusParams(suite.chainA.GetContext()), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
 
@@ -192,7 +192,7 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 			name: "VerifyUpgrade fails",
 			setup: func() {
 
-				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, upgradeHeight, suite.chainA.App.GetConsensusParams(suite.chainA.GetContext()), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
 

@@ -69,10 +69,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		ageBlocks = 0
 	}
 
-	// TODO: Retrieve consensusparams from client state and not context
-	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
-	consensusParams := ctx.ConsensusParams()
-
 	// Reject misbehaviour if the age is too old. Misbehaviour is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
@@ -81,13 +77,13 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	// be nil since the previous param values will be used in case they can't be
 	// retrieved. If they are not set during initialization, Tendermint will always
 	// use the default values.
-	if consensusParams != nil &&
-		consensusParams.Evidence != nil &&
-		(ageDuration > consensusParams.Evidence.MaxAgeDuration ||
-			ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks) {
+	if cs.ConsensusParams != nil &&
+		cs.ConsensusParams.Evidence != nil &&
+		(ageDuration > cs.ConsensusParams.Evidence.MaxAgeDuration ||
+			ageBlocks > cs.ConsensusParams.Evidence.MaxAgeNumBlocks) {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
-			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,
+			ageDuration, ageBlocks, cs.ConsensusParams.Evidence.MaxAgeDuration, cs.ConsensusParams.Evidence.MaxAgeNumBlocks,
 		)
 	}
 

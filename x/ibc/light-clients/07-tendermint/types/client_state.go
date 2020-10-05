@@ -5,6 +5,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +28,7 @@ const Tendermint string = "Tendermint"
 func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
-	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
+	latestHeight clienttypes.Height, consensusParams *abci.ConsensusParams, specs []*ics23.ProofSpec,
 	upgradePath *commitmenttypes.MerklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
@@ -38,6 +39,7 @@ func NewClientState(
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
 		FrozenHeight:                 clienttypes.ZeroHeight(),
+		ConsensusParams:              consensusParams,
 		ProofSpecs:                   specs,
 		UpgradePath:                  upgradePath,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,

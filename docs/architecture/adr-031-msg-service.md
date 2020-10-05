@@ -22,7 +22,7 @@ message MsgSubmitProposal
 }
 ```
 
-This was never adopted, however, and we currently don’t have a mechanism for specifying \
+This was never adopted, however, and we currently don’t have a mechanism for specifying
 the return type of a `Msg`.
 
 Having a well-specified return value for `Msg`s would improve client UX. For instance,
@@ -34,17 +34,6 @@ Also, there may be cases where we want to use these return values programaticall
 For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for
 doing inter-module Ocaps using the `Msg` router. A well-defined return type would
 improve the developer UX for this approach.
-
-Currently, we are encoding `Msg`s as `Any` in `Tx`s which involves packing the
-binary-encoded `Msg` with its type URL.
-
-The type URL for `MsgSubmitProposal` is `/cosmos.gov.MsgSubmitProposal`. 
-
-The fully-qualified RPC name for the `SubmitProposal` RPC call above is
-`/cosmos.gov.Msg/SubmitProposal` which is varies by a single `/` character.
-We could also pack this type URL into an `Any` with the same `MsgSubmitProposal`
-contents and handle it like a “packed RPC” call.
-
 
 ## Decision
 
@@ -94,16 +83,29 @@ For backwards compatibility, existing `Msg` types should be used as the request 
 for `service` definitions. Newer `Msg` types which only support `service` definitions
 should use the more canonical `Msg...Request` names.
 
-### Routing
+### Encoding
 
-In the future, `service` definitions may become the primary method for defining
-`Msg`s. As a starting point, we need to integrate with the SDK's existing routing
-and `Msg` interface. 
+Currently, we are encoding `Msg`s as `Any` in `Tx`s which involves packing the
+binary-encoded `Msg` with its type URL.
 
-To do this we define a `ServiceMsg` struct which wraps any message defined with
-`service` definition which contains the fully-qualified method name (from the
-`Any.type_url` field) and the request body (from the `Any.value` field):
+The type URL for `MsgSubmitProposal` is `/cosmos.gov.MsgSubmitProposal`. 
 
+The fully-qualified name for the `SubmitProposal` service method above is
+`/cosmos.gov.Msg/SubmitProposal` which is varies by a single `/` character.
+
+In order to encode service methods in transactions, we encode them as `Any`s in
+the same `TxBody.messages` field as other `Msg`s. We simply set `Any.type_url`
+to the full-qualified method name (ex. `/cosmos.gov.Msg/SubmitProposal`) and
+set `Any.value` to the protobuf encoding of the request message
+(`MsgSubmitProposal` in this case). 
+
+### Decoding
+
+When decoding, `TxBody.UnpackageInterfaces` will need a special case
+to detect if `Any` type URLs match the service method format (ex. `/cosmos.gov.Msg/SubmitProposal`)
+by checking for two `/` characters. Messages that are method names plus request parameters
+instead of a normal `Any` messages will get unpacked into the `ServiceMsg` struct:
+ 
 ```go
 type ServiceMsg struct {
   // MethodName is the fully-qualified service name
@@ -111,25 +113,24 @@ type ServiceMsg struct {
   // Request is the request payload
   Request MsgRequest
 }
-
-type _ sdk.Msg = ServiceMsg{}
 ```
 
-This `ServiceMsg` implements the `sdk.Msg` interface and its handler does the
+### Routing
+
+In the future, `service` definitions may become the primary method for defining
+`Msg`s. As a starting point, we need to integrate with the SDK's existing routing
+and `Msg` interface. 
+
+To do this, `ServiceMsg` implements the `sdk.Msg` interface and its handler does the
 actual method routing, allowing this feature to be added incrementally on top of
 existing functionality.
 
-### Deserialization
-
-The `TxBody.UnpackageInterfaces` will need a special case
-to detect if `Any` type URLs match the service method format (ex. `/cosmos.gov.Msg/SubmitProposal`)
-by checking for two `/` characters and those messages will be decoded into `ServiceMsg`:
-
 ### `ServiceMsg` interface
 
-All request messages will need to implement the `MsgRequest` interface which the
-`ServiceMsg` wrapper will use to implement its own `ValidateBasic` and `GetSigners`
-methods:
+All request messages will need to implement the `MsgRequest` interface which is a
+simplified version of `Msg`, without `Route()`, `Type()` and `GetSignBytes()` which
+are no longer needed:
+
 ```go
 type MsgRequest interface {
   proto.Message
@@ -138,15 +139,23 @@ type MsgRequest interface {
 }
 ```
 
+`ServiceMsg` will forward its `ValidateBasic` and `GetSigners` methods to the `MsgRequest`
+methods.
+
 ### Module Configuration
 
 In [ADR 021](./adr-021-protobuf-query-encoding.md), we introduced a method `RegisterQueryServer`
 to `AppModule` which allows for modules to register gRPC queriers.
 
-For registering `Msg` services, we attempt an approach which is intended to be
-more extensible by converting `RegisterQueryServer` to `RegisterServices(Configurator)`:
+To register `Msg` services, we attempt an more extensible approach by converting `RegisterQueryServer`
+to a more generic `RegisterServices` method:
 
 ```go
+type AppModule interface {
+  RegisterServices(Configurator)
+  ...
+}
+
 type Configurator interface {
   QueryServer() grpc.Server
   MsgServer() grpc.Server
@@ -159,9 +168,13 @@ func (am AppModule) RegisterServices(cfg Configurator) {
 }
 ```
 
-This `RegisterServices` method and the `Configurator` method are intended to
+The `RegisterServices` method and the `Configurator` interface are intended to
 evolve to satisfy the use cases discussed in [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)
 and [\#7122](https://github.com/cosmos/cosmos-sdk/issues/7421).
+
+When `Msg` services are registered, the framework _should_ verify that all `Msg...Request` types
+implement the `MsgRequest` interface described above and throw an error during initialization rather
+than later when transactions are processed.
 
 ### `Msg` Service Implementation
 
@@ -186,11 +199,12 @@ Separate handler definition is no longer needed with this approach.
 ### Pros
 - communicates return type clearly
 - manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
-- some keeper code could be automatically generate, would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
+- some keeper code could be automatically generate, this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
 - generated client code could be useful for clients
 
 ### Cons
-- supporting both this and the current concrete `Msg` type approach could be confusing
+- supporting both this and the current concrete `Msg` type approach simultaneously could be confusing
+(we could choose to deprecate the current approach)
 - using `service` definitions outside the context of gRPC could be confusing (but doesn’t violate the proto3 spec)
 
 ## References

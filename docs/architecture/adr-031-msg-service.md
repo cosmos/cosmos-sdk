@@ -144,10 +144,10 @@ methods.
 
 ### Module Configuration
 
-In [ADR 021](./adr-021-protobuf-query-encoding.md), we introduced a method `RegisterQueryServer`
+In [ADR 021](./adr-021-protobuf-query-encoding.md), we introduced a method `RegisterQueryService`
 to `AppModule` which allows for modules to register gRPC queriers.
 
-To register `Msg` services, we attempt an more extensible approach by converting `RegisterQueryServer`
+To register `Msg` services, we attempt an more extensible approach by converting `RegisterQueryService`
 to a more generic `RegisterServices` method:
 
 ```go

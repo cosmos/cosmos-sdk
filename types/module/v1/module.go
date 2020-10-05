@@ -24,7 +24,7 @@ type Configurator interface {
 
 	MsgServer() grpc.Server
 	QueryServer() grpc.Server
-	HooksServer() grpc.Server
+	HookServer() grpc.Server
 
 	RequireMsgServices(...interface{})
 	RequireQueryServices(...interface{})
@@ -41,4 +41,8 @@ type ModuleKey interface {
 	grpc2.ClientConnInterface
 
 	DerivedKey(path string) ModuleKey
+}
+
+func NewHookClientConn(hookAddr sdk.AccAddress) grpc2.ClientConnInterface {
+	panic("TODO")
 }

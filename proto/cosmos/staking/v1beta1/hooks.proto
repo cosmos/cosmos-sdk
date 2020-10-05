@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+
+service Hooks {
+    rpc AfterValidatorCreated(AfterValidatorCreatedRequest) returns (AfterValidatorCreatedResponse);
+}
+
+message AfterValidatorCreatedRequest {
+    string validator_address = 1;
+}
+
+message AfterValidatorCreatedResponse { }
+

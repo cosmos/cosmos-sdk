@@ -114,26 +114,26 @@ using the `MsgConnectionOpenTry`.
 
 ```go
 type MsgConnectionOpenTry struct {
-	ClientId             string
-	ConnectionId         string
-	ProvedId             string
-	ClientState          *types.Any // proto-packed counterparty client
-	Counterparty         Counterparty
-	CounterpartyVersions []string
-	ProofHeight          Height
-	ProofInit            []byte
-	ProofClient          []byte
-	ProofConsensus       []byte
-	ConsensusHeight      Height
-	Signer               sdk.AccAddress
+	ClientId                       string
+	DesiredConnectionId            string
+	CounterpartyChosenConnectionId string
+	ClientState                    *types.Any // proto-packed counterparty client
+	Counterparty                   Counterparty
+	CounterpartyVersions           []string
+	ProofHeight                    Height
+	ProofInit                      []byte
+	ProofClient                    []byte
+	ProofConsensus                 []byte
+	ConsensusHeight                Height
+	Signer                         sdk.AccAddress
 }
 ```
 
 This message is expected to fail if:
 
 - `ClientId` is invalid (see naming requirements)
-- `ConnectionId` is invalid (see naming requirements)
-- `ProvedId` is not empty and doesn't match `ConnectionId`
+- `DesiredConnectionId` is invalid (see naming requirements)
+- `CounterpartyChosenConnectionId` is not empty and doesn't match `DesiredConnectionId`
 - `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty
@@ -149,7 +149,7 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an TRYOPEN State. The `ProvedID` 
+The message creates a connection for the given ID with an TRYOPEN State. The `CounterpartyChosenConnectionID` 
 represents the connection ID the counterparty set under `connection.Counterparty.ConnectionId`
 to represent the connection ID this chain should use. An empty string indicates the connection
 identifier is flexible and gives this chain an opportunity to choose its own identifier.
@@ -252,22 +252,22 @@ the `MsgChannelOpenTry` message.
 
 ```go
 type MsgChannelOpenTry struct {
-	PortId              string    
-	ChannelId           string   
-	ProvedChannelId     string 
-	Channel             Channel 
-	CounterpartyVersion string 
-	ProofInit           []byte
-	ProofHeight         Height
-	Signer              sdk.AccAddress 
+	PortId                      string    
+	DesiredChannelId            string   
+	CounterpartyChosenChannelId string 
+	Channel                     Channel 
+	CounterpartyVersion         string 
+	ProofInit                   []byte
+	ProofHeight                 Height
+	Signer                      sdk.AccAddress 
 }
 ```
 
 This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
-- `ChannelId` is invalid (see naming requirements)
-- `ProvedId` is not empty and not equal to `ChannelId`
+- `DesiredChannelId` is invalid (see naming requirements)
+- `CounterpartyChosenChannelId` is not empty and not equal to `ChannelId`
 - `Channel` is empty
 - `CounterpartyVersion` is empty
 - `ProofInit` is empty
@@ -277,7 +277,7 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty's Channel state is in INIT
 
 The message creates a channel on chain B with an TRYOPEN state for the given Channel ID 
-and Port ID. The `ProvedChannelId` represents the channel ID the counterparty set under
+and Port ID. The `CounterpartyChosenChannelId` represents the channel ID the counterparty set under
 `connection.Counterparty.ChannelId` to represent the channel ID this chain should use.
 An empty string indicates the channel identifier is flexible and gives this chain an
 opportunity to choose its own identifier.

@@ -5,9 +5,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// RejectFeeGranterDecorator is a placeholder AnteDecorator for fee grants for
-// when that functionality is enabled. Currently it simpy rejects transactions
-// which have the Fee.granter field set.
+// RejectFeeGranterDecorator is an AnteDecorator which rejects transactions which
+// have the Fee.granter field set. It is to be used by chains which do not support
+// fee grants.
 type RejectFeeGranterDecorator struct{}
 
 // NewRejectFeeGranterDecorator returns a new RejectFeeGranterDecorator.

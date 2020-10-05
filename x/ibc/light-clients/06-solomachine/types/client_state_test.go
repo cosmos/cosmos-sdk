@@ -94,9 +94,9 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 		sig := solomachine.GenerateSignature(value)
 
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -222,9 +222,9 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -347,9 +347,9 @@ func (suite *SoloMachineTestSuite) TestVerifyConnectionState() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -436,9 +436,9 @@ func (suite *SoloMachineTestSuite) TestVerifyChannelState() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -524,9 +524,9 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketCommitment() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -611,9 +611,9 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketAcknowledgement() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -698,9 +698,9 @@ func (suite *SoloMachineTestSuite) TestVerifyPacketReceiptAbsence() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)
@@ -785,9 +785,9 @@ func (suite *SoloMachineTestSuite) TestVerifyNextSeqRecv() {
 		suite.Require().NoError(err)
 
 		sig := solomachine.GenerateSignature(value)
-		signatureDoc := &types.TimestampedSignature{
-			Signature: sig,
-			Timestamp: solomachine.Time,
+		signatureDoc := &types.TimestampedSignatureData{
+			SignatureData: sig,
+			Timestamp:     solomachine.Time,
 		}
 
 		proof, err := suite.chainA.Codec.MarshalBinaryBare(signatureDoc)

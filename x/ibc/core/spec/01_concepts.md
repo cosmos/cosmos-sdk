@@ -94,7 +94,9 @@ to support within their connection state. It is expected that this set of
 versions is from most preferred to least preferred. This is not a strict
 requirement for the SDK implementation of IBC because the party calling
 `ConnOpenTry` will greedily select the latest version it supports that the
-counterparty supports as well.
+counterparty supports as well. A specific version can optionally be passed
+as `Version` to ensure that the handshake will either complete with that 
+version or fail.
 
 During `ConnOpenTry`, party B will select a version from the counterparty's
 supported versions. Priority will be placed on the latest supported version.

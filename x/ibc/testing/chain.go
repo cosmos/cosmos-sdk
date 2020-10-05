@@ -592,7 +592,7 @@ func (chain *TestChain) ConnectionOpenTry(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenTry(
-		connection.ID, connection.ID, connection.ClientID,
+		connection.ID, connection.ID, connection.ClientID, // testing doesn't use flexible selection
 		counterpartyConnection.ID, counterpartyConnection.ClientID,
 		counterpartyClient, counterparty.GetPrefix(), []string{ConnectionVersion},
 		proofInit, proofClient, proofConsensus,
@@ -615,7 +615,7 @@ func (chain *TestChain) ConnectionOpenAck(
 	proofConsensus, consensusHeight := counterparty.QueryConsensusStateProof(counterpartyConnection.ClientID)
 
 	msg := connectiontypes.NewMsgConnectionOpenAck(
-		connection.ID, counterpartyConnection.ID, counterpartyClient,
+		connection.ID, counterpartyConnection.ID, counterpartyClient, // testing doesn't use flexible selection
 		proofTry, proofClient, proofConsensus,
 		proofHeight, consensusHeight,
 		ConnectionVersion,
@@ -732,7 +732,7 @@ func (chain *TestChain) ChanOpenTry(
 	proof, height := counterparty.QueryProof(host.KeyChannel(counterpartyCh.PortID, counterpartyCh.ID))
 
 	msg := channeltypes.NewMsgChannelOpenTry(
-		ch.PortID, ch.ID,
+		ch.PortID, ch.ID, ch.ID, // testing doesn't use flexible selection
 		ch.Version, order, []string{connectionID},
 		counterpartyCh.PortID, counterpartyCh.ID,
 		counterpartyCh.Version,
@@ -751,7 +751,7 @@ func (chain *TestChain) ChanOpenAck(
 
 	msg := channeltypes.NewMsgChannelOpenAck(
 		ch.PortID, ch.ID,
-		counterpartyCh.Version,
+		counterpartyCh.ID, counterpartyCh.Version, // testing doesn't use flexible selection
 		proof, height,
 		chain.SenderAccount.GetAddress(),
 	)

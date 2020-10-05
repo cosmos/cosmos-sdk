@@ -100,7 +100,8 @@ func (k Keeper) ChanOpenTry(
 	order types.Order,
 	connectionHops []string,
 	portID,
-	channelID string,
+	desiredChannelID,
+	counterpartyChosenChannelID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
@@ -109,7 +110,7 @@ func (k Keeper) ChanOpenTry(
 	proofHeight exported.Height,
 ) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	previousChannel, found := k.GetChannel(ctx, portID, channelID)
+	previousChannel, found := k.GetChannel(ctx, portID, desiredChannelID)
 	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortId == counterparty.PortId &&
@@ -151,6 +152,16 @@ func (k Keeper) ChanOpenTry(
 		)
 	}
 
+	// If the channel id chosen for this channel end by the counterparty is empty then
+	// flexible channel identifier selection is allowed by using the desired channel id.
+	// Otherwise the desiredChannelID must match the counterpartyChosenChannelID.
+	if counterpartyChosenChannelID != "" && counterpartyChosenChannelID != desiredChannelID {
+		return nil, sdkerrors.Wrapf(
+			types.ErrInvalidChannelIdentifier,
+			"counterparty chosen channel ID (%s) must be empty or equal to the desired channel ID (%s)", counterpartyChosenChannelID, desiredChannelID,
+		)
+	}
+
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
 	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
@@ -163,7 +174,7 @@ func (k Keeper) ChanOpenTry(
 
 	// expectedCounterpaty is the counterparty of the counterparty's channel end
 	// (i.e self)
-	expectedCounterparty := types.NewCounterparty(portID, channelID)
+	expectedCounterparty := types.NewCounterparty(portID, counterpartyChosenChannelID)
 	expectedChannel := types.NewChannel(
 		types.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
@@ -176,18 +187,18 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, portID, desiredChannelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
+		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
 	}
 
-	k.SetNextSequenceSend(ctx, portID, channelID, 1)
-	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
-	k.SetNextSequenceAck(ctx, portID, channelID, 1)
+	k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
+	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
+	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
 
-	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "NONE", "new-state", "TRYOPEN")
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", "NONE", "new-state", "TRYOPEN")
 
 	defer func() {
 		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
@@ -203,7 +214,8 @@ func (k Keeper) ChanOpenAck(
 	portID,
 	channelID string,
 	chanCap *capabilitytypes.Capability,
-	counterpartyVersion string,
+	counterpartyVersion,
+	counterpartyChannelID string,
 	proofTry []byte,
 	proofHeight exported.Height,
 ) error {
@@ -221,6 +233,16 @@ func (k Keeper) ChanOpenAck(
 
 	if !k.scopedKeeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
+	}
+
+	// If the previously set channel end allowed for the counterparty to select its own
+	// channel identifier then we use the counterpartyChannelID. Otherwise the
+	// counterpartyChannelID must match the previously set counterparty channel ID.
+	if channel.Counterparty.ChannelId != "" && counterpartyChannelID != channel.Counterparty.ChannelId {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidChannelIdentifier,
+			"counterparty channel identifier (%s) must be equal to stored channel ID for counterparty (%s)", counterpartyChannelID, channel.Counterparty.ChannelId,
+		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -250,7 +272,7 @@ func (k Keeper) ChanOpenAck(
 
 	if err := k.connectionKeeper.VerifyChannelState(
 		ctx, connectionEnd, proofHeight, proofTry,
-		channel.Counterparty.PortId, channel.Counterparty.ChannelId,
+		channel.Counterparty.PortId, counterpartyChannelID,
 		expectedChannel,
 	); err != nil {
 		return err
@@ -264,6 +286,7 @@ func (k Keeper) ChanOpenAck(
 
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
+	channel.Counterparty.ChannelId = counterpartyChannelID
 	k.SetChannel(ctx, portID, channelID, channel)
 
 	return nil

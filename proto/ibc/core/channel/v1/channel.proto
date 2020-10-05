@@ -26,12 +26,13 @@ message MsgChannelOpenTry {
 
   string                    port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   string                    channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  Channel                   channel              = 3 [(gogoproto.nullable) = false];
-  string                    counterparty_version = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  bytes                     proof_init           = 5 [(gogoproto.moretags) = "yaml:\"proof_init\""];
-  ibc.core.client.v1.Height proof_height         = 6
+  string                    proved_channel_id    = 3 [(gogoproto.moretags) = "yaml:\"proved_channel_id\""];
+  Channel                   channel              = 4 [(gogoproto.nullable) = false];
+  string                    counterparty_version = 5 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  bytes                     proof_init           = 6 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  ibc.core.client.v1.Height proof_height         = 7
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string signer = 7;
+  string signer = 8;
 }
 
 // MsgChannelOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
@@ -40,13 +41,14 @@ message MsgChannelOpenAck {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                    port_id              = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
-  string                    channel_id           = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
-  string                    counterparty_version = 3 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
-  bytes                     proof_try            = 4 [(gogoproto.moretags) = "yaml:\"proof_try\""];
-  ibc.core.client.v1.Height proof_height         = 5
+  string                    port_id                 = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  string                    channel_id              = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  string                    counterparty_channel_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_channel_id\""];
+  string                    counterparty_version    = 4 [(gogoproto.moretags) = "yaml:\"counterparty_version\""];
+  bytes                     proof_try               = 5 [(gogoproto.moretags) = "yaml:\"proof_try\""];
+  ibc.core.client.v1.Height proof_height            = 6
       [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
-  string signer = 6;
+  string signer = 7;
 }
 
 // MsgChannelOpenConfirm defines a msg sent by a Relayer to Chain B to

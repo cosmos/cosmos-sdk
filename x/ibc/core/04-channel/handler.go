@@ -40,7 +40,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, portCap *capabil
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabilitytypes.Capability, msg *types.MsgChannelOpenTry) (*sdk.Result, *capabilitytypes.Capability, error) {
-	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.ChannelId,
+	capKey, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.ChannelId, msg.ProvedChannelId,
 		portCap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {
@@ -70,7 +70,7 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, portCap *capabili
 // HandleMsgChannelOpenAck defines the sdk.Handler for MsgChannelOpenAck
 func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, channelCap *capabilitytypes.Capability, msg *types.MsgChannelOpenAck) (*sdk.Result, error) {
 	err := k.ChanOpenAck(
-		ctx, msg.PortId, msg.ChannelId, channelCap, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
+		ctx, msg.PortId, msg.ChannelId, channelCap, msg.CounterpartyVersion, msg.CounterpartyChannelId, msg.ProofTry, msg.ProofHeight,
 	)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "channel handshake open ack failed")

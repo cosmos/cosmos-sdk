@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"success with empty provedID", func() {
+		{"invalid provedID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -256,7 +256,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
-
 		}, false},
 		{"invalid previous connection has invalid versions", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
@@ -364,7 +363,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// retrieve client state of chainB to pass as counterpartyClient
 			counterpartyClient = suite.chainB.GetClientState(clientB)
 		}, true},
-		{"success with empty counterparty connection ID", func() {
+		{"success with empty stored counterparty connection ID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -412,7 +411,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			// retrieve client state of chainB to pass as counterpartyClient
 			counterpartyClient = suite.chainB.GetClientState(clientB)
 		}, true},
-		{"success from tryopen with empty string", func() {
+		{"success from tryopen with empty stored connection id", func() {
 			// chainA is in TRYOPEN, chainB is in TRYOPEN
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connB, connA, err := suite.coordinator.ConnOpenInit(suite.chainB, suite.chainA, clientB, clientA)

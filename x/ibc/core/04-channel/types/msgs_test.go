@@ -158,24 +158,26 @@ func (suite *TypesTestSuite) TestMsgChannelOpenInit() {
 // TestMsgChannelOpenTry tests ValidateBasic for MsgChannelOpenTry
 func (suite *TypesTestSuite) TestMsgChannelOpenTry() {
 	testMsgs := []*types.MsgChannelOpenTry{
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                      // valid msg
-		types.NewMsgChannelOpenTry(invalidShortPort, "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                  // too short port id
-		types.NewMsgChannelOpenTry(invalidLongPort, "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                   // too long port id
-		types.NewMsgChannelOpenTry(invalidPort, "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                       // port id contains non-alpha
-		types.NewMsgChannelOpenTry("testportid", invalidShortChannel, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                // too short channel id
-		types.NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                 // too long channel id
-		types.NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // channel id contains non-alpha
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, height, addr),                         // empty counterparty version
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, clienttypes.ZeroHeight(), addr),    // suite.proof height is zero
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // invalid channel order
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),             // connection hops more than 1
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),        // too short connection id
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),         // too long connection id
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr), // connection id contains non-alpha
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                       // empty channel version
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, height, addr),                     // invalid counterparty port id
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, height, addr),                     // invalid counterparty channel id
-		types.NewMsgChannelOpenTry("testportid", "testchannel", "1.0", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", emptyProof, height, addr),                     // empty proof
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                      // valid msg
+		types.NewMsgChannelOpenTry(invalidShortPort, "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                  // too short port id
+		types.NewMsgChannelOpenTry(invalidLongPort, "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                   // too long port id
+		types.NewMsgChannelOpenTry(invalidPort, "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                       // port id contains non-alpha
+		types.NewMsgChannelOpenTry("testportid", invalidShortChannel, chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                // too short channel id
+		types.NewMsgChannelOpenTry("testportid", invalidLongChannel, chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                 // too long channel id
+		types.NewMsgChannelOpenTry("testportid", invalidChannel, chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // channel id contains non-alpha
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, height, addr),                         // empty counterparty version
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, clienttypes.ZeroHeight(), addr),    // suite.proof height is zero
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                     // invalid channel order
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),             // connection hops more than 1
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),        // too short connection id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),         // too long connection id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr), // connection id contains non-alpha
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                       // empty channel version
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, height, addr),                     // invalid counterparty port id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, height, addr),                     // invalid counterparty channel id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", chanid, "1.0", types.UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", emptyProof, height, addr),                     // empty proof
+		types.NewMsgChannelOpenTry("testportid", "testchannel", "", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),                          // valid proved channel id
+		types.NewMsgChannelOpenTry("testportid", "testchannel", "differentchannel", "1.0", types.ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, height, addr),          // different channel id
 	}
 
 	testCases := []struct {
@@ -201,6 +203,8 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTry() {
 		{testMsgs[15], false, "invalid counterparty port id"},
 		{testMsgs[16], false, "invalid counterparty channel id"},
 		{testMsgs[17], false, "empty proof"},
+		{testMsgs[18], true, "valid empty proved channel id"},
+		{testMsgs[19], false, "invalid proved channel id, doesn't match channel id"},
 	}
 
 	for i, tc := range testCases {
@@ -216,16 +220,17 @@ func (suite *TypesTestSuite) TestMsgChannelOpenTry() {
 // TestMsgChannelOpenAck tests ValidateBasic for MsgChannelOpenAck
 func (suite *TypesTestSuite) TestMsgChannelOpenAck() {
 	testMsgs := []*types.MsgChannelOpenAck{
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, height, addr),                   // valid msg
-		types.NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, height, addr),               // too short port id
-		types.NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, height, addr),                // too long port id
-		types.NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, height, addr),                    // port id contains non-alpha
-		types.NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, height, addr),             // too short channel id
-		types.NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, height, addr),              // too long channel id
-		types.NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, height, addr),                  // channel id contains non-alpha
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, height, addr),                      // empty counterparty version
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", emptyProof, height, addr),                    // empty proof
-		types.NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, clienttypes.ZeroHeight(), addr), // proof height is zero
+		types.NewMsgChannelOpenAck("testportid", "testchannel", chanid, "1.0", suite.proof, height, addr),                   // valid msg
+		types.NewMsgChannelOpenAck(invalidShortPort, "testchannel", chanid, "1.0", suite.proof, height, addr),               // too short port id
+		types.NewMsgChannelOpenAck(invalidLongPort, "testchannel", chanid, "1.0", suite.proof, height, addr),                // too long port id
+		types.NewMsgChannelOpenAck(invalidPort, "testchannel", chanid, "1.0", suite.proof, height, addr),                    // port id contains non-alpha
+		types.NewMsgChannelOpenAck("testportid", invalidShortChannel, chanid, "1.0", suite.proof, height, addr),             // too short channel id
+		types.NewMsgChannelOpenAck("testportid", invalidLongChannel, chanid, "1.0", suite.proof, height, addr),              // too long channel id
+		types.NewMsgChannelOpenAck("testportid", invalidChannel, chanid, "1.0", suite.proof, height, addr),                  // channel id contains non-alpha
+		types.NewMsgChannelOpenAck("testportid", "testchannel", chanid, "", suite.proof, height, addr),                      // empty counterparty version
+		types.NewMsgChannelOpenAck("testportid", "testchannel", chanid, "1.0", emptyProof, height, addr),                    // empty proof
+		types.NewMsgChannelOpenAck("testportid", "testchannel", chanid, "1.0", suite.proof, clienttypes.ZeroHeight(), addr), // proof height is zero
+		types.NewMsgChannelOpenAck("testportid", "testchannel", invalidShortChannel, "1.0", suite.proof, height, addr),      // invalid counterparty channel id
 	}
 
 	testCases := []struct {
@@ -243,6 +248,7 @@ func (suite *TypesTestSuite) TestMsgChannelOpenAck() {
 		{testMsgs[7], true, ""},
 		{testMsgs[8], false, "empty proof"},
 		{testMsgs[9], false, "proof height is zero"},
+		{testMsgs[10], false, "invalid counterparty channel id"},
 	}
 
 	for i, tc := range testCases {

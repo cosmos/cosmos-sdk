@@ -91,6 +91,7 @@ type MsgConnectionOpenInit struct {
 	ClientId     string                                       
 	ConnectionId string                                        
 	Counterparty Counterparty                                  
+	Version      string
 	Signer       sdk.AccAddress
 }
 ```
@@ -99,6 +100,7 @@ This message is expected to fail if:
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
 - `Counterparty` is empty
+- 'Version' is not empty and invalid
 - `Signer` is empty
 - A Client hasn't been created for the given ID
 - A Connection for the given ID already exists
@@ -114,6 +116,7 @@ using the `MsgConnectionOpenTry`.
 type MsgConnectionOpenTry struct {
 	ClientId             string
 	ConnectionId         string
+	ProvedId             string
 	ClientState          *types.Any // proto-packed counterparty client
 	Counterparty         Counterparty
 	CounterpartyVersions []string
@@ -130,6 +133,7 @@ This message is expected to fail if:
 
 - `ClientId` is invalid (see naming requirements)
 - `ConnectionId` is invalid (see naming requirements)
+- `ProvedId` is not empty and doesn't match `ConnectionId`
 - `ClientState` is not a valid client of the executing chain
 - `Counterparty` is empty
 - `CounterpartyVersions` is empty
@@ -145,7 +149,10 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided in message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message creates a connection for the given ID with an TRYOPEN State.
+The message creates a connection for the given ID with an TRYOPEN State. The `ProvedID` 
+represents the connection ID the counterparty set under `connection.Counterparty.ConnectionId`
+to represent the connection ID this chain should use. An empty string indicates the connection
+identifier is flexible and gives this chain an opportunity to choose its own identifier.
 
 ### MsgConnectionOpenAck
 
@@ -154,21 +161,23 @@ using the `MsgConnectionOpenAck`.
 
 ```go
 type MsgConnectionOpenAck struct {
-	ConnectionId    string
-	Version         string
-	ClientState     *types.Any // proto-packed counterparty client
-	ProofHeight     Height
-	ProofTry        []byte
-	ProofClient     []byte
-	ProofConsensus  []byte
-	ConsensusHeight Height
-	Signer          sdk.AccAddress
+	ConnectionId             string
+	CounterpartyConnectionId string 
+	Version                  string
+	ClientState              *types.Any // proto-packed counterparty client
+	ProofHeight              Height
+	ProofTry                 []byte
+	ProofClient              []byte
+	ProofConsensus           []byte
+	ConsensusHeight          Height
+	Signer                   sdk.AccAddress
 }
 ```
 
 This message is expected to fail if:
 
 - `ConnectionId` is invalid (see naming requirements)
+- `CounterpartyConnectionId` is invalid (see naming requirements)
 - `Version` is empty
 - `ClientState` is not a valid client of the executing chain
 - `ProofHeight` is zero
@@ -181,7 +190,8 @@ This message is expected to fail if:
 - `ProofClient` does not prove that the counterparty has stored the `ClientState` provided by message
 - `ProofConsensus` does not prove that the counterparty has the correct consensus state for this chain
 
-The message sets the connection state for the given ID to OPEN.
+The message sets the connection state for the given ID to OPEN. `CounterpartyConnectionId`
+should be the `ConnectionId` used by the counterparty connection.
 
 ### MsgConnectionOpenConfirm
 
@@ -244,6 +254,7 @@ the `MsgChannelOpenTry` message.
 type MsgChannelOpenTry struct {
 	PortId              string    
 	ChannelId           string   
+	ProvedChannelId     string 
 	Channel             Channel 
 	CounterpartyVersion string 
 	ProofInit           []byte
@@ -256,6 +267,7 @@ This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
 - `ChannelId` is invalid (see naming requirements)
+- `ProvedId` is not empty and not equal to `ChannelId`
 - `Channel` is empty
 - `CounterpartyVersion` is empty
 - `ProofInit` is empty
@@ -265,7 +277,11 @@ This message is expected to fail if:
 - `ProofInit` does not prove that the counterparty's Channel state is in INIT
 
 The message creates a channel on chain B with an TRYOPEN state for the given Channel ID 
-and Port ID.
+and Port ID. The `ProvedChannelId` represents the channel ID the counterparty set under
+`connection.Counterparty.ChannelId` to represent the channel ID this chain should use.
+An empty string indicates the channel identifier is flexible and gives this chain an
+opportunity to choose its own identifier.
+
 
 ### MsgChannelOpenAck
 
@@ -273,12 +289,13 @@ A channel handshake is opened by a chain A using the `MsgChannelOpenAck` message
 
 ```go
 type MsgChannelOpenAck struct {
-	PortId              string
-	ChannelId           string
-	CounterpartyVersion string
-	ProofTry            []byte
-	ProofHeight         Height
-	Signer              sdk.AccAddress
+	PortId                string
+	ChannelId             string
+	CounterpartyChannelId string 
+	CounterpartyVersion   string
+	ProofTry              []byte
+	ProofHeight           Height
+	Signer                sdk.AccAddress
 }
 ```
 
@@ -286,6 +303,7 @@ This message is expected to fail if:
 
 - `PortId` is invalid (see naming requirements)
 - `ChannelId` is invalid (see naming requirements)
+- `CounterpartyChannelId` is invalid (see naming requirements)
 - `CounterpartyVersion` is empty
 - `ProofTry` is empty
 - `ProofHeight` is zero
@@ -293,6 +311,7 @@ This message is expected to fail if:
 - `ProofTry` does not prove that the counterparty's Channel state is in TRYOPEN
 
 The message sets a channel on chain A to state OPEN for the given Channel ID and Port ID.
+`CounterpartyChannelId` should be the `ChannelId` used by the counterparty channel.
 
 ### MsgChannelOpenConfirm
 

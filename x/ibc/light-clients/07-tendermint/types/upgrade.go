@@ -1,6 +1,9 @@
 package types
 
 import (
+	fmt "fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,14 +23,24 @@ import (
 //   and ProofSpecs do not match parameters set by committed client
 func (cs ClientState) VerifyUpgrade(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
-	upgradedClient exported.ClientState, proofUpgrade []byte,
+	upgradedClient exported.ClientState, upgradeHeight exported.Height, proofUpgrade []byte,
 ) error {
-	if cs.UpgradePath == nil {
+	if cs.UpgradePath == "" {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
+	}
+	// construct MerklePath from upgradePath
+	upgradeKeys := strings.Split(cs.UpgradePath, "/")
+	// append upgradeHeight to last key in merkle path
+	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
+	upgradePath := commitmenttypes.NewMerklePath(upgradeKeys)
+
+	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch at which upgrade occurs must be same as current client epoch. expected epoch %d, got %d",
+			cs.GetLatestHeight().GetEpochNumber(), upgradeHeight.GetEpochNumber())
 	}
 
 	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgrade client height %s must be greater than current client height %s",
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be greater than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
 	}
 
@@ -49,10 +62,10 @@ func (cs ClientState) VerifyUpgrade(
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
-	consState, err := GetConsensusState(clientStore, cdc, cs.GetLatestHeight())
+	consState, err := GetConsensusState(clientStore, cdc, upgradeHeight)
 	if err != nil {
-		return sdkerrors.Wrap(err, "could not retrieve latest consensus state")
+		return sdkerrors.Wrap(err, "could not retrieve consensus state for upgradeHeight")
 	}
 
-	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), *cs.UpgradePath, bz)
+	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz)
 }

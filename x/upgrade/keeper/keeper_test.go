@@ -234,12 +234,13 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
 				if tc.plan.UpgradedClientState != nil {
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+					got, height, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
 					s.Require().NoError(err)
+					s.Require().Equal(tc.plan.Height, height, "upgradedClient not stored at correct upgrade height")
 					s.Require().Equal(clientState, got, "upgradedClient not equal to expected value")
 				} else {
 					// check that upgraded client is empty if latest plan does not specify an upgraded client
-					got, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+					got, _, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
 					s.Require().Error(err)
 					s.Require().Nil(got)
 				}

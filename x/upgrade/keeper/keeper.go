@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -75,6 +77,13 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 
 	store := ctx.KVStore(k.storeKey)
 
+	// remove any upgraded client previously set
+	oldPlan, ok := k.GetUpgradePlan(ctx)
+	if ok {
+		// delete upgraded client key to remove upgraded client set by outdated plan
+		store.Delete(types.UpgradedClientKey(oldPlan.Height))
+	}
+
 	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
@@ -83,15 +92,13 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
-		return k.SetUpgradedClient(ctx, clientState)
+		return k.SetUpgradedClient(ctx, plan.Height, clientState)
 	}
-	// delete upgraded client key to remove any upgraded client set by outdated plan
-	store.Delete(types.UpgradedClientKey())
 	return nil
 }
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain
-func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) error {
+func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ClientState) error {
 	// zero out any custom fields before setting
 	cs = cs.ZeroCustomFields()
 	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
@@ -100,19 +107,45 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, cs ibcexported.ClientState) e
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.UpgradedClientKey(), bz)
+	store.Set(types.UpgradedClientKey(upgradeHeight), bz)
 	return nil
 }
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
-func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, error) {
+// along with the planned upgrade height
+func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int64, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.UpgradedClientKey())
-	if len(bz) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no upgraded client in store")
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.KeyUpgradedClient))
+	var (
+		count, height int
+		bz            []byte
+	)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+
+		keySplit := strings.Split(string(iterator.Key()), "/")
+		var err error
+		height, err = strconv.Atoi(keySplit[len(keySplit)-1])
+		if err != nil {
+			return nil, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not parse upgrade height from key: %s", err)
+		}
+
+		bz = iterator.Value()
 	}
 
-	return clienttypes.UnmarshalClientState(k.cdc, bz)
+	if count == 0 {
+		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade client not found in store")
+	} else if count > 1 {
+		panic("more than 1 upgrade client stored in state")
+	}
+
+	clientState, err := clienttypes.UnmarshalClientState(k.cdc, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+	return clientState, int64(height), nil
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed

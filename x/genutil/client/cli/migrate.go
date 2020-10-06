@@ -3,13 +3,13 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"sort"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -74,7 +74,11 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
+			jsonBlob, err := ioutil.ReadFile(genDocFile)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't read GenesisDoc file: %w", err)
+			}
+			genDoc, err := tmtypes.GenesisDocFromJSON(jsonBlob)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
 			}
@@ -133,4 +137,19 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	cmd.Flags().String(flags.FlagChainID, "", "override chain_id with this flag")
 
 	return cmd
+}
+
+// SanitizeTendermintGenesis makes sure a later version of Tendermint can parse
+// a JSON blob exported by a previous version of Tendermint.
+func SanitizeTendermintGenesis(jsonBlob []byte) ([]byte, error) {
+	var jsonObj map[string]interface{}
+	err := tmjson.Unmarshal(jsonBlob, &jsonObj)
+	if err != nil {
+		return nil, err
+	}
+
+	consensusParams, ok = jsonObj["consensus_params"]["evidence"]
+	if !ok {
+		return nil, fmt.Errorf("exported json does not contain consensus_params.evidence field")
+	}
 }

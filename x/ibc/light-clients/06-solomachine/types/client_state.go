@@ -418,18 +418,18 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 
-	timestampedSignature := &TimestampedSignature{}
-	if err := cdc.UnmarshalBinaryBare(proof, timestampedSignature); err != nil {
-		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSignature)
+	timestampedSigData := &TimestampedSignatureData{}
+	if err := cdc.UnmarshalBinaryBare(proof, timestampedSigData); err != nil {
+		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSigData)
 	}
 
-	timestamp := timestampedSignature.Timestamp
+	timestamp := timestampedSigData.Timestamp
 
-	if len(timestampedSignature.Signature) == 0 {
+	if len(timestampedSigData.SignatureData) == 0 {
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 
-	sigData, err := UnmarshalSignatureData(cdc, timestampedSignature.Signature)
+	sigData, err := UnmarshalSignatureData(cdc, timestampedSigData.SignatureData)
 	if err != nil {
 		return nil, 0, 0, err
 	}

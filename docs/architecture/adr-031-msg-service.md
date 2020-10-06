@@ -10,14 +10,14 @@ Proposed
 
 ## Context
 
-In early conversations [it was also proposed](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc/edit)
-that Msg` return types be captured using a protobuf extension field, ex:
+In early conversations [it was proposed](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc/edit)
+that `Msg` return types be captured using a protobuf extension field, ex:
 
 ```protobuf
 message MsgSubmitProposal
 	option (cosmos_proto.msg_return) = “uint64”;
-	bytes delegator_address = 1;
-	bytes validator_address = 2;
+	string delegator_address = 1;
+	string validator_address = 2;
 	repeated sdk.Coin amount = 3;
 }
 ```
@@ -52,7 +52,7 @@ service Msg {
 // type instead of the more canonical MsgSubmitProposalRequest
 message MsgSubmitProposal {
   google.protobuf.Any content = 1;
-  bytes proposer = 2;
+  string proposer = 2;
 }
 
 message MsgSubmitProposalResponse {
@@ -77,7 +77,7 @@ type MsgServer interface {
 
 On the client side, developers could take advantage of this by creating RPC implementations that encapsulate transaction
 logic. Protobuf libraries that use asynchronous callbacks, like [protobuf.js](https://github.com/protobufjs/protobuf.js#using-services)
-could use this to register callbacks for specific messages even for transactions that span include multiple `Msg`s.
+could use this to register callbacks for specific messages even for transactions that include multiple `Msg`s.
 
 For backwards compatibility, existing `Msg` types should be used as the request parameter
 for `service` definitions. Newer `Msg` types which only support `service` definitions
@@ -101,7 +101,7 @@ set `Any.value` to the protobuf encoding of the request message
 
 ### Decoding
 
-When decoding, `TxBody.UnpackageInterfaces` will need a special case
+When decoding, `TxBody.UnpackInterfaces` will need a special case
 to detect if `Any` type URLs match the service method format (ex. `/cosmos.gov.Msg/SubmitProposal`)
 by checking for two `/` characters. Messages that are method names plus request parameters
 instead of a normal `Any` messages will get unpacked into the `ServiceMsg` struct:
@@ -125,7 +125,7 @@ To do this, `ServiceMsg` implements the `sdk.Msg` interface and its handler does
 actual method routing, allowing this feature to be added incrementally on top of
 existing functionality.
 
-### `ServiceMsg` interface
+### `MsgRequest` interface
 
 All request messages will need to implement the `MsgRequest` interface which is a
 simplified version of `Msg`, without `Route()`, `Type()` and `GetSignBytes()` which
@@ -147,7 +147,7 @@ methods.
 In [ADR 021](./adr-021-protobuf-query-encoding.md), we introduced a method `RegisterQueryService`
 to `AppModule` which allows for modules to register gRPC queriers.
 
-To register `Msg` services, we attempt an more extensible approach by converting `RegisterQueryService`
+To register `Msg` services, we attempt a more extensible approach by converting `RegisterQueryService`
 to a more generic `RegisterServices` method:
 
 ```go

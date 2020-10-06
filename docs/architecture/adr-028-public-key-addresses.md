@@ -68,7 +68,7 @@ way to get this name for every protobuf type, we can use this message name as th
 key type prefix when creating addresses.
 
 We define the canonical address format for new (non-legacy) public keys as
-`Sha256(fmt.Sprintf("%s/%x, proto.MessageName(key), key.Bytes())[:20]`. This takes
+`Sha256(fmt.Sprintf("%s/%x, proto.MessageName(key), key.Bytes()))[:20]`. This takes
 the first 20 bytes of an SHA-256 hash of a string with the proto message name for the key
 type joined by an `/` with the hex encoding of the key bytes.
 

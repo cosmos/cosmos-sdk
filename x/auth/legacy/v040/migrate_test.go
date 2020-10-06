@@ -228,10 +228,7 @@ func TestMigrate(t *testing.T) {
       "@type": "/cosmos.auth.v1beta1.BaseAccount",
       "account_number": "1",
       "address": "cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00",
-      "pub_key": {
-        "@type": "/google.protobuf.Empty",
-        "value": {}
-      },
+      "pub_key": null,
       "sequence": "0"
     }
   ],

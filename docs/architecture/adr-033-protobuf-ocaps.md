@@ -37,14 +37,14 @@ type ModuleKey interface {
 }
 
 type RootModuleKey struct {
-  ModuleName string
-  MsgInvoker Invoker()
+  moduleName string
+  msgInvoker Invoker()
 }
 
 type DerivedModuleKey struct {
-  ModuleName string
-  Path []byte
-  MsgInvoker Invoker()
+  moduleName string
+  path []byte
+  msgInvoker Invoker()
 }
 
 type ModuleID struct {
@@ -117,16 +117,32 @@ func (k stakingKeeper) CreateValidator(ctx context.Context, req *MsgCreateValida
 
 ```go
 type Configurator interface {
+  ModuleKey() RootModuleKey
+
   MsgServer() grpc.Server
   QueryServer() grpc.Server
   HooksServer() grpc.Server
 
-  RequireMsgServer(interface{})
-  RequireQueryServer(interface{})
+  RequireMsgServer(msgServerInterface interface{})
+  RequireQueryServer(queryServerInterface interface{})
+}
 
-  RequireAdminMsgServer(interface{}) interface{}
+type Provisioner interface {
+  GetAdminMsgClientConn(msgServerInterface interface{}) grpc.ClientConn
+  GetPluginClientConn(pluginServerInterface interface{}) func(ModuleID) grpc.ClientConn
+}
+
+type Module interface {
+  Configure(Configurator)
+  Provision(Provisioner)
+}
+
+type ModuleManager interface {
+  GrantAdminAccess(module ModuleID, msgServerInterface interface{})
+  GrantPluginAccess(module ModuleID, pluginServerInterface interface{})
 }
 ```
+
 
 ## Consequences
 

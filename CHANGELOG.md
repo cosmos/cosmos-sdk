@@ -2846,7 +2846,7 @@ FEATURES:
 * Better key output, pubkey go-amino hex bytes now output by default
 * gaiad init overhaul
   * Create genesis transactions with `gaiad init gen-tx`
-  * New genesis account keys are automatically added to the client keybase (introduce `--home-client` flag)
+  * New genesis account keys are automatically added to the client keybase (introduce `--client-home` flag)
   * Initialize with genesis txs using `--gen-txs` flag
 * Context now has access to the application-configured logger
 * Add (non-proof) subspace query helper functions

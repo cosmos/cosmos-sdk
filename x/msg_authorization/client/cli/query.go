@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
@@ -62,7 +61,6 @@ func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 				},
 			)
 			if err != nil {
-				fmt.Println("Errrrrrrrrrrrrrrrr", err)
 				return err
 			}
 

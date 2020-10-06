@@ -144,9 +144,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	return cmd
 }
 
-// SanitizeTendermintGenesis makes sure a later version of Tendermint can parse
+// MigrateTendermintGenesis makes sure a later version of Tendermint can parse
 // a JSON blob exported by a previous version of Tendermint.
-func SanitizeTendermintGenesis(jsonBlob []byte) ([]byte, error) {
+func MigrateTendermintGenesis(jsonBlob []byte) ([]byte, error) {
 	var jsonObj map[string]interface{}
 	err := tmjson.Unmarshal(jsonBlob, &jsonObj)
 	if err != nil {

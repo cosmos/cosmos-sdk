@@ -72,7 +72,7 @@ func TestSanitizeTendermintGenesis(t *testing.T) {
 	_, err := tmtypes.GenesisDocFromJSON(v037Exported)
 	require.Error(t, err)
 
-	_, err := cli.SanitizeTendermintGenesis(v037Exported)
+	_, err := cli.MigrateTendermintGenesis(v037Exported)
 	require.NoError(t, err)
 
 	require.True(t, false)

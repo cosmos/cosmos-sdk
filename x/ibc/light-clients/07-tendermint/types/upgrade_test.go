@@ -12,7 +12,7 @@ import (
 func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 	var (
 		upgradedClient exported.ClientState
-		upgradeHeight  exported.Height
+		upgradeHeight  clienttypes.Height
 		clientA        string
 		proofUpgrade   []byte
 	)
@@ -60,7 +60,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
 
 				// change upgradedClient client-specified parameters
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, upgradeHeight, commitmenttypes.GetSDKSpecs(), upgradePath, true, false)
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, true, false)
 
 				suite.coordinator.CommitBlock(suite.chainB)
 				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
@@ -71,7 +71,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 				// Previous client-chosen parameters must be the same as upgraded client chosen parameters
 				tmClient, _ := cs.(*types.ClientState)
-				oldClient := types.NewClientState(tmClient.ChainId, types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, tmClient.LatestHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, true, false)
+				oldClient := types.NewClientState(tmClient.ChainId, types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, tmClient.LatestHeight, commitmenttypes.GetSDKSpecs(), upgradePath, true, false)
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, oldClient)
 
 				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
@@ -133,12 +133,12 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			name: "unsuccessful upgrade: client-specified parameters do not match previous client",
 			setup: func() {
 
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false)
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
 
 				// change upgradedClient client-specified parameters
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, upgradeHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, true, false)
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, ubdPeriod, ubdPeriod+trustingPeriod, maxClockDrift+5, upgradeHeight, commitmenttypes.GetSDKSpecs(), upgradePath, true, false)
 
 				suite.coordinator.CommitBlock(suite.chainB)
 				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
@@ -179,7 +179,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
 			},
 			expPass: false,
 		},

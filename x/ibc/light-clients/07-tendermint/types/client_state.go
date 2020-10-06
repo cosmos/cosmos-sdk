@@ -133,6 +133,7 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 		ChainId:         cs.ChainId,
 		UnbondingPeriod: cs.UnbondingPeriod,
 		LatestHeight:    cs.LatestHeight,
+		ConsensusParams: cs.ConsensusParams,
 		ProofSpecs:      cs.ProofSpecs,
 		UpgradePath:     cs.UpgradePath,
 	}

@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"success with empty provedID", func() {
+		{"success with empty counterpartyChosenConnectionID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"invalid provedID", func() {
+		{"counterpartyChosenConnectionID does not match desiredConnectionID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -300,11 +300,11 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 			counterparty := types.NewCounterparty(clientA, connA.ID, suite.chainA.GetPrefix())
 
-			// get provedID
-			var provedID string
+			// get counterpartyChosenConnectionID
+			var counterpartyChosenConnectionID string
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			if found {
-				provedID = connection.Counterparty.ConnectionId
+				counterpartyChosenConnectionID = connection.Counterparty.ConnectionId
 			}
 
 			connectionKey := host.KeyConnection(connA.ID)
@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			ctx = ctx.WithConsensusParams(suite.chainB.App.GetConsensusParams(ctx))
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				ctx, connB.ID, provedID, counterparty, clientB, counterpartyClient,
+				ctx, connB.ID, counterpartyChosenConnectionID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)

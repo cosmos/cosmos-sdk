@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/jsonpb"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 

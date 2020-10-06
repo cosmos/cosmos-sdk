@@ -18,10 +18,11 @@ import (
 )
 
 var (
-	_ AccountI       = (*BaseAccount)(nil)
-	_ GenesisAccount = (*BaseAccount)(nil)
-	_ GenesisAccount = (*ModuleAccount)(nil)
-	_ ModuleAccountI = (*ModuleAccount)(nil)
+	_ AccountI                           = (*BaseAccount)(nil)
+	_ GenesisAccount                     = (*BaseAccount)(nil)
+	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
+	_ GenesisAccount                     = (*ModuleAccount)(nil)
+	_ ModuleAccountI                     = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object

@@ -83,7 +83,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		keyringDir, _ := flags.GetKeyringDir(cmd.Flags())
+		keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), clientCtx.HomeDir)
 
 		inBuf := bufio.NewReader(cmd.InOrStdin())
 		kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, inBuf)

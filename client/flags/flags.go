@@ -115,8 +115,12 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 }
 
 // GetKeyringDir finds the directory for the keyring storage
-func GetKeyringDir(pflags *pflag.FlagSet) (string, error) {
+func GetKeyringDir(pflags *pflag.FlagSet, homeDir string) (string, error) {
 	keyringDir, err := pflags.GetString(FlagKeyringDir)
+	if keyringDir == "" {
+		// Use the specified home directory.
+		keyringDir = homeDir
+	}
 	if keyringDir == "" {
 		// Default to the node's home directory.
 		keyringDir, err = pflags.GetString(FlagHome)

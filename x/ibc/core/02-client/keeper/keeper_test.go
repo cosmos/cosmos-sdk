@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -140,6 +141,25 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 }
 
 func (suite *KeeperTestSuite) TestValidateSelfClient() {
+	// test nil consensus params in context
+	_, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctmtypes.Tendermint)
+	clientState := suite.chainB.GetClientState(clientB)
+	tmClient, ok := clientState.(*ibctmtypes.ClientState)
+	suite.Require().True(ok)
+	tmClient.ConsensusParams = nil
+
+	ctx := suite.chainA.GetContext()
+
+	// consensus params are nil in context
+	err := suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
+	suite.Require().NoError(err)
+
+	// evidence params are nil
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{})
+	tmClient.ConsensusParams = &abci.ConsensusParams{}
+	err = suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
+	suite.Require().NoError(err)
+
 	badUpgradePath := commitmenttypes.NewMerklePath([]string{"bad", "upgrade", "path"})
 	invalidConsensusParams := suite.chainA.App.GetConsensusParams(suite.chainA.GetContext())
 	invalidConsensusParams.Evidence.MaxAgeDuration++
@@ -213,6 +233,11 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		{
 			"invalid consensus params",
 			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, invalidConsensusParams, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			false,
+		},
+		{
+			"nil consensus params",
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, nil, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			false,
 		},
 	}

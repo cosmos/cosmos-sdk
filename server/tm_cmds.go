@@ -130,7 +130,7 @@ against which this app has been compiled.
 }
 
 func printlnJSON(v interface{}) error {
-	cdc := codec.New()
+	cdc := codec.NewLegacyAmino()
 	cryptocodec.RegisterCrypto(cdc)
 
 	marshalled, err := cdc.MarshalJSON(v)

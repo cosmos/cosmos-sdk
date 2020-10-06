@@ -79,7 +79,7 @@ func delegatorRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryDelegatorParams(delegatorAddr)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.LegacyAmino.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal params: %s", err))
 			return
@@ -131,7 +131,7 @@ func delegatorWithdrawalAddrHandlerFn(clientCtx client.Context) http.HandlerFunc
 			return
 		}
 
-		bz := clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
+		bz := clientCtx.LegacyAmino.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", types.QuerierRoute), bz)
 		if rest.CheckInternalServerError(w, err) {
 			return
@@ -180,7 +180,7 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var commission types.ValidatorAccumulatedCommission
-		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(bz, &commission)) {
+		if rest.CheckInternalServerError(w, clientCtx.LegacyAmino.UnmarshalJSON(bz, &commission)) {
 			return
 		}
 
@@ -192,11 +192,11 @@ func validatorInfoHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var rewards sdk.DecCoins
-		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(bz, &rewards)) {
+		if rest.CheckInternalServerError(w, clientCtx.LegacyAmino.UnmarshalJSON(bz, &rewards)) {
 			return
 		}
 
-		bz, err = clientCtx.JSONMarshaler.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
+		bz, err = clientCtx.LegacyAmino.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -263,7 +263,7 @@ func communityPoolHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		var result sdk.DecCoins
-		if rest.CheckInternalServerError(w, clientCtx.JSONMarshaler.UnmarshalJSON(res, &result)) {
+		if rest.CheckInternalServerError(w, clientCtx.LegacyAmino.UnmarshalJSON(res, &result)) {
 			return
 		}
 
@@ -285,7 +285,7 @@ func outstandingRewardsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		bin := clientCtx.JSONMarshaler.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
+		bin := clientCtx.LegacyAmino.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", types.QuerierRoute), bin)
 		if rest.CheckInternalServerError(w, err) {
 			return

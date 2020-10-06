@@ -3,12 +3,12 @@ package server
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	flagHeight        = "height"
-	flagForZeroHeight = "for-zero-height"
-	flagJailWhitelist = "jail-whitelist"
+	FlagHeight           = "height"
+	FlagForZeroHeight    = "for-zero-height"
+	FlagJailAllowedAddrs = "jail-allowed-addrs"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -34,6 +34,10 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
 			config.SetRoot(homeDir)
+
+			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
+				return err
+			}
 
 			db, err := openDB(config.RootDir)
 			if err != nil {
@@ -60,11 +64,11 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			height, _ := cmd.Flags().GetInt64(flagHeight)
-			forZeroHeight, _ := cmd.Flags().GetBool(flagForZeroHeight)
-			jailWhiteList, _ := cmd.Flags().GetStringSlice(flagJailWhitelist)
+			height, _ := cmd.Flags().GetInt64(FlagHeight)
+			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
+			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 
-			appState, validators, cp, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
+			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %v", err)
 			}
@@ -74,29 +78,29 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return err
 			}
 
-			doc.AppState = appState
-			doc.Validators = validators
+			doc.AppState = exported.AppState
+			doc.Validators = exported.Validators
+			doc.InitialHeight = exported.Height
 			doc.ConsensusParams = &tmproto.ConsensusParams{
 				Block: tmproto.BlockParams{
-					MaxBytes:   cp.Block.MaxBytes,
-					MaxGas:     cp.Block.MaxGas,
+					MaxBytes:   exported.ConsensusParams.Block.MaxBytes,
+					MaxGas:     exported.ConsensusParams.Block.MaxGas,
 					TimeIotaMs: doc.ConsensusParams.Block.TimeIotaMs,
 				},
 				Evidence: tmproto.EvidenceParams{
-					MaxAgeNumBlocks:  cp.Evidence.MaxAgeNumBlocks,
-					MaxAgeDuration:   cp.Evidence.MaxAgeDuration,
-					MaxNum:           cp.Evidence.MaxNum,
-					ProofTrialPeriod: cp.Evidence.ProofTrialPeriod,
+					MaxAgeNumBlocks: exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
+					MaxAgeDuration:  exported.ConsensusParams.Evidence.MaxAgeDuration,
+					MaxNum:          exported.ConsensusParams.Evidence.MaxNum,
 				},
 				Validator: tmproto.ValidatorParams{
-					PubKeyTypes: cp.Validator.PubKeyTypes,
+					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
 				},
 			}
 
-			// NOTE: for now we're just using standard JSON marshaling for the root GenesisDoc.
-			// These types are in Tendermint, don't support proto and as far as we know, don't need it.
-			// All of the protobuf/amino state is inside AppState
-			encoded, err := json.MarshalIndent(doc, "", " ")
+			// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+			// (except for stuff inside AppState). Inside AppState, we're free
+			// to encode as protobuf or amino.
+			encoded, err := tmjson.Marshal(doc)
 			if err != nil {
 				return err
 			}
@@ -107,9 +111,9 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
-	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
-	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
+	cmd.Flags().Int64(FlagHeight, -1, "Export state from a particular height (-1 means latest height)")
+	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
+	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "List of validators to not jail state export")
 
 	return cmd
 }

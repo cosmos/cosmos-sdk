@@ -31,7 +31,7 @@ module correctly.
 ### Implement `IBCModule` Interface and callbacks
 
 The Cosmos SDK expects all IBC modules to implement the [`IBCModule`
-interface](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/05-port/types/module.go). This
+interface](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port/types/module.go). This
 interface contains all of the callbacks IBC expects modules to implement. This section will describe
 the callbacks that are called during channel handshake execution.
 
@@ -340,7 +340,9 @@ receive acknowledegments with the IBC modules as byte strings.
 
 Thus, modules must agree on how to encode/decode acknowledgements. The process of creating an
 acknowledgement struct along with encoding and decoding it, is very similar to the packet data
-example above.
+example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope)
+specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
+[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel/types).
 
 #### Acknowledging Packets
 

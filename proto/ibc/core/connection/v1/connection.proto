@@ -1,0 +1,177 @@
+syntax = "proto3";
+package ibc.core.connection.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "ibc/core/commitment/v1/commitment.proto";
+import "ibc/core/client/v1/client.proto";
+
+// MsgConnectionOpenInit defines the msg sent by an account on Chain A to
+// initialize a connection with Chain B.
+message MsgConnectionOpenInit {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string       client_id     = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string       connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  Counterparty counterparty  = 3 [(gogoproto.nullable) = false];
+  string       version       = 4;
+  string       signer        = 5;
+}
+
+// MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a
+// connection on Chain B.
+message MsgConnectionOpenTry {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string client_id                         = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  string desired_connection_id             = 2 [(gogoproto.moretags) = "yaml:\"desired_connection_id\""];
+  string counterparty_chosen_connection_id = 3 [(gogoproto.moretags) = "yaml:\"counterparty_chosen_connection_id\""];
+  google.protobuf.Any client_state         = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  Counterparty        counterparty         = 5 [(gogoproto.nullable) = false];
+  repeated string           counterparty_versions = 6 [(gogoproto.moretags) = "yaml:\"counterparty_versions\""];
+  ibc.core.client.v1.Height proof_height          = 7
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  // proof of the initialization the connection on Chain A: `UNITIALIZED ->
+  // INIT`
+  bytes proof_init = 8 [(gogoproto.moretags) = "yaml:\"proof_init\""];
+  // proof of client state included in message
+  bytes proof_client = 9 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  // proof of client consensus state
+  bytes                     proof_consensus  = 10 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.core.client.v1.Height consensus_height = 11
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
+  string signer = 12;
+}
+
+// MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to
+// acknowledge the change of connection state to TRYOPEN on Chain B.
+message MsgConnectionOpenAck {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string              connection_id              = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string              counterparty_connection_id = 2 [(gogoproto.moretags) = "yaml:\"counterparty_connection_id\""];
+  string              version                    = 3;
+  google.protobuf.Any client_state               = 4 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  ibc.core.client.v1.Height proof_height         = 5
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  // proof of the initialization the connection on Chain B: `UNITIALIZED ->
+  // TRYOPEN`
+  bytes proof_try = 6 [(gogoproto.moretags) = "yaml:\"proof_try\""];
+  // proof of client state included in message
+  bytes proof_client = 7 [(gogoproto.moretags) = "yaml:\"proof_client\""];
+  // proof of client consensus state
+  bytes                     proof_consensus  = 8 [(gogoproto.moretags) = "yaml:\"proof_consensus\""];
+  ibc.core.client.v1.Height consensus_height = 9
+      [(gogoproto.moretags) = "yaml:\"consensus_height\"", (gogoproto.nullable) = false];
+  string signer = 10;
+}
+
+// MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to
+// acknowledge the change of connection state to OPEN on Chain A.
+message MsgConnectionOpenConfirm {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string connection_id = 1 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  // proof for the change of the connection state on Chain A: `INIT -> OPEN`
+  bytes                     proof_ack    = 2 [(gogoproto.moretags) = "yaml:\"proof_ack\""];
+  ibc.core.client.v1.Height proof_height = 3
+      [(gogoproto.moretags) = "yaml:\"proof_height\"", (gogoproto.nullable) = false];
+  string signer = 4;
+}
+
+// ICS03 - Connection Data Structures as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
+
+// ConnectionEnd defines a stateful object on a chain connected to another
+// separate one. NOTE: there must only be 2 defined ConnectionEnds to establish
+// a connection between two chains.
+message ConnectionEnd {
+  option (gogoproto.goproto_getters) = false;
+  // client associated with this connection.
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // IBC version which can be utilised to determine encodings or protocols for
+  // channels or packets utilising this connection
+  repeated string versions = 2;
+  // current state of the connection end.
+  State state = 3;
+  // counterparty chain associated with this connection.
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
+}
+
+// IdentifiedConnection defines a connection with additional connection
+// identifier field.
+message IdentifiedConnection {
+  option (gogoproto.goproto_getters) = false;
+  // connection identifier.
+  string id = 1 [(gogoproto.moretags) = "yaml:\"id\""];
+  // client associated with this connection.
+  string client_id = 2 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // IBC version which can be utilised to determine encodings or protocols for
+  // channels or packets utilising this connection
+  repeated string versions = 3;
+  // current state of the connection end.
+  State state = 4;
+  // counterparty chain associated with this connection.
+  Counterparty counterparty = 5 [(gogoproto.nullable) = false];
+}
+
+// State defines if a connection is in one of the following states:
+// INIT, TRYOPEN, OPEN or UNINITIALIZED.
+enum State {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  // A connection end has just started the opening handshake.
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  // A connection end has acknowledged the handshake step on the counterparty
+  // chain.
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  // A connection end has completed the handshake.
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+}
+
+// Counterparty defines the counterparty chain associated with a connection end.
+message Counterparty {
+  option (gogoproto.goproto_getters) = false;
+
+  // identifies the client on the counterparty chain associated with a given
+  // connection.
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // identifies the connection end on the counterparty chain associated with a
+  // given connection.
+  string connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  // commitment merkle prefix of the counterparty chain
+  ibc.core.commitment.v1.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
+}
+
+// ClientPaths define all the connection paths for a client state.
+message ClientPaths {
+  // list of connection paths
+  repeated string paths = 1;
+}
+
+// ConnectionPaths define all the connection paths for a given client state.
+message ConnectionPaths {
+  // client state unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // list of connection paths
+  repeated string paths = 2;
+}
+
+// Version defines the versioning scheme used to negotiate the IBC verison in
+// the connection handshake.
+message Version {
+  option (gogoproto.goproto_getters) = false;
+
+  // unique version identifier
+  string identifier = 1;
+  // list of features compatible with the specified identifier
+  repeated string features = 2;
+}

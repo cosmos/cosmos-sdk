@@ -199,3 +199,32 @@ func StringifyEvents(events []abci.Event) StringEvents {
 
 	return res.Flatten()
 }
+
+// MarkEventsToIndex returns the set of ABCI events, where each event's attribute
+// has it's index value marked based on the provided set of events to index.
+func MarkEventsToIndex(events []abci.Event, indexSet map[string]struct{}) []abci.Event {
+	indexAll := len(indexSet) == 0
+	updatedEvents := make([]abci.Event, len(events))
+
+	for i, e := range events {
+		updatedEvent := abci.Event{
+			Type:       e.Type,
+			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+		}
+
+		for j, attr := range e.Attributes {
+			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
+			updatedAttr := abci.EventAttribute{
+				Key:   attr.Key,
+				Value: attr.Value,
+				Index: index || indexAll,
+			}
+
+			updatedEvent.Attributes[j] = updatedAttr
+		}
+
+		updatedEvents[i] = updatedEvent
+	}
+
+	return updatedEvents
+}

@@ -3,7 +3,7 @@ version: "3"
 services:
   simdnode0:
     container_name: simdnode0
-    image: "cosmos-sdk/simappnode"
+    image: "cosmossdk/simd-env"
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
@@ -19,9 +19,9 @@ services:
 
   simdnode1:
     container_name: simdnode1
-    image: "cosmos-sdk/simappnode"
+    image: "cosmossdk/simd-env"
     ports:
-      - "26659-26660:26656-26657"
+      - "26666-26667:26656-26657"
       - "1318:1317"
       - "9091:9090"
     environment:
@@ -35,12 +35,12 @@ services:
 
   simdnode2:
     container_name: simdnode2
-    image: "cosmos-sdk/simappnode"
+    image: "cosmossdk/simd-env"
     environment:
       - ID=2
       - LOG=${LOG:-simd.log}
     ports:
-      - "26661-26662:26656-26657"
+      - "26676-26677:26656-26657"
       - "1319:1317"
       - "9092:9090"
     volumes:
@@ -51,12 +51,12 @@ services:
 
   simdnode3:
     container_name: simdnode3
-    image: "cosmos-sdk/simappnode"
+    image: "cosmossdk/simd-env"
     environment:
       - ID=3
       - LOG=${LOG:-simd.log}
     ports:
-      - "26663-26664:26656-26657"
+      - "26686-26687:26656-26657"
       - "1320:1317"
       - "9093:9090"
     volumes:

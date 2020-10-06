@@ -80,7 +80,7 @@ func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]
 // for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
-func GenesisStateFromGenFile(cdc codec.JSONMarshaler, genFile string) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
+func GenesisStateFromGenFile(genFile string) (genesisState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, err error) {
 	if !tmos.FileExists(genFile) {
 		return genesisState, genDoc,
 			fmt.Errorf("%s does not exist, run `init` first", genFile)

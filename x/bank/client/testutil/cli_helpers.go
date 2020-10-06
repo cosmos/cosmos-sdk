@@ -5,11 +5,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 )
 

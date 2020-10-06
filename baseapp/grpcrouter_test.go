@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,7 +18,7 @@ func TestGRPCRouter(t *testing.T) {
 	testdata.RegisterTestServiceServer(qr, testdata.TestServiceImpl{})
 	helper := &QueryServiceTestHelper{
 		GRPCQueryRouter: qr,
-		ctx:             sdk.Context{},
+		ctx:             sdk.Context{}.WithContext(context.Background()),
 	}
 	client := testdata.NewTestServiceClient(helper)
 

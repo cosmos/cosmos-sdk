@@ -149,7 +149,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		aminoJSON, err := cmd.Flags().GetBool(flagAmino)
+		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
 
 
 		var json []byte

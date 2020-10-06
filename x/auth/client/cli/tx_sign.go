@@ -260,7 +260,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		aminoJSON, err := cmd.Flags().GetBool(flagAmino)
+		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
 
 		if err != nil {
 			return err

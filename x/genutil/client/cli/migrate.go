@@ -79,7 +79,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			if err != nil {
 				return fmt.Errorf("couldn't read GenesisDoc file: %w", err)
 			}
-			sanitizedJSONBlob, err := SanitizeTendermintGenesis(jsonBlob)
+			sanitizedJSONBlob, err := MigrateTendermintGenesis(jsonBlob)
 			if err != nil {
 				return fmt.Errorf("couldn't read GenesisDoc file: %w", err)
 			}
@@ -145,15 +145,19 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 }
 
 // MigrateTendermintGenesis makes sure a later version of Tendermint can parse
-// a JSON blob exported by a previous version of Tendermint.
+// a JSON blob exported by an older version of Tendermint.
 func MigrateTendermintGenesis(jsonBlob []byte) ([]byte, error) {
 	var jsonObj map[string]interface{}
-	err := tmjson.Unmarshal(jsonBlob, &jsonObj)
+	err := json.Unmarshal(jsonBlob, &jsonObj)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusParams, ok := jsonObj["consensus_params"]
+	consensusParams, ok := jsonObj["consensus_params"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("exported json does not contain consensus_params field")
+	}
+	evidenceParams, ok := consensusParams["evidence"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("exported json does not contain consensus_params.evidence field")
 	}
@@ -162,7 +166,7 @@ func MigrateTendermintGenesis(jsonBlob []byte) ([]byte, error) {
 	// - rename max_age to max_age_num_blocks
 	// - introduce max_age_duration (what's the default value?)
 	// ref: (https://github.com/tendermint/tendermint/pull/4254)
-	fmt.Println(consensusParams)
+	fmt.Println(evidenceParams)
 
 	return jsonBlob, nil
 }

@@ -102,10 +102,10 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithChainID(chainID)
 	}
 
-	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
+	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) || flagSet.Changed(flags.FlagKeyringDir) {
 		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
 		if keyringDir == "" {
-			keyringDir, _ = flagSet.GetString(flags.FlagHome)
+			keyringDir = clientCtx.HomeDir
 		}
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 

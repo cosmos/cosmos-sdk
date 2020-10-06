@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -72,15 +73,19 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			var err error
 
 			target := args[0]
-			importGenesis := args[1]
+			importGenesisFile := args[1]
 
-			jsonBlob, err := ioutil.ReadFile(genDocFile)
+			jsonBlob, err := ioutil.ReadFile(importGenesisFile)
 			if err != nil {
-				return nil, fmt.Errorf("couldn't read GenesisDoc file: %w", err)
+				return fmt.Errorf("couldn't read GenesisDoc file: %w", err)
 			}
-			genDoc, err := tmtypes.GenesisDocFromJSON(jsonBlob)
+			sanitizedJSONBlob, err := SanitizeTendermintGenesis(jsonBlob)
 			if err != nil {
-				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
+				return fmt.Errorf("couldn't read GenesisDoc file: %w", err)
+			}
+			genDoc, err := tmtypes.GenesisDocFromJSON(sanitizedJSONBlob)
+			if err != nil {
+				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesisFile)
 			}
 
 			var initialState types.AppMap
@@ -148,8 +153,16 @@ func SanitizeTendermintGenesis(jsonBlob []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	consensusParams, ok = jsonObj["consensus_params"]["evidence"]
+	consensusParams, ok := jsonObj["consensus_params"]
 	if !ok {
 		return nil, fmt.Errorf("exported json does not contain consensus_params.evidence field")
 	}
+
+	// TODO:
+	// - rename max_age to max_age_num_blocks
+	// - introduce max_age_duration (what's the default value?)
+	// ref: (https://github.com/tendermint/tendermint/pull/4254)
+	fmt.Println(consensusParams)
+
+	return jsonBlob, nil
 }

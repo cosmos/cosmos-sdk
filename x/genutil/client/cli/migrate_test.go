@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"path"
 	"testing"
@@ -73,7 +72,8 @@ func TestSanitizeTendermintGenesis(t *testing.T) {
 	_, err := tmtypes.GenesisDocFromJSON(v037Exported)
 	require.Error(t, err)
 
-	sanitized, err := cli.SanitizeTendermintGenesis(v037Exported)
+	_, err := cli.SanitizeTendermintGenesis(v037Exported)
 	require.NoError(t, err)
-	fmt.Println(string(sanitized))
+
+	require.True(t, false)
 }

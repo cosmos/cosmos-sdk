@@ -77,7 +77,7 @@ var _ sdk.Msg = &MsgConnectionOpenTry{}
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
-	connectionID, provedID, clientID, counterpartyConnectionID,
+	desiredConnectionID, counterpartyChosenConnectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyClient exported.ClientState,
 	counterpartyPrefix commitmenttypes.MerklePrefix, counterpartyVersions []string,
 	proofInit, proofClient, proofConsensus []byte,
@@ -86,18 +86,18 @@ func NewMsgConnectionOpenTry(
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
 	csAny, _ := clienttypes.PackClientState(counterpartyClient)
 	return &MsgConnectionOpenTry{
-		ConnectionId:         connectionID,
-		ProvedId:             provedID,
-		ClientId:             clientID,
-		ClientState:          csAny,
-		Counterparty:         counterparty,
-		CounterpartyVersions: counterpartyVersions,
-		ProofInit:            proofInit,
-		ProofClient:          proofClient,
-		ProofConsensus:       proofConsensus,
-		ProofHeight:          proofHeight,
-		ConsensusHeight:      consensusHeight,
-		Signer:               signer.String(),
+		DesiredConnectionId:            desiredConnectionID,
+		CounterpartyChosenConnectionId: counterpartyChosenConnectionID,
+		ClientId:                       clientID,
+		ClientState:                    csAny,
+		Counterparty:                   counterparty,
+		CounterpartyVersions:           counterpartyVersions,
+		ProofInit:                      proofInit,
+		ProofClient:                    proofClient,
+		ProofConsensus:                 proofConsensus,
+		ProofHeight:                    proofHeight,
+		ConsensusHeight:                consensusHeight,
+		Signer:                         signer.String(),
 	}
 }
 
@@ -113,11 +113,11 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
-	if err := host.ConnectionIdentifierValidator(msg.ConnectionId); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+	if err := host.ConnectionIdentifierValidator(msg.DesiredConnectionId); err != nil {
+		return sdkerrors.Wrap(err, "invalid desired connection ID")
 	}
-	if msg.ProvedId != "" && msg.ProvedId != msg.ConnectionId {
-		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "proved identifier must be empty or equal to connection identifier")
+	if msg.CounterpartyChosenConnectionId != "" && msg.CounterpartyChosenConnectionId != msg.DesiredConnectionId {
+		return sdkerrors.Wrap(ErrInvalidConnectionIdentifier, "counterparty chosen connection identifier must be empty or equal to desired connection identifier")
 	}
 	if err := host.ClientIdentifierValidator(msg.ClientId); err != nil {
 		return sdkerrors.Wrap(err, "invalid client ID")

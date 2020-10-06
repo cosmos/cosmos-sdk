@@ -89,7 +89,10 @@ func TestMigrate(t *testing.T) {
       "@type": "/cosmos.auth.v1beta1.BaseAccount",
       "account_number": "1",
       "address": "cosmos13syh7de9xndv9wmklccpfvc0d8dcyvay4s6z6l",
-      "pub_key": null,
+      "pub_key": {
+        "@type": "/cosmos.crypto.secp256k1.PubKey",
+        "key": "A8oWyJkohwy8XZ0Df92jFMBTtTPMvYJplYIrlEHTKPYk"
+      },
       "sequence": "0"
     },
     {
@@ -97,7 +100,10 @@ func TestMigrate(t *testing.T) {
       "base_account": {
         "account_number": "1",
         "address": "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-        "pub_key": null,
+        "pub_key": {
+          "@type": "/cosmos.crypto.secp256k1.PubKey",
+          "key": "AruDygh5HprMOpHOEato85dLgAsybMJVyxBGUa3KuWCr"
+        },
         "sequence": "0"
       },
       "name": "module2",
@@ -110,7 +116,10 @@ func TestMigrate(t *testing.T) {
       "base_account": {
         "account_number": "1",
         "address": "cosmos18hnp9fjflrkeeqn4gmhjhzljusxzmjeartdckw",
-        "pub_key": null,
+        "pub_key": {
+          "@type": "/cosmos.crypto.secp256k1.PubKey",
+          "key": "A5aEFDIdQHh0OYmNXNv1sHBNURDWWgVkXC2IALcWLLwJ"
+        },
         "sequence": "0"
       },
       "delegated_free": [
@@ -139,7 +148,10 @@ func TestMigrate(t *testing.T) {
         "base_account": {
           "account_number": "1",
           "address": "cosmos1t9kvvejvk6hjtddx6antck39s206csqduq3ke3",
-          "pub_key": null,
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "AoXDzxwTnljemHxfnJcwrKqODBP6Q2l3K3U3UhVDzyah"
+          },
           "sequence": "0"
         },
         "delegated_free": [],
@@ -160,7 +172,10 @@ func TestMigrate(t *testing.T) {
         "base_account": {
           "account_number": "1",
           "address": "cosmos1s4ss9zquz7skvguechzlk3na635jdrecl0sgy2",
-          "pub_key": null,
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A2a4P4TQ1OKzpfu0eKnCoEtmTvoiclSx0G9higenUGws"
+          },
           "sequence": "0"
         },
         "delegated_free": [],
@@ -192,7 +207,10 @@ func TestMigrate(t *testing.T) {
         "base_account": {
           "account_number": "1",
           "address": "cosmos1mcc6rwrj4hswf8p9ct82c7lmf77w9tuk07rha4",
-          "pub_key": null,
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A4tuAfmZlhjK5cjp6ImR704miybHnITVNOyJORdDPFu3"
+          },
           "sequence": "0"
         },
         "delegated_free": [],

@@ -4,14 +4,27 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v040vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // convertBaseAccount converts a 0.39 BaseAccount to a 0.40 BaseAccount.
 func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
+	var any *codectypes.Any
+	// If the old genesis had a pubkey, we pack it inside an Any. Or else, we
+	// just leave it nil.
+	if old.PubKey != nil {
+		var err error
+		any, err = tx.PubKeyToAny(old.PubKey)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return &v040auth.BaseAccount{
 		Address:       old.Address.String(),
+		PubKey:        any,
 		AccountNumber: old.AccountNumber,
 		Sequence:      old.Sequence,
 	}

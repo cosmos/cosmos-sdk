@@ -84,7 +84,7 @@ message MsgUpgradeClient {
   string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
   // upgraded client state
   google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
-  // height at which old chain halts and upgrades
+  // height at which old chain halts and upgrades (i.e last block executed)
   Height upgrade_height = 3 [(gogoproto.moretags) = "yaml:\"upgrade_height\""];
   // proof that old chain committed to new client
   bytes proof_upgrade = 4 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];

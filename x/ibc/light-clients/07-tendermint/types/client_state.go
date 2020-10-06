@@ -116,7 +116,7 @@ func (cs ClientState) Validate() error {
 		keys := strings.Split(cs.UpgradePath, "/")
 		for _, k := range keys {
 			if strings.TrimSpace(k) == "" {
-				return sdkerrors.Wrapf(ErrInvalidUpgradePath, "upgrade path invalid: %s", cs.UpgradePath)
+				return sdkerrors.Wrapf(ErrInvalidUpgradePath, "upgrade path contains an empty string when splitting by '/': %s", cs.UpgradePath)
 			}
 		}
 	}

@@ -422,7 +422,7 @@ func (suite *TypesTestSuite) TestMsgUpgradeClient_ValidateBasic() {
 		{
 			name: "upgrade height is zero",
 			malleate: func(msg *types.MsgUpgradeClient) {
-				msg.UpgradeHeight = &types.Height{}
+				msg.UpgradeHeight = types.ZeroHeight()
 			},
 			expPass: false,
 		},

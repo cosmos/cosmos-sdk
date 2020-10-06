@@ -1,4 +1,4 @@
-# ADR 030: Typed Events
+# ADR 031: Typed Events
 
 ## Changelog
 

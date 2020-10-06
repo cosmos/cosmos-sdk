@@ -67,9 +67,9 @@ func (cs ClientState) VerifyUpgrade(
 			&ClientState{}, upgradedClient)
 	}
 
-	// Relayer must keep all client-chosen parameters the same as the previous client
-	// compare relayer-provided client state against expected client state
-	// all chain-chosen parameters come from committed client, all client-chosen parameters
+	// Relayer must keep all client-chosen parameters the same as the previous client.
+	// Compare relayer-provided client state against expected client state.
+	// All chain-chosen parameters come from committed client, all client-chosen parameters
 	// come from current client
 	expectedClient := NewClientState(
 		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,

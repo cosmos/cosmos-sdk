@@ -77,6 +77,14 @@ var (
 
 	MockAcknowledgement = mock.MockAcknowledgement
 	MockCommitment      = mock.MockCommitment
+
+	// Conditionals for expected output of executing messages.
+	// Change values to false to test messages expected to fail.
+	// Reset to true otherwise successful messages will error.
+	// Use in rare cases, will be deprecated in favor of better
+	// dev ux.
+	ExpSimPassSend = true
+	ExpPassSend    = true
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -293,7 +301,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
-		true, true, chain.senderPrivKey,
+		ExpSimPassSend, ExpPassSend, chain.senderPrivKey,
 	)
 	if err != nil {
 		return nil, err

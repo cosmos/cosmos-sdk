@@ -150,7 +150,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// retrieve client state of chainB to pass as counterpartyClient counterpartyClient = suite.chainA.GetClientState(clientA)
+			// retrieve client state of chainB to pass as counterpartyClient
+			counterpartyClient = suite.chainA.GetClientState(clientA)
 
 			// Set an invalid client of chainA on chainB
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
@@ -320,8 +321,12 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			clientKey := host.FullKeyClientPath(clientA, host.KeyClientState())
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
+			// set consensus params in context to simulate baseapp handling
+			ctx := suite.chainB.GetContext()
+			ctx = ctx.WithConsensusParams(suite.chainB.App.GetConsensusParams(ctx))
+
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), connB.ID, provedID, counterparty, clientB, counterpartyClient,
+				ctx, connB.ID, provedID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)
@@ -691,8 +696,12 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			clientKey := host.FullKeyClientPath(clientB, host.KeyClientState())
 			proofClient, _ := suite.chainB.QueryProof(clientKey)
 
+			// set consensus params in context to simulate baseapp handling
+			ctx := suite.chainA.GetContext()
+			ctx = ctx.WithConsensusParams(suite.chainA.App.GetConsensusParams(ctx))
+
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
-				suite.chainA.GetContext(), connA.ID, counterpartyClient, version, counterpartyConnectionID,
+				ctx, connA.ID, counterpartyClient, version, counterpartyConnectionID,
 				proofTry, proofClient, proofConsensus, proofHeight, consensusHeight,
 			)
 
@@ -772,4 +781,61 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			}
 		})
 	}
+}
+
+// Ensure consensus params are correctly validated by executing messages. Consensus params are
+// set in context by baseapp so test should deliver messages and not call the functions directly.
+// Only invalid cases are tested since successful instances are by default tested by the testing
+// package.
+func (suite *KeeperTestSuite) TestConsensusParamsValidation() {
+	// invalid client state in ConnOpenTry
+	clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+	suite.Require().NoError(err)
+
+	// set incorrect consensus params on counterparty client on chainA
+	clientState := suite.chainA.GetClientState(clientA)
+	tmClient, ok := clientState.(*ibctmtypes.ClientState)
+	suite.Require().True(ok)
+	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
+
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
+
+	// should fail on validate self client
+	ibctesting.ExpSimPassSend = false
+	ibctesting.ExpPassSend = false
+	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+	suite.Require().Error(err)
+
+	// reset values
+	ibctesting.ExpSimPassSend = true
+	ibctesting.ExpPassSend = true
+
+	suite.SetupTest() // reset
+
+	// invalid client state in ConnOpenAck
+	clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	connA, connB, err = suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+	suite.Require().NoError(err)
+
+	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+	suite.Require().NoError(err)
+
+	// set incorrect consensus params on counterparty client on chainB
+	clientState = suite.chainB.GetClientState(clientB)
+	tmClient, ok = clientState.(*ibctmtypes.ClientState)
+	suite.Require().True(ok)
+	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
+
+	suite.chainB.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainB.GetContext(), clientB, tmClient)
+
+	// should fail on validate self client
+	ibctesting.ExpSimPassSend = false
+	ibctesting.ExpPassSend = false
+	err = suite.coordinator.ConnOpenAck(suite.chainA, suite.chainB, connA, connB)
+	suite.Require().Error(err)
+
+	// reset values
+	ibctesting.ExpSimPassSend = true
+	ibctesting.ExpPassSend = true
 }

@@ -289,3 +289,25 @@ func TestBuilderFeePayer(t *testing.T) {
 		})
 	}
 }
+
+func TestBuilderFeeGranter(t *testing.T) {
+	// keys and addresses
+	_, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	feeAmount := testdata.NewTestFeeAmount()
+	msgs := []sdk.Msg{msg1}
+
+	txBuilder := newBuilder()
+	err := txBuilder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	txBuilder.SetGasLimit(200000)
+	txBuilder.SetFeeAmount(feeAmount)
+
+	require.Empty(t, txBuilder.GetTx().FeeGranter())
+
+	// set fee granter
+	txBuilder.SetFeeGranter(addr1)
+	require.Equal(t, addr1, txBuilder.GetTx().FeeGranter())
+}

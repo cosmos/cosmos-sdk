@@ -29,15 +29,31 @@ Proposed
 ### Module Keys
 
 ```go
+func Invoker(ctx context.Context, signer ModuleID, method string, args, reply interface{}, opts ...grpc.CallOption) error
+
 type ModuleKey interface {
-  DerivedKey(path []byte) ModuleKey
+  grpc.ClientConn
   ID() ModuleID
 }
 
-type ModuleID interface {
-  ModuleName() string
-  Path() []byte
-  Address() []byte
+type RootModuleKey struct {
+  ModuleName string
+  MsgInvoker Invoker()
+}
+
+type DerivedModuleKey struct {
+  ModuleName string
+  Path []byte
+  MsgInvoker Invoker()
+}
+
+type ModuleID struct {
+  ModuleName string
+  Path []byte
+}
+
+func (key ModuleID) Address() []byte {
+  return AddressHash(key.ModuleName, key.Path)
 }
 ```
 

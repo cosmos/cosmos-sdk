@@ -34,6 +34,7 @@ func (cs ClientState) VerifyUpgrade(
 	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
 	upgradePath := commitmenttypes.NewMerklePath(upgradeKeys)
 
+	// UpgradeHeight must be in same epoch as client state height
 	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch at which upgrade occurs must be same as current client epoch. expected epoch %d, got %d",
 			cs.GetLatestHeight().GetEpochNumber(), upgradeHeight.GetEpochNumber())
@@ -62,6 +63,8 @@ func (cs ClientState) VerifyUpgrade(
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
+	// This verifies that upgrade is intended for the provided epoch, since committed client must exist
+	// at this consensus state
 	consState, err := GetConsensusState(clientStore, cdc, upgradeHeight)
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not retrieve consensus state for upgradeHeight")

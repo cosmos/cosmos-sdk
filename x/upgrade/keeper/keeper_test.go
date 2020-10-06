@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -249,6 +250,80 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			}
 		})
 	}
+}
+
+func (s *TestKeeperTestSuite) TestGetUpgradedClient() {
+	var (
+		clientState ibcexported.ClientState
+		height      int64
+	)
+	cases := []struct {
+		name   string
+		setup  func()
+		exists bool
+		panics bool
+	}{
+		{
+			name:   "no upgraded client exists",
+			setup:  func() {},
+			exists: false,
+			panics: false,
+		},
+		{
+			name: "success",
+			setup: func() {
+				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
+				height = 10
+
+				s.app.UpgradeKeeper.SetUpgradedClient(s.app.GetContext(), 10, clientState)
+			},
+			exists: true,
+			panics: false,
+		},
+		{
+			name: "GetUpgradedClient panics if multiple clients exist in store",
+			setup: func() {
+
+				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
+				altCs := &ibctmtypes.ClientState{ChainId: "ethermint"}
+
+				height = 10
+
+				s.app.UpgradeKeeper.SetUpgradedClient(s.app.GetContext(), 10, clientState)
+				s.app.UpgradeKeeper.SetUpgradedClient(s.app.GetContext(), 50, altCs)
+			},
+			exists: true,
+			panics: true,
+		},
+	}
+
+	for _, tc := range cases {
+		// reset suite
+		s.SetupTest()
+
+		// setup test case
+		tc.setup()
+
+		if tc.panics {
+			s.Require().Panics(func() {
+				s.app.UpgradeKeeper.GetUpgradedClient(s.app.GetContext())
+			},
+				"case: %s did not panic as expected", tc.name)
+			continue
+		}
+
+		gotCs, gotHeight, err := s.app.UpgradeKeeper.GetUpgradedClient(s.app.GetContext())
+		if tc.exists {
+			s.Require().Equal(clientState, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
+			s.Require().Equal(height, gotHeight, "valid case: %s did not retrieve correct upgrade height", tc.name)
+			s.Require().NoError(err, "valid case: %s returned error")
+		} else {
+			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
+			s.Require().Equal(0, gotHeight, "invalid case: %s retrieved valid upgrade height", tc.name)
+			s.Require().Error(err, "invalid case: %s did not return error", tc.name)
+		}
+	}
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {

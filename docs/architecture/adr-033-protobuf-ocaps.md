@@ -67,13 +67,13 @@ type MsgServer interface {
 }
 ```
 
-[ADR 31](Protobuf Msg Services) specifies how modules can implement the `MsgServer` interface as a replacement for the
-legacy handler registration.
+[ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31]() specifies how modules can implement the generated `QueryServer`
+and `MsgServer` interfaces as replacements for the legacy queriers and `Msg` handlers respectively.
 
-In this ADR we explain how modules can send `Msg`s to other modules using the generated `MsgClient` interfaces and
-propose this mechanism as a replacement for the existing `Keeper` paradigm.
+In this ADR we explain how modules can make queries and send `Msg`s to other modules using the generated `QueryClient`
+and `MsgClient` interfaces and propose this mechanism as a replacement for the existing `Keeper` paradigm.
 
-Using this `MsgClient` approach has the following benefits over keepers:
+Using this `QueryClient`/`MsgClient` approach has the following key benefits over keepers:
 1. Protobuf types are checked for breaking changes using [buf](https://buf.build/docs/breaking-overview) and because of
 the way protobuf is designed this will give us strong backwards compatibility guarantees while allowing for forward
 evolution.
@@ -81,7 +81,48 @@ evolution.
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
 object capability system.
 
-### Module Keys
+This mechanism has the added benefits of:
+- reducing boilerplate through code generation, and
+- allowing for modules in other languages either through a VM like CosmWasm or sub-processes using gRPC 
+
+In order for code to use the generated `Client` interfaces, a `grpc.ClientConn` implementation is needed. The following
+sections will describe the special `grpc.ClientConn` implementations modules will be able to use to make queries and
+send `Msg`s to other modules.
+
+### Inter-module Queries
+
+Queries in Cosmos SDK are generally un-permissioned so allowing one module to query another module should not pose
+any major security threats assuming basic precautions are taken. The basic precautions identified here are:
+- the `sdk.Context` which query methods have access to should not allow writing to the store
+- query methods should only be able to make queries against other modules, not send messages
+- query methods should not be able to make recursive calls to themselves
+
+We introduce a singleton `grpc.ClientConn` implementation as the var `sdk.ModuleQueryConn` for making inter-module
+queries. It would be used like this from within an example `MsgServer` implementation:
+
+```go
+package foo
+
+func (msgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarResponse, error) {
+  bankQueryClient := bank.NewQueryClient(sdk.ModuleQueryConn)
+  res, err := bankQueryClient.Balance(ctx, &QueryBalanceRequest{Denom: "foo", Address: req.Address})
+  ...
+}
+```
+
+Under the hood, a query router will be attached to the provided `context.Context` and `sdk.ModuleQueryConn`
+will retrieve that query router for routing queries.
+
+The attached query router will make sure the above security precautions are taken by:
+- disabling any ability for `QueryServer` methods to write to the store, 
+- disabling the ability for `QueryServer` methods to send `Msg`s to other modules,
+- keeping track of the call stack of method calls to disable recursion
+
+### Inter-module Messages
+
+
+
+#### Module Keys
 
 ```go
 func Invoker(ctx context.Context, signer ModuleID, method string, args, reply interface{}, opts ...grpc.CallOption) error

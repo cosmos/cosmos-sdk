@@ -67,6 +67,9 @@ func TestStdTx(t *testing.T) {
 
 	feePayer := tx.GetSigners()[0]
 	require.Equal(t, addr, feePayer)
+
+	feeGranter := tx.FeeGranter()
+	require.Empty(t, feeGranter)
 }
 
 func TestStdSignBytes(t *testing.T) {

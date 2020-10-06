@@ -69,21 +69,21 @@ var _ sdk.Msg = &MsgChannelOpenTry{}
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 //nolint:interfacer
 func NewMsgChannelOpenTry(
-	portID, channelID, provedChannelID, version string, channelOrder Order, connectionHops []string,
+	portID, desiredChannelID, counterpartyChosenChannelID, version string, channelOrder Order, connectionHops []string,
 	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
 	proofInit []byte, proofHeight clienttypes.Height, signer sdk.AccAddress,
 ) *MsgChannelOpenTry {
 	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
 	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return &MsgChannelOpenTry{
-		PortId:              portID,
-		ChannelId:           channelID,
-		ProvedChannelId:     provedChannelID,
-		Channel:             channel,
-		CounterpartyVersion: counterpartyVersion,
-		ProofInit:           proofInit,
-		ProofHeight:         proofHeight,
-		Signer:              signer.String(),
+		PortId:                      portID,
+		DesiredChannelId:            desiredChannelID,
+		CounterpartyChosenChannelId: counterpartyChosenChannelID,
+		Channel:                     channel,
+		CounterpartyVersion:         counterpartyVersion,
+		ProofInit:                   proofInit,
+		ProofHeight:                 proofHeight,
+		Signer:                      signer.String(),
 	}
 }
 
@@ -102,11 +102,11 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.PortId); err != nil {
 		return sdkerrors.Wrap(err, "invalid port ID")
 	}
-	if err := host.ChannelIdentifierValidator(msg.ChannelId); err != nil {
-		return sdkerrors.Wrap(err, "invalid channel ID")
+	if err := host.ChannelIdentifierValidator(msg.DesiredChannelId); err != nil {
+		return sdkerrors.Wrap(err, "invalid desired channel ID")
 	}
-	if msg.ProvedChannelId != "" && msg.ProvedChannelId != msg.ChannelId {
-		return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "proved channel identifier must be empty or equal to channel identifier")
+	if msg.CounterpartyChosenChannelId != "" && msg.CounterpartyChosenChannelId != msg.DesiredChannelId {
+		return sdkerrors.Wrap(ErrInvalidChannelIdentifier, "counterparty chosen channel ID must be empty or equal to desired channel ID")
 	}
 	if len(msg.ProofInit) == 0 {
 		return sdkerrors.Wrap(commitmenttypes.ErrInvalidProof, "cannot submit an empty proof init")

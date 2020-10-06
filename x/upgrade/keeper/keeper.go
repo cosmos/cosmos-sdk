@@ -76,14 +76,6 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	}
 
 	store := ctx.KVStore(k.storeKey)
-
-	// remove any upgraded client previously set
-	oldPlan, ok := k.GetUpgradePlan(ctx)
-	if ok {
-		// delete upgraded client key to remove upgraded client set by outdated plan
-		store.Delete(types.UpgradedClientKey(oldPlan.Height))
-	}
-
 	bz := k.cdc.MustMarshalBinaryBare(&plan)
 	store.Set(types.PlanKey(), bz)
 
@@ -92,13 +84,27 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not unpack clientstate: %v", err)
 		}
+		// deletes any previously stored upgraded client and sets the new upgraded client in
 		return k.SetUpgradedClient(ctx, plan.Height, clientState)
+	} else {
+		// if latest UpgradedClientState is nil, but upgraded client exists in store,
+		// then delete client state from store.
+		_, height, _ := k.GetUpgradedClient(ctx)
+		store.Delete(types.UpgradedClientKey(height))
 	}
 	return nil
 }
 
 // SetUpgradedClient sets the expected upgraded client for the next version of this chain
 func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcexported.ClientState) error {
+	store := ctx.KVStore(k.storeKey)
+
+	// delete any previously stored upgraded client before setting a new one
+	_, setHeight, err := k.GetUpgradedClient(ctx)
+	if setHeight != 0 {
+		store.Delete(types.UpgradedClientKey(setHeight))
+	}
+
 	// zero out any custom fields before setting
 	cs = cs.ZeroCustomFields()
 	bz, err := clienttypes.MarshalClientState(k.cdc, cs)
@@ -106,7 +112,6 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcex
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not marshal clientstate: %v", err)
 	}
 
-	store := ctx.KVStore(k.storeKey)
 	store.Set(types.UpgradedClientKey(upgradeHeight), bz)
 	return nil
 }

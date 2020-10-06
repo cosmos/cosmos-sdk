@@ -1,4 +1,4 @@
-# ADR 031: Typed Events
+# ADR 032: Typed Events
 
 ## Changelog
 
@@ -95,9 +95,9 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 }
 ```
 
-Here, `EmitTypedEvent` is the method of `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. In this method, `Event.Type` will be type URL of the proto message taken.
+Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
-Next, `ParseTypedEvent` is the method which takes which `abci.Event` and converts back it into `proto.Message` i.e., back to typed event. When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. So this method will take those emitted event and parse it into typed event.
+When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message. 
 
 __Step-2__: Add proto definitions for typed events for msgs in each module:
 
@@ -111,7 +111,7 @@ package cosmos.gov.v1beta1;
 
 message EventSubmitProposal {
     string from_address   = 1;
-    uint64 proposal_id    = 2 [(gogoproto.enumvalue_customname) = "ID"];
+    uint64 proposal_id    = 2;
     TextProposal proposal = 3;
 }
 ```
@@ -125,7 +125,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
     types.Context.EventManager().EmitTypedEvent(
         &EventSubmitProposal{
             FromAddress: fromAddress,
-            ID: id,
+            ProposalId: id,
             Proposal: proposal,
         },
     )
@@ -189,7 +189,7 @@ func SubmitProposalEventHandler(ev proto.Message) (err error) {
     // Handle governance proposal events creation events
     case govtypes.EventSubmitProposal:
         // Users define business logic here e.g.
-        fmt.Println(ev.FromAddress, ev.ID, ev.Proposal)
+        fmt.Println(ev.FromAddress, ev.ProposalId, ev.Proposal)
         return nil
     default:
         return nil

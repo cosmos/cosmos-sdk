@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -112,20 +111,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 
 	cmd.SetErr(cmd.ErrOrStderr())
 	cmd.SetOut(cmd.OutOrStdout())
-}
-
-// GetKeyringDir finds the directory for the keyring storage
-func GetKeyringDir(pflags *pflag.FlagSet, homeDir string) (string, error) {
-	keyringDir, err := pflags.GetString(FlagKeyringDir)
-	if keyringDir == "" {
-		// Use the specified home directory.
-		keyringDir = homeDir
-	}
-	if keyringDir == "" {
-		// Default to the node's home directory.
-		keyringDir, err = pflags.GetString(FlagHome)
-	}
-	return keyringDir, err
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

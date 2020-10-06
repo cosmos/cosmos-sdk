@@ -85,7 +85,10 @@ the flag --nosort is set.
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), "")
+	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+	if keyringDir == "" {
+		keyringDir, _ = cmd.Flags().GetString(flags.FlagHome)
+	}
 	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 
 	var (

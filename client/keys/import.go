@@ -22,8 +22,12 @@ func ImportKeyCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
 
+			keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+			if keyringDir == "" {
+				keyringDir, _ = cmd.Flags().GetString(flags.FlagHome)
+			}
 			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), "")
+
 			kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, buf)
 			if err != nil {
 				return err

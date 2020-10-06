@@ -26,8 +26,12 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
+	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+	if keyringDir == "" {
+		keyringDir, _ = cmd.Flags().GetString(flags.FlagHome)
+	}
 	backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-	keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), "")
+
 	kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin())
 	if err != nil {
 		return err

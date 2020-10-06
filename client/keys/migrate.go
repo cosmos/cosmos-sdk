@@ -40,7 +40,10 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 }
 
 func runMigrateCmd(cmd *cobra.Command, args []string) error {
-	keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), "")
+	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+	if keyringDir == "" {
+		keyringDir, _ = cmd.Flags().GetString(flags.FlagHome)
+	}
 
 	// instantiate legacy keybase
 	var legacyKb keyring.LegacyKeybase

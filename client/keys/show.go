@@ -54,8 +54,11 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keyring.Info
 
+	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+	if keyringDir == "" {
+		keyringDir, _ = cmd.Flags().GetString(flags.FlagHome)
+	}
 	backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-	keyringDir, _ := flags.GetKeyringDir(cmd.Flags(), "")
 	kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin())
 	if err != nil {
 		return err

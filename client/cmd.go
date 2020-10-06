@@ -103,8 +103,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	}
 
 	if clientCtx.Keyring == nil || flagSet.Changed(flags.FlagKeyringBackend) {
+		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
+		if keyringDir == "" {
+			keyringDir, _ = flagSet.GetString(flags.FlagHome)
+		}
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
-		keyringDir, _ := flags.GetKeyringDir(flagSet, clientCtx.HomeDir)
 
 		if keyringBackend != "" {
 			kr, err := newKeyringFromFlags(clientCtx, keyringBackend, keyringDir)

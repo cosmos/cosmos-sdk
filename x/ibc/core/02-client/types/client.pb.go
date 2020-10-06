@@ -334,7 +334,7 @@ type MsgUpgradeClient struct {
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id"`
 	// upgraded client state
 	ClientState *types.Any `protobuf:"bytes,2,opt,name=client_state,json=clientState,proto3" json:"client_state,omitempty" yaml:"client_state"`
-	// height at which old chain halts and upgrades
+	// height at which old chain halts and upgrades (i.e last block executed)
 	UpgradeHeight *Height `protobuf:"bytes,3,opt,name=upgrade_height,json=upgradeHeight,proto3" json:"upgrade_height,omitempty" yaml:"upgrade_height"`
 	// proof that old chain committed to new client
 	ProofUpgrade []byte `protobuf:"bytes,4,opt,name=proof_upgrade,json=proofUpgrade,proto3" json:"proof_upgrade,omitempty" yaml:"proof_upgrade"`

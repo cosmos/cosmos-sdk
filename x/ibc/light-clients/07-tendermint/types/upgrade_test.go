@@ -206,14 +206,14 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				suite.Require().NoError(err)
 
 				// expire chainB's client
-				suite.chainB.ExpireClient(ubdPeriod)
+				suite.chainA.ExpireClient(ubdPeriod)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
 				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
 			},
-			expPass: true,
+			expPass: false,
 		},
 	}
 

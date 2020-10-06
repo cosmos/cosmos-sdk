@@ -1,8 +1,6 @@
 package v040
 
 import (
-	pt "github.com/gogo/protobuf/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
@@ -13,20 +11,15 @@ import (
 
 // convertBaseAccount converts a 0.39 BaseAccount to a 0.40 BaseAccount.
 func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
-	// In `x/auth/legacy/v038/migrate.go`, when creating a BaseAccount, we
-	// explicitly set the PublicKey field to nil. This propagates until 0.40,
-	// and we don't know the PubKey for those accounts, so we just put an empty
-	// string inside the Any.
 	var any *codectypes.Any
-	var err error
+	// If the old genesis had a pubkey, we pack it inside an Any. Or else, we
+	// just leave it nil.
 	if old.PubKey != nil {
+		var err error
 		any, err = tx.PubKeyToAny(old.PubKey)
-	} else {
-		s := pt.Empty{}
-		any, err = codectypes.NewAnyWithValue(&s)
-	}
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return &v040auth.BaseAccount{

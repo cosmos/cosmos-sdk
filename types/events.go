@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -97,7 +98,10 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, err
 	}
 
-	err = proto.Unmarshal(attrBytes, protoMsg)
+	fmt.Printf("Attributes...%s\n", string(attrBytes))
+	fmt.Printf("Proto...%+v\t %T\n", protoMsg, protoMsg)
+
+	err = jsonpb.UnmarshalString(string(attrBytes), protoMsg)
 	if err != nil {
 		return nil, err
 	}

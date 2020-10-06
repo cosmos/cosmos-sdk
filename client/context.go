@@ -300,10 +300,10 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
+func newKeyringFromFlags(ctx Context, backend, keyringDir string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.HomeDir, ctx.Input)
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, keyringDir, ctx.Input)
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.HomeDir, ctx.Input)
+	return keyring.New(sdk.KeyringServiceName(), backend, keyringDir, ctx.Input)
 }

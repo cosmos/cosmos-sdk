@@ -57,14 +57,14 @@ Two basic fee allowance types, `BasicFeeAllowance` and `PeriodicFeeAllowance` ar
 ```proto
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
-message BasicFeeAllowance{
+message BasicFeeAllowance {
      repeated cosmos_sdk.v1.Coin spend_limit = 1;
      ExpiresAt expiration = 2;
 }
 
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
-message PeriodicFeeAllowance{
+message PeriodicFeeAllowance {
      BasicFeeAllowance basic = 1;
      Duration period = 2;
      repeated cosmos_sdk.v1.Coin period_spend_limit = 3;
@@ -75,14 +75,14 @@ message PeriodicFeeAllowance{
 
 // Duration is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
-message Duration{
+message Duration {
     google.protobuf.Timestamp clock = 1;
     int64 block = 2;
 }
 
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
-message ExpiresAt{
+message ExpiresAt {
      google.protobuf.Timestamp time = 1;
      int64 height = 2;
  }
@@ -91,32 +91,33 @@ message ExpiresAt{
 Allowances can be granted and revoked using `MsgGrantFeeAllowance` and `MsgRevokeFeeAllowance`:
 
 ```proto
-message MsgGrantFeeAllowance{
-     bytes granter = 1;
-     bytes grantee = 2;
+message MsgGrantFeeAllowance {
+     string granter = 1;
+     string grantee = 2;
      google.protobuf.Any allowance = 3;
  }
 
  // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
- message MsgRevokeFeeAllowance{
-     bytes granter = 1;
-     bytes grantee = 2;
+ message MsgRevokeFeeAllowance {
+     string granter = 1;
+     string grantee = 2;
  }
 ```
 
-In order to use allowances in transactions, we add a new field `fee_payer` to the transaction `Fee` type:
+In order to use allowances in transactions, we add a new field `granter` to the transaction `Fee` type:
 ```proto
 package cosmos.tx.v1beta1;
 
 message Fee {
   repeated cosmos.base.v1beta1.Coin amount = 1;
   uint64 gas_limit = 2;
-  bytes fee_payer = 3;
+  string payer = 3;
+  string granter = 4;
 }
 ```
 
-`fee_payer` must either be left empty, must equal the first signer (the normal case), or must correspond to an
-account which has granted a fee allowance to the first signer.
+`granter` must either be left empty or must correspond to an account which has granted
+a fee allowance to fee payer (either the first signer or the value of the `payer` field).
 
 A new `AnteDecorator` named `DeductGrantedFeeDecorator` will be created in order to process transactions with `fee_payer`
 set and correctly deduct fees based on fee allowances.

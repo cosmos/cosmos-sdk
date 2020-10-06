@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -40,6 +41,12 @@ func (cs ClientState) VerifyUpgrade(
 			cs.GetLatestHeight().GetEpochNumber(), upgradeHeight.GetEpochNumber())
 	}
 
+	tmClient, ok := upgradedClient.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
+			&ClientState{}, upgradedClient)
+	}
+
 	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "upgraded client height %s must be greater than current client height %s",
 			upgradedClient.GetLatestHeight(), cs.GetLatestHeight())
@@ -68,6 +75,26 @@ func (cs ClientState) VerifyUpgrade(
 	consState, err := GetConsensusState(clientStore, cdc, upgradeHeight)
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not retrieve consensus state for upgradeHeight")
+	}
+
+	tmCommittedClient, ok := committedClient.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
+			&ClientState{}, upgradedClient)
+	}
+
+	// Relayer must keep all client-chosen parameters the same as the previous client.
+	// Compare relayer-provided client state against expected client state.
+	// All chain-chosen parameters come from committed client, all client-chosen parameters
+	// come from current client
+	expectedClient := NewClientState(
+		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,
+		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
+		cs.AllowUpdateAfterExpiry, cs.AllowUpdateAfterMisbehaviour,
+	)
+	if !reflect.DeepEqual(expectedClient, tmClient) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "upgraded client does not maintain previous chosen parameters. expected: %v got: %v",
+			expectedClient, tmClient)
 	}
 
 	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz)

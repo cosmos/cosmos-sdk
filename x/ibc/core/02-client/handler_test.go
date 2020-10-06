@@ -11,7 +11,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -107,38 +106,6 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 
 				// zero custom fields and store in upgrade store
 				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
-
-				// commit upgrade store changes and update clients
-
-				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-				suite.Require().NoError(err)
-
-				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
-				suite.Require().True(found)
-
-				proofUpgrade, _ := suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
-
-				msg, err = clienttypes.NewMsgUpgradeClient(clientA, upgradedClient, upgradeHeight, proofUpgrade, suite.chainA.SenderAccount.GetAddress())
-				suite.Require().NoError(err)
-			},
-			expPass: true,
-		},
-		{
-			name: "successful upgrade to different client type",
-			setup: func() {
-
-				// previous chain committed to the change
-				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.chainA.App.AppCodec(), clientA, "diversifier", 1).ClientState()
-
-				// upgrade Height is at next block
-				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
-
-				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
-				// change sequence to be higher height than latest current client height
-				soloClient.Sequence = 100000000000
-				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), soloClient)
 
 				// commit upgrade store changes and update clients
 

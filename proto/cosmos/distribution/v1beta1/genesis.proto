@@ -107,8 +107,8 @@ message ValidatorSlashEventRecord {
   uint64 height = 2;
   // period is the period of the slash event.
   uint64 period = 3;
-  // event describes the slash event.
-  ValidatorSlashEvent event = 4 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"event\""];
+  // validator_slash_event describes the slash event.
+  ValidatorSlashEvent validator_slash_event = 4 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"event\""];
 }
 
 // GenesisState defines the distribution module's genesis state.

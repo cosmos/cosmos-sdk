@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
@@ -44,7 +45,7 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			granter := clientCtx.FromAddress
+			granter := clientCtx.GetFromAddress()
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
@@ -92,7 +93,7 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 		},
 	}
 	cmd.Flags().String(FlagExpiration, "9999-12-31T23:59:59.52Z", "The time upto which the authorization is active for the user")
-
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -113,7 +114,7 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 				return err
 			}
 
-			granter := clientCtx.FromAddress
+			granter := clientCtx.GetFromAddress()
 
 			msgAuthorized := args[1]
 
@@ -124,6 +125,7 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

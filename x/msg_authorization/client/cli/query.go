@@ -44,7 +44,7 @@ func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			granterAddr := clientCtx.FromAddress
+			granterAddr := clientCtx.GetFromAddress()
 
 			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {

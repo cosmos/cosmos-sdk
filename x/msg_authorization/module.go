@@ -73,12 +73,12 @@ func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.
 
 //GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd("StoreKey")
+	return cli.GetQueryCmd(types.StoreKey)
 }
 
 // GetTxCmd returns the transaction commands for this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd("StoreKey")
+	return cli.GetTxCmd(types.StoreKey)
 }
 
 // AppModule implements the sdk.AppModule interface

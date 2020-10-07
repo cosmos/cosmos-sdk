@@ -107,12 +107,22 @@ func (cs ClientState) Validate() error {
 			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
 		)
 	}
-	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil {
-		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params and evidence params cannot be empty")
+
+	// validate consensus params
+	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil ||
+		cs.ConsensusParams.Block == nil || cs.ConsensusParams.Validator == nil {
+		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params including block, evidence, and validator params cannot be empty")
+	}
+	if err := baseapp.ValidateBlockParams(*cs.ConsensusParams.Block); err != nil {
+		return sdkerrors.Wrap(err, "invalid block params")
 	}
 	if err := baseapp.ValidateEvidenceParams(*cs.ConsensusParams.Evidence); err != nil {
 		return sdkerrors.Wrap(err, "invalid evidence params")
 	}
+	if err := baseapp.ValidateValidatorParams(*cs.ConsensusParams.Validator); err != nil {
+		return sdkerrors.Wrap(err, "invalid validator params")
+	}
+
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")
 	}

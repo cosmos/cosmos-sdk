@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -163,38 +162,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				ClientId: chainID,
 			},
 			suite.now,
-			true,
-		},
-		{
-			"valid misbehaviour with nil consensus params",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, nil, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now,
-			true,
-		},
-		{
-			"valid misbehaviour with nil evidence params in consensus params",
-			types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clienttypes.NewHeight(0, uint64(versionHeight+simapp.DefaultConsensusParams.Evidence.MaxAgeNumBlocks+1)), &abci.ConsensusParams{}, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false),
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			types.NewConsensusState(suite.now, commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("app_hash"))), bothValsHash),
-			height,
-			&types.Misbehaviour{
-				Header1:  types.CreateTestHeader(chainID, height, height, suite.now, bothValSet, bothValSet, bothSigners),
-				Header2:  types.CreateTestHeader(chainID, height, height, suite.now.Add(time.Minute), bothValSet, bothValSet, bothSigners),
-				ChainId:  chainID,
-				ClientId: chainID,
-			},
-			suite.now.Add(time.Hour), // simulate max age block
 			true,
 		},
 		{

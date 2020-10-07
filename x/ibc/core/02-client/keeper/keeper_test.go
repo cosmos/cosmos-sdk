@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -141,28 +140,8 @@ func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 }
 
 func (suite *KeeperTestSuite) TestValidateSelfClient() {
-	// test nil consensus params in context
-	_, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctmtypes.Tendermint)
-	clientState := suite.chainB.GetClientState(clientB)
-	tmClient, ok := clientState.(*ibctmtypes.ClientState)
-	suite.Require().True(ok)
-	tmClient.ConsensusParams = nil
-
-	ctx := suite.chainA.GetContext()
-	ctx = ctx.WithConsensusParams(nil)
-
-	// consensus params are nil in context
-	err := suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
-	suite.Require().NoError(err)
-
-	// evidence params are nil
-	tmClient.ConsensusParams = &abci.ConsensusParams{}
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{})
-	err = suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
-	suite.Require().NoError(err)
-
 	badUpgradePath := commitmenttypes.NewMerklePath([]string{"bad", "upgrade", "path"})
-	invalidConsensusParams := ibctesting.DefaultConsensusParams
+	invalidConsensusParams := suite.chainA.GetContext().ConsensusParams()
 	invalidConsensusParams.Evidence.MaxAgeDuration++
 	testClientHeight := types.NewHeight(0, uint64(suite.chainA.GetContext().BlockHeight()))
 

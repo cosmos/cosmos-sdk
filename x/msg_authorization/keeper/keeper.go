@@ -37,12 +37,12 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Ro
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // Router returns the gov Keeper's Router
-func (keeper Keeper) Router() types.Router {
+func (k Keeper) Router() types.Router {
 	return keeper.router
 }
 

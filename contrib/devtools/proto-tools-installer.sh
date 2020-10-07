@@ -22,12 +22,10 @@ case "${UNAME_S}" in
 Linux)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-linux-x86_64.zip"
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-linux-x86_64"
-  [ -f /etc/debian_version ] && CLANG_FORMAT_BIN="clang-format-6.0" || CLANG_FORMAT_BIN="clang-format"
   ;;
 Darwin)
   PROTOC_ZIP="protoc-${PROTOC_VERSION}-osx-x86_64.zip"
   PROTOC_GRPC_GATEWAY_BIN="protoc-gen-grpc-gateway-v${PROTOC_GRPC_GATEWAY_VERSION}-darwin-x86_64"
-  CLANG_FORMAT_BIN="clang-format"
   ;;
 *)
   f_abort 1 "Unknown kernel name. Exiting."
@@ -117,35 +115,6 @@ f_install_protoc_gen_swagger() {
   f_print_done
 }
 
-f_install_clang_format() {
-  f_print_installing_with_padding ${CLANG_FORMAT_BIN}
-
-  if which ${CLANG_FORMAT_BIN} &>/dev/null ; then
-    echo -e "\talready installed. Skipping."
-    return 0
-  fi
-
-  case "${UNAME_S}" in
-  Linux)
-    if [ -e /etc/debian_version ]; then
-      echo -e "\tRun : sudo apt-get install clang-format-6.0" >&2
-    elif [ -e /etc/fedora-release ]; then
-      echo -e "\tRun: sudo dnf install clang" >&2
-    else
-      echo -e "\tRun (as root): subscription-manager repos --enable rhel-7-server-devtools-rpms ; yum install llvm-toolset-7" >&2
-    fi
-    ;;
-  Darwin)
-    echo -e  "\tRun: \n curl https://gist.githubusercontent.com/bvigueras/daf11aee6876fb9ba4c925c2c31bc04b/raw/\
-526ff0eebbc0476f568c852a8cc5d4cc48281475/clang-format@6.rb -o \
-\$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula/clang-format@6.rb ; \
-brew install clang-format@6 ;" >&2
-    ;;
-  *)
-    echo -e  "\tunknown operating system. Skipping." >&2
-  esac
-}
-
 f_ensure_tools
 f_ensure_dirs
 f_install_protoc
@@ -153,4 +122,3 @@ f_install_buf
 f_install_protoc_gen_gocosmos
 f_install_protoc_gen_grpc_gateway
 f_install_protoc_gen_swagger
-f_install_clang_format

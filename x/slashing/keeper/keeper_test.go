@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
 
 func TestUnJailNotBonded(t *testing.T) {
@@ -22,19 +22,15 @@ func TestUnJailNotBonded(t *testing.T) {
 	p.MaxValidators = 5
 	app.StakingKeeper.SetParams(ctx, p)
 
-	amt := sdk.TokensFromConsensusPower(100)
-	sh := staking.NewHandler(app.StakingKeeper)
-
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.TokensFromConsensusPower(200))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(6)
+	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
 
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
 		addr, val := valAddrs[i], pks[i]
-		res, err := sh(ctx, keeper.NewTestMsgCreateValidator(addr, val, amt))
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		tstaking.CreateValidatorWithValPower(t, addr, val, 100, true)
 	}
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -42,11 +38,10 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	// create a 6th validator with less power than the cliff validator (won't be bonded)
 	addr, val := valAddrs[5], pks[5]
-	createValMsg := keeper.NewTestMsgCreateValidator(addr, val, sdk.TokensFromConsensusPower(50))
-	createValMsg.MinSelfDelegation = sdk.TokensFromConsensusPower(50)
-	res, err := sh(ctx, createValMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	amt := sdk.TokensFromConsensusPower(50)
+	msg := tstaking.CreateValidatorMsg(t, addr, val, amt.Int64())
+	msg.MinSelfDelegation = amt
+	tstaking.Handle(t, msg, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -57,10 +52,8 @@ func TestUnJailNotBonded(t *testing.T) {
 	require.Equal(t, stakingtypes.BondStatusUnbonded, validator.GetStatus().String())
 
 	// unbond below minimum self-delegation
-	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
-	res, err = sh(ctx, msgUnbond)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	require.Equal(t, p.BondDenom, tstaking.Denom)
+	tstaking.Undelegate(t, sdk.AccAddress(addr), addr, sdk.TokensFromConsensusPower(1), true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -75,12 +68,8 @@ func TestUnJailNotBonded(t *testing.T) {
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
 	// bond to meet minimum self-delegation
-	msgBond := stakingtypes.NewMsgDelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))
-	res, err = sh(ctx, msgBond)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.DelegateWithPower(t, sdk.AccAddress(addr), addr, 1)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -103,20 +92,14 @@ func TestHandleNewValidator(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(1)
-
 	addr, val := valAddrs[0], pks[0]
-	amt := sdk.TokensFromConsensusPower(100)
-	sh := staking.NewHandler(app.StakingKeeper)
-
+	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(app.SlashingKeeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
-	res, err := sh(ctx, keeper.NewTestMsgCreateValidator(addr, val, amt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	amt := tstaking.CreateValidatorWithValPower(t, addr, val, 100, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
-
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
 		sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
@@ -149,18 +132,15 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	// initial setup
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	power := int64(100)
 
-	amt := sdk.TokensFromConsensusPower(power)
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.TokensFromConsensusPower(200))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(1)
-
 	addr, val := valAddrs[0], pks[0]
-	sh := staking.NewHandler(app.StakingKeeper)
-	res, err := sh(ctx, keeper.NewTestMsgCreateValidator(addr, val, amt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	power := int64(100)
+	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+
+	amt := tstaking.CreateValidatorWithValPower(t, addr, val, power, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
@@ -216,14 +196,11 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(3)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
-	amt := sdk.TokensFromConsensusPower(power)
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)
-	sh := staking.NewHandler(app.StakingKeeper)
-	res, err := sh(ctx, keeper.NewTestMsgCreateValidator(sdk.ValAddress(addr), val, amt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
 
+	tstaking.CreateValidatorWithValPower(t, sdk.ValAddress(addr), val, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// 100 first blocks OK
@@ -234,10 +211,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	}
 
 	// kick first validator out of validator set
-	newAmt := sdk.TokensFromConsensusPower(101)
-	res, err = sh(ctx, keeper.NewTestMsgCreateValidator(sdk.ValAddress(pks[1].Address()), pks[1], newAmt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.CreateValidatorWithValPower(t, sdk.ValAddress(pks[1].Address()), pks[1], 101, true)
 
 	validatorUpdates := staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))
@@ -249,10 +223,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
-	delTokens := sdk.TokensFromConsensusPower(50)
-	res, err = sh(ctx, keeper.NewTestMsgDelegate(sdk.AccAddress(pks[2].Address()), sdk.ValAddress(pks[0].Address()), delTokens))
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.DelegateWithPower(t, sdk.AccAddress(pks[2].Address()), sdk.ValAddress(pks[0].Address()), 50)
 
 	validatorUpdates = staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))

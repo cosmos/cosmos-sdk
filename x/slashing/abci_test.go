@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -22,16 +23,11 @@ func TestBeginBlocker(t *testing.T) {
 
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
-
-	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power)
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
+	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
 
 	// bond the validator
-	res, err := staking.NewHandler(app.StakingKeeper)(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, pk, amt))
-	require.NoError(t, err)
-	require.NotNil(t, res)
-
+	amt := tstaking.CreateValidatorWithValPower(t, addr, pk, 100, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),

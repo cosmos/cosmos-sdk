@@ -289,9 +289,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
 	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
-	res, err := handler(ctx, newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	handleAndCheck(t, handler, ctx, newDepositMsg)
 
 	macc = app.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
@@ -321,9 +319,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	SortAddresses(addrs)
 
-	handler := gov.NewHandler(app.GovKeeper)
 	stakingHandler := staking.NewHandler(app.StakingKeeper)
-
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
@@ -341,9 +337,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
 	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
-	res, err := handler(ctx, newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	handleAndCheck(t, gov.NewHandler(app.GovKeeper), ctx, newDepositMsg)
 
 	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.OptionYes)
 	require.NoError(t, err)

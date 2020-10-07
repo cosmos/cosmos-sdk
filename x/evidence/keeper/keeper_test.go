@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -19,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -75,6 +76,7 @@ type KeeperTestSuite struct {
 	app     *simapp.SimApp
 
 	queryClient types.QueryClient
+	stakingHdl  sdk.Handler
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -103,6 +105,23 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.stakingHdl = staking.NewHandler(app.StakingKeeper)
+}
+
+func (suite *KeeperTestSuite) createValidator(ctx sdk.Context, a sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) {
+	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	msg, err := stakingtypes.NewMsgCreateValidator(
+		a, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
+		stakingtypes.Description{}, commission, sdk.OneInt(),
+	)
+	suite.NoError(err)
+	suite.stakingHdl(ctx, msg)
+}
+
+func (suite *KeeperTestSuite) stakingHandle(ctx sdk.Context, msg sdk.Msg) {
+	res, err := suite.stakingHdl(ctx, msg)
+	suite.NoError(err)
+	suite.NotNil(res)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -207,8 +226,4 @@ func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
 	handler, err = suite.app.EvidenceKeeper.GetEvidenceHandler("invalidHandler")
 	suite.Error(err)
 	suite.Nil(handler)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

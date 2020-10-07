@@ -7,17 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/tendermint/tendermint/crypto"
 )
-
-func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
-	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return stakingtypes.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		stakingtypes.Description{}, commission, sdk.OneInt(),
-	)
-}
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	ctx := suite.ctx.WithIsCheckTx(false).WithBlockHeight(1)
@@ -29,9 +19,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	operatorAddr, val := valAddresses[0], pubkeys[0]
 
 	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, selfDelegation))
-	suite.NoError(err)
-	suite.NotNil(res)
+	suite.createValidator(ctx, operatorAddr, val, selfDelegation)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -80,9 +68,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	validator, _ := suite.app.StakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(stakingParams.BondDenom, totalBond))
-	res, err = staking.NewHandler(suite.app.StakingKeeper)(ctx, msgUnbond)
-	suite.NoError(err)
-	suite.NotNil(res)
+	suite.stakingHandle(ctx, msgUnbond)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
@@ -94,10 +80,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	amt := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
 
-	// create validator
-	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
-	suite.NoError(err)
-	suite.NotNil(res)
+	suite.createValidator(ctx, operatorAddr, val, amt)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)

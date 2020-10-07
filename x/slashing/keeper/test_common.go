@@ -3,6 +3,9 @@ package keeper
 // DONTCOVER
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,16 +29,19 @@ func TestParams() types.Params {
 	return params
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
+// TODO: remove this
+func NewTestMsgCreateValidator1(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int, t *testing.T) *stakingtypes.MsgCreateValidator {
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 
-	return stakingtypes.NewMsgCreateValidator(
+	msg, err := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
 		stakingtypes.Description{}, commission, sdk.OneInt(),
 	)
+	require.NoError(t, err)
+	return msg
 }
 
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) *stakingtypes.MsgDelegate {
+func NewTestMsgDelegate1(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) *stakingtypes.MsgDelegate {
 	amount := sdk.NewCoin(sdk.DefaultBondDenom, delAmount)
 	return stakingtypes.NewMsgDelegate(delAddr, valAddr, amount)
 }

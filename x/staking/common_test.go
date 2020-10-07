@@ -1,7 +1,6 @@
 package staking_test
 
 import (
-	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,16 +27,17 @@ var (
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *types.MsgCreateValidator {
-	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), types.Description{}, commissionRates, sdk.OneInt(),
-	)
-}
+// TODO:RZ
+// func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) *types.MsgCreateValidator {
+// 	return types.NewMsgCreateValidator(
+// 		address, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt), types.Description{}, commissionRates, sdk.OneInt(),
+// 	)
+// }
 
-func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) *types.MsgDelegate {
-	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
-	return types.NewMsgDelegate(delAddr, valAddr, amount)
-}
+// func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) *types.MsgDelegate {
+// 	amount := sdk.NewCoin(sdk.DefaultBondDenom, amt)
+// 	return types.NewMsgDelegate(delAddr, valAddr, amount)
+// }
 
 // getBaseSimappWithCustomKeeper Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.

@@ -162,6 +162,7 @@ type (
 	}
 )
 
+// New creates a new Network for mock for integration tests.
 func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
@@ -293,7 +294,7 @@ func New(t *testing.T, cfg Config) *Network {
 		commission, err := sdk.NewDecFromStr("0.5")
 		require.NoError(t, err)
 
-		createValMsg := stakingtypes.NewMsgCreateValidator(
+		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, cfg.BondedTokens),
@@ -301,6 +302,7 @@ func New(t *testing.T, cfg Config) *Network {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 		)
+		require.NoError(t, err)
 
 		p2pURL, err := url.Parse(p2pAddr)
 		require.NoError(t, err)

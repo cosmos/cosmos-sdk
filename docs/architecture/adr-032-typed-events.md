@@ -1,4 +1,4 @@
-# ADR 030: Typed Events
+# ADR 032: Typed Events
 
 ## Changelog
 
@@ -28,218 +28,112 @@ The end of this proposal contains a detailed example of how to consume events af
 
 ## Decision
 
-__Step-1__: Declare event types for `sdk.Msg`s a module implements using the typed event interface: `sdk.ModuleEvent`. We first need to define this interface and supporting types.
+__Step-1__:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
 
 ```go
 // types/events.go
 
-// ModuleEvent is the interface that all message events will implement
-type ModuleEvent interface {
-    Context()   BaseModuleEvent
-    ABCIEvent() Event
+// EmitTypedEvent takes typed event and emits converting it into sdk.Event 
+func (em *EventManager) EmitTypedEvent(event proto.Message) error {
+	evtType := proto.MessageName(event)
+	evtJSON, err := codec.ProtoMarshalJSON(event)
+	if err != nil {
+		return err
+	}
+
+	var attrMap map[string]json.RawMessage
+	err = json.Unmarshal(evtJSON, &attrMap)
+	if err != nil {
+		return err
+	}
+
+	var attrs []abci.EventAttribute
+	for k, v := range attrMap {
+		attrs = append(attrs, abci.EventAttribute{
+			Key:   []byte(k),
+			Value: v,
+		})
+	}
+
+	em.EmitEvent(Event{
+		Type:       evtType,
+		Attributes: attrs,
+	})
+
+	return nil
 }
 
-// BaseModuleEvent contains information about the Module and Action of an event
-type BaseModuleEvent struct {
-    Module string
-    Action string
+// ParseTypedEvent converts abci.Event back to typed event
+func ParseTypedEvent(event abci.Event) (proto.Message, error) {
+	concreteGoType := proto.MessageType(event.Type)
+	if concreteGoType == nil {
+		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
+	}
+
+	var value reflect.Value
+	if concreteGoType.Kind() == reflect.Ptr {
+		value = reflect.New(concreteGoType.Elem())
+	} else {
+		value = reflect.Zero(concreteGoType)
+    }
+    
+	protoMsg, ok := value.Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
+	}
+
+	attrMap := make(map[string]json.RawMessage)
+	for _, attr := range event.Attributes {
+		attrMap[string(attr.Key)] = attr.Value
+	}
+
+	attrBytes, err := json.Marshal(attrMap)
+	if err != nil {
+		return nil, err
+	}
+
+	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return protoMsg, nil
 }
 ```
 
-The `BaseModuleEvent` struct will be used for basic context about the event. It aids in routing events to their 
-`Module` and `Action` specific event parsers.
+Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
-__Step 2__:  Implement additional functionality in the `types` package: utility functions and a parser to route the event to its proper module.
+When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message. 
 
-When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. The parser will process this event using `sdk.NewSDKEvent(abci.Event)` to enable passing of the processed event to the proper module.
-
-```go
-// types/events.go
-
-// SDKEvent contains the string representation of the event and the module information
-type SDKEvent struct {
-    Sev  StringEvent
-    Base BaseModuleEvent
-}
-
-// NewSDKEvent parses abci.Event into an sdk.SDKEvent
-func NewSDKEvent(bev abci.Event) (ev SDKEvent, err error) {
-    sev := StringifyEvent(bev)
-    module, err := GetEventString(sev.Attributes, AttributeKeyModule)
-    if err != nil {
-        return
-    }
-    action, err := GetEventString(sev.Attributes, AttributeKeyAction)
-    if err != nil {
-        return
-    }
-    return SDKEvent{sev, BaseModuleEvent{module, action}}, nil
-}
-
-// GetEventString take sdk attributes, key and returns value for that key. 
-func GetEventString(attrs []Attribute, key string) (string, error) {
-    for _, attr := range attrs {
-        if attr.Key == key {
-            return attr.Value, nil
-        }
-    }
-    return "", fmt.Errorf("not found")
-}
-
-// GetEventUint64 take sdk attributes, key and returns uint64 value. 
-// Returns error incase of failure.
-func GetEventUint64(attrs []Attribute, key string) (uint64, error) {
-    sval, err := GetEventString(attrs, key)
-    if err != nil {
-        return 0, err
-    }
-    return strconv.ParseUint(sval, 10, 64)
-}
-
-// Other type functions for use in the individual module parsers
-// e.g. func GetEventFloat64(attrs []Attribute, key) (float64, error) {}
-```
-
-__Step-3__: Add `AppModuleBasic.ParseEvent` and define `app.BasicManager.ParseEvent`:
-
-A `ParseEvent` function will need to be added to the `sdk.AppModuleBasic` interface.
-
-```go
-type AppModuleBasic interface {
-    ...
-    ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error)
-    ...
-}
-
-// ParseEvent takes an sdk.SDKEvent and returns the module specific sdk.ModuleEvent
-func (bm BasicManager) ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error) {
-    for m, b := range bm {
-        if m == ev.Base.Module {
-            return b.ParseEvent(cdc)
-        }
-    }
-    return nil, fmt.Errorf("failed to parse event")
-}
-```
-
-__Step-4__: Define typed events for msgs in `x/<module>/types/events.go`:
+__Step-2__: Add proto definitions for typed events for msgs in each module:
 
 For example, let's take `MsgSubmitProposal` of `gov` module and implement this event's type.
 
-```go
-// x/gov/types/events.go
-func NewEventSubmitProposal(from sdk.Address, id govtypes.ProposalID, proposal govtypes.TextProposal) EventSubmitProposal {
-    return EventSubmitProposal{
-        ID:          id,
-        FromAddress: from,
-        Proposal:    proposal,
-    }
-}
+```protobuf
+// proto/cosmos/gov/v1beta1/gov.proto
+// Add typed event definition
 
-type EventSubmitProposal struct {
-    FromAddress   AccAddress
-    ID            ProposalID
-    Proposal      types.TextProposal
-}
+package cosmos.gov.v1beta1;
 
-func (ev EventSubmitProposal) Context() sdk.BaseModuleEvent {
-    return BaseModuleEvent{
-        Module: "gov",
-        Action: "submit_proposal",
-    }
-}
-
-func (ev EventSubmitProposal) ABCIEvent() sdk.Event {
-    return types.NewEvent("cosmos-sdk-events",
-        sdk.NewAttribute(sdk.AttributeKeyModule, ev.Context().Module),
-        sdk.NewAttribute(sdk.AttributeKeyAction, ev.Context().Action),
-        sdk.NewAttribute("from", ev.FromAddress.String()),
-        sdk.NewAttribute("title", ev.Proposal.Title.String()),
-        sdk.NewAttribute("description", ev.Proposal.Description.String()),
-    )
+message EventSubmitProposal {
+    string from_address   = 1;
+    uint64 proposal_id    = 2;
+    TextProposal proposal = 3;
 }
 ```
 
-__Step-5__: Define `ParseEvent` for each module in their respective `x/<module>/module.go`:
-
-```go
-// x/gov/module.go
-
-// ParseEvent turns an sdk.SDKEvent into the gov specific event type and error if any occurred
-func (AppModuleBasic) ParseEvent(ev sdk.SDKEvent) (sdk.ModuleEvent, error) {
-    if ev.Sev.Type != sdk.EventTypeMessage {
-        return nil, fmt.Errorf("unknown message type")
-    }
-
-    if ev.Base.Module != ModuleName {
-        return nil, fmt.Errorf("wrong module: %s not %s", ev.Base.Module, ModuleName)
-    }
-    
-    switch ev.Base.Action {
-    case "submit_proposal":
-        addr, err := sdk.GetEventString(ev.Sev.Attributes, "from")
-        if err != nil {
-            return nil, err
-        }
-        proposalId, err := sdk.GetEventUint64(ev.Sev.Attributes, "proposal_id")
-        if err != nil {
-            return nil, err
-        }
-        proposal, err := parseProposalFromEvent(ev.Sev.Attributes, "id")
-        if err != nil {
-            return nil, err
-        }
-        from, err := sdk.AccAddressFromBech32(addr)
-        if err != nil {
-            return nil, err
-        }
-        return NewEventSubmitProposal(from, proposalId, proposal), nil
-    case "proposal_deposit":
-        // TODO: Implement
-    case "submit_proposal":
-        // TODO: Implement
-    case "proposal_deposit":
-        // TODO: Implement
-    case "proposal_vote":
-        // TODO: Implement
-    case "inactive_proposal":
-        // TODO: Implement
-    case "active_proposal":
-        // TODO: Implement
-    default:
-        return nil, fmt.Errorf("unsupported event type for gov")
-    }
-}
-
-// parseProposalFromEvent returns the TextProposal from []sdk.Attributes
-func parseProposalFromEvent(attrs []sdk.Attribute) ([]byte, error) {
-    description, err := sdk.GetEventString(attrs, "description")
-    if err != nil {
-        return govtypes.TextProposal{}, err
-    }
-
-    title, err := sdk.GetEventString(attrs, "title")
-    if err != nil {
-        return govtypes.TextProposal{}, err
-    }
-
-    return govtypes.TextProposal{
-        Title:        title,
-        Description:  description,
-    }, nil
-}
-```
-
-__Step-6__: Refactor event emission to use the types created:
-
-Emiting events is similar to the current method:
+__Step-3__: Refactor event emission to use the typed event created and emit using `sdk.EmitTypedEvent`:
 
 ```go
 // x/gov/handler.go
 func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.MsgSubmitProposalI) (*sdk.Result, error) {
     ...
-    types.Context.EventManager().EmitEvent(
-        NewEventSubmitProposal(fromAddress, id, proposal).ABCIEvent(),
+    types.Context.EventManager().EmitTypedEvent(
+        &EventSubmitProposal{
+            FromAddress: fromAddress,
+            ProposalId: id,
+            Proposal: proposal,
+        },
     )
     ...
 }
@@ -280,7 +174,7 @@ type EventEmitter func(context.Context, client.Context, ...EventHandler) error
 
 // EventHandler is a type of function that handles events coming out of the event bus
 // This should be defined in `types/events.go`
-type EventHandler func(sdk.ModuleEvent) error
+type EventHandler func(proto.Message) error
 
 // Sample use of the functions below
 func main() {
@@ -296,12 +190,12 @@ func main() {
 
 // SubmitProposalEventHandler is an example of an event handler that prints proposal details
 // when any EventSubmitProposal is emitted. 
-func SubmitProposalEventHandler(ev sdk.ModuleEvent) (err error) {
+func SubmitProposalEventHandler(ev proto.Message) (err error) {
     switch event := ev.(type) {
     // Handle governance proposal events creation events
     case govtypes.EventSubmitProposal:
         // Users define business logic here e.g.
-        fmt.Println(ev.FromAddress, ev.ID, ev.Proposal)
+        fmt.Println(ev.FromAddress, ev.ProposalId, ev.Proposal)
         return nil
     default:
         return nil
@@ -395,15 +289,11 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
                     // range over events, parse them using the basic manager and 
                     // send them to the pubsub bus
                     for _, abciEv := range events {
-                        sdkEv, err := sdk.NewSDKEvent(abciEv)
-                        if err != nil {
-                            return err
-                        }
-                        moduleEvent, err := mb.ParseEvent(abciEv)
+                        typedEvent, err := sdk.ParseTypedEvent(abciEv)
                         if err != nil {
                             return er
                         }
-                        if err := bus.Publish(moduleEvent); err != nil {
+                        if err := bus.Publish(typedEvent); err != nil {
                             bus.Close()
                             return
                         }
@@ -421,7 +311,5 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 ```
 
 ## References
-- [Event types for a module](https://github.com/ovrclk/akash/blob/master/x/deployment/types/event.go#L24)
-- [Emit Events](https://github.com/ovrclk/akash/blob/master/x/deployment/keeper/keeper.go#L129)
 - [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/master/events/publish.go#L19-L58)
 - [Consuming the events in `Client`](https://github.com/jackzampolin/deploy/blob/master/cmd/event-handlers.go#L57)

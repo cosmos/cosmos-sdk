@@ -15,6 +15,7 @@ const (
 	DefaultTxSizeCostPerByte      uint64 = 10
 	DefaultSigVerifyCostED25519   uint64 = 590
 	DefaultSigVerifyCostSecp256k1 uint64 = 1000
+	DefaultPubKeyChangeCost       uint64 = 5000
 )
 
 // Parameter keys
@@ -24,13 +25,14 @@ var (
 	KeyTxSizeCostPerByte      = []byte("TxSizeCostPerByte")
 	KeySigVerifyCostED25519   = []byte("SigVerifyCostED25519")
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
+	KeyPubKeyChangeCost       = []byte("PubKeyChangeCost")
 )
 
 var _ paramtypes.ParamSet = &Params{}
 
 // NewParams creates a new Params object
 func NewParams(
-	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64,
+	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64, pubKeyChangeCost uint64,
 ) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
@@ -38,6 +40,7 @@ func NewParams(
 		TxSizeCostPerByte:      txSizeCostPerByte,
 		SigVerifyCostED25519:   sigVerifyCostED25519,
 		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+		PubKeyChangeCost:       pubKeyChangeCost,
 	}
 }
 
@@ -56,6 +59,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyTxSizeCostPerByte, &p.TxSizeCostPerByte, validateTxSizeCostPerByte),
 		paramtypes.NewParamSetPair(KeySigVerifyCostED25519, &p.SigVerifyCostED25519, validateSigVerifyCostED25519),
 		paramtypes.NewParamSetPair(KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
+		paramtypes.NewParamSetPair(KeyPubKeyChangeCost, &p.PubKeyChangeCost, validatePubKeyChangeCost),
 	}
 }
 
@@ -67,6 +71,7 @@ func DefaultParams() Params {
 		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
+		PubKeyChangeCost:       DefaultPubKeyChangeCost,
 	}
 }
 
@@ -115,6 +120,19 @@ func validateSigVerifyCostSecp256k1(i interface{}) error {
 	return nil
 }
 
+func validatePubKeyChangeCost(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid pubkey change cost: %d", v)
+	}
+
+	return nil
+}
+
 func validateMaxMemoCharacters(i interface{}) error {
 	v, ok := i.(uint64)
 	if !ok {
@@ -150,6 +168,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
+		return err
+	}
+	if err := validatePubKeyChangeCost(p.PubKeyChangeCost); err != nil {
 		return err
 	}
 	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {

@@ -18,7 +18,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -34,7 +33,7 @@ const (
 var (
 	height          = clienttypes.NewHeight(0, 4)
 	newClientHeight = clienttypes.NewHeight(1, 1)
-	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", upgradetypes.KeyUpgradedClient)
+	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 )
 
 type TendermintTestSuite struct {

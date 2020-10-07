@@ -37,7 +37,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -71,7 +70,7 @@ var (
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", upgradetypes.KeyUpgradedClient)
+	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 

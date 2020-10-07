@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -29,7 +30,10 @@ func (cs ClientState) VerifyUpgrade(
 	if cs.UpgradePath == "" {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
 	}
-	upgradePath := constructUpgradeMerklePath(cs.UpgradePath, upgradeHeight)
+	upgradePath, err := constructUpgradeMerklePath(cs.UpgradePath, upgradeHeight)
+	if err != nil {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, unescaping key with URL format failed: %v", err)
+	}
 
 	// UpgradeHeight must be in same epoch as client state height
 	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
@@ -101,12 +105,17 @@ func (cs ClientState) VerifyUpgrade(
 }
 
 // construct MerklePath from upgradePath
-func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Height) commitmenttypes.MerklePath {
+func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Height) (commitmenttypes.MerklePath, error) {
 	// assume that all keys here are separated by `/` and
 	// any `/` within a merkle key is correctly escaped
 	upgradeKeys := strings.Split(upgradePath, "/")
+	// unescape the last key so that we can append `/{height}` to the last key
+	lastKey, err := url.PathUnescape(upgradeKeys[len(upgradeKeys)-1])
+	if err != nil {
+		return commitmenttypes.MerklePath{}, err
+	}
 	// append upgradeHeight to last key in merkle path
 	// this will create the IAVL key that is used to store client in upgrade store
-	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
-	return commitmenttypes.NewMerklePath(upgradeKeys)
+	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", lastKey, upgradeHeight.GetEpochHeight())
+	return commitmenttypes.NewMerklePath(upgradeKeys), nil
 }

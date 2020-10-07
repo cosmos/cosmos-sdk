@@ -184,7 +184,37 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: false,
 		},
 		{
-			name: "unsuccessful upgrade: upgrade path is nil",
+			name: "unsuccessful upgrade: upgrade path is empty",
+			setup: func() {
+
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
+
+				// upgrade Height is at next block
+				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
+
+				// zero custom fields and store in upgrade store
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
+
+				// commit upgrade store changes and update clients
+
+				suite.coordinator.CommitBlock(suite.chainB)
+				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
+				suite.Require().NoError(err)
+
+				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
+				suite.Require().True(found)
+
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
+
+				// SetClientState with empty upgrade path
+				tmClient, _ := cs.(*types.ClientState)
+				tmClient.UpgradePath = ""
+				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
+			},
+			expPass: false,
+		},
+		{
+			name: "unsuccessful upgrade: upgrade path is malformed and cannot be correctly unescaped",
 			setup: func() {
 
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
@@ -208,7 +238,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 
 				// SetClientState with nil upgrade path
 				tmClient, _ := cs.(*types.ClientState)
-				tmClient.UpgradePath = ""
+				tmClient.UpgradePath = "upgraded%Client"
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
 			},
 			expPass: false,
@@ -267,9 +297,9 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			name: "unsuccessful upgrade: client is expired",
 			setup: func() {
 
-				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &upgradePath, false, false)
+				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
 
 				// commit upgrade store changes and update clients
 
@@ -283,7 +313,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
 			},
 			expPass: false,
 		},

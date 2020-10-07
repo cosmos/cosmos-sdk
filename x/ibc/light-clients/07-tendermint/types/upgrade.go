@@ -61,6 +61,10 @@ func (cs ClientState) VerifyUpgrade(
 		return sdkerrors.Wrap(err, "could not retrieve latest consensus state")
 	}
 
+	if cs.IsExpired(consState.Timestamp, ctx.BlockTime()) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "cannot upgrade an expired client")
+	}
+
 	tmCommittedClient, ok := committedClient.(*ClientState)
 	if !ok {
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",

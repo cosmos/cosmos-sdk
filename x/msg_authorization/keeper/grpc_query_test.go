@@ -2,61 +2,87 @@ package keeper_test
 
 import (
 	gocontext "context"
-	"time"
 	"fmt"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
-
-type MsgAuthTestSuite struct {
-	suite.Suite
-
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	queryClient types.QueryClient
-	accAddrs    []sdk.AccAddress
-}
-
-
-func (suite *MsgAuthTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
-	
-	accAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.TokensFromConsensusPower(200))
-	suite.app = app
-	suite.ctx = ctx
-	suite.accAddrs = accAddrs
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MsgAuthKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-	suite.queryClient = queryClient
-}
-
-func (suite *MsgAuthTestSuite) TestGRPCQueryAuthorization() {
-	suite.T().Log("Here")
-	queryClient := suite.queryClient
-
-	now := suite.ctx.BlockHeader().Time
-	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	x := &types.SendAuthorization{SpendLimit: newCoins}
-	suite.app.MsgAuthKeeper.Grant(suite.ctx, suite.accAddrs[0], suite.accAddrs[1],x,now.Add(time.Hour) )
-
-	paramsResp, err := queryClient.Authorization(gocontext.Background(), &types.QueryAuthorizationRequest{})
-
-	suite.NoError(err)
-
-	authorization, _ := suite.app.MsgAuthKeeper.GetAuthorization(suite.ctx, suite.accAddrs[0], suite.accAddrs[1],x.MsgType())
-	suite.NotNil(authorization)
-	fmt.Println(authorization)
-	suite.Equal(x, paramsResp.GetAuthorization())
+func (suite *TestSuite) TestGRPCQueryAuthorization() {
+	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+	var (
+		req              *types.QueryAuthorizationRequest
+		expAuthorization types.Authorization
+	)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+		postTest func(res *types.QueryAuthorizationResponse)
+	}{
+		{
+			"fail invalid granter addr",
+			func() {
+				req = &types.QueryAuthorizationRequest{}
+			},
+			false,
+			func(res *types.QueryAuthorizationResponse) {},
+		},
+		{
+			"fail invalid grantee addr",
+			func() {
+				req = &types.QueryAuthorizationRequest{
+					GranterAddr: addrs[0].String(),
+				}
+			},
+			false,
+			func(res *types.QueryAuthorizationResponse) {},
+		},
+		{
+			"fail invalid msg-type",
+			func() {
+				req = &types.QueryAuthorizationRequest{
+					GranterAddr: addrs[0].String(),
+					GranteeAddr: addrs[1].String(),
+				}
+			},
+			false,
+			func(res *types.QueryAuthorizationResponse) {},
+		},
+		{
+			"fail invalid msg-type",
+			func() {
+				now := ctx.BlockHeader().Time
+				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+				expAuthorization = &types.SendAuthorization{SpendLimit: newCoins}
+				app.MsgAuthKeeper.Grant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
+				req = &types.QueryAuthorizationRequest{
+					GranterAddr: addrs[1].String(),
+					GranteeAddr: addrs[0].String(),
+					MsgType:     expAuthorization.MsgType(),
+				}
+			},
+			true,
+			func(res *types.QueryAuthorizationResponse) {
+				var auth types.Authorization
+				err := suite.app.InterfaceRegistry().UnpackAny(res.Authorization, &auth)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(auth)
+				suite.Require().Equal(auth.String(), expAuthorization.String())
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+			result, err := queryClient.Authorization(gocontext.Background(), req)
+			if testCase.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+			testCase.postTest(result)
+		})
+	}
 }

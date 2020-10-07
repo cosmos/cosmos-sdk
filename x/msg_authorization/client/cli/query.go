@@ -2,8 +2,8 @@ package cli
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	"github.com/spf13/cobra"
@@ -14,7 +14,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the msg authorization module",
-		Long: "",
+		Long:                       "",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -29,7 +29,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 // GetCmdQueryAuthorization implements the query authorizations command.
 func GetCmdQueryAuthorization(storeName string) *cobra.Command {
-	//TODO update description
 	cmd := &cobra.Command{
 		Use:   "authorization [grantee-addr] [msg-type]",
 		Args:  cobra.ExactArgs(2),
@@ -57,7 +56,7 @@ func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 				&types.QueryAuthorizationRequest{
 					GranterAddr: granterAddr.String(),
 					GranteeAddr: granteeAddr.String(),
-					 MsgType: msgAuthorized,
+					MsgType:     msgAuthorized,
 				},
 			)
 			if err != nil {

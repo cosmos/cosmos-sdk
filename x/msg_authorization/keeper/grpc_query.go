@@ -1,6 +1,5 @@
 package keeper
 
-
 import (
 	"context"
 
@@ -15,7 +14,6 @@ import (
 )
 
 var _ types.QueryServer = Keeper{}
-
 
 // Authorization implements the Query/Authorization gRPC method
 func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRequest) (*types.QueryAuthorizationResponse, error) {
@@ -47,7 +45,7 @@ func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRe
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	authorization, _ := k.GetAuthorization(ctx,granterAddr, granteeAddr, req.MsgType)
+	authorization, _ := k.GetAuthorization(ctx, granteeAddr, granterAddr, req.MsgType)
 	if authorization == nil {
 		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgType)
 	}

@@ -10,7 +10,7 @@ var (
 	_ Authorization = &SendAuthorization{}
 )
 
-func NewSendAuthorization (spendLimit sdk.Coins) *SendAuthorization {
+func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 	return &SendAuthorization{
 		SpendLimit: spendLimit,
 	}

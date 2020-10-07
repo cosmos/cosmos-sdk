@@ -1,18 +1,18 @@
 package msg_authorization
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
-	"context"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -126,9 +126,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	// TODO:
-	// querier := keeper.Querier{Keeper: am.keeper}
-	// types.RegisterQueryServer(server, querier)
+	types.RegisterQueryServer(server, am.keeper)
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

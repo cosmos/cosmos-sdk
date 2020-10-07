@@ -2,12 +2,12 @@ package types
 
 import (
 	"fmt"
-	"time"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"gopkg.in/yaml.v2"
+	"time"
 )
 
 // msg_authorization message types
@@ -99,7 +99,6 @@ func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) er
 	var authorization Authorization
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
-
 
 // String implements the Stringer interface
 func (msg MsgGrantAuthorization) String() string {

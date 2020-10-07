@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 	"time"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,18 +17,28 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	app *simapp.SimApp
-	ctx sdk.Context
+	app   *simapp.SimApp
+	ctx   sdk.Context
 	addrs []sdk.AccAddress
+	queryClient types.QueryClient
+
 }
 
 func (s *TestSuite) SetupTest() {
-	s.app = simapp.Setup(false)
-	ctx := s.app.BaseApp.NewContext(false, tmproto.Header{})
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.MsgAuthKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+	s.queryClient = queryClient
+
+	s.app = app
 	s.ctx = ctx
-	s.addrs = simapp.AddTestAddrsIncremental(s.app, s.ctx, 3, sdk.NewInt(20000001))
+	s.queryClient = queryClient
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
+
 }
 
 func (s *TestSuite) TestKeeper() {

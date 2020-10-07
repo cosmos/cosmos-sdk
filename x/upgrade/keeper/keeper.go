@@ -83,7 +83,9 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		// if latest UpgradedClientState is nil, but upgraded client exists in store,
 		// then delete client state from store.
 		_, height, _ := k.GetUpgradedClient(ctx)
-		store.Delete(types.UpgradedClientKey(height))
+		if height != 0 {
+			store.Delete(types.UpgradedClientKey(height))
+		}
 		return nil
 	}
 

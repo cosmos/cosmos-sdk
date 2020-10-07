@@ -39,6 +39,10 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
+	if testing.Short() {
+		t.Skip("skipping test in unit-tests mode.")
+	}
+
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 2
 
@@ -1286,7 +1290,6 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	s.Require().NoError(err)
 
 	// Use CLI to create a delegation from the new account to validator `val`.
-	s.Require().NoError(err)
 	delHeight, err := s.network.LatestHeight()
 	s.Require().NoError(err)
 	cmd := cli.NewDelegateCmd()

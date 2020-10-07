@@ -43,7 +43,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // Router returns the gov Keeper's Router
 func (k Keeper) Router() types.Router {
-	return keeper.router
+	return k.router
 }
 
 func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {

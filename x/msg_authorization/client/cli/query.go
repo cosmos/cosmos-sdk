@@ -31,8 +31,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 // GetCmdQueryAuthorization implements the query authorizations command.
 func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "authorization [grantee-addr] [msg-type]",
-		Args:  cobra.ExactArgs(2),
+		Use:   "authorization [granter-addr] [grantee-addr] [msg-type]",
+		Args:  cobra.ExactArgs(3),
 		Short: "query authorization for a granter-grantee pair",
 		Long:  "query authorization for a granter-grantee pair",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,14 +43,17 @@ func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			granterAddr := clientCtx.GetFromAddress()
-
-			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
+			granterAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			msgAuthorized := args[1]
+			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msgAuthorized := args[2]
 
 			res, err := queryClient.Authorization(
 				context.Background(),

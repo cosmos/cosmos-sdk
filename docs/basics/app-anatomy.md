@@ -214,12 +214,12 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 
 #### gRPC
 
-gRPC is a modern open source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
+[gRPC](https://grpc.io) is a modern open source high performance RPC framework that has support in multiple languages. It is the recommended way for external clients (such as wallets, browsers and other backend services) to interact with a node.
 
-Each module can expose gRPC endpoints, called [services](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the module's Protobuf files. A service is defined by its name, input arguments and output response. The module then needs to:
+Each module can expose gRPC endpoints, called [service methods](https://grpc.io/docs/what-is-grpc/core-concepts/#service-definition) and are defined in the [module's Protobuf `query.proto` file](#grpc-query-services). A service method is defined by its name, input arguments and output response. The module then needs to:
 
-- define a `RegisterGRPCRoutes` method on `AppModuleBasic` to wire up the services with the SDK.
-- for each service, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
+- define a `RegisterGRPCRoutes` method on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+- for each service method, define a corresponding handler. The handler implements the core logic necessary to serve the gRPC request, and is located in the `keeper/grpc_query.go` file.
 
 #### gRPC-gateway REST Endpoints
 

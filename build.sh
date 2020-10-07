@@ -24,7 +24,7 @@ for os in ${TARGET_OS} ; do
     for arch in ${archs} ; do
         make clean
         GOOS="${os}" GOARCH="${arch}" GOROOT_FINAL="$(go env GOROOT)" \
-        make ${APP} \
+        make build \
             LDFLAGS=-buildid=${VERSION} \
             VERSION=${VERSION} \
             COMMIT=${COMMIT} \

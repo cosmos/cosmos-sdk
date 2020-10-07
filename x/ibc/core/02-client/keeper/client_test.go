@@ -11,7 +11,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	solomachinetypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	localhosttypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -248,7 +247,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		expPass bool
 	}{
 		{
-			name: "successful upgrade to a new tendermint client",
+			name: "successful upgrade",
 			setup: func() {
 
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, upgradeHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
@@ -262,32 +261,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				suite.Require().NoError(err)
 
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
-				suite.Require().True(found)
-
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())
-			},
-			expPass: true,
-		},
-		{
-			name: "successful upgrade to a solomachine client",
-			setup: func() {
-				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
-				suite.Require().True(found)
-
-				// demonstrate that VerifyUpgrade allows for arbitrary changes to clienstate structure so long as
-				// previous chain committed to the change
-				upgradedClient = ibctesting.NewSolomachine(suite.T(), suite.cdc, clientA, "diversifier", 1).ClientState()
-				soloClient, _ := upgradedClient.(*solomachinetypes.ClientState)
-				// change sequence to be higher height than latest current client height
-				soloClient.Sequence = cs.GetLatestHeight().GetEpochHeight() + 100
-				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), upgradedClient)
-
-				suite.coordinator.CommitBlock(suite.chainB)
-				err := suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, ibctesting.Tendermint)
-				suite.Require().NoError(err)
-
-				cs, found = suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
 				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(), cs.GetLatestHeight().GetEpochHeight())

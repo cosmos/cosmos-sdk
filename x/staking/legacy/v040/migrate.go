@@ -9,6 +9,7 @@ import (
 // Migrate accepts exported v0.38 x/staking genesis state and migrates it to
 // v0.40 x/staking genesis state. The migration includes:
 //
+// - Convert addresses from bytes to bech32 strings.
 // - Re-encode in v0.40 GenesisState.
 func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 	newLastValidatorPowers := make([]v040staking.LastValidatorPower, len(stakingState.LastValidatorPowers))

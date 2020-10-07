@@ -79,6 +79,7 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 //
 // - Convert vote option & proposal status from byte to enum.
 // - Migrate proposal content to Any.
+// - Convert addresses from bytes to bech32 strings.
 // - Re-encode in v0.40 GenesisState.
 func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
 	newDeposits := make([]v040gov.Deposit, len(oldGovState.Deposits))

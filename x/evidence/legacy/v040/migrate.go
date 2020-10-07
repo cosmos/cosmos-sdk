@@ -3,7 +3,6 @@ package v040
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v038evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v038"
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -31,7 +30,7 @@ func migrateEvidence(oldEvidence v038evidence.Evidence) *codectypes.Any {
 // - Removing the `Params` field.
 // - Converting Equivocations into Anys.
 // - Re-encode in v0.40 GenesisState.
-func Migrate(evidenceState v038evidence.GenesisState, _ client.Context) *v040evidence.GenesisState {
+func Migrate(evidenceState v038evidence.GenesisState) *v040evidence.GenesisState {
 	var newEvidences = make([]*codectypes.Any, len(evidenceState.Evidence))
 	for i, oldEvidence := range evidenceState.Evidence {
 		newEvidences[i] = migrateEvidence(oldEvidence)

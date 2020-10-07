@@ -134,7 +134,7 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		rootViper.SetConfigName("config")
 		rootViper.AddConfigPath(configPath)
 		if err := rootViper.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("failed to read in app.toml: %w", err)
+			return nil, fmt.Errorf("failed to read in config.toml: %w", err)
 		}
 
 		if err := rootViper.Unmarshal(conf); err != nil {

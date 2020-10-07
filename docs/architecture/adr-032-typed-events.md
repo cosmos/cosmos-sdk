@@ -159,8 +159,6 @@ Please see the below code sample for more detail on this flow looks for clients.
 
 ### Negative
 
-* Requires a substantial amount of additional code in each module. For new developers and chains, this can be 
-partially mitigaed by code generation in [`starport`](https://github.com/tendermint/starport).
 
 ## Detailed code example of publishing events
 

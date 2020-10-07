@@ -10,9 +10,15 @@ import (
 
 func migrateEvidence(oldEvidence v038evidence.Evidence) *codectypes.Any {
 	switch oldEvidence := oldEvidence.(type) {
-	case *v040evidence.Equivocation:
+	case v038evidence.Equivocation:
 		{
-			any, err := codectypes.NewAnyWithValue(oldEvidence)
+			newEquivocation := &v040evidence.Equivocation{
+				Height:           oldEvidence.Height,
+				Time:             oldEvidence.Time,
+				Power:            oldEvidence.Power,
+				ConsensusAddress: oldEvidence.ConsensusAddress.String(),
+			}
+			any, err := codectypes.NewAnyWithValue(newEquivocation)
 			if err != nil {
 				panic(err)
 			}

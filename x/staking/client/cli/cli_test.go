@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -40,7 +38,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	if testing.Short() {
-		t.Skip("skipping test in unit-tests mode.")
+		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
 	cfg := network.DefaultConfig()

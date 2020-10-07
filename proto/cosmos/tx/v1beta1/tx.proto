@@ -169,4 +169,14 @@ message Fee {
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs
   uint64 gas_limit = 2;
+
+  // if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees.
+  // the payer must be a tx signer (and thus have signed this field in AuthInfo).
+  // setting this field does *not* change the ordering of required signers for the transaction.
+  string payer = 3;
+
+  // if set, the fee payer (either the first signer or the value of the payer field) requests that a fee grant be used
+  // to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does
+  // not support fee grants, this will fail
+  string granter = 4;
 }

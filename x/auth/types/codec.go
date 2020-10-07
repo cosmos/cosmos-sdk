@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacytx.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterface associates protoName with AccountI interface
+// RegisterInterfaces associates protoName with AccountI interface
 // and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(

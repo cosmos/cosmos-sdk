@@ -321,7 +321,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			clientKey := host.FullKeyClientPath(clientA, host.KeyClientState())
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
-			// set consensus params in context to simulate baseapp handling
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
 				suite.chainB.GetContext(), connB.ID, counterpartyChosenConnectionID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
@@ -693,7 +692,6 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 			clientKey := host.FullKeyClientPath(clientB, host.KeyClientState())
 			proofClient, _ := suite.chainB.QueryProof(clientKey)
 
-			// set consensus params in context to simulate baseapp handling
 			err := suite.chainA.App.IBCKeeper.ConnectionKeeper.ConnOpenAck(
 				suite.chainA.GetContext(), connA.ID, counterpartyClient, version, counterpartyConnectionID,
 				proofTry, proofClient, proofConsensus, proofHeight, consensusHeight,

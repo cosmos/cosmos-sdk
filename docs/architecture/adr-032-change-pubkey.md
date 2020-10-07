@@ -53,7 +53,7 @@ Once, approved, the handler for this message type, which takes in the AccountKee
 Because an account can no longer be pruned from state once its pubkey has changed, we can charge an additional gas fee for this operation to compensate for this this externality (this bound gas amount is configured as parameter `PubKeyChangeCost`). The bonus gas is charged inside handler, using the `ConsumeGas` function.
 
 ```go
-	amount := pk.GetParams(ctx).PubKeyChangeCost
+	amount := ak.GetParams(ctx).PubKeyChangeCost
 	ctx.GasMeter().ConsumeGas(amount, "pubkey change fee")
 ```
 

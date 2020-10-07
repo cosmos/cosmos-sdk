@@ -43,7 +43,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	}
 
 	if err := k.ConnOpenTry(
-		ctx, msg.ConnectionId, msg.ProvedId, msg.Counterparty, msg.ClientId, targetClient,
+		ctx, msg.DesiredConnectionId, msg.CounterpartyChosenConnectionId, msg.Counterparty, msg.ClientId, targetClient,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofClient, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	); err != nil {
@@ -53,7 +53,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg *types.Msg
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenTry,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.DesiredConnectionId),
 			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientId),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientId),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyConnectionID, msg.Counterparty.ConnectionId),

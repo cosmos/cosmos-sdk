@@ -29,11 +29,7 @@ func (cs ClientState) VerifyUpgrade(
 	if cs.UpgradePath == "" {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
 	}
-	// construct MerklePath from upgradePath
-	upgradeKeys := strings.Split(cs.UpgradePath, "/")
-	// append upgradeHeight to last key in merkle path
-	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
-	upgradePath := commitmenttypes.NewMerklePath(upgradeKeys)
+	upgradePath := constructUpgradeMerklePath(cs.UpgradePath, upgradeHeight)
 
 	// UpgradeHeight must be in same epoch as client state height
 	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
@@ -98,4 +94,15 @@ func (cs ClientState) VerifyUpgrade(
 	}
 
 	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), upgradePath, bz)
+}
+
+// construct MerklePath from upgradePath
+func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Height) commitmenttypes.MerklePath {
+	// assume that all keys here are separated by `/` and
+	// any `/` within a merkle key is correctly escaped
+	upgradeKeys := strings.Split(upgradePath, "/")
+	// append upgradeHeight to last key in merkle path
+	// this will create the IAVL key that is used to store client in upgrade store
+	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", upgradeKeys[len(upgradeKeys)-1], upgradeHeight.GetEpochHeight())
+	return commitmenttypes.NewMerklePath(upgradeKeys)
 }

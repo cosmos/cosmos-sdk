@@ -101,6 +101,7 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcex
 	store := ctx.KVStore(k.storeKey)
 
 	// delete any previously stored upgraded client before setting a new one
+	// since there should only ever be one upgraded client in the store at any given time
 	_, setHeight, _ := k.GetUpgradedClient(ctx)
 	if setHeight != 0 {
 		store.Delete(types.UpgradedClientKey(setHeight))
@@ -119,6 +120,7 @@ func (k Keeper) SetUpgradedClient(ctx sdk.Context, upgradeHeight int64, cs ibcex
 
 // GetUpgradedClient gets the expected upgraded client for the next version of this chain
 // along with the planned upgrade height
+// Since there is only ever one upgraded client in store, we do not need to know key beforehand
 func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int64, error) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.KeyUpgradedClient))
@@ -130,6 +132,8 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context) (ibcexported.ClientState, int
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		count++
+		// we must panic if the upgraded clients in store is ever more than one since
+		// that would break upgrade functionality and chain must halt and fix issue manually
 		if count > 1 {
 			panic("more than 1 upgrade client stored in state")
 		}

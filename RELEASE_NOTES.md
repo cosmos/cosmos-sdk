@@ -1,9 +1,8 @@
 # Cosmos SDK v0.40.0 "Stargate" Release Notes
 
-This release introduces several new important updates to the Cosmos SDK. Please see below for a high level overview of the changes in this release.
+This release introduces several new important updates to the Cosmos SDK. The release notes below provide an overview of the larger high-level changes introduced in the v0.40 (aka Stargate) release series.
 
-For a more detailed look at all changes see the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.40.x/CHANGELOG.md), or alternatively you can look at issues tracked in 
-the [Cosmos SDK v0.40 milestone](https://github.com/cosmos/cosmos-sdk/milestone/25?closed=1) and [IBC 1.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/21?closed=1), which contain links to all major SDK issues that were tracked in this release.
+That being said, this release does contain many more minor and module-level changes besides those mentioned below. For a comprehsive list of all breaking changes and improvements since the v0.39 release series, please see the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.40.x/CHANGELOG.md).
 
 ## Protocol Buffer Migration
 

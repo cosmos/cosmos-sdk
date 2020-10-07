@@ -146,9 +146,9 @@ object called `TxEncoder` and the decoding by an object called `TxDecoder`.
 
 A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/tx/decoder.go
++++ https://github.com/cosmos/cosmos-sdk/blob/9ae17669d6715a84c20d52e10e2232be9f467360/x/auth/tx/decoder.go
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/tx/encoder.go
++++ https://github.com/cosmos/cosmos-sdk/blob/9ae17669d6715a84c20d52e10e2232be9f467360/x/auth/tx/encoder.go
 
 ## Next {hide}
 

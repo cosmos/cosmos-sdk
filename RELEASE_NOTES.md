@@ -2,7 +2,7 @@
 
 This release introduces several new important updates to the Cosmos SDK. Please see below for a high level overview of the changes in this release.
 
-For a more detailed look at all changes see the [changelog](https://github.com/cosmos/cosmos-sdk/blob/master/CHANGELOG.md), or alternatively you can look at issues tracked in 
+For a more detailed look at all changes see the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.40.x/CHANGELOG.md), or alternatively you can look at issues tracked in 
 the [Cosmos SDK v0.40 milestone](https://github.com/cosmos/cosmos-sdk/milestone/25?closed=1) and [IBC 1.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/21?closed=1), which contain links to all major SDK issues that were tracked in this release.
 
 ## Protocol Buffer Migration

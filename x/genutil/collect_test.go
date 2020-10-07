@@ -56,9 +56,9 @@ func TestCollectTxsHandlesDirectories(t *testing.T) {
 
 	// 2. Ensure that we don't encounter any error traversing the directory.
 	srvCtx := server.NewDefaultContext()
-	_ = srvCtx.Config
+	_ = srvCtx
 	cdc := codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
-	gdoc := tmtypes.GenesisDoc{}
+	gdoc := tmtypes.GenesisDoc{AppState: []byte("{}")}
 	balItr := new(doNothingIterator)
 
 	dnc := &doNothingUnmarshalJSON{cdc}

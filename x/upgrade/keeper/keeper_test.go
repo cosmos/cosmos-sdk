@@ -291,10 +291,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		},
 	}
 
-	for i, tc := range cases {
-		if i != 2 {
-			continue
-		}
+	for _, tc := range cases {
 		// reset suite
 		s.SetupTest()
 

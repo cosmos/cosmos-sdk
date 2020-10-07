@@ -71,10 +71,6 @@ typically used for when the data needs to be streamed or grouped together
 
 Modules are encouraged to utilize Protobuf encoding for their respective types.
 
-#### Guidelines for protobuf message definitions
-
-Apart from [following official guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), ... TODO
-
 #### FAQ
 
 1. How to create modules using protobuf encoding?
@@ -117,7 +113,7 @@ message MsgSubmitEvidence {
 The SDK provides support methods `MarshalAny` and `UnmarshalAny` to allow
 easy encoding of state to `Any`.
 
-Module should register interfaces using `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from Any, similarly to type registration with Amino:
+Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/3d969a1ffdf9a80f9ee16db9c16b8a8aa1004af6/codec/types/interface_registry.go#L23-L52
 
@@ -128,6 +124,14 @@ type UnpackInterfacesMessage interface {
   UnpackInterfaces(InterfaceUnpacker) error
 }
 ```
+
+#### Guidelines for protobuf message definitions
+
+In addition to [following official guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend to use these annotations in .proto files when dealing with interfaces:
+* fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
+using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
+* interface implementations should be annotated with `cosmos_proto.implements_interface`
+using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 
 #### Transaction Encoding
 

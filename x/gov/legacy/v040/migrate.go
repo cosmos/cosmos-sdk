@@ -1,116 +1,140 @@
 package v040
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"fmt"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+func migrateVoteOption(oldVoteOption v034gov.VoteOption) v040gov.VoteOption {
+	switch oldVoteOption {
+	case v034gov.OptionEmpty:
+		return v040gov.OptionEmpty
+
+	case v034gov.OptionYes:
+		return v040gov.OptionYes
+
+	case v034gov.OptionAbstain:
+		return v040gov.OptionAbstain
+
+	case v034gov.OptionNo:
+		return v040gov.OptionNo
+
+	case v034gov.OptionNoWithVeto:
+		return v040gov.OptionNoWithVeto
+
+	default:
+		panic(fmt.Errorf("'%s' is not a valid vote option", oldVoteOption))
+	}
+}
+
+func migrateProposalStatus(oldProposalStatus v034gov.ProposalStatus) v040gov.ProposalStatus {
+	switch oldProposalStatus {
+
+	case v034gov.StatusNil:
+		return v040gov.StatusNil
+
+	case v034gov.StatusDepositPeriod:
+		return v040gov.StatusDepositPeriod
+
+	case v034gov.StatusVotingPeriod:
+		return v040gov.StatusVotingPeriod
+
+	case v034gov.StatusPassed:
+		return v040gov.StatusPassed
+
+	case v034gov.StatusRejected:
+		return v040gov.StatusRejected
+
+	case v034gov.StatusFailed:
+		return v040gov.StatusFailed
+
+	default:
+		panic(fmt.Errorf("'%s' is not a valid proposal status", oldProposalStatus))
+	}
+}
+
+func migrateContent(oldContent v036gov.Content) *codectypes.Any {
+	switch oldContent := oldContent.(type) {
+	case *v040gov.TextProposal:
+		{
+			// Convert the content into Any.
+			contentAny, err := codectypes.NewAnyWithValue(oldContent)
+			if err != nil {
+				panic(err)
+			}
+
+			return contentAny
+		}
+	default:
+		panic(fmt.Errorf("'%T' is not a valid proposal content type", oldContent))
+	}
+}
+
 // Migrate accepts exported v0.36 x/gov genesis state and migrates it to
 // v0.40 x/gov genesis state. The migration includes:
 //
-// - Re-encode in v0.40 GenesisState
-func Migrate(govState v036gov.GenesisState) *v040gov.GenesisState {
-	newLastValidatorPowers := make([]v040gov.LastValidatorPower, len(govState.LastValidatorPowers))
-	for i, oldLastValidatorPower := range govState.LastValidatorPowers {
-		newLastValidatorPowers[i] = v040gov.LastValidatorPower{
-			Address: oldLastValidatorPower.Address.String(),
-			Power:   oldLastValidatorPower.Power,
+// - Convert vote option & proposal status from byte to enum.
+// - Migrate proposal content to Any.
+// - Re-encode in v0.40 GenesisState.
+func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
+	newDeposits := make([]v040gov.Deposit, len(oldGovState.Deposits))
+	for i, oldDeposit := range oldGovState.Deposits {
+		newDeposits[i] = v040gov.Deposit{
+			ProposalId: oldDeposit.ProposalID,
+			Depositor:  oldDeposit.Depositor.String(),
+			Amount:     oldDeposit.Amount,
 		}
 	}
 
-	newValidators := make([]v040gov.Validator, len(govState.Validators))
-	for i, oldValidator := range govState.Validators {
-		newValidators[i] = v040gov.Validator{
-			OperatorAddress: oldValidator.OperatorAddress.String(),
-			ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, oldValidator.ConsPubKey),
-			Jailed:          oldValidator.Jailed,
-			Status:          oldValidator.Status,
-			Tokens:          oldValidator.Tokens,
-			DelegatorShares: oldValidator.DelegatorShares,
-			Description: v040gov.Description{
-				Moniker:         oldValidator.Description.Moniker,
-				Identity:        oldValidator.Description.Identity,
-				Website:         oldValidator.Description.Website,
-				SecurityContact: oldValidator.Description.SecurityContact,
-				Details:         oldValidator.Description.Details,
+	newVotes := make([]v040gov.Vote, len(oldGovState.Votes))
+	for i, oldVote := range oldGovState.Votes {
+		newVotes[i] = v040gov.Vote{
+			ProposalId: oldVote.ProposalID,
+			Voter:      oldVote.Voter.String(),
+			Option:     migrateVoteOption(oldVote.Option),
+		}
+	}
+
+	newProposals := make([]v040gov.Proposal, len(oldGovState.Proposals))
+	for i, oldProposal := range oldGovState.Proposals {
+		newProposals[i] = v040gov.Proposal{
+			ProposalId: oldProposal.ProposalID,
+			Content:    migrateContent(oldProposal.Content),
+			Status:     migrateProposalStatus(oldProposal.Status),
+			FinalTallyResult: v040gov.TallyResult{
+				Yes:        oldProposal.FinalTallyResult.Yes,
+				Abstain:    oldProposal.FinalTallyResult.Abstain,
+				No:         oldProposal.FinalTallyResult.No,
+				NoWithVeto: oldProposal.FinalTallyResult.NoWithVeto,
 			},
-			UnbondingHeight: oldValidator.UnbondingHeight,
-			UnbondingTime:   oldValidator.UnbondingCompletionTime,
-			Commission: v040gov.Commission{
-				CommissionRates: v040gov.CommissionRates{
-					Rate:          oldValidator.Commission.Rate,
-					MaxRate:       oldValidator.Commission.MaxRate,
-					MaxChangeRate: oldValidator.Commission.MaxChangeRate,
-				},
-				UpdateTime: oldValidator.Commission.UpdateTime,
-			},
-			MinSelfDelegation: oldValidator.MinSelfDelegation,
-		}
-	}
-
-	newDelegations := make([]v040gov.Delegation, len(govState.Delegations))
-	for i, oldDelegation := range govState.Delegations {
-		newDelegations[i] = v040gov.Delegation{
-			DelegatorAddress: oldDelegation.DelegatorAddress.String(),
-			ValidatorAddress: oldDelegation.ValidatorAddress.String(),
-			Shares:           oldDelegation.Shares,
-		}
-	}
-
-	newUnbondingDelegations := make([]v040gov.UnbondingDelegation, len(govState.UnbondingDelegations))
-	for i, oldUnbondingDelegation := range govState.UnbondingDelegations {
-		newEntries := make([]v040gov.UnbondingDelegationEntry, len(oldUnbondingDelegation.Entries))
-		for j, oldEntry := range oldUnbondingDelegation.Entries {
-			newEntries[j] = v040gov.UnbondingDelegationEntry{
-				CreationHeight: oldEntry.CreationHeight,
-				CompletionTime: oldEntry.CompletionTime,
-				InitialBalance: oldEntry.InitialBalance,
-				Balance:        oldEntry.Balance,
-			}
-		}
-
-		newUnbondingDelegations[i] = v040gov.UnbondingDelegation{
-			DelegatorAddress: oldUnbondingDelegation.DelegatorAddress.String(),
-			ValidatorAddress: oldUnbondingDelegation.ValidatorAddress.String(),
-			Entries:          newEntries,
-		}
-	}
-
-	newRedelegations := make([]v040gov.Redelegation, len(govState.Redelegations))
-	for i, oldRedelegation := range govState.Redelegations {
-		newEntries := make([]v040gov.RedelegationEntry, len(oldRedelegation.Entries))
-		for j, oldEntry := range oldRedelegation.Entries {
-			newEntries[j] = v040gov.RedelegationEntry{
-				CreationHeight: oldEntry.CreationHeight,
-				CompletionTime: oldEntry.CompletionTime,
-				InitialBalance: oldEntry.InitialBalance,
-				SharesDst:      oldEntry.SharesDst,
-			}
-		}
-
-		newRedelegations[i] = v040gov.Redelegation{
-			DelegatorAddress:    oldRedelegation.DelegatorAddress.String(),
-			ValidatorSrcAddress: oldRedelegation.ValidatorSrcAddress.String(),
-			ValidatorDstAddress: oldRedelegation.ValidatorDstAddress.String(),
-			Entries:             newEntries,
+			SubmitTime:      oldProposal.SubmitTime,
+			DepositEndTime:  oldProposal.DepositEndTime,
+			TotalDeposit:    oldProposal.TotalDeposit,
+			VotingStartTime: oldProposal.VotingStartTime,
+			VotingEndTime:   oldProposal.VotingEndTime,
 		}
 	}
 
 	return &v040gov.GenesisState{
-		Params: v040gov.Params{
-			UnbondingTime:     govState.Params.UnbondingTime,
-			MaxValidators:     uint32(govState.Params.MaxValidators),
-			MaxEntries:        uint32(govState.Params.MaxEntries),
-			HistoricalEntries: uint32(govState.Params.HistoricalEntries),
-			BondDenom:         govState.Params.BondDenom,
+		StartingProposalId: oldGovState.StartingProposalID,
+		Deposits:           newDeposits,
+		Votes:              newVotes,
+		Proposals:          newProposals,
+		DepositParams: v040gov.DepositParams{
+			MinDeposit:       oldGovState.DepositParams.MinDeposit,
+			MaxDepositPeriod: oldGovState.DepositParams.MaxDepositPeriod,
 		},
-		LastTotalPower:       govState.LastTotalPower,
-		LastValidatorPowers:  newLastValidatorPowers,
-		Validators:           newValidators,
-		Delegations:          newDelegations,
-		UnbondingDelegations: newUnbondingDelegations,
-		Redelegations:        newRedelegations,
-		Exported:             govState.Exported,
+		VotingParams: v040gov.VotingParams{
+			VotingPeriod: oldGovState.VotingParams.VotingPeriod,
+		},
+		TallyParams: v040gov.TallyParams{
+			Quorum:        oldGovState.TallyParams.Quorum,
+			Threshold:     oldGovState.TallyParams.Threshold,
+			VetoThreshold: oldGovState.TallyParams.Veto,
+		},
 	}
 }

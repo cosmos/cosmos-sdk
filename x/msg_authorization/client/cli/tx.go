@@ -67,25 +67,26 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 
 			msgType, ok := dict["msg_type"]
 			if !ok {
-				return errors.New("Missing key msg_type")
+				return errors.New("missing key msg_type")
 			}
 
 			var authorization types.Authorization
-			if msgType == (types.SendAuthorization{}.MsgType()) {
+			switch msgType {
+			case (types.SendAuthorization{}.MsgType()):
 				limit, err := sdk.ParseCoins(args[2])
 				if err != nil {
 					return err
 				}
 				authorization = types.NewSendAuthorization(limit)
-			} else if msgType == (types.GenericAuthorization{}.MsgType()) {
+			case (types.GenericAuthorization{}.MsgType()):
 				genAuth := types.GenericAuthorization{}
 				err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &genAuth)
 				if err != nil {
 					return err
 				}
 				authorization = &genAuth
-			} else {
-				return errors.New("Invalid authorization type")
+			default:
+				return errors.New("invalid authorization type")
 			}
 
 			expirationString := viper.GetString(FlagExpiration)

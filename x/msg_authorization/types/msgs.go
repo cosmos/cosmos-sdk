@@ -108,6 +108,7 @@ func (msg MsgGrantAuthorization) String() string {
 }
 
 // NewMsgRevokeAuthorization creates a new MsgRevokeAuthorization
+//nolint:interfacer
 func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType string) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
 		Granter:              granter.String(),
@@ -155,6 +156,7 @@ func (msg MsgRevokeAuthorization) String() string {
 }
 
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
+//nolint:interfacer
 func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorized {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {

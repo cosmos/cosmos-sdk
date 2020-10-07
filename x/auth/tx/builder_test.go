@@ -239,3 +239,75 @@ func TestBuilderValidateBasic(t *testing.T) {
 	err = txBuilder.ValidateBasic()
 	require.Error(t, err)
 }
+
+func TestBuilderFeePayer(t *testing.T) {
+	// keys and addresses
+	_, _, addr1 := testdata.KeyTestPubAddr()
+	_, _, addr2 := testdata.KeyTestPubAddr()
+	_, _, addr3 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	feeAmount := testdata.NewTestFeeAmount()
+	msgs := []sdk.Msg{msg1}
+
+	cases := map[string]struct {
+		txFeePayer      sdk.AccAddress
+		expectedSigners []sdk.AccAddress
+		expectedPayer   sdk.AccAddress
+	}{
+		"no fee payer specified": {
+			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedPayer:   addr1,
+		},
+		"secondary signer set as fee payer": {
+			txFeePayer:      addr2,
+			expectedSigners: []sdk.AccAddress{addr1, addr2},
+			expectedPayer:   addr2,
+		},
+		"outside signer set as fee payer": {
+			txFeePayer:      addr3,
+			expectedSigners: []sdk.AccAddress{addr1, addr2, addr3},
+			expectedPayer:   addr3,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// setup basic tx
+			txBuilder := newBuilder()
+			err := txBuilder.SetMsgs(msgs...)
+			require.NoError(t, err)
+			txBuilder.SetGasLimit(200000)
+			txBuilder.SetFeeAmount(feeAmount)
+
+			// set fee payer
+			txBuilder.SetFeePayer(tc.txFeePayer)
+			// and check it updates fields properly
+			require.Equal(t, tc.expectedSigners, txBuilder.GetSigners())
+			require.Equal(t, tc.expectedPayer, txBuilder.FeePayer())
+		})
+	}
+}
+
+func TestBuilderFeeGranter(t *testing.T) {
+	// keys and addresses
+	_, _, addr1 := testdata.KeyTestPubAddr()
+
+	// msg and signatures
+	msg1 := testdata.NewTestMsg(addr1, addr2)
+	feeAmount := testdata.NewTestFeeAmount()
+	msgs := []sdk.Msg{msg1}
+
+	txBuilder := newBuilder()
+	err := txBuilder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	txBuilder.SetGasLimit(200000)
+	txBuilder.SetFeeAmount(feeAmount)
+
+	require.Empty(t, txBuilder.GetTx().FeeGranter())
+
+	// set fee granter
+	txBuilder.SetFeeGranter(addr1)
+	require.Equal(t, addr1, txBuilder.GetTx().FeeGranter())
+}

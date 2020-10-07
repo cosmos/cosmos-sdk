@@ -175,7 +175,7 @@ Finally, each module should also implement the `RegisterQueryService` method as 
 
 ### Legacy Querier
 
-Legacy queries were queries used before the introduction of Protobuf and gRPC in the SDK.
+Legacy queriers were queriers used before the introduction of Protobuf and gRPC in the SDK. They are present for existing modules, but will be deprecated in a future release of the SDK. If you are developing new modules, gRPC query services should be preferred, and you only need to implement the `LegacyQuerierHandler` interface if you wish to use legacy queriers.
 
 [`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#interfaces) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
 

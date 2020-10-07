@@ -1269,11 +1269,12 @@ func (s *IntegrationTestSuite) TestNewCmdUnbond() {
 // calling the /block_results RPC endpoint.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
 func (s *IntegrationTestSuite) TestBlockResults() {
+	require := s.Require()
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
+	require.NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
 	// Send some funds to the new account.
@@ -1285,11 +1286,11 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	// Use CLI to create a delegation from the new account to validator `val`.
 	delHeight, err := s.network.LatestHeight()
-	s.Require().NoError(err)
+	require.NoError(err)
 	cmd := cli.NewDelegateCmd()
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
@@ -1299,7 +1300,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	})
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	// Create a HTTP rpc client.
 	rpcClient, err := http.New(val.RPCAddress, "/websocket")
@@ -1308,7 +1309,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	// By experience, it happens around 2 blocks after `delHeight`.
 	for {
 		latestHeight, err := s.network.LatestHeight()
-		s.Require().NoError(err)
+		require.NoError(err)
 
 		// Wait maximum 10 blocks, or else fail test.
 		if latestHeight > delHeight+10 {
@@ -1316,11 +1317,11 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 		}
 
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)
-		s.Require().NoError(err)
+		require.NoError(err)
 
 		if len(res.ValidatorUpdates) > 0 {
 			valUpdate := res.ValidatorUpdates[0]
-			s.Require().Equal(
+			require.Equal(
 				valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
 				val.PubKey.Bytes(),
 			)

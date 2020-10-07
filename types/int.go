@@ -106,7 +106,15 @@ type Int struct {
 
 // BigInt converts Int to big.Int
 func (i Int) BigInt() *big.Int {
+	if i.IsNil() {
+		return nil
+	}
 	return new(big.Int).Set(i.i)
+}
+
+// IsNil returns true if Int is uninitialized
+func (i Int) IsNil() bool {
+	return i.i == nil
 }
 
 // NewInt constructs Int from int64

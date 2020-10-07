@@ -35,9 +35,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.39.2]
+### Features
 
 * (types/coin.go) [\#6755](https://github.com/cosmos/cosmos-sdk/pull/6755) Add custom regex validation for `Coin` denom by overwriting `CoinDenomRegex` when using `/types/coin.go`.
+
+### Bug Fixes
+
+* (types) [\#7038](https://github.com/cosmos/cosmos-sdk/issues/7038) Fix infinite looping of `ApproxRoot` by including a hard-coded maximum iterations limit of 100.
+* (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
+* (client) [\#7048](https://github.com/cosmos/cosmos-sdk/issues/7048) Fix client `keys add` failure when generating mnemonic in interactive mode.
+* (keys) [\#7397](https://github.com/cosmos/cosmos-sdk/pull/7397) Update 99designs/keyring to v1.1.6 for go 1.15 compatibility.
 
 ## [v0.39.1]
 

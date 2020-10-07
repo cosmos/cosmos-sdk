@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -54,4 +55,35 @@ func Test_runAddCmdBasic(t *testing.T) {
 	}
 	err := runAddCmd(cmd, []string{"keyname2"})
 	assert.NoError(t, err)
+
+	// In recovery mode
+	cmd.SetArgs([]string{
+		"keyname6",
+		fmt.Sprintf("--%s=true", flagRecover),
+	})
+
+	// use valid mnemonic and complete recovery key generation successfully
+	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
+	require.NoError(t, cmd.Execute())
+
+	// use invalid mnemonic and fail recovery key generation
+	mockIn.Reset("invalid mnemonic\n")
+	require.Error(t, cmd.Execute())
+
+	// In interactive mode
+	cmd.SetArgs([]string{
+		"keyname7",
+		"-i",
+		fmt.Sprintf("--%s=false", flagRecover),
+	})
+
+	const password = "password1!"
+
+	// set password and complete interactive key generation successfully
+	mockIn.Reset("\n" + password + "\n" + password + "\n")
+	require.NoError(t, cmd.Execute())
+
+	// passwords don't match and fail interactive key generation
+	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
+	require.Error(t, cmd.Execute())
 }

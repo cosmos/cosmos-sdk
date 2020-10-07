@@ -1,0 +1,21 @@
+syntax = "proto3";
+package ibc.core.client.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
+
+import "ibc/core/client/v1/client.proto";
+import "gogoproto/gogo.proto";
+
+// GenesisState defines the ibc client submodule's genesis state.
+message GenesisState {
+  // client states with their corresponding identifiers
+  repeated IdentifiedClientState clients = 1 [(gogoproto.nullable) = false];
+  // consensus states from each client
+  repeated ClientConsensusStates clients_consensus = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "ClientsConsensusStates",
+    (gogoproto.moretags)     = "yaml:\"clients_consensus\""
+  ];
+  // create localhost on initialization
+  bool create_localhost = 3 [(gogoproto.moretags) = "yaml:\"create_localhost\""];
+}

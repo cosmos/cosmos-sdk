@@ -94,7 +94,7 @@ A few notes on the `Keyring` methods:
 
 For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go). For `ed25519` keys, it can be found [here](https://github.com/tendermint/tendermint/blob/01c32c62e8840d812359c9e87e9c575aa67acb09/crypto/ed25519/ed25519.go).
 
-Note that in the Cosmos SDK, `Pubkeys` are not manipulated in their raw form. Instead, they are double encoded using [`Amino`](../core/encoding.md#amino) and [`bech32`](https://en.bitcoin.it/wiki/Bech32). In the SDK is done by first calling the `Bytes()` method on the raw `Pubkey` (which applies amino encoding), and then the `ConvertAndEncode` method of `bech32`.
+Note that in the Cosmos SDK, `Pubkeys` are not manipulated in their raw form. Instead, they are double encoded using [`Amino`](../core/encoding.md#amino) and [`bech32`](https://en.bitcoin.it/wiki/Bech32). In the SDK, it is done by first calling the `Bytes()` method on the raw `Pubkey` (which applies amino encoding), and then the `ConvertAndEncode` method of `bech32`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/address.go#L579-L729
 

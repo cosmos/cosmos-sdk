@@ -65,8 +65,10 @@ const (
 	Description = "description"
 )
 
-// Default params variables used to create a TM client
 var (
+	DefaultConsensusParams = simapp.DefaultConsensusParams
+
+	// Default params variables used to create a TM client
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
@@ -180,7 +182,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 // GetContext returns the current context for the application.
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	ctx := chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	return ctx.WithConsensusParams(DefaultConsensusParams)
 }
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof

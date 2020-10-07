@@ -30,7 +30,7 @@ func (suite *TypesTestSuite) TestPackClientState() {
 		},
 		{
 			"tendermint client",
-			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, suite.chainA.App.GetConsensusParams(suite.chainA.GetContext()), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			ibctmtypes.NewClientState(chainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			true,
 		},
 		{

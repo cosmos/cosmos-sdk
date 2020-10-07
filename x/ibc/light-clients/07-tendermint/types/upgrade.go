@@ -1,6 +1,8 @@
 package types
 
 import (
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,6 +26,11 @@ func (cs ClientState) VerifyUpgrade(
 ) error {
 	if cs.UpgradePath == nil {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, no upgrade path set")
+	}
+	tmClient, ok := upgradedClient.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
+			&ClientState{}, upgradedClient)
 	}
 
 	if !upgradedClient.GetLatestHeight().GT(cs.GetLatestHeight()) {
@@ -52,6 +59,30 @@ func (cs ClientState) VerifyUpgrade(
 	consState, err := GetConsensusState(clientStore, cdc, cs.GetLatestHeight())
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not retrieve latest consensus state")
+	}
+
+	if cs.IsExpired(consState.Timestamp, ctx.BlockTime()) {
+		return sdkerrors.Wrap(clienttypes.ErrInvalidClient, "cannot upgrade an expired client")
+	}
+
+	tmCommittedClient, ok := committedClient.(*ClientState)
+	if !ok {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "upgraded client must be Tendermint client. expected: %T got: %T",
+			&ClientState{}, upgradedClient)
+	}
+
+	// Relayer must keep all client-chosen parameters the same as the previous client.
+	// Compare relayer-provided client state against expected client state.
+	// All chain-chosen parameters come from committed client, all client-chosen parameters
+	// come from current client
+	expectedClient := NewClientState(
+		tmCommittedClient.ChainId, cs.TrustLevel, cs.TrustingPeriod, tmCommittedClient.UnbondingPeriod,
+		cs.MaxClockDrift, tmCommittedClient.LatestHeight, tmCommittedClient.ProofSpecs, tmCommittedClient.UpgradePath,
+		cs.AllowUpdateAfterExpiry, cs.AllowUpdateAfterMisbehaviour,
+	)
+	if !reflect.DeepEqual(expectedClient, tmClient) {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidClient, "upgraded client does not maintain previous chosen parameters. expected: %v got: %v",
+			expectedClient, tmClient)
 	}
 
 	return merkleProof.VerifyMembership(cs.ProofSpecs, consState.GetRoot(), *cs.UpgradePath, bz)

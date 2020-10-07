@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -105,6 +106,12 @@ func (cs ClientState) Validate() error {
 			ErrInvalidTrustingPeriod,
 			"trusting period (%s) should be < unbonding period (%s)", cs.TrustingPeriod, cs.UnbondingPeriod,
 		)
+	}
+	if cs.ConsensusParams == nil || cs.ConsensusParams.Evidence == nil {
+		return sdkerrors.Wrap(ErrInvalidConsensusParams, "consensus params and evidence params cannot be empty")
+	}
+	if err := baseapp.ValidateEvidenceParams(*cs.ConsensusParams.Evidence); err != nil {
+		return sdkerrors.Wrap(err, "invalid evidence params")
 	}
 	if cs.ProofSpecs == nil {
 		return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof specs cannot be nil for tm client")

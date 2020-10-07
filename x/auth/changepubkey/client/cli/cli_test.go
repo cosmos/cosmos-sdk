@@ -8,14 +8,12 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
-	changepubkeytypes "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 )
 
 type IntegrationTestSuite struct {
@@ -105,45 +103,6 @@ func (s *IntegrationTestSuite) TestNewMsgChangePubKeyCmd() {
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestQueryParamsCmd() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"happy case",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
-		},
-		{
-			"with specific height",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			cmd := cli.QueryParamsCmd()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
-			} else {
-				s.Require().NoError(err, fmt.Sprintln("err", err))
-				var changePubKeyParams changepubkeytypes.Params
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &changePubKeyParams))
 			}
 		})
 	}

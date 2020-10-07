@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/client/cli"
-	changepubkeykeeper "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
@@ -48,7 +47,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 
 // DefaultGenesis returns the module's default genesis state as raw bytes.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return []byte("{}")
 }
 
 // ValidateGenesis performs genesis state validation. Currently, this is a no-op.
@@ -70,7 +69,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the module's root query command. Currently, this is a no-op.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
 }
 
 // AppModule extends the AppModuleBasic implementation by implementing the
@@ -78,15 +77,13 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	accountKeeper      keeper.AccountKeeper
-	changePubKeyKeeper changepubkeykeeper.ChangePubKeyKeeper
+	accountKeeper keeper.AccountKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, pk changepubkeykeeper.ChangePubKeyKeeper) AppModule {
+func NewAppModule(ak keeper.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:     AppModuleBasic{},
-		accountKeeper:      ak,
-		changePubKeyKeeper: pk,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  ak,
 	}
 }
 
@@ -95,7 +92,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.changePubKeyKeeper))
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper))
 }
 
 // QuerierRoute returns querier route for changepubkey
@@ -105,19 +102,15 @@ func (AppModule) QuerierRoute() string {
 
 // RegisterQueryService performs a no-op.
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.changePubKeyKeeper)
 }
 
 // LegacyQuerierHandler performs a no-op.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return changepubkeykeeper.NewQuerier(am.changePubKeyKeeper, legacyQuerierCdc)
+	return nil
 }
 
 // InitGenesis performs a no-op.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
-	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.changePubKeyKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -131,5 +124,5 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 
 // ExportGenesis is always empty, as InitGenesis does nothing either.
 func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	return am.DefaultGenesis(cdc)
+	return []byte("{}")
 }

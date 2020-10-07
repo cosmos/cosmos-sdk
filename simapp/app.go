@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/changepubkey"
-	changepubkeykeeper "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/keeper"
 	changepubkeytypes "github.com/cosmos/cosmos-sdk/x/auth/changepubkey/types"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -156,7 +155,6 @@ type SimApp struct {
 
 	// keepers
 	AccountKeeper      authkeeper.AccountKeeper
-	ChangePubKeyKeeper changepubkeykeeper.ChangePubKeyKeeper
 	BankKeeper         bankkeeper.Keeper
 	CapabilityKeeper   *capabilitykeeper.Keeper
 	StakingKeeper      stakingkeeper.Keeper
@@ -247,9 +245,6 @@ func NewSimApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
-	app.ChangePubKeyKeeper = changepubkeykeeper.NewChangePubKeyKeeper(
-		appCodec, keys[changepubkeytypes.StoreKey], app.GetSubspace(changepubkeytypes.ModuleName),
-	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
 	)
@@ -329,7 +324,7 @@ func NewSimApp(
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		changepubkey.NewAppModule(app.AccountKeeper, app.ChangePubKeyKeeper),
+		changepubkey.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),

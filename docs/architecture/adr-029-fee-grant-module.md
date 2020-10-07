@@ -58,34 +58,54 @@ Two basic fee allowance types, `BasicFeeAllowance` and `PeriodicFeeAllowance` ar
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicFeeAllowance {
-     repeated cosmos_sdk.v1.Coin spend_limit = 1;
-     ExpiresAt expiration = 2;
+	// spend_limit specifies the maximum amount of tokens that can be spent
+	// by this allowance and will be updated as tokens are spent. If it is
+	// empty, there is no spend limit and any amount of coins can be spent.
+    repeated cosmos_sdk.v1.Coin spend_limit = 1;
+
+    // expires_at specifies an optional time when this allowance expires
+    ExpiresAt expiration = 2;
 }
 
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
 message PeriodicFeeAllowance {
      BasicFeeAllowance basic = 1;
+
+     // period specifies the time duration in which period_spend_limit coins can
+     // be spent before that allowance is reset
      Duration period = 2;
+ 
+     // period_spend_limit specifies the maximum number of coins that can be spent
+     // in the period
      repeated cosmos_sdk.v1.Coin period_spend_limit = 3;
+
+     // period_can_spend is the number of coins left to be spent before the period_reset time
      repeated cosmos_sdk.v1.Coin period_can_spend = 4;
-
+ 
+     // period_reset is the time at which this period resets and a new one begins,
+     // it is calculated from the start time of the first transaction after the
+     // last period ended
      ExpiresAt period_reset = 5;
-}
-
-// Duration is a repeating unit of either clock time or number of blocks.
-// This is designed to be added to an ExpiresAt struct.
-message Duration {
-    google.protobuf.Timestamp clock = 1;
-    int64 block = 2;
 }
 
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
 message ExpiresAt {
-     google.protobuf.Timestamp time = 1;
-     int64 height = 2;
+     oneof sum {
+       google.protobuf.Timestamp time = 1;
+       uint64 height = 2;
+     }
  }
+
+// Duration is a repeating unit of either clock time or number of blocks.
+message Duration {
+    oneof sum {
+      google.protobuf.Duration duration = 1;
+      uint64 blocks = 2;
+    }
+}
+
 ```
 
 Allowances can be granted and revoked using `MsgGrantFeeAllowance` and `MsgRevokeFeeAllowance`:

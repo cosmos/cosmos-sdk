@@ -149,14 +149,15 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	tmClient.ConsensusParams = nil
 
 	ctx := suite.chainA.GetContext()
+	ctx = ctx.WithConsensusParams(nil)
 
 	// consensus params are nil in context
 	err := suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
 	suite.Require().NoError(err)
 
 	// evidence params are nil
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{})
 	tmClient.ConsensusParams = &abci.ConsensusParams{}
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{})
 	err = suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tmClient)
 	suite.Require().NoError(err)
 
@@ -243,11 +244,7 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	}
 
 	for _, tc := range testCases {
-		// NOTE: the consensus params are usually set in the context before a transaction execution. This
-		// is simulated by setting the consensus params before calling ValidateSelfClient.
-		ctx := suite.chainA.GetContext().WithConsensusParams(ibctesting.DefaultConsensusParams)
-
-		err := suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(ctx, tc.clientState)
+		err := suite.chainA.App.IBCKeeper.ClientKeeper.ValidateSelfClient(suite.chainA.GetContext(), tc.clientState)
 		if tc.expPass {
 			suite.Require().NoError(err, "expected valid client for case: %s", tc.name)
 		} else {

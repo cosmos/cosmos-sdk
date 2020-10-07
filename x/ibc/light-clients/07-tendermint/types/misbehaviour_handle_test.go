@@ -14,6 +14,7 @@ import (
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
@@ -425,7 +426,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 			// Set current timestamp in context
 			ctx := suite.chainA.GetContext().WithBlockTime(tc.timestamp)
-			ctx = ctx.WithConsensusParams(simapp.DefaultConsensusParams)
 
 			// Set trusted consensus states in client store
 

@@ -82,7 +82,13 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
 	}
 
-	value := reflect.New(concreteGoType).Elem()
+	var value reflect.Value
+	if concreteGoType.Kind() == reflect.Ptr {
+		value = reflect.New(concreteGoType.Elem())
+	} else {
+		value = reflect.Zero(concreteGoType)
+	}
+
 	protoMsg, ok := value.Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)

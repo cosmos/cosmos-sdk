@@ -8,7 +8,13 @@
 
 Proposed
 
+## Abstract
+
+We want to reuse protobuf code generator to crate for use _factories_ for `Msg` and message handler `Responses`. Specifically we can use a protobuf `service` which will provide us library functions to be used internally an in external libraries.
+
 ## Context
+
+TODO: Explain what's wrong with creating a message.
 
 In early conversations [it was proposed](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc/edit)
 that `Msg` return types be captured using a protobuf extension field, ex:
@@ -39,9 +45,10 @@ improve the developer UX for this approach.
 
 ## Decision
 
-We decide to add support for using protobuf `service` definitions for `Msg`s.
+We decide to use protobuf `service` definitions for generating a _factory methods_ for `Msg`s.
 
-A `Msg` `service` definition would be written as follows:
+Below we define how this will look on a `SubmitProposal` message from `x/gov` module. 
+We start with a `Msg` `service` definition:
 
 ```proto
 package cosmos.gov;

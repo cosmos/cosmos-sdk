@@ -21,8 +21,8 @@ Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
-- The [`Result`] returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/gas-fees.md) consumption and [`events`](../core/events.md).
-	+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
+- The [`*Result`] returned to `baseapp`, which contains (among other things) information on the execution of the `handler` and [`events`](../core/events.md).
+	+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
 ## Implementation of a module `handler`s
 
@@ -37,10 +37,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
-		case MsgType1:
+		case *MsgType1:
 			return handleMsgType1(ctx, keeper, msg)
 
-		case MsgType2:
+		case *MsgType2:
 			return handleMsgType2(ctx, keeper, msg)
 
 		default:
@@ -69,15 +69,15 @@ ctx.EventManager().EmitEvent(
 
 These `events` are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/events.md) to learn more about `events`. 
 
-Finally, the `handler` function returns a `sdk.Result` which contains the aforementioned `events` and an optional `Data` field. 
+Finally, the `handler` function returns a `*sdk.Result` which contains the aforementioned `events` and an optional `Data` field. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
-Next is an example of how to return a `Result` from the `gov` module:
+Next is an example of how to return a `*Result` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/gov/handler.go#L59-L62
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/gov/handler.go#L67-L70
 
-For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/handler.go) from the nameservice tutorial. 
+For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/gov/handler.go) from the `gov` module.
 
 ## Next {hide}
 

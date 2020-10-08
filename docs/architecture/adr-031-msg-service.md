@@ -14,6 +14,8 @@ In early conversations [it was also proposed](https://docs.google.com/document/d
 that Msg` return types be captured using a protobuf extension field, ex:
 
 ```protobuf
+package cosmos.gov;
+
 message MsgSubmitProposal
 	option (cosmos_proto.msg_return) = “uint64”;
 	bytes delegator_address = 1;
@@ -70,6 +72,8 @@ side, this is almost like an automatically generated keeper method and could may
 (see [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)):
 
 ```go
+package gov
+
 type MsgServer interface {
   SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 }
@@ -183,6 +187,8 @@ from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`
 method:
 
 ```go
+package gov
+
 func (k Keeper) SubmitProposal(goCtx context.Context, params *types.MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
     ...

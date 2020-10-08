@@ -800,5 +800,5 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 }
 
 func malleateHeight(height exported.Height, diff uint64) exported.Height {
-	return clienttypes.NewHeight(height.GetEpochNumber(), height.GetEpochHeight()+diff)
+	return clienttypes.NewHeight(height.GetVersionNumber(), height.GetVersionHeight()+diff)
 }

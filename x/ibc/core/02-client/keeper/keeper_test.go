@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	testChainID       = "gaiahub-0"
-	testChainIDEpoch1 = "gaiahub-1"
+	testChainID         = "gaiahub-0"
+	testChainIDVersion1 = "gaiahub-1"
 
 	testClientID  = "gaiachain"
 	testClientID2 = "ethbridge"
@@ -42,9 +42,9 @@ const (
 )
 
 var (
-	testClientHeight       = types.NewHeight(0, 5)
-	testClientHeightEpoch1 = types.NewHeight(1, 5)
-	upgradeHeight          = types.NewHeight(1, 1)
+	testClientHeight         = types.NewHeight(0, 5)
+	testClientHeightVersion1 = types.NewHeight(1, 5)
+	upgradeHeight            = types.NewHeight(1, 1)
 )
 
 type KeeperTestSuite struct {
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		},
 		{
 			"invalid client version",
-			ibctmtypes.NewClientState(testChainIDEpoch1, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightEpoch1, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
+			ibctmtypes.NewClientState(testChainIDVersion1, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeightVersion1, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false),
 			false,
 		},
 		{

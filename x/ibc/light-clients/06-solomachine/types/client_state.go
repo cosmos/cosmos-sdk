@@ -35,7 +35,7 @@ func (cs ClientState) ClientType() string {
 
 // GetLatestHeight returns the latest sequence number.
 // Return exported.Height to satisfy ClientState interface
-// Epoch number is always 0 for a solo-machine.
+// Version number is always 0 for a solo-machine.
 func (cs ClientState) GetLatestHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.Sequence)
 }
@@ -47,7 +47,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns the frozen sequence of the client.
 // Return exported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Version number is always 0 for a solo-machine
 func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
@@ -396,11 +396,11 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (signing.SignatureData, uint64, uint64, error) {
-	if version := height.GetEpochNumber(); version != 0 {
+	if version := height.GetVersionNumber(); version != 0 {
 		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
 	}
 	// sequence is encoded in the version height of height struct
-	sequence := height.GetEpochHeight()
+	sequence := height.GetVersionHeight()
 	if cs.IsFrozen() {
 		return nil, 0, 0, clienttypes.ErrClientFrozen
 	}
@@ -438,7 +438,7 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	latestSequence := cs.GetLatestHeight().GetEpochHeight()
+	latestSequence := cs.GetLatestHeight().GetVersionHeight()
 	if latestSequence < sequence {
 		return nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,

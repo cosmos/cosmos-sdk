@@ -39,8 +39,13 @@ the key type concatenated with the key bytes, summarized as `Sha256(KeyTypePrefi
 
 ### Legacy Public Key Addresses Don't Change
 
-`secp256k1` and multisig public keys are currently in use in existing Cosmos SDK zones. We
-don't want to change existing addresses. So the addresses for these two key types will remain the same.
+`secp256k1` and multisig public keys are currently in use in existing Cosmos SDK zones. They use the following
+address formats:
+
+- secp256k1: `ripemd160(sha256(pk_bytes))[:20]`
+- legacy amino multisig: `sha256(aminoCdc.Marshal(pk))[:20]`
+
+We don't want to change existing addresses. So the addresses for these two key types will remain the same.
 
 The current multisig public keys use amino serialization to generate the address. We will retain
 those public keys and their address formatting, and call them "legacy amino" multisig public keys

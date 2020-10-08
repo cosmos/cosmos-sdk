@@ -28,7 +28,7 @@ func NewClientState(
 	chainID string, trustLevel Fraction,
 	trustingPeriod, ubdPeriod, maxClockDrift time.Duration,
 	latestHeight clienttypes.Height, specs []*ics23.ProofSpec,
-	upgradePath *commitmenttypes.MerklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
+	upgradePath string, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour bool,
 ) *ClientState {
 	return &ClientState{
 		ChainId:                      chainID,
@@ -110,6 +110,14 @@ func (cs ClientState) Validate() error {
 	for _, spec := range cs.ProofSpecs {
 		if spec == nil {
 			return sdkerrors.Wrap(ErrInvalidProofSpecs, "proof spec cannot be nil")
+		}
+	}
+	if cs.UpgradePath != "" {
+		keys := strings.Split(cs.UpgradePath, "/")
+		for _, k := range keys {
+			if strings.TrimSpace(k) == "" {
+				return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "upgrade path contains an empty string when splitting by '/': %s", cs.UpgradePath)
+			}
 		}
 	}
 

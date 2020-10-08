@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,11 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -32,9 +31,9 @@ const (
 )
 
 var (
-	height        = clienttypes.NewHeight(0, 4)
-	upgradeHeight = clienttypes.NewHeight(1, 1)
-	upgradePath   = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+	height          = clienttypes.NewHeight(0, 4)
+	newClientHeight = clienttypes.NewHeight(1, 1)
+	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 )
 
 type TendermintTestSuite struct {

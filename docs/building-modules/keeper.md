@@ -20,7 +20,7 @@ The core idea behind the object-capabilities approach is to only reveal what is 
 
 ## Type Definition 
 
-`keeper`s are generally implemented in a `internal/keeper/keeper.go` file located in the module's folder. By convention, the type `keeper` of a module is simply named `Keeper` and usually follows the following structure:
+`keeper`s are generally implemented in a `/keeper/keeper.go` file located in the module's folder. By convention, the type `keeper` of a module is simply named `Keeper` and usually follows the following structure:
 
 ```go
 type Keeper struct {
@@ -38,7 +38,7 @@ For example, here is the type definition of the `keeper` from the `staking` modu
 
 Let us go through the different parameters:
 
-- An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in a `internal/types/expected_keepers.go` file within the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself. 
+- An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in a `types/expected_keepers.go` file within the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself. 
 - `storeKey`s grant access to the store(s) of the [multistore](../core/store.md) managed by the module. They should always remain unexposed to external modules. 
 - A [codec `cdc`](../core/encoding.md), used to marshall and unmarshall struct to/from `[]byte`, that can be any of `codec.BinaryMarshaler`,`codec.JSONMarshaler` or `codec.Marshaler` based on your requirements. 
 

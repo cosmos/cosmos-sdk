@@ -6,7 +6,12 @@
 
 ## Status
 
-Proposed
+Accepted
+
+## Abstract
+
+This ADR defines a canonical 20-byte address format for new public key algorithms, multisig public keys, and module
+accounts using string prefixes and blake2b hashing.
 
 ## Context
 

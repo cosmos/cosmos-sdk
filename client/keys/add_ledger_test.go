@@ -87,12 +87,15 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 func Test_runAddCmdLedger(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
 
+	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
 	cmd.SetArgs([]string{
 		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagUseLedger),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
@@ -101,7 +104,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	})
 	mockIn.Reset("test1234\ntest1234\n")
 
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)

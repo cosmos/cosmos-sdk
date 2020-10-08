@@ -16,7 +16,7 @@ improvements in terms of the code that is generated and the fact that return typ
 ## Context
 
 Currently `Msg` handlers in the Cosmos SDK do have return values that are placed in the `data` field of the response.
-But these return values are not specified anywhere except in the golang handler code.
+These return values, however, are not specified anywhere except in the golang handler code.
 
 In early conversations [it was proposed](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc/edit)
 that `Msg` return types be captured using a protobuf extension field, ex:

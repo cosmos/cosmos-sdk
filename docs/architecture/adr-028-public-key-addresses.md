@@ -51,10 +51,43 @@ The current multisig public keys use amino serialization to generate the address
 those public keys and their address formatting, and call them "legacy amino" multisig public keys
 in protobuf. We will also create multisig public keys without amino addresses to be described below.
 
-### Canonical Public Key Addresses
 
-Following on the discussion in [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694), we propose the
-following approach.
+### Canonical Address Format
+
+We have three types of accounts we would like to create addresses for in the future:
+- regular public key addresses for new signature algorithms (ex. `sr25519`).
+- public key addresses for multisig public keys that don't use amino encoding
+- module accounts: basically any accounts which cannot sign transactions and
+which are managed internally by modules
+
+To address all of these use cases we propose the following basic `AddressHash` function,
+based on the discussions in [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694):
+
+```go
+func AddressHash(prefix string, contents []byte) []byte {
+	preImage := []byte(prefix)
+	if len(contents) != 0 {
+		preImage = append(preImage, 0)
+		preImage = append(preImage, contents...)
+	}
+	return blake2b.Sum256(preImage)[:20]
+}
+```
+
+`AddressHash` always take a string `prefix` as a starting point which should represent the
+type of public key (ex. `sr25519`) or module account being used (ex. `staking` or `group`).
+For public keys, the `contents` parameter is used to specify the binary contents of the public
+key. For module accounts, `contents` can be left empty (for modules which don't manage "sub-accounts"),
+or can be some module-specific content to specify different pools (ex. `bonded` or `not-bonded` for `staking`)
+or managed accounts (ex. different accounts managed by the `group` module).
+
+In the `preImage`, the byte value `0` is used as the separator between `prefix` and `contents`. This is a logical
+choice given that `0` is an invalid value for a string character and is commonly used as a null terminator.
+
+We use a 256-bit `blake2b` hash instead of `sha256` because it is generally considered more secure. Blake hashes
+are considered "random oracle indifferentiable", a stronger property which `sha256` does not have.
+
+### Canonical Public Key Address Prefixes
 
 All public key types will have a unique protobuf message type such as:
 
@@ -70,14 +103,10 @@ All protobuf messages have unique fully qualified names, in this example `cosmos
 These names are derived directly from .proto files in a standardized way and used
 in other places such as the type URL in `Any`s. Since there is an easy and obvious
 way to get this name for every protobuf type, we can use this message name as the
-key type prefix when creating addresses.
+key type `prefix` when creating addresses. For all basic public keys, `contents`
+should just be the raw unencoded public key bytes.
 
-We define the canonical address format for new (non-legacy) public keys as
-`Sha256(fmt.Sprintf("%s/%x, proto.MessageName(key), key.Bytes()))[:20]`. This takes
-the first 20 bytes of an SHA-256 hash of a string with the proto message name for the key
-type joined by an `/` with the hex encoding of the key bytes.
-
-For all basic public keys, key bytes should just be the raw unencoded public key bytes.
+Thus the canonical address for new public key types would be `AddressHash(proto.MessageName(pk), pk.Bytes)`.
 
 ### Multisig Addresses
 
@@ -104,13 +133,12 @@ using `Sha256(fmt.Sprintf("cosmos.crypto.multisig.PubKey/%d/%s", pk.Threshold, j
 ## Consequences
 
 ### Positive
-- a simple algorithm for generating addresses for new public keys
+- a simple algorithm for generating addresses for new public keys and module accounts
 
 ### Negative
 - addresses do not communicate key type, a prefixed approach would have done this
 
 ### Neutral
 - protobuf message names are used as key type prefixes
-- public key bytes are hex encoded before generating addresses
 
 ## References

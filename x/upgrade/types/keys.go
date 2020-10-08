@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// ModuleName is the name of this module
 	ModuleName = "upgrade"
@@ -33,6 +35,6 @@ func PlanKey() []byte {
 // UpgradedClientKey is the key under which the upgraded client state is saved
 // Connecting IBC chains can verify against the upgraded client in this path before
 // upgrading their clients
-func UpgradedClientKey() []byte {
-	return []byte(KeyUpgradedClient)
+func UpgradedClientKey(height int64) []byte {
+	return []byte(fmt.Sprintf("%s/%d", KeyUpgradedClient, height))
 }

@@ -11,11 +11,11 @@ import (
 )
 
 // CommitPacket returns a packet commitment bytes. The commitment consists of:
-// hash(timeout_timestamp + timeout_epoch + timeout_height + data) from a given packet.
+// hash(timeout_timestamp + timeout_version_number + timeout_version_height + data) from a given packet.
 func CommitPacket(packet exported.PacketI) []byte {
 	buf := sdk.Uint64ToBigEndian(packet.GetTimeoutTimestamp())
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochNumber())...)
-	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetEpochHeight())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionNumber())...)
+	buf = append(buf, sdk.Uint64ToBigEndian(packet.GetTimeoutHeight().GetVersionHeight())...)
 	buf = append(buf, packet.GetData()...)
 	return tmhash.Sum(buf)
 }

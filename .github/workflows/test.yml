@@ -255,7 +255,7 @@ jobs:
   test-race-1:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3
@@ -275,7 +275,7 @@ jobs:
           name: "${{ github.sha }}-aa"
         if: "env.GIT_DIFF != ''"
       - name: Run tests with race detector
-        run: cat xaa.txt | xargs go test -mod=readonly -json -timeout 15m -race -tags='cgo ledger test_ledger_mock' > xaa-race-output.txt
+        run: cat xaa.txt | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' > xaa-race-output.txt
         if: "env.GIT_DIFF != ''"
       - uses: actions/upload-artifact@v2
         with:
@@ -285,7 +285,7 @@ jobs:
   test-race-2:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3
@@ -305,7 +305,7 @@ jobs:
           name: "${{ github.sha }}-ab"
         if: "env.GIT_DIFF != ''"
       - name: Run tests with race detector
-        run: cat xab.txt | xargs go test -mod=readonly -json -timeout 15m -race -tags='cgo ledger test_ledger_mock' > xab-race-output.txt
+        run: cat xab.txt | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' > xab-race-output.txt
         if: "env.GIT_DIFF != ''"
       - uses: actions/upload-artifact@v2
         with:
@@ -315,7 +315,7 @@ jobs:
   test-race-3:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3
@@ -335,7 +335,7 @@ jobs:
           name: "${{ github.sha }}-ac"
         if: "env.GIT_DIFF != ''"
       - name: Run tests with race detector
-        run: cat xac.txt | xargs go test -mod=readonly -json -timeout 15m -race -tags='cgo ledger test_ledger_mock' > xac-race-output.txt
+        run: cat xac.txt | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' > xac-race-output.txt
         if: "env.GIT_DIFF != ''"
       - uses: actions/upload-artifact@v2
         with:
@@ -345,7 +345,7 @@ jobs:
   test-race-4:
     runs-on: ubuntu-latest
     needs: split-test-files
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.3
@@ -365,7 +365,7 @@ jobs:
           name: "${{ github.sha }}-ad"
         if: "env.GIT_DIFF != ''"
       - name: Run tests with race detector
-        run: cat xad.txt | xargs go test -mod=readonly -json -timeout 15m -race -tags='cgo ledger test_ledger_mock' > xad-race-output.txt
+        run: cat xad.txt | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' > xad-race-output.txt
         if: "env.GIT_DIFF != ''"
       - uses: actions/upload-artifact@v2
         with:
@@ -430,7 +430,7 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: "env.GIT_DIFF != ''"
-  
+
   docker-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -56,7 +56,7 @@ A `query` is a request for information made by end-users of applications through
 
 ### gRPC Queries
 
-Starting from v0.40, developers can define queries as [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services), by creating a `Query` service per module in `query.proto`. This service lists endpoints starting with `rpc`.
+Starting from v0.40, the prefered way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`. 
 
 Here's an example of such a `Query` service definition:
 ```proto
@@ -77,6 +77,8 @@ service Query {
 ```
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+
+A `RegisterQueryServer` method is also generated and should be used to register the module's query server in `RegisterQueryService` method from the [`AppModule` interface](./module-manager.md#appmodule).
 
 ### Legacy Queries
 

@@ -13,12 +13,8 @@ type decCoinTestSuite struct {
 	suite.Suite
 }
 
-func NewDecCoinTestSuite(t *testing.T) {
+func TestDecCoinTestSuite(t *testing.T) {
 	suite.Run(t, new(decCoinTestSuite))
-}
-
-func (s *decCoinTestSuite) SetupSuite() {
-	s.T().Parallel()
 }
 
 func (s *decCoinTestSuite) TestNewDecCoin() {

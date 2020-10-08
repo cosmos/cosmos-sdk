@@ -45,20 +45,18 @@ An application using this module likely adds `auth` module commands to its root 
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the `nameservice` module:
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `auth` module:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/client/cli/query.go#L52-L73
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/auth/client/cli/query.go#L76-L108
 
-This query returns the address that owns a particular name. The getter function does the following:
+This query returns the account at a given address. The getter function does the following:
 
-- **`codec` and `queryRoute`.** In addition to taking in the application `codec`, query command getters also take a `queryRoute` used to construct a path [Baseapp](../core/baseapp.md#query-routing) uses to route the query in the application.
-- **Construct the command.** Read the [Cobra Documentation](https://github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `whois` and provide the `name` they are querying for as the only argument.
+- **Construct the command.** Read the [Cobra Documentation](https://github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `account` and provide the `address` they are querying for as the only argument.
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
-  - The function should first initialize a new [`Context`](../interfaces/query-lifecycle.md#context) with the application `codec`.
+  - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
-  - The `queryRoute` is used to construct a `path` [`baseapp`](../core/baseapp.md) will use to route the query to the appropriate [querier](./querier.md). The expected format for a query `path` is "queryCategory/queryRoute/queryType/arg1/arg2/...", where `queryCategory` can be `p2p`, `store`, `app`, or `custom`, `queryRoute` is the name of the module, and `queryType` is the name of the query type defined within the module. [`baseapp`](../core/baseapp.md) can handle each type of `queryCategory` by routing it to a module querier or retrieving results directly from stores and functions for querying peer nodes. Module queries are `custom` type queries (some SDK modules have exceptions, such as `auth` and `gov` module queries).
-  - The `Context` `QueryWithData()` function is used to relay the query to a node and retrieve the response. It requires the `path`. It returns the result and height of the query upon success or an error if the query fails.
-  - The `codec` is used to nmarshal the response and the `Context` is used to print the output back to the user.
+  - A new `queryClient` should be initialized using the `clientCtx`. Then it can be used to call the appropriate [querier](./querier.md).
+  - The `clientCtx.PrintOutput` method is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
 Finally, the module also needs a `GetQueryCmd`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd` command shown above.

@@ -38,6 +38,7 @@ type ClientState interface {
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
+		upgradeHeight Height,
 		proofUpgrade []byte,
 	) error
 	// Utility function that zeroes out any client customizable fields in client state
@@ -172,8 +173,8 @@ type Height interface {
 	EQ(Height) bool
 	GT(Height) bool
 	GTE(Height) bool
-	GetEpochNumber() uint64
-	GetEpochHeight() uint64
+	GetVersionNumber() uint64
+	GetVersionHeight() uint64
 	Decrement() (Height, bool)
 	String() string
 }

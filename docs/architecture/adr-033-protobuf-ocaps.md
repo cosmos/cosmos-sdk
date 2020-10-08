@@ -96,16 +96,93 @@ modules use their `ModuleKey` to send `Msg`s where they are listed as signers to
 could use their `ModuleKey` to "sign" a `/cosmos.bank.Msg/Send` transaction to send coins from the module to another
 account.
 
+`QueryClient`s could also be made with `ModuleKey`s, except that authentication isn't required.
+
+Ex:
 ```go
 package foo
 
-func (msgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarResponse, error) {
-  bankMsgClient := bank.NewMsgClient(msgServer.moduleKey)
-  res, err := bankMsgClient.Balance(ctx, &MsgSend{FromAddress: msgServer.moduleKey.Address(), ...})
+func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarResponse, error) {
+  bankQueryClient := bank.NewQueryClient(fooMsgServer.moduleKey)
+  balance, err := bankQueryClient.Balance(&bank.QueryBalanceRequest{Address: fooMsgServer.moduleKey.Address(), Denom: "foo"})
+  
+  ...
+
+  bankMsgClient := bank.NewMsgClient(fooMsgServer.moduleKey)
+  res, err := bankMsgClient.Balance(ctx, &bank.MsgSend{FromAddress: fooMsgServer.moduleKey.Address(), ...})
+
   ...
 }
 ```
 
+### `ModuleKey`s and `ModuleID`s
+
+A `ModuleKey` can be thought of as a "private key" for a module account and a `ModuleID` can be thought of as the
+corresponding "public key". From [ADR 028](), modules can have both a root module account and any number of sub-accounts
+or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
+accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
+derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
+and forms its address based on the `AddressHash` method from [ADR 028]():
+
+```go
+type ModuleID struct {
+  ModuleName string
+  Path []byte
+}
+
+func (key ModuleID) Address() []byte {
+  return AddressHash(key.ModuleName, key.Path)
+}
+```
+
+In addition to being able to generate a `ModuleID` and address, a `ModuleKey` contains a special function closure called
+the `Invoker` which is the key to safe inter-module access. This function closure corresponds to the `Invoke` method in
+the `grpc.ClientConn` interface and under the hood is able to route messages to the approach `Msg` and `Query` handlers performing
+appropriate security checks on `Msg`s. This allows for even safer inter-module access than keeper's whose private member
+variables could be manipulated through reflection. Golang does not support reflection of a function closure's captured
+variables and direct manipulation of memory would be needed for a truly malicious module to bypass the `ModuleKey`
+security.
+
+The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
+
+```go
+func Invoker(ctx context.Context, caller ModuleID, method string, args, reply interface{}, opts ...grpc.CallOption) error
+
+type RootModuleKey struct {
+  moduleName string
+  invoker Invoker
+}
+
+type DerivedModuleKey struct {
+  moduleName string
+  path []byte
+  invoker Invoker
+}
+```
+
+A module can get access to a `DerivedModuleKey`, using the `Derive(path []byte)` method on `RootModuleKey` and then
+would use this key to authenticate `Msg`s from a sub-account:
+
+```go
+package foo
+
+func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarResponse, error) {
+  derivedKey := fooMsgServer.moduleKey.Derive(req.SomePath)
+  bankMsgClient := bank.NewMsgClient(derivedKey)
+  res, err := bankMsgClient.Balance(ctx, &bank.MsgSend{FromAddress: derivedKey.Address(), ...})
+  ...
+}
+```
+
+In this way, a module can gain permissioned access to a root account and any number of sub-accounts and send
+authenticated `Msg`s from these accounts. The `caller ModuleID` parameter on `Invoker` is used under the hood to
+distinguish between different module accounts, but either way the `Invoker` only allows `Msg`s from either the
+root or a derived module account to pass through.
+
+### `AppModule` Wiring
+
+
+### Security Considerations
 
 Queries in Cosmos SDK are generally un-permissioned so allowing one module to query another module should not pose
 any major security threats assuming basic precautions are taken. The basic precautions identified here are:
@@ -145,14 +222,6 @@ type DerivedModuleKey struct {
   msgInvoker Invoker()
 }
 
-type ModuleID struct {
-  ModuleName string
-  Path []byte
-}
-
-func (key ModuleID) Address() []byte {
-  return AddressHash(key.ModuleName, key.Path)
-}
 ```
 
 ### Inter-Module Communication
@@ -241,6 +310,9 @@ type ModuleManager interface {
 }
 ```
 
+### Future Work
+
+A separate ADR will address the use cases of "admin" access and inter-module hooks (as used in `x/staking/keeper/hooks.go`).
 
 ## Consequences
 

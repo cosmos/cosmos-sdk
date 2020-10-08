@@ -57,4 +57,4 @@ See an example of `ExportGenesis` from the `auth` module.
 
 ## Next {hide}
 
-Learn about [modules interfaces](#module-interfaces.md) {hide}
+Learn about [modules interfaces](module-interfaces.md) {hide}

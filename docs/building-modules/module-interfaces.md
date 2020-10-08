@@ -16,13 +16,13 @@ One of the main interfaces for an application is the [command-line interface](..
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command.
+[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions and include the name of the command.
 
-Here is an example from the `nameservice` module:
+Here is an example from the `auth` module:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/client/cli/tx.go#L33-L58
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/client/cli/tx_sign.go#L160-L194
 
-This getter function creates the command for the Buy Name transaction. It does the following:
+This getter function creates the command for the Sign transaction. It does the following:
 
 - **Construct the command:** Read the [Cobra Documentation](https://github.com/spf13/cobra) for details on how to create commands.
   - **Use:** Specifies the format of a command-line entry users should type in order to invoke this command. In this case, the user uses `buy-name` as the name of the transaction command and provides the `name` the user wishes to buy and the `amount` the user is willing to pay.
@@ -30,16 +30,16 @@ This getter function creates the command for the Buy Name transaction. It does t
   - **Short and Long:** A description for the function is provided here. A `Short` description is expected, and `Long` can be used to provide a more detailed description when a user uses the `--help` flag to ask for more information.
   - **RunE:** Defines a function that can return an error, called when the command is executed. Using `Run` would do the same thing, but would not allow for errors to be returned.
 - **`RunE` Function Body:** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
-  - The function should first initialize a [`TxBuilder`](../core/transactions.md#txbuilder) with the application `codec`'s `TxEncoder`, as well as a new [`Context`](../interfaces/query-lifecycle.md#context) with the `codec` and `AccountDecoder`. These contexts contain all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
-  - If applicable, the command's arguments are parsed. Here, the `amount` given by the user is parsed into a denomination of `coins`.
-  - If applicable, the `Context` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `cliCtx.getFromAddress()`.
+  - The function should first get the `clientCtx` with `client.GetClientContextFromCmd(cmd)` and `client.ReadTxCommandFlags(clientCtx, cmd.Flags())`.This context contains all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
+  - If applicable, the command's arguments are parsed.
+  - If applicable, the `Context` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `clientCtx.GetFromAddress()`.
   - A [message](./messages-and-queries.md) is created using all parameters parsed from the command arguments and `Context`. The constructor function of the specific message type is called directly. It is good practice to call `ValidateBasic()` on the newly created message to run a sanity check and check for invalid arguments.
   - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
-- **Flags.** Add any [flags](#flags) to the command. No flags were specified here, but all transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These _persistent_ [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
+- **Flags.** Add any [flags](#flags) to the command. All transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These _persistent_ [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
 
-Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign` and `MultiSign` commands.
+Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` commands.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/67f6b021180c7ef0bcf25b6597a629aca27766b8/x/auth/client/cli/tx.go#L11-L25
++++ https://github.com/cosmos/cosmos-sdk/blob/351192aa0b52a42b66ff06e81cfa7a9e26667a7f/x/auth/client/cli/tx.go#L10-L26
 
 An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
 

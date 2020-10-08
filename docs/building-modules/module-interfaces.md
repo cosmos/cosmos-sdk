@@ -69,9 +69,9 @@ The flags for a module are typically found in a `flags.go` file in the `./x/modu
 
 For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
-For example, the SDK `./client/flags` package includes a `PostCommands()` function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from.
+For example, the SDK `./client/flags` package includes a `AddTxFlagsToCmd(cmd *cobra.Command)` function that adds necessary flags to a transaction command, such as the `from` flag to indicate which address the transaction originates from.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/flags/flags.go#L85-L116
++++ https://github.com/cosmos/cosmos-sdk/blob/cfb5fc03e5092395403d10156c0ee96e6ff1ddbe/client/flags/flags.go#L85-L112
 
 Here is an example of how to add a flag using the `from` flag from this function.
 
@@ -87,7 +87,7 @@ A flag can be marked as _required_ so that an error is automatically thrown if t
 cmd.MarkFlagRequired(FlagFrom)
 ```
 
-Since `PostCommands()` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate). For a full list of what flags are included in the `PostCommands()` function, including which are required inputs from users, see the CLI documentation [here](../interfaces/cli.md#transaction-flags).
+Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
 
 ## REST
 

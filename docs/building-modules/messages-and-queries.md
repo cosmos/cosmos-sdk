@@ -48,7 +48,7 @@ It extends `proto.Message` and contains the following methods:
 
 See an example implementation of a `message` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/gov/v1beta1/tx.proto#L15-L27
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/gov/types/msgs.go#L94-L136
 
 ## Queries
 

@@ -38,6 +38,7 @@ type ClientState interface {
 		cdc codec.BinaryMarshaler,
 		store sdk.KVStore,
 		newClient ClientState,
+		upgradeHeight Height,
 		proofUpgrade []byte,
 	) error
 	// Utility function that zeroes out any client customizable fields in client state

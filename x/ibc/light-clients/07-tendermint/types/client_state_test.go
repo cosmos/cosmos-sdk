@@ -37,7 +37,7 @@ func (suite *TendermintTestSuite) TestValidate() {
 		},
 		{
 			name:        "valid client with nil upgrade path",
-			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), nil, false, false),
+			clientState: types.NewClientState(chainID, types.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, height, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), "", false, false),
 			expPass:     true,
 		},
 		{

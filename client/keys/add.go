@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -84,20 +85,19 @@ the flag --nosort is set.
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-
-	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagHome)
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
 	var (
 		kr  keyring.Keyring
 		err error
 	)
 
+	dryRun, _ := cmd.Flags().GetBool(flags.FlagHome)
 	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, keyringDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, keyringDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf)
 	}
 
 	if err != nil {

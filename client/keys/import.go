@@ -6,10 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ImportKeyCommand imports private keys from a keyfile.
@@ -21,14 +19,7 @@ func ImportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
-
-			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
-
-			kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, buf)
-			if err != nil {
-				return err
-			}
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			bz, err := ioutil.ReadFile(args[1])
 			if err != nil {
@@ -40,7 +31,7 @@ func ImportKeyCommand() *cobra.Command {
 				return err
 			}
 
-			return kb.ImportPrivKey(args[0], string(bz), passphrase)
+			return clientCtx.Keyring.ImportPrivKey(args[0], string(bz), passphrase)
 		},
 	}
 }

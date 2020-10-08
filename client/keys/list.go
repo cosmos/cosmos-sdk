@@ -4,9 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const flagListNames = "list-names"
@@ -26,15 +24,9 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
-	backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-	keyringDir, _ := cmd.Flags().GetString(flags.FlagKeyringDir)
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), backend, keyringDir, cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
-
-	infos, err := kb.List()
+	infos, err := clientCtx.Keyring.List()
 	if err != nil {
 		return err
 	}

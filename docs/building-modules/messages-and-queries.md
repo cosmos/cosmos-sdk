@@ -54,7 +54,33 @@ See an example implementation of a `message` from the `gov` module:
 
 A `query` is a request for information made by end-users of applications through an interface and processed by a full-node. A `query` is received by a full-node through its consensus engine and relayed to the application via the ABCI. It is then routed to the appropriate module via `baseapp`'s `queryrouter` so that it can be processed by the module's [`querier`](./querier.md). For a deeper look at the lifecycle of a `query`, click [here](../interfaces/query-lifecycle.md). 
 
-Contrary to `message`s, there is usually no specific `query` object defined by module developers. Instead, the SDK takes the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
+### gRPC Queries
+
+Starting from v0.40, developers can define queries as [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services), by creating a `Query` service per module in `query.proto`. This service lists endpoints starting with `rpc`.
+
+Here's an example of such a `Query` service definition:
+```proto
+
+// Query defines the gRPC querier service.
+service Query {
+  // Account returns account details based on address.
+  rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+  }
+
+  // Params queries all parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+  }
+}
+
+```
+
+As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
+
+### Legacy Queries
+
+Before the introduction of Protobuf and gRPC in the SDK, there was usually no specific `query` object defined by module developers, contrary to `message`s. Instead, the SDK took the simpler approach of using a simple `path` to define each `query`. The `path` contains the `query` type and all the arguments needed in order to process it. For most module queries, the `path` should look like the following:
 
 ```
 queryCategory/queryRoute/queryType/arg1/arg2/...
@@ -73,9 +99,6 @@ The `path` for each `query` must be defined by the module developer in the modul
 - [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified. 
 - `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). 
 
-See an example of `query` return types from the `nameservice` module:
-
-+++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/types/querier.go#L5-L21
 
 ## Next {hide}
 

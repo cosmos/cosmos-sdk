@@ -133,7 +133,7 @@ func checkValidity(
 	// This is useful if the update is at a previous version rather than an update to the latest version
 	// of the client.
 	// The chainID must be set correctly for the previous version before attempting verification.
-	// Updates for previous Versions are not supported if the chainID is not in version format.
+	// Updates for previous versions are not supported if the chainID is not in version format.
 	if clienttypes.IsVersionFormat(chainID) {
 		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
 	}

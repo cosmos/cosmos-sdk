@@ -35,9 +35,9 @@ func (cs ClientState) VerifyUpgrade(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, unescaping key with URL format failed: %v", err)
 	}
 
-	// UpgradeHeight must be in same Version as client state height
+	// UpgradeHeight must be in same version as client state height
 	if cs.GetLatestHeight().GetVersionNumber() != upgradeHeight.GetVersionNumber() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "Version at which upgrade occurs must be same as current client Version. expected Version %d, got %d",
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version at which upgrade occurs must be same as current client version. expected version %d, got %d",
 			cs.GetLatestHeight().GetVersionNumber(), upgradeHeight.GetVersionNumber())
 	}
 
@@ -70,7 +70,7 @@ func (cs ClientState) VerifyUpgrade(
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
-	// This verifies that upgrade is intended for the provided Version, since committed client must exist
+	// This verifies that upgrade is intended for the provided version, since committed client must exist
 	// at this consensus state
 	consState, err := GetConsensusState(clientStore, cdc, upgradeHeight)
 	if err != nil {

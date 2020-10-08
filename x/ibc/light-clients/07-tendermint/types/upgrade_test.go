@@ -79,7 +79,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: true,
 		},
 		{
-			name: "unsuccessful upgrade: upgrade height Version does not match current client Version",
+			name: "unsuccessful upgrade: upgrade height version does not match current client version",
 			setup: func() {
 
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)

@@ -197,7 +197,7 @@ Generally, the [commands related to a module](../building-modules/module-interfa
 
 #### REST
 
-The [module's REST interface](../building-modules/module-interfaces.md#rest) lets users generate transactions and query the state through REST calls to the application's [light client daemon](../core/node.md#lcd) (LCD). REST routes are defined in a file `client/rest/rest.go`, which is composed of:
+The [module's REST interface](../building-modules/module-interfaces.md#legacy-rest) lets users generate transactions and query the state through REST calls to the application's [light client daemon](../core/node.md#lcd) (LCD). REST routes are defined in a file `client/rest/rest.go`, which is composed of:
 
 - A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
 - Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:

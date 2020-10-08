@@ -89,7 +89,15 @@ cmd.MarkFlagRequired(FlagFrom)
 
 Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
 
-## REST
+Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
+
+## gRPC
+TODO
+
+## gRPC-gateway REST
+TODO
+
+## Legacy REST
 
 Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
 
@@ -99,11 +107,11 @@ To support HTTP requests, the module developer needs to define possible request 
 
 Request types, which define structured interactions from users, must be defined for all _transaction_ requests. Users using this method to interact with an application will send HTTP Requests with the required fields in order to trigger state changes in the application. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
 
-Here is an example of a request to buy a name from the `nameservice` module:
+Here is an example of a request to send coins from the `bank` module:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L14-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L15-L19
 
-The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the arguments `Name` and `Amount` fields in the body and `Buyer` will be provided by the user's address.
+The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the argument `Amount` fields in the body.
 
 #### BaseReq
 
@@ -114,6 +122,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 - `ChainID` specifies the unique identifier of the blockchain the transaction pertains to.
 - `AccountNumber` is an identifier for the account.
 - `Sequence`is the value of a counter measuring how many transactions have been sent from the account. It is used to prevent replay attacks.
+- `TimeoutHeight` allows a transaction to be rejected if it's committed at a height greater than the timeout.
 - `Gas` refers to how much [gas](../basics/gas-fees.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
 - `GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 - `GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
@@ -122,17 +131,17 @@ The `BaseReq` includes basic information that every request needs to have, simil
 
 ### Request Handlers
 
-Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the application's `codec` and the [`Context`](../interfaces/query-lifecycle.md#context) created in the user interaction.
+Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the [client `Context`](../interfaces/query-lifecycle.md#context).
 
-Here is an example of a request handler for the nameservice module `buyNameReq` request (the same one shown above):
+Here is an example of a request handler for the `bank` module `SendReq` request (the same one shown above):
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L21-L57
++++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L21-L51
 
 The request handler can be broken down as follows:
 
-- **Parse Request:** The request handler first attempts to parse the request, and then run `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Next, it attempts to parse the arguments `Buyer` and `Amount` to the types `AccountAddress` and `Coins` respectively.
-- **Message:** Then, a [message](./messages-and-queries.md) of the type `MsgBuyName` (defined by the module developer to trigger the state changes for this transaction) is created from the values and another sanity check, `ValidateBasic` is run on it.
-- **Generate Transaction:** Finally, the HTTP `ResponseWriter`, application [`codec`](../core/encoding.md), [`Context`](../interfaces/query-lifecycle.md#context), request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGenerateStdTxResponse` to further process the request.
+- **Parse Request:** First, it tries to parse the argument `address` into a `AccountAddress`. Then, the request handler attempts to parse the request, and then run `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Finally, it attempts to parse `BaseReq.From` to the type `AccountAddress`.
+- **Message:** Then, a [message](./messages-and-queries.md#messages) of the type `MsgSend` (defined by the module developer to trigger the state changes for this transaction) is created from the values.
+- **Generate Transaction:** Finally, the HTTP `ResponseWriter`, client `Context`, request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGeneratedTxResponse` to further process the request.
 
 To read more about how a transaction is generated, visit the transactions documentation [here](../core/transactions.md#transaction-generation).
 

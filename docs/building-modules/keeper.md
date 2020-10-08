@@ -32,15 +32,15 @@ type Keeper struct {
 }
 ```
 
-For example, here is the [type definition of the `keeper` from the nameservice tutorial:
+For example, here is the type definition of the `keeper` from the `staking` module:
 
-+++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/keeper/keeper.go#L10-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go#L23-L33
 
 Let us go through the different parameters:
 
 - An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in a `internal/types/expected_keepers.go` file within the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself. 
 - `storeKey`s grant access to the store(s) of the [multistore](../core/store.md) managed by the module. They should always remain unexposed to external modules. 
-- A [codec `cdc`](../core/encoding.md), used to marshall and unmarshall struct to/from `[]byte`. 
+- A [codec `cdc`](../core/encoding.md), used to marshall and unmarshall struct to/from `[]byte`, that can be any of `codec.BinaryMarshaler`,`codec.JSONMarshaler` or `codec.Marshaler` based on your requirements. 
 
 Of course, it is possible to define different types of internal `keeper`s for the same module (e.g. a read-only `keeper`). Each type of `keeper` comes with its own constructor function, which is called from the [application's constructor function](../basics/app-anatomy.md). This is where `keeper`s are instantiated, and where developers make sure to pass correct instances of modules' `keeper`s to other modules that require it. 
 
@@ -72,7 +72,7 @@ and go through the following steps:
 2. Marhsall `value` to `[]byte` using the codec `cdc`. 
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store. 
 
-For more, see an example of `keeper`'s [methods implementation from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/keeper/keeper.go). 
+For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go). 
 
 ## Next {hide}
 

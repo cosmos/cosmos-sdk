@@ -35,6 +35,7 @@ const (
 // List of CLI flags
 const (
 	FlagHome             = tmcli.HomeFlag
+	FlagKeyringDir       = "keyring-dir"
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
@@ -84,6 +85,7 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
 func AddTxFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
 	cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 	cmd.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	cmd.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")

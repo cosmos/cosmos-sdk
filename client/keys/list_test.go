@@ -1,12 +1,14 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -24,6 +26,9 @@ func Test_runListCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn)
 	require.NoError(t, err)
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	path := "" //sdk.GetConfig().GetFullFundraiserPath()
 	_, err = kb.NewAccount("something", testutil.TestMnemonic, "", path, hd.Secp256k1)
@@ -55,7 +60,7 @@ func Test_runListCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
-			if err := cmd.Execute(); (err != nil) != tt.wantErr {
+			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -65,7 +70,7 @@ func Test_runListCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
-			if err := cmd.Execute(); (err != nil) != tt.wantErr {
+			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 		},
 		{
 			"nil consensus params",
-			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, nil, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+			ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, nil, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 			false,
 		},
 	}

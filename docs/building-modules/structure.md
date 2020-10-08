@@ -27,6 +27,7 @@ x/{module}
 │   ├── keeper.go
 │   ├── ...
 │   └── querier.go
+│   └── grpc_query.go
 ├── types
 │   ├── codec.go
 │   ├── errors.go
@@ -40,6 +41,8 @@ x/{module}
 │   ├── types.proto
 │   ├── ...
 │   └── querier.go
+│   └── query.pb.go
+│   └── genesis.pb.go
 ├── simulation
 │   ├── decoder.go
 │   ├── genesis.go

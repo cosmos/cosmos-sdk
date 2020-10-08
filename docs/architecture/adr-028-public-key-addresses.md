@@ -111,7 +111,9 @@ Thus the canonical address for new public key types would be `AddressHash(proto.
 ### Multisig Addresses
 
 For new multisig public keys, we define a custom address format not based on any encoding scheme
-(amino or protobuf). This avoids issues with non-determinism in the encoding scheme.
+(amino or protobuf). This avoids issues with non-determinism in the encoding scheme. It also
+ensures that multisig public keys which differ simply in the ordering of keys have the same
+address by sorting child public keys first.
 
 First we define a proto message for multisig public keys:
 ```proto

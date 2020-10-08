@@ -67,12 +67,12 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 endif
 # handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
 endif
 # handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
 endif
 
@@ -110,7 +110,6 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	docker pull cosmossdk/rbuilder:latest
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
@@ -122,7 +121,6 @@ build-simd-all: go.sum
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
-	docker pull cosmossdk/rbuilder:latest
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64' \

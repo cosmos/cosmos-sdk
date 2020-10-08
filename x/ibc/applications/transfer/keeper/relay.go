@@ -11,7 +11,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 )
 
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
@@ -99,17 +98,9 @@ func (k Keeper) SendTransfer(
 		}
 	}
 
-	var labels []metrics.Label
-
-	// retrieve the counterparty chain identifier for telemetry purposes
-	_, clientState, err := k.channelKeeper.GetChannelClientState(ctx, destinationPort, destinationChannel)
-	if err == nil && clientState.ClientType() == ibctmtypes.Tendermint {
-		tmClientState, ok := clientState.(*ibctmtypes.ClientState)
-		if !ok {
-			return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected %T, got %T", &ibctmtypes.ClientState{}, clientState)
-		}
-
-		labels = append(labels, telemetry.NewLabel("chain_id", tmClientState.GetChainID()))
+	labels := []metrics.Label{
+		telemetry.NewLabel("destination-port", destinationPort),
+		telemetry.NewLabel("destination-channel", destinationChannel),
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
@@ -206,17 +197,9 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return err
 	}
 
-	var labels []metrics.Label
-
-	// retrieve the counterparty chain identifier for telemetry purposes
-	_, clientState, err := k.channelKeeper.GetChannelClientState(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
-	if err == nil && clientState.ClientType() == ibctmtypes.Tendermint {
-		tmClientState, ok := clientState.(*ibctmtypes.ClientState)
-		if !ok {
-			return sdkerrors.Wrapf(clienttypes.ErrInvalidClientType, "expected %T, got %T", &ibctmtypes.ClientState{}, clientState)
-		}
-
-		labels = append(labels, telemetry.NewLabel("chain_id", tmClientState.GetChainID()))
+	labels := []metrics.Label{
+		telemetry.NewLabel("source-port", packet.GetSourcePort()),
+		telemetry.NewLabel("source-channel", packet.GetSourceChannel()),
 	}
 
 	// This is the prefix that would have been prefixed to the denomination

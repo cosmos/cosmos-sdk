@@ -24,8 +24,8 @@ This module will be used in the Cosmos Hub.
    - [Gas & Fees](01_concepts.md#gas-&-fees)
 2. **[State](02_state.md)**
    - [Accounts](02_state.md#accounts)
-3. **[Messages](03_messages.md)**
-   - [Handlers](03_messages.md#handlers)
+3. **[AnteHandlers](03_antehandlers.md)**
+   - [Handlers](03_antehandlers.md#handlers)
 4. **[Keepers](04_keepers.md)**
    - [Account Keeper](04_keepers.md#account-keeper)
 5. **[Vesting](05_vesting.md)**

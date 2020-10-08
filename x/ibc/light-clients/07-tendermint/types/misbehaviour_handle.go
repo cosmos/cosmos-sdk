@@ -56,10 +56,10 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 
 	var ageBlocks int64
-	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.VersionNumber {
+	if tmMisbehaviour.GetHeight().GetVersionNumber() == cs.LatestHeight.VersionNumber {
 		// if the misbehaviour is in the same version as the client then
 		// perform expiry check using block height in addition to time
-		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
+		infractionHeight := tmMisbehaviour.GetHeight().GetVersionHeight()
 		ageBlocks = int64(cs.LatestHeight.VersionHeight - infractionHeight)
 	} else {
 		// if the misbehaviour is from a different version, then the version-height
@@ -69,25 +69,14 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 		ageBlocks = 0
 	}
 
-	// TODO: Retrieve consensusparams from client state and not context
-	// Issue #6516: https://github.com/cosmos/cosmos-sdk/issues/6516
-	consensusParams := ctx.ConsensusParams()
-
 	// Reject misbehaviour if the age is too old. Misbehaviour is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	//
-	// NOTE: The first condition is a safety check as the consensus params cannot
-	// be nil since the previous param values will be used in case they can't be
-	// retrieved. If they are not set during initialization, Tendermint will always
-	// use the default values.
-	if consensusParams != nil &&
-		consensusParams.Evidence != nil &&
-		(ageDuration > consensusParams.Evidence.MaxAgeDuration ||
-			ageBlocks > consensusParams.Evidence.MaxAgeNumBlocks) {
+	if ageDuration > cs.ConsensusParams.Evidence.MaxAgeDuration ||
+		ageBlocks > cs.ConsensusParams.Evidence.MaxAgeNumBlocks {
 		return nil, sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour,
 			"age duration (%s) and age blocks (%d) are greater than max consensus params for duration (%s) and block (%d)",
-			ageDuration, ageBlocks, consensusParams.Evidence.MaxAgeDuration, consensusParams.Evidence.MaxAgeNumBlocks,
+			ageDuration, ageBlocks, cs.ConsensusParams.Evidence.MaxAgeDuration, cs.ConsensusParams.Evidence.MaxAgeNumBlocks,
 		)
 	}
 
@@ -144,8 +133,8 @@ func checkMisbehaviourHeader(
 	chainID := clientState.GetChainID()
 	// If chainID is in version format, then set version number of chainID with the version number
 	// of the misbehaviour header
-	if clienttypes.IsEpochFormat(chainID) {
-		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
+	if clienttypes.IsVersionFormat(chainID) {
+		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
 	}
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet

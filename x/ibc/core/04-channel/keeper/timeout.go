@@ -146,7 +146,7 @@ func (k Keeper) TimeoutExecuted(
 		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
 	}
 
-	k.Logger(ctx).Info("packet timed-out", "packet", packet)
+	k.Logger(ctx).Info("packet timed-out", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event marking that we have processed the timeout
 	ctx.EventManager().EmitEvents(sdk.Events{

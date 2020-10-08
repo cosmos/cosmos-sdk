@@ -129,7 +129,7 @@ func (k Keeper) SendPacket(
 		),
 	})
 
-	k.Logger(ctx).Info(fmt.Sprintf("packet sent: %v", packet))
+	k.Logger(ctx).Info("packet sent", "packet", fmt.Sprintf("%v", packet))
 	return nil
 }
 
@@ -518,7 +518,7 @@ func (k Keeper) AcknowledgementExecuted(
 	}
 
 	// log that a packet has been acknowledged
-	k.Logger(ctx).Info(fmt.Sprintf("packet acknowledged: %v", packet))
+	k.Logger(ctx).Info("packet acknowledged", "packet", fmt.Sprintf("%v", packet))
 
 	// emit an event marking that we have processed the acknowledgement
 	ctx.EventManager().EmitEvents(sdk.Events{

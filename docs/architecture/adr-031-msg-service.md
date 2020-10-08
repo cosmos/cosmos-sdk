@@ -105,10 +105,13 @@ should use the more canonical `Msg...Request` names.
 Currently, we are encoding `Msg`s as `Any` in `Tx`s which involves packing the
 binary-encoded `Msg` with its type URL.
 
-The type URL for `MsgSubmitProposal` is `/cosmos.gov.MsgSubmitProposal`. 
+The type URL for `MsgSubmitProposal` based on the proto3 spec is `/cosmos.gov.MsgSubmitProposal`. 
 
-The fully-qualified name for the `SubmitProposal` service method above is
-`/cosmos.gov.Msg/SubmitProposal` which is varies by a single `/` character.
+The fully-qualified name for the `SubmitProposal` service method above (also
+based on the proto3 and gRPC specs) is `/cosmos.gov.Msg/SubmitProposal` which varies
+by a single `/` character. The generated `.pb.go` files for protobuf `service`s
+include names of this form and any compliant protobuf/gRPC code generator will
+generate the same name.
 
 In order to encode service methods in transactions, we encode them as `Any`s in
 the same `TxBody.messages` field as other `Msg`s. We simply set `Any.type_url`

@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -85,7 +84,12 @@ func (k Keeper) ChanOpenInit(
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 	k.SetNextSequenceAck(ctx, portID, channelID, 1)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-init")
+	}()
+
 	return capKey, nil
 }
 
@@ -194,7 +198,12 @@ func (k Keeper) ChanOpenTry(
 	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
 	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, desiredChannelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
+	}()
+
 	return capKey, nil
 }
 
@@ -269,7 +278,11 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> OPEN", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-ack")
+	}()
 
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
@@ -339,8 +352,11 @@ func (k Keeper) ChanOpenConfirm(
 
 	channel.State = types.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "TRYOPEN", "new-state", "OPEN")
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID))
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-confirm")
+	}()
 	return nil
 }
 
@@ -382,7 +398,11 @@ func (k Keeper) ChanCloseInit(
 		)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-init")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -445,7 +465,11 @@ func (k Keeper) ChanCloseConfirm(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-confirm")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

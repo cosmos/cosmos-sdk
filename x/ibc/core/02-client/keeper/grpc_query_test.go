@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		{
 			"success",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, types.ZeroHeight(), ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				suite.keeper.SetClientState(suite.ctx, testClientID, clientState)
 
 				var err error
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 		{
 			"success latest height",
 			func() {
-				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), &ibctesting.UpgradePath, false, false)
+				clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				cs := ibctmtypes.NewConsensusState(
 					suite.consensusState.Timestamp, commitmenttypes.NewMerkleRoot([]byte("hash1")), nil,
 				)

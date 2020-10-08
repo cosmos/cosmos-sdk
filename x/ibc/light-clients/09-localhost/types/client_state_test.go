@@ -123,8 +123,8 @@ func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetEpochNumber())
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetEpochHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetVersionNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetVersionHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
 }
 

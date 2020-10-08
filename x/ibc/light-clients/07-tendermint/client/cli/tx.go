@@ -120,12 +120,6 @@ func NewCreateClientCmd() *cobra.Command {
 			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
 
 			upgradePath, _ := cmd.Flags().GetString(flagUpgradePath)
-			keyPath := strings.Split(upgradePath, "/")
-			if keyPath[0] == upgradePath {
-				return fmt.Errorf("invalid merkle path %s", upgradePath)
-			}
-
-			merklePath := commitmenttypes.NewMerklePath(keyPath)
 
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
@@ -136,7 +130,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 			clientState := types.NewClientState(
 				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
-				height, specs, &merklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
+				height, specs, upgradePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
 
 			consensusState := header.ConsensusState()

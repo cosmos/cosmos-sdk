@@ -42,7 +42,7 @@ message ClientState {
   repeated ics23.ProofSpec proof_specs = 8 [(gogoproto.moretags) = "yaml:\"proof_specs\""];
 
   // Path at which next upgraded client will be committed
-  ibc.core.commitment.v1.MerklePath upgrade_path = 9 [(gogoproto.moretags) = "yaml:\"upgrade_path\""];
+  string upgrade_path = 9 [(gogoproto.moretags) = "yaml:\"upgrade_path\""];
 
   // This flag, when set to true, will allow governance to recover a client
   // which has expired

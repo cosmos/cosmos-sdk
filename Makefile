@@ -110,10 +110,10 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker pull cosmossdk/rbuilder:latest
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='darwin linux windows' \
+        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -122,10 +122,10 @@ build-simd-all: go.sum
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+	docker pull cosmossdk/rbuilder:latest
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='linux' \
+        --env TARGET_PLATFORMS='linux/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \

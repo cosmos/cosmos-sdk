@@ -57,15 +57,15 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 func (suite *KeeperTestSuite) TestUpdateClientTendermint() {
 	// Must create header creation functions since suite.header gets recreated on each test case
 	createFutureUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		heightPlus3 := clienttypes.NewHeight(suite.header.GetHeight().GetEpochNumber(), suite.header.GetHeight().GetEpochHeight()+3)
+		heightPlus3 := clienttypes.NewHeight(suite.header.GetHeight().GetVersionNumber(), suite.header.GetHeight().GetVersionHeight()+3)
 		height := suite.header.GetHeight().(clienttypes.Height)
 
 		return ibctmtypes.CreateTestHeader(testChainID, heightPlus3, height, suite.header.Header.Time.Add(time.Hour),
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	}
 	createPastUpdateFn := func(s *KeeperTestSuite) *ibctmtypes.Header {
-		heightMinus2 := clienttypes.NewHeight(suite.header.GetHeight().GetEpochNumber(), suite.header.GetHeight().GetEpochHeight()-2)
-		heightMinus4 := clienttypes.NewHeight(suite.header.GetHeight().GetEpochNumber(), suite.header.GetHeight().GetEpochHeight()-4)
+		heightMinus2 := clienttypes.NewHeight(suite.header.GetHeight().GetVersionNumber(), suite.header.GetHeight().GetVersionHeight()-2)
+		heightMinus4 := clienttypes.NewHeight(suite.header.GetHeight().GetVersionNumber(), suite.header.GetHeight().GetVersionHeight()-4)
 
 		return ibctmtypes.CreateTestHeader(testChainID, heightMinus2, heightMinus4, suite.header.Header.Time,
 			suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
 
 				// commit upgrade store changes and update clients
 
@@ -268,7 +268,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
 			},
 			expPass: true,
 		},
@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
 
 				// commit upgrade store changes and update clients
 
@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
 
 				clientA = "wrongclientid"
 			},
@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
 
 				// commit upgrade store changes and update clients
 
@@ -320,7 +320,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
 
 				// set frozen client in store
 				tmClient, ok := cs.(*ibctmtypes.ClientState)
@@ -340,7 +340,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				upgradeHeight = clienttypes.NewHeight(0, uint64(suite.chainB.GetContext().BlockHeight()+1))
 
 				// zero custom fields and store in upgrade store
-				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetEpochHeight()), upgradedClient)
+				suite.chainB.App.UpgradeKeeper.SetUpgradedClient(suite.chainB.GetContext(), int64(upgradeHeight.GetVersionHeight()), upgradedClient)
 
 				// change upgradedClient client-specified parameters
 				upgradedClient = ibctmtypes.NewClientState("wrongchainID", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, true, true)
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 				cs, found := suite.chainA.App.IBCKeeper.ClientKeeper.GetClientState(suite.chainA.GetContext(), clientA)
 				suite.Require().True(found)
 
-				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetEpochHeight())), cs.GetLatestHeight().GetEpochHeight())
+				proofUpgrade, _ = suite.chainB.QueryUpgradeProof(upgradetypes.UpgradedClientKey(int64(upgradeHeight.GetVersionHeight())), cs.GetLatestHeight().GetVersionHeight())
 			},
 			expPass: false,
 		},

@@ -56,10 +56,10 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	ageDuration := ctx.BlockTime().Sub(infractionTime)
 
 	var ageBlocks int64
-	if tmMisbehaviour.GetHeight().GetEpochNumber() == cs.LatestHeight.VersionNumber {
+	if tmMisbehaviour.GetHeight().GetVersionNumber() == cs.LatestHeight.VersionNumber {
 		// if the misbehaviour is in the same version as the client then
 		// perform expiry check using block height in addition to time
-		infractionHeight := tmMisbehaviour.GetHeight().GetEpochHeight()
+		infractionHeight := tmMisbehaviour.GetHeight().GetVersionHeight()
 		ageBlocks = int64(cs.LatestHeight.VersionHeight - infractionHeight)
 	} else {
 		// if the misbehaviour is from a different version, then the version-height
@@ -133,8 +133,8 @@ func checkMisbehaviourHeader(
 	chainID := clientState.GetChainID()
 	// If chainID is in version format, then set version number of chainID with the version number
 	// of the misbehaviour header
-	if clienttypes.IsEpochFormat(chainID) {
-		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
+	if clienttypes.IsVersionFormat(chainID) {
+		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
 	}
 
 	// - ValidatorSet must have 2/3 similarity with trusted FromValidatorSet

@@ -35,10 +35,10 @@ func (cs ClientState) VerifyUpgrade(
 		return sdkerrors.Wrapf(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade client, unescaping key with URL format failed: %v", err)
 	}
 
-	// UpgradeHeight must be in same epoch as client state height
-	if cs.GetLatestHeight().GetEpochNumber() != upgradeHeight.GetEpochNumber() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "epoch at which upgrade occurs must be same as current client epoch. expected epoch %d, got %d",
-			cs.GetLatestHeight().GetEpochNumber(), upgradeHeight.GetEpochNumber())
+	// UpgradeHeight must be in same version as client state height
+	if cs.GetLatestHeight().GetVersionNumber() != upgradeHeight.GetVersionNumber() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version at which upgrade occurs must be same as current client version. expected version %d, got %d",
+			cs.GetLatestHeight().GetVersionNumber(), upgradeHeight.GetVersionNumber())
 	}
 
 	tmClient, ok := upgradedClient.(*ClientState)
@@ -70,7 +70,7 @@ func (cs ClientState) VerifyUpgrade(
 	}
 
 	// Must prove against latest consensus state to ensure we are verifying against latest upgrade plan
-	// This verifies that upgrade is intended for the provided epoch, since committed client must exist
+	// This verifies that upgrade is intended for the provided version, since committed client must exist
 	// at this consensus state
 	consState, err := GetConsensusState(clientStore, cdc, upgradeHeight)
 	if err != nil {
@@ -116,6 +116,6 @@ func constructUpgradeMerklePath(upgradePath string, upgradeHeight exported.Heigh
 	}
 	// append upgradeHeight to last key in merkle path
 	// this will create the IAVL key that is used to store client in upgrade store
-	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", lastKey, upgradeHeight.GetEpochHeight())
+	upgradeKeys[len(upgradeKeys)-1] = fmt.Sprintf("%s/%d", lastKey, upgradeHeight.GetVersionHeight())
 	return commitmenttypes.NewMerklePath(upgradeKeys), nil
 }

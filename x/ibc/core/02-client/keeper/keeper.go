@@ -182,7 +182,7 @@ func (k Keeper) GetSelfConsensusState(ctx sdk.Context, height exported.Height) (
 	}
 	// check that height version matches chainID version
 	version := types.ParseChainID(ctx.ChainID())
-	if version != height.GetEpochNumber() {
+	if version != height.GetVersionNumber() {
 		return nil, false
 	}
 	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, int64(selfHeight.VersionHeight))

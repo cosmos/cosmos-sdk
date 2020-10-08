@@ -38,6 +38,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+		MaxNum:          50,
 	},
 	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{

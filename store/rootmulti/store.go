@@ -191,7 +191,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it has been added, set the initial version
 		if upgrades.IsAdded(key.Name()) {
-			storeParams.initialVersion = uint64(ver)
+			storeParams.initialVersion = uint64(ver) + 1
 		}
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)

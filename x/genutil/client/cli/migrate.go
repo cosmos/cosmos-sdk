@@ -8,16 +8,17 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
-	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
-	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_39"
-	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_40"
+	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
+	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v038"
+	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
+	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -67,7 +68,6 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
 
 			var err error
 
@@ -80,7 +80,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			var initialState types.AppMap
-			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
+			if err := json.Unmarshal(genDoc.AppState, &initialState); err != nil {
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
@@ -90,9 +90,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			// TODO: handler error from migrationFunc call
-			newGenState := migrationFunc(initialState)
+			newGenState := migrationFunc(initialState, clientCtx)
 
-			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
+			genDoc.AppState, err = json.Marshal(newGenState)
 			if err != nil {
 				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
 			}
@@ -114,7 +114,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := json.MarshalIndent(genDoc, "", " ")
+			bz, err := tmjson.Marshal(genDoc)
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}

@@ -1,42 +1,51 @@
 syntax = "proto3";
 package cosmos.tx.signing.v1beta1;
 
-import "cosmos/base/crypto/v1beta1/crypto.proto";
+import "cosmos/crypto/multisig/v1beta1/multisig.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
-// SignMode represents a signing mode with its own security guarantees
+// SignMode represents a signing mode with its own security guarantees.
 enum SignMode {
-    // SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected
-    SIGN_MODE_UNSPECIFIED = 0;
+  // SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
+  // rejected
+  SIGN_MODE_UNSPECIFIED = 0;
 
-    // SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified
-    // with raw bytes from Tx
-    SIGN_MODE_DIRECT = 1;
+  // SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
+  // verified with raw bytes from Tx
+  SIGN_MODE_DIRECT = 1;
 
-    // SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable
-    // textual representation on top of the binary representation from SIGN_MODE_DIRECT
-    SIGN_MODE_TEXTUAL = 2;
+  // SIGN_MODE_TEXTUAL is a future signing mode that will verify some
+  // human-readable textual representation on top of the binary representation
+  // from SIGN_MODE_DIRECT
+  SIGN_MODE_TEXTUAL = 2;
 
-    // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
-    // Amino JSON and will be removed in the future
-    SIGN_MODE_LEGACY_AMINO_JSON = 127;
+  // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
+  // Amino JSON and will be removed in the future
+  SIGN_MODE_LEGACY_AMINO_JSON = 127;
 }
 
 // SignatureDescriptors wraps multiple SignatureDescriptor's.
 message SignatureDescriptors {
-    // signatures are the signature descriptors
-    repeated SignatureDescriptor signatures = 1;
+  // signatures are the signature descriptors
+  repeated SignatureDescriptor signatures = 1;
 }
 
-// SignatureDescriptor is a convenience type which represents the full data for a
-// signature including the public key of the signer, signing modes and the signature
-// itself. It is primarily used for coordinating signatures between clients.
+// SignatureDescriptor is a convenience type which represents the full data for
+// a signature including the public key of the signer, signing modes and the
+// signature itself. It is primarily used for coordinating signatures between
+// clients.
 message SignatureDescriptor {
     // public_key is the public key of the signer
-    cosmos.base.crypto.v1beta1.PublicKey public_key = 1;
+    google.protobuf.Any public_key = 1;
 
     Data data = 2;
+
+    // sequence is the sequence of the account, which describes the
+    // number of committed transactions signed by a given address. It is used to prevent
+    // replay attacks.
+    uint64 sequence = 3;
 
     // Data represents signature data
     message Data {
@@ -61,7 +70,7 @@ message SignatureDescriptor {
         // Multi is the signature data for a multisig public key
         message Multi {
             // bitarray specifies which keys within the multisig are signing
-            cosmos.base.crypto.v1beta1.CompactBitArray bitarray = 1;
+            cosmos.crypto.multisig.v1beta1.CompactBitArray bitarray = 1;
 
             // signatures is the signatures of the multi-signature
             repeated Data signatures  = 2;

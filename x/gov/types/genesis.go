@@ -50,7 +50,7 @@ func ValidateGenesis(data *GenesisState) error {
 			threshold.String())
 	}
 
-	veto := data.TallyParams.Veto
+	veto := data.TallyParams.VetoThreshold
 	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
 		return fmt.Errorf("governance vote veto threshold should be positive and less or equal to one, is %s",
 			veto.String())

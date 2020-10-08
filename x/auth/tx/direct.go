@@ -31,7 +31,7 @@ func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signi
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}
 
-	protoTx, ok := tx.(*builder)
+	protoTx, ok := tx.(*wrapper)
 	if !ok {
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
@@ -39,18 +39,17 @@ func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signi
 	bodyBz := protoTx.getBodyBytes()
 	authInfoBz := protoTx.getAuthInfoBytes()
 
-	return DirectSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.AccountSequence)
+	return DirectSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber)
 }
 
 // DirectSignBytes returns the SIGN_MODE_DIRECT sign bytes for the provided TxBody bytes, AuthInfo bytes, chain ID,
 // account number and sequence.
-func DirectSignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum, sequence uint64) ([]byte, error) {
+func DirectSignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum uint64) ([]byte, error) {
 	signDoc := types.SignDoc{
-		BodyBytes:       bodyBytes,
-		AuthInfoBytes:   authInfoBytes,
-		ChainId:         chainID,
-		AccountNumber:   accnum,
-		AccountSequence: sequence,
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		ChainId:       chainID,
+		AccountNumber: accnum,
 	}
 	return signDoc.Marshal()
 }

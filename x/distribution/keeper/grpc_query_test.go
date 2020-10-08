@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 		}, {
 			"valid request",
 			func() {
-				req = &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: valAddrs[0]}
+				req = &types.QueryValidatorOutstandingRewardsRequest{ValidatorAddress: valAddrs[0].String()}
 			},
 			true,
 		},
@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
 		{
 			"valid request",
 			func() {
-				req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valAddrs[0]}
+				req = &types.QueryValidatorCommissionRequest{ValidatorAddress: valAddrs[0].String()}
 			},
 			true,
 		},
@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 			"Ending height lesser than start height request",
 			func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1],
+					ValidatorAddress: valAddrs[1].String(),
 					StartingHeight:   10,
 					EndingHeight:     1,
 				}
@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 			"no slash event validator request",
 			func() {
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[1],
+					ValidatorAddress: valAddrs[1].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 				}
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 				}
 
 				req = &types.QueryValidatorSlashesRequest{
-					ValidatorAddress: valAddrs[0],
+					ValidatorAddress: valAddrs[0].String(),
 					StartingHeight:   1,
 					EndingHeight:     10,
 					Pagination:       pageReq,
@@ -385,8 +385,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"empty delegator request",
 			func() {
 				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: nil,
-					ValidatorAddress: valAddrs[0],
+					DelegatorAddress: "",
+					ValidatorAddress: valAddrs[0].String(),
 				}
 			},
 			false,
@@ -395,8 +395,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"empty validator request",
 			func() {
 				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[1],
-					ValidatorAddress: nil,
+					DelegatorAddress: addrs[1].String(),
+					ValidatorAddress: "",
 				}
 			},
 			false,
@@ -405,8 +405,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"request with wrong delegator and validator",
 			func() {
 				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[1],
-					ValidatorAddress: valAddrs[1],
+					DelegatorAddress: addrs[1].String(),
+					ValidatorAddress: valAddrs[1].String(),
 				}
 			},
 			false,
@@ -415,8 +415,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"valid request",
 			func() {
 				req = &types.QueryDelegationRewardsRequest{
-					DelegatorAddress: addrs[0],
-					ValidatorAddress: valAddrs[0],
+					DelegatorAddress: addrs[0].String(),
+					ValidatorAddress: valAddrs[0].String(),
 				}
 
 				expRes = &types.QueryDelegationRewardsResponse{
@@ -465,7 +465,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"valid total delegation rewards",
 			func() {
 				totalRewardsReq = &types.QueryDelegationTotalRewardsRequest{
-					DelegatorAddress: addrs[0],
+					DelegatorAddress: addrs[0].String(),
 				}
 
 				expectedDelReward := types.NewDelegationDelegatorReward(valAddrs[0],
@@ -519,7 +519,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"request no delegations address",
 			func() {
 				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
-					DelegatorAddress: addrs[1],
+					DelegatorAddress: addrs[1].String(),
 				}
 
 				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{}
@@ -530,10 +530,10 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 			"valid request",
 			func() {
 				delegatorValidatorsReq = &types.QueryDelegatorValidatorsRequest{
-					DelegatorAddress: addrs[0],
+					DelegatorAddress: addrs[0].String(),
 				}
 				expDelegatorValidatorsRes = &types.QueryDelegatorValidatorsResponse{
-					Validators: valAddrs[:1],
+					Validators: []string{valAddrs[0].String()},
 				}
 			},
 			true,
@@ -548,7 +548,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(validators, expDelegatorValidatorsRes)
+				suite.Require().Equal(expDelegatorValidatorsRes, validators)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(validators)
@@ -580,7 +580,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 		{
 			"valid request",
 			func() {
-				req = &types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addrs[0]}
+				req = &types.QueryDelegatorWithdrawAddressRequest{DelegatorAddress: addrs[0].String()}
 			},
 			true,
 		},
@@ -594,7 +594,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1])
+				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1].String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(withdrawAddress)

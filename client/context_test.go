@@ -71,13 +71,13 @@ x: "10"
 	// amino
 	//
 	amino := testdata.NewTestAmino()
-	ctx = ctx.WithJSONMarshaler(codec.NewAminoCodec(&codec.LegacyAmino{Amino: amino}))
+	ctx = ctx.WithLegacyAmino(&codec.LegacyAmino{Amino: amino})
 
 	// json
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "json"
-	err = ctx.PrintOutput(hasAnimal)
+	err = ctx.PrintOutputLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`{"type":"testdata/HasAnimal","value":{"animal":{"type":"testdata/Dog","value":{"size":"big","name":"Spot"}},"x":"10"}}
@@ -87,7 +87,7 @@ x: "10"
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
 	ctx.OutputFormat = "text"
-	err = ctx.PrintOutput(hasAnimal)
+	err = ctx.PrintOutputLegacy(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
 		`type: testdata/HasAnimal

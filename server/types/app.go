@@ -11,6 +11,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 type (
@@ -31,7 +32,7 @@ type (
 	Application interface {
 		abci.Application
 
-		RegisterAPIRoutes(*api.Server)
+		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
@@ -42,7 +43,20 @@ type (
 	// application using various configurations.
 	AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
 
+	// ExportedApp represents an exported app state, along with
+	// validators, consensus params and latest app height.
+	ExportedApp struct {
+		// AppState is the application state as JSON.
+		AppState json.RawMessage
+		// Validators is the exported validator set.
+		Validators []tmtypes.GenesisValidator
+		// Height is the app's latest block height.
+		Height int64
+		// ConsensusParams are the exported consensus params for ABCI.
+		ConsensusParams *abci.ConsensusParams
+	}
+
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string) (json.RawMessage, []tmtypes.GenesisValidator, *abci.ConsensusParams, error)
+	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string) (ExportedApp, error)
 )

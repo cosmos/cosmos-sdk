@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // EncodeResp defines a tx encoding response.
@@ -22,7 +22,7 @@ type EncodeResp struct {
 // and responds with base64-encoded bytes.
 func EncodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.StdTx
+		var req legacytx.StdTx
 
 		body, err := ioutil.ReadAll(r.Body)
 		if rest.CheckBadRequestError(w, err) {

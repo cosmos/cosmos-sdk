@@ -51,7 +51,15 @@ STATIK         = $(TOOLS_DESTDIR)/statik
 RUNSIM         = $(TOOLS_DESTDIR)/runsim
 
 tools: tools-stamp
-tools-stamp: proto-tools statik runsim
+tools-stamp: statik runsim
+	# Create dummy file to satisfy dependency and avoid
+	# rebuilding when this Makefile target is hit twice
+	# in a row.
+	touch $@
+
+proto-tools: proto-tools-stamp
+proto-tools-stamp:
+	bash $(mkfile_dir)/proto-tools-installer.sh
 	# Create dummy file to satisfy dependency and avoid
 	# rebuilding when this Makefile target is hit twice
 	# in a row.
@@ -77,45 +85,8 @@ $(RUNSIM):
 	@echo "Installing runsim..."
 	@(cd /tmp && go get github.com/cosmos/tools/cmd/runsim@v1.0.0)
 
-PROTOC_VERSION ?= 3.11.2
-ifeq ($(UNAME_S),Linux)
-  PROTOC_ZIP ?= protoc-3.11.2-linux-x86_64.zip
-endif
-ifeq ($(UNAME_S),Darwin)
-  PROTOC_ZIP ?= protoc-3.11.2-osx-x86_64.zip
-endif
-
-proto-tools: proto-tools-stamp buf
-
-proto-tools-stamp:
-	@echo "Installing protoc compiler..."
-	@(cd /tmp; \
-	curl -OL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/${PROTOC_ZIP}"; \
-	unzip -o ${PROTOC_ZIP} -d $(PREFIX) bin/protoc; \
-	unzip -o ${PROTOC_ZIP} -d $(PREFIX) 'include/*'; \
-	rm -f ${PROTOC_ZIP})
-
-	@echo "Installing protoc-gen-gocosmos..."
-	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
-
-	@echo "Installing protoc-gen-grpc-gateway..."
-	@go install https://github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-
-	touch $@
-
-buf: buf-stamp
-
-buf-stamp:
-	@echo "Installing buf..."
-	@curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${UNAME_S}-${UNAME_M}" \
-    -o "${BIN}/buf" && \
-	chmod +x "${BIN}/buf"
-
-	touch $@
-
 tools-clean:
 	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
-	rm -f tools-stamp proto-tools-stamp buf-stamp
+	rm -f proto-tools-stamp tools-stamp
 
 .PHONY: tools-clean statik runsim

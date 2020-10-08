@@ -80,7 +80,7 @@ The `auth` codec definition:
 var ModuleCdc *codec.LegacyAmino
 
 func init() {
-    ModuleCdc = codec.New()
+    ModuleCdc = codec.NewLegacyAmino()
     // register module msg's and Account interface
     ...
     // leave the codec unsealed

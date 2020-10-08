@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
+	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,12 +21,12 @@ func TestValidatorTestEquivalent(t *testing.T) {
 	val1 := NewValidator(valAddr1, pk1, Description{})
 	val2 := NewValidator(valAddr1, pk1, Description{})
 
-	ok := val1.Equal(val2)
+	ok := val1.String() == val2.String()
 	require.True(t, ok)
 
 	val2 = NewValidator(valAddr2, pk2, Description{})
 
-	ok = val1.Equal(val2)
+	ok = val1.String() == val2.String()
 	require.False(t, ok)
 }
 
@@ -62,7 +63,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdate()
-	pk, err := cryptoenc.PubKeyToProto(validator.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
@@ -72,7 +73,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 	validator := NewValidator(valAddr1, pk1, Description{})
 
 	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := cryptoenc.PubKeyToProto(validator.GetConsPubKey())
+	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
@@ -80,7 +81,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 
 func TestShareTokens(t *testing.T) {
 	validator := Validator{
-		OperatorAddress: valAddr1,
+		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -98,7 +99,7 @@ func TestRemoveTokens(t *testing.T) {
 	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
 
 	validator := Validator{
-		OperatorAddress: valAddr,
+		OperatorAddress: valAddr.String(),
 		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -154,7 +155,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 // TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()),
+		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
 		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(100),
@@ -171,7 +172,7 @@ func TestRemoveDelShares(t *testing.T) {
 	poolTokens := sdk.NewInt(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()),
+		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
 		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
 		Status:          sdk.Bonded,
 		Tokens:          poolTokens,
@@ -220,7 +221,7 @@ func TestUpdateStatus(t *testing.T) {
 func TestPossibleOverflow(t *testing.T) {
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()),
+		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
 		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
 		Status:          sdk.Bonded,
 		Tokens:          sdk.NewInt(2159),
@@ -317,7 +318,7 @@ func TestValidatorToTm(t *testing.T) {
 		val.Status = sdk.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
-		expected[i] = tmtypes.NewValidator(pk, val.ConsensusPower())
+		expected[i] = tmtypes.NewValidator(pk.(cryptotypes.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
 	}
 
 	require.Equal(t, expected, vals.ToTmValidators())

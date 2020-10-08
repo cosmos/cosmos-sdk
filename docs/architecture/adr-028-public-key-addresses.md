@@ -111,7 +111,7 @@ Thus the canonical address for new public key types would be `AddressHash(proto.
 ### Multisig Addresses
 
 For new multisig public keys, we define a custom address format not based on any encoding scheme
-(amino or protobuf).
+(amino or protobuf). This avoids issues with non-determinism in the encoding scheme.
 
 First we define a proto message for multisig public keys:
 ```proto
@@ -123,12 +123,32 @@ message PubKey {
 }
 ```
 
-Each nested public key has its own address defined using the the algorithm described here 
-(either Canonica or Multisig address). We can use to recursively define the multisig address format. 
-Let's create an array of strings, `hexAddresses []string`,
-which is the hex-encoded address of each nested pubkey. We join these hex encoded addresses
-with a `/`, i.e. `joinedHexAddresses := strings.Join(hexAddresses, "/")`. We then form the address of the multisig pubkey,
-using `Sha256(fmt.Sprintf("cosmos.crypto.multisig.PubKey/%d/%s", pk.Threshold, joinedHexAddresses)[:20]`.
+We define the following `Address()` function for this public key:
+
+```
+func (multisig PubKey) Address() {
+  // first gather all the addresses of each nested public key
+  var addresses [][]byte
+  for key := range multisig.Keys {
+    addresses = append(joinedAddresses, key.Address())
+  }
+
+  // then sort them in ascending order
+  addresses = Sort(addresses)
+
+  // then concatenate them together
+  var joinedAddresses []byte
+  for addr := range addresses {
+    joinedAddresses := append(joinedAddresses, addr...)
+  }
+
+  // form the string prefix from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
+  prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
+
+  // use the standard AddressHash function
+  return AddressHash(prefix, joinedAddresses)
+}
+``` 
 
 ## Consequences
 

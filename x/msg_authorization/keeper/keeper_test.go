@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -17,11 +18,10 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	app   *simapp.SimApp
-	ctx   sdk.Context
-	addrs []sdk.AccAddress
+	app         *simapp.SimApp
+	ctx         sdk.Context
+	addrs       []sdk.AccAddress
 	queryClient types.QueryClient
-
 }
 
 func (s *TestSuite) SetupTest() {

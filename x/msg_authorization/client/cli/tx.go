@@ -89,26 +89,21 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 				return errors.New("invalid authorization type")
 			}
 
-			expirationString := viper.GetString(FlagExpiration)
-			expiration, err := time.Parse(time.RFC3339, expirationString)
-			if err != nil {
-				return err
-			}
+			period := time.Unix(viper.GetInt64(FlagExpiration), 0)
 
-			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, expiration)
+			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, period)
 			if err != nil {
 				return err
 			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().String(FlagExpiration, "9999-12-31T23:59:59.52Z", "The time upto which the authorization is active for the user")
+	cmd.Flags().Int64(FlagExpiration, int64(3600*24*365), "The second unit of time duration which the authorization is active for the user; Default is a year")
 	return cmd
 }
 

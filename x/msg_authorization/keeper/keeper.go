@@ -46,10 +46,6 @@ func (k Keeper) Router() types.Router {
 	return k.router
 }
 
-func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
-	return []byte(fmt.Sprintf("c/%x/%x/%s", grantee, granter, msgType))
-}
-
 func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(actor)
@@ -61,7 +57,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
-	actor := k.getActorAuthorizationKey(grantee, granter, updated.MsgType())
+	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MsgType())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return
@@ -134,14 +130,14 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(grant)
-	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
+	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
+	actor := types.GetActorAuthorizationKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
@@ -154,7 +150,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
 func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration int64) {
-	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
+	grant, found := k.getAuthorizationGrant(ctx, types.GetActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
 		return nil, 0
 	}
@@ -164,4 +160,21 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 
 	return grant.GetAuthorization(), grant.Expiration
+}
+
+// IterateGrants iterates over all authorization grants
+func (k Keeper) IterateGrants(ctx sdk.Context,
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.AuthorizationGrant) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var grant types.AuthorizationGrant
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
+		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
+		fmt.Println(granterAddr.String(), granteeAddr.String())
+		if handler(granterAddr, granteeAddr, grant) {
+			break
+		}
+	}
 }

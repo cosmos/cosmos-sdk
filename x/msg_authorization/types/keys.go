@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,6 +18,25 @@ const (
 	QuerierRoute = ModuleName
 )
 
+// Keys for msg_authorization store
+// Items are stored with the following key: values
+//
+// - 0x01<accAddress_Bytes><accAddress_Bytes><msgType_Bytes>: Grant
+
+var (
+	// Keys for store prefixes
+	GrantKey = []byte{0x01} // prefix for each key
+)
+
+// GetActorAuthorizationKey - return authorization store key
 func GetActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
-	return []byte(fmt.Sprintf("c/%x/%x/%s", grantee, granter, msgType))
+	return append(append(append(GrantKey, granter.Bytes()...), grantee.Bytes()...), []byte(msgType)...)
+
+}
+
+// extractAddressesFromGrantKey - split granter & grantee address from the authorization key
+func ExtractAddressesFromGrantKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
+	granterAddr = sdk.AccAddress(key[1 : sdk.AddrLen+1])
+	granteeAddr = sdk.AccAddress(key[sdk.AddrLen+1 : sdk.AddrLen*2+1])
+	return
 }

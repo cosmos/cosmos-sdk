@@ -3,6 +3,7 @@ package msg_authorization
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -19,7 +20,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
@@ -30,52 +30,58 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
+// AppModuleBasic defines the basic application module used by the msg_authorization module.
 type AppModuleBasic struct {
 	cdc codec.Marshaler
 }
 
-// Name returns the ModuleName
+// Name returns the msg_authorization module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+// RegisterLegacyAminoCodec registers the msg_authorization module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the msg_authorization module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-// DefaultGenesis is an empty object
+// DefaultGenesis returns default genesis state as raw bytes for the msg_authorization
+// module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis is always successful, as we ignore the value
+// ValidateGenesis performs genesis state validation for the msg_authorization module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers all REST query handlers
+// RegisterRESTRoutes registers the REST routes for the msg_authorization module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
 	// rest.RegisterRoutes(clientCtx, r)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the staking module.
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the msg_authorization module.
 func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	// TODO: Add grpc querier
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
-//GetQueryCmd returns the cli query commands for this module
+//GetQueryCmd returns the cli query commands for the msg_authorization module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey)
 }
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for the msg_authorization module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd(types.StoreKey)
 }
@@ -102,9 +108,6 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// // Route is empty, as we do not handle Messages (just proposals)
-// func (AppModule) Route() string { return types.RouterKey }
-
 // Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
@@ -117,7 +120,7 @@ func (am AppModule) NewHandler() sdk.Handler {
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// LegacyQuerierHandler returns the staking module sdk.Querier.
+// LegacyQuerierHandler returns the msg_authorization module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
@@ -128,19 +131,20 @@ func (am AppModule) RegisterQueryService(server grpc.Server) {
 	types.RegisterQueryServer(server, am.keeper)
 }
 
-// InitGenesis is ignored, no sense in serializing future upgrades
+// InitGenesis performs genesis initialization for the msg_authorization module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis is always empty, as InitGenesis does nothing either
+// ExportGenesis returns the exported genesis state as raw bytes for the msg_authorization
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	return am.DefaultGenesis(cdc)
-}
-
-// DefaultGenesis is an empty object
-func (am AppModule) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	gs := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(gs)
 }
 
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
@@ -156,10 +160,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the evidence module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
+// GenerateGenesisState creates a randomized GenState of the msg_authorization module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 
 // ProposalContents returns all the evidence content functions used to
 // simulate governance proposals.
@@ -167,7 +169,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 	return nil
 }
 
-// RandomizedParams creates randomized evidence param changes for the simulator.
+// RandomizedParams creates randomized msg_authorization param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }

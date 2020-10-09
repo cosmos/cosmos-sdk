@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -24,7 +24,7 @@ func (k Keeper) ConnOpenInit(
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return types.ErrConnectionExists
+		return sdkerrors.Wrap(types.ErrConnectionExists, connectionID)
 	}
 
 	versions := types.GetCompatibleEncodedVersions()
@@ -44,7 +44,12 @@ func (k Keeper) ConnOpenInit(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-init")
+	}()
+
 	return nil
 }
 
@@ -56,8 +61,8 @@ func (k Keeper) ConnOpenInit(
 //  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
-	connectionID, // desiredIdentifier
-	provedID string, // provedIdentifier
+	desiredConnectionID, // desiredIdentifier
+	counterpartyChosenConnectionID string, // counterparty used this identifier in proof
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string, // clientID of chainA
 	clientState exported.ClientState, // clientState that chainA has for chainB
@@ -83,27 +88,30 @@ func (k Keeper) ConnOpenTry(
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return clienttypes.ErrSelfConsensusStateNotFound
+		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
-	if provedID != connectionID && provedID != "" {
+	// If the connection id chosen for this connection end by the counterparty is empty then
+	// flexible connection identifier selection is allowed by using the desired connection id.
+	// Otherwise the desiredConnectionID must match the counterpartyChosenConnectionID.
+	if counterpartyChosenConnectionID != "" && counterpartyChosenConnectionID != desiredConnectionID {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionIdentifier,
-			"proved identifier (%s) must equal connection identifier (%s) or be empty", provedID, connectionID,
+			"counterparty chosen connection ID (%s) must be empty or equal to the desired connection ID (%s)", counterpartyChosenConnectionID, desiredConnectionID,
 		)
 	}
 
 	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(clientID, provedID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
+	expectedCounterparty := types.NewCounterparty(clientID, counterpartyChosenConnectionID, commitmenttypes.NewMerklePrefix(prefix.Bytes()))
 	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientId, expectedCounterparty, counterpartyVersions)
 
-	// If connection already exists for connectionID, ensure that the existing connection's
+	// If connection already exists for desiredConnectionID, ensure that the existing connection's
 	// counterparty is chainA and connection is on INIT stage.
 	// Check that existing connection versions for initialized connection is equal to compatible
 	// versions for this chain.
-	previousConnection, found := k.GetConnection(ctx, connectionID)
+	previousConnection, found := k.GetConnection(ctx, desiredConnectionID)
 	if found && !(previousConnection.State == types.INIT &&
 		previousConnection.Counterparty.ConnectionId == counterparty.ConnectionId &&
 		bytes.Equal(previousConnection.Counterparty.Prefix.Bytes(), counterparty.Prefix.Bytes()) &&
@@ -149,12 +157,17 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	// store connection in chainB state
-	if err := k.addConnectionToClient(ctx, clientID, connectionID); err != nil {
-		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", connectionID, clientID)
+	if err := k.addConnectionToClient(ctx, clientID, desiredConnectionID); err != nil {
+		return sdkerrors.Wrapf(err, "failed to add connection with ID %s to client with ID %s", desiredConnectionID, clientID)
 	}
 
-	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> TRYOPEN ", connectionID, previousConnection.State))
+	k.SetConnection(ctx, desiredConnectionID, connection)
+	k.Logger(ctx).Info("connection state updated", "connection-id", desiredConnectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
+	}()
+
 	return nil
 }
 
@@ -189,10 +202,13 @@ func (k Keeper) ConnOpenAck(
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, connectionID)
 	}
 
-	if counterpartyConnectionID != connection.Counterparty.ConnectionId && connection.Counterparty.ConnectionId != "" {
+	// If the previously set connection end allowed for the counterparty to select its own
+	// connection identifier then we use the counterpartyConnectionID. Otherwise the
+	// counterpartyConnectionID must match the previously set counterparty connection ID.
+	if connection.Counterparty.ConnectionId != "" && counterpartyConnectionID != connection.Counterparty.ConnectionId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidConnectionIdentifier,
-			"counterparty connection identifier (%s) must be empty or equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
+			"counterparty connection identifier (%s) must be equal to stored connection ID for counterparty (%s)", counterpartyConnectionID, connection.Counterparty.ConnectionId,
 		)
 	}
 
@@ -256,7 +272,11 @@ func (k Keeper) ConnOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> OPEN ", connectionID, connection.State))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", connection.State.String(), "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-ack")
+	}()
 
 	// Update connection state to Open
 	connection.State = types.OPEN
@@ -305,6 +325,11 @@ func (k Keeper) ConnOpenConfirm(
 	// Update ChainB's connection to Open
 	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "TRYOPEN", "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-confirm")
+	}()
+
 	return nil
 }

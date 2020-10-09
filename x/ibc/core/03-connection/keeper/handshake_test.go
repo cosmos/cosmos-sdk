@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"success with empty provedID", func() {
+		{"success with empty counterpartyChosenConnectionID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			// retrieve client state of chainA to pass as counterpartyClient
 			counterpartyClient = suite.chainA.GetClientState(clientA)
 		}, true},
-		{"invalid provedID", func() {
+		{"counterpartyChosenConnectionID does not match desiredConnectionID", func() {
 			clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			connA, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
@@ -150,7 +150,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			_, _, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
 			suite.Require().NoError(err)
 
-			// retrieve client state of chainB to pass as counterpartyClient counterpartyClient = suite.chainA.GetClientState(clientA)
+			// retrieve client state of chainB to pass as counterpartyClient
+			counterpartyClient = suite.chainA.GetClientState(clientA)
 
 			// Set an invalid client of chainA on chainB
 			tmClient, ok := counterpartyClient.(*ibctmtypes.ClientState)
@@ -299,11 +300,11 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			connB := suite.chainB.GetFirstTestConnection(clientB, clientA)
 			counterparty := types.NewCounterparty(clientA, connA.ID, suite.chainA.GetPrefix())
 
-			// get provedID
-			var provedID string
+			// get counterpartyChosenConnectionID
+			var counterpartyChosenConnectionID string
 			connection, found := suite.chainA.App.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connA.ID)
 			if found {
-				provedID = connection.Counterparty.ConnectionId
+				counterpartyChosenConnectionID = connection.Counterparty.ConnectionId
 			}
 
 			connectionKey := host.KeyConnection(connA.ID)
@@ -321,7 +322,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 			proofClient, _ := suite.chainA.QueryProof(clientKey)
 
 			err := suite.chainB.App.IBCKeeper.ConnectionKeeper.ConnOpenTry(
-				suite.chainB.GetContext(), connB.ID, provedID, counterparty, clientB, counterpartyClient,
+				suite.chainB.GetContext(), connB.ID, counterpartyChosenConnectionID, counterparty, clientB, counterpartyClient,
 				versions, proofInit, proofClient, proofConsensus,
 				proofHeight, consensusHeight,
 			)
@@ -772,4 +773,61 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 			}
 		})
 	}
+}
+
+// Ensure consensus params are correctly validated by executing messages. Consensus params are
+// set in context by baseapp so test should deliver messages and not call the functions directly.
+// Only invalid cases are tested since successful instances are by default tested by the testing
+// package.
+func (suite *KeeperTestSuite) TestConsensusParamsValidation() {
+	// invalid client state in ConnOpenTry
+	clientA, clientB := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	connA, connB, err := suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+	suite.Require().NoError(err)
+
+	// set incorrect consensus params on counterparty client on chainA
+	clientState := suite.chainA.GetClientState(clientA)
+	tmClient, ok := clientState.(*ibctmtypes.ClientState)
+	suite.Require().True(ok)
+	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
+
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), clientA, tmClient)
+
+	// should fail on validate self client
+	ibctesting.ExpSimPassSend = false
+	ibctesting.ExpPassSend = false
+	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+	suite.Require().Error(err)
+
+	// reset values
+	ibctesting.ExpSimPassSend = true
+	ibctesting.ExpPassSend = true
+
+	suite.SetupTest() // reset
+
+	// invalid client state in ConnOpenAck
+	clientA, clientB = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
+	connA, connB, err = suite.coordinator.ConnOpenInit(suite.chainA, suite.chainB, clientA, clientB)
+	suite.Require().NoError(err)
+
+	err = suite.coordinator.ConnOpenTry(suite.chainB, suite.chainA, connB, connA)
+	suite.Require().NoError(err)
+
+	// set incorrect consensus params on counterparty client on chainB
+	clientState = suite.chainB.GetClientState(clientB)
+	tmClient, ok = clientState.(*ibctmtypes.ClientState)
+	suite.Require().True(ok)
+	tmClient.ConsensusParams.Evidence.MaxAgeDuration++
+
+	suite.chainB.App.IBCKeeper.ClientKeeper.SetClientState(suite.chainB.GetContext(), clientB, tmClient)
+
+	// should fail on validate self client
+	ibctesting.ExpSimPassSend = false
+	ibctesting.ExpPassSend = false
+	err = suite.coordinator.ConnOpenAck(suite.chainA, suite.chainB, connA, connB)
+	suite.Require().Error(err)
+
+	// reset values
+	ibctesting.ExpSimPassSend = true
+	ibctesting.ExpPassSend = true
 }

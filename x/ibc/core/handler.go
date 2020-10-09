@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
@@ -85,7 +87,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, sdkerrors.Wrapf(porttypes.ErrInvalidRoute, "route not found to module: %s", module)
 			}
 
-			if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.ChannelId, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
+			if err = cbs.OnChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortId, msg.DesiredChannelId, cap, msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion); err != nil {
 				return nil, sdkerrors.Wrap(err, "channel open try callback failed")
 			}
 
@@ -205,6 +207,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				}
 			}
 
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"tx", "msg", "ibc", msg.Type()},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+					},
+				)
+			}()
+
 			return res, nil
 
 		case *channeltypes.MsgAcknowledgement:
@@ -236,6 +251,19 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 				return nil, err
 			}
 
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"tx", "msg", "ibc", msg.Type()},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+					},
+				)
+			}()
+
 			return res, nil
 
 		case *channeltypes.MsgTimeout:
@@ -266,6 +294,20 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
+
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"ibc", "timeout", "packet"},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+						telemetry.NewLabel("timeout-type", "height"),
+					},
+				)
+			}()
 
 			return res, nil
 
@@ -299,6 +341,20 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			if err = k.ChannelKeeper.TimeoutExecuted(ctx, cap, msg.Packet); err != nil {
 				return nil, err
 			}
+
+			defer func() {
+				telemetry.IncrCounterWithLabels(
+					[]string{"ibc", "timeout", "packet"},
+					1,
+					[]metrics.Label{
+						telemetry.NewLabel("source-port", msg.Packet.SourcePort),
+						telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
+						telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
+						telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+						telemetry.NewLabel("timeout-type", "channel-closed"),
+					},
+				)
+			}()
 
 			return res, nil
 

@@ -13,10 +13,10 @@ import (
 
 var _ exported.Height = (*Height)(nil)
 
-// IsEpochFormat checks if a chainID is in the format required for parsing epochs
+// IsVersionFormat checks if a chainID is in the format required for parsing versions
 // The chainID must be in the form: `{chainID}-{version}
 // 24-host may enforce stricter checks on chainID
-var IsEpochFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
+var IsVersionFormat = regexp.MustCompile(`^.+[^-]-{1}[1-9][0-9]*$`).MatchString
 
 // ZeroHeight is a helper function which returns an uninitialized height.
 func ZeroHeight() Height {
@@ -31,13 +31,13 @@ func NewHeight(versionNumber, versionHeight uint64) Height {
 	}
 }
 
-// GetEpochNumber returns the version-number of the height
-func (h Height) GetEpochNumber() uint64 {
+// GetVersionNumber returns the version-number of the height
+func (h Height) GetVersionNumber() uint64 {
 	return h.VersionNumber
 }
 
-// GetEpochHeight returns the version-height of the height
-func (h Height) GetEpochHeight() uint64 {
+// GetVersionHeight returns the version-height of the height
+func (h Height) GetVersionHeight() uint64 {
 	return h.VersionHeight
 }
 
@@ -149,10 +149,10 @@ func ParseHeight(heightStr string) (Height, error) {
 	return NewHeight(versionNumber, versionHeight), nil
 }
 
-// SetEpochNumber takes a chainID in valid version format and swaps the version number
+// SetVersionNumber takes a chainID in valid version format and swaps the version number
 // in the chainID with the given version number.
-func SetEpochNumber(chainID string, version uint64) (string, error) {
-	if !IsEpochFormat(chainID) {
+func SetVersionNumber(chainID string, version uint64) (string, error) {
+	if !IsVersionFormat(chainID) {
 		return "", sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidChainID, "chainID is not in version format: %s", chainID,
 		)
@@ -166,10 +166,10 @@ func SetEpochNumber(chainID string, version uint64) (string, error) {
 
 // ParseChainID is a utility function that returns an version number from the given ChainID.
 // ParseChainID attempts to parse a chain id in the format: `{chainID}-{version}`
-// and return the epochnumber as a uint64.
+// and return the versionnumber as a uint64.
 // If the chainID is not in the expected format, a default version value of 0 is returned.
 func ParseChainID(chainID string) uint64 {
-	if !IsEpochFormat(chainID) {
+	if !IsVersionFormat(chainID) {
 		// chainID is not in version format, return 0 as default
 		return 0
 	}
@@ -183,7 +183,7 @@ func ParseChainID(chainID string) uint64 {
 }
 
 // GetSelfHeight is a utility function that returns self height given context
-// Epoch number is retrieved from ctx.ChainID()
+// Version number is retrieved from ctx.ChainID()
 func GetSelfHeight(ctx sdk.Context) Height {
 	version := ParseChainID(ctx.ChainID())
 	return NewHeight(version, uint64(ctx.BlockHeight()))

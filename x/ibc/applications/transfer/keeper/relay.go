@@ -3,6 +3,8 @@ package keeper
 import (
 	"strings"
 
+	"github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
@@ -96,11 +98,18 @@ func (k Keeper) SendTransfer(
 		}
 	}
 
+	labels := []metrics.Label{
+		telemetry.NewLabel("destination-port", destinationPort),
+		telemetry.NewLabel("destination-channel", destinationChannel),
+	}
+
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
 	// chain inside the packet data. The receiving chain will perform denom
 	// prefixing as necessary.
 
 	if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
+		labels = append(labels, telemetry.NewLabel("source", "true"))
+
 		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
@@ -112,6 +121,8 @@ func (k Keeper) SendTransfer(
 		}
 
 	} else {
+		labels = append(labels, telemetry.NewLabel("source", "false"))
+
 		// transfer the coins to the module account and burn them
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
 			ctx, sender, types.ModuleName, sdk.NewCoins(token),
@@ -144,7 +155,25 @@ func (k Keeper) SendTransfer(
 		timeoutTimestamp,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, channelCap, packet)
+	if err := k.channelKeeper.SendPacket(ctx, channelCap, packet); err != nil {
+		return err
+	}
+
+	defer func() {
+		telemetry.SetGaugeWithLabels(
+			[]string{"tx", "msg", "ibc", "transfer"},
+			float32(token.Amount.Int64()),
+			[]metrics.Label{telemetry.NewLabel("denom", fullDenomPath)},
+		)
+
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", types.ModuleName, "send"},
+			1,
+			labels,
+		)
+	}()
+
+	return nil
 }
 
 // OnRecvPacket processes a cross chain fungible token transfer. If the
@@ -168,6 +197,11 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return err
 	}
 
+	labels := []metrics.Label{
+		telemetry.NewLabel("source-port", packet.GetSourcePort()),
+		telemetry.NewLabel("source-channel", packet.GetSourceChannel()),
+	}
+
 	// This is the prefix that would have been prefixed to the denomination
 	// on sender chain IF and only if the token originally came from the
 	// receiving chain.
@@ -186,7 +220,27 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 		// unescrow tokens
 		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
-		return k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, sdk.NewCoins(token))
+		if err := k.bankKeeper.SendCoins(ctx, escrowAddress, receiver, sdk.NewCoins(token)); err != nil {
+			return err
+		}
+
+		defer func() {
+			telemetry.SetGaugeWithLabels(
+				[]string{"ibc", types.ModuleName, "packet", "receive"},
+				float32(data.Amount),
+				[]metrics.Label{telemetry.NewLabel("denom", unprefixedDenom)},
+			)
+
+			telemetry.IncrCounterWithLabels(
+				[]string{"ibc", types.ModuleName, "receive"},
+				1,
+				append(
+					labels, telemetry.NewLabel("source", "true"),
+				),
+			)
+		}()
+
+		return nil
 	}
 
 	// sender chain is the source, mint vouchers
@@ -223,9 +277,29 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	// send to receiver
-	return k.bankKeeper.SendCoinsFromModuleToAccount(
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(
 		ctx, types.ModuleName, receiver, sdk.NewCoins(voucher),
-	)
+	); err != nil {
+		return err
+	}
+
+	defer func() {
+		telemetry.SetGaugeWithLabels(
+			[]string{"ibc", types.ModuleName, "packet", "receive"},
+			float32(data.Amount),
+			[]metrics.Label{telemetry.NewLabel("denom", data.Denom)},
+		)
+
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", types.ModuleName, "receive"},
+			1,
+			append(
+				labels, telemetry.NewLabel("source", "false"),
+			),
+		)
+	}()
+
+	return nil
 }
 
 // OnAcknowledgementPacket responds to the the success or failure of a packet

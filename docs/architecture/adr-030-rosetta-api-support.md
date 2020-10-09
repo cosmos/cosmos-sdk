@@ -120,7 +120,7 @@ As we see we hold not only the instantiation of a Launchpad specific network but
 
 In this way we could have two options (yet to decide) that we can expose rosetta in the cosmos SDK.
 
-#### Embedding it in the Start command.
+#### In-process Execution.
 
 This will look more like the approach the API in cosmos works: [link](https://github.com/cosmos/cosmos-sdk/blob/ca7b31dd5d23b10a919de1a60bbac90e89c5bf78/server/start.go#L248).
 

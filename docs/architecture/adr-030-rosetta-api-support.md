@@ -46,7 +46,7 @@ type Network struct {
 }
 ````
 
-The properties struct is needed in order to run the Service, these are options that are mandatory and are related to Rosetta specific properties.
+A `NetworkProperties` `struct` comprises basic values that are required by a Rosetta API `Service` to run:
 
 ```
 type NetworkProperties struct {

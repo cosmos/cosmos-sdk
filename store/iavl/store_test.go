@@ -117,7 +117,7 @@ func TestGetImmutable(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	newStore, err := store.GetImmutable(cID.Version - 1)
 	require.NoError(t, err)

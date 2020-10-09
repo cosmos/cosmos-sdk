@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -100,14 +99,10 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 
 func hardenedInt(field string) (uint32, error) {
 	field = strings.TrimSuffix(field, "'")
-	i, err := strconv.Atoi(field)
 
+	i, err := strconv.ParseUint(field, 10, 32)
 	if err != nil {
 		return 0, err
-	}
-
-	if i < 0 {
-		return 0, fmt.Errorf("fields must not be negative. got %d", i)
 	}
 
 	return uint32(i), nil
@@ -178,14 +173,9 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 			part = part[:len(part)-1]
 		}
 
-		idx, err := strconv.Atoi(part)
-
+		idx, err := strconv.ParseUint(part, 10, 32)
 		if err != nil {
 			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
-		}
-
-		if idx < 0 {
-			return []byte{}, errors.New("invalid BIP 32 path: index negative ot too large")
 		}
 
 		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)

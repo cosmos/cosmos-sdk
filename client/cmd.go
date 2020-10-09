@@ -97,6 +97,18 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
 
+	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
+		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
+
+		// The keyring directory is optional and falls back to the home directory
+		// if omitted.
+		if keyringDir == "" {
+			keyringDir = clientCtx.HomeDir
+		}
+
+		clientCtx = clientCtx.WithKeyringDir(keyringDir)
+	}
+
 	if clientCtx.ChainID == "" || flagSet.Changed(flags.FlagChainID) {
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)

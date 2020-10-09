@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020 April 27: Initial Draft
+- 2020 August 5: Update guidelines
 
 ## Status
 
@@ -99,13 +100,62 @@ the best choices for the future.
 
 ### Versioning
 
-#### Don't Allow Breaking Changes in Stable Packages
+#### Guidelines on Stable Package Versions
 
-Always use a breaking change detector such as [Buf](https://buf.build) to prevent
-breaking changes in stable (non-alpha or beta) packages. Breaking changes can
-break smart contracts/persistent scripts and generally provide a bad UX for
-clients. With protobuf, there should usually be ways to extend existing
-functionality instead of just breaking it.
+In general, schema evolution is the way to update protobuf schemas. That means that new fields,
+messages, and RPC methods are _added_ to existing schemas and old fields, messages and RPC methods
+are maintained as long as possible.
+
+Breaking things is often unacceptable in a blockchain scenario. For instance, immutable smart contracts
+may depend on certain data schemas on the host chain. If the host chain breaks those schemas, the smart
+contract may be irreparably broken. Even when things can be fixed (for instance in client software),
+this often comes at a high cost.
+
+Instead of breaking things, we should make every effort to evolve schemas rather than just breaking them.
+[Buf](https://buf.build) breaking change detection should be used on all stable (non-alpha or beta) packages
+to prevent such breakage.
+
+With that in mind, different stable versions (i.e. `v1` or `v2`) of a package should more or less be considered
+different packages and this should be last resort approach for upgrading protobuf schemas. Scenarios where creating
+a `v2` may make sense are:
+* we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
+way to do this. In that case, there are really just two different, but similar modules with different APIs.
+* we want to add a new revamped API for an existing module and it's just too cumbersome to add it to the existing package,
+so putting it in `v2` is cleaner for users. In this case, care should be made to not deprecate support for
+`v1` if it is actively used in immutable smart contracts.
+
+#### Guidelines on unstable (alpha and beta) package versions
+
+The following guidelines are recommended for marking packages as alpha or beta:
+* marking something as `alpha` or `beta` should be a last resort and just putting something in the
+stable package (i.e. `v1` or `v2`) should be preferred
+* a package *should* be marked as `alpha` *if and only if* there are active discussions to remove
+or significantly alter the package in the near future
+* a package *should* be marked as `beta` *if and only if* there is an active discussion to 
+significantly refactor/rework the functionality in the near future but not remove it
+* modules *can and should* have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
+
+*`alpha` and `beta` should not be used to avoid responsibility for maintaining compatibility.*
+Whenever code is released into the wild, especially on a blockchain, there is a high cost to changing things. In some
+cases, for instance with immutable smart contracts, a breaking change may be impossible to fix.
+
+When marking something as `alpha` or `beta`, maintainers should ask the questions:
+* what is the cost of asking others to change their code vs the benefit of us maintaining the optionality to change it?
+* what is the plan for moving this to `v1` and how will that affect users?
+
+`alpha` or `beta` should really be used to communicate "changes are planned".
+
+As a case study, gRPC reflection is in the package `grpc.reflection.v1alpha`. It hasn't been changed since
+2017 and it is now used in other widely used software like gRPCurl. Some folks probably use it in production services
+and so if they actually went and changed the package to `grpc.reflection.v1`, some software would break and
+they probably don't want to do that... So now the `v1alpha` package is more or less the de-facto `v1`. Let's not do that.
+
+The following are guidelines for working with non-stable packages:
+* [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
+(ex. `v1alpha1`) _should_ be used for non-stable packages
+* non-stable packages should generally be excluded from breaking change detection
+* immutable smart contract modules (i.e. CosmWasm) _should_ block smart contracts/persistent
+scripts from interacting with `alpha`/`beta` packages
 
 #### Omit v1 suffix
 
@@ -114,15 +164,6 @@ we can omit `v1` for packages that don't actually have a second version. This
 allows for more concise names for common use cases like `cosmos.bank.Send`.
 Packages that do have a second or third version can indicate that with `.v2`
 or `.v3`.
-
-#### Use `alpha` or `beta` to Denote Non-stable Packages
-
-[Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
-(ex. `v1alpha1`) _should_ be used for non-stable packages. These packages should
-likely be excluded from breaking change detection and _should_ generally 
-be blocked from usage by smart contracts/persistent scripts to prevent them
-from breaking. The SDK _should_ mark any packages as alpha or beta where the
-API is likely to change significantly in the near future.
 
 ### Package Naming
 

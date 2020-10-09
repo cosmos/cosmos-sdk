@@ -6,9 +6,9 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 var (
@@ -38,7 +38,7 @@ func (misbehaviour Misbehaviour) String() string {
 
 // GetHeight returns the sequence at which misbehaviour occurred.
 // Return exported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Version number is always 0 for a solo-machine
 func (misbehaviour Misbehaviour) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, misbehaviour.Sequence)
 }

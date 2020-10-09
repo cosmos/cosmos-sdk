@@ -58,16 +58,16 @@ protoSigData := signing.SignatureDataToProto(sigData)
 bz, err := cdc.MarshalBinaryBare(protoSigData)
 ```
 
-Construct a `TimestampedSignature` and marshal it. The marshaled result can be
+Construct a `TimestampedSignatureData` and marshal it. The marshaled result can be
 passed in as the proof parameter to the verification functions.
 
 For example:
 
 ```go
-timestampedSignature := &types.TimestampedSignature{
-  Signature: sig,
+timestampedSignatureData := &types.TimestampedSignatureData{
+  SignatureData: sigData,
   Timestamp: solomachine.Time,
 }
 
-proof, err := cdc.MarshalBinaryBare(timestampedSignature)
+proof, err := cdc.MarshalBinaryBare(timestampedSignatureData)
 ```

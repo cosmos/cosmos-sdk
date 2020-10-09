@@ -114,8 +114,6 @@ func NewNetwork(options Options) service.Network {
 }
 ```
 
-As we see we hold not only the instantiation of a Launchpad specific network but the adapter implementation too. As the way to talk to different rpc endpoint change between different versions (Launchpad, Stargate, etc), makes sense to keep it in their respective branches.
-
 #### In-process Execution.
 
 Rosetta API service could run within the same execution process of the application; new configuration option and command line flag would be provided:

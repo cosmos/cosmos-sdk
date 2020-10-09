@@ -91,7 +91,7 @@ type ConstructionAPI interface {
 Cosmos SDK provides a base `Network` struct so that it could serve as code example for client application developers and testing tool to be used in conjuction with `simd`.
 
 ```
-// NewLaunchpadNetwork returns a configured network to work in a Launchpad version.
+// NewNetwork returns the default application configuration.
 func NewLaunchpadNetwork(options Options) service.Network {
 	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))

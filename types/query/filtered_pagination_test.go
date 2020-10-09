@@ -2,9 +2,6 @@ package query_test
 
 import (
 	"fmt"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -16,7 +13,7 @@ import (
 
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
-func TestFilteredPaginations(t *testing.T) {
+func (s *paginationTestSuite) TestFilteredPaginations() {
 	app, ctx, appCodec := setupTest()
 
 	var balances sdk.Coins
@@ -33,61 +30,61 @@ func TestFilteredPaginations(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
+	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(authtypes.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
 	balances, res, err := execFilterPaginate(store, pageReq, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 4, len(balances))
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(4, len(balances))
 
-	t.Log("verify empty request")
+	s.T().Log("verify empty request")
 	balances, res, err = execFilterPaginate(store, nil, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 4, len(balances))
-	require.Equal(t, uint64(4), res.Total)
-	require.Nil(t, res.NextKey)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(4, len(balances))
+	s.Require().Equal(uint64(4), res.Total)
+	s.Require().Nil(res.NextKey)
 
-	t.Log("verify nextKey is returned if there are more results")
+	s.T().Log("verify nextKey is returned if there are more results")
 	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 2, len(balances))
-	require.NotNil(t, res.NextKey)
-	require.Equal(t, string(res.NextKey), fmt.Sprintf("test2denom"))
-	require.Equal(t, uint64(4), res.Total)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(2, len(balances))
+	s.Require().NotNil(res.NextKey)
+	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test2denom"))
+	s.Require().Equal(uint64(4), res.Total)
 
-	t.Log("verify both key and offset can't be given")
+	s.T().Log("verify both key and offset can't be given")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true}
 	_, _, err = execFilterPaginate(store, pageReq, appCodec)
-	require.Error(t, err)
+	s.Require().Error(err)
 
-	t.Log("use nextKey for query")
+	s.T().Log("use nextKey for query")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 2, len(balances))
-	require.Nil(t, res.NextKey)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(2, len(balances))
+	s.Require().Nil(res.NextKey)
 
-	t.Log("verify default limit")
+	s.T().Log("verify default limit")
 	pageReq = &query.PageRequest{Key: nil, Limit: 0}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, 4, len(balances))
-	require.Equal(t, uint64(4), res.Total)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(4, len(balances))
+	s.Require().Equal(uint64(4), res.Total)
 
-	t.Log("verify with offset")
+	s.T().Log("verify with offset")
 	pageReq = &query.PageRequest{Offset: 2, Limit: 2}
 	balances, res, err = execFilterPaginate(store, pageReq, appCodec)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.LessOrEqual(t, len(balances), 2)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().LessOrEqual(len(balances), 2)
 }
 
 func ExampleFilteredPaginate() {

@@ -58,7 +58,7 @@ type NetworkProperties struct {
 }
 ```
 
-The `Blockchain` and `Network` are the ones that Rosetta uses to label the networks that the API supports, for example, if we were implementing a Bitcoin API Rosetta blockchain would be "Bitcoin" and network could be "mainnet", etc.
+Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
 
 The `AddrPrefix` is specific to the nature of cosmos type addresses. Because a network can have a different type of address we need to provide it, for example for IOV it would be "star" and for cosmos hub would be "cosmos".
 

@@ -25,7 +25,7 @@ The service is structured in a way that:
 
 The Service is just an struct that is started and listens to the port specified in the options. This is commonly used for all the SDK versions supported.
 
-To construct one we can call the constructor:
+The constructor follows:
 
 `func New(options Options, network Network) (*Service, error)`
 

@@ -38,7 +38,7 @@ execution.
 
 Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.38.1/x/distribution/keeper/querier.go#L62-L80
++++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/distribution/keeper/querier.go#L62-L80
 
 Regardless if an error is wrapped or not, the SDK's `errors` package provides an API to determine if
 an error is of a particular kind via `Is`.

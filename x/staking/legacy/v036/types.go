@@ -32,7 +32,7 @@ type (
 		OperatorAddress         sdk.ValAddress          `json:"operator_address" yaml:"operator_address"`
 		ConsPubKey              crypto.PubKey           `json:"consensus_pubkey" yaml:"consensus_pubkey"`
 		Jailed                  bool                    `json:"jailed" yaml:"jailed"`
-		Status                  sdk.BondStatus          `json:"status" yaml:"status"`
+		Status                  v034staking.BondStatus  `json:"status" yaml:"status"`
 		Tokens                  sdk.Int                 `json:"tokens" yaml:"tokens"`
 		DelegatorShares         sdk.Dec                 `json:"delegator_shares" yaml:"delegator_shares"`
 		Description             v034staking.Description `json:"description" yaml:"description"`
@@ -46,7 +46,7 @@ type (
 		OperatorAddress         sdk.ValAddress          `json:"operator_address" yaml:"operator_address"`
 		ConsPubKey              string                  `json:"consensus_pubkey" yaml:"consensus_pubkey"`
 		Jailed                  bool                    `json:"jailed" yaml:"jailed"`
-		Status                  sdk.BondStatus          `json:"status" yaml:"status"`
+		Status                  v034staking.BondStatus  `json:"status" yaml:"status"`
 		Tokens                  sdk.Int                 `json:"tokens" yaml:"tokens"`
 		DelegatorShares         sdk.Dec                 `json:"delegator_shares" yaml:"delegator_shares"`
 		Description             v034staking.Description `json:"description" yaml:"description"`

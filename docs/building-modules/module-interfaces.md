@@ -55,7 +55,7 @@ This query returns the account at a given address. The getter function does the 
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
   - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
-  - A new `queryClient` should be initialized using the `clientCtx`. Then it can be used to call the appropriate [querier](./querier.md).
+  - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [querier](./querier.md).
   - The `clientCtx.PrintOutput` method is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
@@ -92,14 +92,48 @@ Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags requ
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
 ## gRPC
-TODO
+
+[gRPC](https://grpc.io/) is the prefered way for external clients like wallets and exchanges to interact with a node.
+
+In addition to providing an ABCI query pathway, modules [custom queries](./messages-and-queries.md#grpc-queries) can provide a GRPC proxy server that routes requests in the GRPC protocol to ABCI query requests under the hood.
+
+In order to do that, module should implement `RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+
+Here's an example from the `auth` module:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/module.go#L69-L72
 
 ## gRPC-gateway REST
-TODO
+
+Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io). Thus, application developers can also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers.
+
+[grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) translates REST calls into gRPC calls, which might be useful for clients that do not use gRPC.
+
+Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `auth` module:
+
+```proto
+
+// Query defines the gRPC querier service.
+service Query{
+    // Account returns account details based on address.
+    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
+      option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+    }
+
+    // Params queries all parameters.
+    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+      option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+    }
+}
+```
+
+The SDK provides CLI commands for apps to start GRPC gateway either in a separate process or the same process as the ABCI app, as well as provides a command for generating grpc-gateway proxy `.proto` files and Swagger definition files.
 
 ## Legacy REST
 
-Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+Developers may choose to keep using legacy REST endpoints for backward compatibility, although the recommended way is to use [gRPC](#grpc) and [gRPC-gateway](#grpc-gateway-rest).
+
+With this implementation, module developers need to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
 
 To support HTTP requests, the module developer needs to define possible request types, how to handle them, and provide a way to register them with a provided router.
 

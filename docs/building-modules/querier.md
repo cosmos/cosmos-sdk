@@ -37,7 +37,7 @@ type QueryServer interface {
 }
 ```
 
-These custom queries methods should be implemented by a module's keeper. The first parameter of these methods is a generic `context.Context`, whereas querier methods generally need an instance of `sdk.Context` to read
+These custom queries methods should be implemented by a module's keeper, typically in `./keeper/grpc_query.go`. The first parameter of these methods is a generic `context.Context`, whereas querier methods generally need an instance of `sdk.Context` to read
 from the store. Therefore, the SDK provides a function `sdk.UnwrapSDKContext` to retrieve the `sdk.Context` from the provided
 `context.Context`.
 

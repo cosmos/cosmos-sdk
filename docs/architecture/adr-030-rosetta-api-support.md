@@ -23,7 +23,7 @@ The service is structured in a way that:
 
 ### Service
 
-The Service is just an struct that is started and listens to the port specified in the options. This is commonly used for all the SDK versions supported.
+`Service` is a simple `struct` that is started and listens to the port specified in the options. This is meant to be used across all the Cosmos SDK versions that are actively supported.
 
 The constructor follows:
 

@@ -88,7 +88,7 @@ type ConstructionAPI interface {
 
 ### Cosmos SDK Integration
 
-The best way to do it would be that every Cosmos SDK version holds the implementation of the Network struct, this can be an example located in the Cosmos SDK Launchpad version.
+Cosmos SDK provides a base `Network` struct so that it could serve as code example for client application developers and testing tool to be used in conjuction with `simd`.
 
 ```
 // NewLaunchpadNetwork returns a configured network to work in a Launchpad version.

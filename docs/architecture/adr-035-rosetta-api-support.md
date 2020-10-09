@@ -120,9 +120,7 @@ In this way we could have two options (yet to decide) that we can expose rosetta
 
 #### In-process Execution.
 
-This will look more like the approach the API in cosmos works: [link](https://github.com/cosmos/cosmos-sdk/blob/ca7b31dd5d23b10a919de1a60bbac90e89c5bf78/server/start.go#L248).
-
-So we can add something like:
+Rosetta API service could run within the same execution process of the application; new configuration option and command line flag would be provided:
 
 ```
 	if config.Rosetta.Enable {
@@ -174,7 +172,7 @@ func NewRosettaServiceCmd() *cobra.Command {
             
             h, err := service.New(
                 service.Options{Port: uint32(*flagPort)},
-                launchpad.NewLaunchpadNetwork(launchpad.Options{
+                NewNetwork(Options{
                     CosmosEndpoint:     *flagAppRPC,
                     TendermintEndpoint: *flagTendermintRPC,
                     Blockchain:         *flagBlockchain,

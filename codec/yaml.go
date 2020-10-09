@@ -7,20 +7,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// MarshalYAML marshals the provided toPrint content with the provided JSON marshaler
-// by encoding JSON, decoding JSON, and then encoding YAML.
+// MarshalYAML marshals toPrint using jsonMarshaler to leverage specialized MarshalJSON methods
+// (usually related to serialize data with protobuf or amin depending on a configuration).
+// This involves additional roundtrip through JSON.
 func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint proto.Message) ([]byte, error) {
-	// only the JSONMarshaler has full context as to how the JSON
-	// mashalling should look (which may be different for amino & proto codecs)
-	// so we need to use it to marshal toPrint first
+	// We are OK with the performance hit of the additional JSON roundtip. MarshalYAML is not
+	// used in any critical parts of the system.
 	bz, err := jsonMarshaler.MarshalJSON(toPrint)
 	if err != nil {
 		return nil, err
 	}
 
-	// generate YAML by decoding and re-encoding JSON as YAML
+	// generate YAML by decoding JSON and re-encoding to YAML
 	var j interface{}
-
 	err = json.Unmarshal(bz, &j)
 	if err != nil {
 		return nil, err

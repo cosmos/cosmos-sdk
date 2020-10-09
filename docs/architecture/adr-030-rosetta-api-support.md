@@ -60,7 +60,7 @@ type NetworkProperties struct {
 
 Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
 
-The `AddrPrefix` is specific to the nature of cosmos type addresses. Because a network can have a different type of address we need to provide it, for example for IOV it would be "star" and for cosmos hub would be "cosmos".
+`AddrPrefix` contains the network-specific address prefix. Cosmos SDK base implementations will default to `cosmos`, client applications are instructed that this should be changed according to their network configuration.
 
 And the `SupportedOperations` is related to Rosetta, these are the operations the API supports. An operation can be a `Transfer`, `Delegation`, etc. For now we only support one type of operation, `Transfer`.
 

@@ -72,17 +72,16 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEn
 func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
-
-	var fos []os.FileInfo
-	fos, err = ioutil.ReadDir(genTxsDir)
-	if err != nil {
-		return appGenTxs, persistentPeers, err
-	}
-
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
 	var appState map[string]json.RawMessage
 	if err := json.Unmarshal(genDoc.AppState, &appState); err != nil {
+		return appGenTxs, persistentPeers, err
+	}
+
+	var fos []os.FileInfo
+	fos, err = ioutil.ReadDir(genTxsDir)
+	if err != nil {
 		return appGenTxs, persistentPeers, err
 	}
 
@@ -100,15 +99,16 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 	var addressesIPs []string
 
 	for _, fo := range fos {
-		filename := filepath.Join(genTxsDir, fo.Name())
-		if !fo.IsDir() && (filepath.Ext(filename) != ".json") {
+		if fo.IsDir() {
+			continue
+		}
+		if !strings.HasSuffix(fo.Name(), ".json") {
 			continue
 		}
 
 		// get the genTx
-		var jsonRawTx []byte
-
-		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
+		jsonRawTx, err := ioutil.ReadFile(filepath.Join(genTxsDir, fo.Name()))
+		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

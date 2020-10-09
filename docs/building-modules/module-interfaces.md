@@ -127,7 +127,9 @@ service Query{
 }
 ```
 
-The SDK provides CLI commands for apps to start GRPC gateway either in a separate process or the same process as the ABCI app, as well as provides a command for generating grpc-gateway proxy `.proto` files and Swagger definition files (`protoc-gen-swagger`).
+gRPC gateway is started in-process along with the application and Tendermint.
+
+The SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`).
 
 ## Legacy REST
 

@@ -1,15 +1,35 @@
 package v040
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+func migrateBondStatus(oldStatus v034staking.BondStatus) sdk.BondStatus {
+	switch oldStatus {
+	case v034staking.Unbonded:
+		return sdk.Unbonded
+
+	case v034staking.Unbonding:
+		return sdk.Unbonding
+
+	case v034staking.Bonded:
+		return sdk.Bonded
+
+	default:
+		panic(fmt.Errorf("invalid bond status %d", oldStatus))
+	}
+}
 
 // Migrate accepts exported v0.38 x/staking genesis state and migrates it to
 // v0.40 x/staking genesis state. The migration includes:
 //
 // - Convert addresses from bytes to bech32 strings.
+// - Update BondStatus staking constants.
 // - Re-encode in v0.40 GenesisState.
 func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 	newLastValidatorPowers := make([]v040staking.LastValidatorPower, len(stakingState.LastValidatorPowers))
@@ -26,7 +46,7 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 			OperatorAddress: oldValidator.OperatorAddress.String(),
 			ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, oldValidator.ConsPubKey),
 			Jailed:          oldValidator.Jailed,
-			Status:          oldValidator.Status,
+			Status:          migrateBondStatus(oldValidator.Status),
 			Tokens:          oldValidator.Tokens,
 			DelegatorShares: oldValidator.DelegatorShares,
 			Description: v040staking.Description{

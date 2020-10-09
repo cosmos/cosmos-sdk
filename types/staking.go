@@ -40,9 +40,9 @@ type BondStatus int32
 
 // staking constants
 const (
-	Unbonded  BondStatus = 0
-	Unbonding BondStatus = 1
-	Bonded    BondStatus = 2
+	Unbonded  BondStatus = 1
+	Unbonding BondStatus = 2
+	Bonded    BondStatus = 3
 
 	BondStatusUnbonded  = "Unbonded"
 	BondStatusUnbonding = "Unbonding"

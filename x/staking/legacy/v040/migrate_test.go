@@ -2,7 +2,6 @@ package v040_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,12 +22,12 @@ func TestMigrate(t *testing.T) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONMarshaler(encodingConfig.Marshaler)
 
-	consPubKey := ed25519.GenPrivKey().PubKey()
+	consPubKey := ed25519.GenPrivKeyFromSecret([]byte("val0")).PubKey()
 	stakingGenState := v038staking.GenesisState{
 		Validators: v038staking.Validators{v038staking.Validator{
 			ConsPubKey: consPubKey,
 			Status:     v034staking.Unbonded,
-		}},x	
+		}},
 	}
 
 	migrated := v040staking.Migrate(stakingGenState)
@@ -70,7 +69,7 @@ func TestMigrate(t *testing.T) {
         },
         "update_time": "0001-01-01T00:00:00Z"
       },
-      "consensus_pubkey": "cosmosvalconspub1zcjduepqtrz32re64nu80d3lagdry56ywym6yjrayrv2ycrvvm07f9tkve8s397nyf",
+      "consensus_pubkey": "cosmosvalconspub1zcjduepq9ymett3nlv6fytn7lqxzd3q3ckvd79eqlcf3wkhgamcl4rzghesq83ecpx",
       "delegator_shares": "0",
       "description": {
         "details": "",

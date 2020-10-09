@@ -176,7 +176,7 @@ func NewRosettaServiceCmd() *cobra.Command {
             
             h, err := service.New(
                 service.Options{Port: uint32(*flagPort)},
-                launchpad.NewLaunchpadNetwork(launchpad.Options{
+                NewNetwork(Options{
                     CosmosEndpoint:     *flagAppRPC,
                     TendermintEndpoint: *flagTendermintRPC,
                     Blockchain:         *flagBlockchain,

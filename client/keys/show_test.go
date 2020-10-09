@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -43,18 +45,22 @@ func Test_runShowCmd(t *testing.T) {
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
+	kbHome := t.TempDir()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
 	cmd.SetArgs([]string{"invalid"})
-	require.EqualError(t, cmd.Execute(), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid is not a valid name or address: decoding bech32 failed: invalid bech32 string length 7")
 
 	cmd.SetArgs([]string{"invalid1", "invalid2"})
-	require.EqualError(t, cmd.Execute(), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid1 is not a valid name or address: decoding bech32 failed: invalid index of 1")
 
-	kbHome := t.TempDir()
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
-	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("runShowCmd_Key1")
 		kb.Delete("runShowCmd_Key2")
@@ -75,7 +81,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=", FlagBechPrefix),
 	})
-	require.EqualError(t, cmd.Execute(), "invalid Bech32 prefix encoding provided: ")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid Bech32 prefix encoding provided: ")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1,
@@ -85,7 +91,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 
 	// try fetch by name
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// try fetch by addr
 	info, err := kb.Key(fakeKeyName1)
@@ -97,7 +103,7 @@ func Test_runShowCmd(t *testing.T) {
 	})
 
 	require.NoError(t, err)
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc
 	cmd.SetArgs([]string{
@@ -107,7 +113,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=0", flagMultiSigThreshold),
 	})
-	require.EqualError(t, cmd.Execute(), "threshold must be a positive integer")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "threshold must be a positive integer")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
@@ -116,7 +122,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 	})
-	require.NoError(t, cmd.Execute())
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc + threshold=2
 	cmd.SetArgs([]string{
@@ -127,7 +133,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 	})
-	require.EqualError(t, cmd.Execute(), "the device flag (-d) can only be used for accounts stored in devices")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts stored in devices")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
@@ -137,7 +143,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 	})
-	require.EqualError(t, cmd.Execute(), "the device flag (-d) can only be used for accounts")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts")
 
 	cmd.SetArgs([]string{
 		fakeKeyName1, fakeKeyName2,
@@ -148,7 +154,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 		fmt.Sprintf("--%s=true", FlagPublicKey),
 	})
-	require.EqualError(t, cmd.Execute(), "the device flag (-d) can only be used for addresses not pubkeys")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
 }
 
 func Test_validateMultisigThreshold(t *testing.T) {

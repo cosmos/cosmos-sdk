@@ -24,7 +24,7 @@ func (s *stakingTestSuite) TestBondStatus() {
 	s.Require().False(sdk.Unbonded.Equal(sdk.Bonded))
 	s.Require().False(sdk.Unbonded.Equal(sdk.Unbonding))
 	s.Require().False(sdk.Bonded.Equal(sdk.Unbonding))
-	s.Require().Panicsf(func() { sdk.BondStatus(0).String() }, "invalid bond status") // nolint:govet
+	s.Require().Panicsf(func() { sdk.BondStatus(3).String() }, "invalid bond status") // nolint:govet
 	s.Require().Equal(sdk.BondStatusUnbonded, sdk.Unbonded.String())
 	s.Require().Equal(sdk.BondStatusBonded, sdk.Bonded.String())
 	s.Require().Equal(sdk.BondStatusUnbonding, sdk.Unbonding.String())

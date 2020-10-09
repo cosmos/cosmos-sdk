@@ -62,7 +62,7 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 `AddrPrefix` contains the network-specific address prefix. Cosmos SDK base implementations will default to `cosmos`, client applications are instructed that this should be changed according to their network configuration.
 
-And the `SupportedOperations` is related to Rosetta, these are the operations the API supports. An operation can be a `Transfer`, `Delegation`, etc. For now we only support one type of operation, `Transfer`.
+`SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported.
 
 The other important thing that the Network holds is the Adapter interface. This interface is the specific implementation for every cosmos version.
 

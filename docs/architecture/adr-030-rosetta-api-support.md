@@ -29,7 +29,7 @@ The constructor follows:
 
 `func New(options Options, network Network) (*Service, error)`
 
-It accepts an options struct that only holds the port to listen to:
+It accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
 
 ```
 type Options struct {

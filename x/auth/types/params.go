@@ -121,14 +121,14 @@ func validateSigVerifyCostSecp256k1(i interface{}) error {
 }
 
 func validatePubKeyChangeCost(i interface{}) error {
-	v, ok := i.(uint64)
+	_, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v == 0 {
-		return fmt.Errorf("invalid pubkey change cost: %d", v)
-	}
+	// if v == 0 {
+	// 	return fmt.Errorf("invalid pubkey change cost: %d", v)
+	// }
 
 	return nil
 }

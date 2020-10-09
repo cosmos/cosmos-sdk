@@ -6,20 +6,18 @@ Rosetta API, an open-source specification and set of tools developed by Coinbase
 
 By using a common interface that standardizes the process of how a user interacts with a blockchain, both the work of exchanges to integrate with new blockchains and also of the developers to build cross-blockchain applications such as block explorers, wallets and dApps is considerably reduced.
 
-We think that providing Rosetta support to the Cosmos SDK will add value to all the developers and Cosmos SDK based chains in the ecosystem.
-
 ## Decision
 
+We think that providing Rosetta support to the Cosmos SDK will add value to all the developers and Cosmos SDK based chains in the ecosystem.
+
+
+## Architecture
 
 The service is structured in a way that:
 
 1. It becomes easy to inject different implementations for different types of SDK. For this abstraction we have used the term Adapter.
 2. Due to the nature of versioning that has been done with Cosmos SDK so far it becomes very difficult to have different SDK versions included in the same repo, for that we created a generic shared code that includes the Service and the Adapter interface.
 3. It is easy to inject and instantiate wherever is needed in the different applications.
-
-
-## Architecture
-
 
 ### Service
 

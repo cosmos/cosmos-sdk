@@ -177,7 +177,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		appState[v040staking.ModuleName] = v040Codec.MustMarshalJSON(v040staking.Migrate(stakingGenState))
 	}
 
-	// Remove x/genutil
+	// Migrate x/genutil
 	if appState[v039genutil.ModuleName] != nil {
 		// unmarshal relative source genesis application state
 		var genutilGenState v039genutil.GenesisState

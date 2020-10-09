@@ -37,7 +37,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -65,18 +64,28 @@ const (
 	Description = "description"
 )
 
-// Default params variables used to create a TM client
 var (
+	DefaultConsensusParams = simapp.DefaultConsensusParams
+
+	// Default params variables used to create a TM client
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-	UpgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
 	MockAcknowledgement = mock.MockAcknowledgement
 	MockCommitment      = mock.MockCommitment
+
+	// Conditionals for expected output of executing messages.
+	// Change values to false to test messages expected to fail.
+	// Reset to true otherwise successful messages will error.
+	// Use in rare cases, will be deprecated in favor of better
+	// dev ux.
+	ExpSimPassSend = true
+	ExpPassSend    = true
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -172,7 +181,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 // GetContext returns the current context for the application.
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	ctx := chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	return ctx.WithConsensusParams(DefaultConsensusParams)
 }
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
@@ -206,7 +216,7 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   "store/upgrade/key",
 		Height: int64(height - 1),
-		Data:   upgradetypes.UpgradedClientKey(),
+		Data:   key,
 		Prove:  true,
 	})
 
@@ -293,7 +303,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
-		true, true, chain.senderPrivKey,
+		ExpSimPassSend, ExpPassSend, chain.senderPrivKey,
 	)
 	if err != nil {
 		return nil, err
@@ -420,8 +430,8 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-			height, commitmenttypes.GetSDKSpecs(),
-			&UpgradePath, false, false,
+			height, counterparty.App.GetConsensusParams(counterparty.GetContext()), commitmenttypes.GetSDKSpecs(),
+			UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:

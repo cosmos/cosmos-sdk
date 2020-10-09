@@ -64,7 +64,7 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 `SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported.
 
-The other important thing that the Network holds is the Adapter interface. This interface is the specific implementation for every cosmos version.
+`Network` holds an `Adapter` reference too. Adapter implementations may vary across different Cosmos SDK release series:
 
 And adapter must satisfy the interface:
 

@@ -11,6 +11,8 @@ import (
 // to v0.40 x/slashing genesis state. The migration includes:
 //
 // - Chaning SigningInfos and MissedBlocks from map to array.
+// - Convert addresses from bytes to bech32 strings.
+// - Re-encode in v0.40 GenesisState.
 func Migrate(oldGenState v039slashing.GenesisState) *v040slashing.GenesisState {
 	// Note that the two following `for` loop over a map's keys, so are not
 	// deterministic.

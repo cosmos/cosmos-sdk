@@ -129,7 +129,7 @@ service Query{
 
 gRPC gateway is started in-process along with the application and Tendermint.
 
-The SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`).
+The SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in `app.toml` defines if swagger documentation should be automatically registered.
 
 ## Legacy REST
 

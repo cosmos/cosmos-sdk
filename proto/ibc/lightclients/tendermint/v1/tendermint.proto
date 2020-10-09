@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tenderm
 
 import "tendermint/types/validator.proto";
 import "tendermint/types/types.proto";
+import "tendermint/abci/types.proto";
 import "confio/proofs.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -38,18 +39,22 @@ message ClientState {
   // Latest height the client was updated to
   ibc.core.client.v1.Height latest_height = 7
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"latest_height\""];
+
+  // Consensus params of the chain
+  .tendermint.abci.ConsensusParams consensus_params = 8 [(gogoproto.moretags) = "yaml:\"consensus_params\""];
+
   // Proof specifications used in verifying counterparty state
-  repeated ics23.ProofSpec proof_specs = 8 [(gogoproto.moretags) = "yaml:\"proof_specs\""];
+  repeated ics23.ProofSpec proof_specs = 9 [(gogoproto.moretags) = "yaml:\"proof_specs\""];
 
   // Path at which next upgraded client will be committed
-  ibc.core.commitment.v1.MerklePath upgrade_path = 9 [(gogoproto.moretags) = "yaml:\"upgrade_path\""];
+  string upgrade_path = 10 [(gogoproto.moretags) = "yaml:\"upgrade_path\""];
 
   // This flag, when set to true, will allow governance to recover a client
   // which has expired
-  bool allow_update_after_expiry = 10 [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry\""];
+  bool allow_update_after_expiry = 11 [(gogoproto.moretags) = "yaml:\"allow_update_after_expiry\""];
   // This flag, when set to true, will allow governance to unfreeze a client
   // whose chain has experienced a misbehaviour event
-  bool allow_update_after_misbehaviour = 11 [(gogoproto.moretags) = "yaml:\"allow_update_after_misbehaviour\""];
+  bool allow_update_after_misbehaviour = 12 [(gogoproto.moretags) = "yaml:\"allow_update_after_misbehaviour\""];
 }
 
 // ConsensusState defines the consensus state from Tendermint.

@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"fmt"
+	"github.com/armon/go-metrics"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -34,7 +35,19 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 	k.SetClientState(ctx, p.ClientId, clientState)
 	k.SetClientConsensusState(ctx, p.ClientId, header.GetHeight(), consensusState)
 
-	k.Logger(ctx).Info("client updated after governance proposal passed", "client-id", p.ClientId, "height", clientState.GetLatestHeight())
+	k.Logger(ctx).Info("client updated after governance proposal passed", "client-id", p.ClientId, "height", clientState.GetLatestHeight().String())
+
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{"ibc", "client", "update"},
+			1,
+			[]metrics.Label{
+				telemetry.NewLabel("client-type", clientState.ClientType()),
+				telemetry.NewLabel("client-id", p.ClientId),
+				telemetry.NewLabel("update-type", "proposal"),
+			},
+		)
+	}()
 
 	// emitting events in the keeper for proposal updates to clients
 	ctx.EventManager().EmitEvent(
@@ -42,7 +55,7 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 			types.EventTypeUpdateClientProposal,
 			sdk.NewAttribute(types.AttributeKeyClientID, p.ClientId),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
-			sdk.NewAttribute(types.AttributeKeyConsensusHeight, fmt.Sprintf("%d", header.GetHeight())),
+			sdk.NewAttribute(types.AttributeKeyConsensusHeight, header.GetHeight().String()),
 		),
 	)
 

@@ -37,7 +37,7 @@ type Options struct {
 }
 ```
 
-And a Network struct. This struct is the one that is specific to every SDK version, or even a network specific that the generic SDK does not cover all their needs.
+The `Network` type holds network-specific properties (i.e. configuration values) and adapters. Ready-to-use Cosmos SDK release series-specific base `Network` concrete types will be made available. Applications can embed such types in their own custom types.
 
 ```
 type Network struct {

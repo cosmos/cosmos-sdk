@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -34,7 +35,15 @@ const (
 	lastPageRecords = 35
 )
 
-func TestPagination(t *testing.T) {
+type paginationTestSuite struct {
+	suite.Suite
+}
+
+func TestPaginationTestSuite(t *testing.T) {
+	suite.Run(t, new(paginationTestSuite))
+}
+
+func (s *paginationTestSuite) TestPagination() {
 	app, ctx, _ := setupTest()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
@@ -50,96 +59,96 @@ func TestPagination(t *testing.T) {
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, addr1, balances))
+	s.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
 
-	t.Log("verify empty page request results a max of defaultLimit records and counts total records")
+	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.Equal(t, res.Pagination.Total, uint64(numBalances))
-	require.NotNil(t, res.Pagination.NextKey)
-	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Pagination.Total, uint64(numBalances))
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
 
-	t.Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.Equal(t, res.Pagination.Total, uint64(0))
-	require.NotNil(t, res.Pagination.NextKey)
-	require.LessOrEqual(t, res.Balances.Len(), overLimit)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().LessOrEqual(res.Balances.Len(), overLimit)
 
-	t.Log("verify paginate with custom limit and countTotal true")
+	s.T().Log("verify paginate with custom limit and countTotal true")
 	pageReq = &query.PageRequest{Limit: underLimit, CountTotal: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.Equal(t, res.Balances.Len(), underLimit)
-	require.NotNil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(numBalances))
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), underLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(numBalances))
 
-	t.Log("verify paginate with custom limit and countTotal false")
+	s.T().Log("verify paginate with custom limit and countTotal false")
 	pageReq = &query.PageRequest{Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.Equal(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(0))
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), defaultLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	t.Log("verify paginate with custom limit, key and countTotal false")
+	s.T().Log("verify paginate with custom limit, key and countTotal false")
 	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.Equal(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(0))
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), defaultLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	t.Log("verify paginate for last page, results in records less than max limit")
+	s.T().Log("verify paginate for last page, results in records less than max limit")
 	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
-	require.Equal(t, res.Balances.Len(), lastPageRecords)
-	require.Nil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(0))
+	s.Require().NoError(err)
+	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
+	s.Require().Equal(res.Balances.Len(), lastPageRecords)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	t.Log("verify paginate with offset and limit")
+	s.T().Log("verify paginate with offset and limit")
 	pageReq = &query.PageRequest{Offset: 200, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
-	require.Equal(t, res.Balances.Len(), lastPageRecords)
-	require.Nil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(0))
+	s.Require().NoError(err)
+	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
+	s.Require().Equal(res.Balances.Len(), lastPageRecords)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	t.Log("verify paginate with offset and limit")
+	s.T().Log("verify paginate with offset and limit")
 	pageReq = &query.PageRequest{Offset: 100, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), defaultLimit)
-	require.NotNil(t, res.Pagination.NextKey)
-	require.Equal(t, res.Pagination.Total, uint64(0))
+	s.Require().NoError(err)
+	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	t.Log("verify paginate with offset and key - error")
+	s.T().Log("verify paginate with offset and key - error")
 	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.Error(t, err)
-	require.Equal(t, err.Error(), "invalid request, either offset or key is expected, got both")
+	s.Require().Error(err)
+	s.Require().Equal(err.Error(), "invalid request, either offset or key is expected, got both")
 
-	t.Log("verify paginate with offset greater than total results")
+	s.T().Log("verify paginate with offset greater than total results")
 	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
-	require.NoError(t, err)
-	require.LessOrEqual(t, res.Balances.Len(), 0)
-	require.Nil(t, res.Pagination.NextKey)
+	s.Require().NoError(err)
+	s.Require().LessOrEqual(res.Balances.Len(), 0)
+	s.Require().Nil(res.Pagination.NextKey)
 }
 
 func ExamplePaginate() {

@@ -175,7 +175,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(shares.ToDec())
 	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
 
-	expectedValStatus := map[int]sdk.BondStatus{
+	expectedValStatus := map[int]types.BondStatus{
 		9: sdk.Bonded, 8: sdk.Bonded, 7: sdk.Bonded, 5: sdk.Bonded, 4: sdk.Bonded,
 		0: sdk.Unbonding, 1: sdk.Unbonding, 2: sdk.Unbonding, 3: sdk.Unbonding, 6: sdk.Unbonding,
 	}

@@ -143,7 +143,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
+	status := []types.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -54,7 +55,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	validator, ok := app.StakingKeeper.GetValidator(ctx, addr)
 	require.True(t, ok)
 	require.False(t, validator.Jailed)
-	require.Equal(t, sdk.BondStatusUnbonded, validator.GetStatus().String())
+	require.Equal(t, types.BondStatusUnbonded, validator.GetStatus().String())
 
 	// unbond below minimum self-delegation
 	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.NewCoin(p.BondDenom, sdk.TokensFromConsensusPower(1)))

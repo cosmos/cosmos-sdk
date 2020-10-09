@@ -338,7 +338,7 @@ func (v Validator) PotentialConsensusPower() int64 {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
+func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 	v.Status = newStatus
 	return v
 }
@@ -419,9 +419,9 @@ func (v Validator) MinEqual(other Validator) bool {
 		v.Commission.Equal(other.Commission)
 }
 
-func (v Validator) IsJailed() bool            { return v.Jailed }
-func (v Validator) GetMoniker() string        { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
+func (v Validator) IsJailed() bool        { return v.Jailed }
+func (v Validator) GetMoniker() string    { return v.Description.Moniker }
+func (v Validator) GetStatus() BondStatus { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil

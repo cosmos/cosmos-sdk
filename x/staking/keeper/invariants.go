@@ -54,9 +54,9 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 
 		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
 			switch validator.GetStatus() {
-			case sdk.Bonded:
+			case types.Bonded:
 				bonded = bonded.Add(validator.GetTokens())
-			case sdk.Unbonding, sdk.Unbonded:
+			case types.Unbonding, types.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
 			default:
 				panic("invalid validator status")

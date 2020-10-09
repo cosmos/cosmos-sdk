@@ -27,9 +27,10 @@ const (
 	MaxSecurityContactLength = 140
 	MaxDetailsLength         = 280
 
-	BondStatusUnbonded  = "Unbonded"
-	BondStatusUnbonding = "Unbonding"
-	BondStatusBonded    = "Bonded"
+	BondStatusUnspecified = BondStatus_name[Unspecified]
+	BondStatusUnbonded    = BondStatus_name[Unbonded]
+	BondStatusUnbonding   = BondStatus_name[Unbonding]
+	BondStatusBonded      = BondStatus_name[Bonded]
 )
 
 var _ ValidatorI = Validator{}

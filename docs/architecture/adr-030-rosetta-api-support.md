@@ -92,7 +92,7 @@ Cosmos SDK provides a base `Network` struct so that it could serve as code examp
 
 ```
 // NewNetwork returns the default application configuration.
-func NewLaunchpadNetwork(options Options) service.Network {
+func NewNetwork(options Options) service.Network {
 	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
 

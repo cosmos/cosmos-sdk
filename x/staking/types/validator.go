@@ -17,7 +17,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 const (
@@ -29,7 +28,7 @@ const (
 	MaxDetailsLength         = 280
 )
 
-var _ exported.ValidatorI = Validator{}
+var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
@@ -72,7 +71,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}

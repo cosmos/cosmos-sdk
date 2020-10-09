@@ -1,4 +1,4 @@
-# ADR 030: Rosetta API support
+# ADR 033: Rosetta API support
 
 ## Context
 

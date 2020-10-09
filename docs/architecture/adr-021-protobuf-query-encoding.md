@@ -109,12 +109,12 @@ func (q Querier) QueryBalance(ctx context.Context, params *types.QueryBalancePar
 ### Custom Query Registration and Routing
 
 Query server implementations as above would be registered with `AppModule`s using
-a new method `RegisterQueryServer(grpc.Server)` which could be implemented simply
+a new method `RegisterQueryService(grpc.Server)` which could be implemented simply
 as below:
 
 ```go
 // x/bank/module.go
-func (am AppModule) RegisterQueryServer(server grpc.Server) {
+func (am AppModule) RegisterQueryService(server grpc.Server) {
 	types.RegisterQueryServer(server, keeper.Querier{am.keeper})
 }
 ```

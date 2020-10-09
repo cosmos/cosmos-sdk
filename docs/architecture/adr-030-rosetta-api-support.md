@@ -88,7 +88,7 @@ type ConstructionAPI interface {
 
 ````
 
-### How to use it in the Cosmos SDK.
+### Cosmos SDK Integration
 
 The best way to do it would be that every Cosmos SDK version holds the implementation of the Network struct, this can be an example located in the Cosmos SDK Launchpad version.
 

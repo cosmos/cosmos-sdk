@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,7 +53,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().True(app.BankKeeper.GetBalance(ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
 
 	s.T().Log("verify that no authorization returns nil")
-	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Nil(authorization)
 	s.Require().Zero(expiration)
 	now := s.ctx.BlockHeader().Time
@@ -62,34 +63,34 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify if expired authorization is rejected")
 	x := &types.SendAuthorization{SpendLimit: newCoins}
 	app.MsgAuthKeeper.Grant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = &types.SendAuthorization{SpendLimit: newCoins}
 	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
-	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
+	s.Require().Equal(authorization.MsgType(), proto.MessageName(&banktypes.MsgSend{}))
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgMultiSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke fails with wrong information")
-	err = app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, banktypes.MsgMultiSend{}.Type())
+	err = app.MsgAuthKeeper.Revoke(ctx, recipientAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Error(err)
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, recipientAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	err = app.MsgAuthKeeper.Revoke(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	err = app.MsgAuthKeeper.Revoke(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NoError(err)
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().Nil(authorization)
 
 }
@@ -129,10 +130,10 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
 	app.MsgAuthKeeper.Grant(s.ctx, granteeAddr, granterAddr, &types.SendAuthorization{SpendLimit: smallCoin}, now)
-	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
 	s.Require().NotZero(expiration)
-	s.Require().Equal(authorization.MsgType(), banktypes.MsgSend{}.Type())
+	s.Require().Equal(authorization.MsgType(), proto.MessageName(&banktypes.MsgSend{}))
 
 	executeMsgs, err = msgs.GetMsgs()
 	s.Require().NoError(err)
@@ -141,7 +142,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NotNil(result)
 	s.Require().Nil(err)
 
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
 
 	s.T().Log("verify dispatch fails with overlimit")
@@ -162,7 +163,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().Nil(result)
 	s.Require().NotNil(err)
 
-	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.MsgSend{}.Type())
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
 }
 

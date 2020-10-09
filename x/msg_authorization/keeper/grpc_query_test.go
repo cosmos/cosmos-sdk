@@ -51,7 +51,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(res *types.QueryAuthorizationResponse) {},
 		},
 		{
-			"fail invalid msg-type",
+			"Succcess",
 			func() {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))

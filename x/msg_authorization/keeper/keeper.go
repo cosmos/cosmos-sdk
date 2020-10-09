@@ -90,7 +90,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg.Type())
+			authorization, _ := k.GetAuthorization(ctx, grantee, granter, proto.MessageName(msg))
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
@@ -111,7 +111,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 
 		msgResult, err = handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", msg.Type())
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", proto.MessageName(msg))
 		}
 	}
 
@@ -166,13 +166,12 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 func (k Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.AuthorizationGrant) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, nil)
+	iter := sdk.KVStorePrefixIterator(store, types.GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant types.AuthorizationGrant
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
-		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
-		fmt.Println(granterAddr.String(), granteeAddr.String())
+		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Value())
 		if handler(granterAddr, granteeAddr, grant) {
 			break
 		}

@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/gogo/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -17,7 +18,7 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 }
 
 func (authorization SendAuthorization) MsgType() string {
-	return bank.MsgSend{}.Type()
+	return proto.MessageName(&bank.MsgSend{})
 }
 
 func (authorization SendAuthorization) Accept(msg sdk.Msg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {

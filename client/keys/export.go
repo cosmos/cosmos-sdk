@@ -5,10 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ExportKeyCommand exports private keys from the key store.
@@ -20,20 +18,14 @@ func ExportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
-
-			backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-			kb, err := keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
-			if err != nil {
-				return err
-			}
+			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
 			if err != nil {
 				return err
 			}
 
-			armored, err := kb.ExportPrivKeyArmor(args[0], encryptPassword)
+			armored, err := clientCtx.Keyring.ExportPrivKeyArmor(args[0], encryptPassword)
 			if err != nil {
 				return err
 			}

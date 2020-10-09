@@ -17,7 +17,6 @@ import (
 	v040evidence "github.com/cosmos/cosmos-sdk/x/evidence/legacy/v040"
 	v039genutil "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	v040genutil "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	v039mint "github.com/cosmos/cosmos-sdk/x/mint/legacy/v039"
@@ -28,8 +27,8 @@ import (
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
 )
 
-func migrateGenutil(oldGenState v039genutil.GenesisState) *v040genutil.GenesisState {
-	return &v040genutil.GenesisState{
+func migrateGenutil(oldGenState v039genutil.GenesisState) *types.GenesisState {
+	return &types.GenesisState{
 		GenTxs: oldGenState.GenTxs,
 	}
 }
@@ -189,7 +188,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v040genutil.ModuleName] = v040Codec.MustMarshalJSON(migrateGenutil(genutilGenState))
+		appState[ModuleName] = v040Codec.MustMarshalJSON(migrateGenutil(genutilGenState))
 	}
 
 	return appState

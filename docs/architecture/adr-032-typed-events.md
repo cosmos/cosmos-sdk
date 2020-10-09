@@ -14,6 +14,10 @@
 
 Proposed
 
+## Abstract
+
+Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
+
 ## Context
 
 Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
@@ -145,7 +149,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper keeper.Keeper, msg types.Ms
 
 Users will be able to subscribe using `client.Context.Client.Subscribe` and consume events which are emitted using `EventHandler`s.
 
-Akash Network has built a simple [`pubsub`](https://github.com/ovrclk/akash/blob/master/pubsub/bus.go). This can be used to subscribe to `abci.Events` and [publish](https://github.com/ovrclk/akash/blob/master/events/publish.go#L21) them as typed events.
+Akash Network has built a simple [`pubsub`](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/pubsub/bus.go#L20). This can be used to subscribe to `abci.Events` and [publish](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L21) them as typed events.
 
 Please see the below code sample for more detail on this flow looks for clients.
 
@@ -309,5 +313,5 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
 ```
 
 ## References
-- [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/master/events/publish.go#L19-L58)
-- [Consuming the events in `Client`](https://github.com/jackzampolin/deploy/blob/master/cmd/event-handlers.go#L57)
+- [Publish Custom Events via a bus](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L19-L58)
+- [Consuming the events in `Client`](https://github.com/ovrclk/deploy/blob/bf6c633ab6c68f3026df59efd9982d6ca1bf0561/cmd/event-handlers.go#L57)

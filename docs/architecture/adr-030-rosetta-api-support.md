@@ -66,8 +66,6 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 `Network` holds an `Adapter` reference too. Adapter implementations may vary across different Cosmos SDK release series:
 
-And adapter must satisfy the interface:
-
 ```
 type Adapter interface {
 	DataAPI

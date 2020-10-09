@@ -24,23 +24,22 @@ import (
 )
 
 const (
-	flagTrustLevel                   = "trust-level"
-	flagConsensusParams              = "consensus-params"
-	flagProofSpecs                   = "proof-specs"
-	flagUpgradePath                  = "upgrade-path"
-	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
-	flagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
+	FlagTrustLevel                   = "trust-level"
+	FlagProofSpecs                   = "proof-specs"
+	FlagUpgradePath                  = "upgrade-path"
+	FlagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
+	FlagAllowUpdateAfterMisbehaviour = "allow_update_after_misbehaviour"
 )
 
-// NewCreateClientCmd defines the command to create a new IBC Client as defined
-// in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
+// NewCreateClientCmd defines the command to create a new Tendermint light client to be used
+// for IBC interactions.
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift]",
+		Use:   "create [client-id] [path/to/header.json] [trusting_period] [unbonding_period] [max_clock_drift]",
 		Short: "create new tendermint client",
-		Long: `Create a new tendermint IBC client. 
+		Long: `Create a new tendermint IBC client. The consensus params can be a JSON input, a path to a .json file.
+		The params must match the consensus parameters of the chain this light client represents otherwise all connection handshakes should fail verification on the counterparty chain.
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
-  - 'consensus-params' flag can be a JSON input, a path to a .json file. The params must match the consensus parameters of the chain this light client represents.
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'
   - 'upgrade-path' flag is a string specifying the upgrade path for this chain where a future upgraded client will be stored. The path represents a keypath for the store with each key separated by a '/'. Any slash within a key must be escaped.
   e.g. 'upgrade/upgradedClient'`,
@@ -58,25 +57,27 @@ func NewCreateClientCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 			legacyAmino := codec.NewLegacyAmino()
 
-			var header *types.Header
-			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
-				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
-				if err != nil {
-					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
-				}
-				if err := cdc.UnmarshalJSON(contents, header); err != nil {
-					return errors.Wrap(err, "error unmarshalling consensus header file")
-				}
-			}
-
 			var (
+				header          *types.Header
 				trustLevel      types.Fraction
 				consensusParams *abci.ConsensusParams
 				specs           []*ics23.ProofSpec
 			)
 
-			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
+			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return errors.New("neither JSON input nor path to .json file were provided for header")
+				}
+
+				if err := cdc.UnmarshalJSON(contents, header); err != nil {
+					return errors.Wrap(err, "error unmarshalling contents of header file")
+				}
+			}
+
+			lvl, _ := cmd.Flags().GetString(FlagTrustLevel)
 
 			if lvl == "default" {
 				trustLevel = types.NewFractionFromTm(light.DefaultTrustLevel)
@@ -102,44 +103,45 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
-			cp, _ := cmd.Flags().GetString(flagConsensusParams)
-			if cp != "" {
-				if err := legacyAmino.UnmarshalJSON([]byte(cp), &consensusParams); err != nil {
-					// check for file path if JSON input not provided
-					contents, err := ioutil.ReadFile(cp)
-					if err != nil {
-						return errors.New("neither JSON input nor path to .json file was provided for consensus params flag")
-					}
-					// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
-					// or wrap lists of proto.Message in some other message)
-					if err := legacyAmino.UnmarshalJSON(contents, &consensusParams); err != nil {
-						return errors.Wrap(err, "error unmarshalling consensus params file")
-					}
+			cp := args[5]
+			if err := cdc.UnmarshalJSON([]byte(cp), consensusParams); err != nil {
+
+				// check for file path if JSON input not provided
+				contents, err := ioutil.ReadFile(cp)
+				if err != nil {
+					return errors.New("neither JSON input nor path to .json file was provided for consensus params argument")
+				}
+
+				if err := cdc.UnmarshalJSON(contents, consensusParams); err != nil {
+					return errors.Wrap(err, "error unmarshalling contents of consensus params file")
 				}
 			}
 
-			spc, _ := cmd.Flags().GetString(flagProofSpecs)
+			spc, _ := cmd.Flags().GetString(FlagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
+
 				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 			} else if err := legacyAmino.UnmarshalJSON([]byte(spc), &specs); err != nil {
+
 				// check for file path if JSON input not provided
 				contents, err := ioutil.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
+
 				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 				if err := legacyAmino.UnmarshalJSON(contents, &specs); err != nil {
-					return errors.Wrap(err, "error unmarshalling proof specs file")
+					return errors.Wrap(err, "error unmarshalling contents of proof specs file")
 				}
 			}
 
-			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(flagAllowUpdateAfterExpiry)
-			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
+			allowUpdateAfterExpiry, _ := cmd.Flags().GetBool(FlagAllowUpdateAfterExpiry)
+			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(FlagAllowUpdateAfterMisbehaviour)
 
-			upgradePath, _ := cmd.Flags().GetString(flagUpgradePath)
+			upgradePath, _ := cmd.Flags().GetString(FlagUpgradePath)
 
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
@@ -170,10 +172,11 @@ func NewCreateClientCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagTrustLevel, "default", "light client trust level fraction for header updates")
-	cmd.Flags().String(flagProofSpecs, "default", "proof specs format to be used for verification")
-	cmd.Flags().Bool(flagAllowUpdateAfterExpiry, false, "allow governance proposal to update client after expiry")
-	cmd.Flags().Bool(flagAllowUpdateAfterMisbehaviour, false, "allow governance proposal to update client after misbehaviour")
+	cmd.Flags().String(FlagTrustLevel, "default", "light client trust level fraction for header updates")
+	cmd.Flags().String(FlagProofSpecs, "default", "proof specs format to be used for verification")
+	cmd.Flags().String(FlagUpgradePath, "", "string specifying the upgrade path for this chain where a future upgraded client will be stored. The path represents a keypath for the store with each key separated by a '/'. Any slash within a key must be escaped. e.g. 'upgrade/upgradedClient'")
+	cmd.Flags().Bool(FlagAllowUpdateAfterExpiry, false, "allow governance proposal to update client after expiry")
+	cmd.Flags().Bool(FlagAllowUpdateAfterMisbehaviour, false, "allow governance proposal to update client after misbehaviour")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -146,7 +146,7 @@ security.
 The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
 
 ```go
-func Invoker(ctx context.Context, caller ModuleID, method string, args, reply interface{}, opts ...grpc.CallOption) error
+func Invoker(ctx context.Context, params InvokeParams, method string, args, reply interface{}, opts ...grpc.CallOption) error
 
 type RootModuleKey struct {
   moduleName string
@@ -157,6 +157,10 @@ type DerivedModuleKey struct {
   moduleName string
   path []byte
   invoker Invoker
+}
+
+type InvokeParams struct {
+  Caller ModuleID
 }
 ```
 
@@ -175,12 +179,29 @@ func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarRes
 ```
 
 In this way, a module can gain permissioned access to a root account and any number of sub-accounts and send
-authenticated `Msg`s from these accounts. The `caller ModuleID` parameter on `Invoker` is used under the hood to
+authenticated `Msg`s from these accounts. The `InvokeParams.Caller` parameter is used under the hood to
 distinguish between different module accounts, but either way the `Invoker` only allows `Msg`s from either the
 root or a derived module account to pass through.
 
-### `AppModule` Wiring
+### `AppModule` Wiring and Requirements
 
+In [ADR 031](), the `AppModule.RegisterService(Configurator)` method was introduced. To support inter-module
+communication, we extend the `Configurator` interface to pass in the `ModuleKey` and to allow modules to specify
+their dependencies on other modules using `RequireServer`:
+
+
+```go
+type Configurator interface {
+   QueryServer() grpc.Server
+   MsgServer() grpc.Server
+
+   ModuleKey() ModuleKey
+   RequireServer(serverInterface interface{})
+}
+```
+
+The `ModuleKey` is passed to modules in the `RegisterService` method because this is the earliest point at which modules
+need it and this 
 
 ### Security Considerations
 
@@ -312,7 +333,9 @@ type ModuleManager interface {
 
 ### Future Work
 
-A separate ADR will address the use cases of "admin" access and inter-module hooks (as used in `x/staking/keeper/hooks.go`).
+A separate ADR will address the use cases of unrestricted, "admin" access and inter-module hooks
+(as used in `x/staking/keeper/hooks.go`).
+
 
 ## Consequences
 

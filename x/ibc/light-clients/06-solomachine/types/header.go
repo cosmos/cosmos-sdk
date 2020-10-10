@@ -6,8 +6,8 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 var _ exported.Header = Header{}
@@ -19,7 +19,7 @@ func (Header) ClientType() string {
 
 // GetHeight returns the current sequence number as the height.
 // Return clientexported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Version number is always 0 for a solo-machine
 func (h Header) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, h.Sequence)
 }

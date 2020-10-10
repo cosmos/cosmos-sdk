@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## v0.40.0-rc1 - YYYY-MM-DD
+## v0.40.0-rc0 - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases
 of the Cosmos SDK since launch. Please read through this changelog and [release notes](./RELEASE_NOTES.md) to make sure you are aware of any relevant breaking changes.
@@ -232,6 +232,8 @@ of the Cosmos SDK since launch. Please read through this changelog and [release 
   * (x/auth) [\#6350](https://github.com/cosmos/cosmos-sdk/pull/6350) New sign-batch command to sign StdTx batch files.
   * (baseapp) [\#5803](https://github.com/cosmos/cosmos-sdk/pull/5803) Added support for taking state snapshots at regular height intervals, via options `snapshot-interval` and `snapshot-keep-recent`.
   * (client) [\#5921](https://github.com/cosmos/cosmos-sdk/issues/5921) Introduce new gRPC and gRPC Gateway based APIs for querying app & module data. See [ADR021](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-021-protobuf-query-encoding.md) for more details
+  * (cli) [\#7485](https://github.com/cosmos/cosmos-sdk/pull/7485) Introduce a new optional `--keyring-dir` flag that allows clients to specify a Keyring directory if it does not reside in the directory specified by `--home`.
+  * (coin) [\#6755](https://github.com/cosmos/cosmos-sdk/pull/6755) Add custom regex validation for `Coin` denom by overwriting `CoinDenomRegex` when using `/types/coin.go`.
   * (config) [\#7265](https://github.com/cosmos/cosmos-sdk/pull/7265) Support Tendermint block pruning through a new `min-retain-blocks` configuration that can be set in either `app.toml` or via the CLI. This parameter is used in conjunction with other criteria to determine the height at which Tendermint should prune blocks.
   * (events) [\#7121](https://github.com/cosmos/cosmos-sdk/pull/7121) The application now derives what events are indexed by Tendermint via the `index-events` configuration in `app.toml`, which is a list of events taking the form `{eventType}.{attributeKey}`.
   * (tx) [\#6089](https://github.com/cosmos/cosmos-sdk/pull/6089) Transactions can now have a `TimeoutHeight` set which allows the transaction to be rejected if it's committed at a height greater than the timeout.

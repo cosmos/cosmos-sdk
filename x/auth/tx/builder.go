@@ -144,6 +144,18 @@ func (w *wrapper) FeePayer() sdk.AccAddress {
 	return w.GetSigners()[0]
 }
 
+func (w *wrapper) FeeGranter() sdk.AccAddress {
+	feePayer := w.tx.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return granterAddr
+	}
+	return nil
+}
+
 func (w *wrapper) GetMemo() string {
 	return w.tx.Body.Memo
 }
@@ -250,6 +262,17 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 	}
 
 	w.tx.AuthInfo.Fee.Payer = feePayer.String()
+
+	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
+	w.authInfoBz = nil
+}
+
+func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
+	if w.tx.AuthInfo.Fee == nil {
+		w.tx.AuthInfo.Fee = &tx.Fee{}
+	}
+
+	w.tx.AuthInfo.Fee.Granter = feeGranter.String()
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil

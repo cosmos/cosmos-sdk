@@ -2,11 +2,11 @@ package types_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/09-localhost/types"
 )
 
@@ -123,8 +123,8 @@ func (suite *LocalhostTestSuite) TestCheckHeaderAndUpdateState() {
 	clientState := types.NewClientState("chainID", clientHeight)
 	cs, _, err := clientState.CheckHeaderAndUpdateState(suite.ctx, nil, nil, nil)
 	suite.Require().NoError(err)
-	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetEpochNumber())
-	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetEpochHeight()))
+	suite.Require().Equal(uint64(0), cs.GetLatestHeight().GetVersionNumber())
+	suite.Require().Equal(suite.ctx.BlockHeight(), int64(cs.GetLatestHeight().GetVersionHeight()))
 	suite.Require().Equal(suite.ctx.BlockHeader().ChainID, clientState.ChainId)
 }
 

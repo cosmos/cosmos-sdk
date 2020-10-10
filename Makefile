@@ -67,12 +67,12 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 endif
 # handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
 endif
 # handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
 endif
 
@@ -97,21 +97,22 @@ include contrib/devtools/Makefile
 ###                                  Build                                  ###
 ###############################################################################
 
-build: go.sum
-	go build -mod=readonly ./...
+BUILD_TARGETS := build install
 
-simd:
-	mkdir -p $(BUILDDIR)
-	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR) ./simapp/simd
+build: BUILD_ARGS=-o $(BUILDDIR)/
+build-linux:
+	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
 
-simd-linux: go.sum
-	$(MAKE) simd GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false
+$(BUILD_TARGETS): go.sum $(BUILDDIR)/
+	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+
+$(BUILDDIR)/:
+	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='darwin linux windows' \
+        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -119,24 +120,22 @@ build-simd-all: go.sum
         --name latest-build cosmossdk/rbuilder:latest
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
-build-simd-linux: go.sum
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
+build-simd-linux: go.sum $(BUILDDIR)/
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='linux' \
+        --env TARGET_PLATFORMS='linux/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=false \
         --name latest-build cosmossdk/rbuilder:latest
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
-	mkdir -p $(BUILDDIR)
 	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build simd simd-linux build-simd-all build-simd-linux cosmovisor
+.PHONY: build build-linux build-simd-all build-simd-linux cosmovisor
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -152,13 +151,7 @@ mocks: $(MOCKS_DIR)
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
-distclean: clean
-	rm -rf \
-    gitian-build-darwin/ \
-    gitian-build-linux/ \
-    gitian-build-windows/ \
-    .gitian-builder-cache/
-
+distclean: clean tools-clean
 clean:
 	rm -rf \
     $(BUILDDIR)/ \
@@ -171,15 +164,10 @@ clean:
 ###                          Tools & Dependencies                           ###
 ###############################################################################
 
-go-mod-cache: go.sum
-	@echo "--> Download go modules to local cache"
-	@go mod download
-.PHONY: go-mod-cache
-
 go.sum: go.mod
-	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
-	@go mod tidy
+	echo "Ensure dependencies have not been modified ..." >&2
+	go mod verify
+	go mod tidy
 
 ###############################################################################
 ###                              Documentation                              ###
@@ -204,9 +192,7 @@ godocs:
 # the `versions` file will be the default root index.html.
 build-docs:
 	@cd docs && \
-	while read -a p; do \
-		branch=$${p[0]} ; \
-		path_prefix=$${p[1]} ; \
+	while read -r branch path_prefix; do \
 		(git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
@@ -459,7 +445,7 @@ proto-update-deps:
 ###############################################################################
 
 # Run a 4-node testnet locally
-localnet-start: $(BUILDDIR)/simd localnet-stop
+localnet-start: build-linux localnet-stop
 	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
 	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
 		--user $(shell id -u):$(shell id -g) \

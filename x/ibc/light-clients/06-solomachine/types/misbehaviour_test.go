@@ -10,8 +10,8 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 
 	suite.Require().Equal(types.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
-	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetEpochNumber())
-	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetEpochHeight())
+	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetVersionNumber())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetVersionHeight())
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {

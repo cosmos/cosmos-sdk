@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 // CheckHeaderAndUpdateState checks if the provided header is valid, and if valid it will:
@@ -96,11 +96,11 @@ func checkValidity(
 
 	// UpdateClient only accepts updates with a header at the same version
 	// as the trusted consensus state
-	if header.GetHeight().GetEpochNumber() != header.TrustedHeight.VersionNumber {
+	if header.GetHeight().GetVersionNumber() != header.TrustedHeight.VersionNumber {
 		return sdkerrors.Wrapf(
 			ErrInvalidHeaderHeight,
 			"header height version %d does not match trusted header version %d",
-			header.GetHeight().GetEpochNumber(), header.TrustedHeight.VersionNumber,
+			header.GetHeight().GetVersionNumber(), header.TrustedHeight.VersionNumber,
 		)
 	}
 
@@ -133,9 +133,9 @@ func checkValidity(
 	// This is useful if the update is at a previous version rather than an update to the latest version
 	// of the client.
 	// The chainID must be set correctly for the previous version before attempting verification.
-	// Updates for previous epochs are not supported if the chainID is not in version format.
-	if clienttypes.IsEpochFormat(chainID) {
-		chainID, _ = clienttypes.SetEpochNumber(chainID, header.GetHeight().GetEpochNumber())
+	// Updates for previous versions are not supported if the chainID is not in version format.
+	if clienttypes.IsVersionFormat(chainID) {
+		chainID, _ = clienttypes.SetVersionNumber(chainID, header.GetHeight().GetVersionNumber())
 	}
 
 	// Construct a trusted header using the fields in consensus state

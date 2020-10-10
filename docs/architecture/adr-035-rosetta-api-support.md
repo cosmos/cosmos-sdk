@@ -149,7 +149,7 @@ Rosetta API service could run within the same execution process of the applicati
 
 ```
 
-#### The cobra command approach
+#### Command Line Integration
 
 This means providing a new command in order to run the service, an example can look something like:
 

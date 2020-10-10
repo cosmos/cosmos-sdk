@@ -114,7 +114,7 @@ func NewNetwork(options Options) service.Network {
 }
 ```
 
-#### In-process Execution.
+#### In-process Execution
 
 Rosetta API service could run within the same execution process of the application; new configuration option and command line flag would be provided:
 

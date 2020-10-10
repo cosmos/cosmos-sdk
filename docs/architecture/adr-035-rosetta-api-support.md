@@ -13,7 +13,7 @@ We think that providing Rosetta support to the Cosmos SDK will add value to all 
 
 ## Architecture
 
-The service is structured in a way that:
+The driving principles of the proposed design follow:
 
 1. Developer-friendliness: it must be as riskless and painless as possible for client applications developers to extend network configurations to expose Rosetta API-compliant services.
 2. Long term support: developers build applications on the various stable branches of Cosmos SDK. This proposal aims to provide support for all the release series supported by the Cosmos SDK team.

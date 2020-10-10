@@ -90,10 +90,10 @@ func Migrate(
 	// get staking module accounts coins
 	for _, validator := range vals {
 		switch validator.Status {
-		case sdk.Bonded:
+		case v034staking.Bonded:
 			bondedAmt = bondedAmt.Add(validator.Tokens)
 
-		case sdk.Unbonding, sdk.Unbonded:
+		case v034staking.Unbonding, v034staking.Unbonded:
 			notBondedAmt = notBondedAmt.Add(validator.Tokens)
 
 		default:

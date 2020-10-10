@@ -17,7 +17,7 @@ The service is structured in a way that:
 
 1. Developer-friendliness: it must be as riskless and painless as possible for client applications developers to extend network configurations to expose Rosetta API-compliant services.
 2. Due to the nature of versioning that has been done with Cosmos SDK so far it becomes very difficult to have different SDK versions included in the same repo, for that we created a generic shared code that includes the Service and the Adapter interface.
-3. It is easy to inject and instantiate wherever is needed in the different applications.
+3. Cost-efficiency: backporting features from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
 
 ### Service
 

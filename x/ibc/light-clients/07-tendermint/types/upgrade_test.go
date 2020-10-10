@@ -104,7 +104,7 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 			expPass: false,
 		},
 		{
-			name: "unsuccessful upgrade: chain-specified paramaters do not match committed client",
+			name: "unsuccessful upgrade: chain-specified parameters do not match committed client",
 			setup: func() {
 
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)

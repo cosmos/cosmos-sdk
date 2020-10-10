@@ -16,7 +16,7 @@ Proposed
 
 ## Abstract
 
-Currently in the SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
+Currently in the SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team. 
 
 ## Context
 
@@ -29,6 +29,8 @@ As the SDK gets used more extensively for apps like `peggy`, other peg zones, IB
 If this proposal is accepted, users will be able to build event driven SDK apps in go by just writing `EventHandler`s for their specific event types and passing them to `EventEmitters` that are defined in the SDK.
 
 The end of this proposal contains a detailed example of how to consume events after this refactor.
+
+This proposal is specifically about how to consume these events as a client of the blockchain, not for intermodule communication.
 
 ## Decision
 

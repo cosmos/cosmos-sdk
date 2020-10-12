@@ -156,4 +156,5 @@ If the misbehaviour is successfully processed:
 
 ## Upgrades
 
-Upgrades to solo machine light clients are not supported. 
+Upgrades to solo machine light clients are not supported since an entirely different type of 
+public key can be set using normal client updates.

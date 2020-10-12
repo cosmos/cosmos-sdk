@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestMessageService(t *testing.T) {
+func TestMsgService(t *testing.T) {
 	// TODO
 }

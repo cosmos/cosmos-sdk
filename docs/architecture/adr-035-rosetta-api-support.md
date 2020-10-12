@@ -86,7 +86,7 @@ type ConstructionAPI interface {
 
 ### Cosmos SDK Integration
 
-Cosmos SDK provides a base `Network` struct so that it could serve as code example for client application developers and testing tool to be used in conjuction with `simd`.
+Cosmos SDK provides a base `Network` struct and a `NewNetwork` constructor that could serve as code example for client application developers and testing tool to be used in conjuction with `simd`.
 
 ```
 // NewNetwork returns the default application configuration.

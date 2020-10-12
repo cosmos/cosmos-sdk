@@ -34,9 +34,7 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg *types.MsgGrantAuthorizati
 		return nil, err
 	}
 
-	var authorization types.Authorization
-
-	authorization = msg.Authorization.GetCachedValue().(types.Authorization)
+	authorization := msg.Authorization.GetCachedValue().(types.Authorization)
 
 	k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
 

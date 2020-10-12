@@ -110,6 +110,7 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err

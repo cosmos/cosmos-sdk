@@ -1692,9 +1692,9 @@ func TestQuery(t *testing.T) {
 
 func TestGRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *BaseApp) {
-		testdata.RegisterTestServiceServer(
+		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
-			testdata.TestServiceImpl{},
+			testdata.QueryImpl{},
 		)
 	}
 
@@ -1711,7 +1711,7 @@ func TestGRPCQuery(t *testing.T) {
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.TestService/SayHello",
+		Path: "/testdata.Query/SayHello",
 	}
 
 	resQuery := app.Query(reqQuery)

@@ -9,8 +9,8 @@ import (
 	msgauthcli "github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 )
 
-func MsgGrantSendAuthorizationExec(clientCtx client.Context, grantee, limit fmt.Stringer, authorization string, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{grantee.String(), authorization, limit.String()}
+func MsgGrantSendAuthorizationExec(clientCtx client.Context, grantee fmt.Stringer, msgType, authorization string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{grantee.String(), msgType, authorization}
 	args = append(args, extraArgs...)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, msgauthcli.GetCmdGrantAuthorization(""), args)

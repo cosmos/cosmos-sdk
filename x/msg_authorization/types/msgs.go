@@ -28,6 +28,7 @@ var (
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
+//nolint:interfacer
 func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) (*MsgGrantAuthorization, error) {
 	msg, ok := authorization.(proto.Message)
 	if !ok {

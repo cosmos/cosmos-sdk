@@ -129,7 +129,7 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 		panic(err)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(grant)
+	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
 }

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"time"
@@ -39,10 +38,10 @@ func GetTxCmd(storeKey string) *cobra.Command {
 
 func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee_address] [authorization] [limit]",
+		Use:   "grant [grantee_address] [type] [authorization] --from=[granter]",
 		Short: "Grant authorization to an address",
 		Long:  "Grant authorization to an address to execute a transaction on your behalf",
-		Args:  cobra.RangeArgs(2, 3),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -54,32 +53,24 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 				return err
 			}
 
-			var temp interface{}
-			bz, err := ioutil.ReadFile(args[1])
+			msgType := args[1]
+
+			bz, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
-			}
-
-			if err = json.Unmarshal(bz, &temp); err != nil {
-				return err
-			}
-			dict := temp.(map[string]interface{})
-
-			msgType, ok := dict["msg_type"]
-			if !ok {
-				return errors.New("missing key msg_type")
 			}
 
 			var authorization types.Authorization
 			switch msgType {
 			case (types.SendAuthorization{}.MsgType()):
-				limit, err := sdk.ParseCoins(args[2])
+				var sendAuth types.SendAuthorization
+				err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &sendAuth)
 				if err != nil {
 					return err
 				}
-				authorization = types.NewSendAuthorization(limit)
+				authorization = &sendAuth
 			case (types.GenericAuthorization{}.MsgType()):
-				genAuth := types.GenericAuthorization{}
+				var genAuth types.GenericAuthorization
 				err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &genAuth)
 				if err != nil {
 					return err
@@ -109,7 +100,7 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 
 func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] [msg_type]",
+		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
 		Short: "revoke authorization",
 		Long:  "revoke authorization from an address for a transaction",
 		Args:  cobra.ExactArgs(2),

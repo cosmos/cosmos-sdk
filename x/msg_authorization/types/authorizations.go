@@ -21,23 +21,23 @@ type Authorization interface {
 }
 
 // NewAuthorizationGrant returns new AuthrizationGrant
-func NewAuthorizationGrant(authorization Authorization, expiration int64) (*AuthorizationGrant, error) {
+func NewAuthorizationGrant(authorization Authorization, expiration int64) (AuthorizationGrant, error) {
 	auth := AuthorizationGrant{
 		Expiration: expiration,
 	}
 	msg, ok := authorization.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", authorization)
+		return AuthorizationGrant{}, fmt.Errorf("cannot proto marshal %T", authorization)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, err
+		return AuthorizationGrant{}, err
 	}
 
 	auth.Authorization = any
 
-	return &auth, nil
+	return auth, nil
 }
 
 var (

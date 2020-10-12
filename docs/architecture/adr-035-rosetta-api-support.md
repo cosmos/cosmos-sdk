@@ -8,7 +8,7 @@ By using a common interface that standardizes the process of how a user interact
 
 ## Decision
 
-We think that providing Rosetta support to the Cosmos SDK will add value to all the developers and Cosmos SDK based chains in the ecosystem.
+We think that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and Cosmos SDK based chains in the ecosystem.
 
 
 ## Architecture

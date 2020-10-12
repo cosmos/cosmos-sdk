@@ -49,7 +49,7 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 - **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../building-modules/keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
 - **A reference to an [`appCodec`](../core/encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../core/encoding.md).
 - **A reference to a [`legacyAmino`](../core/encoding.md) codec.** Some parts of the SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicity use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-- **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering [`routes`](../core/baseapp.md#routing), [gRPC routes and Tendermint query routes](../core/baseapp.md#query-routing) or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+- **A reference to a [module manager](../building-modules/module-manager.md#manager)** and a [basic module manager](../building-modules/module-manager.md#basicmanager). The module manager is an object that contains a list of the application's module. It facilitates operations related to these modules, like registering [`routes`](../core/baseapp.md#routing), [gRPC query services](../core/baseapp.md#grpc-query-services) and [legacy Tendermint query routes](../core/baseapp.md#legacy-query-routing) or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the SDK's own app used for demo and testing purposes:
 
@@ -67,7 +67,7 @@ Here are the main actions performed by this function:
 - Instantiate a new application with a reference to a `baseapp` instance, a codec and all the appropriate store keys.
 - Instantiate all the [`keeper`s](#keeper) defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that `keepers` must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`.
 - Instantiate the application's [module manager](../building-modules/module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
-- With the module manager, initialize the application's [`routes`](../core/baseapp.md#routing) and [query routes](../core/baseapp.md#query-routing). When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's [`handler`](#handler) using the routes defined here. Likewise, when a query is received by the application, it is routed to the appropriate module's [`querier`](#querier) using the query routes defined here.
+- With the module manager, initialize the application's [`routes`](../core/baseapp.md#routing), [`gRPC query services`](../core/baseapp.md#grpc-query-services) and [`legacy query routes`](../core/baseapp.md#query-routing). When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's [`handler`](#handler) using the `routes` defined here. Likewise, when a gRPC request is received by the application, it is routed to the appropriate module's [`gRPC query service`](#grpc-query-services) using the gRPC routes defined here. The SDK still supports legacy Tendermint queries, and these queries are routes using the `legacy query routes`.
 - With the module manager, register the [application's modules' invariants](../building-modules/invariants.md). Invariants are variables (e.g. total supply of a token) that are evaluated at the end of each block. The process of checking invariants is done via a special module called the [`InvariantsRegistry`](../building-modules/invariants.md#invariant-registry). The value of the invariant should be equal to a predicted value defined in the module. Should the value be different than the predicted one, special logic defined in the invariant registry will be triggered (usually the chain is halted). This is useful to make sure no critical bug goes unnoticed and produces long-lasting effects that would be hard to fix.
 - With the module manager, set the order of execution between the `InitGenesis`, `BegingBlocker` and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
 - Set the remainer of application's parameters:
@@ -107,14 +107,19 @@ See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
 ### Register Codec
 
-The `MakeCodecs` function is the last important function of the `app.go` file. The goal of this function is to instantiate a [codec `appCodec`](../core/encoding.md) (defaults to Protobuf), and initialize the codec of the SDK and each of the application's modules using the `RegisterInterfaces` function.
+The `EncodingConfig` structure is the last important part of the `app.go` file. The goal of this structure is to define the codecs that will be used throughout the app.
 
-To register the application's modules, the `MakeCodecs` creates a codec which will be passed as argument into the `RegisterInterfaces` method on `ModuleBasics`. `ModuleBasics` is a [basic manager](../building-modules/module-manager.md#basicmanager) which lists all of the application's modules. It is instanciated in the `init()` function, and only serves to easily register non-dependant elements of application's modules (such as codec). To learn more about the basic module manager, click [here](../building-modules/module-manager.md#basicmanager).
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/simapp/params/encoding.go#L9-L16
 
-Please note that in this version of the SDK, the `MakeCodecs` function actually creates two codecs:
+Here are descriptions of what each of the four fields means:
 
-- an `appCodec`, which will be used by default across the SDK, defaults to Protocol Buffers,
-- a `legacyAmino` codec, as some legacy parts of the SDK still uses Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `legacyAmino` codec should not be used by app developers anymore, and will be removed in the next releases.
+- `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces, which are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct which contains a `type_url` (the concrete type of the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each of the application's modules implements the `RegisterInterfaces` method, which can be used to register the module's own interfaces and implementations.
+  - To go more into details, the SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/gogo/protobuf). By default, the [gogo protobuf implementation of `Any`](https://godoc.org/github.com/gogo/protobuf/types) uses [global type registration](https://github.com/gogo/protobuf/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could registry a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
+- `Marshaler`: The `Marshaler` is the default codec used throughout the SDK. It is composed of a `BinaryMarshaler` used to encode and decode state, and a `JSONMarshaler` used to output data to the users (for example in the [CLI](#cli)). By default, the SDK uses Protobuf as `Marshaler`.
+- `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../core/transactions.md).
+- `Amino`: Some legacy parts of the SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
+
+The SDK exposes a `MakeCodecs` function used to create a `EncodingConfig`. It uses Protobuf as default `Marshaler`, and passes it down to the app's `appCodec` field. It also instantiates a legacy `Amino` codec inside the app's `legacyAmino` field.
 
 See an example of a `MakeCodecs` from `simapp`:
 
@@ -165,7 +170,7 @@ Handler functions return a result of type `sdk.Result`, which informs the applic
 
 ### gRPC Query Services
 
-gRPC query services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io).
+gRPC query services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configued under the `grpc.enable` and `grpc.address` fields inside `app.toml`.
 
 gRPC query services are defined in the module's Protobuf definition, specifically inside `query.proto`. The `query.proto` definition file exposes a single `Query` [Protobuf service](https://developers.google.com/protocol-buffers/docs/proto#services). Each gRPC query endpoint corresponds to a service method, starting with the `rpc` keyword, inside the `Query` service.
 
@@ -227,7 +232,7 @@ Some external clients may not wish to use gRPC. The SDK provides in this case a 
 
 The REST endpoints are defined in the Protobuf files, along with the gRPC services, using Protobuf annotations. Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods. By default, all REST endpoints defined in the SDK have an URL starting with the `/cosmos/` prefix.
 
-The SDK also provides development tools to generate [Swagger](https://swagger.io/) definition files for these REST endpoints.
+The SDK also provides a development endpoint to generate [Swagger](https://swagger.io/) definition files for these REST endpoints. This endpoint can be enabled inside the `app.toml` config file, under the `api.swagger` key.
 
 #### Legacy API REST Endpoints
 

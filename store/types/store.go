@@ -69,12 +69,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, d := range s.Added {
-		if d == key {
-			return true
-		}
-	}
-	return false
+	return tmstrings.StringInSlice(s.Added, key)
 }
 
 // IsDeleted returns true if the given key should be deleted

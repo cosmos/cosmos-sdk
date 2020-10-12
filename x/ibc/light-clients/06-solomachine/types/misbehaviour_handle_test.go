@@ -91,7 +91,7 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					clientState = solomachine.ClientState()
 					m := solomachine.CreateMisbehaviour()
 
-					m.SignatureOne.Timestamp = 1000000000000
+					m.SignatureTwo.Timestamp = 1000000000000
 					misbehaviour = m
 				}, false,
 			},

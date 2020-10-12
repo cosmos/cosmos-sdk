@@ -328,7 +328,8 @@ func TestBondStatus(t *testing.T) {
 	require.False(t, Unbonded == Bonded)
 	require.False(t, Unbonded == Unbonding)
 	require.False(t, Bonded == Unbonding)
-	require.Panicsf(t, func() { BondStatus(4).String() }, "invalid bond status") // nolint:govet
+	require.Equal(t, BondStatus(4).String(), "4")
+	require.Equal(t, BondStatusUnspecified, Unspecified.String())
 	require.Equal(t, BondStatusUnbonded, Unbonded.String())
 	require.Equal(t, BondStatusBonded, Bonded.String())
 	require.Equal(t, BondStatusUnbonding, Unbonding.String())

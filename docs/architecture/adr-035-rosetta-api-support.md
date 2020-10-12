@@ -126,7 +126,7 @@ Rosetta API service could run within the same execution process of the applicati
             
             h, err := service.New(
                 service.Options{Port: uint32(*flagPort)},
-                NewNetwork(Options{
+                InitRosettaAPIFromConfig(),
                     CosmosEndpoint:     *flagAppRPC,
                     TendermintEndpoint: *flagTendermintRPC,
                     Blockchain:         *flagBlockchain,

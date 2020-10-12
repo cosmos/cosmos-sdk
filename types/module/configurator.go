@@ -8,30 +8,20 @@ import "github.com/gogo/protobuf/grpc"
 // https://github.com/cosmos/cosmos-sdk/issues/7093
 type Configurator interface {
 	QueryServer() grpc.Server
-	MsgServer() grpc.Server
 }
 
 type configurator struct {
 	queryServer grpc.Server
-	msgServer   grpc.Server
 }
 
-// NewConfigurator returns a new Configurator instance.
-func NewConfigurator(queryServer grpc.Server, msgServer grpc.Server) Configurator {
-	return configurator{
-		queryServer: queryServer,
-		msgServer:   msgServer,
-	}
+// NewConfigurator returns a new Configurator instance
+func NewConfigurator(queryServer grpc.Server) Configurator {
+	return configurator{queryServer: queryServer}
 }
 
 var _ Configurator = configurator{}
 
-// QueryServer implements the Configurator.QueryServer method.
+// QueryServer implements the Configurator.QueryServer method
 func (c configurator) QueryServer() grpc.Server {
 	return c.queryServer
-}
-
-// QueryServer implements the Configurator.MsgServer method.
-func (c configurator) MsgServer() grpc.Server {
-	return c.msgServer
 }

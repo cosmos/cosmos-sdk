@@ -26,11 +26,13 @@ const (
 	MaxWebsiteLength         = 140
 	MaxSecurityContactLength = 140
 	MaxDetailsLength         = 280
+)
 
-	BondStatusUnspecified = BondStatus_name[Unspecified]
-	BondStatusUnbonded    = BondStatus_name[Unbonded]
-	BondStatusUnbonding   = BondStatus_name[Unbonding]
-	BondStatusBonded      = BondStatus_name[Bonded]
+var (
+	BondStatusUnspecified = BondStatus_name[int32(Unspecified)]
+	BondStatusUnbonded    = BondStatus_name[int32(Unbonded)]
+	BondStatusUnbonding   = BondStatus_name[int32(Unbonding)]
+	BondStatusBonded      = BondStatus_name[int32(Bonded)]
 )
 
 var _ ValidatorI = Validator{}

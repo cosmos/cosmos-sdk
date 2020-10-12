@@ -11,8 +11,22 @@ Accepted
 
 ## Abstract
 
+This ADR defines the `msg_authorization` module for allowing accounts to grant authorizations to other accounts on
+behalf of the granting account.
+
 ## Context
 
+The concrete use cases which motivated this module include:
+- the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
+delegated stake
+- "sub-keys" functionality which is a term used to describe the functionality provided by this  module together with
+the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/regen-network/cosmos-modules/tree/master/incubator/group).
+
+The "sub-keys" functionality roughly refers to the ability for one account to grant some subset of its capabilities to
+other accounts with possibly less robust, but easier to use security measures. For instance, a master account representing
+an organization could grant the ability to spend small amounts of the organization's funds to individual employee accounts.
+Or an individual (or group) with a multisig wallet could grant the ability to vote on proposals to any one of the member
+keys.
 
 ## Decision
 

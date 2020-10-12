@@ -27,8 +27,8 @@ the `VersionNumber` will get incremented. This allows IBC clients to distinguish
 block-height `n` of a previous version of the chain (at version `p`) and block-height `n` of the current
 version of the chain (at version `e`).
 
-`Heights` that share the same version number can be compared by simply comparing their respective `EpochHeights`.
-Heights that do not share the same version number will only be compared using their respective `EpochNumbers`.
+`Heights` that share the same version number can be compared by simply comparing their respective `VersionHeights`.
+Heights that do not share the same version number will only be compared using their respective `VersionNumbers`.
 Thus a height `h` with version number `e+1` will always be greater than a height `g` with version number `e`,
 **REGARDLESS** of the difference in version heights.
 
@@ -43,7 +43,7 @@ given by the chain's chainID, and the version height given by the Tendermint blo
 and resets its block-height, it is responsible for updating its chain-id to increment the version number.
 IBC Tendermint clients then verifies the version number against their `ChainId` and treat the `VersionHeight` as the Tendermint block-height.
 
-Tendermint chains wishing to use epochs to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
+Tendermint chains wishing to use versions to maintain persistent IBC connections even across height-resetting upgrades must format their chain-ids
 in the following manner: `{chainID}-{version_number}`. On any height-resetting upgrade, the chainID **MUST** be updated with a higher version number
 than the previous value.
 
@@ -52,7 +52,7 @@ Ex:
 - Before upgrade ChainID: `gaiamainnet-3`
 - After upgrade ChainID: `gaiamainnet-4`
 
-Clients that do not require epochs, such as the solo-machine client, simply hardcode `0` into the version number whenever they
+Clients that do not require versions, such as the solo-machine client, simply hardcode `0` into the version number whenever they
 need to return an IBC height when implementing IBC interfaces and use the `VersionHeight` exclusively.
 
 Other client-types may implement their own logic to verify the IBC Heights that relayers provide in their `Update`, `Misbehavior`, and

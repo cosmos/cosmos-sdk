@@ -111,7 +111,7 @@ func TestParseChainID(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		require.Equal(t, tc.formatted, types.IsEpochFormat(tc.chainID), "case %d does not match expected format", i)
+		require.Equal(t, tc.formatted, types.IsVersionFormat(tc.chainID), "case %d does not match expected format", i)
 
 		version := types.ParseChainID(tc.chainID)
 		require.Equal(t, tc.version, version, "case %d returns incorrect version", i)
@@ -119,16 +119,16 @@ func TestParseChainID(t *testing.T) {
 
 }
 
-func TestSetEpochNumber(t *testing.T) {
-	// Test SetEpochNumber
-	chainID, err := types.SetEpochNumber("gaiamainnet", 3)
-	require.Error(t, err, "invalid version format passed SetEpochNumber")
-	require.Equal(t, "", chainID, "invalid version format returned non-empty string on SetEpochNumber")
+func TestSetVersionNumber(t *testing.T) {
+	// Test SetVersionNumber
+	chainID, err := types.SetVersionNumber("gaiamainnet", 3)
+	require.Error(t, err, "invalid version format passed SetVersionNumber")
+	require.Equal(t, "", chainID, "invalid version format returned non-empty string on SetVersionNumber")
 	chainID = "gaiamainnet-3"
 
-	chainID, err = types.SetEpochNumber(chainID, 4)
-	require.NoError(t, err, "valid version format failed SetEpochNumber")
-	require.Equal(t, "gaiamainnet-4", chainID, "valid version format returned incorrect string on SetEpochNumber")
+	chainID, err = types.SetVersionNumber(chainID, 4)
+	require.NoError(t, err, "valid version format failed SetVersionNumber")
+	require.Equal(t, "gaiamainnet-4", chainID, "valid version format returned incorrect string on SetVersionNumber")
 }
 
 func (suite *TypesTestSuite) TestSelfHeight() {

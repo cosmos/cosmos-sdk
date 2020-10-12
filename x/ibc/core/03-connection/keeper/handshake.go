@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -24,7 +24,7 @@ func (k Keeper) ConnOpenInit(
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return types.ErrConnectionExists
+		return sdkerrors.Wrap(types.ErrConnectionExists, connectionID)
 	}
 
 	versions := types.GetCompatibleEncodedVersions()
@@ -44,7 +44,12 @@ func (k Keeper) ConnOpenInit(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-init")
+	}()
+
 	return nil
 }
 
@@ -83,7 +88,7 @@ func (k Keeper) ConnOpenTry(
 
 	expectedConsensusState, found := k.clientKeeper.GetSelfConsensusState(ctx, consensusHeight)
 	if !found {
-		return clienttypes.ErrSelfConsensusStateNotFound
+		return sdkerrors.Wrap(clienttypes.ErrSelfConsensusStateNotFound, consensusHeight.String())
 	}
 
 	// If the connection id chosen for this connection end by the counterparty is empty then
@@ -157,7 +162,12 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	k.SetConnection(ctx, desiredConnectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> TRYOPEN ", desiredConnectionID, previousConnection.State))
+	k.Logger(ctx).Info("connection state updated", "connection-id", desiredConnectionID, "previous-state", previousConnection.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-try")
+	}()
+
 	return nil
 }
 
@@ -262,7 +272,11 @@ func (k Keeper) ConnOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: %s -> OPEN ", connectionID, connection.State))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", connection.State.String(), "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-ack")
+	}()
 
 	// Update connection state to Open
 	connection.State = types.OPEN
@@ -311,6 +325,11 @@ func (k Keeper) ConnOpenConfirm(
 	// Update ChainB's connection to Open
 	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
-	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
+	k.Logger(ctx).Info("connection state updated", "connection-id", connectionID, "previous-state", "TRYOPEN", "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "connection", "open-confirm")
+	}()
+
 	return nil
 }

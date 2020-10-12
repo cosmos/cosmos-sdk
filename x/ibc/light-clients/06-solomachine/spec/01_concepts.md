@@ -4,6 +4,12 @@ order: 1
 
 # Concepts
 
+## Client State
+
+## Consensus State
+
+## Counterparty Verification
+
 ## Proofs
 
 A solo machine proof should verify that the solomachine public key signed
@@ -71,3 +77,12 @@ timestampedSignatureData := &types.TimestampedSignatureData{
 
 proof, err := cdc.MarshalBinaryBare(timestampedSignatureData)
 ```
+
+## Updates By Header
+
+
+## Updates By Proposal
+
+## Misbehaviour
+
+## Upgrades

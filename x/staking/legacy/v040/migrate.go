@@ -9,16 +9,16 @@ import (
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func migrateBondStatus(oldStatus v034staking.BondStatus) sdk.BondStatus {
+func migrateBondStatus(oldStatus v034staking.BondStatus) v040staking.BondStatus {
 	switch oldStatus {
 	case v034staking.Unbonded:
-		return sdk.Unbonded
+		return v040staking.Unbonded
 
 	case v034staking.Unbonding:
-		return sdk.Unbonding
+		return v040staking.Unbonding
 
 	case v034staking.Bonded:
-		return sdk.Bonded
+		return v040staking.Bonded
 
 	default:
 		panic(fmt.Errorf("invalid bond status %d", oldStatus))

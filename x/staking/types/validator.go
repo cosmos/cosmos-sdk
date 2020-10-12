@@ -17,7 +17,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
 const (
@@ -29,7 +28,14 @@ const (
 	MaxDetailsLength         = 280
 )
 
-var _ exported.ValidatorI = Validator{}
+var (
+	BondStatusUnspecified = BondStatus_name[int32(Unspecified)]
+	BondStatusUnbonded    = BondStatus_name[int32(Unbonded)]
+	BondStatusUnbonding   = BondStatus_name[int32(Unbonding)]
+	BondStatusBonded      = BondStatus_name[int32(Bonded)]
+)
+
+var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
@@ -43,7 +49,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		OperatorAddress:   operator.String(),
 		ConsensusPubkey:   pkStr,
 		Jailed:            false,
-		Status:            sdk.Unbonded,
+		Status:            Unbonded,
 		Tokens:            sdk.ZeroInt(),
 		DelegatorShares:   sdk.ZeroDec(),
 		Description:       description,
@@ -72,7 +78,7 @@ func (v Validators) String() (out string) {
 }
 
 // ToSDKValidators -  convenience function convert []Validators to []sdk.Validators
-func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
+func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 	for _, val := range v {
 		validators = append(validators, val)
 	}
@@ -135,17 +141,17 @@ func UnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) (v Validator, e
 
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
-	return v.GetStatus().Equal(sdk.Bonded)
+	return v.GetStatus() == Bonded
 }
 
 // IsUnbonded checks if the validator status equals Unbonded
 func (v Validator) IsUnbonded() bool {
-	return v.GetStatus().Equal(sdk.Unbonded)
+	return v.GetStatus() == Unbonded
 }
 
 // IsUnbonding checks if the validator status equals Unbonding
 func (v Validator) IsUnbonding() bool {
-	return v.GetStatus().Equal(sdk.Unbonding)
+	return v.GetStatus() == Unbonding
 }
 
 // constant used in flags to indicate that description field should not be updated
@@ -338,7 +344,7 @@ func (v Validator) PotentialConsensusPower() int64 {
 
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
-func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
+func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 	v.Status = newStatus
 	return v
 }
@@ -412,16 +418,16 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 func (v Validator) MinEqual(other Validator) bool {
 	return v.ConsensusPubkey == other.ConsensusPubkey &&
 		(v.OperatorAddress == other.OperatorAddress) &&
-		v.Status.Equal(other.Status) &&
+		v.Status == other.Status &&
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
 		v.Description == other.Description &&
 		v.Commission.Equal(other.Commission)
 }
 
-func (v Validator) IsJailed() bool            { return v.Jailed }
-func (v Validator) GetMoniker() string        { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus { return v.Status }
+func (v Validator) IsJailed() bool        { return v.Jailed }
+func (v Validator) GetMoniker() string    { return v.Description.Moniker }
+func (v Validator) GetStatus() BondStatus { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil

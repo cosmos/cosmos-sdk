@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	yaml "gopkg.in/yaml.v2"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -262,4 +264,20 @@ func (r TxResponse) GetTx() Tx {
 		return tx
 	}
 	return nil
+}
+
+func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	bz, err := proto.Marshal(res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{
+		Data:   bz,
+		Events: ctx.EventManager().ABCIEvents(),
+	}, nil
 }

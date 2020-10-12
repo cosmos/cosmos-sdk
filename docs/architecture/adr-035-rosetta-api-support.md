@@ -144,7 +144,7 @@ Rosetta API service could run within the same execution process of the applicati
 
 #### Command Line Integration
 
-Client applications could write a new command to launch a Rosetta API server process:
+Client application developers can write a new command to launch a Rosetta API server as a separate process too:
 
 ```
 func NewRosettaServiceCmd() *cobra.Command {

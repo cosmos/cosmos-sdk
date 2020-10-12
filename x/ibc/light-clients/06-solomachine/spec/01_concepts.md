@@ -111,12 +111,14 @@ proof, err := cdc.MarshalBinaryBare(timestampedSignatureData)
 ## Updates By Header
 
 An update by a header will only succeed if:
+
 - the header provided is parseable to solo machine header
 - the header sequence matches the current sequence
 - the header timestamp is greater than or equal to the consensus state timestamp
 - the currently registered public key generated the proof
 
 If the update is successful:
+
 - the public key is updated
 - the diversifier is updated
 - the timestamp is updated
@@ -126,11 +128,13 @@ If the update is successful:
 ## Updates By Proposal
 
 An update by a governance proposal will only succeed if:
+
 - the header provided is parseable to solo machine header
 - the `AllowUpdateAfterProposal` client parameter is set to `true`
 - the new header public key does not equal the consensus state public key
 
 If the update is successful:
+
 - the public key is updated
 - the diversifier is updated
 - the timestamp is updated
@@ -141,11 +145,13 @@ If the update is successful:
 ## Misbehaviour
 
 Misbehaviour handling will only succeed if:
+
 - the misbehaviour provided is parseable to solo machine misbehaviour
 - the client is not already frozen
 - the current public key signed over two unique data messages at the same sequence and diversifier. 
 
 If the misbehaviour is successfully processed:
+
 - the client is frozen by setting the frozen sequence to the misbehaviour sequence
 
 ## Upgrades

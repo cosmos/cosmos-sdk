@@ -31,7 +31,6 @@ package module
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
@@ -207,7 +206,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
-// RegisterQueryService registers all gRPC query services.
+// RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
 // BeginBlock returns an empty module begin-block
@@ -289,8 +288,7 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter,
 }
 
 // RegisterServices registers all module services
-func (m *Manager) RegisterServices(queryRouter grpc.Server) {
-	cfg := NewConfigurator(queryRouter)
+func (m *Manager) RegisterServices(cfg Configurator) {
 	for _, module := range m.Modules {
 		module.RegisterServices(cfg)
 	}

@@ -120,11 +120,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
 	switch validator.GetStatus() {
-	case sdk.Bonded:
+	case types.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
-	case sdk.Unbonding, sdk.Unbonded:
+	case types.Unbonding, types.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}

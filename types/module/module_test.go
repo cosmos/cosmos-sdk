@@ -182,10 +182,10 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 
 	queryRouter := mocks.NewMockServer(mockCtrl)
-	mockAppModule1.EXPECT().RegisterQueryService(queryRouter).Times(1)
-	mockAppModule2.EXPECT().RegisterQueryService(queryRouter).Times(1)
+	mockAppModule1.EXPECT().RegisterServices(queryRouter).Times(1)
+	mockAppModule2.EXPECT().RegisterServices(queryRouter).Times(1)
 
-	mm.RegisterQueryServices(queryRouter)
+	mm.RegisterServices(queryRouter)
 }
 
 func TestManager_InitGenesis(t *testing.T) {

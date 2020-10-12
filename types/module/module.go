@@ -173,8 +173,8 @@ type AppModule interface {
 	// Deprecated: use RegisterQueryService
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 
-	// RegisterQueryService allows a module to register a gRPC query service
-	RegisterQueryService(grpc.Server)
+	// RegisterServices allows a module to register services
+	RegisterServices(Configurator)
 
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
@@ -208,7 +208,7 @@ func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
 // RegisterQueryService registers all gRPC query services.
-func (gam GenesisOnlyAppModule) RegisterQueryService(grpc.Server) {}
+func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
@@ -288,10 +288,11 @@ func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter,
 	}
 }
 
-// RegisterQueryServices registers all module query services
-func (m *Manager) RegisterQueryServices(grpcRouter grpc.Server) {
+// RegisterServices registers all module services
+func (m *Manager) RegisterServices(queryRouter grpc.Server) {
+	cfg := NewConfigurator(queryRouter)
 	for _, module := range m.Modules {
-		module.RegisterQueryService(grpcRouter)
+		module.RegisterServices(cfg)
 	}
 }
 

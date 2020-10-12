@@ -243,7 +243,7 @@ The [module's Legacy REST interface](../building-modules/module-interfaces.md#re
   +++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/types/rest/rest.go#L62-L76
 - One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
 
-These Legacy API endpoints are present in the SDK for backwards compatbility purposes, and will be removed in the next release.
+These Legacy API endpoints are present in the SDK for backward compatibility purposes and will be removed in the next release.
 
 ## Application Interface
 

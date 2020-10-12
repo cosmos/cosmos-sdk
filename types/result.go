@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/gogo/protobuf/proto"
 
 	yaml "gopkg.in/yaml.v2"
@@ -274,13 +276,21 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		return nil, err
 	}
 
-	bz, err := proto.Marshal(res)
-	if err != nil {
-		return nil, err
+	var data []byte
+	if res != nil {
+		data, err = proto.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var events []abci.Event
+	if evtMgr := ctx.EventManager(); evtMgr != nil {
+		events = evtMgr.ABCIEvents()
 	}
 
 	return &Result{
-		Data:   bz,
-		Events: ctx.EventManager().ABCIEvents(),
+		Data:   data,
+		Events: events,
 	}, nil
 }

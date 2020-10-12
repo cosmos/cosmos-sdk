@@ -183,7 +183,6 @@ func NewRosettaServiceCmd() *cobra.Command {
 }
 ```
 
-This is closer to the Standalone approach. Right now in the current implementation we have a main.go that can be run as a Standalone, this probably will be removed once we migrate the code from Tendermint repo an embed it in Cosmos SDK.
 
 
 ### The external Library

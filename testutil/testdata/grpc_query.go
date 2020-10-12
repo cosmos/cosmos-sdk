@@ -11,6 +11,8 @@ import (
 
 type QueryImpl struct{}
 
+var _ QueryServer = QueryImpl
+
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
 	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
 	if !ok {
@@ -36,8 +38,6 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	greeting := fmt.Sprintf("Hello %s!", request.Name)
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
-
-var _ QueryServer = QueryImpl{}
 
 var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
 

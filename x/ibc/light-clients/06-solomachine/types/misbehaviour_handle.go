@@ -55,7 +55,7 @@ func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, 
 	// timestamp less than consensus state would always fail and not succeed in fooling the
 	// light client
 	if sigAndData.Timestamp < clientState.ConsensusState.Timestamp {
-		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "timestamp is less than consensus state timestmap (%d < %d)", sigAndData.Timestamp, clientState.ConsensusState.Timestamp)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "timestamp is less than consensus state timestamp (%d < %d)", sigAndData.Timestamp, clientState.ConsensusState.Timestamp)
 	}
 
 	// ensure data can be unmarshaled to the specified data type

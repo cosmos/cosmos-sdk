@@ -160,7 +160,7 @@ func NewRosettaServiceCmd() *cobra.Command {
         	...
             
             h, err := service.New(
-                service.Options{Port: uint32(*flagPort)},
+                service.Options{Port: config.Rosetta.Port},
                 NewNetwork(Options{
                     CosmosEndpoint:     *flagAppRPC,
                     TendermintEndpoint: *flagTendermintRPC,

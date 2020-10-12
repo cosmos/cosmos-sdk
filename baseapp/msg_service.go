@@ -1,8 +1,8 @@
 package baseapp
 
+type MsgServiceRouter struct{}
+
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter() *GRPCQueryRouter {
-	return &GRPCQueryRouter{
-		routes: map[string]GRPCQueryHandler{},
-	}
+func NewMsgServiceRouter() *MsgServiceRouter {
+	return &MsgServiceRouter{}
 }

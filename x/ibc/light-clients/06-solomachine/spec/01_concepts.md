@@ -148,8 +148,6 @@ Misbehaviour handling will only succeed if:
 If the misbehaviour is successfully processed:
 - the client is frozen by setting the frozen sequence to the misbehaviour sequence
 
-
-
 ## Upgrades
 
 Upgrades to solo machine light clients are not supported. 

@@ -104,9 +104,9 @@ See an example of an `InitChainer` from [`gaia`](https://github.com/cosmos/gaia)
 
 ### Register Codec
 
-MakeCodec 函数是 app.go 文件的最后一个重要功能。 此函数的目的是使用 RegisterCodec 函数实例化 codec`cdc`，例如 amino 初始化 SDK 的编解码器以及每个应用程序的模块。
+MakeCodec 函数是 app.go 文件的最后一个重要功能。 此函数的目的是使用 RegisterLegacyAminoCodec 函数实例化 codec`cdc`，例如 amino 初始化 SDK 的编解码器以及每个应用程序的模块。
 
-为了注册应用程序的模块，`MakeCodec` 函数在 `ModuleBasics` 上调用 `RegisterCodec`。`ModuleBasics` 是一个基本管理器，其中列出了应用程序的所有模块。 它在`init()`函数中得到实例化，仅用于注册应用程序模块的非依赖元素（例如编解码器）。 要了解有关基本模块管理器的更多信息，请点击[这里](https://docs.cosmos.network/master/building-modules/module-manager.html#basicmanager)。
+为了注册应用程序的模块，`MakeCodec` 函数在 `ModuleBasics` 上调用 `RegisterLegacyAminoCodec`。`ModuleBasics` 是一个基本管理器，其中列出了应用程序的所有模块。 它在`init()`函数中得到实例化，仅用于注册应用程序模块的非依赖元素（例如编解码器）。 要了解有关基本模块管理器的更多信息，请点击[这里](https://docs.cosmos.network/master/building-modules/module-manager.html#basicmanager)。
 
 请参阅 [gaia](https://github.com/cosmos/gaia) 中的 `MakeCodec` 示例：
 

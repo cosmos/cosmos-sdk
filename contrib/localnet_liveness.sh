@@ -26,7 +26,7 @@ if [ -z "$4" ]; then
   exit 1
 fi
 
-docker_containers=( $(docker ps -q -f name=simdnode --format='{{.Names}}') )
+docker_containers=( $(docker ps -q -f name=simd --format='{{.Names}}') )
 
 while [ ${CNT} -lt $ITER ]; do
   curr_block=$(curl -s $NODEADDR:26657/status | jq -r '.result.sync_info.latest_block_height')

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"math/rand"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -46,10 +46,8 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the capability module's types to the provided codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
-}
+// RegisterLegacyAminoCodec does nothing. Capability does not support amino.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
@@ -70,6 +68,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.
 func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the capability module.
+func (a AppModuleBasic) RegisterGRPCRoutes(_ client.Context, _ *runtime.ServeMux) {
+}
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
@@ -107,11 +109,11 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 func (AppModule) QuerierRoute() string { return "" }
 
 // LegacyQuerierHandler returns the capability module's Querier.
-func (am AppModule) LegacyQuerierHandler(codec.JSONMarshaler) sdk.Querier { return nil }
+func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterServices(module.Configurator) {}
 
 // RegisterInvariants registers the capability module's invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}

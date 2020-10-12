@@ -63,7 +63,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := paramscutils.ParseParamChangeProposalJSON(clientCtx.JSONMarshaler, args[0])
+			proposal, err := paramscutils.ParseParamChangeProposalJSON(clientCtx.LegacyAmino, args[0])
 			if err != nil {
 				return err
 			}

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RegisterCodec registers all the necessary types and interfaces for the
+// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
-func RegisterCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
 	cdc.RegisterConcrete(&MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
 	cdc.RegisterConcrete(&MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
@@ -41,7 +41,7 @@ func RegisterProposalTypeCodec(o interface{}, name string) {
 }
 
 var (
-	amino = codec.New()
+	amino = codec.NewLegacyAmino()
 
 	// ModuleCdc references the global x/gov module codec. Note, the codec should
 	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
@@ -53,6 +53,6 @@ var (
 )
 
 func init() {
-	RegisterCodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 }

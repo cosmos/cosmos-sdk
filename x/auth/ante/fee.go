@@ -8,10 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var (
-	_ sdk.FeeTx = (*types.StdTx)(nil) // assert StdTx implements FeeTx
-)
-
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
 // as the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, decorator returns error and tx is rejected from mempool.

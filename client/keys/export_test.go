@@ -1,11 +1,13 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 
@@ -20,8 +22,7 @@ func Test_runExportCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	// Now add a temporary keybase
-	kbHome, cleanUp := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanUp)
+	kbHome := t.TempDir()
 
 	// create a key
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
@@ -42,5 +43,8 @@ func Test_runExportCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	require.NoError(t, cmd.Execute())
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
 }

@@ -35,6 +35,7 @@ const (
 // List of CLI flags
 const (
 	FlagHome             = tmcli.HomeFlag
+	FlagKeyringDir       = "keyring-dir"
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
@@ -72,10 +73,8 @@ var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 
 // AddQueryFlagsToCmd adds common flags to a module query command.
 func AddQueryFlagsToCmd(cmd *cobra.Command) {
-	cmd.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
-	cmd.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|kwallet|pass|test)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
 	cmd.MarkFlagRequired(FlagChainID)
@@ -86,6 +85,7 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
 func AddTxFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
 	cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 	cmd.Flags().Uint64P(FlagAccountNumber, "a", 0, "The account number of the signing account (offline mode only)")
 	cmd.Flags().Uint64P(FlagSequence, "s", 0, "The sequence number of the signing account (offline mode only)")

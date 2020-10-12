@@ -33,7 +33,7 @@ type InterfaceRegistry interface {
 	// as implementations of iface.
 	//
 	// Ex:
-	//   registry.RegisterInterface("cosmos.v1beta1.Msg", (*sdk.Msg)(nil))
+	//   registry.RegisterInterface("cosmos.base.v1beta1.Msg", (*sdk.Msg)(nil))
 	RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)
 
 	// RegisterImplementations registers impls as concrete implementations of
@@ -59,7 +59,7 @@ type UnpackInterfacesMessage interface {
 	// Any's using the AnyUnpacker. It should generally be implemented as
 	// follows:
 	//   func (s *MyStruct) UnpackInterfaces(unpacker AnyUnpacker) error {
-	//		var x AnInterface
+	//		var x AnyInterface
 	//		// where X is an Any field on MyStruct
 	//		err := unpacker.UnpackAny(s.X, &x)
 	//		if err != nil {

@@ -20,8 +20,7 @@ func TestGetMigrationCallback(t *testing.T) {
 }
 
 func TestMigrateGenesis(t *testing.T) {
-	home, cleanup := testutil.NewTestCaseDir(t)
-	t.Cleanup(cleanup)
+	home := t.TempDir()
 
 	cdc := makeCodec()
 
@@ -31,7 +30,7 @@ func TestMigrateGenesis(t *testing.T) {
 	cmd := cli.MigrateGenesisCmd()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 
-	clientCtx := client.Context{}.WithJSONMarshaler(cdc)
+	clientCtx := client.Context{}.WithLegacyAmino(cdc)
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 

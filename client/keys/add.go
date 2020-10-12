@@ -12,11 +12,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -84,20 +85,19 @@ the flag --nosort is set.
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
-
-	homeDir, _ := cmd.Flags().GetString(flags.FlagHome)
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagHome)
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
 	var (
 		kr  keyring.Keyring
 		err error
 	)
 
+	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf)
 	} else {
 		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, homeDir, buf)
+		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf)
 	}
 
 	if err != nil {
@@ -174,7 +174,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 				})
 			}
 
-			pk := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 			if _, err := kb.SaveMultisig(name, pk); err != nil {
 				return err
 			}
@@ -226,18 +226,22 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	var mnemonic, bip39Passphrase string
 
 	recover, _ := cmd.Flags().GetBool(flagRecover)
-	if interactive || recover {
-		bip39Message := "Enter your bip39 mnemonic"
-		if !recover {
-			bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."
-		}
-
-		mnemonic, err = input.GetString(bip39Message, inBuf)
+	if recover {
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
 			return err
 		}
 
 		if !bip39.IsMnemonicValid(mnemonic) {
+			return errors.New("invalid mnemonic")
+		}
+	} else if interactive {
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
+		if err != nil {
+			return err
+		}
+
+		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
 			return errors.New("invalid mnemonic")
 		}
 	}

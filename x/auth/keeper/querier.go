@@ -10,7 +10,7 @@ import (
 )
 
 // NewQuerier creates a querier for auth REST endpoints
-func NewQuerier(k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func NewQuerier(k AccountKeeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryAccount:
@@ -25,13 +25,18 @@ func NewQuerier(k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) sdk.Queri
 	}
 }
 
-func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryAccountRequest
 	if err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	account := k.GetAccount(ctx, params.Address)
+	addr, err := sdk.AccAddressFromBech32(params.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := k.GetAccount(ctx, addr)
 	if account == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", params.Address)
 	}
@@ -44,7 +49,7 @@ func queryAccount(ctx sdk.Context, req abci.RequestQuery, k AccountKeeper, legac
 	return bz, nil
 }
 
-func queryParams(ctx sdk.Context, k AccountKeeper, legacyQuerierCdc codec.JSONMarshaler) ([]byte, error) {
+func queryParams(ctx sdk.Context, k AccountKeeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	params := k.GetParams(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, params)

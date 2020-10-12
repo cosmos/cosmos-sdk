@@ -1,12 +1,10 @@
 package simulation
 
-// DONTCOVER
-
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -22,6 +20,48 @@ const (
 	SigVerifyCostED25519   = "sig_verify_cost_ed25519"
 	SigVerifyCostSECP256K1 = "sig_verify_cost_secp256k1"
 )
+
+// RandomGenesisAccountsFn defines the function required to generate custom account types
+// on the auth module simulation.
+type RandomGenesisAccountsFn func(simState *module.SimulationState) types.GenesisAccounts
+
+// RandomGenesisAccounts defines the default RandomGenesisAccountsFn used on the SDK.
+// It creates a slice of BaseAccount, ContinuousVestingAccount and DelayedVestingAccount.
+func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccounts {
+	genesisAccs := make(types.GenesisAccounts, len(simState.Accounts))
+	for i, acc := range simState.Accounts {
+		bacc := types.NewBaseAccountWithAddress(acc.Address)
+
+		// Only consider making a vesting account once the initial bonded validator
+		// set is exhausted due to needing to track DelegatedVesting.
+		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
+			genesisAccs[i] = bacc
+			continue
+		}
+
+		initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake)))
+		var endTime int64
+
+		startTime := simState.GenTimestamp.Unix()
+
+		// Allow for some vesting accounts to vest very quickly while others very slowly.
+		if simState.Rand.Intn(100) < 50 {
+			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
+		} else {
+			endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
+		}
+
+		bva := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)
+
+		if simState.Rand.Intn(100) < 50 {
+			genesisAccs[i] = vestingtypes.NewContinuousVestingAccountRaw(bva, startTime)
+		} else {
+			genesisAccs[i] = vestingtypes.NewDelayedVestingAccountRaw(bva)
+		}
+	}
+
+	return genesisAccs
+}
 
 // GenMaxMemoChars randomized MaxMemoChars
 func GenMaxMemoChars(r *rand.Rand) uint64 {
@@ -52,7 +92,7 @@ func GenSigVerifyCostSECP256K1(r *rand.Rand) uint64 {
 }
 
 // RandomizedGenState generates a random GenesisState for auth
-func RandomizedGenState(simState *module.SimulationState) {
+func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn RandomGenesisAccountsFn) {
 	var maxMemoChars uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, MaxMemoChars, &maxMemoChars, simState.Rand,
@@ -85,46 +125,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	params := types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
 		sigVerifyCostED25519, sigVerifyCostSECP256K1)
-	genesisAccs := RandomGenesisAccounts(simState)
+	genesisAccs := randGenAccountsFn(simState)
 
 	authGenesis := types.NewGenesisState(params, genesisAccs)
 
-	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, &authGenesis.Params))
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authGenesis)
-}
-
-// RandomGenesisAccounts returns randomly generated genesis accounts
-func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs types.GenesisAccounts) {
-	for i, acc := range simState.Accounts {
-		bacc := types.NewBaseAccountWithAddress(acc.Address)
-		var gacc types.GenesisAccount = bacc
-
-		// Only consider making a vesting account once the initial bonded validator
-		// set is exhausted due to needing to track DelegatedVesting.
-		if int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50 {
-			initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake)))
-			var endTime int64
-
-			startTime := simState.GenTimestamp.Unix()
-
-			// Allow for some vesting accounts to vest very quickly while others very slowly.
-			if simState.Rand.Intn(100) < 50 {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
-			} else {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
-			}
-
-			bva := vestingtypes.NewBaseVestingAccount(bacc, initialVesting, endTime)
-
-			if simState.Rand.Intn(100) < 50 {
-				gacc = vestingtypes.NewContinuousVestingAccountRaw(bva, startTime)
-			} else {
-				gacc = vestingtypes.NewDelayedVestingAccountRaw(bva)
-			}
-		}
-
-		genesisAccs = append(genesisAccs, gacc)
+	bz, err := json.MarshalIndent(&authGenesis.Params, "", " ")
+	if err != nil {
+		panic(err)
 	}
-
-	return genesisAccs
+	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authGenesis)
 }

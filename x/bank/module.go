@@ -1,12 +1,13 @@
 package bank
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -37,8 +38,10 @@ type AppModuleBasic struct {
 // Name returns the bank module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
-// RegisterCodec registers the bank module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) { types.RegisterCodec(cdc) }
+// RegisterLegacyAminoCodec registers the bank module's types on the LegacyAmino codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank
 // module.
@@ -59,6 +62,11 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 // RegisterRESTRoutes registers the REST routes for the bank module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
+}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the bank module.
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the bank module.
@@ -88,8 +96,8 @@ type AppModule struct {
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.keeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // NewAppModule creates a new AppModule object
@@ -118,7 +126,7 @@ func (am AppModule) Route() sdk.Route {
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // LegacyQuerierHandler returns the bank module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 

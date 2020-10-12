@@ -1,11 +1,12 @@
 package distribution
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
-	"github.com/gogo/protobuf/grpc"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -41,9 +42,9 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the distribution module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the distribution
@@ -65,6 +66,11 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.
 // RegisterRESTRoutes registers the REST routes for the distribution module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {
 	rest.RegisterHandlers(clientCtx, rtr)
+}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the distribution module.
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the distribution module.
@@ -129,14 +135,14 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.keeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the distribution module. It returns

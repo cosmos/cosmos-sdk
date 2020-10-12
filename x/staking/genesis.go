@@ -7,7 +7,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -43,7 +42,7 @@ func InitGenesis(
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			keeper.AfterValidatorCreated(ctx, validator.OperatorAddress)
+			keeper.AfterValidatorCreated(ctx, validator.GetOperator())
 		}
 
 		// update timeslice if necessary
@@ -52,9 +51,9 @@ func InitGenesis(
 		}
 
 		switch validator.GetStatus() {
-		case sdk.Bonded:
+		case types.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
-		case sdk.Unbonding, sdk.Unbonded:
+		case types.Unbonding, types.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 		default:
 			panic("invalid validator status")
@@ -62,15 +61,20 @@ func InitGenesis(
 	}
 
 	for _, delegation := range data.Delegations {
+		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
+
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress)
+			keeper.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 	}
 
@@ -126,8 +130,12 @@ func InitGenesis(
 	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
-			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
-			validator, found := keeper.GetValidator(ctx, lv.Address)
+			valAddr, err := sdk.ValAddressFromBech32(lv.Address)
+			if err != nil {
+				panic(err)
+			}
+			keeper.SetLastValidatorPower(ctx, valAddr, lv.Power)
+			validator, found := keeper.GetValidator(ctx, valAddr)
 
 			if !found {
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
@@ -165,7 +173,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	var lastValidatorPowers []types.LastValidatorPower
 
 	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr, Power: power})
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{Address: addr.String(), Power: power})
 		return false
 	})
 
@@ -183,7 +191,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
-	keeper.IterateLastValidators(ctx, func(_ int64, validator exported.ValidatorI) (stop bool) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			Address: validator.GetConsAddr().Bytes(),
 			PubKey:  validator.GetConsPubKey(),

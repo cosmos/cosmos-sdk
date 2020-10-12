@@ -56,7 +56,7 @@ func TestValidateCmd(t *testing.T) {
 }
 
 func TestSetCmdClientContextHandler(t *testing.T) {
-	initClientCtx := client.Context{}.WithHomeDir("/foo/bar").WithChainID("test-chain")
+	initClientCtx := client.Context{}.WithHomeDir("/foo/bar").WithChainID("test-chain").WithKeyringDir("/foo/bar")
 
 	newCmd := func() *cobra.Command {
 		c := &cobra.Command{

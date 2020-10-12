@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -18,7 +19,9 @@ import (
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
@@ -55,7 +58,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	cdc := codec.New()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

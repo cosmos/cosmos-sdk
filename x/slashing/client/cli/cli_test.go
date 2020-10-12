@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -5,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -147,7 +150,7 @@ func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     fmt.Stringer
+		respType     proto.Message
 		expectedCode uint32
 	}{
 		{

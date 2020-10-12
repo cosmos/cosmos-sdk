@@ -1,13 +1,12 @@
 package upgrade
 
 import (
+	"context"
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,11 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// module codec
-var moduleCdc = codec.New()
-
 func init() {
-	types.RegisterCodec(moduleCdc)
+	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
 }
 
 var (
@@ -41,14 +37,19 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the upgrade types on the amino codec
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+// RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterRESTRoutes registers all REST query handlers
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, r *mux.Router) {
 	rest.RegisterRoutes(clientCtx, r)
+}
+
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the upgrade module.
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetQueryCmd returns the cli query commands for this module
@@ -89,14 +90,14 @@ func (AppModule) Route() sdk.Route { return sdk.Route{} }
 func (AppModule) QuerierRoute() string { return types.QuerierKey }
 
 // LegacyQuerierHandler registers a query handler to respond to the module-specific queries
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc codec.JSONMarshaler) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, am.keeper)
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

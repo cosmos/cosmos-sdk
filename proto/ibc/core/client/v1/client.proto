@@ -1,0 +1,126 @@
+syntax = "proto3";
+package ibc.core.client.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+// IdentifiedClientState defines a client state with an additional client
+// identifier field.
+message IdentifiedClientState {
+  // client identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+}
+
+// ConsensusStateWithHeight defines a consensus state with an additional height field.
+message ConsensusStateWithHeight {
+  // consensus state height
+  Height height = 1 [(gogoproto.nullable) = false];
+  // consensus state
+  google.protobuf.Any consensus_state = 2 [(gogoproto.moretags) = "yaml\"consensus_state\""];
+}
+
+// ClientConsensusStates defines all the stored consensus states for a given
+// client.
+message ClientConsensusStates {
+  // client identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // consensus states and their heights associated with the client
+  repeated ConsensusStateWithHeight consensus_states = 2
+      [(gogoproto.moretags) = "yaml:\"consensus_states\"", (gogoproto.nullable) = false];
+}
+
+// ClientUpdateProposal is a governance proposal. If it passes, the client is
+// updated with the provided header. The update may fail if the header is not
+// valid given certain conditions specified by the client implementation.
+message ClientUpdateProposal {
+  option (gogoproto.goproto_getters) = false;
+  // the title of the update proposal
+  string title = 1;
+  // the description of the proposal
+  string description = 2;
+  // the client identifier for the client to be updated if the proposal passes
+  string client_id = 3 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // the header used to update the client if the proposal passes
+  google.protobuf.Any header = 4;
+}
+
+// MsgCreateClient defines a message to create an IBC client
+message MsgCreateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // light client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // consensus state associated with the client that corresponds to a given
+  // height.
+  google.protobuf.Any consensus_state = 3 [(gogoproto.moretags) = "yaml:\"consensus_state\""];
+  // signer address
+  string signer = 4;
+}
+
+// MsgUpdateClient defines an sdk.Msg to update a IBC client state using
+// the given header.
+message MsgUpdateClient {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // header to update the light client
+  google.protobuf.Any header = 2;
+  // signer address
+  string signer = 3;
+}
+
+// MsgUpgradeClient defines an sdk.Msg to upgrade an IBC client to a new client state
+message MsgUpgradeClient {
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // upgraded client state
+  google.protobuf.Any client_state = 2 [(gogoproto.moretags) = "yaml:\"client_state\""];
+  // height at which old chain halts and upgrades (i.e last block executed)
+  Height upgrade_height = 3 [(gogoproto.moretags) = "yaml:\"upgrade_height\""];
+  // proof that old chain committed to new client
+  bytes proof_upgrade = 4 [(gogoproto.moretags) = "yaml:\"proof_upgrade\""];
+  // signer address
+  string signer = 5;
+}
+
+// MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
+// light client misbehaviour.
+message MsgSubmitMisbehaviour {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // client unique identifier
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // misbehaviour used for freezing the light client
+  google.protobuf.Any misbehaviour = 2;
+  // signer address
+  string signer = 3;
+}
+
+// Height is a monotonically increasing data type
+// that can be compared against another Height for the purposes of updating and
+// freezing clients
+//
+// Normally the VersionHeight is incremented at each height while keeping version
+// number the same However some consensus algorithms may choose to reset the
+// height in certain conditions e.g. hard forks, state-machine breaking changes
+// In these cases, the version number is incremented so that height continues to
+// be monitonically increasing even as the VersionHeight gets reset
+message Height {
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // the version that the client is currently on
+  uint64 version_number = 1 [(gogoproto.moretags) = "yaml:\"version_number\""];
+  // the height within the given version
+  uint64 version_height = 2 [(gogoproto.moretags) = "yaml:\"version_height\""];
+}

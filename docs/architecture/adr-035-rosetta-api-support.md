@@ -127,7 +127,6 @@ Rosetta API service could run within the same execution process of the applicati
             h, err := service.New(
                 service.Options{Port: uint32(*flagPort)},
                 InitRosettaAPIFromConfig(),
-                }),
             )
             if err != nil {
             }

@@ -99,13 +99,13 @@ enum BondStatus {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // UNSPECIFIED defines an invalid validator status.
-  UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  BOND_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
   // UNBONDED defines a validator that is not bonded.
-  UNBONDED = 1 [(gogoproto.enumvalue_customname) = "Unbonded"];
+  BOND_STATUS_UNBONDED = 1 [(gogoproto.enumvalue_customname) = "Unbonded"];
   // UNBONDING defines a validator that is unbonding.
-  UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
+  BOND_STATUS_UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
   // BONDED defines a validator that is bonded.
-  BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
+  BOND_STATUS_BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
 }
 
 // ValAddresses defines a repeated set of validator addresses.

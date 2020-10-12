@@ -73,8 +73,9 @@ A few notes on the `Keyring` methods:
 - `NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk (note that the `PrivKey` is [encrypted with a passphrase before being persisted](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/mintkey/mintkey.go), it is **never stored unencrypted**). In the context of this method, the `account` and `address` parameters refer to the segment of the BIP44 derivation path (e.g. `0`, `1`, `2`, ...) used to derive the `PrivKey` and `PubKey` from the mnemonic (note that given the same mnemonic and `account`, the same `PrivKey` will be generated, and given the same `account` and `address`, the same `PubKey` and `Address` will be generated). Finally, note that the `NewAccount` method derives keys and addresses using the algorithm specified in the last argument `algo`. Currently, the SDK supports two public key algorithms:
   - `secp256k1`, as implemented in the [SDK's `crypto/keys/secp256k1` package](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go),
   - `ed25519`, as implemented in the [SDK's `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/ed25519/ed25519.go).
+- `ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)` exports a private key in ASCII-armored encrypted format, using the given passphrase. You can then either import it again into the keyring using the `ImportPrivKey(uid, armor, passphrase string)` function, or decrypt it into a raw private key uwing the `UnarmorDecryptPrivKey(armorStr string, passphrase string)` function.
 
-See the [`Addresses`](#addresses) section for more information.
+Also see the [`Addresses`](#addresses) section for more information.
 
 ## Addresses and PubKeys
 
@@ -92,11 +93,16 @@ See the [`Addresses`](#addresses) section for more information.
 
 ### PubKeys
 
-`PubKey`s used in the Cosmos SDK follow the `Pubkey` interface defined in tendermint's `crypto` package:
+`PubKey`s used in the Cosmos SDK are Protobuf messages and extend the `Pubkey` interface defined in tendermint's `crypto` package:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/types/types.go#L8-L13
 
 +++ https://github.com/tendermint/tendermint/blob/01c32c62e8840d812359c9e87e9c575aa67acb09/crypto/crypto.go#L22-L28
 
-For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go). For `ed25519` keys, it can be found [here](ttps://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/ed25519/ed25519.go).
+- For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/secp256k1/secp256k1.go).
+- For `ed25519` keys, it can be found [here](https://github.com/cosmos/cosmos-sdk/blob/d9175200920e96bfa4182b5c8bc46d91b17a28a1/crypto/keys/ed25519/ed25519.go).
+
+In both case, the actual key (as raw bytes) is the compressed form of the pubkey. The first byte is a `0x02` byte if the `y`-coordinate is the lexicographically largest of the two associated with the `x`-coordinate. Otherwise the first byte is a `0x03`. This prefix is followed with the `x`-coordinate.
 
 Note that in the Cosmos SDK, `Pubkeys` are not manipulated in their raw bytes form. Instead, they are encoded to string using [`Amino`](../core/encoding.md#amino) and [`bech32`](https://en.bitcoin.it/wiki/Bech32). In the SDK, it is done by first calling the `Bytes()` method on the raw `Pubkey` (which applies amino encoding), and then the `ConvertAndEncode` method of `bech32`.
 

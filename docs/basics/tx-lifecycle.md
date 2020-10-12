@@ -186,8 +186,7 @@ to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx
 Instead of using their `checkState`, full-nodes use `deliverState`:
 
 - **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very
-  similar to `CheckTx` but also executes and writes state changes.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 - **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage\

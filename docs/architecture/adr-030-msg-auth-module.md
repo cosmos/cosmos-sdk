@@ -3,199 +3,182 @@
 ## Changelog
 
 - 2019-11-06: Initial Draft
-- 2020-08-18: Updated Draft
+- 2020-10-12: Updated Draft
 
 ## Status
 
 Accepted
+
+## Abstract
 
 ## Context
 
 
 ## Decision
 
-We will create a module named `msg_authorization`. The `msg_authorization` module provides support for
-granting arbitrary capabilities from one account (the granter) to another account (the grantee). Capabilities
-must be granted for a particular type of `sdk.Msg` one by one using an implementation
-of `Capability`.
+We will create a module named `msg_authorization` which provides support for
+granting arbitrary capabilities from one account (the granter) to another account (the grantee). Authorizations
+must be granted for a particular type of `Msg` one by one using an implementation
+of `Authorization`.
 
 ### Types
 
-Capabilities determine exactly what action is delegated. They are extensible
-and can be defined for any sdk.Msg type even outside of the module where the Msg is defined.
+Authorizations determine exactly what action is granted. They are extensible
+and can be defined for any `Msg` service method even outside of the module where
+the `Msg` method is defined. `Authorization`s use the new `ServiceMsg` type from
+ADR 031.
 
-#### Capability
+#### Authorization
 
 ```go
-type Capability interface {
-	// MsgType returns the type of Msg's that this capability can accept
-	MsgType() sdk.Msg
-	// Accept determines whether this grant allows the provided action, and if
-	// so provides an upgraded capability grant
-	Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Capability, delete bool)
+type Authorization interface {
+	// MethodName returns the fully-qualified method name for the Msg as described in ADR 031.
+	MethodName() string
+
+	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
+	// so provides an upgraded authorization grant.
+	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```
 
-For example a `SendCapability` like this is defined for `MsgSend` that takes
+For example a `SendAuthorization` like this is defined for `MsgSend` that takes
 a `SpendLimit` and updates it down to zero:
 
 ```go
-type SendCapability struct {
+type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this capability and will be updated as tokens are spent. If it is
+	// by this authorization and will be updated as tokens are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
 	SpendLimit sdk.Coins
 }
 
-func (cap SendCapability) MsgType() sdk.Msg {
-	return &bank.MsgSend{}
+func (cap SendAuthorization) MethodName() string {
+	return "/cosmos.bank.v1beta1.Msg/Send"
 }
 
-func (cap SendCapability) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Capability, delete bool) {
-	switch msg := msg.(type) {
+func (cap SendAuthorization) Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool) {
+	switch req := msg.Request.(type) {
 	case bank.MsgSend:
-		left, invalid := cap.SpendLimit.SafeSub(msg.Amount)
+		left, invalid := cap.SpendLimit.SafeSub(req.Amount)
 		if invalid {
 			return false, nil, false
 		}
 		if left.IsZero() {
 			return true, nil, true
 		}
-		return true, SendCapability{SpendLimit: left}, false
+		return true, SendAuthorization{SpendLimit: left}, false
 	}
 	return false, nil, false
 }
 ```
 
 A different type of capability for `MsgSend` could be implemented
-using the `Capability` interface with no need to change the underlying
+using the `Authorization` interface with no need to change the underlying
 `bank` module.
 
-### Messages
+### `Msg` Service
 
-#### `MsgGrant`
+```proto
+service Msg {
+  // GrantAuthorization grants the provided authorization to the grantee on the granter's
+  // account with the provided expiration time.
+  rpc GrantAuthorization(MsgGrantAuthorization) returns (MsgGrantAuthorizationResponse);
 
-```go
-// MsgGrant grants the provided capability to the grantee on the granter's
-// account with the provided expiration time.
-type MsgGrant struct {
-	Granter    sdk.AccAddress `json:"granter"`
-	Grantee    sdk.AccAddress `json:"grantee"`
-	Capability Capability     `json:"capability"`
-    // Expiration specifies the expiration time of the grant
-	Expiration time.Time      `json:"expiration"`
+  // ExecAuthorized attempts to execute the provided messages using
+  // authorizations granted to the grantee. Each message should have only
+  // one signer corresponding to the granter of the authorization.
+  rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse)
+
+
+  // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
+  // granter's account with that has been granted to the grantee.
+  rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);
+}
+
+message MsgGrantAuthorization{
+  string granter = 1;
+  string grantee = 2;
+  google.protobuf.Any authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration = 4;
+}
+
+message MsgExecAuthorized {
+    string grantee = 1;
+    repeated google.protobuf.Any msgs = 2;
+}
+
+message MsgRevokeAuthorization{
+  string granter = 1;
+  string grantee = 2;
+  string method_name = 3;
 }
 ```
 
-#### MsgRevoke
+### Router Middleware
+
+The `msg_authorization` `Keeper` will expose a `DispatchActions` method which allows other modules to send `ServiceMsg`s
+to the router based on `Authorization` grants:
 
 ```go
-// MsgRevoke revokes any capability with the provided sdk.Msg type on the
-// granter's account with that has been granted to the grantee.
-type MsgRevoke struct {
-	Granter sdk.AccAddress `json:"granter"`
-	Grantee sdk.AccAddress `json:"grantee"`
-    // CapabilityMsgType is the full protobuf message name for the Msg type
-    // whose capability is being revoked.
-	CapabilityMsgType string `json:"capability_msg_type"`
+type Keeper interface {
+  DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result`
 }
 ```
-
-#### MsgExecDelegated
-
-```go
-// MsgExecDelegated attempts to execute the provided messages using
-// capabilities granted to the grantee. Each message should have only
-// one signer corresponding to the granter of the capability.
-type MsgExecDelegated struct {
-	Grantee sdk.AccAddress `json:"grantee"`
-	Msgs   []sdk.Msg      `json:"msg"`
-}
-```
-
-### Keeper
-
-#### Constructor: `NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keeper`
-
-The message delegation keeper receives a reference to the baseapp's `Router` in order
-to dispatch delegated messages.
-
-#### `DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result`
-
-`DispatchActions` attempts to execute the provided messages via capability
-grants from the message signer to the grantee.
-
-#### `Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability Capability, expiration time.Time)`
-
-Grants the provided capability to the grantee on the granter's account with the provided expiration
-time. If there is an existing capability grant for the same `sdk.Msg` type, this grant
-overwrites that.
-
-#### `Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg)`
-
-Revokes any capability for the provided message type granted to the grantee by the granter.
-
-#### `GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap Capability, expiration time.Time)`
-
-Returns any `Capability` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.
 
 ### CLI
 
 #### `--send-as` Flag
 
-When a CLI user wants to run a transaction as another user using `MsgExecDelegated`, they
+When a CLI user wants to run a transaction as another user using `MsgExecAuthorized`, they
 can use the `--send-as` flag. For instance `gaiacli tx gov vote 1 yes --from mykey --send-as cosmos3thsdgh983egh823`
 would send a transaction like this:
 
 ```go
-MsgExecDelegated {
+MsgExecAuthorized {
   Grantee: mykey,
-  Msgs: []sdk.Msg{
-    MsgVote {
-	  ProposalID: 1,
-	  Voter: cosmos3thsdgh983egh823
-	  Option: Yes
+  Msgs: []sdk.SericeMsg{
+    ServiceMsg {
+      MethodName:"/cosmos.gov.v1beta1.Msg/Vote"
+      Request: MsgVote {
+	    ProposalID: 1,
+	    Voter: cosmos3thsdgh983egh823
+	    Option: Yes
+      }
     }
   }
 }
 ```
-#### `tx grant <grantee> <capability> --from <granter>`
 
-This CLI command will send a `MsgGrant` tx. `capability` should be encoded as
+#### `tx grant <grantee> <authorization> --from <granter>`
+
+This CLI command will send a `MsgGrantAuthorization` transaction. `authorization` should be encoded as
 JSON on the CLI.
 
-#### `tx revoke <grantee> <capability-msg-type> --from <granter>`
+#### `tx revoke <grantee> <method-name> --from <granter>`
 
-This CLI command will send a `MsgRevoke` tx. `capability-msg-type` should be encoded as
-JSON on the CLI.
+This CLI command will send a `MsgRevokeAuthorization` transaction.
 
-### Built-in Capabilities
+### Built-in Authorizations
 
-#### `SendCapability`
+#### `SendAuthorization`
 
-```go
-type SendCapability struct {
-	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this capability and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
-	SpendLimit sdk.Coins
+```proto
+// SendAuthorization allows the grantee to spend up to spend_limit coins from
+// the granter's account.
+message SendAuthorization {
+  repeated cosmos.base.v1beta1.Coin spend_limit = 1;
 }
 ```
 
-#### `GenericCapability`
+#### `GenericAuthorization`
 
-```go
-// GenericCapability grants the permission to execute any transaction of the provided
-// sdk.Msg type without restrictions
-type GenericCapability struct {
-    // MsgType is the type of Msg this capability grant allows
-    MsgType sdk.Msg
+```proto
+// GenericAuthorization gives the grantee unrestricted permissions to execute
+// the provide method on behalf of the granter's account.
+message GenericAuthorization {
+  string method_name = 1;
 }
 ```
-
-## Status
-
-Accepted
 
 ## Consequences
 
@@ -204,7 +187,7 @@ Accepted
 - Users will be able to authorize arbitrary permissions on their accounts to other
 users, simplifying key management for some use cases
 - The solution is more generic than previously considered approaches and the
-`Capability` interface approach can be extended to cover other use cases by 
+`Authorization` interface approach can be extended to cover other use cases by 
 SDK users
 
 ### Negative

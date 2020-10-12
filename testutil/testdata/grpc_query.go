@@ -11,7 +11,7 @@ import (
 
 type QueryImpl struct{}
 
-var _ QueryServer = QueryImpl
+var _ QueryServer = QueryImpl{}
 
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
 	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)

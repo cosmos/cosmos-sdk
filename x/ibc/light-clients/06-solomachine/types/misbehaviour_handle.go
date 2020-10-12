@@ -58,7 +58,7 @@ func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, 
 
 	data, err := MisbehaviourSignBytes(
 		cdc,
-		misbehaviour.Sequence, clientState.ConsensusState.Timestamp,
+		misbehaviour.Sequence, sigAndData.Timestamp,
 		clientState.ConsensusState.Diversifier,
 		sigAndData.DataType,
 		sigAndData.Data,

@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO: Break into several smaller functions for clarity
@@ -21,7 +21,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 	currValidators := make(map[string]types.ValidatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
-	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator exported.ValidatorI) (stop bool) {
+	keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 		currValidators[validator.GetOperator().String()] = types.NewValidatorGovInfo(
 			validator.GetOperator(),
 			validator.GetBondedTokens(),
@@ -48,7 +48,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation exported.DelegationI) (stop bool) {
+		keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr().String()
 
 			if val, ok := currValidators[valAddrStr]; ok {

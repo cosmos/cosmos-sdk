@@ -75,7 +75,7 @@ message Validator {
   string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
   string consensus_pubkey = 2 [(gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
   bool   jailed           = 3;
-  int32  status           = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.BondStatus"];
+  BondStatus status       = 4;
   string tokens = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   string delegator_shares = 6 [
     (gogoproto.moretags)   = "yaml:\"delegator_shares\"",
@@ -92,6 +92,20 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+}
+
+// BondStatus is the status of a validator.
+enum BondStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an invalid validator status.
+  BOND_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // UNBONDED defines a validator that is not bonded.
+  BOND_STATUS_UNBONDED = 1 [(gogoproto.enumvalue_customname) = "Unbonded"];
+  // UNBONDING defines a validator that is unbonding.
+  BOND_STATUS_UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
+  // BONDED defines a validator that is bonded.
+  BOND_STATUS_BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
 }
 
 // ValAddresses defines a repeated set of validator addresses.

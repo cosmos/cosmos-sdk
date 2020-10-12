@@ -367,7 +367,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, sdk.TokensFromConsensusPower(14), validator.Tokens)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 	require.True(t, validator.Jailed)
 }
 
@@ -533,7 +533,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	// Make sure validator is still in state because there is still an outstanding delegation
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, sdk.Unbonded)
+	require.Equal(t, validator.Status, types.Unbonded)
 
 	// unbond some of the other delegation's shares
 	unbondTokens := sdk.TokensFromConsensusPower(6)
@@ -615,7 +615,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	// validator should still be in state and still be in unbonding state
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, validator.Status, sdk.Unbonding)
+	require.Equal(t, validator.Status, types.Unbonding)
 
 	// unbond the validator
 	ctx = ctx.WithBlockTime(validator.UnbondingTime)
@@ -780,7 +780,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	maxEntries := app.StakingKeeper.MaxEntries(ctx)
 
@@ -841,7 +841,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	// create a second delegation to validator 1
 	delTokens := sdk.TokensFromConsensusPower(10)
@@ -862,7 +862,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, valTokens, validator.Tokens)
-	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 }
 
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
@@ -992,7 +992,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	validator2, issuedShares = validator2.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdk.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Unix(333, 0))

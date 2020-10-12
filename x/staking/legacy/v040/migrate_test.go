@@ -81,7 +81,7 @@ func TestMigrate(t *testing.T) {
       "jailed": false,
       "min_self_delegation": "0",
       "operator_address": "",
-      "status": 1,
+      "status": "BOND_STATUS_UNBONDED",
       "tokens": "0",
       "unbonding_height": "0",
       "unbonding_time": "0001-01-01T00:00:00Z"

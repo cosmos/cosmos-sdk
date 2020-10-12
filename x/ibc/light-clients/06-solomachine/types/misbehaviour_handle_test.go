@@ -96,6 +96,14 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 				}, false,
 			},
 			{
+				"timestamp is less than consensus state timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					solomachine.Time = solomachine.Time - 5
+					misbehaviour = solomachine.CreateMisbehaviour()
+				}, false,
+			},
+			{
 				"invalid first signature data",
 				func() {
 					clientState = solomachine.ClientState()

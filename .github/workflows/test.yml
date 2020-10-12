@@ -40,7 +40,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           PREFIX_FILTER: |
@@ -95,7 +95,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -137,7 +137,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -179,7 +179,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -221,7 +221,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -263,7 +263,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -293,7 +293,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -323,7 +323,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -353,7 +353,7 @@ jobs:
           go-version: 1.15
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -378,7 +378,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |
@@ -415,7 +415,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v1
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           SUFFIX_FILTER: |

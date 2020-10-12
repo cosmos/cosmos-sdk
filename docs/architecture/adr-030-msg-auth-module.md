@@ -11,8 +11,8 @@ Accepted
 
 ## Abstract
 
-This ADR defines the `msg_authorization` module for allowing accounts to grant authorizations to other accounts on
-behalf of the granting account.
+This ADR defines the `msg_authorization` module which allows accounts to grant authorizations to perform actions
+on behalf of that account to other accounts.
 
 ## Context
 
@@ -28,16 +28,19 @@ an organization could grant the ability to spend small amounts of the organizati
 Or an individual (or group) with a multisig wallet could grant the ability to vote on proposals to any one of the member
 keys.
 
+The sub-keys functionality was originally proposed in https://github.com/cosmos/cosmos-sdk/issues/4480. The current
+implementation is based on work done by the [Gaian's team at Hackatom Berlin 2019](https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation).
+
 ## Decision
 
 We will create a module named `msg_authorization` which provides support for
 granting arbitrary capabilities from one account (the granter) to another account (the grantee). Authorizations
-must be granted for a particular type of `Msg` one by one using an implementation
+must be granted for a particular `Msg` service methods one by one using an implementation
 of `Authorization`.
 
 ### Types
 
-Authorizations determine exactly what action is granted. They are extensible
+Authorizations determine exactly what capabilities are granted. They are extensible
 and can be defined for any `Msg` service method even outside of the module where
 the `Msg` method is defined. `Authorization`s use the new `ServiceMsg` type from
 ADR 031.
@@ -46,11 +49,11 @@ ADR 031.
 
 ```go
 type Authorization interface {
-	// MethodName returns the fully-qualified method name for the Msg as described in ADR 031.
+	// MethodName returns the fully-qualified Msg service method name as described in ADR 031.
 	MethodName() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization grant.
+	// so provides an upgraded authorization instance.
 	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
 }
 ```
@@ -105,7 +108,7 @@ service Msg {
 
 
   // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
-  // granter's account with that has been granted to the grantee.
+  // granter's account that has been granted to the grantee.
   rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);
 }
 
@@ -139,12 +142,16 @@ type Keeper interface {
 }
 ```
 
+This allows the functionality provided by `msg_authorization` to be used for future inter-module object capabilities
+permissions as described in https://github.com/cosmos/cosmos-sdk.
+
 ### CLI
 
 #### `--send-as` Flag
 
-When a CLI user wants to run a transaction as another user using `MsgExecAuthorized`, they
-can use the `--send-as` flag. For instance `gaiacli tx gov vote 1 yes --from mykey --send-as cosmos3thsdgh983egh823`
+When a CLI user wants to run a transaction on behalf of another account using `MsgExecAuthorized`, they
+can use the `--send-as` flag to specify the granter's account but signed by the grantee's account as
+specified by the `--from` flag. For instance `gaiacli tx gov vote 1 yes --from mykey --send-as cosmos3thsdgh983egh823`
 would send a transaction like this:
 
 ```go
@@ -198,8 +205,8 @@ message GenericAuthorization {
 
 ### Positive
 
-- Users will be able to authorize arbitrary permissions on their accounts to other
-users, simplifying key management for some use cases
+- Users will be able to authorize arbitrary actions on behalf of their accounts to other
+users, improving key management for many use cases
 - The solution is more generic than previously considered approaches and the
 `Authorization` interface approach can be extended to cover other use cases by 
 SDK users

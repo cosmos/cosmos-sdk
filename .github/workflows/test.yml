@@ -26,7 +26,7 @@ jobs:
       - name: install tparse
         run: |
           export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v2.1.1
+      - uses: actions/cache@v2.1.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary
@@ -401,7 +401,7 @@ jobs:
         with:
           name: "${{ github.sha }}-ad-race-output"
         if: "env.GIT_DIFF != ''"
-      - uses: actions/cache@v2.1.1
+      - uses: actions/cache@v2.1.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary

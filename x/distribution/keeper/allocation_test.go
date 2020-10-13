@@ -20,11 +20,11 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, sdk.ValAddress(addrs[0]), valConsPk1, 100, true)
+	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, 100, true)
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate tokens
@@ -49,15 +49,15 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
 
 	// create second validator with 0% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valAddrs[1], valConsPk2, 100, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, 100, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -119,19 +119,19 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 
 	// create validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valAddrs[0], valConsPk1, 110, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, 110, true)
 
 	// create second validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valAddrs[1], valConsPk2, 100, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, 100, true)
 
 	// create third validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valAddrs[2], valConsPk3, 100, true)
+	tstaking.CreateValidator(valAddrs[2], valConsPk3, 100, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
@@ -28,11 +29,11 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 
-	amt := tstaking.CreateValidatorWithValPower(t, addr, val, 100, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
@@ -54,10 +55,10 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
-	amt := tstaking.CreateValidatorWithValPower(t, addr, val, 100, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
@@ -66,7 +67,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	)
 
 	tstaking.Denom = app.StakingKeeper.GetParams(ctx).BondDenom
-	tstaking.Undelegate(t, sdk.AccAddress(addr), addr, sdk.OneInt(), true)
+	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.OneInt(), true)
 	require.True(t, app.StakingKeeper.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
@@ -85,12 +86,12 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(20))
 	app.SlashingKeeper.SetParams(ctx, keeper.TestParams())
 
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 	stakingParams := app.StakingKeeper.GetParams(ctx)
 	app.StakingKeeper.SetParams(ctx, stakingParams)
 	valAddr, consAddr := sdk.ValAddress(pks[1].Address()), sdk.ConsAddress(pks[0].Address())
 
-	amt := tstaking.CreateValidatorWithValPower(t, valAddr, pks[1], 10, true)
+	amt := tstaking.CreateValidatorWithValPower(valAddr, pks[1], 10, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// set dummy signing info
@@ -99,11 +100,11 @@ func TestJailedValidatorDelegations(t *testing.T) {
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(pks[2].Address())
-	tstaking.Delegate(t, delAddr, valAddr, amt.Int64())
+	tstaking.Delegate(delAddr, valAddr, amt.Int64())
 
 	// unbond validator total self-delegations (which should jail the validator)
 	valAcc := sdk.AccAddress(valAddr)
-	tstaking.Undelegate(t, valAcc, valAddr, amt, true)
+	tstaking.Undelegate(valAcc, valAddr, amt, true)
 	_, err := app.StakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
 	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
 
@@ -118,7 +119,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.Nil(t, res)
 
 	// self-delegate to validator
-	tstaking.Delegate(t, valAcc, valAddr, amt.Int64())
+	tstaking.Delegate(valAcc, valAddr, amt.Int64())
 
 	// verify the validator can now unjail itself
 	res, err = slashing.NewHandler(app.SlashingKeeper)(ctx, types.NewMsgUnjail(valAddr))
@@ -149,9 +150,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	power := int64(100)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 	slh := slashing.NewHandler(app.SlashingKeeper)
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 
-	amt := tstaking.CreateValidatorWithValPower(t, addr, val, power, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	require.Equal(

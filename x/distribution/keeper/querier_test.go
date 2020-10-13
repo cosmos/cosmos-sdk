@@ -170,9 +170,9 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, []types.ValidatorSlashEvent{slashOne, slashTwo}, slashes)
 
 	// test delegation rewards query
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(t, valOpAddr1, valConsPk1, 100, true)
+	tstaking.CreateValidator(valOpAddr1, valConsPk1, 100, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 

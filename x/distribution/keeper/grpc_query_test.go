@@ -341,9 +341,9 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	app, ctx, addrs, valAddrs := suite.app, suite.ctx, suite.addrs, suite.valAddrs
 
-	tstaking := teststaking.NewService(ctx, app.StakingKeeper)
+	tstaking := teststaking.NewService(suite.T(), ctx, app.StakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(suite.T(), valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

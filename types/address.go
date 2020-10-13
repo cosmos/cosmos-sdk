@@ -634,7 +634,6 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 	// TM's ed25519 bech32 encoding, we explicitly say to bech32-encode our own
 	// ed25519 the same way as TM's ed25519.
 	// TODO: Remove Bech32ifyPubKey and all usages (cosmos/cosmos-sdk/issues/#7357)
-	// TODO RZ: check if this is handled by the protobuf any serialization
 	pkToMarshal := pubkey
 	if ed25519Pk, ok := pubkey.(*ed25519.PubKey); ok {
 		pkToMarshal = ed25519Pk.AsTmPubKey()

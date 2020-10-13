@@ -14,7 +14,7 @@ import (
 // handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]MsgServiceHandler
+	routes            map[string]sdk.Handler
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -22,18 +22,18 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		routes: map[string]sdk.Handler{},
 	}
 }
 
-// MsgServiceHandler defines a function type which handles Msg service message.
+// sdk.Handler defines a function type which handles Msg service message.
 // It's similar to sdk.Handler, but with simplified version of `Msg`, without
 // `Route()`, `Type()` and `GetSignBytes()`.
 type MsgServiceHandler = func(ctx sdk.Context, msgRequest sdk.MsgRequest) (*sdk.Result, error)
 
-// Route returns the MsgServiceHandler for a given query route path or nil
+// Route returns the sdk.Handler for a given query route path or nil
 // if not found.
-func (msr *MsgServiceRouter) Route(path string) MsgServiceHandler {
+func (msr *MsgServiceRouter) Route(path string) sdk.Handler {
 	handler, found := msr.routes[path]
 	if !found {
 		return nil
@@ -50,7 +50,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, _ sdk.MsgRequest) (*sdk.Result, error) {
+		msr.routes[fqMethod] = func(ctx sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {

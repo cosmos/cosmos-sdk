@@ -50,7 +50,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, msgRequest sdk.MsgRequest) (*sdk.Result, error) {
+		msr.routes[fqMethod] = func(ctx sdk.Context, _ sdk.MsgRequest) (*sdk.Result, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {

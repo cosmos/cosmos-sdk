@@ -143,31 +143,12 @@ func (q Keeper) ChannelClientState(c context.Context, req *types.QueryChannelCli
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	channel, found := q.GetChannel(ctx, req.PortId, req.ChannelId)
-	if !found {
-		return nil, status.Error(
-			codes.NotFound,
-			sdkerrors.Wrapf(types.ErrChannelNotFound, "port-id: %s, channel-id %s", req.PortId, req.ChannelId).Error(),
-		)
+	clientID, clientState, err := q.GetChannelClientState(ctx, req.PortId, req.ChannelId)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
-	connection, found := q.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
-	if !found {
-		return nil, status.Error(
-			codes.NotFound,
-			sdkerrors.Wrapf(connectiontypes.ErrConnectionNotFound, "connection-id: %s", channel.ConnectionHops[0]).Error(),
-		)
-	}
-
-	clientState, found := q.clientKeeper.GetClientState(ctx, connection.ClientId)
-	if !found {
-		return nil, status.Error(
-			codes.NotFound,
-			sdkerrors.Wrapf(clienttypes.ErrClientNotFound, "client-id: %s", connection.ClientId).Error(),
-		)
-	}
-
-	identifiedClientState := clienttypes.NewIdentifiedClientState(connection.ClientId, clientState)
+	identifiedClientState := clienttypes.NewIdentifiedClientState(clientID, clientState)
 
 	selfHeight := clienttypes.GetSelfHeight(ctx)
 	return types.NewQueryChannelClientStateResponse(identifiedClientState, nil, selfHeight), nil

@@ -26,9 +26,10 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 	}
 }
 
-// MsgServiceHandler defines a function type which handles ABCI Query requests
-// using gRPC
-type MsgServiceHandler = func(ctx sdk.Context, data []byte) (*sdk.Result, error)
+// MsgServiceHandler defines a function type which handles Msg service message.
+// It's similar to sdk.Handler, but with simplified version of `Msg`, without
+// `Route()`, `Type()` and `GetSignBytes()`.
+type MsgServiceHandler = func(ctx sdk.Context, msgRequest sdk.MsgRequest) (*sdk.Result, error)
 
 // Route returns the MsgServiceHandler for a given query route path or nil
 // if not found.
@@ -49,14 +50,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, data []byte) (*sdk.Result, error) {
+		msr.routes[fqMethod] = func(ctx sdk.Context, msgRequest sdk.MsgRequest) (*sdk.Result, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				err := protoCodec.Unmarshal(data, i)
-				if err != nil {
-					return err
-				}
 				if msr.interfaceRegistry != nil {
 					return codectypes.UnpackInterfaces(i, msr.interfaceRegistry)
 				}

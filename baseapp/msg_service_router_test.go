@@ -1,32 +1,46 @@
 package baseapp
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func TestMsgService(t *testing.T) {
-	qr := NewMsgServiceRouter()
-	interfaceRegistry := testdata.NewTestInterfaceRegistry()
-	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterMsgServer(qr, testdata.MsgImpl{})
-	helper := &MsgServiceTestHelper{
-		MsgServiceRouter: qr,
-		ctx:              sdk.Context{}.WithContext(context.Background()),
+	msgServiceOpt := func(bapp *BaseApp) {
+		testdata.RegisterMsgServer(
+			bapp.MsgServiceRouter(),
+			testdata.MsgImpl{},
+		)
 	}
-	client := testdata.NewMsgClient(helper)
 
-	res, err := client.CreateDog(context.Background(), &testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "spot"}})
-	require.Nil(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, "spot", res.Name)
+	app := setupBaseApp(t, msgServiceOpt)
 
-	require.Panics(t, func() {
-		_, _ = client.CreateDog(context.Background(), nil)
-	})
+	app.InitChain(abci.RequestInitChain{})
+	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.Commit()
+
+	msg, err := testdata.NewServiceMsgCreateDog(&testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}})
+	require.NoError(t, err)
+	tx := &txtypes.Tx{
+		Body: &txtypes.TxBody{
+			Messages: []*codectypes.Any{msg},
+		},
+	}
+	txBytes, err := proto.Marshal(tx)
+	require.NoError(t, err)
+
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	fmt.Println(res.Data)
+	require.Empty(t, res.Events)
+	require.False(t, true)
 }

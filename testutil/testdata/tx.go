@@ -3,8 +3,10 @@ package testdata
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/crypto"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -65,3 +67,15 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 	return addrs
 }
 func (msg *TestMsg) ValidateBasic() error { return nil }
+
+func NewServiceMsgCreateDog(msg *MsgCreateDog) (*codectypes.Any, error) {
+	txBytes, err := proto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &codectypes.Any{
+		TypeUrl: "/testdata.Msg/CreateDog",
+		Value:   txBytes,
+	}, nil
+}

@@ -18,21 +18,9 @@ When a transaction is relayed from the underlying consensus engine to the SDK ap
 
 Defining `message`s is the responsibility of module developers. Typically, they are defined as protobuf messages in a `proto/` directory (see more info about [conventions and naming](../core/encoding.md#faq)). The `message`'s definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
-```proto
-// Example of a protobuf message definition
+Here's an example of a protobuf message definition:
 
-message MsgSubmitProposal {
-  option (gogoproto.equal) = false;
-
-  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"initial_deposit\""
-  ];
-  string proposer = 3;
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/gov/v1beta1/tx.proto#L15-L27
 
 The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`] interface:
 
@@ -59,22 +47,8 @@ A `query` is a request for information made by end-users of applications through
 Starting from v0.40, the prefered way to define queries is by using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`. 
 
 Here's an example of such a `Query` service definition:
-```proto
 
-// Query defines the gRPC querier service.
-service Query {
-  // Account returns account details based on address.
-  rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
-  }
-
-  // Params queries all parameters.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/params";
-  }
-}
-
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/auth/v1beta1/query.proto#L12-L23
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer).
 

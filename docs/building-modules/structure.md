@@ -37,10 +37,10 @@ x/{module}
 │   ├── keys.go
 │   ├── msgs.go
 │   ├── params.go
-│   ├── types.pb.go
 │   ├── types.proto
 │   ├── ...
 │   └── querier.go
+│   └── {module_name}.pb.go
 │   └── query.pb.go
 │   └── genesis.pb.go
 ├── simulation

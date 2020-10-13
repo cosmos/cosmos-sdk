@@ -10,10 +10,10 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	grpc "github.com/gogo/protobuf/grpc"
+	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	mux "github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
 	reflect "reflect"
@@ -264,7 +264,7 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 // RegisterGRPCRoutes mocks base method
 func (m *MockAppModuleGenesis) RegisterGRPCRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+	m.ctrl.Call(m, "RegisterGRPCRoutes", arg0, arg1)
 }
 
 // RegisterGRPCRoutes indicates an expected call of RegisterGRPCRoutes
@@ -539,29 +539,29 @@ func (mr *MockAppModuleMockRecorder) QuerierRoute() *gomock.Call {
 }
 
 // LegacyQuerierHandler mocks base method
-func (m *MockAppModule) LegacyQuerierHandler(*codec.LegacyAmino) types0.Querier {
+func (m *MockAppModule) LegacyQuerierHandler(arg0 *codec.LegacyAmino) types0.Querier {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LegacyQuerierHandler")
+	ret := m.ctrl.Call(m, "LegacyQuerierHandler", arg0)
 	ret0, _ := ret[0].(types0.Querier)
 	return ret0
 }
 
 // LegacyQuerierHandler indicates an expected call of LegacyQuerierHandler
-func (mr *MockAppModuleMockRecorder) NewQuerierHandler() *gomock.Call {
+func (mr *MockAppModuleMockRecorder) LegacyQuerierHandler(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQuerierHandler))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LegacyQuerierHandler", reflect.TypeOf((*MockAppModule)(nil).LegacyQuerierHandler), arg0)
 }
 
-// RegisterQueryService mocks base method
-func (m *MockAppModule) RegisterQueryService(arg0 grpc.Server) {
+// RegisterServices mocks base method
+func (m *MockAppModule) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterQueryService", arg0)
+	m.ctrl.Call(m, "RegisterServices", arg0)
 }
 
-// RegisterQueryService indicates an expected call of RegisterQueryService
-func (mr *MockAppModuleMockRecorder) RegisterQueryService(arg0 interface{}) *gomock.Call {
+// RegisterServices indicates an expected call of RegisterServices
+func (mr *MockAppModuleMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterQueryService", reflect.TypeOf((*MockAppModule)(nil).RegisterQueryService), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockAppModule)(nil).RegisterServices), arg0)
 }
 
 // BeginBlock mocks base method

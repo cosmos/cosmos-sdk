@@ -49,8 +49,15 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 
 // verifySignatureAndData verifies that the currently registered public key has signed
 // over the provided data and that the data is valid. The data is valid if it can be
-// unmarshaled into the specified data type.
+// unmarshaled into the specified data type or the timestamp of the signature is less
+// than the consensus state timestamp.
 func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, misbehaviour *Misbehaviour, sigAndData *SignatureAndData) error {
+	// timestamp less than consensus state would always fail and not succeed in fooling the
+	// light client
+	if sigAndData.Timestamp < clientState.ConsensusState.Timestamp {
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidMisbehaviour, "timestamp is less than consensus state timestamp (%d < %d)", sigAndData.Timestamp, clientState.ConsensusState.Timestamp)
+	}
+
 	// ensure data can be unmarshaled to the specified data type
 	if _, err := UnmarshalDataByType(cdc, sigAndData.DataType, sigAndData.Data); err != nil {
 		return err
@@ -58,7 +65,7 @@ func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, 
 
 	data, err := MisbehaviourSignBytes(
 		cdc,
-		misbehaviour.Sequence, clientState.ConsensusState.Timestamp,
+		misbehaviour.Sequence, sigAndData.Timestamp,
 		clientState.ConsensusState.Diversifier,
 		sigAndData.DataType,
 		sigAndData.Data,

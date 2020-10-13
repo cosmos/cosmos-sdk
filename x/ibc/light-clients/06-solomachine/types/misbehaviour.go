@@ -85,6 +85,9 @@ func (sd SignatureAndData) ValidateBasic() error {
 	if sd.DataType == UNSPECIFIED {
 		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data type cannot be UNSPECIFIED")
 	}
+	if sd.Timestamp == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "timestamp cannot be 0")
+	}
 
 	return nil
 }

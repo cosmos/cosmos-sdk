@@ -1,0 +1,35 @@
+syntax = "proto3";
+package ibc.applications.convo.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/applications/convo/types";
+
+import "gogoproto/gogo.proto";
+import "ibc/core/client/v1/client.proto";
+
+// MsgConvo defines a Msg for a sender on one chain to send a message to a receiver
+// on another chain connected by an IBC channel
+message MsgConvo {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // the port on which the packet will be sent
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  // the channel by which the packet will be sent
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+
+  // the sender address
+  string sender = 4;
+  // the recipient address on the destination chain
+  string receiver = 5;
+
+  // the message sender sends to receiver
+  string message = 6;
+
+  // Timeout height relative to the current block height.
+  // The timeout is disabled when set to 0.
+  ibc.core.client.v1.Height timeout_height = 7
+      [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  // Timeout timestamp (in nanoseconds) relative to the current block timestamp.
+  // The timeout is disabled when set to 0.
+  uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+}

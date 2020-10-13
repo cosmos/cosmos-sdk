@@ -65,7 +65,7 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send the tx to the app
-	txBytes, err := encCfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
 	res := app.BaseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	fmt.Println("res=", res)

@@ -114,6 +114,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		vesting.AppModuleBasic{},
 	)
 
 	// module account permissions

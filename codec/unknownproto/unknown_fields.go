@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -407,4 +408,21 @@ func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*desc
 	descprotoCacheMu.Unlock()
 
 	return tagNumToTypeIndex, md, nil
+}
+
+type DefaultAnyResolver struct{}
+
+var _ jsonpb.AnyResolver = DefaultAnyResolver{}
+
+func (d DefaultAnyResolver) Resolve(typeUrl string) (proto.Message, error) {
+	// Only the part of typeUrl after the last slash is relevant.
+	mname := typeUrl
+	if slash := strings.LastIndex(mname, "/"); slash >= 0 {
+		mname = mname[slash+1:]
+	}
+	mt := proto.MessageType(mname)
+	if mt == nil {
+		return nil, fmt.Errorf("unknown message type %q", mname)
+	}
+	return reflect.New(mt.Elem()).Interface().(proto.Message), nil
 }

@@ -22,7 +22,7 @@ func TestDefaultTxDecoderError(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	encoder := DefaultTxEncoder()
-	decoder := DefaultTxDecoder(cdc)
+	decoder := DefaultTxDecoder(cdc, nil)
 
 	builder := newBuilder()
 	err := builder.SetMsgs(testdata.NewTestMsg())
@@ -42,7 +42,7 @@ func TestDefaultTxDecoderError(t *testing.T) {
 func TestUnknownFields(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	decoder := DefaultTxDecoder(cdc)
+	decoder := DefaultTxDecoder(cdc, nil)
 
 	tests := []struct {
 		name           string
@@ -125,7 +125,7 @@ func TestUnknownFields(t *testing.T) {
 
 			if tt.shouldAminoErr != "" {
 				handler := signModeLegacyAminoJSONHandler{}
-				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
+				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), nil)
 				theTx, err := decoder(txBz)
 				require.NoError(t, err)
 				_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)

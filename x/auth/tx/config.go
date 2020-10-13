@@ -21,14 +21,18 @@ type config struct {
 	protoCodec  *codec.ProtoCodec
 }
 
+type ServiceRequestUnpacker interface {
+	Unpack(method string, reqBz []byte) (sdk.MsgRequest, error)
+}
+
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
-func NewTxConfig(protoCodec *codec.ProtoCodec, enabledSignModes []signingtypes.SignMode) client.TxConfig {
+func NewTxConfig(protoCodec *codec.ProtoCodec, enabledSignModes []signingtypes.SignMode, svcReqUnpacker ServiceRequestUnpacker) client.TxConfig {
 	return &config{
 		handler:     makeSignModeHandler(enabledSignModes),
-		decoder:     DefaultTxDecoder(protoCodec),
+		decoder:     DefaultTxDecoder(protoCodec, svcReqUnpacker),
 		encoder:     DefaultTxEncoder(),
-		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
+		jsonDecoder: DefaultJSONTxDecoder(protoCodec, svcReqUnpacker),
 		jsonEncoder: DefaultJSONTxEncoder(),
 		protoCodec:  protoCodec,
 	}

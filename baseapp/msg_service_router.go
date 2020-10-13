@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -15,6 +16,7 @@ import (
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]sdk.Handler
+	unpackers         map[string]func(reqBz []byte) (sdk.MsgRequest, error)
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -40,6 +42,15 @@ func (msr *MsgServiceRouter) Route(path string) sdk.Handler {
 	}
 
 	return handler
+}
+
+func (msr *MsgServiceRouter) Unpack(method string, reqBz []byte) (sdk.MsgRequest, error) {
+	unpacker, found := msr.unpackers[method]
+	if !found {
+		return nil, fmt.Errorf("can't handle method %s", method)
+	}
+
+	return unpacker(reqBz)
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
@@ -73,6 +84,26 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			return &sdk.Result{
 				Data: resBytes,
 			}, nil
+		}
+
+		msr.unpackers[fqMethod] = func(reqBz []byte) (sdk.MsgRequest, error) {
+			var unpackErr error
+			var res sdk.MsgRequest
+			_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
+				unpackErr = protoCodec.Unmarshal(reqBz, i)
+				if unpackErr != nil {
+					return unpackErr
+				}
+				var ok bool
+				res, ok = i.(sdk.MsgRequest)
+				if !ok {
+					return fmt.Errorf("%T does not implement %T", i, (*sdk.MsgRequest)(nil))
+				}
+				return nil
+			}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+				return nil, nil
+			})
+			return res, unpackErr
 		}
 	}
 }

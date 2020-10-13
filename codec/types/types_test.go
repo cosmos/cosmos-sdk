@@ -7,17 +7,14 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	grpc2 "google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/gogo/protobuf/jsonpb"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 

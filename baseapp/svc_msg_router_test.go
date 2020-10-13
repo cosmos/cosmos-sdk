@@ -27,7 +27,7 @@ func TestMsgService(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterMsgServer(
-		app.MsgServiceRouter(),
+		app.ServiceMsgRouter(),
 		testdata.MsgServerImpl{},
 	)
 	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})

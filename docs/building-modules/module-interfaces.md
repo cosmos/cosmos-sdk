@@ -22,7 +22,7 @@ Here is an example from the `auth` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/client/cli/tx_sign.go#L160-L194
 
-This getter function creates the command for the Sign transaction. It does the following:
+This getter function creates the command for the `Sign` transaction. It does the following:
 
 - **Construct the command:** Read the [Cobra Documentation](https://github.com/spf13/cobra) for details on how to create commands.
   - **Use:** Specifies the format of a command-line entry users should type in order to invoke this command. In this case, the user uses `buy-name` as the name of the transaction command and provides the `name` the user wishes to buy and the `amount` the user is willing to pay.

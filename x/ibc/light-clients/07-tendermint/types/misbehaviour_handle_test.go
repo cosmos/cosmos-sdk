@@ -33,7 +33,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	_, suiteVal := suite.valSet.GetByIndex(0)
 
 	// Create signer array and ensure it is in same order as bothValSet
-	bothSigners := CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
+	bothSigners := ibctesting.CreateSortedSignerArray(altPrivVal, suite.privVal, altVal, suiteVal)
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 

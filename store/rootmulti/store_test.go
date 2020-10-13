@@ -79,9 +79,9 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	cID := ms.Commit()
 	require.Equal(t, int64(1), cID.Version)
 
-	// require failure when given an invalid or pruned version
+	// require no failure when given an invalid or pruned version
 	_, err = ms.CacheMultiStoreWithVersion(cID.Version + 1)
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	// require a valid version can be cache-loaded
 	cms, err := ms.CacheMultiStoreWithVersion(cID.Version)
@@ -192,6 +192,9 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, s3)
 	s3.Set(k3, v3)
 
+	s4, _ := store.getStoreByName("store4").(types.KVStore)
+	require.Nil(t, s4)
+
 	// do one commit
 	commitID := store.Commit()
 	expectedCommitID := getExpectedCommitID(store, 1)
@@ -231,6 +234,24 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, s3)
 	require.Nil(t, s3.Get(k3)) // data was deleted
 
+	// store4 is mounted, with empty data
+	s4, _ = restore.getStoreByName("store4").(types.KVStore)
+	require.NotNil(t, s4)
+
+	iterator := s4.Iterator(nil, nil)
+
+	values := 0
+	for ; iterator.Valid(); iterator.Next() {
+		values += 1
+	}
+	require.Zero(t, values)
+
+	require.NoError(t, iterator.Close())
+
+	// write something inside store4
+	k4, v4 := []byte("fourth"), []byte("created")
+	s4.Set(k4, v4)
+
 	// store2 is no longer mounted
 	st2 := restore.getStoreByName("store2")
 	require.Nil(t, st2)
@@ -258,12 +279,16 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, rl2)
 	require.Equal(t, v2, rl2.Get(k2))
 
+	rl4, _ := reload.getStoreByName("store4").(types.KVStore)
+	require.NotNil(t, rl4)
+	require.Equal(t, v4, rl4.Get(k4))
+
 	// check commitInfo in storage
 	ci, err = getCommitInfo(db, 2)
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
-	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
-	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3"})
+	require.Equal(t, 4, len(ci.StoreInfos), ci.StoreInfos)
+	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3", "store4"})
 }
 
 func TestParsePath(t *testing.T) {
@@ -474,7 +499,7 @@ func TestMultiStore_Pruning(t *testing.T) {
 
 			for _, v := range tc.deleted {
 				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.Error(t, err, "expected error when loading height: %d", v)
+				require.NoError(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}
@@ -510,7 +535,7 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 
 	for _, v := range pruneHeights {
 		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err, "expected error when loading height: %d", v)
+		require.NoError(t, err, "expected error when loading height: %d", v)
 	}
 }
 
@@ -796,8 +821,10 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("restore2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
 
 	upgrades := &types.StoreUpgrades{
+		Added: []string{"store4"},
 		Renamed: []types.StoreRename{{
 			OldKey: "store2",
 			NewKey: "restore2",

@@ -14,7 +14,7 @@ func TestMsgService(t *testing.T) {
 	qr := NewMsgServiceRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
-	testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
+	testdata.RegisterMsgServer(qr, testdata.MsgImpl{})
 	helper := &MsgServiceTestHelper{
 		MsgServiceRouter: qr,
 		ctx:              sdk.Context{}.WithContext(context.Background()),

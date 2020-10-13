@@ -9,6 +9,7 @@ import (
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 )
 
 type Store interface {
@@ -69,7 +70,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	return tmstrings.StringInSlice(s.Added, key)
+	return tmstrings.StringInSlice(key, s.Added)
 }
 
 // IsDeleted returns true if the given key should be deleted

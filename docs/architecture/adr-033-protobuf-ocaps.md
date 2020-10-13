@@ -146,7 +146,7 @@ security.
 The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
 
 ```go
-func Invoker(ctx context.Context, params InvokeParams, method string, args, reply interface{}, opts ...grpc.CallOption) error
+func Invoker(method string) func(ctx context.Context, caller ModuleID, request, response interface{}, opts ...interface{}) error
 
 type RootModuleKey struct {
   moduleName string
@@ -157,10 +157,6 @@ type DerivedModuleKey struct {
   moduleName string
   path []byte
   invoker Invoker
-}
-
-type InvokeParams struct {
-  Caller ModuleID
 }
 ```
 
@@ -179,9 +175,13 @@ func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBar) (*MsgBarRes
 ```
 
 In this way, a module can gain permissioned access to a root account and any number of sub-accounts and send
-authenticated `Msg`s from these accounts. The `InvokeParams.Caller` parameter is used under the hood to
-distinguish between different module accounts, but either way the `Invoker` only allows `Msg`s from either the
-root or a derived module account to pass through.
+authenticated `Msg`s from these accounts. The `Invoker` `caller` parameter is used under the hood to
+distinguish between different module accounts, but either way the function returned by `Invoker` only allows `Msg`s
+from either the root or a derived module account to pass through.
+
+Note that `Invoker` returns a function itself based on the method passed in. this will allow client implementations
+in the future that cache the invoke function for each method type avoiding the overhead of hash table method lookup,
+reducing the overhead of this inter-module communication method to bare minimum required for checking permissions.
 
 ### `AppModule` Wiring and Requirements
 

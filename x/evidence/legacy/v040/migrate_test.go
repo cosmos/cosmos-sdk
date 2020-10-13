@@ -31,7 +31,7 @@ func TestMigrate(t *testing.T) {
 		}},
 	}
 
-	migrated := v040evidence.Migrate(evidenceGenState, clientCtx)
+	migrated := v040evidence.Migrate(evidenceGenState)
 	expected := `{"evidence":[{"@type":"/cosmos.evidence.v1beta1.Equivocation","height":"20","time":"0001-01-01T00:00:00Z","power":"100","consensus_address":"cosmosvalcons1xxkueklal9vejv9unqu80w9vptyepfa99x2a3w"}]}`
 
 	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)

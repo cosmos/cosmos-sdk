@@ -3,7 +3,6 @@ package vesting
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -102,7 +101,7 @@ func (am AppModule) Route() sdk.Route {
 func (AppModule) QuerierRoute() string { return "" }
 
 // RegisterQueryService performs a no-op.
-func (am AppModule) RegisterQueryService(_ grpc.Server) {}
+func (am AppModule) RegisterServices(_ module.Configurator) {}
 
 // LegacyQuerierHandler performs a no-op.
 func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {

@@ -15,7 +15,21 @@ const (
 	ModuleName = "staking"
 )
 
+// staking constants
+const (
+	Unbonded  BondStatus = 0x00
+	Unbonding BondStatus = 0x01
+	Bonded    BondStatus = 0x02
+
+	BondStatusUnbonded  = "Unbonded"
+	BondStatusUnbonding = "Unbonding"
+	BondStatusBonded    = "Bonded"
+)
+
 type (
+	// BondStatus is the status of a validator
+	BondStatus byte
+
 	Pool struct {
 		NotBondedTokens sdk.Int `json:"not_bonded_tokens"`
 		BondedTokens    sdk.Int `json:"bonded_tokens"`
@@ -51,7 +65,7 @@ type (
 		OperatorAddress         sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
 		ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator
 		Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
-		Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
+		Status                  BondStatus     `json:"status"`              // validator status (bonded/unbonding/unbonded)
 		Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
 		DelegatorShares         sdk.Dec        `json:"delegator_shares"`    // total shares issued to a validator's delegators
 		Description             Description    `json:"description"`         // description terms for the validator
@@ -65,7 +79,7 @@ type (
 		OperatorAddress         sdk.ValAddress `json:"operator_address"`
 		ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`
 		Jailed                  bool           `json:"jailed"`
-		Status                  sdk.BondStatus `json:"status"`
+		Status                  BondStatus     `json:"status"`
 		Tokens                  sdk.Int        `json:"tokens"`
 		DelegatorShares         sdk.Dec        `json:"delegator_shares"`
 		Description             Description    `json:"description"`

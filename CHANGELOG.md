@@ -34,9 +34,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Unreleased
+## [Unreleased]
 
-## v0.40.0-rc0 - 2020-10-13
+## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases
 of the Cosmos SDK since launch. Please read through this changelog and [release notes](./RELEASE_NOTES.md) to make sure you are aware of any relevant breaking changes.

@@ -96,6 +96,18 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 					misbehaviour.SignatureTwo.DataType = types.UNSPECIFIED
 				}, false,
 			},
+			{
+				"timestamp for SignatureOne is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.Timestamp = 0
+				}, false,
+			},
+			{
+				"timestamp for SignatureTwo is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Timestamp = 0
+				}, false,
+			},
 		}
 
 		for _, tc := range testCases {

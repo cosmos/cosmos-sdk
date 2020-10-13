@@ -180,3 +180,16 @@ message Fee {
   // not support fee grants, this will fail
   string granter = 4;
 }
+
+// ServiceMsg is the struct which represents a service message, it can be
+// thought as an Any whose typeUrl matches a service method format
+// (ex. `/cosmos.gov.Msg/SubmitProposal`), and whose value is the marshalled
+// bytes of the request.
+message ServiceMsg {
+    // method_name is the fully-qualified service method name of the service 
+    // message. Note that is contains two '/' characters.
+    string method_name = 1;
+    // request is the encoded raw bytes of the request which corresponds to the
+    // service method.
+    bytes request = 2;
+}

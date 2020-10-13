@@ -8,13 +8,15 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // MsgServiceRouter routes Msg Service fully-qualified service methods to their
 // handler.
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
-	routes            map[string]sdk.Handler
+	routes            map[string]MsgServiceHandler
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -22,18 +24,16 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]sdk.Handler{},
+		routes: map[string]MsgServiceHandler{},
 	}
 }
 
-// sdk.Handler defines a function type which handles Msg service message.
-// It's similar to sdk.Handler, but with simplified version of `Msg`, without
-// `Route()`, `Type()` and `GetSignBytes()`.
+// MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, reqBz []byte) (*sdk.Result, error)
 
-// Route returns the sdk.Handler for a given query route path or nil
+// Route returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *MsgServiceRouter) Route(path string) sdk.Handler {
+func (msr *MsgServiceRouter) Route(path string) MsgServiceHandler {
 	handler, found := msr.routes[path]
 	if !found {
 		return nil
@@ -50,13 +50,29 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
+		msr.routes[fqMethod] = func(ctx sdk.Context, reqBz []byte) (*sdk.Result, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+				err := protoCodec.Unmarshal(reqBz, i)
+				if err != nil {
+					return err
+				}
+
+				req, ok := i.(tx.MsgRequest)
+				if !ok {
+					return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "req is not a MsgRequest")
+				}
+
 				if msr.interfaceRegistry != nil {
 					return codectypes.UnpackInterfaces(i, msr.interfaceRegistry)
 				}
+
+				err = req.ValidateBasic()
+				if err != nil {
+					return err
+				}
+
 				return nil
 			}, nil)
 			if err != nil {

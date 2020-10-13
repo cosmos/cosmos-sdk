@@ -1,4 +1,4 @@
-# ADR 032: Change PubKey
+# ADR 034: Change PubKey
 
 ## Changelog
 

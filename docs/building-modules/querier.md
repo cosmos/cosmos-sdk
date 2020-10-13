@@ -24,7 +24,7 @@ Let us break it down:
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `query`, as well as a cache-wrapped copy of the latest state. It is primarily used by the [`keeper`](./keeper.md) to access the state.
 - The result `res` returned to `baseapp`, marshalled using the application's [`codec`](../core/encoding.md).
 
-## Implementation of a module `querier`s
+## Implementation of a module query service
 
 ### gRPC Queriers
 

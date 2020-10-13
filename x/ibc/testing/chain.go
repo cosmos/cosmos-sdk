@@ -527,6 +527,7 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 		valSet      *tmproto.ValidatorSet
 		trustedVals *tmproto.ValidatorSet
 	)
+	require.NotNil(chain.t, tmValSet)
 
 	vsetHash := tmValSet.Hash()
 

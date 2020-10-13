@@ -56,7 +56,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	encodingConfig := simapp.MakeEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	encodingConfig.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)

@@ -685,7 +685,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		msgRoute := msg.Route()
-		handler := app.router.Route(ctx, msgRoute)
+		// First, check if the MsgService router handles the route.
+		handler := app.MsgServiceRouter().Route(msgRoute)
+		// If not, then check if the legacy router handles the route.
+		if handler == nil {
+			handler = app.router.Route(ctx, msgRoute)
+		}
 
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)

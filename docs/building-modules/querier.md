@@ -26,7 +26,7 @@ Let us break it down:
 
 ## Implementation of a module query service
 
-### gRPC Queriers
+### gRPC Service
 
 When defining a Protobuf `Query` service, a `QueryServer` interface is generated for each module with all the service methods:
 

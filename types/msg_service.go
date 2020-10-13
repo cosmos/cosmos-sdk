@@ -28,6 +28,10 @@ type ServiceMsg struct {
 
 var _ Msg = ServiceMsg{}
 
+func (msg ServiceMsg) ProtoMessage()  {}
+func (msg ServiceMsg) Reset()         {}
+func (msg ServiceMsg) String() string { return "ServiceMsg" }
+
 // Route implements Msg.Route method.
 func (msg ServiceMsg) Route() string {
 	return msg.MethodName

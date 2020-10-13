@@ -147,7 +147,7 @@ func NewBaseApp(
 		router:           NewRouter(),
 		queryRouter:      NewQueryRouter(),
 		grpcQueryRouter:  NewGRPCQueryRouter(),
-		serviceMsgRouter: NewMsgServiceRouter(),
+		serviceMsgRouter: NewServiceMsgRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
 	}

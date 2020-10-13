@@ -21,8 +21,8 @@ type ServiceMsgRouter struct {
 
 var _ gogogrpc.Server = &ServiceMsgRouter{}
 
-// NewMsgServiceRouter creates a new ServiceMsgRouter.
-func NewMsgServiceRouter() *ServiceMsgRouter {
+// NewServiceMsgRouter creates a new ServiceMsgRouter.
+func NewServiceMsgRouter() *ServiceMsgRouter {
 	return &ServiceMsgRouter{
 		routes: map[string]MsgServiceHandler{},
 	}

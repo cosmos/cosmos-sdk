@@ -223,6 +223,7 @@ func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
 	app.snapshotKeepRecent = snapshotKeepRecent
 }
 
+// SetInterfaceRegistry sets the InterfaceRegistry.
 func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)

@@ -29,7 +29,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 // sdk.Handler defines a function type which handles Msg service message.
 // It's similar to sdk.Handler, but with simplified version of `Msg`, without
 // `Route()`, `Type()` and `GetSignBytes()`.
-type MsgServiceHandler = func(ctx sdk.Context, msgRequest sdk.MsgRequest) (*sdk.Result, error)
+type MsgServiceHandler = func(ctx sdk.Context, reqBz []byte) (*sdk.Result, error)
 
 // Route returns the sdk.Handler for a given query route path or nil
 // if not found.

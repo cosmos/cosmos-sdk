@@ -112,7 +112,6 @@ Applications typically support web services that use HTTP requests (e.g. a web w
 Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `auth` module:
 
 ```proto
-
 // Query defines the gRPC querier service.
 service Query{
     // Account returns account details based on address.

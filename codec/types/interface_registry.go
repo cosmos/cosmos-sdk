@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -18,12 +20,14 @@ type AnyUnpacker interface {
 	//    err := cdc.UnpackAny(any, &msg)
 	//    ...
 	UnpackAny(any *Any, iface interface{}) error
+	UnpackServiceMethodRequest(any *Any) (proto.Message, error)
 }
 
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {
 	AnyUnpacker
+	jsonpb.AnyResolver
 
 	// RegisterInterface associates protoName as the public name for the
 	// interface passed in as iface. This is to be used primarily to create
@@ -42,6 +46,8 @@ type InterfaceRegistry interface {
 	// Ex:
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
+
+	RegisterServiceRequestType(methodName string, request proto.Message)
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -76,8 +82,10 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	interfaceNames map[string]reflect.Type
-	interfaceImpls map[reflect.Type]interfaceMap
+	interfaceNames  map[string]reflect.Type
+	interfaceImpls  map[reflect.Type]interfaceMap
+	typeURLMap      map[string]reflect.Type
+	serviceRequests map[string]reflect.Type
 }
 
 type interfaceMap = map[string]reflect.Type
@@ -112,10 +120,18 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 			panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 		}
 
-		imap["/"+proto.MessageName(impl)] = implType
+		typeUrl := "/" + proto.MessageName(impl)
+		imap[typeUrl] = implType
+		registry.typeURLMap[typeUrl] = implType
 	}
 
 	registry.interfaceImpls[ityp] = imap
+}
+
+func (registry *interfaceRegistry) RegisterServiceRequestType(methodName string, request proto.Message) {
+	typ := reflect.TypeOf(request)
+	registry.typeURLMap[methodName] = typ
+	registry.serviceRequests[methodName] = typ
 }
 
 func (registry *interfaceRegistry) ListAllInterfaces() []string {
@@ -196,6 +212,44 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	any.cachedValue = msg
 
 	return nil
+}
+
+func (registry *interfaceRegistry) UnpackServiceMethodRequest(any *Any) (proto.Message, error) {
+	if any.TypeUrl == "" {
+		// if TypeUrl is empty return nil because without it we can't actually unpack anything
+		return nil, nil
+	}
+
+	typ, found := registry.serviceRequests[any.TypeUrl]
+	if !found {
+		return nil, fmt.Errorf("no method named %s registered", any.TypeUrl)
+	}
+
+	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't proto unmarshal %T", msg)
+	}
+
+	err := proto.Unmarshal(any.Value, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = UnpackInterfaces(msg, registry)
+	if err != nil {
+		return nil, err
+	}
+
+	return msg, nil
+}
+
+func (registry *interfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+	typ := registry.typeURLMap[typeUrl]
+	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("can't resolve type URL %s", typeUrl)
+	}
+	return msg, nil
 }
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces

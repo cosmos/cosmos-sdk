@@ -142,11 +142,14 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		// If the any's typeUrl contains 2 slashes, then we unpack the any into
 		// a ServiceMsg struct as per ADR-031.
 		if nSlashes := len(strings.Split("/", any.TypeUrl)) - 1; nSlashes >= 2 {
-			var serviceMsg sdk.ServiceMsg
-			err := unpacker.UnpackAny(any, &serviceMsg)
+			var serviceMsg ServiceMsg
+			req, err := unpacker.UnpackServiceMethodRequest(any)
 			if err != nil {
 				return err
 			}
+			msgReq, ok := req.(MsgRequest)
+			serviceMsg.MethodName = any.TypeUrl
+			serviceMsg.Request = msgReq
 		} else {
 			var msg sdk.Msg
 			err := unpacker.UnpackAny(any, &msg)

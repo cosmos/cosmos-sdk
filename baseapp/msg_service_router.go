@@ -1,14 +1,16 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/gogo/protobuf/proto"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -29,7 +31,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, reqBz []byte) (*sdk.Result, error)
+type MsgServiceHandler = func(ctx sdk.Context, req tx.MsgRequest) (*sdk.Result, error)
 
 // Route returns the MsgServiceHandler for a given query route path or nil
 // if not found.
@@ -50,45 +52,47 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, reqBz []byte) (*sdk.Result, error) {
+		// NOTE: this is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
+		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
+		// We use a no-op interceptor to avoid actually calling into the handler itself.
+		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
+			msg, ok := i.(proto.Message)
+			if !ok {
+				// we panic here because there is no other alternative and the app cannot be initialized correctly
+				// this should only happen if there is a problem with code generation in which case the app won't
+				// work correctly anyway
+				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
+			}
+			msr.interfaceRegistry.RegisterServiceRequestType(fqMethod, msg)
+			return nil
+		}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+			return nil, nil
+		})
+
+		msr.routes[fqMethod] = func(ctx sdk.Context, req tx.MsgRequest) (*sdk.Result, error) {
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				err := protoCodec.Unmarshal(reqBz, i)
-				if err != nil {
-					return err
-				}
-
-				req, ok := i.(tx.MsgRequest)
-				if !ok {
-					return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "req is not a MsgRequest")
-				}
-
-				if msr.interfaceRegistry != nil {
-					return codectypes.UnpackInterfaces(i, msr.interfaceRegistry)
-				}
-
-				err = req.ValidateBasic()
-				if err != nil {
-					return err
-				}
-
+				// we don't do any decoding here because the decoding was already done
 				return nil
-			}, nil)
+			}, func(goCtx context.Context, _ interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+				err := req.ValidateBasic()
+				if err != nil {
+					return nil, err
+				}
+				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
+				return handler(goCtx, req)
+			})
 			if err != nil {
 				return nil, err
 			}
 
-			// proto marshal the result bytes
-			resBytes, err := protoCodec.Marshal(res)
-			if err != nil {
-				return nil, err
+			resMsg, ok := res.(proto.Message)
+			if !ok {
+				return nil, fmt.Errorf("can't proto encode %T", resMsg)
 			}
-
-			// return the result bytes as the response value
-			return &sdk.Result{
-				Data: resBytes,
-			}, nil
+			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
 	}
 }

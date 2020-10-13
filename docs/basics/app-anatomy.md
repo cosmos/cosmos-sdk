@@ -228,8 +228,6 @@ Each module can expose gRPC endpoints, called [service methods](https://grpc.io/
 
 #### gRPC-gateway REST Endpoints
 
-The [module's REST interface](../building-modules/module-interfaces.md#legacy-rest) lets users generate transactions and query the state through REST calls to the application's [light client daemon](../core/node.md#lcd) (LCD). REST routes are defined in a file `client/rest/rest.go`, which is composed of:
-
 Some external clients may not wish to use gRPC. The SDK provides in this case a gRPC gateway service, which exposes each gRPC service as a correspoding REST endpoint. Please refer to the [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) documentation to learn more.
 
 The REST endpoints are defined in the Protobuf files, along with the gRPC services, using Protobuf annotations. Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods. By default, all REST endpoints defined in the SDK have an URL starting with the `/cosmos/` prefix.

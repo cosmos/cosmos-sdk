@@ -64,6 +64,7 @@ type IntegrationTestSuite struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	queryClient types.QueryClient
+	msgClient   types.MsgClient
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -77,9 +78,14 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
+	msgHelper := baseapp.NewMsgServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterMsgServer(msgHelper, keeper.NewMsgServerImpl(app.BankKeeper))
+	msgClient := types.NewMsgClient(msgHelper)
+
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
+	suite.msgClient = msgClient
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {

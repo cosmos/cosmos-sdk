@@ -32,7 +32,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error)
 
-// Route returns the MsgServiceHandler for a given query route path or nil
+// Handler returns the MsgServiceHandler for a given query route path or nil
 // if not found.
 func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
 	handler, found := msr.routes[methodName]

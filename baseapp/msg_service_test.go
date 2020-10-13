@@ -1,8 +1,10 @@
-package simapp_test
+package baseapp_test
 
 import (
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -27,7 +28,7 @@ func TestMsgService(t *testing.T) {
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),
-		testdata.MsgImpl{},
+		testdata.MsgServerImpl{},
 	)
 	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 

@@ -4,12 +4,12 @@ import (
 	"context"
 )
 
-type MsgImpl struct{}
+type MsgServerImpl struct{}
 
-var _ MsgServer = MsgImpl{}
+var _ MsgServer = MsgServerImpl{}
 
 // CreateDog implements the MsgServer interface.
-func (m MsgImpl) CreateDog(_ context.Context, msg *MsgCreateDog) (*MsgCreateDogResponse, error) {
+func (m MsgServerImpl) CreateDog(_ context.Context, msg *MsgCreateDog) (*MsgCreateDogResponse, error) {
 	return &MsgCreateDogResponse{
 		Name: msg.Dog.Name,
 	}, nil

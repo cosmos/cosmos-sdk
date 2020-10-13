@@ -54,5 +54,5 @@ func (msg ServiceMsg) GetSigners() []AccAddress {
 
 // Type implements Msg.Type method.
 func (msg ServiceMsg) Type() string {
-	return "timeout_packet"
+	return msg.MethodName
 }

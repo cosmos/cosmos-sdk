@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/jsonpb"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -27,6 +26,7 @@ type descriptorIface interface {
 
 // RejectUnknownFieldsStrict rejects any bytes bz with an error that has unknown fields for the provided proto.Message type.
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+// An AnyResolver must be provided for traversing inside google.protobuf.Any's.
 func RejectUnknownFieldsStrict(bz []byte, msg proto.Message, resolver jsonpb.AnyResolver) error {
 	_, err := RejectUnknownFields(bz, msg, false, resolver)
 	return err
@@ -37,6 +37,7 @@ func RejectUnknownFieldsStrict(bz []byte, msg proto.Message, resolver jsonpb.Any
 // hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
 // used to treat a message with non-critical field different in different security contexts (such as transaction signing).
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
+// An AnyResolver must be provided for traversing inside google.protobuf.Any's.
 func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool, resolver jsonpb.AnyResolver) (hasUnknownNonCriticals bool, err error) {
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
@@ -410,10 +411,13 @@ func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*desc
 	return tagNumToTypeIndex, md, nil
 }
 
+// DefaultAnyResolver is a default implementation of AnyResolver which uses
+// the default encoding of type URLs as specified by the protobuf specification.
 type DefaultAnyResolver struct{}
 
 var _ jsonpb.AnyResolver = DefaultAnyResolver{}
 
+// Resolve is the AnyResolver.Resolve method.
 func (d DefaultAnyResolver) Resolve(typeUrl string) (proto.Message, error) {
 	// Only the part of typeUrl after the last slash is relevant.
 	mname := typeUrl

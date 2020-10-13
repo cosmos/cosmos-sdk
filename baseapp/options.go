@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"

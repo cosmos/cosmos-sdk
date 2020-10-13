@@ -15,18 +15,24 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
+		msgServer := keeper.NewMsgServerImpl(k)
+
 		switch msg := msg.(type) {
 		case *types.MsgSetWithdrawAddress:
-			return handleMsgModifyWithdrawAddress(ctx, msg, k)
+			res, err := msgServer.ModifyWithdrawAddress(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgWithdrawDelegatorReward:
-			return handleMsgWithdrawDelegatorReward(ctx, msg, k)
+			res, err := msgServer.WithdrawDelegatorReward(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgWithdrawValidatorCommission:
-			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
+			res, err := msgServer.WithdrawValidatorCommission(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgFundCommunityPool:
-			return handleMsgFundCommunityPool(ctx, msg, k)
+			res, err := msgServer.FundCommunityPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized distribution message type: %T", msg)

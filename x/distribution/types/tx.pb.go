@@ -4,11 +4,16 @@
 package types
 
 import (
+	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -65,6 +70,43 @@ func (m *MsgSetWithdrawAddress) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetWithdrawAddress proto.InternalMessageInfo
 
+// MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
+type MsgSetWithdrawAddressResponse struct {
+}
+
+func (m *MsgSetWithdrawAddressResponse) Reset()         { *m = MsgSetWithdrawAddressResponse{} }
+func (m *MsgSetWithdrawAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetWithdrawAddressResponse) ProtoMessage()    {}
+func (*MsgSetWithdrawAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{1}
+}
+func (m *MsgSetWithdrawAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetWithdrawAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetWithdrawAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetWithdrawAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetWithdrawAddressResponse.Merge(m, src)
+}
+func (m *MsgSetWithdrawAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetWithdrawAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetWithdrawAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetWithdrawAddressResponse proto.InternalMessageInfo
+
 // MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
 // from a single validator.
 type MsgWithdrawDelegatorReward struct {
@@ -76,7 +118,7 @@ func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegator
 func (m *MsgWithdrawDelegatorReward) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawDelegatorReward) ProtoMessage()    {}
 func (*MsgWithdrawDelegatorReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed4f433d965e58ca, []int{1}
+	return fileDescriptor_ed4f433d965e58ca, []int{2}
 }
 func (m *MsgWithdrawDelegatorReward) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -105,6 +147,43 @@ func (m *MsgWithdrawDelegatorReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
 
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
+type MsgWithdrawDelegatorRewardResponse struct {
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) Reset()         { *m = MsgWithdrawDelegatorRewardResponse{} }
+func (m *MsgWithdrawDelegatorRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawDelegatorRewardResponse) ProtoMessage()    {}
+func (*MsgWithdrawDelegatorRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{3}
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Merge(m, src)
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawDelegatorRewardResponse proto.InternalMessageInfo
+
 // MsgWithdrawValidatorCommission withdraws the full commission to the validator
 // address.
 type MsgWithdrawValidatorCommission struct {
@@ -115,7 +194,7 @@ func (m *MsgWithdrawValidatorCommission) Reset()         { *m = MsgWithdrawValid
 func (m *MsgWithdrawValidatorCommission) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawValidatorCommission) ProtoMessage()    {}
 func (*MsgWithdrawValidatorCommission) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed4f433d965e58ca, []int{2}
+	return fileDescriptor_ed4f433d965e58ca, []int{4}
 }
 func (m *MsgWithdrawValidatorCommission) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -144,6 +223,45 @@ func (m *MsgWithdrawValidatorCommission) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawValidatorCommission proto.InternalMessageInfo
 
+// MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.
+type MsgWithdrawValidatorCommissionResponse struct {
+}
+
+func (m *MsgWithdrawValidatorCommissionResponse) Reset() {
+	*m = MsgWithdrawValidatorCommissionResponse{}
+}
+func (m *MsgWithdrawValidatorCommissionResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawValidatorCommissionResponse) ProtoMessage()    {}
+func (*MsgWithdrawValidatorCommissionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{5}
+}
+func (m *MsgWithdrawValidatorCommissionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawValidatorCommissionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawValidatorCommissionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawValidatorCommissionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawValidatorCommissionResponse.Merge(m, src)
+}
+func (m *MsgWithdrawValidatorCommissionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawValidatorCommissionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawValidatorCommissionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawValidatorCommissionResponse proto.InternalMessageInfo
+
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.
 type MsgFundCommunityPool struct {
@@ -155,7 +273,7 @@ func (m *MsgFundCommunityPool) Reset()         { *m = MsgFundCommunityPool{} }
 func (m *MsgFundCommunityPool) String() string { return proto.CompactTextString(m) }
 func (*MsgFundCommunityPool) ProtoMessage()    {}
 func (*MsgFundCommunityPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed4f433d965e58ca, []int{3}
+	return fileDescriptor_ed4f433d965e58ca, []int{6}
 }
 func (m *MsgFundCommunityPool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -184,11 +302,52 @@ func (m *MsgFundCommunityPool) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgFundCommunityPool proto.InternalMessageInfo
 
+// MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
+type MsgFundCommunityPoolResponse struct {
+}
+
+func (m *MsgFundCommunityPoolResponse) Reset()         { *m = MsgFundCommunityPoolResponse{} }
+func (m *MsgFundCommunityPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgFundCommunityPoolResponse) ProtoMessage()    {}
+func (*MsgFundCommunityPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed4f433d965e58ca, []int{7}
+}
+func (m *MsgFundCommunityPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgFundCommunityPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgFundCommunityPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgFundCommunityPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFundCommunityPoolResponse.Merge(m, src)
+}
+func (m *MsgFundCommunityPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgFundCommunityPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFundCommunityPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgFundCommunityPoolResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetWithdrawAddress)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddress")
+	proto.RegisterType((*MsgSetWithdrawAddressResponse)(nil), "cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse")
 	proto.RegisterType((*MsgWithdrawDelegatorReward)(nil), "cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward")
+	proto.RegisterType((*MsgWithdrawDelegatorRewardResponse)(nil), "cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse")
 	proto.RegisterType((*MsgWithdrawValidatorCommission)(nil), "cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission")
+	proto.RegisterType((*MsgWithdrawValidatorCommissionResponse)(nil), "cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse")
 	proto.RegisterType((*MsgFundCommunityPool)(nil), "cosmos.distribution.v1beta1.MsgFundCommunityPool")
+	proto.RegisterType((*MsgFundCommunityPoolResponse)(nil), "cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse")
 }
 
 func init() {
@@ -196,35 +355,332 @@ func init() {
 }
 
 var fileDescriptor_ed4f433d965e58ca = []byte{
-	// 436 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xbd, 0x8e, 0xd3, 0x40,
-	0x1c, 0xc4, 0xbd, 0x87, 0x74, 0xe2, 0x96, 0x82, 0x9c, 0x75, 0x88, 0x90, 0x3b, 0xad, 0x4f, 0x16,
-	0x45, 0x1a, 0x6c, 0x02, 0xdd, 0x75, 0xe4, 0xd0, 0x49, 0x29, 0x22, 0x90, 0x91, 0x40, 0xa2, 0x41,
-	0x6b, 0xef, 0xca, 0x59, 0x61, 0xfb, 0x1f, 0x79, 0xd7, 0x71, 0xf2, 0x06, 0x94, 0x3c, 0x42, 0x24,
-	0x1a, 0x44, 0x4d, 0xc9, 0x03, 0xa4, 0x4c, 0x49, 0x15, 0x90, 0xd3, 0x50, 0xe7, 0x09, 0x50, 0xfc,
-	0x95, 0x2f, 0x44, 0x03, 0x95, 0xad, 0xf1, 0xec, 0x6f, 0x46, 0xd6, 0x2c, 0x7e, 0xe8, 0x81, 0x0c,
-	0x41, 0xda, 0x4c, 0x48, 0x15, 0x0b, 0x37, 0x51, 0x02, 0x22, 0x7b, 0xd4, 0x71, 0xb9, 0xa2, 0x1d,
-	0x5b, 0x8d, 0xad, 0x61, 0x0c, 0x0a, 0xf4, 0xf3, 0xc2, 0x65, 0x6d, 0xbb, 0xac, 0xd2, 0xd5, 0x3a,
-	0xf3, 0xc1, 0x87, 0xdc, 0x67, 0xaf, 0xdf, 0x8a, 0x23, 0x2d, 0x52, 0x82, 0x5d, 0x2a, 0x79, 0x0d,
-	0xf4, 0x40, 0x44, 0xc5, 0x77, 0xf3, 0x2b, 0xc2, 0xf7, 0xfa, 0xd2, 0x7f, 0xc5, 0xd5, 0x1b, 0xa1,
-	0x06, 0x2c, 0xa6, 0xe9, 0x33, 0xc6, 0x62, 0x2e, 0xa5, 0xde, 0xc3, 0xa7, 0x8c, 0x07, 0xdc, 0xa7,
-	0x0a, 0xe2, 0x77, 0xb4, 0x10, 0x9b, 0xe8, 0x12, 0xb5, 0x4f, 0xba, 0x17, 0xab, 0x85, 0xd1, 0x9c,
-	0xd0, 0x30, 0xb8, 0x32, 0x0f, 0x2c, 0xa6, 0xd3, 0xa8, 0xb5, 0x0a, 0x75, 0x83, 0x1b, 0x69, 0x49,
-	0xaf, 0x49, 0x47, 0x39, 0xe9, 0x7c, 0xb5, 0x30, 0xee, 0x17, 0xa4, 0x7d, 0x87, 0xe9, 0xdc, 0x4d,
-	0x77, 0x2b, 0x5d, 0xdd, 0xfe, 0x30, 0x35, 0xb4, 0x5f, 0x53, 0x43, 0x33, 0xbf, 0x21, 0xdc, 0xea,
-	0x4b, 0xbf, 0xea, 0xfc, 0xbc, 0x4a, 0x74, 0x78, 0x4a, 0x63, 0xf6, 0x3f, 0xbb, 0xf7, 0xf0, 0xe9,
-	0x88, 0x06, 0x82, 0xed, 0xa0, 0x8e, 0xf6, 0x51, 0x07, 0x16, 0xd3, 0x69, 0xd4, 0xda, 0x61, 0xfd,
-	0x04, 0x93, 0xad, 0xf6, 0xaf, 0x2b, 0xe3, 0x35, 0x84, 0xa1, 0x90, 0x52, 0x40, 0xf4, 0xe7, 0x58,
-	0xf4, 0x8f, 0xb1, 0x9f, 0x10, 0x3e, 0xeb, 0x4b, 0xff, 0x26, 0x89, 0xd8, 0x3a, 0x2a, 0x89, 0x84,
-	0x9a, 0xbc, 0x04, 0x08, 0x74, 0x0f, 0x1f, 0xd3, 0x10, 0x92, 0x48, 0x35, 0xd1, 0xe5, 0xad, 0xf6,
-	0x9d, 0x27, 0x0f, 0xac, 0x72, 0x69, 0xeb, 0xd9, 0x54, 0x0b, 0xb3, 0xae, 0x41, 0x44, 0xdd, 0xc7,
-	0xb3, 0x85, 0xa1, 0x7d, 0xf9, 0x61, 0xb4, 0x7d, 0xa1, 0x06, 0x89, 0x6b, 0x79, 0x10, 0xda, 0xe5,
-	0xc6, 0x8a, 0xc7, 0x23, 0xc9, 0xde, 0xdb, 0x6a, 0x32, 0xe4, 0x32, 0x3f, 0x20, 0x9d, 0x12, 0xad,
-	0x5f, 0xe0, 0x13, 0xc6, 0x87, 0x20, 0x85, 0x82, 0xb8, 0xf8, 0x83, 0xce, 0x46, 0xd8, 0xb4, 0xec,
-	0xbe, 0xf8, 0x9c, 0x11, 0x34, 0xcb, 0x08, 0x9a, 0x67, 0x04, 0xfd, 0xcc, 0x08, 0xfa, 0xb8, 0x24,
-	0xda, 0x7c, 0x49, 0xb4, 0xef, 0x4b, 0xa2, 0xbd, 0xed, 0xfc, 0x35, 0x77, 0xbc, 0x7b, 0x83, 0xf2,
-	0x1a, 0xee, 0x71, 0x3e, 0xf5, 0xa7, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x89, 0x6e, 0x9f, 0xc2,
-	0x65, 0x03, 0x00, 0x00,
+	// 563 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x3f, 0x6f, 0xd3, 0x40,
+	0x18, 0xc6, 0x7d, 0x2d, 0xaa, 0xe8, 0x31, 0x90, 0x58, 0x45, 0x0d, 0x4e, 0x38, 0x57, 0x56, 0x85,
+	0xb2, 0x60, 0x93, 0x30, 0x20, 0xc2, 0x80, 0x48, 0x50, 0xa5, 0x0e, 0x11, 0xc8, 0x48, 0x20, 0xb1,
+	0x20, 0x27, 0x77, 0xb8, 0x27, 0x62, 0xbf, 0x91, 0xef, 0xdc, 0x34, 0x23, 0x13, 0x8c, 0x48, 0x7c,
+	0x00, 0x2a, 0xb1, 0x20, 0x66, 0x46, 0x3e, 0x40, 0x25, 0x96, 0x8e, 0x4c, 0x01, 0x25, 0x0b, 0x73,
+	0x3f, 0x01, 0x4a, 0xfc, 0x87, 0xfc, 0x2f, 0xa5, 0x9d, 0x12, 0xbd, 0xf7, 0x3c, 0x3f, 0x3f, 0xaf,
+	0xf2, 0x5c, 0x8c, 0xb7, 0x9b, 0x20, 0x3c, 0x10, 0x16, 0xe5, 0x42, 0x06, 0xbc, 0x11, 0x4a, 0x0e,
+	0xbe, 0xb5, 0x5f, 0x6a, 0x30, 0xe9, 0x94, 0x2c, 0x79, 0x60, 0xb6, 0x03, 0x90, 0xa0, 0xe6, 0x23,
+	0x95, 0x39, 0xae, 0x32, 0x63, 0x95, 0xb6, 0xe1, 0x82, 0x0b, 0x23, 0x9d, 0x35, 0xfc, 0x16, 0x59,
+	0x34, 0x12, 0x83, 0x1b, 0x8e, 0x60, 0x29, 0xb0, 0x09, 0xdc, 0x8f, 0xce, 0x8d, 0xaf, 0x08, 0x5f,
+	0xab, 0x0b, 0xf7, 0x29, 0x93, 0xcf, 0xb9, 0xdc, 0xa3, 0x81, 0xd3, 0x79, 0x48, 0x69, 0xc0, 0x84,
+	0x50, 0x77, 0x71, 0x96, 0xb2, 0x16, 0x73, 0x1d, 0x09, 0xc1, 0x4b, 0x27, 0x1a, 0xe6, 0xd0, 0x16,
+	0x2a, 0xae, 0x57, 0x0b, 0x27, 0x3d, 0x3d, 0xd7, 0x75, 0xbc, 0x56, 0xc5, 0x98, 0x91, 0x18, 0x76,
+	0x26, 0x9d, 0x25, 0xa8, 0x1d, 0x9c, 0xe9, 0xc4, 0xf4, 0x94, 0xb4, 0x32, 0x22, 0xe5, 0x4f, 0x7a,
+	0xfa, 0x66, 0x44, 0x9a, 0x56, 0x18, 0xf6, 0xd5, 0xce, 0x64, 0xa4, 0xca, 0xe5, 0x77, 0x87, 0xba,
+	0xf2, 0xfb, 0x50, 0x57, 0x0c, 0x1d, 0xdf, 0x98, 0x9b, 0xda, 0x66, 0xa2, 0x0d, 0xbe, 0x60, 0xc6,
+	0x37, 0x84, 0xb5, 0xba, 0x70, 0x93, 0xe3, 0x47, 0x49, 0x24, 0x9b, 0x75, 0x9c, 0x80, 0x5e, 0xe4,
+	0x72, 0xbb, 0x38, 0xbb, 0xef, 0xb4, 0x38, 0x9d, 0x40, 0xad, 0x4c, 0xa3, 0x66, 0x24, 0x86, 0x9d,
+	0x49, 0x67, 0xb3, 0xfb, 0x6d, 0x63, 0x63, 0x71, 0xfa, 0x74, 0xc9, 0x10, 0x93, 0x31, 0xd5, 0xb3,
+	0x04, 0x57, 0x03, 0xcf, 0xe3, 0x42, 0x70, 0xf0, 0xe7, 0x87, 0x43, 0xe7, 0x0c, 0x57, 0xc4, 0x37,
+	0x97, 0x3f, 0x36, 0x0d, 0xf8, 0x09, 0xe1, 0x8d, 0xba, 0x70, 0x77, 0x42, 0x9f, 0x0e, 0x4f, 0x43,
+	0x9f, 0xcb, 0xee, 0x13, 0x80, 0x96, 0xda, 0xc4, 0x6b, 0x8e, 0x07, 0xa1, 0x2f, 0x73, 0x68, 0x6b,
+	0xb5, 0x78, 0xa5, 0x7c, 0xdd, 0x8c, 0xab, 0x3d, 0xec, 0x69, 0x52, 0x69, 0xb3, 0x06, 0xdc, 0xaf,
+	0xde, 0x3e, 0xea, 0xe9, 0xca, 0x97, 0x9f, 0x7a, 0xd1, 0xe5, 0x72, 0x2f, 0x6c, 0x98, 0x4d, 0xf0,
+	0xac, 0xb8, 0xd4, 0xd1, 0xc7, 0x2d, 0x41, 0x5f, 0x5b, 0xb2, 0xdb, 0x66, 0x62, 0x64, 0x10, 0x76,
+	0x8c, 0x56, 0x0b, 0x78, 0x9d, 0xb2, 0x36, 0x08, 0x2e, 0x21, 0x88, 0x7e, 0x11, 0xfb, 0xef, 0x60,
+	0x6c, 0x1f, 0x82, 0x0b, 0xf3, 0x42, 0x26, 0x5b, 0x94, 0xbf, 0x5f, 0xc2, 0xab, 0x75, 0xe1, 0xaa,
+	0x6f, 0x87, 0x77, 0x05, 0x28, 0x7f, 0xd5, 0x9d, 0xbe, 0x2b, 0x65, 0x73, 0xc9, 0xcd, 0x34, 0xe7,
+	0x36, 0x55, 0xab, 0x9c, 0xdd, 0x93, 0x24, 0x52, 0x3f, 0x20, 0xbc, 0xb9, 0xa8, 0xda, 0x77, 0x4f,
+	0xe3, 0x2e, 0x30, 0x6a, 0x0f, 0xfe, 0xd3, 0x98, 0xa6, 0xfa, 0x88, 0x70, 0x7e, 0x59, 0x19, 0xef,
+	0xff, 0xeb, 0x03, 0xe6, 0x98, 0xb5, 0xda, 0x39, 0xcc, 0x69, 0xc2, 0x37, 0x08, 0x67, 0x67, 0xcb,
+	0x58, 0x3a, 0x0d, 0x3d, 0x63, 0xd1, 0xee, 0x9d, 0xd9, 0x92, 0x64, 0xa8, 0x3e, 0xfe, 0xdc, 0x27,
+	0xe8, 0xa8, 0x4f, 0xd0, 0x71, 0x9f, 0xa0, 0x5f, 0x7d, 0x82, 0xde, 0x0f, 0x88, 0x72, 0x3c, 0x20,
+	0xca, 0x8f, 0x01, 0x51, 0x5e, 0x94, 0x96, 0xb6, 0xfc, 0x60, 0xf2, 0x05, 0x31, 0x2a, 0x7d, 0x63,
+	0x6d, 0xf4, 0x4f, 0x7e, 0xe7, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x9b, 0x1f, 0xea, 0x42, 0x44,
+	0x06, 0x00, 0x00,
+}
+
+func (this *MsgSetWithdrawAddressResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgSetWithdrawAddressResponse)
+	if !ok {
+		that2, ok := that.(MsgSetWithdrawAddressResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *MsgWithdrawDelegatorRewardResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgWithdrawDelegatorRewardResponse)
+	if !ok {
+		that2, ok := that.(MsgWithdrawDelegatorRewardResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *MsgWithdrawValidatorCommissionResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgWithdrawValidatorCommissionResponse)
+	if !ok {
+		that2, ok := that.(MsgWithdrawValidatorCommissionResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+func (this *MsgFundCommunityPoolResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgFundCommunityPoolResponse)
+	if !ok {
+		that2, ok := that.(MsgFundCommunityPoolResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	return true
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// MsgClient is the client API for Msg service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MsgClient interface {
+	// ModifyWithdrawAddress defines a method to change the withdraw address
+	// for a delegator (or validator self-delegation).
+	ModifyWithdrawAddress(ctx context.Context, in *MsgSetWithdrawAddress, opts ...grpc.CallOption) (*MsgSetWithdrawAddressResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a single validator.
+	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
+	// WithdrawValidatorCommission defines a method to withdraw the
+	// full commission to the validator address
+	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
+	// FundCommunityPool defines a method to allow an account to directly
+	// fund the community pool.
+	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
+}
+
+type msgClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+	return &msgClient{cc}
+}
+
+func (c *msgClient) ModifyWithdrawAddress(ctx context.Context, in *MsgSetWithdrawAddress, opts ...grpc.CallOption) (*MsgSetWithdrawAddressResponse, error) {
+	out := new(MsgSetWithdrawAddressResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/ModifyWithdrawAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error) {
+	out := new(MsgWithdrawDelegatorRewardResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error) {
+	out := new(MsgWithdrawValidatorCommissionResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error) {
+	out := new(MsgFundCommunityPoolResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/FundCommunityPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	// ModifyWithdrawAddress defines a method to change the withdraw address
+	// for a delegator (or validator self-delegation).
+	ModifyWithdrawAddress(context.Context, *MsgSetWithdrawAddress) (*MsgSetWithdrawAddressResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a single validator.
+	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
+	// WithdrawValidatorCommission defines a method to withdraw the
+	// full commission to the validator address
+	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
+	// FundCommunityPool defines a method to allow an account to directly
+	// fund the community pool.
+	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
+}
+
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
+}
+
+func (*UnimplementedMsgServer) ModifyWithdrawAddress(ctx context.Context, req *MsgSetWithdrawAddress) (*MsgSetWithdrawAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyWithdrawAddress not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawDelegatorReward(ctx context.Context, req *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawValidatorCommission(ctx context.Context, req *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawValidatorCommission not implemented")
+}
+func (*UnimplementedMsgServer) FundCommunityPool(ctx context.Context, req *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FundCommunityPool not implemented")
+}
+
+func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_ModifyWithdrawAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetWithdrawAddress)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ModifyWithdrawAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/ModifyWithdrawAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ModifyWithdrawAddress(ctx, req.(*MsgSetWithdrawAddress))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawDelegatorReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, req.(*MsgWithdrawDelegatorReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawValidatorCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawValidatorCommission)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawValidatorCommission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawValidatorCommission(ctx, req.(*MsgWithdrawValidatorCommission))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_FundCommunityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgFundCommunityPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).FundCommunityPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/FundCommunityPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).FundCommunityPool(ctx, req.(*MsgFundCommunityPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "cosmos.distribution.v1beta1.Msg",
+	HandlerType: (*MsgServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ModifyWithdrawAddress",
+			Handler:    _Msg_ModifyWithdrawAddress_Handler,
+		},
+		{
+			MethodName: "WithdrawDelegatorReward",
+			Handler:    _Msg_WithdrawDelegatorReward_Handler,
+		},
+		{
+			MethodName: "WithdrawValidatorCommission",
+			Handler:    _Msg_WithdrawValidatorCommission_Handler,
+		},
+		{
+			MethodName: "FundCommunityPool",
+			Handler:    _Msg_FundCommunityPool_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "cosmos/distribution/v1beta1/tx.proto",
 }
 
 func (m *MsgSetWithdrawAddress) Marshal() (dAtA []byte, err error) {
@@ -261,6 +717,29 @@ func (m *MsgSetWithdrawAddress) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetWithdrawAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetWithdrawAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetWithdrawAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -301,6 +780,29 @@ func (m *MsgWithdrawDelegatorReward) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgWithdrawDelegatorRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgWithdrawValidatorCommission) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -328,6 +830,29 @@ func (m *MsgWithdrawValidatorCommission) MarshalToSizedBuffer(dAtA []byte) (int,
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawValidatorCommissionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawValidatorCommissionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawValidatorCommissionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -375,6 +900,29 @@ func (m *MsgFundCommunityPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgFundCommunityPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgFundCommunityPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgFundCommunityPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -403,6 +951,15 @@ func (m *MsgSetWithdrawAddress) Size() (n int) {
 	return n
 }
 
+func (m *MsgSetWithdrawAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgWithdrawDelegatorReward) Size() (n int) {
 	if m == nil {
 		return 0
@@ -420,6 +977,15 @@ func (m *MsgWithdrawDelegatorReward) Size() (n int) {
 	return n
 }
 
+func (m *MsgWithdrawDelegatorRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgWithdrawValidatorCommission) Size() (n int) {
 	if m == nil {
 		return 0
@@ -430,6 +996,15 @@ func (m *MsgWithdrawValidatorCommission) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	return n
+}
+
+func (m *MsgWithdrawValidatorCommissionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -449,6 +1024,15 @@ func (m *MsgFundCommunityPool) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	return n
+}
+
+func (m *MsgFundCommunityPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -551,6 +1135,59 @@ func (m *MsgSetWithdrawAddress) Unmarshal(dAtA []byte) error {
 			}
 			m.WithdrawAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetWithdrawAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetWithdrawAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetWithdrawAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -692,6 +1329,59 @@ func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgWithdrawDelegatorRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgWithdrawValidatorCommission) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -753,6 +1443,59 @@ func (m *MsgWithdrawValidatorCommission) Unmarshal(dAtA []byte) error {
 			}
 			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawValidatorCommissionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawValidatorCommissionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawValidatorCommissionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -872,6 +1615,59 @@ func (m *MsgFundCommunityPool) Unmarshal(dAtA []byte) error {
 			}
 			m.Depositor = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgFundCommunityPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgFundCommunityPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgFundCommunityPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

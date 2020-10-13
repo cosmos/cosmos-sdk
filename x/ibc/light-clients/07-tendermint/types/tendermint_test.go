@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -85,10 +86,30 @@ func (suite *TendermintTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 
 func TestTendermintTestSuite(t *testing.T) {
 	suite.Run(t, new(TendermintTestSuite))
+}
+
+// CreateSortedSignerArray takes two PrivValidators, and the corresponding Validator structs
+// (including voting power). It returns a signer array of PrivValidators that matches the
+// sorting of ValidatorSet.
+// The sorting is first by .VotingPower (descending), with secondary index of .Address (ascending).
+func CreateSortedSignerArray(altPrivVal, suitePrivVal tmtypes.PrivValidator,
+	altVal, suiteVal *tmtypes.Validator) []tmtypes.PrivValidator {
+
+	switch {
+	case altVal.VotingPower > suiteVal.VotingPower:
+		return []tmtypes.PrivValidator{altPrivVal, suitePrivVal}
+	case altVal.VotingPower < suiteVal.VotingPower:
+		return []tmtypes.PrivValidator{suitePrivVal, altPrivVal}
+	default:
+		if bytes.Compare(altVal.Address, suiteVal.Address) == -1 {
+			return []tmtypes.PrivValidator{altPrivVal, suitePrivVal}
+		}
+		return []tmtypes.PrivValidator{suitePrivVal, altPrivVal}
+	}
 }

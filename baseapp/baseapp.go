@@ -54,7 +54,7 @@ type BaseApp struct { // nolint: maligned
 	router            sdk.Router           // handle any kind of message
 	queryRouter       sdk.QueryRouter      // router for redirecting query calls
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	serviceMsgRouter  *ServiceMsgRouter    // router for redirecting Msg service messages
+	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry types.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
@@ -147,7 +147,7 @@ func NewBaseApp(
 		router:           NewRouter(),
 		queryRouter:      NewQueryRouter(),
 		grpcQueryRouter:  NewGRPCQueryRouter(),
-		serviceMsgRouter: NewServiceMsgRouter(),
+		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
 	}
@@ -180,8 +180,8 @@ func (app *BaseApp) Logger() log.Logger {
 	return app.logger
 }
 
-// ServiceMsgRouter returns the ServiceMsgRouter of a BaseApp.
-func (app *BaseApp) ServiceMsgRouter() *ServiceMsgRouter { return app.serviceMsgRouter }
+// MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -696,7 +696,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 		if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
 			msgType = svcMsg.MethodName
-			handler := app.serviceMsgRouter.Handler(msgType)
+			handler := app.msgServiceRouter.Handler(msgType)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message service method: %s; message index: %d", msgType, i)
 			}

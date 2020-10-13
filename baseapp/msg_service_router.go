@@ -13,17 +13,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ServiceMsgRouter routes fully-qualified Msg service methods to their handler.
-type ServiceMsgRouter struct {
+// MsgServiceRouter routes fully-qualified Msg service methods to their handler.
+type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 }
 
-var _ gogogrpc.Server = &ServiceMsgRouter{}
+var _ gogogrpc.Server = &MsgServiceRouter{}
 
-// NewServiceMsgRouter creates a new ServiceMsgRouter.
-func NewServiceMsgRouter() *ServiceMsgRouter {
-	return &ServiceMsgRouter{
+// NewMsgServiceRouter creates a new MsgServiceRouter.
+func NewMsgServiceRouter() *MsgServiceRouter {
+	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}
 }
@@ -33,7 +33,7 @@ type MsgServiceHandler = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result,
 
 // Handler returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *ServiceMsgRouter) Handler(methodName string) MsgServiceHandler {
+func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
 	handler, found := msr.routes[methodName]
 	if !found {
 		return nil
@@ -44,7 +44,7 @@ func (msr *ServiceMsgRouter) Handler(methodName string) MsgServiceHandler {
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
 // service description, handler is an object which implements that gRPC service.
-func (msr *ServiceMsgRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
@@ -93,6 +93,6 @@ func (msr *ServiceMsgRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 }
 
 // SetInterfaceRegistry sets the interface registry for the router.
-func (msr *ServiceMsgRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
+func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
 }

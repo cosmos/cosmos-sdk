@@ -12,6 +12,7 @@ import (
 //
 // - Moving balances from x/auth to x/bank genesis state.
 // - Moving supply from x/supply to x/bank genesis state.
+// - Re-encode in v0.40 GenesisState.
 func Migrate(
 	bankGenState v038bank.GenesisState,
 	authGenState v039auth.GenesisState,

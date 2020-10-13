@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -178,7 +178,7 @@ func (k Keeper) DelegationTotalRewards(c context.Context, req *types.QueryDelega
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del exported.DelegationI) (stop bool) {
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			valAddr := del.GetValidatorAddr()
 			val := k.stakingKeeper.Validator(ctx, valAddr)
 			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
@@ -212,7 +212,7 @@ func (k Keeper) DelegatorValidators(c context.Context, req *types.QueryDelegator
 
 	k.stakingKeeper.IterateDelegations(
 		ctx, delAdr,
-		func(_ int64, del exported.DelegationI) (stop bool) {
+		func(_ int64, del stakingtypes.DelegationI) (stop bool) {
 			validators = append(validators, del.GetValidatorAddr().String())
 			return false
 		},

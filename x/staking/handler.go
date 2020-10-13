@@ -111,7 +111,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg *types.MsgCreateValidator, k 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, sdk.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func handleMsgDelegate(ctx sdk.Context, msg *types.MsgDelegate, k keeper.Keeper)
 	}
 
 	// NOTE: source funds are always unbonded
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}

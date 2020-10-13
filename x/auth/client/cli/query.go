@@ -49,7 +49,7 @@ func QueryParamsCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(`Query the current auth parameters:
 
-$ <appcli> query auth params
+$ <appd> query auth params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

@@ -162,6 +162,8 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.Equal(t, spot, ha2.Animal.GetCachedValue())
 }
 
+// this instance of grpc.ClientConn is used to test packing service method
+// requests into Any's
 type testAnyPackClient struct {
 	any               types.Any
 	interfaceRegistry types.InterfaceRegistry
@@ -175,6 +177,7 @@ func (t *testAnyPackClient) Invoke(_ context.Context, method string, args, _ int
 		return fmt.Errorf("can't proto marshal %T", args)
 	}
 
+	// registry the method request type with the interface registry
 	t.interfaceRegistry.RegisterServiceRequestType((*interface{})(nil), method, reqMsg)
 
 	bz, err := proto.Marshal(reqMsg)
@@ -201,6 +204,7 @@ func TestAny_ServiceRequestProtoJSON(t *testing.T) {
 	}})
 	require.NoError(t, err)
 
+	// marshal JSON
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	bz, err := cdc.MarshalJSON(&anyPacker.any)
 	require.NoError(t, err)
@@ -208,6 +212,7 @@ func TestAny_ServiceRequestProtoJSON(t *testing.T) {
 		`{"@type":"/testdata.Msg/CreateDog","dog":{"size":"","name":"spot"}}`,
 		string(bz))
 
+	// unmarshal JSON
 	var any2 types.Any
 	err = cdc.UnmarshalJSON(bz, &any2)
 	require.NoError(t, err)

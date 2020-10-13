@@ -34,6 +34,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.40.0-rc1 - 2020-10-19
+
+* (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+
+
 ## v0.40.0-rc0 - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases

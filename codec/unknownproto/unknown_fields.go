@@ -137,12 +137,14 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
 			msg, err = resolver.Resolve(protoMessageName)
+			if err != nil {
+				return hasUnknownNonCriticals, err
+			}
 		} else {
 			msg, err = protoMessageForTypeName(protoMessageName[1:])
-		}
-
-		if err != nil {
-			return hasUnknownNonCriticals, err
+			if err != nil {
+				return hasUnknownNonCriticals, err
+			}
 		}
 
 		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals, resolver)
@@ -418,9 +420,9 @@ type DefaultAnyResolver struct{}
 var _ jsonpb.AnyResolver = DefaultAnyResolver{}
 
 // Resolve is the AnyResolver.Resolve method.
-func (d DefaultAnyResolver) Resolve(typeUrl string) (proto.Message, error) {
-	// Only the part of typeUrl after the last slash is relevant.
-	mname := typeUrl
+func (d DefaultAnyResolver) Resolve(typeURL string) (proto.Message, error) {
+	// Only the part of typeURL after the last slash is relevant.
+	mname := typeURL
 	if slash := strings.LastIndex(mname, "/"); slash >= 0 {
 		mname = mname[slash+1:]
 	}

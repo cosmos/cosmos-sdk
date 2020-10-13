@@ -116,8 +116,8 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
 	for _, impl := range impls {
-		typeUrl := "/" + proto.MessageName(impl)
-		registry.registerImpl(iface, typeUrl, impl)
+		typeURL := "/" + proto.MessageName(impl)
+		registry.registerImpl(iface, typeURL, impl)
 	}
 }
 
@@ -125,7 +125,7 @@ func (registry *interfaceRegistry) RegisterServiceRequestType(iface interface{},
 	registry.registerImpl(iface, methodName, request)
 }
 
-func (registry *interfaceRegistry) registerImpl(iface interface{}, typeUrl string, impl proto.Message) {
+func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {
@@ -137,8 +137,8 @@ func (registry *interfaceRegistry) registerImpl(iface interface{}, typeUrl strin
 		panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 	}
 
-	imap[typeUrl] = implType
-	registry.typeURLMap[typeUrl] = implType
+	imap[typeURL] = implType
+	registry.typeURLMap[typeURL] = implType
 
 	registry.interfaceImpls[ityp] = imap
 }
@@ -223,15 +223,15 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	return nil
 }
 
-func (registry *interfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
-	typ, found := registry.typeURLMap[typeUrl]
+func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+	typ, found := registry.typeURLMap[typeURL]
 	if !found {
-		return nil, fmt.Errorf("unable to resolve type URL %s", typeUrl)
+		return nil, fmt.Errorf("unable to resolve type URL %s", typeURL)
 	}
 
 	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("can't resolve type URL %s", typeUrl)
+		return nil, fmt.Errorf("can't resolve type URL %s", typeURL)
 	}
 
 	return msg, nil

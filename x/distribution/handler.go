@@ -19,7 +19,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case *types.MsgSetWithdrawAddress:
-			res, err := msgServer.ModifyWithdrawAddress(sdk.WrapSDKContext(ctx), msg)
+			res, err := msgServer.SetWithdrawAddress(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgWithdrawDelegatorReward:

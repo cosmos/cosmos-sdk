@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -45,16 +47,17 @@ type (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger           log.Logger
-	name             string               // application name from abci.Info
-	db               dbm.DB               // common DB backend
-	cms              sdk.CommitMultiStore // Main (uncached) state
-	storeLoader      StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	router           sdk.Router           // handle any kind of message
-	queryRouter      sdk.QueryRouter      // router for redirecting query calls
-	grpcQueryRouter  *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter *MsgServiceRouter    // router for redirecting Msg service messages
-	txDecoder        sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	logger            log.Logger
+	name              string               // application name from abci.Info
+	db                dbm.DB               // common DB backend
+	cms               sdk.CommitMultiStore // Main (uncached) state
+	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	router            sdk.Router           // handle any kind of message
+	queryRouter       sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	interfaceRegistry types.InterfaceRegistry
+	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -684,20 +687,36 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			break
 		}
 
-		msgRoute := msg.Route()
-		handler := app.router.Route(ctx, msgRoute)
+		var msgEvents sdk.Events
+		var msgResult *sdk.Result
+		var err error
+		var msgType string
 
-		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+		if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
+			msgType = svcMsg.MethodName
+			handler := app.msgServiceRouter.Handler(msgType)
+			if handler == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message service method: %s; message index: %d", msgType, i)
+			}
+			msgResult, err = handler(ctx, svcMsg.Request)
+		} else {
+			// legacy sdk.Msg routing
+			msgRoute := msg.Route()
+			msgType = msg.Type()
+			handler := app.router.Route(ctx, msgRoute)
+			if handler == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+			}
+
+			msgResult, err = handler(ctx, msg)
 		}
 
-		msgResult, err := handler(ctx, msg)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
-		msgEvents := sdk.Events{
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+		msgEvents = sdk.Events{
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgType)),
 		}
 		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 

@@ -1,9 +1,10 @@
 package simapp_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -19,23 +20,23 @@ import (
 )
 
 func TestMsgService(t *testing.T) {
-	db := dbm.NewMemDB()
-	encCfg := simapp.MakeEncodingConfig()
-	msgServiceOpt := func(bapp *baseapp.BaseApp) {
-		testdata.RegisterMsgServer(
-			bapp.MsgServiceRouter(),
-			testdata.MsgImpl{},
-		)
-	}
 	priv, _, _ := testdata.KeyTestPubAddr()
-	app := simapp.NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 0, encCfg, msgServiceOpt)
+	encCfg := simapp.MakeEncodingConfig()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	testdata.RegisterMsgServer(
+		app.MsgServiceRouter(),
+		testdata.MsgImpl{},
+	)
+	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 
 	msg := testdata.NewServiceMsgCreateDog(&testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}})
-
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	txBuilder.SetMsgs(msg)
+	err := txBuilder.SetMsgs(msg)
+	require.NoError(t, err)
 
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
@@ -48,7 +49,7 @@ func TestMsgService(t *testing.T) {
 		Sequence: 0,
 	}
 
-	err := txBuilder.SetSignatures(sigV2)
+	err = txBuilder.SetSignatures(sigV2)
 	require.NoError(t, err)
 
 	// Second round: all signer infos are set, so each signer can sign.
@@ -67,6 +68,6 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res := app.BaseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	fmt.Println("res=", res)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 }

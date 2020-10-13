@@ -14,7 +14,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw)
+		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -27,7 +27,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 		var body tx.TxBody
 
 		// allow non-critical unknown fields in TxBody
-		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true)
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -40,7 +40,7 @@ func DefaultTxDecoder(cdc *codec.ProtoCodec) sdk.TxDecoder {
 		var authInfo tx.AuthInfo
 
 		// reject all unknown proto fields in AuthInfo
-		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo)
+		err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}

@@ -27,7 +27,15 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
+		var msg sdk.Msg
+		if IsServiceMsg(any.TypeUrl) {
+			msg = sdk.ServiceMsg{
+				MethodName: any.TypeUrl,
+				Request:    any.GetCachedValue().(sdk.MsgRequest),
+			}
+		} else {
+			msg = any.GetCachedValue().(sdk.Msg)
+		}
 		res[i] = msg
 	}
 	return res
@@ -141,15 +149,12 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
 		// If the any's typeUrl contains 2 slashes, then we unpack the any into
 		// a ServiceMsg struct as per ADR-031.
-		if nSlashes := len(strings.Split("/", any.TypeUrl)) - 1; nSlashes >= 2 {
-			var serviceMsg ServiceMsg
-			req, err := unpacker.UnpackServiceMethodRequest(any)
+		if IsServiceMsg(any.TypeUrl) {
+			var req sdk.MsgRequest
+			err := unpacker.UnpackAny(any, &req)
 			if err != nil {
 				return err
 			}
-			msgReq, ok := req.(MsgRequest)
-			serviceMsg.MethodName = any.TypeUrl
-			serviceMsg.Request = msgReq
 		} else {
 			var msg sdk.Msg
 			err := unpacker.UnpackAny(any, &msg)
@@ -182,4 +187,8 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+func IsServiceMsg(typeUrl string) bool {
+	return strings.Count(typeUrl, "/") >= 2
 }

@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/gogo/protobuf/jsonpb"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -24,8 +26,8 @@ type descriptorIface interface {
 
 // RejectUnknownFieldsStrict rejects any bytes bz with an error that has unknown fields for the provided proto.Message type.
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
-func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
-	_, err := RejectUnknownFields(bz, msg, false)
+func RejectUnknownFieldsStrict(bz []byte, msg proto.Message, resolver jsonpb.AnyResolver) error {
+	_, err := RejectUnknownFields(bz, msg, false, resolver)
 	return err
 }
 
@@ -34,7 +36,7 @@ func RejectUnknownFieldsStrict(bz []byte, msg proto.Message) error {
 // hasUnknownNonCriticals will be set to true if non-critical fields were encountered during traversal. This flag can be
 // used to treat a message with non-critical field different in different security contexts (such as transaction signing).
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
-func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool) (hasUnknownNonCriticals bool, err error) {
+func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals bool, resolver jsonpb.AnyResolver) (hasUnknownNonCriticals bool, err error) {
 	if len(bz) == 0 {
 		return hasUnknownNonCriticals, nil
 	}
@@ -115,9 +117,12 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 		_, o := protowire.ConsumeVarint(fieldBytes)
 		fieldBytes = fieldBytes[o:]
 
+		var msg proto.Message
+		var err error
+
 		if protoMessageName == ".google.protobuf.Any" {
 			// Firstly typecheck types.Any to ensure nothing snuck in.
-			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals)
+			hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, (*types.Any)(nil), allowUnknownNonCriticals, resolver)
 			hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 			if err != nil {
 				return hasUnknownNonCriticals, err
@@ -129,14 +134,16 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			}
 			protoMessageName = any.TypeUrl
 			fieldBytes = any.Value
+			msg, err = resolver.Resolve(protoMessageName)
+		} else {
+			msg, err = protoMessageForTypeName(protoMessageName[1:])
 		}
 
-		msg, err := protoMessageForTypeName(protoMessageName[1:])
 		if err != nil {
 			return hasUnknownNonCriticals, err
 		}
 
-		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals)
+		hasUnknownNonCriticalsChild, err := RejectUnknownFields(fieldBytes, msg, allowUnknownNonCriticals, resolver)
 		hasUnknownNonCriticals = hasUnknownNonCriticals || hasUnknownNonCriticalsChild
 		if err != nil {
 			return hasUnknownNonCriticals, err

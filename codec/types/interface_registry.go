@@ -20,7 +20,6 @@ type AnyUnpacker interface {
 	//    err := cdc.UnpackAny(any, &msg)
 	//    ...
 	UnpackAny(any *Any, iface interface{}) error
-	UnpackServiceMethodRequest(any *Any) (proto.Message, error)
 }
 
 // InterfaceRegistry provides a mechanism for registering interfaces and
@@ -47,7 +46,7 @@ type InterfaceRegistry interface {
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 
-	RegisterServiceRequestType(methodName string, request proto.Message)
+	RegisterServiceRequestType(iface interface{}, methodName string, request proto.Message)
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -82,10 +81,9 @@ type UnpackInterfacesMessage interface {
 }
 
 type interfaceRegistry struct {
-	interfaceNames  map[string]reflect.Type
-	interfaceImpls  map[reflect.Type]interfaceMap
-	typeURLMap      map[string]reflect.Type
-	serviceRequests map[string]reflect.Type
+	interfaceNames map[string]reflect.Type
+	interfaceImpls map[reflect.Type]interfaceMap
+	typeURLMap     map[string]reflect.Type
 }
 
 type interfaceMap = map[string]reflect.Type
@@ -95,6 +93,7 @@ func NewInterfaceRegistry() InterfaceRegistry {
 	return &interfaceRegistry{
 		interfaceNames: map[string]reflect.Type{},
 		interfaceImpls: map[reflect.Type]interfaceMap{},
+		typeURLMap:     map[string]reflect.Type{},
 	}
 }
 
@@ -108,30 +107,32 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface int
 }
 
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+	for _, impl := range impls {
+		typeUrl := "/" + proto.MessageName(impl)
+		registry.registerImpl(iface, typeUrl, impl)
+	}
+}
+
+func (registry *interfaceRegistry) RegisterServiceRequestType(iface interface{}, methodName string, request proto.Message) {
+	registry.registerImpl(iface, methodName, request)
+}
+
+func (registry *interfaceRegistry) registerImpl(iface interface{}, typeUrl string, impl proto.Message) {
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {
 		imap = map[string]reflect.Type{}
 	}
 
-	for _, impl := range impls {
-		implType := reflect.TypeOf(impl)
-		if !implType.AssignableTo(ityp) {
-			panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
-		}
-
-		typeUrl := "/" + proto.MessageName(impl)
-		imap[typeUrl] = implType
-		registry.typeURLMap[typeUrl] = implType
+	implType := reflect.TypeOf(impl)
+	if !implType.AssignableTo(ityp) {
+		panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 	}
 
-	registry.interfaceImpls[ityp] = imap
-}
+	imap[typeUrl] = implType
+	registry.typeURLMap[typeUrl] = implType
 
-func (registry *interfaceRegistry) RegisterServiceRequestType(methodName string, request proto.Message) {
-	typ := reflect.TypeOf(request)
-	registry.typeURLMap[methodName] = typ
-	registry.serviceRequests[methodName] = typ
+	registry.interfaceImpls[ityp] = imap
 }
 
 func (registry *interfaceRegistry) ListAllInterfaces() []string {
@@ -214,41 +215,17 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	return nil
 }
 
-func (registry *interfaceRegistry) UnpackServiceMethodRequest(any *Any) (proto.Message, error) {
-	if any.TypeUrl == "" {
-		// if TypeUrl is empty return nil because without it we can't actually unpack anything
-		return nil, nil
-	}
-
-	typ, found := registry.serviceRequests[any.TypeUrl]
-	if !found {
-		return nil, fmt.Errorf("no method named %s registered", any.TypeUrl)
-	}
-
-	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("can't proto unmarshal %T", msg)
-	}
-
-	err := proto.Unmarshal(any.Value, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	err = UnpackInterfaces(msg, registry)
-	if err != nil {
-		return nil, err
-	}
-
-	return msg, nil
-}
-
 func (registry *interfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
-	typ := registry.typeURLMap[typeUrl]
+	typ, found := registry.typeURLMap[typeUrl]
+	if !found {
+		return nil, fmt.Errorf("unable to resolve type URL %s", typeUrl)
+	}
+
 	msg, ok := reflect.New(typ.Elem()).Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("can't resolve type URL %s", typeUrl)
 	}
+
 	return msg, nil
 }
 

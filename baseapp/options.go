@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -220,4 +222,10 @@ func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
 		panic("SetSnapshotKeepRecent() on sealed BaseApp")
 	}
 	app.snapshotKeepRecent = snapshotKeepRecent
+}
+
+func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
+	app.interfaceRegistry = registry
+	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }

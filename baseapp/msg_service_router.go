@@ -11,7 +11,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // MsgServiceRouter routes Msg Service fully-qualified service methods to their
@@ -31,12 +30,12 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
-type MsgServiceHandler = func(ctx sdk.Context, req tx.MsgRequest) (*sdk.Result, error)
+type MsgServiceHandler = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error)
 
 // Route returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *MsgServiceRouter) Route(path string) MsgServiceHandler {
-	handler, found := msr.routes[path]
+func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
+	handler, found := msr.routes[methodName]
 	if !found {
 		return nil
 	}
@@ -63,24 +62,21 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				// work correctly anyway
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
-			msr.interfaceRegistry.RegisterServiceRequestType(fqMethod, msg)
+			msr.interfaceRegistry.RegisterServiceRequestType((*sdk.MsgRequest)(nil), fqMethod, msg)
 			return nil
 		}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 			return nil, nil
 		})
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, req tx.MsgRequest) (*sdk.Result, error) {
+		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
+
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
 				// we don't do any decoding here because the decoding was already done
 				return nil
 			}, func(goCtx context.Context, _ interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				err := req.ValidateBasic()
-				if err != nil {
-					return nil, err
-				}
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 				return handler(goCtx, req)
 			})

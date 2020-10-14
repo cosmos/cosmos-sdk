@@ -1,7 +1,7 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
@@ -73,6 +73,34 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 
 					m.SignatureTwo.Signature = suite.GetInvalidProof()
 					misbehaviour = m
+				}, false,
+			},
+			{
+				"invalid SignatureOne timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureOne.Timestamp = 1000000000000
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"invalid SignatureTwo timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					m := solomachine.CreateMisbehaviour()
+
+					m.SignatureTwo.Timestamp = 1000000000000
+					misbehaviour = m
+				}, false,
+			},
+			{
+				"timestamp is less than consensus state timestamp",
+				func() {
+					clientState = solomachine.ClientState()
+					solomachine.Time = solomachine.Time - 5
+					misbehaviour = solomachine.CreateMisbehaviour()
 				}, false,
 			},
 			{

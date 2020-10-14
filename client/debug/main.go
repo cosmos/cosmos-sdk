@@ -174,7 +174,7 @@ Example:
 $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")
 			stringBytes = strings.Trim(stringBytes, "]")
@@ -182,7 +182,7 @@ $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 11
 
 			byteArray := []byte{}
 			for _, s := range spl {
-				b, err := strconv.Atoi(s)
+				b, err := strconv.ParseInt(s, 10, 8)
 				if err != nil {
 					return err
 				}

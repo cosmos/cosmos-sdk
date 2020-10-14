@@ -7,9 +7,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
 var _ exported.Header = Header{}
@@ -34,8 +34,8 @@ func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
 		return clienttypes.ZeroHeight()
 	}
-	epoch := clienttypes.ParseChainID(h.Header.ChainID)
-	return clienttypes.NewHeight(epoch, uint64(h.Header.Height))
+	version := clienttypes.ParseChainID(h.Header.ChainID)
+	return clienttypes.NewHeight(version, uint64(h.Header.Height))
 }
 
 // GetTime returns the current block timestamp. It returns a zero time if

@@ -602,15 +602,32 @@ var (
 	reAmt       = `[[:digit:]]+`
 	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
-	reDnm       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reDnmString))
-	reCoin      = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnmString))
-	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
+	reDnm       = returnReDnm
+	reCoin      = returnReCoin
+	reDecCoin   = returnDecCoin
 )
 
-// ValidateDenom validates a denomination string returning an error if it is
-// invalid.
+func returnDecCoin() *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, CoinDenomRegex()))
+}
+func returnReCoin() *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, CoinDenomRegex()))
+}
+func returnReDnm() *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`^%s$`, CoinDenomRegex()))
+}
+
+// DefaultCoinDenomRegex returns the default regex string
+func DefaultCoinDenomRegex() string {
+	return reDnmString
+}
+
+// CoinDenomRegex returns the current regex string and can be overwritten for custom validation
+var CoinDenomRegex = DefaultCoinDenomRegex
+
+// ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
-	if !reDnm.MatchString(denom) {
+	if !reDnm().MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
@@ -628,7 +645,7 @@ func mustValidateDenom(denom string) {
 func ParseCoin(coinStr string) (coin Coin, err error) {
 	coinStr = strings.TrimSpace(coinStr)
 
-	matches := reCoin.FindStringSubmatch(coinStr)
+	matches := reCoin().FindStringSubmatch(coinStr)
 	if matches == nil {
 		return Coin{}, fmt.Errorf("invalid coin expression: %s", coinStr)
 	}

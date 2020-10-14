@@ -8,14 +8,14 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
 func (suite *TendermintTestSuite) TestMisbehaviour() {
 	signers := []tmtypes.PrivValidator{suite.privVal}
-	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
 
 	misbehaviour := &types.Misbehaviour{
 		Header1:  suite.header,
@@ -34,9 +34,9 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	altPubKey, err := altPrivVal.GetPubKey()
 	suite.Require().NoError(err)
 
-	epochHeight := int64(height.EpochHeight)
+	versionHeight := int64(height.VersionHeight)
 
-	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), epochHeight)
+	altVal := tmtypes.NewValidator(altPubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), versionHeight)
 
 	// Create bothValSet with both suite validator and altVal
 	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
@@ -51,7 +51,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	heightMinus1 := clienttypes.NewHeight(0, height.EpochHeight-1)
+	heightMinus1 := clienttypes.NewHeight(0, height.VersionHeight-1)
 
 	testCases := []struct {
 		name                 string
@@ -86,7 +86,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			"valid misbehaviour with different trusted headers",
 			&types.Misbehaviour{
 				Header1:  suite.header,
-				Header2:  types.CreateTestHeader(chainID, height, clienttypes.NewHeight(0, height.EpochHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
+				Header2:  types.CreateTestHeader(chainID, height, clienttypes.NewHeight(0, height.VersionHeight-3), suite.now.Add(time.Minute), suite.valSet, bothValSet, signers),
 				ChainId:  chainID,
 				ClientId: clientID,
 			},
@@ -213,13 +213,13 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			},
 			func(misbehaviour *types.Misbehaviour) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header1.GetHeight().GetEpochHeight()), 1, tmproto.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header1.GetHeight().GetVersionHeight()), 1, tmproto.PrecommitType, altValSet)
 				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header1.Commit.BlockID)
 				if err != nil {
 					return err
 				}
 
-				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetEpochHeight()), misbehaviour.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), misbehaviour.Header1.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				misbehaviour.Header1.Commit = tmCommit.ToProto()
 				return err
 			},
@@ -235,13 +235,13 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			},
 			func(misbehaviour *types.Misbehaviour) error {
 				// voteSet contains only altVal which is less than 2/3 of total power (height/1height)
-				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header2.GetHeight().GetEpochHeight()), 1, tmproto.PrecommitType, altValSet)
+				wrongVoteSet := tmtypes.NewVoteSet(chainID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), 1, tmproto.PrecommitType, altValSet)
 				blockID, err := tmtypes.BlockIDFromProto(&misbehaviour.Header2.Commit.BlockID)
 				if err != nil {
 					return err
 				}
 
-				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetEpochHeight()), misbehaviour.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
+				tmCommit, err := tmtypes.MakeCommit(*blockID, int64(misbehaviour.Header2.GetHeight().GetVersionHeight()), misbehaviour.Header2.Commit.Round, wrongVoteSet, altSigners, suite.now)
 				misbehaviour.Header2.Commit = tmCommit.ToProto()
 				return err
 			},

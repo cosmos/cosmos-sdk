@@ -53,7 +53,9 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 	}
 
 	ctx.EventManager().EmitEvent(submitEvent)
-	return &types.MsgSubmitProposalResponse{}, nil
+	return &types.MsgSubmitProposalResponse{
+		ProposalId: proposal.ProposalId,
+	}, nil
 }
 
 func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {

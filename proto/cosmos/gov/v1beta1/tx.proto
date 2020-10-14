@@ -39,7 +39,9 @@ message MsgSubmitProposal {
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
-message MsgSubmitProposalResponse {}
+message MsgSubmitProposalResponse {
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+}
 
 // MsgVote defines a message to cast a vote.
 message MsgVote {

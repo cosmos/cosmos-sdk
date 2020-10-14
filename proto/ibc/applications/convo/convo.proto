@@ -33,3 +33,16 @@ message MsgConvo {
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
+
+// ConvoPacketData defines a struct for the packet payload
+// of the convo IBC application
+message ConvoPacketData {
+    // sender address
+    string sender = 1;
+
+    // receiver address
+    string receiver = 2;
+
+    // message sent from sender to receiver
+    string message = 3;
+}

@@ -81,7 +81,7 @@ Modules are by convention defined in the `.x/` subfolder (e.g. the `bank` module
 - Custom [`message` types](./messages-and-queries.md#messages) to trigger state-transitions. 
 - A [`handler`](./handler.md) used to process messages when they are routed to the module by [`baseapp`](../core/baseapp.md#message-routing). 
 - A  [`keeper`](./keeper.md), used to access the module's store(s) and update the state. 
-- A [`querier`](./querier.md), used to process user queries when they are routed to the module by [`baseapp`](../core/baseapp.md#query-routing).
+- A [query service](./query-services.md), used to process user queries when they are routed to the module by [`baseapp`](../core/baseapp.md#query-routing).
 - Interfaces, for end users to query the subset of the state defined by the module and create `message`s of the custom types defined in the module.
 
 In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./module-manager.md). 
@@ -91,4 +91,3 @@ Please refer to the [structure document](./structure.md) to learn about the reco
 ## Next {hide}
 
 Read more on the [`AppModule` interface and the `module manager`](./module-manager.md) {hide}
-

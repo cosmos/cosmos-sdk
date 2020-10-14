@@ -54,3 +54,7 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 025: IBC Passive Channels](./adr-025-ibc-passive-channels.md)
 - [ADR 026: IBC Client Recovery Mechanisms](./adr-026-ibc-client-recovery-mechanisms.md)
 - [ADR 027: Deterministic Protobuf Serialization](./adr-027-deterministic-protobuf-serialization.md)
+- [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
+- [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
+- [ADR 032: Typed Events](./adr-031-typed-events.md)
+

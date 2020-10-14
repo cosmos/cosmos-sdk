@@ -31,7 +31,7 @@ func NewUnjailTxCmd() *cobra.Command {
 		Short: "unjail validator previously jailed for downtime",
 		Long: `unjail a jailed validator:
 
-$ <appcli> tx slashing unjail --from mykey
+$ <appd> tx slashing unjail --from mykey
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)

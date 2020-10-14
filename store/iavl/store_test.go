@@ -50,6 +50,62 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	return tree, types.CommitID{Version: ver, Hash: hash}
 }
 
+func TestLoadStore(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree)
+
+	// Create non-pruned height H
+	require.True(t, tree.Set([]byte("hello"), []byte("hallo")))
+	hash, verH, err := tree.SaveVersion()
+	cIDH := types.CommitID{Version: verH, Hash: hash}
+	require.Nil(t, err)
+
+	// Create pruned height Hp
+	require.True(t, tree.Set([]byte("hello"), []byte("hola")))
+	hash, verHp, err := tree.SaveVersion()
+	cIDHp := types.CommitID{Version: verHp, Hash: hash}
+	require.Nil(t, err)
+
+	// TODO: Prune this height
+
+	// Create current height Hc
+	require.True(t, tree.Set([]byte("hello"), []byte("ciao")))
+	hash, verHc, err := tree.SaveVersion()
+	cIDHc := types.CommitID{Version: verHc, Hash: hash}
+	require.Nil(t, err)
+
+	// Querying an existing store at some previous non-pruned height H
+	hStore, err := store.GetImmutable(verH)
+	require.NoError(t, err)
+	require.Equal(t, string(hStore.Get([]byte("hello"))), "hallo")
+
+	// Querying an existing store at some previous pruned height Hp
+	hpStore, err := store.GetImmutable(verHp)
+	require.NoError(t, err)
+	require.Equal(t, string(hpStore.Get([]byte("hello"))), "hola")
+
+	// Querying an existing store at current height Hc
+	hcStore, err := store.GetImmutable(verHc)
+	require.NoError(t, err)
+	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
+
+	// Querying a new store at some previous non-pruned height H
+	newHStore, err := LoadStore(db, cIDH, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
+
+	// Querying a new store at some previous pruned height Hp
+	newHpStore, err := LoadStore(db, cIDHp, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
+
+	// Querying a new store at current height H
+	newHcStore, err := LoadStore(db, cIDHc, false)
+	require.NoError(t, err)
+	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
+}
+
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
@@ -61,7 +117,7 @@ func TestGetImmutable(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	newStore, err := store.GetImmutable(cID.Version - 1)
 	require.NoError(t, err)

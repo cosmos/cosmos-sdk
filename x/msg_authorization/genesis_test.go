@@ -46,7 +46,7 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	genesis := msgauth.ExportGenesis(suite.ctx, suite.keeper)
 
 	// Clear keeper
-	suite.keeper.Revoke(suite.ctx, granteeAddr, granterAddr, grant.MsgType())
+	suite.keeper.Revoke(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
 
 	msgauth.InitGenesis(suite.ctx, suite.keeper, genesis)
 	newGenesis := msgauth.ExportGenesis(suite.ctx, suite.keeper)

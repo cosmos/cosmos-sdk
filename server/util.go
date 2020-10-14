@@ -40,7 +40,7 @@ type Context struct {
 	Logger log.Logger
 }
 
-// ErrorCode contains the exit code for server exit
+// ErrorCode contains the exit code for server exit.
 type ErrorCode struct {
 	Code int
 }

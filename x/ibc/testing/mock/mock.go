@@ -102,7 +102,7 @@ func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-// RegisterQueryService implements the AppModule interface.
+// RegisterServices implements the AppModule interface.
 func (am AppModule) RegisterServices(module.Configurator) {}
 
 // InitGenesis implements the AppModule interface.

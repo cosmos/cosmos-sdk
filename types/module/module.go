@@ -166,10 +166,10 @@ type AppModule interface {
 	// routes
 	Route() sdk.Route
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	QuerierRoute() string
 
-	// Deprecated: use RegisterQueryService
+	// Deprecated: use RegisterServices
 	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
 
 	// RegisterServices allows a module to register services

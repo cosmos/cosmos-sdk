@@ -176,7 +176,7 @@ gRPC query services are defined in the module's Protobuf definition, specificall
 
 Protobuf generates a `QueryServer` interface for each module, containing all the service methods. A module's [`keeper`](#keeper) then needs to implement this `QueryServer` interface, by providing the concrete implementation of each service method. This concrete implementation is the handler of the corresponding gRPC query endpoint.
 
-Finally, each module should also implement the `RegisterQueryService` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterQueryServer` function provided by the generated Protobuf code.
+Finally, each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterQueryServer` function provided by the generated Protobuf code.
 
 ### Legacy Querier
 

@@ -100,7 +100,7 @@ func (am AppModule) Route() sdk.Route {
 // functionality.
 func (AppModule) QuerierRoute() string { return "" }
 
-// RegisterQueryService performs a no-op.
+// RegisterServices performs a no-op.
 func (am AppModule) RegisterServices(_ module.Configurator) {}
 
 // LegacyQuerierHandler performs a no-op.

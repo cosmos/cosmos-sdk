@@ -71,11 +71,11 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 	return k.router.GetRoute(evidenceRoute), nil
 }
 
-// SubmitEvidence attempts to match evidence against the keepers router and execute
+// submitEvidence attempts to match evidence against the keepers router and execute
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
+func (k Keeper) SubmitEvidenceI(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
 		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
 	}

@@ -25,7 +25,7 @@ type HandlerTestSuite struct {
 	app     *simapp.SimApp
 }
 
-func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidence {
+func testMsgSubmitEvidence(r *require.Assertions, e exported.Evidence, s sdk.AccAddress) exported.MsgSubmitEvidenceI {
 	msg, err := types.NewMsgSubmitEvidence(s, e)
 	r.NoError(err)
 	return msg
@@ -113,7 +113,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NoError(err, "unexpected error; tc #%d", i)
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
-			msg := tc.msg.(exported.MsgSubmitEvidence)
+			msg := tc.msg.(exported.MsgSubmitEvidenceI)
 			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
 		}
 	}

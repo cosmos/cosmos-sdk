@@ -72,7 +72,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 			// call the method handler from the service description with the handler object
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(_ interface{}) error {
 				// we don't do any decoding here because the decoding was already done
 				return nil
 			}, func(goCtx context.Context, _ interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

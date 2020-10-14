@@ -79,6 +79,10 @@ Next is an example of how to return a `*Result` from the `gov` module:
 
 For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/gov/handler.go) from the `gov` module.
 
+The `handler` can then be registered from [`AppModule.Route()`](./module-manager.md#appmodule) as shown in the example below:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146
+
 ## Next {hide}
 
 Learn about [query services](./query-services.md) {hide}

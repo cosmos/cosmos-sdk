@@ -87,6 +87,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			if !ok {
 				return nil, fmt.Errorf("can't proto encode %T", resMsg)
 			}
+
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
 	}

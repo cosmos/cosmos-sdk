@@ -69,7 +69,7 @@ func (k Keeper) Set(ctx sdk.Context, key string, value valueType)
 and go through the following steps:
 
 1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`. Then it's prefered to use the `prefix.Store` to access only the desired limited subset of the store for convenience and safety.
-2. Marshall `value` to `[]byte` using the codec `cdc`. 
+2. Marshal `value` to `[]byte` using the codec `cdc`. 
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store. 
 
 For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go).

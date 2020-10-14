@@ -101,7 +101,7 @@ func UnsafePackAny(x interface{}) *Any {
 
 // PackAny is a checked and safe version of UnsafePackAny. It assures that
 // `x` implements the proto.Message interface and uses it to serialize `x`.
-// TODO: should be moved away: https://github.com/cosmos/cosmos-sdk/issues/7479
+// [DEPRECATED]: should be moved away: https://github.com/cosmos/cosmos-sdk/issues/7479
 func PackAny(x interface{}) (*Any, error) {
 	if x == nil {
 		return nil, nil

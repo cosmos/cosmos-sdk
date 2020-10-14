@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 )
 
-func TestSortedSignerArray(t *testing.T) {
+func TestCreateSortedSignerArray(t *testing.T) {
 	privVal1 := mock.NewPV()
 	pubKey1, err := privVal1.GetPubKey()
 	require.NoError(t, err)

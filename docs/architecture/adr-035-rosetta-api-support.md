@@ -2,9 +2,11 @@
 
 ## Context
 
-Rosetta API, an open-source specification and set of tools developed by Coinbase, makes integration with blockchains simpler, faster, and more reliable by establishing a standard API for integrating blockchain applications.
+Rosetta API, an open-source specification and set of tools developed by Coinbase. Through the use of a standard API for integrating blockchain applications it will
 
-By using a common interface that standardizes the process of how a user interacts with a blockchain, both the work of exchanges to integrate with new blockchains and also of the developers to build cross-blockchain applications such as block explorers, wallets and dApps is considerably reduced.
+* Easier for a user to interact with a blockchain
+* Allow exchanges to integrate new blockchains quickly and easily
+* Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at considerably lower cost and effort.
 
 ## Decision
 

@@ -34,9 +34,7 @@ type MsgServiceHandler = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result,
 // Handler returns the MsgServiceHandler for a given query route path or nil
 // if not found.
 func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
-	handler, _ := msr.routes[methodName]
-
-	return handler
+	return msr.routes[methodName]
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC

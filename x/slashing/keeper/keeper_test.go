@@ -47,7 +47,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	tstaking.CheckValidator(addr, stakingtypes.BondStatusUnbonded, false)
+	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
 
 	// unbond below minimum self-delegation
 	require.Equal(t, p.BondDenom, tstaking.Denom)
@@ -57,7 +57,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// verify that validator is jailed
-	tstaking.CheckValidator(addr, "", true)
+	tstaking.CheckValidator(addr, -1, true)
 
 	// verify we cannot unjail (yet)
 	require.Error(t, app.SlashingKeeper.Unjail(ctx, addr))
@@ -73,7 +73,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	// verify we can immediately unjail
 	require.NoError(t, app.SlashingKeeper.Unjail(ctx, addr))
 
-	tstaking.CheckValidator(addr, "", false)
+	tstaking.CheckValidator(addr, -1, false)
 }
 
 // Test a new validator entering the validator set

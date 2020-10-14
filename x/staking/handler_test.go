@@ -592,7 +592,7 @@ func TestJailValidator(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	tstaking.Ctx = ctx
 
-	tstaking.CheckValidator(validatorAddr, "", true)
+	tstaking.CheckValidator(validatorAddr, -1, true)
 
 	// test that the delegator can still withdraw their bonds
 	tstaking.Undelegate(delegatorAddr, validatorAddr, unamt, true)
@@ -1020,7 +1020,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	// the total number of validators should stay the same
 	vals := app.StakingKeeper.GetLastValidators(ctx)
 	require.Equal(t, 2, len(vals), "vals %v", vals)
-	tstaking.CheckValidator(val1, types.Bonded.String(), false)
+	tstaking.CheckValidator(val1, types.Bonded, false)
 }
 
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {

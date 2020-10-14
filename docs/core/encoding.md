@@ -80,7 +80,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types.
 Protobuf types can be defined to encode:
   - state
   - [`Msg`s](../building-modules/messages-and-queries.md#messages)
-  - [queries](../building-modules/querier.md)
+  - [Query services](../building-modules/query-services.md)
   - [genesis](../building-modules/genesis.md)
   
 **Naming and conventions**

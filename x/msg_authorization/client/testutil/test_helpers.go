@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 	msgauthcli "github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 )
 
@@ -29,7 +28,7 @@ func MsgGrantAuthorizationExec(clientCtx client.Context, granter, grantee, msgNa
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 	}
 
-	viper.Set(cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix())
+	viper.Set(msgauthcli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix())
 
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, msgauthcli.NewCmdGrantAuthorization(), args)

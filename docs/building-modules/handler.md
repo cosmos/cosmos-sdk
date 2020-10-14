@@ -83,6 +83,14 @@ The `handler` can then be registered from [`AppModule.Route()`](./module-manager
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/x/gov/module.go#L143-L146
 
+## Telemetry
+
+New [telemetry metrics](../core/telemetry.md) can be created from the `handler` when handling messages for instance. 
+
+This is an example from the `auth` module:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/auth/vesting/handler.go#L68-L80
+
 ## Next {hide}
 
 Learn about [query services](./query-services.md) {hide}

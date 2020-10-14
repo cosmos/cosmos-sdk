@@ -50,7 +50,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
-		// NOTE: this is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
+		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
 		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
 		// We use a no-op interceptor to avoid actually calling into the handler itself.
 		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {

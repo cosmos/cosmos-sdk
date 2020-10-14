@@ -40,7 +40,7 @@ Let us go through the different parameters:
 
 - An expected `keeper` is a `keeper` external to a module that is required by the internal `keeper` of said module. External `keeper`s are listed in the internal `keeper`'s type definition as interfaces. These interfaces are themselves defined in a `types/expected_keepers.go` file within the module's folder. In this context, interfaces are used to reduce the number of dependencies, as well as to facilitate the maintenance of the module itself. 
 - `storeKey`s grant access to the store(s) of the [multistore](../core/store.md) managed by the module. They should always remain unexposed to external modules. 
-- A [codec `cdc`](../core/encoding.md), used to marshall and unmarshall struct to/from `[]byte`, that can be any of `codec.BinaryMarshaler`,`codec.JSONMarshaler` or `codec.Marshaler` based on your requirements. 
+- A [codec `cdc`](../core/encoding.md), used to marshall and unmarshall struct to/from `[]byte`, that can be any of `codec.BinaryMarshaler`,`codec.JSONMarshaler` or `codec.Marshaler` based on your requirements. It can be either a proto or amino codec as long as they implement these interfaces.
 
 Of course, it is possible to define different types of internal `keeper`s for the same module (e.g. a read-only `keeper`). Each type of `keeper` comes with its own constructor function, which is called from the [application's constructor function](../basics/app-anatomy.md). This is where `keeper`s are instantiated, and where developers make sure to pass correct instances of modules' `keeper`s to other modules that require it. 
 
@@ -56,7 +56,7 @@ func (k Keeper) Get(ctx sdk.Context, key string) returnType
 
 and go through the following steps:
 
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`.
+1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`. Then it's prefered to use the `prefix.Store` to access only the desired limited subset of the store for convenience and safety.
 2. If it exists, get the `[]byte` value stored at location `[]byte(key)` using the `Get(key []byte)` method of the store. 
 3. Unmarshall the retrieved value from `[]byte` to `returnType` using the codec `cdc`. Return the value.
 
@@ -68,11 +68,17 @@ func (k Keeper) Set(ctx sdk.Context, key string, value valueType)
 
 and go through the following steps:
 
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`.
+1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`. Then it's prefered to use the `prefix.Store` to access only the desired limited subset of the store for convenience and safety.
 2. Marshall `value` to `[]byte` using the codec `cdc`. 
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store. 
 
-For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go). 
+For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go).
+
+The [module `KVStore`](../core/store.md#kvstore-and-commitkvstore-interfaces) also provides an `Iterator()` method which returns an `Iterator` object to iterate over a domain of keys.
+
+This is an example from the `auth` module to iterate accounts:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/bf8809ef9840b4f5369887a38d8345e2380a567f/x/auth/keeper/account.go#L70-L83
 
 ## Next {hide}
 

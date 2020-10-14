@@ -52,7 +52,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return nil
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
@@ -296,11 +296,11 @@ func (am AppModule) OnAcknowledgementPacket(
 ) (*sdk.Result, error) {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal convo packet acknowledgement: %v", err)
 	}
-	var data types.FungibleTokenPacketData
+	var data types.ConvoPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal convo packet data: %s", err.Error())
 	}
 
 	if err := am.keeper.OnAcknowledgementPacket(ctx, packet, data, ack); err != nil {
@@ -343,9 +343,9 @@ func (am AppModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) (*sdk.Result, error) {
-	var data types.FungibleTokenPacketData
+	var data types.ConvoPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal convo packet data: %s", err.Error())
 	}
 	// refund tokens
 	if err := am.keeper.OnTimeoutPacket(ctx, packet, data); err != nil {

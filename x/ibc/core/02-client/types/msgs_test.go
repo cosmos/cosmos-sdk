@@ -57,7 +57,7 @@ func (suite *TypesTestSuite) TestMarshalMsgCreateClient() {
 		{
 			"tendermint client", func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers).ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 		},
@@ -109,7 +109,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"valid - tendermint client",
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers).ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			true,
@@ -117,7 +117,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 		{
 			"invalid tendermint client",
 			func() {
-				msg, err = types.NewMsgCreateClient("tendermint", &ibctmtypes.ClientState{}, suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers).ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient("tendermint", &ibctmtypes.ClientState{}, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,
@@ -133,7 +133,7 @@ func (suite *TypesTestSuite) TestMsgCreateClient_ValidateBasic() {
 			"failed to unpack consensus state",
 			func() {
 				tendermintClient := ibctmtypes.NewClientState(suite.chainA.ChainID, ibctesting.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
-				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers).ConsensusState(), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgCreateClient("tendermint", tendermintClient, suite.chainA.CurrentTMClientHeader().ConsensusState(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 				msg.ConsensusState = nil
 			},
@@ -216,7 +216,7 @@ func (suite *TypesTestSuite) TestMarshalMsgUpdateClient() {
 		},
 		{
 			"tendermint client", func() {
-				msg, err = types.NewMsgUpdateClient("tendermint", suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpdateClient("tendermint", suite.chainA.CurrentTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 
 			},
@@ -268,7 +268,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"valid - tendermint header",
 			func() {
-				msg, err = types.NewMsgUpdateClient("tendermint", suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpdateClient("tendermint", suite.chainA.CurrentTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			true,
@@ -315,7 +315,7 @@ func (suite *TypesTestSuite) TestMsgUpdateClient_ValidateBasic() {
 		{
 			"unsupported - localhost",
 			func() {
-				msg, err = types.NewMsgUpdateClient(exported.Localhost, suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, types.Height{}, suite.chainA.CurrentHeader.Time, suite.chainA.Vals, nil, suite.chainA.Signers), suite.chainA.SenderAccount.GetAddress())
+				msg, err = types.NewMsgUpdateClient(exported.Localhost, suite.chainA.CurrentTMClientHeader(), suite.chainA.SenderAccount.GetAddress())
 				suite.Require().NoError(err)
 			},
 			false,

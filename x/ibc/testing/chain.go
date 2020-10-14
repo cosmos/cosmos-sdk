@@ -268,7 +268,7 @@ func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clien
 func (chain *TestChain) NextBlock() {
 	// set the last header to the current header
 	// use nil trusted fields
-	chain.LastHeader = chain.CreateTMClientHeader(chain.ChainID, chain.CurrentHeader.Height, clienttypes.Height{}, chain.CurrentHeader.Time, chain.Vals, nil, chain.Signers)
+	chain.LastHeader = chain.CurrentTMClientHeader()
 
 	// increment the current header
 	chain.CurrentHeader = tmproto.Header{
@@ -518,6 +518,12 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 // expire any clients with a trusting period less than or equal to this amount of time.
 func (chain *TestChain) ExpireClient(amount time.Duration) {
 	chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(amount)
+}
+
+// CurrentTMClientHeader creates a TM header using the current header parameters
+// on the chain. The trusted fields in the header are set to nil.
+func (chain *TestChain) CurrentTMClientHeader() *ibctmtypes.Header {
+	return chain.CreateTMClientHeader(chain.ChainID, chain.CurrentHeader.Height, clienttypes.Height{}, chain.CurrentHeader.Time, chain.Vals, nil, chain.Signers)
 }
 
 // CreateTMClientHeader creates a TM header to update the TM client. Args are passed in to allow

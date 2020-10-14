@@ -41,6 +41,12 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
+// RegisterQueryService registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
+
 // RegisterLegacyAminoCodec registers the msg_authorization module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
@@ -79,12 +85,12 @@ func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runti
 
 //GetQueryCmd returns the cli query commands for the msg_authorization module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for the msg_authorization module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd(types.StoreKey)
+	return cli.GetTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface

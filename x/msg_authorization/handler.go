@@ -41,7 +41,7 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg *types.MsgGrantAuthorizati
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventGrantAuthorization,
-			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MsgType()),
+			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MethodName()),
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyGranterAddress, msg.Granter),
 			sdk.NewAttribute(types.AttributeKeyGranteeAddress, msg.Grantee),
@@ -84,7 +84,6 @@ func handleMsgExecAuthorized(ctx sdk.Context, msg *types.MsgExecAuthorized, k ke
 	if err != nil {
 		return nil, err
 	}
-
 	msgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err

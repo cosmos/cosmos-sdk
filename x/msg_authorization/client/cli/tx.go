@@ -2,7 +2,6 @@ package cli
 
 import (
 	"errors"
-	"io/ioutil"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,7 +16,7 @@ import (
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string) *cobra.Command {
+func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Authorization transactions subcommands",
@@ -28,20 +27,20 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	}
 
 	AuthorizationTxCmd.AddCommand(
-		GetCmdGrantAuthorization(storeKey),
-		GetCmdRevokeAuthorization(storeKey),
-		GetCmdSendAs(storeKey),
+		NewCmdGrantAuthorization(),
+		NewCmdRevokeAuthorization(),
+		NewCmdSendAs(),
 	)
 
 	return AuthorizationTxCmd
 }
 
-func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
+func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee_address] [type] [authorization] --from=[granter]",
+		Use:   "grant [grantee_address] [msg-type] [limit] --from=[granter]",
 		Short: "Grant authorization to an address",
 		Long:  "Grant authorization to an address to execute a transaction on your behalf",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -55,27 +54,18 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 
 			msgType := args[1]
 
-			bz, err := ioutil.ReadFile(args[2])
-			if err != nil {
-				return err
-			}
-
 			var authorization types.Authorization
 			switch msgType {
-			case (types.SendAuthorization{}.MsgType()):
-				var sendAuth types.SendAuthorization
-				err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &sendAuth)
+			case (types.SendAuthorization{}.MethodName()):
+				limit, err := sdk.ParseCoins(args[2])
 				if err != nil {
 					return err
 				}
-				authorization = &sendAuth
-			case (types.GenericAuthorization{}.MsgType()):
-				var genAuth types.GenericAuthorization
-				err := clientCtx.JSONMarshaler.UnmarshalJSON(bz, &genAuth)
-				if err != nil {
-					return err
+				authorization = &types.SendAuthorization{
+					SpendLimit: limit,
 				}
-				authorization = &genAuth
+			case (types.GenericAuthorization{}.MethodName()):
+				authorization = types.NewGenericAuthorization(msgType)
 			default:
 				return errors.New("invalid authorization type")
 			}
@@ -98,7 +88,7 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 	return cmd
 }
 
-func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
+func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
 		Short: "revoke authorization",
@@ -131,12 +121,12 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 	return cmd
 }
 
-func GetCmdSendAs(storeKey string) *cobra.Command {
+func NewCmdSendAs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "send-as [grantee] [msg_tx_json] --from [grantee]",
+		Use:   "exec [msg_tx_json] --from [grantee]",
 		Short: "execute tx on behalf of granter account",
 		Long:  "execute tx on behalf of granter account",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -144,10 +134,7 @@ func GetCmdSendAs(storeKey string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			grantee, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
+			grantee := clientCtx.GetFromAddress()
 
 			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
 				return errors.New("cannot broadcast tx during offline mode")

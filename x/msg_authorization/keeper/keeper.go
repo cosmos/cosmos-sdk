@@ -57,7 +57,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
-	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MsgType())
+	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return
@@ -105,6 +105,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 		handler := k.router.GetRoute(msg.Route())
+
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
 		}
@@ -130,7 +131,7 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
-	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MsgType())
+	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MethodName())
 	store.Set(actor, bz)
 }
 

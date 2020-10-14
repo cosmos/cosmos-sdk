@@ -71,7 +71,7 @@ func (s *TestSuite) TestKeeper() {
 	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
-	s.Require().Equal(authorization.MsgType(), proto.MessageName(&banktypes.MsgSend{}))
+	s.Require().Equal(authorization.MethodName(), proto.MessageName(&banktypes.MsgSend{}))
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
 	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgMultiSend{}))
@@ -133,7 +133,7 @@ func (s *TestSuite) TestKeeperFees() {
 	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgSend{}))
 	s.Require().NotNil(authorization)
 	s.Require().NotZero(expiration)
-	s.Require().Equal(authorization.MsgType(), proto.MessageName(&banktypes.MsgSend{}))
+	s.Require().Equal(authorization.MethodName(), proto.MessageName(&banktypes.MsgSend{}))
 
 	executeMsgs, err = msgs.GetMsgs()
 	s.Require().NoError(err)

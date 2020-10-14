@@ -11,7 +11,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the msg authorization module",
@@ -22,14 +22,14 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	authorizationQueryCmd.AddCommand(
-		GetCmdQueryAuthorization(queryRoute),
+		GetCmdQueryAuthorization(),
 	)
 
 	return authorizationQueryCmd
 }
 
 // GetCmdQueryAuthorization implements the query authorizations command.
-func GetCmdQueryAuthorization(storeName string) *cobra.Command {
+func GetCmdQueryAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "authorization [granter-addr] [grantee-addr] [msg-type]",
 		Args:  cobra.ExactArgs(3),

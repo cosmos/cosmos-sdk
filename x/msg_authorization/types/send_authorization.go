@@ -17,7 +17,7 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 	}
 }
 
-func (authorization SendAuthorization) MsgType() string {
+func (authorization SendAuthorization) MethodName() string {
 	return proto.MessageName(&bank.MsgSend{})
 }
 

@@ -75,7 +75,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(_ interface{}) error {
 				// we don't do any decoding here because the decoding was already done
 				return nil
-			}, func(goCtx context.Context, _ interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			}, func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 				return handler(goCtx, req)
 			})

@@ -191,8 +191,8 @@ Accepted
 
 ### Positive
 
-- Provide out-of-the-box Rosetta interface just by using the Cosmos SDK.
-- Contribute to the standarization of blockchain interfaces.
+- Out-of-the-box Rosetta API support within Cosmos SDK.
+- Blockchain interface standardisation
 
 ## References
 

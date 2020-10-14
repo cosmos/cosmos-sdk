@@ -143,7 +143,7 @@ func (p BIP44Params) String() string {
 		changeStr = "0"
 	}
 	// m / Purpose' / coin_type' / Account' / Change / address_index
-	return fmt.Sprintf("%d'/%d'/%d'/%s/%d",
+	return fmt.Sprintf("m/%d'/%d'/%d'/%s/%d",
 		p.Purpose,
 		p.CoinType,
 		p.Account,

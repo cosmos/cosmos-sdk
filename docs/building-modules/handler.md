@@ -81,4 +81,4 @@ For a deeper look at `handler`s, see this [example implementation of a `handler`
 
 ## Next {hide}
 
-Learn about [queriers](./querier.md) {hide}
+Learn about [query services](./query-services.md) {hide}

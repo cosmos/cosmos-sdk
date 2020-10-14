@@ -55,7 +55,7 @@ This query returns the account at a given address. The getter function does the 
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
   - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
-  - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [querier](./querier.md).
+  - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
   - The `clientCtx.PrintOutput` method is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
@@ -67,7 +67,7 @@ Finally, the module also needs a `GetQueryCmd`, which aggregates all of the quer
 
 The flags for a module are typically found in a `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as _required_ so that an error is thrown if the user does not provide values for them.
 
-For full details on flags, visit the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra).
+For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
 For example, the SDK `./client/flags` package includes a `AddTxFlagsToCmd(cmd *cobra.Command)` function that adds necessary flags to a transaction command, such as the `from` flag to indicate which address the transaction originates from.
 

@@ -689,22 +689,24 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			break
 		}
 
-		var msgEvents sdk.Events
-		var msgResult *sdk.Result
-		var err error
-		var msgType string
+		var (
+			msgEvents sdk.Events
+			msgResult *sdk.Result
+			msgFqName string
+			err       error
+		)
 
 		if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
-			msgType = svcMsg.MethodName
-			handler := app.msgServiceRouter.Handler(msgType)
+			msgFqName = svcMsg.MethodName
+			handler := app.msgServiceRouter.Handler(msgFqName)
 			if handler == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message service method: %s; message index: %d", msgType, i)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message service method: %s; message index: %d", msgFqName, i)
 			}
 			msgResult, err = handler(ctx, svcMsg.Request)
 		} else {
 			// legacy sdk.Msg routing
 			msgRoute := msg.Route()
-			msgType = msg.Type()
+			msgFqName = msg.Type()
 			handler := app.router.Route(ctx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
@@ -718,7 +720,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		msgEvents = sdk.Events{
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgType)),
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgFqName)),
 		}
 		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 

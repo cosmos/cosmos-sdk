@@ -45,7 +45,7 @@ func (msr *MsgServiceRouter) Handler(methodName string) MsgServiceHandler {
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
 // service description, handler is an object which implements that gRPC service.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	// adds a top-level query handler based on the gRPC service name
+	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
@@ -71,9 +71,9 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 
-			// call the method handler from the service description with the handler object
+			// Call the method handler from the service description with the handler object.
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(_ interface{}) error {
-				// we don't do any decoding here because the decoding was already done
+				// We don't do any decoding here because the decoding was already done.
 				return nil
 			}, func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)

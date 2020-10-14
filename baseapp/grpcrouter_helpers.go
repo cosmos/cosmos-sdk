@@ -21,8 +21,10 @@ type QueryServiceTestHelper struct {
 	ctx sdk.Context
 }
 
-var _ gogogrpc.Server = &QueryServiceTestHelper{}
-var _ gogogrpc.ClientConn = &QueryServiceTestHelper{}
+var (
+	_ gogogrpc.Server     = &QueryServiceTestHelper{}
+	_ gogogrpc.ClientConn = &QueryServiceTestHelper{}
+)
 
 // NewQueryServerTestHelper creates a new QueryServiceTestHelper that wraps
 // the provided sdk.Context

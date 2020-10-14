@@ -24,7 +24,7 @@ Here is an example from the `auth` module:
 
 This getter function creates the command for the `Sign` transaction. It does the following:
 
-- **Construct the command:** Read the [Cobra Documentation](https://github.com/spf13/cobra) for details on how to create commands.
+- **Construct the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for details on how to create commands.
   - **Use:** Specifies the format of a command-line entry users should type in order to invoke this command. In this case, the user uses `buy-name` as the name of the transaction command and provides the `name` the user wishes to buy and the `amount` the user is willing to pay.
   - **Args:** The number of arguments the user provides, in this case exactly two: `name` and `amount`.
   - **Short and Long:** A description for the function is provided here. A `Short` description is expected, and `Long` can be used to provide a more detailed description when a user uses the `--help` flag to ask for more information.
@@ -51,7 +51,7 @@ An application using this module likely adds `auth` module commands to its root 
 
 This query returns the account at a given address. The getter function does the following:
 
-- **Construct the command.** Read the [Cobra Documentation](https://github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `account` and provide the `address` they are querying for as the only argument.
+- **Construct the command.** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `account` and provide the `address` they are querying for as the only argument.
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
   - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
@@ -67,7 +67,7 @@ Finally, the module also needs a `GetQueryCmd`, which aggregates all of the quer
 
 The flags for a module are typically found in a `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as _required_ so that an error is thrown if the user does not provide values for them.
 
-For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
+For full details on flags, visit the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra).
 
 For example, the SDK `./client/flags` package includes a `AddTxFlagsToCmd(cmd *cobra.Command)` function that adds necessary flags to a transaction command, such as the `from` flag to indicate which address the transaction originates from.
 
@@ -126,13 +126,13 @@ service Query{
 }
 ```
 
-gRPC gateway is started in-process along with the application and Tendermint.
+gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in `app.toml`.
 
 The SDK provides a command for generating [Swagger](https://swagger.io/) documentation (`protoc-gen-swagger`). Setting `swagger` in `app.toml` defines if swagger documentation should be automatically registered.
 
 ## Legacy REST
 
-Developers may choose to keep using legacy REST endpoints for backward compatibility, although the recommended way is to use [gRPC](#grpc) and [gRPC-gateway](#grpc-gateway-rest).
+Legacy REST endpoints will be deprecated. But developers may choose to keep using legacy REST endpoints for backward compatibility, although the recommended way is to use [gRPC](#grpc) and [gRPC-gateway](#grpc-gateway-rest).
 
 With this implementation, module developers need to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
 

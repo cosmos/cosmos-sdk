@@ -56,7 +56,7 @@ func (k Keeper) Get(ctx sdk.Context, key string) returnType
 
 and go through the following steps:
 
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey` method of the `ctx`.
+1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`.
 2. If it exists, get the `[]byte` value stored at location `[]byte(key)` using the `Get(key []byte)` method of the store. 
 3. Unmarshall the retrieved value from `[]byte` to `returnType` using the codec `cdc`. Return the value.
 
@@ -68,8 +68,8 @@ func (k Keeper) Set(ctx sdk.Context, key string, value valueType)
 
 and go through the following steps:
 
-1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey` method of the `ctx`.
-2. Marhsall `value` to `[]byte` using the codec `cdc`. 
+1. Retrieve the appropriate store from the `ctx` using the `storeKey`. This is done through the `KVStore(storeKey sdk.StoreKey)` method of the `ctx`.
+2. Marshall `value` to `[]byte` using the codec `cdc`. 
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store. 
 
 For more, see an example of `keeper`'s [methods implementation from the `staking` module](https://github.com/cosmos/cosmos-sdk/blob/3bafd8255a502e5a9cee07391cf8261538245dfd/x/staking/keeper/keeper.go). 

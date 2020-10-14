@@ -162,7 +162,7 @@ type (
 	}
 )
 
-// New creates a new Network for mock for integration tests.
+// New creates a new Network for integration tests.
 func New(t *testing.T, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")

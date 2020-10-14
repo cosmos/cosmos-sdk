@@ -73,5 +73,6 @@ func (k Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvar
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
 	return &types.MsgVerifyInvariantResponse{}, nil
 }

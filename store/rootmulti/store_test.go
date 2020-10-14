@@ -245,7 +245,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	values := 0
 	for ; iterator.Valid(); iterator.Next() {
-		values += 1
+		values++
 	}
 	require.Zero(t, values)
 

@@ -39,7 +39,6 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	pruneHeights   []int64
-	initialVersion int64
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext

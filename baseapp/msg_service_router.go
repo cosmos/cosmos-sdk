@@ -56,7 +56,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
 			msg, ok := i.(proto.Message)
 			if !ok {
-				// we panic here because there is no other alternative and the app cannot be initialized correctly
+				// We panic here because there is no other alternative and the app cannot be initialized correctly
 				// this should only happen if there is a problem with code generation in which case the app won't
 				// work correctly anyway
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))

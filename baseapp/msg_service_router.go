@@ -61,7 +61,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				// work correctly anyway
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
-			msr.interfaceRegistry.RegisterServiceRequestType((*sdk.MsgRequest)(nil), fqMethod, msg)
+			msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
 			return nil
 		}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 			return nil, nil
@@ -70,8 +70,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 
-			// call the method handler from the service description with the handler object,
-			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
+			// call the method handler from the service description with the handler object
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
 				// we don't do any decoding here because the decoding was already done
 				return nil

@@ -46,7 +46,7 @@ type InterfaceRegistry interface {
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 
-	// RegisterServiceRequestType allows a protobuf service method request type to be
+	// RegisterCustomTypeURL allows a protobuf service method request type to be
 	// registered as the google.protobuf.Any value type for type URLs corresponding
 	// to the fully qualified method name. iface should be an interface as type
 	// as in RegisterInterface and RegisterImplementations.
@@ -54,7 +54,7 @@ type InterfaceRegistry interface {
 	// This will allow us to pack service methods in Any's using the full method name
 	// as the type URL and the request body as the value, and allow us to unpack
 	// such packed methods using the normal UnpackAny method for the interface iface.
-	RegisterServiceRequestType(iface interface{}, methodName string, request proto.Message)
+	RegisterCustomTypeURL(iface interface{}, methodName string, request proto.Message)
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
@@ -121,7 +121,7 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 	}
 }
 
-func (registry *interfaceRegistry) RegisterServiceRequestType(iface interface{}, methodName string, request proto.Message) {
+func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, methodName string, request proto.Message) {
 	registry.registerImpl(iface, methodName, request)
 }
 

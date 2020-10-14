@@ -175,7 +175,7 @@ func (t *testAnyPackClient) Invoke(_ context.Context, method string, args, _ int
 	}
 
 	// registry the method request type with the interface registry
-	t.interfaceRegistry.RegisterServiceRequestType((*interface{})(nil), method, reqMsg)
+	t.interfaceRegistry.RegisterCustomTypeURL((*interface{})(nil), method, reqMsg)
 
 	bz, err := proto.Marshal(reqMsg)
 	if err != nil {

@@ -5,6 +5,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 
 import "gogoproto/gogo.proto";
 
+service Msg {
+  // VerifyInvariant defines a method to verify a particular invariance.
+  rpc VerifyInvariant(MsgVerifyInvariant) returns (MsgVerifyInvariantResponse);
+}
+
 // MsgVerifyInvariant represents a message to verify a particular invariance.
 message MsgVerifyInvariant {
   option (gogoproto.equal)           = false;
@@ -14,3 +19,6 @@ message MsgVerifyInvariant {
   string invariant_module_name = 2 [(gogoproto.moretags) = "yaml:\"invariant_module_name\""];
   string invariant_route       = 3 [(gogoproto.moretags) = "yaml:\"invariant_route\""];
 }
+
+// MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
+message MsgVerifyInvariantResponse {  }

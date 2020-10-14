@@ -61,6 +61,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				// work correctly anyway
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
+
 			msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
 			return nil
 		}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {

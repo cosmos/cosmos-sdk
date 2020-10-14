@@ -3,7 +3,6 @@ package changepubkey
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -102,7 +101,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // RegisterQueryService performs a no-op.
-func (am AppModule) RegisterQueryService(server grpc.Server) {
+func (am AppModule) RegisterServices(module.Configurator) {
 }
 
 // LegacyQuerierHandler performs a no-op.

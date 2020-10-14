@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/crisis/types";
 
 import "gogoproto/gogo.proto";
 
+// Msg defines the bank Msg service.
 service Msg {
   // VerifyInvariant defines a method to verify a particular invariance.
   rpc VerifyInvariant(MsgVerifyInvariant) returns (MsgVerifyInvariantResponse);

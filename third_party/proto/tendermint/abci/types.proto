@@ -334,9 +334,9 @@ message TxResult {
 
 // Validator
 message Validator {
-  bytes address = 1; // The first 20 bytes of SHA256(public key)
+  bytes address = 1;  // The first 20 bytes of SHA256(public key)
   // PubKey pub_key = 2 [(gogoproto.nullable)=false];
-  int64 power = 3; // The voting power
+  int64 power = 3;  // The voting power
 }
 
 // ValidatorUpdate
@@ -352,19 +352,19 @@ message VoteInfo {
 }
 
 enum EvidenceType {
-  UNKNOWN               = 0;
-  DUPLICATE_VOTE        = 1;
-  LIGHT_CLIENT_ATTACK   = 2;
+  UNKNOWN             = 0;
+  DUPLICATE_VOTE      = 1;
+  LIGHT_CLIENT_ATTACK = 2;
 }
 
 message Evidence {
-  EvidenceType              type      = 1;
+  EvidenceType type = 1;
   // The offending validator
-  Validator                 validator = 2 [(gogoproto.nullable) = false];
-  // The height when the offense occurred 
-  int64                     height    = 3;
+  Validator validator = 2 [(gogoproto.nullable) = false];
+  // The height when the offense occurred
+  int64 height = 3;
   // The corresponding time where the offense occurred
-  google.protobuf.Timestamp time      = 4 [
+  google.protobuf.Timestamp time = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime)  = true
   ];

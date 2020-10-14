@@ -125,7 +125,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
 }
 
-// RegisterServices registers a GRPC query service to respond to the
+// RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)

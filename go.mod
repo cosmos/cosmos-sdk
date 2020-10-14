@@ -4,15 +4,11 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.3
-	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
-	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
-	github.com/dgraph-io/ristretto v0.0.3 // indirect
-	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/golang/snappy v0.0.2 // indirect
@@ -34,7 +30,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/iavl v0.14.1
 	github.com/tendermint/tendermint v0.33.8
-	github.com/tendermint/tm-db v0.6.2
+	github.com/tendermint/tm-db v0.5.1
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb // indirect
 	golang.org/x/sys v0.0.0-20201013132646-2da7054afaeb // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

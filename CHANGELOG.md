@@ -34,6 +34,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.40.0-rc1 - [Unreleased]
+
+### Client Breaking Changes
+
+* __General__
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
+
 ## v0.40.0-rc0 - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases
@@ -65,7 +72,6 @@ of the Cosmos SDK since launch. Please read through this changelog and [release 
   are now replaced by human-readable expressions. This change can potentially break compatibility with all those client side tools
   that parse log messages.
   * (x/gov) [\#6859](https://github.com/cosmos/cosmos-sdk/pull/6859) `ProposalStatus` and `VoteOption` are now JSON serialized using its protobuf name, so expect names like `PROPOSAL_STATUS_DEPOSIT_PERIOD` as opposed to `DepositPeriod`.
-  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
 
 ### API Breaking Changes
 

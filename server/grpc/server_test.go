@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestGRPCServer() {
 	s.Require().NoError(err)
 
 	// gRPC query to test service should work
-	testClient := testdata.NewTestServiceClient(conn)
+	testClient := testdata.NewQueryClient(conn)
 	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)

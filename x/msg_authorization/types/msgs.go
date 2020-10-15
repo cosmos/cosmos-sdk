@@ -84,6 +84,14 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
+func (msg MsgGrantAuthorization) GetAuthorization() Authorization {
+	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
+	if !ok {
+		return nil
+	}
+	return authorization
+}
+
 func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.Msg

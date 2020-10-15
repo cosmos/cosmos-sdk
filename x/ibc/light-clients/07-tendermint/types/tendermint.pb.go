@@ -4,8 +4,8 @@
 package types
 
 import (
+	confio "confio"
 	fmt "fmt"
-	_go "github.com/confio/ics23/go"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -53,7 +53,7 @@ type ClientState struct {
 	// Consensus params of the chain
 	ConsensusParams *types1.ConsensusParams `protobuf:"bytes,8,opt,name=consensus_params,json=consensusParams,proto3" json:"consensus_params,omitempty" yaml:"consensus_params"`
 	// Proof specifications used in verifying counterparty state
-	ProofSpecs []*_go.ProofSpec `protobuf:"bytes,9,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
+	ProofSpecs []*confio.ProofSpec `protobuf:"bytes,9,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
 	// Path at which next upgraded client will be committed
 	UpgradePath string `protobuf:"bytes,10,opt,name=upgrade_path,json=upgradePath,proto3" json:"upgrade_path,omitempty" yaml:"upgrade_path"`
 	// This flag, when set to true, will allow governance to recover a client
@@ -1209,7 +1209,7 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ProofSpecs = append(m.ProofSpecs, &_go.ProofSpec{})
+			m.ProofSpecs = append(m.ProofSpecs, &confio.ProofSpec{})
 			if err := m.ProofSpecs[len(m.ProofSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

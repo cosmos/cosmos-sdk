@@ -385,7 +385,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// power decreased by 1 again, validator is out of stake
 	// validator should be in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+	require.Equal(t, validator.GetStatus(), types.Unbonding)
 }
 
 //_________________________________________________________________________________
@@ -515,14 +515,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated validator
 	// validator decreased to zero power, should be in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+	require.Equal(t, validator.GetStatus(), types.Unbonding)
 
 	// slash the validator again, by 100%
 	// no stake remains to be slashed
 	ctx = ctx.WithBlockHeight(12)
 	// validator still in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+	require.Equal(t, validator.GetStatus(), types.Unbonding)
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
@@ -542,7 +542,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated validator
 	// power still zero, still in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
-	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
+	require.Equal(t, validator.GetStatus(), types.Unbonding)
 }
 
 // tests Slash at a previous height with both an unbonding delegation and a redelegation

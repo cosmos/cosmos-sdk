@@ -1,6 +1,7 @@
 package ibctesting
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"testing"
@@ -37,7 +38,6 @@ import (
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -65,18 +65,28 @@ const (
 	Description = "description"
 )
 
-// Default params variables used to create a TM client
 var (
+	DefaultConsensusParams = simapp.DefaultConsensusParams
+
+	// Default params variables used to create a TM client
 	DefaultTrustLevel ibctmtypes.Fraction = ibctmtypes.DefaultTrustLevel
 	TestHash                              = tmhash.Sum([]byte("TESTING HASH"))
 	TestCoin                              = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 
-	UpgradePath = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+	UpgradePath = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 
 	ConnectionVersion = connectiontypes.GetCompatibleEncodedVersions()[0]
 
 	MockAcknowledgement = mock.MockAcknowledgement
 	MockCommitment      = mock.MockCommitment
+
+	// Conditionals for expected output of executing messages.
+	// Change values to false to test messages expected to fail.
+	// Reset to true otherwise successful messages will error.
+	// Use in rare cases, will be deprecated in favor of better
+	// dev ux.
+	ExpSimPassSend = true
+	ExpPassSend    = true
 )
 
 // TestChain is a testing struct that wraps a simapp with the last TM Header, the current ABCI
@@ -172,7 +182,8 @@ func NewTestChain(t *testing.T, chainID string) *TestChain {
 
 // GetContext returns the current context for the application.
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	ctx := chain.App.BaseApp.NewContext(false, chain.CurrentHeader)
+	return ctx.WithConsensusParams(DefaultConsensusParams)
 }
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
@@ -206,7 +217,7 @@ func (chain *TestChain) QueryUpgradeProof(key []byte, height uint64) ([]byte, cl
 	res := chain.App.Query(abci.RequestQuery{
 		Path:   "store/upgrade/key",
 		Height: int64(height - 1),
-		Data:   upgradetypes.UpgradedClientKey(),
+		Data:   key,
 		Prove:  true,
 	})
 
@@ -256,7 +267,8 @@ func (chain *TestChain) QueryConsensusStateProof(clientID string) ([]byte, clien
 // CONTRACT: this function must only be called after app.Commit() occurs
 func (chain *TestChain) NextBlock() {
 	// set the last header to the current header
-	chain.LastHeader = chain.CreateTMClientHeader()
+	// use nil trusted fields
+	chain.LastHeader = chain.CurrentTMClientHeader()
 
 	// increment the current header
 	chain.CurrentHeader = tmproto.Header{
@@ -293,7 +305,7 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
-		true, true, chain.senderPrivKey,
+		ExpSimPassSend, ExpPassSend, chain.senderPrivKey,
 	)
 	if err != nil {
 		return nil, err
@@ -420,8 +432,8 @@ func (chain *TestChain) ConstructMsgCreateClient(counterparty *TestChain, client
 		height := counterparty.LastHeader.GetHeight().(clienttypes.Height)
 		clientState = ibctmtypes.NewClientState(
 			counterparty.ChainID, DefaultTrustLevel, TrustingPeriod, UnbondingPeriod, MaxClockDrift,
-			height, commitmenttypes.GetSDKSpecs(),
-			&UpgradePath, false, false,
+			height, counterparty.App.GetConsensusParams(counterparty.GetContext()), commitmenttypes.GetSDKSpecs(),
+			UpgradePath, false, false,
 		)
 		consensusState = counterparty.LastHeader.ConsensusState()
 	case SoloMachine:
@@ -508,14 +520,28 @@ func (chain *TestChain) ExpireClient(amount time.Duration) {
 	chain.CurrentHeader.Time = chain.CurrentHeader.Time.Add(amount)
 }
 
-// CreateTMClientHeader creates a TM header to update the TM client.
-func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
-	vsetHash := chain.Vals.Hash()
+// CurrentTMClientHeader creates a TM header using the current header parameters
+// on the chain. The trusted fields in the header are set to nil.
+func (chain *TestChain) CurrentTMClientHeader() *ibctmtypes.Header {
+	return chain.CreateTMClientHeader(chain.ChainID, chain.CurrentHeader.Height, clienttypes.Height{}, chain.CurrentHeader.Time, chain.Vals, nil, chain.Signers)
+}
+
+// CreateTMClientHeader creates a TM header to update the TM client. Args are passed in to allow
+// caller flexibility to use params that differ from the chain.
+func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, trustedHeight clienttypes.Height, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *ibctmtypes.Header {
+	var (
+		valSet      *tmproto.ValidatorSet
+		trustedVals *tmproto.ValidatorSet
+	)
+	require.NotNil(chain.t, tmValSet)
+
+	vsetHash := tmValSet.Hash()
+
 	tmHeader := tmtypes.Header{
 		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
-		ChainID:            chain.ChainID,
-		Height:             chain.CurrentHeader.Height,
-		Time:               chain.CurrentHeader.Time,
+		ChainID:            chainID,
+		Height:             blockHeight,
+		Time:               timestamp,
 		LastBlockID:        MakeBlockID(make([]byte, tmhash.Size), 10_000, make([]byte, tmhash.Size)),
 		LastCommitHash:     chain.App.LastCommitID().Hash,
 		DataHash:           tmhash.Sum([]byte("data_hash")),
@@ -525,15 +551,13 @@ func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
 		AppHash:            chain.CurrentHeader.AppHash,
 		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
-		ProposerAddress:    chain.Vals.Proposer.Address,
+		ProposerAddress:    tmValSet.Proposer.Address, //nolint:staticcheck
 	}
 	hhash := tmHeader.Hash()
-
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
+	voteSet := tmtypes.NewVoteSet(chainID, blockHeight, 1, tmproto.PrecommitType, tmValSet)
 
-	voteSet := tmtypes.NewVoteSet(chain.ChainID, chain.CurrentHeader.Height, 1, tmproto.PrecommitType, chain.Vals)
-
-	commit, err := tmtypes.MakeCommit(blockID, chain.CurrentHeader.Height, 1, voteSet, chain.Signers, chain.CurrentHeader.Time)
+	commit, err := tmtypes.MakeCommit(blockID, blockHeight, 1, voteSet, signers, timestamp)
 	require.NoError(chain.t, err)
 
 	signedHeader := &tmproto.SignedHeader{
@@ -541,16 +565,27 @@ func (chain *TestChain) CreateTMClientHeader() *ibctmtypes.Header {
 		Commit: commit.ToProto(),
 	}
 
-	valSet, err := chain.Vals.ToProto()
-	if err != nil {
-		panic(err)
+	if tmValSet != nil {
+		valSet, err = tmValSet.ToProto()
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	// Do not set trusted field here, these fields can be inserted before relaying messages to a client.
+	if tmTrustedVals != nil {
+		trustedVals, err = tmTrustedVals.ToProto()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// The trusted fields may be nil. They may be filled before relaying messages to a client.
 	// The relayer is responsible for querying client and injecting appropriate trusted fields.
 	return &ibctmtypes.Header{
-		SignedHeader: signedHeader,
-		ValidatorSet: valSet,
+		SignedHeader:      signedHeader,
+		ValidatorSet:      valSet,
+		TrustedHeight:     trustedHeight,
+		TrustedValidators: trustedVals,
 	}
 }
 
@@ -562,6 +597,26 @@ func MakeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) tmtypes.Bl
 			Total: partSetSize,
 			Hash:  partSetHash,
 		},
+	}
+}
+
+// CreateSortedSignerArray takes two PrivValidators, and the corresponding Validator structs
+// (including voting power). It returns a signer array of PrivValidators that matches the
+// sorting of ValidatorSet.
+// The sorting is first by .VotingPower (descending), with secondary index of .Address (ascending).
+func CreateSortedSignerArray(altPrivVal, suitePrivVal tmtypes.PrivValidator,
+	altVal, suiteVal *tmtypes.Validator) []tmtypes.PrivValidator {
+
+	switch {
+	case altVal.VotingPower > suiteVal.VotingPower:
+		return []tmtypes.PrivValidator{altPrivVal, suitePrivVal}
+	case altVal.VotingPower < suiteVal.VotingPower:
+		return []tmtypes.PrivValidator{suitePrivVal, altPrivVal}
+	default:
+		if bytes.Compare(altVal.Address, suiteVal.Address) == -1 {
+			return []tmtypes.PrivValidator{altPrivVal, suitePrivVal}
+		}
+		return []tmtypes.PrivValidator{suitePrivVal, altPrivVal}
 	}
 }
 

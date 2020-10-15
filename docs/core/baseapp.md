@@ -200,7 +200,7 @@ The application's `router` is initilalized with all the routes using the applica
 
 ### Query Routing
 
-Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a `query router`, which maps module names to module `querier`s. The `queryRouter` is called during the initial stages of `query` processing, which is done via the [`Query` ABCI message](#query). 
+Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/query-services.md). To do so, `baseapp` holds a `query router`, which maps module names to module `querier`s. The `queryRouter` is called during the initial stages of `query` processing, which is done via the [`Query` ABCI message](#query). 
 
 Just like the `router`, the `query router` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 

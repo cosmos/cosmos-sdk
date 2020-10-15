@@ -35,7 +35,7 @@ func (cs ClientState) ClientType() string {
 
 // GetLatestHeight returns the latest sequence number.
 // Return exported.Height to satisfy ClientState interface
-// Epoch number is always 0 for a solo-machine.
+// Version number is always 0 for a solo-machine.
 func (cs ClientState) GetLatestHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.Sequence)
 }
@@ -47,7 +47,7 @@ func (cs ClientState) IsFrozen() bool {
 
 // GetFrozenHeight returns the frozen sequence of the client.
 // Return exported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Version number is always 0 for a solo-machine
 func (cs ClientState) GetFrozenHeight() exported.Height {
 	return clienttypes.NewHeight(0, cs.FrozenSequence)
 }
@@ -79,7 +79,7 @@ func (cs ClientState) ZeroCustomFields() exported.ClientState {
 // VerifyUpgrade returns an error since solomachine client does not support upgrades
 func (cs ClientState) VerifyUpgrade(
 	_ sdk.Context, _ codec.BinaryMarshaler, _ sdk.KVStore,
-	_ exported.ClientState, _ []byte,
+	_ exported.ClientState, _ exported.Height, _ []byte,
 ) error {
 	return sdkerrors.Wrap(clienttypes.ErrInvalidUpgradeClient, "cannot upgrade solomachine client")
 }
@@ -396,11 +396,11 @@ func produceVerificationArgs(
 	prefix exported.Prefix,
 	proof []byte,
 ) (signing.SignatureData, uint64, uint64, error) {
-	if version := height.GetEpochNumber(); version != 0 {
+	if version := height.GetVersionNumber(); version != 0 {
 		return nil, 0, 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "version must be 0 for solomachine, got version-number: %d", version)
 	}
 	// sequence is encoded in the version height of height struct
-	sequence := height.GetEpochHeight()
+	sequence := height.GetVersionHeight()
 	if cs.IsFrozen() {
 		return nil, 0, 0, clienttypes.ErrClientFrozen
 	}
@@ -418,18 +418,18 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "proof cannot be empty")
 	}
 
-	timestampedSignature := &TimestampedSignature{}
-	if err := cdc.UnmarshalBinaryBare(proof, timestampedSignature); err != nil {
-		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSignature)
+	timestampedSigData := &TimestampedSignatureData{}
+	if err := cdc.UnmarshalBinaryBare(proof, timestampedSigData); err != nil {
+		return nil, 0, 0, sdkerrors.Wrapf(err, "failed to unmarshal proof into type %T", timestampedSigData)
 	}
 
-	timestamp := timestampedSignature.Timestamp
+	timestamp := timestampedSigData.Timestamp
 
-	if len(timestampedSignature.Signature) == 0 {
+	if len(timestampedSigData.SignatureData) == 0 {
 		return nil, 0, 0, sdkerrors.Wrap(ErrInvalidProof, "signature data cannot be empty")
 	}
 
-	sigData, err := UnmarshalSignatureData(cdc, timestampedSignature.Signature)
+	sigData, err := UnmarshalSignatureData(cdc, timestampedSigData.SignatureData)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -438,7 +438,7 @@ func produceVerificationArgs(
 		return nil, 0, 0, sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "consensus state cannot be empty")
 	}
 
-	latestSequence := cs.GetLatestHeight().GetEpochHeight()
+	latestSequence := cs.GetLatestHeight().GetVersionHeight()
 	if latestSequence < sequence {
 		return nil, 0, 0, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidHeight,

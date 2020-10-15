@@ -1,11 +1,13 @@
 package keys
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -41,7 +43,11 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
-	err = cmd.Execute()
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 

@@ -63,13 +63,14 @@ message SignatureAndData {
   bytes    signature                 = 1;
   DataType data_type                 = 2 [(gogoproto.moretags) = "yaml:\"data_type\""];
   bytes    data                      = 3;
+  uint64   timestamp                 = 4;
 }
 
-// TimestampedSignature contains the signature and the timestamp of the
+// TimestampedSignatureData contains the signature data and the timestamp of the
 // signature.
-message TimestampedSignature {
+message TimestampedSignatureData {
   option (gogoproto.goproto_getters) = false;
-  bytes  signature                   = 1;
+  bytes  signature_data              = 1 [(gogoproto.moretags) = "yaml:\"signature_data\""];
   uint64 timestamp                   = 2;
 }
 

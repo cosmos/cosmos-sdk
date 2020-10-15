@@ -545,7 +545,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Delegate performs a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
-	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdk.BondStatus,
+	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
 	validator types.Validator, subtractAccount bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
@@ -577,7 +577,7 @@ func (k Keeper) Delegate(
 	// performing a delegation and not a redelegation, thus the source tokens are
 	// all non bonded
 	if subtractAccount {
-		if tokenSrc == sdk.Bonded {
+		if tokenSrc == types.Bonded {
 			panic("delegation token source cannot be bonded")
 		}
 
@@ -599,14 +599,14 @@ func (k Keeper) Delegate(
 	} else {
 		// potentially transfer tokens between pools, if
 		switch {
-		case tokenSrc == sdk.Bonded && validator.IsBonded():
+		case tokenSrc == types.Bonded && validator.IsBonded():
 			// do nothing
-		case (tokenSrc == sdk.Unbonded || tokenSrc == sdk.Unbonding) && !validator.IsBonded():
+		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && !validator.IsBonded():
 			// do nothing
-		case (tokenSrc == sdk.Unbonded || tokenSrc == sdk.Unbonding) && validator.IsBonded():
+		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && validator.IsBonded():
 			// transfer pools
 			k.notBondedTokensToBonded(ctx, bondAmt)
-		case tokenSrc == sdk.Bonded && !validator.IsBonded():
+		case tokenSrc == types.Bonded && !validator.IsBonded():
 			// transfer pools
 			k.bondedTokensToNotBonded(ctx, bondAmt)
 		default:

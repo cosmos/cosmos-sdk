@@ -181,7 +181,11 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Signature: sig,
 		DataType:  solomachinetypes.CLIENT,
 		Data:      dataOne,
+		Timestamp: solo.Time,
 	}
+
+	// misbehaviour signaturess can have different timestamps
+	solo.Time++
 
 	signBytes = &solomachinetypes.SignBytes{
 		Sequence:    solo.Sequence,
@@ -199,6 +203,7 @@ func (solo *Solomachine) CreateMisbehaviour() *solomachinetypes.Misbehaviour {
 		Signature: sig,
 		DataType:  solomachinetypes.CONSENSUS,
 		Data:      dataTwo,
+		Timestamp: solo.Time,
 	}
 
 	return &solomachinetypes.Misbehaviour{

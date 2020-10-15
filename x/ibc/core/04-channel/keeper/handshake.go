@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -85,7 +84,12 @@ func (k Keeper) ChanOpenInit(
 	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
 	k.SetNextSequenceAck(ctx, portID, channelID, 1)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> INIT", portID, channelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "NONE", "new-state", "INIT")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-init")
+	}()
+
 	return capKey, nil
 }
 
@@ -96,8 +100,8 @@ func (k Keeper) ChanOpenTry(
 	order types.Order,
 	connectionHops []string,
 	portID,
-	channelID,
-	provedChannelID string,
+	desiredChannelID,
+	counterpartyChosenChannelID string,
 	portCap *capabilitytypes.Capability,
 	counterparty types.Counterparty,
 	version,
@@ -106,7 +110,7 @@ func (k Keeper) ChanOpenTry(
 	proofHeight exported.Height,
 ) (*capabilitytypes.Capability, error) {
 	// channel identifier and connection hop length checked on msg.ValidateBasic()
-	previousChannel, found := k.GetChannel(ctx, portID, channelID)
+	previousChannel, found := k.GetChannel(ctx, portID, desiredChannelID)
 	if found && !(previousChannel.State == types.INIT &&
 		previousChannel.Ordering == order &&
 		previousChannel.Counterparty.PortId == counterparty.PortId &&
@@ -148,12 +152,13 @@ func (k Keeper) ChanOpenTry(
 		)
 	}
 
-	// empty-string is a sentinel value for "allow any identifier" to be selected by
-	// the counterparty channel
-	if provedChannelID != channelID && provedChannelID != "" {
+	// If the channel id chosen for this channel end by the counterparty is empty then
+	// flexible channel identifier selection is allowed by using the desired channel id.
+	// Otherwise the desiredChannelID must match the counterpartyChosenChannelID.
+	if counterpartyChosenChannelID != "" && counterpartyChosenChannelID != desiredChannelID {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidChannelIdentifier,
-			"proved channel identifier (%s) must equal channel identifier (%s) or be empty", provedChannelID, channelID,
+			"counterparty chosen channel ID (%s) must be empty or equal to the desired channel ID (%s)", counterpartyChosenChannelID, desiredChannelID,
 		)
 	}
 
@@ -169,7 +174,7 @@ func (k Keeper) ChanOpenTry(
 
 	// expectedCounterpaty is the counterparty of the counterparty's channel end
 	// (i.e self)
-	expectedCounterparty := types.NewCounterparty(portID, provedChannelID)
+	expectedCounterparty := types.NewCounterparty(portID, counterpartyChosenChannelID)
 	expectedChannel := types.NewChannel(
 		types.INIT, channel.Ordering, expectedCounterparty,
 		counterpartyHops, counterpartyVersion,
@@ -182,18 +187,23 @@ func (k Keeper) ChanOpenTry(
 		return nil, err
 	}
 
-	k.SetChannel(ctx, portID, channelID, channel)
+	k.SetChannel(ctx, portID, desiredChannelID, channel)
 
-	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	capKey, err := k.scopedKeeper.NewCapability(ctx, host.ChannelCapabilityPath(portID, desiredChannelID))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, channelID)
+		return nil, sdkerrors.Wrapf(err, "could not create channel capability for port ID %s and channel ID %s", portID, desiredChannelID)
 	}
 
-	k.SetNextSequenceSend(ctx, portID, channelID, 1)
-	k.SetNextSequenceRecv(ctx, portID, channelID, 1)
-	k.SetNextSequenceAck(ctx, portID, channelID, 1)
+	k.SetNextSequenceSend(ctx, portID, desiredChannelID, 1)
+	k.SetNextSequenceRecv(ctx, portID, desiredChannelID, 1)
+	k.SetNextSequenceAck(ctx, portID, desiredChannelID, 1)
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: NONE -> TRYOPEN", portID, channelID))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", desiredChannelID, "previous-state", previousChannel.State.String(), "new-state", "TRYOPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-try")
+	}()
+
 	return capKey, nil
 }
 
@@ -225,12 +235,13 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrapf(types.ErrChannelCapabilityNotFound, "caller does not own capability for channel, port ID (%s) channel ID (%s)", portID, channelID)
 	}
 
-	// empty-string is a sentinel value for "allow any identifier" to be selected by
-	// the counterparty channel
-	if counterpartyChannelID != channel.Counterparty.ChannelId && channel.Counterparty.ChannelId != "" {
+	// If the previously set channel end allowed for the counterparty to select its own
+	// channel identifier then we use the counterpartyChannelID. Otherwise the
+	// counterpartyChannelID must match the previously set counterparty channel ID.
+	if channel.Counterparty.ChannelId != "" && counterpartyChannelID != channel.Counterparty.ChannelId {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelIdentifier,
-			"counterparty channel identifier (%s) must be empty or equal to stored channel ID for counterparty (%s)", counterpartyChannelID, channel.Counterparty.ChannelId,
+			"counterparty channel identifier (%s) must be equal to stored channel ID for counterparty (%s)", counterpartyChannelID, channel.Counterparty.ChannelId,
 		)
 	}
 
@@ -267,7 +278,11 @@ func (k Keeper) ChanOpenAck(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> OPEN", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "OPEN")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-ack")
+	}()
 
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
@@ -337,8 +352,11 @@ func (k Keeper) ChanOpenConfirm(
 
 	channel.State = types.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", "TRYOPEN", "new-state", "OPEN")
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: TRYOPEN -> OPEN", portID, channelID))
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "open-confirm")
+	}()
 	return nil
 }
 
@@ -380,7 +398,11 @@ func (k Keeper) ChanCloseInit(
 		)
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-init")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -443,7 +465,11 @@ func (k Keeper) ChanCloseConfirm(
 		return err
 	}
 
-	k.Logger(ctx).Info(fmt.Sprintf("channel (port-id: %s, channel-id: %s) state updated: %s -> CLOSED", portID, channelID, channel.State))
+	k.Logger(ctx).Info("channel state updated", "port-id", portID, "channel-id", channelID, "previous-state", channel.State.String(), "new-state", "CLOSED")
+
+	defer func() {
+		telemetry.IncrCounter(1, "ibc", "channel", "close-confirm")
+	}()
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

@@ -55,11 +55,11 @@ func (suite *SoloMachineTestSuite) GetSequenceFromStore() uint64 {
 	var clientState exported.ClientState
 	err := codec.UnmarshalAny(suite.chainA.Codec, &clientState, bz)
 	suite.Require().NoError(err)
-	return clientState.GetLatestHeight().GetEpochHeight()
+	return clientState.GetLatestHeight().GetVersionHeight()
 }
 
 func (suite *SoloMachineTestSuite) GetInvalidProof() []byte {
-	invalidProof, err := suite.chainA.Codec.MarshalBinaryBare(&types.TimestampedSignature{Timestamp: suite.solomachine.Time})
+	invalidProof, err := suite.chainA.Codec.MarshalBinaryBare(&types.TimestampedSignatureData{Timestamp: suite.solomachine.Time})
 	suite.Require().NoError(err)
 
 	return invalidProof

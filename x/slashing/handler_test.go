@@ -231,7 +231,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be bonded still
 	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	bondPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.True(sdk.IntEq(t, amt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount))
@@ -250,7 +250,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been jailed
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
 	slashAmt := amt.ToDec().Mul(app.SlashingKeeper.SlashFractionDowntime(ctx)).RoundInt64()
 
@@ -289,7 +289,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should be rebonded now
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
 	require.Equal(t, amt.Int64()-slashAmt, app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Int64())
@@ -306,7 +306,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 	app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Bonded, validator.GetStatus())
+	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
 	nextHeight := height + app.SlashingKeeper.MinSignedPerWindow(ctx) + 1
@@ -329,5 +329,5 @@ func TestHandleAbsentValidator(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, sdk.Unbonding, validator.GetStatus())
+	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 }

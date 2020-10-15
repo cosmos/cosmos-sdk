@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,27 +15,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	ibctestingmock "github.com/cosmos/cosmos-sdk/x/ibc/testing/mock"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
-	chainID                      = "gaia"
-	chainIDEpoch0                = "gaia-version-0"
-	chainIDEpoch1                = "gaia-version-1"
-	clientID                     = "gaiamainnet"
-	trustingPeriod time.Duration = time.Hour * 24 * 7 * 2
-	ubdPeriod      time.Duration = time.Hour * 24 * 7 * 3
-	maxClockDrift  time.Duration = time.Second * 10
+	chainID                       = "gaia"
+	chainIDVersion0               = "gaia-version-0"
+	chainIDVersion1               = "gaia-version-1"
+	clientID                      = "gaiamainnet"
+	trustingPeriod  time.Duration = time.Hour * 24 * 7 * 2
+	ubdPeriod       time.Duration = time.Hour * 24 * 7 * 3
+	maxClockDrift   time.Duration = time.Second * 10
 )
 
 var (
-	height        = clienttypes.NewHeight(0, 4)
-	upgradeHeight = clienttypes.NewHeight(1, 1)
-	upgradePath   = commitmenttypes.NewMerklePath([]string{"upgrade", upgradetypes.KeyUpgradedClient})
+	height          = clienttypes.NewHeight(0, 4)
+	newClientHeight = clienttypes.NewHeight(1, 1)
+	upgradePath     = fmt.Sprintf("%s/%s", "upgrade", "upgradedClient")
 )
 
 type TendermintTestSuite struct {
@@ -86,7 +85,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 

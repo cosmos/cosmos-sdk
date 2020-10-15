@@ -57,8 +57,7 @@ func (k Keeper) SetPendingMessage(ctx sdk.Context, sender, srcChannel, receiver,
 func (k Keeper) GetPendingMessage(ctx sdk.Context, sender, srcChannel, receiver string) string {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPendingMessage(sender, srcChannel, receiver)
-	msgBytes := store.Get(key)
-	return string(msgBytes)
+	return string(store.Get(key))
 }
 
 // DeletePendingMessage deletes the pending message for the sender-receiver convo over the giver
@@ -79,10 +78,10 @@ func (k Keeper) SetInboxMessage(ctx sdk.Context, sender, srcChannel, receiver, m
 
 // GetInboxMessage will get the incoming message intended for the receiver from the sender
 // over the destination channel in the receiver's inbox (receiver has an inbox per channel)
-func (k Keeper) GetInboxMessage(ctx sdk.Context, sender, srcChannel, receiver, msg string) {
+func (k Keeper) GetInboxMessage(ctx sdk.Context, sender, srcChannel, receiver string) string {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyInboxMessage(sender, srcChannel, receiver)
-	store.Get(key)
+	return string(store.Get(key))
 }
 
 // SetOutboxMessage will set the latest confirmed outgoing message of the sender-receiver convo over the giver
@@ -95,10 +94,10 @@ func (k Keeper) SetOutboxMessage(ctx sdk.Context, sender, srcChannel, receiver, 
 
 // GetOutboxMessage will get the latest confirmed outgoing message of the sender-receiver convo over the giver
 // source channel
-func (k Keeper) GetOutboxMessage(ctx sdk.Context, sender, srcChannel, receiver, msg string) {
+func (k Keeper) GetOutboxMessage(ctx sdk.Context, sender, srcChannel, receiver string) string {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyOutboxMessage(sender, srcChannel, receiver)
-	store.Get(key)
+	return string(store.Get(key))
 }
 
 // ChanCloseInit defines a wrapper function for the channel Keeper's function

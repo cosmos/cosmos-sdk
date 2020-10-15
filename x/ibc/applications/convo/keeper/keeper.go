@@ -25,6 +25,20 @@ type Keeper struct {
 	scopedKeeper  capabilitykeeper.ScopedKeeper
 }
 
+// NewKeeper creates a new IBC convo Keeper instance
+func NewKeeper(
+	cdc codec.BinaryMarshaler, key sdk.StoreKey,
+	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
+) Keeper {
+	return Keeper{
+		cdc:           cdc,
+		storeKey:      key,
+		channelKeeper: channelKeeper,
+		portKeeper:    portKeeper,
+		scopedKeeper:  scopedKeeper,
+	}
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s-%s", host.ModuleName, types.ModuleName))

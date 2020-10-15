@@ -151,7 +151,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
 
-
 		var json []byte
 
 		if aminoJSON {

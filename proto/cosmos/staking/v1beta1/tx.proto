@@ -103,7 +103,7 @@ message MsgBeginRedelegate {
 
 // MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 message MsgBeginRedelegateResponse { 
-  bytes completionTime = 1;
+  bytes completion_time = 1;
 }
 
 // MsgUndelegate defines a SDK message for performing an undelegation from a
@@ -119,5 +119,5 @@ message MsgUndelegate {
 
 // MsgUndelegateResponse defines the Msg/Undelegate response type.
 message MsgUndelegateResponse { 
-  bytes completionTime = 1;
+  bytes completion_time = 1;
 }

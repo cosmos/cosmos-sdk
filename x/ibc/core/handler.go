@@ -6,9 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
@@ -21,29 +19,40 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
+		var msgServer = keeper.MsgServer{
+			Keeper: k,
+		}
+
 		switch msg := msg.(type) {
 		// IBC client msg interface types
 		case *clienttypes.MsgCreateClient:
-			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
+			res, err := msgServer.CreateClient(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *clienttypes.MsgUpdateClient:
-			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
+			res, err := msgServer.UpdateClient(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *clienttypes.MsgSubmitMisbehaviour:
-			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
+			res, err := msgServer.SubmitMisbehaviour(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		// IBC connection msgs
 		case *connectiontypes.MsgConnectionOpenInit:
-			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
+			res, err := msgServer.ConnectionOpenInit(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *connectiontypes.MsgConnectionOpenTry:
-			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
+			res, err := msgServer.ConnectionOpenTry(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *connectiontypes.MsgConnectionOpenAck:
-			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
+			res, err := msgServer.ConnectionOpenAck(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *connectiontypes.MsgConnectionOpenConfirm:
-			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
+			res, err := msgServer.ConnectionOpenConfirm(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		// IBC channel msgs
 		case *channeltypes.MsgChannelOpenInit:

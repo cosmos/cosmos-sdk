@@ -95,6 +95,38 @@ func (s *TestSuite) TestKeeper() {
 
 }
 
+func (s *TestSuite) TestKeeperIter() {
+	app, ctx, addrs := s.app, s.ctx, s.addrs
+
+	granterAddr := addrs[0]
+	granteeAddr := addrs[1]
+
+	err := app.BankKeeper.SetBalances(ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
+	s.Require().Nil(err)
+	s.Require().True(app.BankKeeper.GetBalance(ctx, granterAddr, "steak").IsEqual(sdk.NewCoin("steak", sdk.NewInt(10000))))
+
+	s.T().Log("verify that no authorization returns nil")
+	authorization, expiration := app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, "Abcd")
+	s.Require().Nil(authorization)
+	s.Require().Zero(expiration)
+	now := s.ctx.BlockHeader().Time
+	s.Require().NotNil(now)
+
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
+	s.T().Log("verify if expired authorization is rejected")
+	x := &types.SendAuthorization{SpendLimit: newCoins}
+	app.MsgAuthKeeper.Grant(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
+	authorization, _ = app.MsgAuthKeeper.GetAuthorization(ctx, granteeAddr, granterAddr, "abcd")
+	s.Require().Nil(authorization)
+
+	app.MsgAuthKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
+		s.Require().Equal(granter, granterAddr)
+		s.Require().Equal(grantee, granteeAddr)
+		return true
+	})
+
+}
+
 func (s *TestSuite) TestKeeperFees() {
 	app, addrs := s.app, s.addrs
 

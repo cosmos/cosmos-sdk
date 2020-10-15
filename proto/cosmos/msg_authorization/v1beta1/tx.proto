@@ -10,7 +10,7 @@ option go_package            = "github.com/cosmos/cosmos-sdk/x/msg_authorization
 option (gogoproto.equal_all) = true;
 
 
-
+// Msg defines the msg_authorization Msg service.
 service Msg {
      // GrantAuthorization grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.

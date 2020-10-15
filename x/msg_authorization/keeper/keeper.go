@@ -171,8 +171,8 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant types.AuthorizationGrant
+		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
-		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Value())
 		if handler(granterAddr, granteeAddr, grant) {
 			break
 		}

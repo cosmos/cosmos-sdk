@@ -7,6 +7,51 @@ order: 1
 > NOTE: if you are not familiar with the IBC terminology and concepts, please read
 this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.md) as prerequisite reading.
 
+## Client Creation, Updates, and Upgrades
+
+## Client Misbehaviour
+
+IBC clients must freeze when the counterparty chain becomes malicious and 
+takes actions that could fool the light client into accepting invalid state 
+transitions. Thus, relayers are able to submit Misbehaviour proofs that prove 
+that a counterparty chain has signed two Headers for the same height. This 
+constitutes misbehaviour as the IBC client could have accepted either header 
+as valid. Upon verifying the misbehaviour the IBC client must freeze at that 
+height so that any proof verifications for the frozen height or later fail.
+
+Note, there is a difference between the chain-level Misbehaviour that IBC is 
+concerned with and the validator-level Evidence that Tendermint is concerned 
+with. Tendermint must be able to detect, submit, and punish any evidence of 
+individual validators breaking the Tendermint consensus protocol and attempting 
+to mount an attack. IBC clients must only act when an attack is successful 
+and the chain has successfully forked. In this case, valid Headers submitted 
+to the IBC client can no longer be trusted and the client must freeze.
+
+Governance may then choose to override a frozen client and provide the correct, 
+canonical Header so that the client can continue operating after the Misbehaviour 
+submission.
+
+## ClientUpdateProposal
+
+A governance proposal may be passed to update a specified client with a provided
+header. This is useful in unfreezing clients or updating expired clients. Each 
+client is expected to implement this functionality. A client may choose to disallow
+an update by a governance proposal by returning an error in the client state function
+'CheckProposedHeaderAndUpdateState'.
+
+The localhost client cannot be updated by a governance proposal. 
+
+The solo machine client requires the boolean flag 'AllowUpdateAfterProposal' to be set
+to true in order to be updated by a proposal. This is set upon client creation and cannot 
+be updated later.
+
+The tendermint client has two flags update flags, 'AllowUpdateAfterExpiry' and 
+'AllowUpdateAfterMisbehaviour'. The former flag can only be used to unexpire clients. The
+latter flag can be used to unfreeze a client and if necessary it will also unexpire the client.
+It is advised to let a client expire if it has become frozen before proposing a new header. 
+This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
+expired. These boolean flags are set upon client creation and cannot be updated later.
+
 ## IBC Client Heights
 
 IBC Client Heights are represented by the struct:
@@ -61,27 +106,7 @@ Other client-types may implement their own logic to verify the IBC Heights that 
 The IBC interfaces expect an `ibcexported.Height` interface, however all clients should use the concrete implementation provided in
 `02-client/types` and reproduced above.
 
-## Client Misbehaviour
-
-IBC clients must freeze when the counterparty chain becomes malicious and 
-takes actions that could fool the light client into accepting invalid state 
-transitions. Thus, relayers are able to submit Misbehaviour proofs that prove 
-that a counterparty chain has signed two Headers for the same height. This 
-constitutes misbehaviour as the IBC client could have accepted either header 
-as valid. Upon verifying the misbehaviour the IBC client must freeze at that 
-height so that any proof verifications for the frozen height or later fail.
-
-Note, there is a difference between the chain-level Misbehaviour that IBC is 
-concerned with and the validator-level Evidence that Tendermint is concerned 
-with. Tendermint must be able to detect, submit, and punish any evidence of 
-individual validators breaking the Tendermint consensus protocol and attempting 
-to mount an attack. IBC clients must only act when an attack is successful 
-and the chain has successfully forked. In this case, valid Headers submitted 
-to the IBC client can no longer be trusted and the client must freeze.
-
-Governance may then choose to override a frozen client and provide the correct, 
-canonical Header so that the client can continue operating after the Misbehaviour 
-submission.
+## Connection Handshake
 
 ## Connection Version Negotiation
 
@@ -124,6 +149,8 @@ with regards to version selection in `ConnOpenTry`. Each version in a set of
 versions should have a unique version identifier.
 :::
 
+## Channel Handshake
+
 ## Channel Version Negotiation
 
 During the channel handshake procedure a version must be agreed upon between
@@ -159,23 +186,14 @@ in the handshake callbacks.
 Implementations which do not feel they would benefit from versioning can do
 basic string matching using a single compatible version.
 
-## ClientUpdateProposal
+## Sending, Receiving, Acknowledging Packets
 
-A governance proposal may be passed to update a specified client with a provided
-header. This is useful in unfreezing clients or updating expired clients. Each 
-client is expected to implement this functionality. A client may choose to disallow
-an update by a governance proposal by returning an error in the client state function
-'CheckProposedHeaderAndUpdateState'.
+## Timing out Packets
 
-The localhost client cannot be updated by a governance proposal. 
+## Closing Channels
 
-The solo machine client requires the boolean flag 'AllowUpdateAfterProposal' to be set
-to true in order to be updated by a proposal. This is set upon client creation and cannot 
-be updated later.
+## Port and Channel Capabilities
 
-The tendermint client has two flags update flags, 'AllowUpdateAfterExpiry' and 
-'AllowUpdateAfterMisbehaviour'. The former flag can only be used to unexpire clients. The
-latter flag can be used to unfreeze a client and if necessary it will also unexpire the client.
-It is advised to let a client expire if it has become frozen before proposing a new header. 
-This is to avoid the client from becoming refrozen if the misbehaviour evidence has not 
-expired. These boolean flags are set upon client creation and cannot be updated later.
+## Hostname Validation
+
+## Proofs

@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TestAccountRetriever is an AccountRetriever that can be used in unit tests
-type TestAccountRetriever struct {
-	Accounts map[string]TestAccount
-}
+var (
+	_ AccountRetriever = TestAccountRetriever{}
+	_ Account          = TestAccount{}
+)
 
 // TestAccount represents a client Account that can be used in unit tests
 type TestAccount struct {
@@ -40,19 +40,10 @@ func (t TestAccount) GetSequence() uint64 {
 	return t.Seq
 }
 
-// String implements client Account.String
-func (t TestAccount) String() string {
-	return fmt.Sprintf(`address: %s
-pub_key: nil
-account_number: %d
-sequence: %d`, t.Address, t.Num, t.Seq,
-	)
+// TestAccountRetriever is an AccountRetriever that can be used in unit tests
+type TestAccountRetriever struct {
+	Accounts map[string]TestAccount
 }
-
-var (
-	_ AccountRetriever = TestAccountRetriever{}
-	_ Account          = TestAccount{}
-)
 
 // GetAccount implements AccountRetriever.GetAccount
 func (t TestAccountRetriever) GetAccount(_ Context, addr sdk.AccAddress) (Account, error) {

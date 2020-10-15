@@ -12,9 +12,6 @@ type Account interface {
 	GetPubKey() crypto.PubKey // can return nil.
 	GetAccountNumber() uint64
 	GetSequence() uint64
-
-	// Ensure that account implements stringer
-	String() string
 }
 
 // AccountRetriever defines the interfaces required by transactions to

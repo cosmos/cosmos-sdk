@@ -536,7 +536,7 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 
 	for _, v := range pruneHeights {
 		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.NoError(t, err, "expected error when loading height: %d", v)
+		require.NoError(t, err, "expected no error when loading height, found err: %d", v)
 	}
 }
 

@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -76,12 +75,10 @@ func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	s.Require().NoError(em.EmitTypedEvent(&coin))
 	s.Require().Len(em.Events(), 1)
 
-	fmt.Println(em.Events()[0])
-
 	msg, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-	s.Require().NoError(err)
 
-	fmt.Println(msg, "msg")
+	s.Require().NoError(err)
+	s.Require().Equal(coin.String(), msg.String())
 }
 
 func (s *eventsTestSuite) TestStringifyEvents() {

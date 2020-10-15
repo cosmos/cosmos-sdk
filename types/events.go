@@ -44,6 +44,7 @@ func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
 }
 
+// EmitTypedEvent takes typed event and emits converting it into sdk.Event
 func (em *EventManager) EmitTypedEvent(event proto.Message) error {
 	evtType := proto.MessageName(event)
 	evtJSON, err := codec.ProtoMarshalJSON(event)
@@ -73,10 +74,8 @@ func (em *EventManager) EmitTypedEvent(event proto.Message) error {
 	return nil
 }
 
+// ParseTypedEvent converts abci.Event back to typed event
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
-	// look up proto.Message type by event.Type
-	// populate attributes into map[string]json.RawMessage and marshal that to a json string
-	// unmarshal the json string to the proto.Message
 	concreteGoType := proto.MessageType(event.Type)
 	if concreteGoType == nil {
 		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)

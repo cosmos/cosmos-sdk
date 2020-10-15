@@ -84,7 +84,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
-	var attrs []abci.EventAttribute
+	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for k, v := range attrMap {
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   []byte(k),

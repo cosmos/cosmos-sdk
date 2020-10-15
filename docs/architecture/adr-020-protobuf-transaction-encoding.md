@@ -315,6 +315,8 @@ and messages.
 
 ```go
 type AccountRetriever interface {
+  GetAccount(clientCtx Context, addr sdk.AccAddress) (client.Account, error)
+  GetAccountWithHeight(clientCtx Context, addr sdk.AccAddress) (client.Account, int64, error)
   EnsureExists(clientCtx client.Context, addr sdk.AccAddress) error
   GetAccountNumberSequence(clientCtx client.Context, addr sdk.AccAddress) (uint64, uint64, error)
 }

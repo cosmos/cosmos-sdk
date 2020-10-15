@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [\#7084](https://github.com/cosmos/cosmos-sdk/pull/7084) Fix panic when calling `BigInt()` on an uninitialized `Int`.
 * (client) [\#7048](https://github.com/cosmos/cosmos-sdk/issues/7048) Fix client `keys add` failure when generating mnemonic in interactive mode.
 * (keys) [\#7397](https://github.com/cosmos/cosmos-sdk/pull/7397) Update 99designs/keyring to v1.1.6 for go 1.15 compatibility.
-* (kvstore) [\#7531](https://github.com/cosmos/cosmos-sdk/pull/7531) Allow new stores to be registered during on-chain upgrades.
+* (kvstore) [\#7385](https://github.com/cosmos/cosmos-sdk/issues/7385) Allow new stores to be registered during on-chain upgrades.
 
 ## [v0.39.1]
 

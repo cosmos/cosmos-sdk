@@ -56,5 +56,5 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 027: Deterministic Protobuf Serialization](./adr-027-deterministic-protobuf-serialization.md)
 - [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
-- [ADR 032: Typed Events](./adr-031-typed-events.md)
+- [ADR 032: Typed Events](./adr-032-typed-events.md)
 

@@ -11,6 +11,7 @@
 - 2020 August 07: Use ADR 027 for serializing `SignDoc`.
 - 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`.
 - 2020 September 25: Remove `PublicKey` type in favor of `secp256k1.PubKey`, `ed25519.PubKey` and `multisig.LegacyAminoPubKey`.
+- 2020 October 15: Add `GetAccount` and `GetAccountWithHeight` methods to the `AccountRetriever` interface.
 
 ## Status
 

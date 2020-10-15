@@ -224,6 +224,9 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	return nil
 }
 
+// Resolve returns the proto message given its typeURL. It works with types
+// registered with RegisterInterface/RegisterImplementations, as well as those
+// registered with RegisterWithCustomTypeURL.
 func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
 	typ, found := registry.typeURLMap[typeURL]
 	if !found {

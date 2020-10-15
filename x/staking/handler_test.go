@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/protobuf/proto"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -117,8 +118,11 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err := gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)
@@ -255,8 +259,11 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err := gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)
@@ -500,8 +507,11 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
+
 		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 		finishTime, err := gogotypes.TimestampFromProto(ts)
 		require.NoError(t, err)
@@ -618,8 +628,11 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
+
 		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 		_, err = gogotypes.TimestampFromProto(ts)
 		require.NoError(t, err)
@@ -676,8 +689,11 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
+
 		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 		finishTime, err := gogotypes.TimestampFromProto(ts)
 		require.NoError(t, err)
@@ -715,8 +731,11 @@ func TestJailValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err := gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)
@@ -735,8 +754,10 @@ func TestJailValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts = &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err = gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)
@@ -783,8 +804,11 @@ func TestValidatorQueue(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err := gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)
@@ -889,8 +913,11 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	require.NotNil(t, res)
 
 	// change the ctx to Block Time one second before the validator would have unbonded
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
+
 	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(resData.CompletionTime, ts)
 
 	finishTime, err := gogotypes.TimestampFromProto(ts)
 	require.NoError(t, err)

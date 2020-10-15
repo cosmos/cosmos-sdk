@@ -71,14 +71,16 @@ func (s *eventsTestSuite) TestEventManager() {
 func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	em := sdk.NewEventManager()
 
-	coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
-	s.Require().NoError(em.EmitTypedEvent(&coin))
-	s.Require().Len(em.Events(), 1)
+	coin1 := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
+	coin2 := sdk.NewCoin("fakedenom2", sdk.NewInt(1999999))
+
+	s.Require().NoError(em.EmitTypedEvents(&coin1))
+	s.Require().NoError(em.EmitTypedEvent(&coin2))
+	s.Require().Len(em.Events(), 2)
 
 	msg, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-
 	s.Require().NoError(err)
-	s.Require().Equal(coin.String(), msg.String())
+	s.Require().Equal(coin1.String(), msg.String())
 }
 
 func (s *eventsTestSuite) TestStringifyEvents() {

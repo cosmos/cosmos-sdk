@@ -44,18 +44,44 @@ func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
 }
 
-// EmitTypedEvent takes typed event and emits converting it into sdk.Event
-func (em *EventManager) EmitTypedEvent(event proto.Message) error {
-	evtType := proto.MessageName(event)
-	evtJSON, err := codec.ProtoMarshalJSON(event)
+// EmitTypedEvent takes typed event and emits converting it into Event
+func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
+	event, err := TypedEventToEvent(tev)
 	if err != nil {
 		return err
+	}
+
+	em.EmitEvent(event)
+	return nil
+}
+
+// EmitTypedEvents takes series of typed events and emit
+func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
+	events := make(Events, len(tevs))
+	for i, tev := range tevs {
+		res, err := TypedEventToEvent(tev)
+		if err != nil {
+			return err
+		}
+		events[i] = res
+	}
+
+	em.EmitEvents(events)
+	return nil
+}
+
+// TypedEventToEvent takes typed event and converts to Event object
+func TypedEventToEvent(tev proto.Message) (Event, error) {
+	evtType := proto.MessageName(tev)
+	evtJSON, err := codec.ProtoMarshalJSON(tev)
+	if err != nil {
+		return Event{}, err
 	}
 
 	var attrMap map[string]json.RawMessage
 	err = json.Unmarshal(evtJSON, &attrMap)
 	if err != nil {
-		return err
+		return Event{}, err
 	}
 
 	var attrs []abci.EventAttribute
@@ -66,12 +92,10 @@ func (em *EventManager) EmitTypedEvent(event proto.Message) error {
 		})
 	}
 
-	em.EmitEvent(Event{
+	return Event{
 		Type:       evtType,
 		Attributes: attrs,
-	})
-
-	return nil
+	}, nil
 }
 
 // ParseTypedEvent converts abci.Event back to typed event

@@ -9,7 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
-  // ModifyWithdrawAddress defines a method to change the withdraw address 
+  // SetWithdrawAddress defines a method to change the withdraw address 
   // for a delegator (or validator self-delegation).
   rpc SetWithdrawAddress(MsgSetWithdrawAddress) returns (MsgSetWithdrawAddressResponse);
 
@@ -18,7 +18,7 @@ service Msg {
   rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
 
   // WithdrawValidatorCommission defines a method to withdraw the 
-  // full commission to the validator address
+  // full commission to the validator address.
   rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
 
   // FundCommunityPool defines a method to allow an account to directly

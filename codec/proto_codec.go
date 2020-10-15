@@ -14,14 +14,14 @@ import (
 // ProtoCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
 type ProtoCodec struct {
-	anyUnpacker types.AnyUnpacker
+	interfaceRegistry types.InterfaceRegistry
 }
 
 var _ Marshaler = &ProtoCodec{}
 
 // NewProtoCodec returns a reference to a new ProtoCodec
-func NewProtoCodec(anyUnpacker types.AnyUnpacker) *ProtoCodec {
-	return &ProtoCodec{anyUnpacker: anyUnpacker}
+func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
+	return &ProtoCodec{interfaceRegistry: interfaceRegistry}
 }
 
 // MarshalBinaryBare implements BinaryMarshaler.MarshalBinaryBare method.
@@ -67,7 +67,7 @@ func (pc *ProtoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
 	if err != nil {
 		return err
 	}
-	err = types.UnpackInterfaces(ptr, pc.anyUnpacker)
+	err = types.UnpackInterfaces(ptr, pc.interfaceRegistry)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
 	}
 
-	return ProtoMarshalJSON(m)
+	return ProtoMarshalJSON(m, pc.interfaceRegistry)
 }
 
 // MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
@@ -135,12 +135,13 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
 	}
 
-	err := jsonpb.Unmarshal(strings.NewReader(string(bz)), m)
+	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
+	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), m)
 	if err != nil {
 		return err
 	}
 
-	return types.UnpackInterfaces(ptr, pc.anyUnpacker)
+	return types.UnpackInterfaces(ptr, pc.interfaceRegistry)
 }
 
 // MustUnmarshalJSON implements JSONMarshaler.MustUnmarshalJSON method,
@@ -155,5 +156,9 @@ func (pc *ProtoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 // it unpacks the value in any to the interface pointer passed in as
 // iface.
 func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	return pc.anyUnpacker.UnpackAny(any, iface)
+	return pc.interfaceRegistry.UnpackAny(any, iface)
+}
+
+func (pc *ProtoCodec) InterfaceRegistry() types.InterfaceRegistry {
+	return pc.interfaceRegistry
 }

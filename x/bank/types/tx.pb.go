@@ -70,6 +70,7 @@ func (m *MsgSend) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSend proto.InternalMessageInfo
 
+// MsgSendResponse defines the Msg/Send response type.
 type MsgSendResponse struct {
 }
 
@@ -159,6 +160,7 @@ func (m *MsgMultiSend) GetOutputs() []Output {
 	return nil
 }
 
+// MsgMultiSendResponse defines the Msg/MultiSend response type.
 type MsgMultiSendResponse struct {
 }
 
@@ -248,7 +250,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	// Send defines a method for sending coins from one account to another account.
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
+	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
 }
 
@@ -280,7 +284,9 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	// Send defines a method for sending coins from one account to another account.
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
+	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
 }
 

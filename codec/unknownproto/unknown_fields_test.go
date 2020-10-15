@@ -230,7 +230,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			hasUnknownNonCriticals, gotErr := RejectUnknownFields(protoBlob, tt.recv, tt.allowUnknownNonCriticals)
+			hasUnknownNonCriticals, gotErr := RejectUnknownFields(protoBlob, tt.recv, tt.allowUnknownNonCriticals, DefaultAnyResolver{})
 			require.Equal(t, tt.wantErr, gotErr)
 			require.Equal(t, tt.hasUnknownNonCriticals, hasUnknownNonCriticals)
 		})
@@ -289,7 +289,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			_, gotErr := RejectUnknownFields(blob, c1, tt.allowUnknownNonCriticals)
+			_, gotErr := RejectUnknownFields(blob, c1, tt.allowUnknownNonCriticals, DefaultAnyResolver{})
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -490,7 +490,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotErr := RejectUnknownFieldsStrict(protoBlob, tt.recv)
+			gotErr := RejectUnknownFieldsStrict(protoBlob, tt.recv, DefaultAnyResolver{})
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -643,7 +643,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			}
 
 			c1 := new(testdata.Customer1)
-			gotErr := RejectUnknownFieldsStrict(blob, c1)
+			gotErr := RejectUnknownFieldsStrict(blob, c1, DefaultAnyResolver{})
 			if !reflect.DeepEqual(gotErr, tt.wantErr) {
 				t.Fatalf("Error mismatch\nGot:\n%s\n\nWant:\n%s", gotErr, tt.wantErr)
 			}
@@ -660,7 +660,7 @@ func TestPackedEncoding(t *testing.T) {
 	require.NoError(t, err)
 
 	unmarshalled := &testdata.TestRepeatedUints{}
-	_, err = RejectUnknownFields(marshalled, unmarshalled, false)
+	_, err = RejectUnknownFields(marshalled, unmarshalled, false, DefaultAnyResolver{})
 	require.NoError(t, err)
 }
 

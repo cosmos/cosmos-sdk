@@ -114,7 +114,10 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 			suite.Require().NotNil(res, "expected non-nil result; tc #%d", i)
 
 			msg := tc.msg.(exported.MsgSubmitEvidenceI)
-			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), res.Data, "invalid hash; tc #%d", i)
+
+			var resultData types.MsgSubmitEvidenceResponse
+			suite.app.AppCodec().UnmarshalBinaryBare(res.Data, &resultData)
+			suite.Require().Equal(msg.GetEvidence().Hash().Bytes(), resultData.Hash, "invalid hash; tc #%d", i)
 		}
 	}
 }

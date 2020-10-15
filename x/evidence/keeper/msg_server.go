@@ -26,5 +26,7 @@ func (k Keeper) SubmitEvidence(goCtx context.Context, msg *types.MsgSubmitEviden
 		),
 	)
 
-	return &types.MsgSubmitEvidenceResponse{}, nil
+	return &types.MsgSubmitEvidenceResponse{
+		Hash: evidence.Hash(),
+	}, nil
 }

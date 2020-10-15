@@ -26,4 +26,7 @@ message MsgSubmitEvidence {
 }
 
 // MsgSubmitEvidenceResponse defines the Msg/SubmitEvidence response type.
-message MsgSubmitEvidenceResponse {}
+message MsgSubmitEvidenceResponse {
+  // hash defines the hash of the evidence.
+  bytes hash = 4;
+}

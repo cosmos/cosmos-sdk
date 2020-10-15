@@ -48,7 +48,7 @@ type InterfaceRegistry interface {
 
 	// RegisterCustomTypeURL allows a protobuf message to be registered as a
 	// google.protobuf.Any with a custom typeURL (besides its own canonical
-	// typeURL). iface should be an interface as type as in RegisterInterface
+	// typeURL). iface should be an interface as type, as in RegisterInterface
 	// and RegisterImplementations.
 	//
 	// Ex:

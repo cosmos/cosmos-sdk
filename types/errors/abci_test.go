@@ -6,10 +6,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestABCInfo(t *testing.T) {
+type abciTestSuite struct {
+	suite.Suite
+}
+
+func TestABCITestSuite(t *testing.T) {
+	suite.Run(t, new(abciTestSuite))
+}
+
+func (s *abciTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *abciTestSuite) TestABCInfo() {
 	cases := map[string]struct {
 		err       error
 		debug     bool
@@ -91,23 +103,14 @@ func TestABCInfo(t *testing.T) {
 	}
 
 	for testName, tc := range cases {
-		tc := tc
-		t.Run(testName, func(t *testing.T) {
-			space, code, log := ABCIInfo(tc.err, tc.debug)
-			if space != tc.wantSpace {
-				t.Errorf("want %s space, got %s", tc.wantSpace, space)
-			}
-			if code != tc.wantCode {
-				t.Errorf("want %d code, got %d", tc.wantCode, code)
-			}
-			if log != tc.wantLog {
-				t.Errorf("want %q log, got %q", tc.wantLog, log)
-			}
-		})
+		space, code, log := ABCIInfo(tc.err, tc.debug)
+		s.Require().Equal(tc.wantSpace, space, testName)
+		s.Require().Equal(tc.wantCode, code, testName)
+		s.Require().Equal(tc.wantLog, log, testName)
 	}
 }
 
-func TestABCIInfoStacktrace(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoStacktrace() {
 	cases := map[string]struct {
 		err            error
 		debug          bool
@@ -140,37 +143,27 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		},
 	}
 
-	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.(*abciTestSuite).TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
-		tc := tc
-		t.Run(testName, func(t *testing.T) {
-			_, _, log := ABCIInfo(tc.err, tc.debug)
-			if tc.wantStacktrace {
-				if !strings.Contains(log, thisTestSrc) {
-					t.Errorf("log does not contain this file stack trace: %s", log)
-				}
+		_, _, log := ABCIInfo(tc.err, tc.debug)
+		if !tc.wantStacktrace {
+			s.Require().Equal(tc.wantErrMsg, log, testName)
+			continue
+		}
 
-				if !strings.Contains(log, tc.wantErrMsg) {
-					t.Errorf("log does not contain expected error message: %s", log)
-				}
-			} else if log != tc.wantErrMsg {
-				t.Fatalf("unexpected log message: %s", log)
-			}
-		})
+		s.Require().True(strings.Contains(log, thisTestSrc), testName)
+		s.Require().True(strings.Contains(log, tc.wantErrMsg), testName)
 	}
 }
 
-func TestABCIInfoHidesStacktrace(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoHidesStacktrace() {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
-
-	if log != "wrapped: unauthorized" {
-		t.Fatalf("unexpected message in non debug mode: %s", log)
-	}
+	s.Require().Equal("wrapped: unauthorized", log)
 }
 
-func TestRedact(t *testing.T) {
+func (s *abciTestSuite) TestRedact() {
 	cases := map[string]struct {
 		err       error
 		untouched bool  // if true we expect the same error after redact
@@ -196,21 +189,21 @@ func TestRedact(t *testing.T) {
 
 	for name, tc := range cases {
 		spec := tc
-		t.Run(name, func(t *testing.T) {
-			redacted := Redact(spec.err)
-			if spec.untouched {
-				require.Equal(t, spec.err, redacted)
-			} else {
-				// see if we got the expected redact
-				require.Equal(t, spec.changed, redacted)
-				// make sure the ABCI code did not change
-				require.Equal(t, abciCode(spec.err), abciCode(redacted))
-			}
-		})
+		redacted := Redact(spec.err)
+		if spec.untouched {
+			s.Require().Equal(spec.err, redacted, name)
+			continue
+		}
+
+		// see if we got the expected redact
+		s.Require().Equal(spec.changed, redacted, name)
+		// make sure the ABCI code did not change
+		s.Require().Equal(abciCode(spec.err), abciCode(redacted), name)
+
 	}
 }
 
-func TestABCIInfoSerializeErr(t *testing.T) {
+func (s *abciTestSuite) TestABCIInfoSerializeErr() {
 	var (
 		// Create errors with stacktrace for equal comparison.
 		myErrDecode = Wrap(ErrTxDecode, "test")
@@ -250,12 +243,8 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		spec := spec
-		t.Run(msg, func(t *testing.T) {
-			_, _, log := ABCIInfo(spec.src, spec.debug)
-			if exp, got := spec.exp, log; exp != got {
-				t.Errorf("expected %v but got %v", exp, got)
-			}
-		})
+		_, _, log := ABCIInfo(spec.src, spec.debug)
+		s.Require().Equal(spec.exp, log, msg)
 	}
 }
 

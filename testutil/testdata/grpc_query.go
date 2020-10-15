@@ -9,9 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-type TestServiceImpl struct{}
+type QueryImpl struct{}
 
-func (e TestServiceImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
+var _ QueryServer = QueryImpl{}
+
+func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
 	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
 	if !ok {
 		return nil, fmt.Errorf("expected Animal")
@@ -28,16 +30,14 @@ func (e TestServiceImpl) TestAny(_ context.Context, request *TestAnyRequest) (*T
 	}}, nil
 }
 
-func (e TestServiceImpl) Echo(_ context.Context, req *EchoRequest) (*EchoResponse, error) {
+func (e QueryImpl) Echo(_ context.Context, req *EchoRequest) (*EchoResponse, error) {
 	return &EchoResponse{Message: req.Message}, nil
 }
 
-func (e TestServiceImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHelloResponse, error) {
+func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHelloResponse, error) {
 	greeting := fmt.Sprintf("Hello %s!", request.Name)
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
-
-var _ TestServiceServer = TestServiceImpl{}
 
 var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
 

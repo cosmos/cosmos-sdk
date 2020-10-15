@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -37,6 +38,15 @@ type Context struct {
 	Viper  *viper.Viper
 	Config *tmcfg.Config
 	Logger log.Logger
+}
+
+// ErrorCode contains the exit code for server exit.
+type ErrorCode struct {
+	Code int
+}
+
+func (e ErrorCode) Error() string {
+	return strconv.Itoa(e.Code)
 }
 
 func NewDefaultContext() *Context {
@@ -243,6 +253,14 @@ func TrapSignal(cleanupFunc func()) {
 
 		os.Exit(exitCode)
 	}()
+}
+
+// WaitForQuitSignals waits for SIGINT and SIGTERM and returns.
+func WaitForQuitSignals() ErrorCode {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
 }
 
 func skipInterface(iface net.Interface) bool {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	metrics "github.com/armon/go-metrics"
-	gogotypes "github.com/gogo/protobuf/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -265,11 +264,6 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	ts, err := gogotypes.TimestampProto(completionTime)
-	if err != nil {
-		return nil, types.ErrBadRedelegationAddr
-	}
-
 	defer func() {
 		telemetry.IncrCounter(1, types.ModuleName, "redelegate")
 		telemetry.SetGaugeWithLabels(
@@ -279,7 +273,6 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		)
 	}()
 
-	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeRedelegate,
@@ -296,7 +289,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	})
 
 	return &types.MsgBeginRedelegateResponse{
-		CompletionTime: completionTimeBz,
+		CompletionTime: completionTime,
 	}, nil
 }
 
@@ -328,11 +321,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	ts, err := gogotypes.TimestampProto(completionTime)
-	if err != nil {
-		return nil, types.ErrBadRedelegationAddr
-	}
-
 	defer func() {
 		telemetry.IncrCounter(1, types.ModuleName, "undelegate")
 		telemetry.SetGaugeWithLabels(
@@ -342,7 +330,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		)
 	}()
 
-	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(ts)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeUnbond,
@@ -358,6 +345,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	})
 
 	return &types.MsgUndelegateResponse{
-		CompletionTime: completionTimeBz,
+		CompletionTime: completionTime,
 	}, nil
 }

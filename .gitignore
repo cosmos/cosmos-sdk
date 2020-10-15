@@ -9,6 +9,10 @@
 .idea
 *.pyc
 
+# private files
+private[.-]*
+private
+
 # Build
 vendor
 build

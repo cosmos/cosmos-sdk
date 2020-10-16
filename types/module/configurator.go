@@ -12,7 +12,7 @@ type Configurator interface {
 	// be exposed as gRPC services.
 	MsgServer() grpc.Server
 
-	// MsgServer returns a grpc.Server instance which allows registering services
+	// QueryServer returns a grpc.Server instance which allows registering services
 	// that will be exposed as gRPC services as well as ABCI query handlers.
 	QueryServer() grpc.Server
 }

@@ -50,7 +50,7 @@ The constructor follows:
 
 The Service accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
 
-```
+```golang
 type Options struct {
 	Port uint32
 }

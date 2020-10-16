@@ -50,7 +50,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgGrantAuthorization},
-		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgRevokeAuthorization},
+		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgRevokeAuthorization},
 		{simappparams.DefaultWeightMsgSend, types.ModuleName, types.TypeMsgExecDelegated},
 	}
 

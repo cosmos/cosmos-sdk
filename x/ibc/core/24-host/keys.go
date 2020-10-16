@@ -22,8 +22,9 @@ const (
 
 // KVStore key prefixes for IBC
 var (
-	KeyClientStorePrefix = []byte("clients")
-	KeyConnectionPrefix  = []byte("connections")
+	KeyClientStorePrefix     = []byte("clients")
+	KeyConsensusStatesPrefix = []byte("consensusStates")
+	KeyConnectionPrefix      = []byte("connections")
 )
 
 // KVStore key prefixes for IBC
@@ -67,7 +68,7 @@ func ClientStatePath() string {
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
 func ConsensusStatePath(height exported.Height) string {
-	return fmt.Sprintf("consensusStates/%s", height)
+	return fmt.Sprintf("%s/%s", KeyConsensusStatesPrefix, height)
 }
 
 // KeyClientState returns the store key for a particular client state

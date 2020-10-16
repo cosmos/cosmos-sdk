@@ -334,6 +334,8 @@ func (t *serviceMsgClientConn) NewStream(context.Context, *grpc2.StreamDesc, str
 
 var _ grpc.ClientConn = &serviceMsgClientConn{}
 
+// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
+// NewSendTxCmd but using MsgClient.
 func newSendTxMsgServiceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "send [from_key_or_address] [to_address] [amount]",

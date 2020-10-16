@@ -20,11 +20,13 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgCreateValidator{}
-	_ sdk.Msg = &MsgEditValidator{}
-	_ sdk.Msg = &MsgDelegate{}
-	_ sdk.Msg = &MsgUndelegate{}
-	_ sdk.Msg = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
+	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ sdk.Msg                            = &MsgEditValidator{}
+	_ sdk.Msg                            = &MsgDelegate{}
+	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgBeginRedelegate{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -134,6 +136,12 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey crypto.PubKey
+	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance

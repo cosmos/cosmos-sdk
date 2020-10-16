@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmkv "github.com/tendermint/tendermint/libs/kv"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -42,6 +43,7 @@ type Queryable interface {
 
 // StoreUpgrades defines a series of transformations to apply the multistore db upon load
 type StoreUpgrades struct {
+	Added   []string      `json:"added"`
 	Renamed []StoreRename `json:"renamed"`
 	Deleted []string      `json:"deleted"`
 }
@@ -52,6 +54,14 @@ type StoreUpgrades struct {
 type StoreRename struct {
 	OldKey string `json:"old_key"`
 	NewKey string `json:"new_key"`
+}
+
+// IsAdded returns true if the given key should be added
+func (s *StoreUpgrades) IsAdded(key string) bool {
+	if s == nil {
+		return false
+	}
+	return tmstrings.StringInSlice(key, s.Added)
 }
 
 // IsDeleted returns true if the given key should be deleted

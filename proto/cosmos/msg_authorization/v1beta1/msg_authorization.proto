@@ -29,7 +29,9 @@ message GenericAuthorization{
     option (gogoproto.goproto_getters)  = false;
     option (cosmos_proto.implements_interface) = "Authorization";
 
-    string method_title = 1;
+    string method_name = 1[
+        (gogoproto.customname)="MessageName"
+    ];
 }
 
 // TODO

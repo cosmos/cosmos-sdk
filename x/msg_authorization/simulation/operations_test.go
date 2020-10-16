@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/simulation"
@@ -48,9 +49,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{100, types.ModuleName, types.TypeMsgGrantAuthorization},
-		{80, types.ModuleName, types.TypeMsgRevokeAuthorization},
-		{60, types.ModuleName, types.TypeMsgExecDelegated},
+		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgGrantAuthorization},
+		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgRevokeAuthorization},
+		{simappparams.DefaultWeightMsgSend, types.ModuleName, types.TypeMsgExecDelegated},
 	}
 
 	for i, w := range weightesOps {
@@ -133,6 +134,38 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
 	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.AuthorizationMsgType)
+	suite.Require().Len(futureOperations, 0)
+
+}
+
+func (suite *SimTestSuite) TestSimulateExecAuthorization() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	initAmt := sdk.TokensFromConsensusPower(200)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+
+	granter := accounts[0]
+	grantee := accounts[1]
+	authorization := types.NewSendAuthorization(initCoins)
+
+	suite.app.MsgAuthKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now())
+
+	// execute operation
+	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.MsgAuthKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgExecAuthorized
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
 	suite.Require().Len(futureOperations, 0)
 
 }

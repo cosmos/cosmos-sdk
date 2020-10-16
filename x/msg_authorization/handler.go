@@ -3,12 +3,11 @@ package msg_authorization
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 //NewHandler returns a handler for msg_authorization messages.
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k types.MsgServer) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {

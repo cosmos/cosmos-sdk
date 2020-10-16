@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -683,6 +684,13 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 
 	var protoPk crypto.PubKey
 	switch aminoPk.(type) {
+
+	// We are bech32ifying some secp256k1 keys in tests.
+	case *secp256k1.PubKey:
+	case *ed25519.PubKey:
+		protoPk = aminoPk
+
+	// Real-life case.
 	case tmed25519.PubKey:
 		protoPk = &ed25519.PubKey{
 			Key: aminoPk.Bytes(),
@@ -690,7 +698,7 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 
 	default:
 		// We only allow ed25519 pubkeys to be bech32-ed right now.
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "bech32 expects %T, got %T", tmed25519.PubKey{}, aminoPk)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "bech32 pubkey does not support %T", aminoPk)
 	}
 
 	return protoPk, nil

@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -50,7 +49,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 	return pubkey
 }
 
-func testEquivocationHandler(k interface{}) types.Handler {
+func testEquivocationHandler(_ interface{}) types.Handler {
 	return func(ctx sdk.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
@@ -106,22 +105,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.stakingHdl = staking.NewHandler(app.StakingKeeper)
-}
-
-func (suite *KeeperTestSuite) createValidator(ctx sdk.Context, a sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) {
-	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	msg, err := stakingtypes.NewMsgCreateValidator(
-		a, pubKey, sdk.NewCoin(sdk.DefaultBondDenom, amt),
-		stakingtypes.Description{}, commission, sdk.OneInt(),
-	)
-	suite.NoError(err)
-	suite.stakingHdl(ctx, msg)
-}
-
-func (suite *KeeperTestSuite) stakingHandle(ctx sdk.Context, msg sdk.Msg) {
-	res, err := suite.stakingHdl(ctx, msg)
-	suite.NoError(err)
-	suite.NotNil(res)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

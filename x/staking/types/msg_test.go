@@ -6,6 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,6 +16,25 @@ var (
 	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
 	coinZero = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 )
+
+func TestMsgPkDecode(t *testing.T) {
+	// description := Description{}
+	// commission1 := NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	// msg, err := NewMsgCreateValidator(valAddr1, pk1, coinPos, description, commission1, sdk.OneInt())
+	// require.NoError(t, err)
+
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	pk1bz, err := codec.MarshalAny(cdc, pk1)
+	require.NoError(t, err)
+
+	var pkUnmarshaled ed25519.PubKey
+	err = codec.UnmarshalAny(cdc, &pkUnmarshaled, pk1bz)
+	require.NoError(t, err)
+
+	require.True(t, pk1.Equals(&pkUnmarshaled))
+}
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgCreateValidator(t *testing.T) {
@@ -41,9 +63,10 @@ func TestMsgCreateValidator(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		t.Logf("Test: %s, pk=%t", tc.name, tc.pubkey)
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
 		msg, err := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
-		require.NotNil(t, err)
+		require.NoError(t, err)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

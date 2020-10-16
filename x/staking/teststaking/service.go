@@ -107,10 +107,9 @@ func (sh *Service) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondS
 }
 
 // CheckDelegator asserts that a delegator exists
-func (sh *Service) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress) {
-	d, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
-	require.True(sh.t, ok)
-	require.NotNil(sh.t, d)
+func (sh *Service) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
+	_, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
+	require.Equal(sh.t, ok, found)
 }
 
 // TurnBlock calls EndBlocker and updates the block time

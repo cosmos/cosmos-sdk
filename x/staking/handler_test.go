@@ -270,7 +270,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
 
-	tstaking.CheckDelegator(delegatorAddr, validatorAddr)
+	tstaking.CheckDelegator(delegatorAddr, validatorAddr, false)
 
 	bond, found := app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
@@ -278,9 +278,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	bondedTokens := app.StakingKeeper.TotalBondedTokens(ctx)
 	require.Equal(t, bondAmount.Int64(), bondedTokens.Int64())
-
-	// just send the same msgbond multiple times
-	tstaking.Delegate(delegatorAddr, validatorAddr, bondAmount.Int64())
 
 	for i := int64(0); i < 5; i++ {
 		ctx = ctx.WithBlockHeight(i)
@@ -547,7 +544,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	// delegate multiple parties
 	for _, delegatorAddr := range delegatorAddrs {
 		tstaking.Delegate(delegatorAddr, validatorAddr, 10)
-		tstaking.CheckDelegator(delegatorAddr, validatorAddr)
+		tstaking.CheckDelegator(delegatorAddr, validatorAddr, true)
 	}
 
 	// unbond them all
@@ -735,12 +732,11 @@ func TestRedelegationPeriod(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	params.UnbondingTime = 7 * time.Second
 	app.StakingKeeper.SetParams(ctx, params)
+	// initial balance
+	amt1 := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(validatorAddr), denom).Amount
 
 	// create the validators
 	tstaking.CreateValidator(validatorAddr, PKs[0], 10, true)
-
-	// initial balance
-	amt1 := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(validatorAddr), denom).Amount
 
 	// balance should have been subtracted after creation
 	amt2 := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(validatorAddr), denom).Amount

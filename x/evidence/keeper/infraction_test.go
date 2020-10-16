@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign() {
@@ -15,11 +15,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	selfDelegation := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewService(suite.T(), ctx, suite.app.StakingKeeper)
 
-	// create validator
-	suite.createValidator(ctx, operatorAddr, val, selfDelegation)
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -67,8 +66,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	del, _ := suite.app.StakingKeeper.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
 	validator, _ := suite.app.StakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
-	msgUnbond := stakingtypes.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(stakingParams.BondDenom, totalBond))
-	suite.stakingHandle(ctx, msgUnbond)
+	tstaking.Ctx = ctx
+	tstaking.Denom = stakingParams.BondDenom
+	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
@@ -77,10 +77,10 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
-	amt := sdk.TokensFromConsensusPower(power)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
+	tstaking := teststaking.NewService(suite.T(), ctx, suite.app.StakingKeeper)
 
-	suite.createValidator(ctx, operatorAddr, val, amt)
+	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)

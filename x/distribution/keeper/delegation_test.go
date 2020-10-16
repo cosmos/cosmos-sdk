@@ -25,11 +25,10 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
 
-	// end block to bond validator
+	// end block to bond validator and start new block
 	staking.EndBlocker(ctx, app.StakingKeeper)
-
-	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	tstaking.Ctx = ctx
 
 	// fetch validator and delegation
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -234,6 +233,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// second delegation
+	tstaking.Ctx = ctx
 	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
 	del2 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
 

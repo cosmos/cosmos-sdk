@@ -29,7 +29,7 @@ func NewTxConfig(protoCodec *codec.ProtoCodec, enabledSignModes []signingtypes.S
 		decoder:     DefaultTxDecoder(protoCodec),
 		encoder:     DefaultTxEncoder(),
 		jsonDecoder: DefaultJSONTxDecoder(protoCodec),
-		jsonEncoder: DefaultJSONTxEncoder(),
+		jsonEncoder: DefaultJSONTxEncoder(protoCodec),
 		protoCodec:  protoCodec,
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -220,4 +221,11 @@ func (app *BaseApp) SetSnapshotKeepRecent(snapshotKeepRecent uint32) {
 		panic("SetSnapshotKeepRecent() on sealed BaseApp")
 	}
 	app.snapshotKeepRecent = snapshotKeepRecent
+}
+
+// SetInterfaceRegistry sets the InterfaceRegistry.
+func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
+	app.interfaceRegistry = registry
+	app.grpcQueryRouter.SetInterfaceRegistry(registry)
+	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }

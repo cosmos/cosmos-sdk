@@ -119,6 +119,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	var resData types.MsgUndelegateResponse
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -254,6 +255,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 
 	var resData types.MsgUndelegateResponse
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -496,6 +498,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 
 		var resData types.MsgUndelegateResponse
 		err = proto.Unmarshal(res.Data, &resData)
+		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(resData.CompletionTime)
 		staking.EndBlocker(ctx, app.StakingKeeper)
@@ -611,6 +614,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 
 		var resData types.MsgUndelegateResponse
 		err = proto.Unmarshal(res.Data, &resData)
+		require.NoError(t, err)
 
 		// adds validator into unbonding queue
 		staking.EndBlocker(ctx, app.StakingKeeper)
@@ -666,6 +670,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 
 		var resData types.MsgUndelegateResponse
 		err = proto.Unmarshal(res.Data, &resData)
+		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(resData.CompletionTime)
 		staking.EndBlocker(ctx, app.StakingKeeper)
@@ -702,6 +707,7 @@ func TestJailValidator(t *testing.T) {
 
 	var resData types.MsgUndelegateResponse
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -718,6 +724,7 @@ func TestJailValidator(t *testing.T) {
 	require.NotNil(t, res)
 
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -763,6 +770,7 @@ func TestValidatorQueue(t *testing.T) {
 
 	var resData types.MsgUndelegateResponse
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -866,6 +874,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	// change the ctx to Block Time one second before the validator would have unbonded
 	var resData types.MsgUndelegateResponse
 	err = proto.Unmarshal(res.Data, &resData)
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime.Add(time.Second * -1))
 

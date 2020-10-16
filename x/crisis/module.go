@@ -112,8 +112,7 @@ func (AppModule) QuerierRoute() string { return "" }
 // LegacyQuerierHandler returns no sdk.Querier.
 func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
-// RegisterQueryService registers a GRPC query service to respond to the
-// module-specific GRPC queries.
+// RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 }

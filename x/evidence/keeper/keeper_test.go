@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 			ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 		}
 
-		suite.Nil(suite.app.EvidenceKeeper.SubmitEvidenceI(ctx, evidence[i]))
+		suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, evidence[i]))
 	}
 
 	return evidence
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidenceI(ctx, e))
+	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
 	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
@@ -165,8 +165,8 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidenceI(ctx, e))
-	suite.Error(suite.app.EvidenceKeeper.SubmitEvidenceI(ctx, e))
+	suite.Nil(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
+	suite.Error(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
 	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.True(ok)
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Error(suite.app.EvidenceKeeper.SubmitEvidenceI(ctx, e))
+	suite.Error(suite.app.EvidenceKeeper.SubmitEvidence(ctx, e))
 
 	res, ok := suite.app.EvidenceKeeper.GetEvidence(ctx, e.Hash())
 	suite.False(ok)

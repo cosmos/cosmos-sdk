@@ -30,12 +30,12 @@ func TestEquals(t *testing.T) {
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
 
-	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []tmcrypto.PubKey{pubKey1, pubKey2})
-	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []tmcrypto.PubKey{pubKey1, multisigKey})
+	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []crypto.PubKey{pubKey1, pubKey2})
+	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []crypto.PubKey{pubKey1, multisigKey})
 
 	testCases := []struct {
 		msg      string
-		other    tmcrypto.PubKey
+		other    crypto.PubKey
 		expectEq bool
 	}{
 		{
@@ -264,8 +264,8 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
 }
 
-func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []tmcrypto.PubKey, signatures []signing.SignatureData) {
-	pubKeys = make([]tmcrypto.PubKey, n)
+func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []crypto.PubKey, signatures []signing.SignatureData) {
+	pubKeys = make([]crypto.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
 
 	for i := 0; i < n; i++ {
@@ -279,7 +279,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []tmcrypto.PubKey,
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
-	pubKeys := make([]tmcrypto.PubKey, n)
+	pubKeys := make([]crypto.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
 	bitArray := crypto.NewCompactBitArray(n)
 	for i := 0; i < n; i++ {

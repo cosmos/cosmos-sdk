@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -27,7 +28,7 @@ var (
 
 // NewBaseAccount creates a new BaseAccount object
 //nolint:interfacer
-func NewBaseAccount(address sdk.AccAddress, pubKey crypto.PubKey, accountNumber, sequence uint64) *BaseAccount {
+func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
 		Address:       address.String(),
 		AccountNumber: accountNumber,
@@ -71,11 +72,11 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // GetPubKey - Implements sdk.AccountI.
-func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
+func (acc BaseAccount) GetPubKey() (pk cryptotypes.PubKey) {
 	if acc.PubKey == nil {
 		return nil
 	}
-	content, ok := acc.PubKey.GetCachedValue().(crypto.PubKey)
+	content, ok := acc.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		return nil
 	}
@@ -83,7 +84,7 @@ func (acc BaseAccount) GetPubKey() (pk crypto.PubKey) {
 }
 
 // SetPubKey - Implements sdk.AccountI.
-func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (acc *BaseAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	if pubKey == nil {
 		acc.PubKey = nil
 	} else {
@@ -162,7 +163,7 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if acc.PubKey == nil {
 		return nil
 	}
-	var pubKey crypto.PubKey
+	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
@@ -221,7 +222,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 }
 
 // SetPubKey - Implements AccountI
-func (ma ModuleAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
@@ -323,8 +324,8 @@ type AccountI interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
+	GetPubKey() cryptotypes.PubKey // can return nil.
+	SetPubKey(cryptotypes.PubKey) error
 
 	GetAccountNumber() uint64
 	SetAccountNumber(uint64) error

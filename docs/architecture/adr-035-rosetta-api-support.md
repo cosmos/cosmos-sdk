@@ -58,7 +58,7 @@ type Options struct {
 
 The `Network` type holds network-specific properties (i.e. configuration values) and adapters. Pre-configured concrete types will be available for each Cosmos SDK release. Applications can also create their own custom types.
 
-```
+```golang
 type Network struct {
 	Properties rosetta.NetworkProperties
 	Adapter    rosetta.Adapter
@@ -67,7 +67,7 @@ type Network struct {
 
 A `NetworkProperties` `struct` comprises basic values that are required by a Rosetta API `Service`:
 
-```
+```golang
 type NetworkProperties struct {
 	// Mandatory properties
 	Blockchain          string
@@ -87,7 +87,7 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 `Network` holds an `Adapter` reference too. Each Cosmos SDK release series will have their own Adapter implementations. Developers can implement their own custom adapters as required.
 
-```
+```golang
 type Adapter interface {
 	DataAPI
 	ConstructionAPI
@@ -112,7 +112,7 @@ As described, each Cosmos SDK release series will have version specific implemen
 
 Due to separation of interface and implementation, application developers have the option to override as needed, using this code as reference.
 
-```
+```golang
 // NewNetwork returns the default application configuration.
 
 func NewNetwork(options Options) service.Network {
@@ -150,7 +150,7 @@ As stated at the start, application developers will have two methods for invocat
 
 Rosetta API service could run within the same execution process as the application. New configuration option and command line flags would be provided to support this:
 
-```
+```golang
 	if config.Rosetta.Enable {
      ....
             get contecxt, flags, etc
@@ -178,7 +178,7 @@ Rosetta API service could run within the same execution process as the applicati
 
 Client application developers can write a new command to launch a Rosetta API server as a separate process too:
 
-```
+```golang
 func NewRosettaServiceCmd() *cobra.Command {
 
     ...

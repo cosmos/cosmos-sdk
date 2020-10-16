@@ -64,26 +64,15 @@ func ClientStatePath() string {
 	return "clientState"
 }
 
-// ClientTypePath takes an Identifier and returns Path under which to store the
-// type of a particular client.
-func ClientTypePath() string {
-	return "clientType"
-}
-
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
 func ConsensusStatePath(height exported.Height) string {
-	return fmt.Sprintf("consensusState/%s", height)
+	return fmt.Sprintf("consensusStates/%s", height)
 }
 
 // KeyClientState returns the store key for a particular client state
 func KeyClientState() []byte {
 	return []byte(ClientStatePath())
-}
-
-// KeyClientType returns the store key for type of a particular client
-func KeyClientType() []byte {
-	return []byte(ClientTypePath())
 }
 
 // KeyConsensusState returns the store key for the consensus state of a particular

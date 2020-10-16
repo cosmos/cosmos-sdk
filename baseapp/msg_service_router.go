@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
@@ -59,28 +59,24 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 
 			msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
 			return nil
-		}, func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-			return nil, nil
-		})
+		}, noopInterceptor)
 
 		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-			// Call the method handler from the service description with the handler object.
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(_ interface{}) error {
-				// We don't do any decoding here because the decoding was already done.
-				return nil
-			}, func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 				return handler(goCtx, req)
-			})
+			}
+			// Call the method handler from the service description with the handler object.
+			// We don't do any decoding here because the decoding was already done.
+			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
 			if err != nil {
 				return nil, err
 			}
 
 			resMsg, ok := res.(proto.Message)
 			if !ok {
-				return nil, fmt.Errorf("can't proto encode %T", resMsg)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting proto.Message, got %T", resMsg)
 			}
 
 			return sdk.WrapServiceResult(ctx, resMsg, err)
@@ -92,3 +88,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
 }
+
+// gRPC NOOP interceptor
+func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
+	return nil, nil
+}
+
+func noopDecoder(_ interface{}) error { return nil }

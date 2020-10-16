@@ -13,7 +13,7 @@ type MsgTransfer struct {
   SourcePort        string
   SourceChannel     string
   Token             sdk.Coin
-  Sender            sdk.AccAddress
+  Sender            string
   Receiver          string
   TimeoutHeight     ibcexported.Height
   TimeoutTimestamp  uint64

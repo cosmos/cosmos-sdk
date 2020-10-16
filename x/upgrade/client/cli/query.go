@@ -47,7 +47,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 				return err
 			}
 
-			if len(res.Plan.Name) == 0 {
+			if res.Plan == nil {
 				return fmt.Errorf("no upgrade scheduled")
 			}
 

@@ -13,3 +13,11 @@ with the value `[]byte(byte(1))` in the `Response` field.
 
 An unsuccessful receive of a transfer packet will result in an Error Acknowledgement being written
 with the error message in the `Response` field.
+
+## Denomination Trace
+
+## Send Fungible Tokens
+
+## Receive Fungible Tokens
+
+## Locked Funds

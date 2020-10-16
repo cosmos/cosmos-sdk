@@ -2,26 +2,43 @@
 
 ## Context
 
-Rosetta API, an open-source specification and set of tools developed by Coinbase. Through the use of a standard API for integrating blockchain applications it will
+[Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to standardise blockchain interactions.
 
-* Easier for a user to interact with a blockchain
+Through the use of a standard API for integrating blockchain applications it will
+
+* Be easier for a user to interact with a given blockchain
 * Allow exchanges to integrate new blockchains quickly and easily
 * Enable application developers to build cross-blockchain applications such as block explorers, wallets and dApps at considerably lower cost and effort.
 
 ## Decision
 
-We think that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and Cosmos SDK based chains in the ecosystem.
+It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and Cosmos SDK based chains in the ecosystem. How it is implemented is key.
 
+The driving principles of the proposed design are:
+
+1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network configurations to expose Rosetta API-compliant services.
+2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
+3. **Cost-efficiency:** Backporting features from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
+
+This ADR will describe how this will be achieved.
+
+1. There will be an external repo called [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) for the implementation of the core Rosetta API features, particularly:
+   a. The types and interfaces. This separates design from implementation detail.
+   b. Some core implementations: specifically, the `Service` functionality as this is independent of the Cosmos SDK version.
+2. Due to differences between the Cosmos release series, each series will have its own specific API implementations of `Network` struct and `Adapter` interface.
+3. There will be two options for starting an API service in applications:
+   a. API shares the application process
+   b. API-specific process.
+
+This document below will describe each design component of the proposed architecture.
 
 ## Architecture
 
-The driving principles of the proposed design follow:
+### 1. The External Repo
 
-1. Extensibility: it must be as riskless and painless as possible for application developers to use network configurations to expose Rosetta API-compliant services.
-2. Long term support: developers build applications on the various stable branches of Cosmos SDK. This proposal aims to provide support for all the release series supported by the Cosmos SDK team.
-3. Cost-efficiency: backporting features from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
+As section will describe the proposed external library, including the service implementation, plus the defined types and interfaces.
 
-### Service
+#### Service
 
 `Service` is a simple `struct` that is started and listens to the port specified in the options. This is meant to be used across all the Cosmos SDK versions that are actively supported.
 
@@ -29,7 +46,9 @@ The constructor follows:
 
 `func New(options Options, network Network) (*Service, error)`
 
-It accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
+#### Types
+
+The Service accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
 
 ```
 type Options struct {
@@ -44,9 +63,9 @@ type Network struct {
 	Properties rosetta.NetworkProperties
 	Adapter    rosetta.Adapter
 }
-````
+```
 
-A `NetworkProperties` `struct` comprises basic values that are required by a Rosetta API `Service` to run:
+A `NetworkProperties` `struct` comprises basic values that are required by a Rosetta API `Service`:
 
 ```
 type NetworkProperties struct {
@@ -60,11 +79,13 @@ type NetworkProperties struct {
 
 Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
 
-`AddrPrefix` contains the network-specific address prefix. Cosmos SDK base implementations will default to `cosmos`, client applications are instructed that this should be changed according to their network configuration.
+`AddrPrefix` contains the network-specific address prefix. Cosmos SDK base implementations will default to `cosmos`, client applications should change this according to their network configuration.
 
-`SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported.
+`SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported. Additional operations will be added in due time.
 
-`Network` holds an `Adapter` reference too. Adapter implementations may vary across different Cosmos SDK release series:
+#### Interfaces
+
+`Network` holds an `Adapter` reference too. Each Cosmos SDK release series will have their own Adapter implementations. Developers can implement their own custom adapters as required.
 
 ```
 type Adapter interface {
@@ -83,15 +104,17 @@ type DataAPI interface {
 type ConstructionAPI interface {
 	server.ConstructionAPIServicer
 }
+```
 
-````
+### 2. Cosmos SDK Implementation
 
-### Cosmos SDK Integration
+As described, each Cosmos SDK release series will have version specific implementations of `Network` and `Adapter`, as well as a `NewNetwork` constructor.
 
-Cosmos SDK provides a base `Network` struct and a `NewNetwork` constructor that could serve as code example for client application developers and testing tool to be used in conjuction with `simd`.
+Due to separation of interface and implementation, application developers have the option to override as needed, using this code as reference.
 
 ```
 // NewNetwork returns the default application configuration.
+
 func NewNetwork(options Options) service.Network {
 	cosmosClient := cosmos.NewClient(fmt.Sprintf("http://%s", options.CosmosEndpoint))
 	tendermintClient := tendermint.NewClient(fmt.Sprintf("http://%s", options.TendermintEndpoint))
@@ -116,9 +139,16 @@ func NewNetwork(options Options) service.Network {
 }
 ```
 
-#### In-process Execution
+### 3. API service invocation
 
-Rosetta API service could run within the same execution process of the application; new configuration option and command line flag would be provided:
+As stated at the start, application developers will have two methods for invocation of the Rosetta API service:
+
+1. Shared process for both application and API
+2. Standalone API service
+
+#### Shared Process
+
+Rosetta API service could run within the same execution process as the application. New configuration option and command line flags would be provided to support this:
 
 ```
 	if config.Rosetta.Enable {
@@ -144,7 +174,7 @@ Rosetta API service could run within the same execution process of the applicati
 
 ```
 
-#### Command Line Integration
+#### Separate API service
 
 Client application developers can write a new command to launch a Rosetta API server as a separate process too:
 
@@ -177,13 +207,6 @@ func NewRosettaServiceCmd() *cobra.Command {
 
 }
 ```
-
-
-
-### The external Library
-
-Because apart from the Network struct and Adapter implemention there is a lot of code that would be shared across versions, we can provide a repo for the Rosetta Service that will hold only the Service, the Interfaces and the types. This includes all that is not specific to a single version. (Still to decide if we keep an external shared dependency or not.)
-
 
 ## Status
 

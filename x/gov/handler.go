@@ -19,9 +19,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Deposit(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case types.MsgSubmitProposalI:
-			msgProposal := msg.(*types.MsgSubmitProposal)
-			res, err := msgServer.SubmitProposal(sdk.WrapSDKContext(ctx), msgProposal)
+		case *types.MsgSubmitProposal:
+			res, err := msgServer.SubmitProposal(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgVote:

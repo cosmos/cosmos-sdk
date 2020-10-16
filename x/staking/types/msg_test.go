@@ -8,7 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,16 +26,17 @@ func TestMsgPkDecode(t *testing.T) {
 	// require.NoError(t, err)
 
 	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
 
 	pk1bz, err := codec.MarshalAny(cdc, pk1)
 	require.NoError(t, err)
 
-	var pkUnmarshaled ed25519.PubKey
+	var pkUnmarshaled cryptotypes.PubKey
 	err = codec.UnmarshalAny(cdc, &pkUnmarshaled, pk1bz)
 	require.NoError(t, err)
 
-	require.True(t, pk1.Equals(&pkUnmarshaled))
+	require.True(t, pk1.Equals(pkUnmarshaled.(*ed25519.PubKey)))
 }
 
 // test ValidateBasic for MsgCreateValidator

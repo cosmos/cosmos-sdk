@@ -85,7 +85,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	val := tmtypes.NewValidator(pubKey.(cryptotypes.IntoTmPubKey).AsTmPubKey(), 10)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
 	suite.valsHash = suite.valSet.Hash()
-	suite.header = ibctmtypes.CreateTestHeader(chainID, height, heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = suite.chainA.CreateTMClientHeader(chainID, int64(height.VersionHeight), heightMinus1, suite.now, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1, Time: suite.now})
 }
 

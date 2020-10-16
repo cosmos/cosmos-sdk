@@ -28,8 +28,8 @@ For the general specification please refer to the [Interchain Standards](https:/
 
 As stated above, the IBC implementation on the Cosmos SDK introduces some changes
 to the general specification, in order to avoid code duplication and to take
-advantage of the SDK architectural components such as the `AnteHandler` and
-transaction routing through `Handlers`.
+advantage of the SDK architectural components such as the transaction routing 
+through `Handlers`.
 
 ### Interchain Standards reference
 

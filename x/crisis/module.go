@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -115,7 +114,7 @@ func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return n
 
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
-func (am AppModule) RegisterQueryService(grpc.Server) {}
+func (am AppModule) RegisterServices(module.Configurator) {}
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.

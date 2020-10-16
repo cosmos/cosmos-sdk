@@ -422,7 +422,7 @@ func TestLoadVersionPruning(t *testing.T) {
 
 	for _, v := range []int64{1, 2, 4} {
 		_, err = app.cms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err)
+		require.NoError(t, err)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {
@@ -1692,9 +1692,9 @@ func TestQuery(t *testing.T) {
 
 func TestGRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *BaseApp) {
-		testdata.RegisterTestServiceServer(
+		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
-			testdata.TestServiceImpl{},
+			testdata.QueryImpl{},
 		)
 	}
 
@@ -1711,7 +1711,7 @@ func TestGRPCQuery(t *testing.T) {
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.TestService/SayHello",
+		Path: "/testdata.Query/SayHello",
 	}
 
 	resQuery := app.Query(reqQuery)

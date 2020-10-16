@@ -38,7 +38,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-		MaxNum:          50,
+		MaxBytes:        10000,
 	},
 	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
@@ -96,7 +96,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey),
 			Jailed:            false,
-			Status:            sdk.Bonded,
+			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
 			DelegatorShares:   sdk.OneDec(),
 			Description:       stakingtypes.Description{},

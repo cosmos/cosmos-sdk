@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
@@ -248,7 +249,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	val1, found := app.StakingKeeper.GetValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[4], delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[4], delTokens, stakingtypes.Unbonded, val1, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
@@ -284,7 +285,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
@@ -321,9 +322,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val1, true)
 	require.NoError(t, err)
-	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
@@ -363,9 +364,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
@@ -402,9 +403,9 @@ func TestTallyJailedValidator(t *testing.T) {
 	val3, found := app.StakingKeeper.GetValidator(ctx, valAddrs[2])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, sdk.Unbonded, val3, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
@@ -441,7 +442,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrs[0], delTokens, stakingtypes.Unbonded, val2, true)
 	require.NoError(t, err)
 
 	tp := TestProposal

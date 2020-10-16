@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -172,7 +173,11 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := types.GetProposalIDFromBytes(res.Data)
+	var proposalData types.MsgSubmitProposalResponse
+	err = proto.Unmarshal(res.Data, &proposalData)
+	require.NoError(t, err)
+
+	proposalID := proposalData.ProposalId
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -224,7 +229,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	proposalID := types.GetProposalIDFromBytes(res.Data)
+	var proposalData types.MsgSubmitProposalResponse
+	err = proto.Unmarshal(res.Data, &proposalData)
+	require.NoError(t, err)
+
+	proposalID := proposalData.ProposalId
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)

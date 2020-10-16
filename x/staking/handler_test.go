@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/protobuf/proto"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -103,13 +103,11 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	totalBond := validator.TokensFromShares(bond.GetShares()).TruncateInt()
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, totalBond, true)
 
-	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-	finishTime, err := gogotypes.TimestampFromProto(ts)
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(finishTime)
-	tstaking.Ctx = ctx
+	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
@@ -203,13 +201,11 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	// unbond validator total self-delegations (which should jail the validator)
 	res := tstaking.Undelegate(sdk.AccAddress(valAddr), valAddr, bondAmount, true)
 
-	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-
-	finishTime, err := gogotypes.TimestampFromProto(ts)
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(finishTime)
+	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	tstaking.Ctx = ctx
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
@@ -406,14 +402,15 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	numUnbonds := int64(5)
 
 	for i := int64(0); i < numUnbonds; i++ {
-		res := tstaking.Handle(msgUndelegate, true)
-		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+		res, err := handler(ctx, msgUndelegate)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 
-		finishTime, err := gogotypes.TimestampFromProto(ts)
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
-		ctx = ctx.WithBlockTime(finishTime)
+		ctx = ctx.WithBlockTime(resData.CompletionTime)
 		tstaking.Ctx = ctx
 		staking.EndBlocker(ctx, app.StakingKeeper)
 
@@ -507,10 +504,8 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 
 		res := tstaking.Undelegate(delegatorAddrs[i], validatorAddr, amt, true)
 
-		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-
-		_, err := gogotypes.TimestampFromProto(ts)
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
 		// adds validator into unbonding queue
@@ -551,12 +546,11 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	for _, delegatorAddr := range delegatorAddrs {
 		res := tstaking.Undelegate(delegatorAddr, validatorAddr, sdk.NewInt(amount), true)
 
-		ts := &gogotypes.Timestamp{}
-		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-		finishTime, err := gogotypes.TimestampFromProto(ts)
+		var resData types.MsgUndelegateResponse
+		err = proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
-		ctx = ctx.WithBlockTime(finishTime)
+		ctx = ctx.WithBlockTime(resData.CompletionTime)
 		staking.EndBlocker(ctx, app.StakingKeeper)
 		tstaking.Ctx = ctx
 
@@ -577,29 +571,33 @@ func TestJailValidator(t *testing.T) {
 	tstaking.Delegate(delegatorAddr, validatorAddr, amt)
 
 	// unbond the validators bond portion
-	unamt := sdk.NewInt(amt)
-	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, unamt, true)
-	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
+	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	res, err = handler(ctx, msgUndelegateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	finishTime, err := gogotypes.TimestampFromProto(ts)
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(finishTime)
+	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	tstaking.Ctx = ctx
 
 	tstaking.CheckValidator(validatorAddr, -1, true)
 
 	// test that the delegator can still withdraw their bonds
-	tstaking.Undelegate(delegatorAddr, validatorAddr, unamt, true)
-	ts = &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	msgUndelegateDelegator := types.NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
 
-	finishTime, err = gogotypes.TimestampFromProto(ts)
+	res, err = handler(ctx, msgUndelegateDelegator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(finishTime)
+	ctx = ctx.WithBlockTime(resData.CompletionTime)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	tstaking.Ctx = ctx
 
@@ -623,11 +621,14 @@ func TestValidatorQueue(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, amt, true)
-	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
+	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, delTokens)
+	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
+	res, err = handler(ctx, msgUndelegateValidator)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	finishTime, err := gogotypes.TimestampFromProto(ts)
+	var resData types.MsgUndelegateResponse
+	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = tstaking.TurnBlock(finishTime)
@@ -704,17 +705,17 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt, true)
 
 	// change the ctx to Block Time one second before the validator would have unbonded
-	ts := &gogotypes.Timestamp{}
-	types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(res.Data, ts)
-	finishTime, err := gogotypes.TimestampFromProto(ts)
+	var resData types.MsgUndelegateResponse
+	err := proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
-	ctx = ctx.WithBlockTime(finishTime.Add(time.Second * -1))
-	tstaking.Ctx = ctx
+
+	ctx = ctx.WithBlockTime(resData.CompletionTime.Add(time.Second * -1))
 
 	// unbond the delegator from the validator
 	res = tstaking.Undelegate(delegatorAddr, validatorAddr, unbondAmt, true)
 
 	ctx = tstaking.TurnBlockTimeDiff(app.StakingKeeper.UnbondingTime(ctx))
+	tstaking.Ctx = ctx
 
 	// Check to make sure that the unbonding delegation is no longer in state
 	// (meaning it was deleted in the above EndBlocker)

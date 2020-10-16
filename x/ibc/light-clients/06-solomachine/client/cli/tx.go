@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
@@ -25,10 +24,11 @@ const (
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [client-id] [sequence] [path/to/consensus-state.json]",
-		Short:   "create new solo machine client",
-		Long:    "create a new solo machine client with the specified identifier and public key",
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [path/to/consensus-state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Use:   "create [client-id] [sequence] [path/to/consensus_state.json]",
+		Short: "create new solo machine client",
+		Long: `create a new solo machine client with the specified identifier and public key
+	- ConsensusState json example: {"public_key":{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/3SXL2ONYaOkxpdR5P8tHTlSlPv1AwQwSFxKRee5JQW"},"diversifier":"diversifier","timestamp":"10"}`,
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [path/to/consensus_state] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -46,9 +46,8 @@ func NewCreateClientCmd() *cobra.Command {
 
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
+			// attempt to unmarshal consensus state argument
 			consensusState := &types.ConsensusState{}
-
-			// attempt to unmarshal public key argument
 			if err := cdc.UnmarshalJSON([]byte(args[2]), consensusState); err != nil {
 
 				// check for file path if JSON input is not provided

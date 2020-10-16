@@ -1,7 +1,8 @@
 package tx
 
 import (
-	fmt "fmt"
+	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -26,7 +27,15 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		msg := any.GetCachedValue().(sdk.Msg)
+		var msg sdk.Msg
+		if isServiceMsg(any.TypeUrl) {
+			msg = sdk.ServiceMsg{
+				MethodName: any.TypeUrl,
+				Request:    any.GetCachedValue().(sdk.MsgRequest),
+			}
+		} else {
+			msg = any.GetCachedValue().(sdk.Msg)
+		}
 		res[i] = msg
 	}
 	return res
@@ -138,12 +147,23 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		var msg sdk.Msg
-		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
+		// If the any's typeUrl contains 2 slashes, then we unpack the any into
+		// a ServiceMsg struct as per ADR-031.
+		if isServiceMsg(any.TypeUrl) {
+			var req sdk.MsgRequest
+			err := unpacker.UnpackAny(any, &req)
+			if err != nil {
+				return err
+			}
+		} else {
+			var msg sdk.Msg
+			err := unpacker.UnpackAny(any, &msg)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -167,4 +187,10 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+// isServiceMsg checks if a type URL corresponds to a service method name,
+// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
+func isServiceMsg(typeURL string) bool {
+	return strings.Count(typeURL, "/") >= 2
 }

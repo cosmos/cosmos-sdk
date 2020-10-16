@@ -205,10 +205,27 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			return err
+		switch msg := msg.(type) {
+		case sdk.ServiceMsg:
+			{
+				bz, err := proto.Marshal(msg.Request)
+				if err != nil {
+					return err
+				}
+				anys[i] = &codectypes.Any{
+					TypeUrl: msg.MethodName,
+					Value:   bz,
+				}
+			}
+		default:
+			{
+				anys[i], err = codectypes.NewAnyWithValue(msg)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
 	}
 
 	w.tx.Body.Messages = anys

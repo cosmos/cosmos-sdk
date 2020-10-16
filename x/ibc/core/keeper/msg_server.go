@@ -20,6 +20,7 @@ type MsgServer struct {
 
 var _ clienttypes.MsgServer = MsgServer{}
 var _ connectiontypes.MsgServer = MsgServer{}
+var _ channeltypes.MsgServer = MsgServer{}
 
 func (k MsgServer) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateClient) (*clienttypes.MsgCreateClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

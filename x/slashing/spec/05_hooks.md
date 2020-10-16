@@ -25,6 +25,6 @@ onValidatorBonded(address sdk.ValAddress)
     }
     setValidatorSigningInfo(signingInfo)
   }
-  
+
   return
 ```

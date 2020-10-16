@@ -71,7 +71,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 	return k.router.GetRoute(evidenceRoute), nil
 }
 
-// submitEvidence attempts to match evidence against the keepers router and execute
+// SubmitEvidenceI attempts to match evidence against the keepers router and execute
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.

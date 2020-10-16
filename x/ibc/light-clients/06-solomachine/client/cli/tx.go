@@ -6,13 +6,13 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/06-solomachine/types"
@@ -25,11 +25,11 @@ const (
 // NewCreateClientCmd defines the command to create a new solo machine client.
 func NewCreateClientCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create [client-id] [sequence] [path/to/consensus_state.json]",
+		Use:     "create [client-id] [sequence] [path/to/public-key.json] [diversifier] [timestamp]",
 		Short:   "create new solo machine client",
-		Long:    "create a new solo machine client with the specified identifier and consensus state",
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
-		Args:    cobra.ExactArgs(3),
+		Long:    "create a new solo machine client with the specified identifier and public key",
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [sequence] [public-key] [diversifier] [timestamp]  --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
@@ -38,24 +38,40 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			clientID := args[0]
+			diversifier := args[3]
 
 			sequence, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
+			timestamp, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
-			var consensusState *types.ConsensusState
-			if err := cdc.UnmarshalJSON([]byte(args[2]), consensusState); err != nil {
+			var publicKey *codectypes.Any
+
+			// attempt to unmarshal public key argument
+			if err := cdc.UnmarshalJSON([]byte(args[2]), publicKey); err != nil {
+
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := ioutil.ReadFile(args[2])
 				if err != nil {
-					return errors.New("neither JSON input nor path to .json file were provided")
+					return errors.New("neither JSON input nor path to .json file for public key were provided")
 				}
-				if err := cdc.UnmarshalJSON(contents, consensusState); err != nil {
-					return errors.Wrap(err, "error unmarshalling consensus state file")
+
+				if err := cdc.UnmarshalJSON(contents, publicKey); err != nil {
+					return errors.Wrap(err, "error unmarshalling public key file")
 				}
+			}
+
+			consensusState := &types.ConsensusState{
+				PublicKey:   publicKey,
+				Diversifier: diversifier,
+				Timestamp:   timestamp,
 			}
 
 			allowUpdateAfterProposal, _ := cmd.Flags().GetBool(flagAllowUpdateAfterProposal)

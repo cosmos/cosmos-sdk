@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 		},
 		{
 			"test query validators gRPC route with valid status",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?status=%s", baseURL, sdk.Bonded.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?status=%s", baseURL, types.Bonded.String()),
 			false,
 		},
 	}

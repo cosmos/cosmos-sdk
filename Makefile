@@ -67,12 +67,12 @@ ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
 endif
 # handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
   BUILD_TAGS += rocksdb
 endif
 # handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(TENDERMINT_BUILD_OPTIONS)))
+ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
 endif
 
@@ -110,10 +110,9 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='darwin linux windows' \
+        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -122,10 +121,9 @@ build-simd-all: go.sum
 	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/rbuilder 2>/dev/null),$(info found image cosmossdk/rbuilder),docker pull cosmossdk/rbuilder:latest)
 	docker rm latest-build || true
 	docker run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_OS='linux' \
+        --env TARGET_PLATFORMS='linux/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
@@ -389,7 +387,7 @@ proto-check-breaking-docker:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 .PHONY: proto-check-breaking-ci
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/3359e0bf2f8414d9687f9eecda67b899d64a9cd1/proto/tendermint
+TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc5/proto/tendermint
 GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
 CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.2

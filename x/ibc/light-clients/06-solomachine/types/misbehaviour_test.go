@@ -10,8 +10,8 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 
 	suite.Require().Equal(types.SoloMachine, misbehaviour.ClientType())
 	suite.Require().Equal(suite.solomachine.ClientID, misbehaviour.GetClientID())
-	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetEpochNumber())
-	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetEpochHeight())
+	suite.Require().Equal(uint64(0), misbehaviour.GetHeight().GetVersionNumber())
+	suite.Require().Equal(suite.solomachine.Sequence, misbehaviour.GetHeight().GetVersionHeight())
 }
 
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
@@ -94,6 +94,18 @@ func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 				"data type for SignatureTwo is unspecified",
 				func(misbehaviour *types.Misbehaviour) {
 					misbehaviour.SignatureTwo.DataType = types.UNSPECIFIED
+				}, false,
+			},
+			{
+				"timestamp for SignatureOne is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureOne.Timestamp = 0
+				}, false,
+			},
+			{
+				"timestamp for SignatureTwo is zero",
+				func(misbehaviour *types.Misbehaviour) {
+					misbehaviour.SignatureTwo.Timestamp = 0
 				}, false,
 			},
 		}

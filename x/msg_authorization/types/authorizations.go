@@ -12,32 +12,32 @@ import (
 type Authorization interface {
 	proto.Message
 
-	// MsgType returns the type of Msg's that this authorization can accept
-	MsgType() string
+	// MethodName returns the fully-qualified Msg service method name as described in ADR 031.
+	MethodName() string
 
-	// Accept determines whether this grant allows the provided action, and if
-	// so provides an upgraded authorization grant
+	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
+	// so provides an upgraded authorization instance.
 	Accept(msg sdk.Msg, block tmproto.Header) (allow bool, updated Authorization, delete bool)
 }
 
 // NewAuthorizationGrant returns new AuthrizationGrant
-func NewAuthorizationGrant(authorization Authorization, expiration int64) (*AuthorizationGrant, error) {
+func NewAuthorizationGrant(authorization Authorization, expiration int64) (AuthorizationGrant, error) {
 	auth := AuthorizationGrant{
 		Expiration: expiration,
 	}
 	msg, ok := authorization.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf("cannot proto marshal %T", authorization)
+		return AuthorizationGrant{}, fmt.Errorf("cannot proto marshal %T", authorization)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, err
+		return AuthorizationGrant{}, err
 	}
 
 	auth.Authorization = any
 
-	return &auth, nil
+	return auth, nil
 }
 
 var (

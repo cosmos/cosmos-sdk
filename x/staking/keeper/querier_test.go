@@ -143,7 +143,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []sdk.BondStatus{sdk.Bonded, sdk.Unbonded, sdk.Unbonding}
+	status := []types.BondStatus{types.Bonded, types.Unbonded, types.Unbonding}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]), PKs[i], types.Description{})
@@ -224,7 +224,7 @@ func TestQueryDelegation(t *testing.T) {
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
 
 	delTokens := sdk.TokensFromConsensusPower(20)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, types.Unbonded, val1, true)
 	require.NoError(t, err)
 
 	// apply TM updates
@@ -473,7 +473,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 		}
 
 		delTokens := sdk.TokensFromConsensusPower(20)
-		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, sdk.Unbonded, validator, true)
+		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, types.Unbonded, validator, true)
 		require.NoError(t, err)
 	}
 
@@ -552,7 +552,7 @@ func TestQueryRedelegations(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 
 	delAmount := sdk.TokensFromConsensusPower(100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, types.Unbonded, val1, true)
 	require.NoError(t, err)
 	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
@@ -623,7 +623,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 	// delegate
 	delAmount := sdk.TokensFromConsensusPower(100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, sdk.Unbonded, val1, true)
+	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
 	require.NoError(t, err)
 	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 

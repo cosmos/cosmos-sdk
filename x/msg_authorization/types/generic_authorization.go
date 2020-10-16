@@ -9,16 +9,14 @@ var (
 	_ Authorization = &GenericAuthorization{}
 )
 
-func NewGenericAuthorization (msgType string) *GenericAuthorization {
-	// var msg sdk.Msg
-	// TODO handle generic msg type
-	return nil
+func NewGenericAuthorization(methodName string) *GenericAuthorization {
+	return &GenericAuthorization{
+		MessageName: methodName,
+	}
 }
 
-func (cap GenericAuthorization) MsgType() string {
-	var msg sdk.Msg
-	ModuleCdc.UnpackAny(cap.Message, &msg)
-	return msg.Type()
+func (cap GenericAuthorization) MethodName() string {
+	return cap.MessageName
 }
 
 func (cap GenericAuthorization) Accept(msg sdk.Msg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {

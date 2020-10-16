@@ -1,19 +1,22 @@
 package cli
 
 import (
+	"errors"
 	"time"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string) *cobra.Command {
+func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Authorization transactions subcommands",
@@ -24,17 +27,17 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	}
 
 	AuthorizationTxCmd.AddCommand(
-		GetCmdGrantAuthorization(storeKey),
-		GetCmdRevokeAuthorization(storeKey),
-		GetCmdSendAs(storeKey),
+		NewCmdGrantAuthorization(),
+		NewCmdRevokeAuthorization(),
+		NewCmdSendAs(),
 	)
 
 	return AuthorizationTxCmd
 }
 
-func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
+func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee_address] [authorization] [limit]",
+		Use:   "grant [grantee_address] [msg-type] [limit] --from=[granter]",
 		Short: "Grant authorization to an address",
 		Long:  "Grant authorization to an address to execute a transaction on your behalf",
 		Args:  cobra.RangeArgs(2, 3),
@@ -44,61 +47,50 @@ func GetCmdGrantAuthorization(storeKey string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			granter := clientCtx.FromAddress
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
-			msgType  := args[1]
+
+			msgType := args[1]
 
 			var authorization types.Authorization
-			var (
-				_ types.Authorization = &types.SendAuthorization{}
-			)
-			if msgType == (types.SendAuthorization{}.MsgType()) {
+			switch msgType {
+			case (types.SendAuthorization{}.MethodName()):
 				limit, err := sdk.ParseCoins(args[2])
 				if err != nil {
-					return nil
+					return err
 				}
-				authorization = types.NewSendAuthorization(limit)
-			} else if msgType == (types.GenericAuthorization{}.MsgType()) {
-				limit, err := sdk.ParseCoins(args[2])
-				if err != nil {
-					return nil
+				authorization = &types.SendAuthorization{
+					SpendLimit: limit,
 				}
-				authorization = types.NewSendAuthorization(limit)
-				// TODO replace with generic authorization
-				// authorization = types.NewGenericAuthorization(msgType)
-			} else {
-				return nil
+			case (types.GenericAuthorization{}.MethodName()):
+				authorization = types.NewGenericAuthorization(msgType)
+			default:
+				return errors.New("invalid authorization type")
 			}
 
-			expirationString := viper.GetString(FlagExpiration)
-			expiration, err := time.Parse(time.RFC3339, expirationString)
-			if err != nil {
-				return err
-			}
+			period := time.Unix(viper.GetInt64(FlagExpiration), 0)
 
-			msg, err  := types.NewMsgGrantAuthorization(granter, grantee, authorization, expiration)
+			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, period)
 			if err != nil {
 				return err
 			}
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 
 		},
 	}
-	cmd.Flags().String(FlagExpiration, "9999-12-31T23:59:59.52Z", "The time upto which the authorization is active for the user")
-
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Int64(FlagExpiration, int64(3600*24*365), "The second unit of time duration which the authorization is active for the user; Default is a year")
 	return cmd
 }
 
-func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
+func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] [msg_type]",
+		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
 		Short: "revoke authorization",
 		Long:  "revoke authorization from an address for a transaction",
 		Args:  cobra.ExactArgs(2),
@@ -108,12 +100,13 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			granter := clientCtx.FromAddress
+			granter := clientCtx.GetFromAddress()
 
 			msgAuthorized := args[1]
 
@@ -124,43 +117,44 @@ func GetCmdRevokeAuthorization(storeKey string) *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
-func GetCmdSendAs(storeKey string) *cobra.Command {
+func NewCmdSendAs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "send-as [grantee] [msg_tx_json] --from [grantee]",
+		Use:   "exec [msg_tx_json] --from [grantee]",
 		Short: "execute tx on behalf of granter account",
 		Long:  "execute tx on behalf of granter account",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			return nil
-			// inBuf := bufio.NewReader(cmd.InOrStdin())
-			// txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
-			// cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			grantee := clientCtx.GetFromAddress()
 
-			// grantee := cliCtx.FromAddress
+			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
+				return errors.New("cannot broadcast tx during offline mode")
+			}
 
-			// var stdTx auth.StdTx
-			// bz, err := ioutil.ReadFile(args[1])
-			// if err != nil {
-			// 	return err
-			// }
+			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgExecAuthorized(grantee, stdTx.GetMsgs())
 
-			// err = cdc.UnmarshalJSON(bz, &stdTx)
-			// if err != nil {
-			// 	return err
-			// }
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
-			// msg := types.NewMsgExecAuthorized(grantee, stdTx.Msgs)
-
-			// if err := msg.ValidateBasic(); err != nil {
-			// 	return err
-			// }
-
-			// return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }

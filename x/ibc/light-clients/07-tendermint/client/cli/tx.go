@@ -10,6 +10,7 @@ import (
 	ics23 "github.com/confio/ics23/go"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/light"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,6 +25,7 @@ import (
 
 const (
 	flagTrustLevel                   = "trust-level"
+	flagConsensusParams              = "consensus-params"
 	flagProofSpecs                   = "proof-specs"
 	flagUpgradePath                  = "upgrade-path"
 	flagAllowUpdateAfterExpiry       = "allow_update_after_expiry"
@@ -38,10 +40,11 @@ func NewCreateClientCmd() *cobra.Command {
 		Short: "create new tendermint client",
 		Long: `Create a new tendermint IBC client. 
   - 'trust-level' flag can be a fraction (eg: '1/3') or 'default'
+  - 'consensus-params' flag can be a JSON input, a path to a .json file. The params must match the consensus parameters of the chain this light client represents.
   - 'proof-specs' flag can be JSON input, a path to a .json file or 'default'
   - 'upgrade-path' flag is a string specifying the upgrade path for this chain where a future upgraded client will be stored. The path represents a keypath for the store with each key separated by a '/'. Any slash within a key must be escaped.
   e.g. 'upgrade/upgradedClient'`,
-		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
+		Example: fmt.Sprintf("%s tx ibc %s create [client-id] [path/to/consensus_state.json] [trusting_period] [unbonding_period] [max_clock_drift] --trust-level default --consensus-params [path/to/consensus-params.json] --proof-specs [path/to/proof-specs.json] --upgrade-path upgrade/upgradedClient --from node0 --home ../node0/<app>cli --chain-id $CID", version.AppName, types.SubModuleName),
 		Args:    cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -68,8 +71,9 @@ func NewCreateClientCmd() *cobra.Command {
 			}
 
 			var (
-				trustLevel types.Fraction
-				specs      []*ics23.ProofSpec
+				trustLevel      types.Fraction
+				consensusParams *abci.ConsensusParams
+				specs           []*ics23.ProofSpec
 			)
 
 			lvl, _ := cmd.Flags().GetString(flagTrustLevel)
@@ -98,6 +102,22 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
+			cp, _ := cmd.Flags().GetString(flagConsensusParams)
+			if cp != "" {
+				if err := legacyAmino.UnmarshalJSON([]byte(cp), &consensusParams); err != nil {
+					// check for file path if JSON input not provided
+					contents, err := ioutil.ReadFile(cp)
+					if err != nil {
+						return errors.New("neither JSON input nor path to .json file was provided for consensus params flag")
+					}
+					// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+					// or wrap lists of proto.Message in some other message)
+					if err := legacyAmino.UnmarshalJSON(contents, &consensusParams); err != nil {
+						return errors.Wrap(err, "error unmarshalling consensus params file")
+					}
+				}
+			}
+
 			spc, _ := cmd.Flags().GetString(flagProofSpecs)
 			if spc == "default" {
 				specs = commitmenttypes.GetSDKSpecs()
@@ -120,12 +140,6 @@ func NewCreateClientCmd() *cobra.Command {
 			allowUpdateAfterMisbehaviour, _ := cmd.Flags().GetBool(flagAllowUpdateAfterMisbehaviour)
 
 			upgradePath, _ := cmd.Flags().GetString(flagUpgradePath)
-			keyPath := strings.Split(upgradePath, "/")
-			if keyPath[0] == upgradePath {
-				return fmt.Errorf("invalid merkle path %s", upgradePath)
-			}
-
-			merklePath := commitmenttypes.NewMerklePath(keyPath)
 
 			// validate header
 			if err := header.ValidateBasic(); err != nil {
@@ -136,7 +150,7 @@ func NewCreateClientCmd() *cobra.Command {
 
 			clientState := types.NewClientState(
 				header.GetHeader().GetChainID(), trustLevel, trustingPeriod, ubdPeriod, maxClockDrift,
-				height, specs, &merklePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
+				height, consensusParams, specs, upgradePath, allowUpdateAfterExpiry, allowUpdateAfterMisbehaviour,
 			)
 
 			consensusState := header.ConsensusState()

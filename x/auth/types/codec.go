@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacytx.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterface associates protoName with AccountI interface
+// RegisterInterfaces associates protoName with AccountI interface
 // and creates a registry of it's concrete implementations
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
@@ -30,7 +30,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.auth.GenesisAccount",
+		"cosmos.auth.v1beta1.GenesisAccount",
 		(*GenesisAccount)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},

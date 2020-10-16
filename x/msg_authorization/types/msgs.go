@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"time"
+
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,6 +28,7 @@ var (
 )
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
+//nolint:interfacer
 func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) (*MsgGrantAuthorization, error) {
 	msg, ok := authorization.(proto.Message)
 	if !ok {
@@ -82,6 +84,14 @@ func (msg MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
+func (msg MsgGrantAuthorization) GetAuthorization() Authorization {
+	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
+	if !ok {
+		return nil
+	}
+	return authorization
+}
+
 func (msg MsgExecAuthorized) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.Msg
@@ -100,7 +110,6 @@ func (msg MsgGrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) er
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
 
-
 // String implements the Stringer interface
 func (msg MsgGrantAuthorization) String() string {
 	out, _ := yaml.Marshal(msg)
@@ -108,6 +117,7 @@ func (msg MsgGrantAuthorization) String() string {
 }
 
 // NewMsgRevokeAuthorization creates a new MsgRevokeAuthorization
+//nolint:interfacer
 func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType string) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
 		Granter:              granter.String(),
@@ -155,6 +165,7 @@ func (msg MsgRevokeAuthorization) String() string {
 }
 
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
+//nolint:interfacer
 func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorized {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {

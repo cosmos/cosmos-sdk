@@ -2,9 +2,13 @@ package types_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,6 +16,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -179,4 +184,34 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 
 	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(checkTxResult))
 	s.Require().Equal(want, sdk.NewResponseFormatBroadcastTxCommit(deliverTxResult))
+}
+
+func TestWrapServiceResult(t *testing.T) {
+	ctx := sdk.Context{}
+
+	res, err := sdk.WrapServiceResult(ctx, nil, fmt.Errorf("test"))
+	require.Nil(t, res)
+	require.NotNil(t, err)
+
+	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Empty(t, res.Events)
+
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	ctx.EventManager().EmitEvent(sdk.NewEvent("test"))
+	res, err = sdk.WrapServiceResult(ctx, nil, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+
+	spot := testdata.Dog{Name: "spot"}
+	res, err = sdk.WrapServiceResult(ctx, &spot, nil)
+	require.NotNil(t, res)
+	require.Nil(t, err)
+	require.Len(t, res.Events, 1)
+	var spot2 testdata.Dog
+	err = proto.Unmarshal(res.Data, &spot2)
+	require.NoError(t, err)
+	require.Equal(t, spot, spot2)
 }

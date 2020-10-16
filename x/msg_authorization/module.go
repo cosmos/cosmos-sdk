@@ -1,26 +1,26 @@
 package msg_authorization
 
 import (
-	"encoding/json"
-	"math/rand"
 	"context"
+	"encoding/json"
+	"fmt"
+	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/simulation"
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/keeper"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
@@ -31,67 +31,83 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
+// AppModuleBasic defines the basic application module used by the msg_authorization module.
 type AppModuleBasic struct {
 	cdc codec.Marshaler
 }
 
-// Name returns the ModuleName
+// Name returns the msg_authorization module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
+// RegisterQueryService registers a gRPC query service to respond to the
+// module-specific gRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
+
+// RegisterLegacyAminoCodec registers the msg_authorization module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the msg_authorization module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-// DefaultGenesis is an empty object
+// DefaultGenesis returns default genesis state as raw bytes for the msg_authorization
+// module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-// ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
-	return nil
+// ValidateGenesis performs genesis state validation for the msg_authorization module.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+	var data types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+
+	return types.ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers all REST query handlers
+// RegisterRESTRoutes registers the REST routes for the msg_authorization module.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
 	// rest.RegisterRoutes(clientCtx, r)
 }
 
-// RegisterGRPCRoutes registers the gRPC Gateway routes for the staking module.
-func (AppModuleBasic) RegisterGRPCRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// TODO: Add grpc querier
+// RegisterGRPCRoutes registers the gRPC Gateway routes for the msg_authorization module.
+func (AppModuleBasic) RegisterGRPCRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
-//GetQueryCmd returns the cli query commands for this module
+//GetQueryCmd returns the cli query commands for the msg_authorization module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd("StoreKey")
+	return cli.GetQueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for the msg_authorization module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd("StoreKey")
+	return cli.GetTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
+		accountKeeper:  ak,
+		bankKeeper:     bk,
 	}
 }
 
@@ -102,9 +118,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// // Route is empty, as we do not handle Messages (just proposals)
-// func (AppModule) Route() string { return types.RouterKey }
 
 // Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
@@ -118,7 +131,7 @@ func (am AppModule) NewHandler() sdk.Handler {
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// LegacyQuerierHandler returns the staking module sdk.Querier.
+// LegacyQuerierHandler returns the msg_authorization module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
 }
@@ -126,24 +139,23 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterQueryService registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	// TODO:
-	// querier := keeper.Querier{Keeper: am.keeper}
-	// types.RegisterQueryServer(server, querier)
+	types.RegisterQueryServer(server, am.keeper)
 }
 
-// InitGenesis is ignored, no sense in serializing future upgrades
+// InitGenesis performs genesis initialization for the msg_authorization module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
+	var genesisState types.GenesisState
+	cdc.MustUnmarshalJSON(data, &genesisState)
+	InitGenesis(ctx, am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis is always empty, as InitGenesis does nothing either
+// ExportGenesis returns the exported genesis state as raw bytes for the msg_authorization
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-	return am.DefaultGenesis(cdc)
-}
-
-// DefaultGenesis is an empty object
-func (am AppModule) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return nil
+	gs := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(gs)
 }
 
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
@@ -159,10 +171,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the evidence module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
+// GenerateGenesisState creates a randomized GenState of the msg_authorization module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
 
 // ProposalContents returns all the evidence content functions used to
 // simulate governance proposals.
@@ -170,17 +180,21 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 	return nil
 }
 
-// RandomizedParams creates randomized evidence param changes for the simulator.
+// RandomizedParams creates randomized msg_authorization param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	// return simulation.WeightedOperations(
+	// 	simState.AppParams, simState.Cdc,
+	// 	am.accountKeeper, am.bankKeeper, am.keeper,
+	// )
 	return nil
 }

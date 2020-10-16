@@ -38,7 +38,7 @@ func (misbehaviour Misbehaviour) String() string {
 
 // GetHeight returns the sequence at which misbehaviour occurred.
 // Return exported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
+// Version number is always 0 for a solo-machine
 func (misbehaviour Misbehaviour) GetHeight() exported.Height {
 	return clienttypes.NewHeight(0, misbehaviour.Sequence)
 }
@@ -84,6 +84,9 @@ func (sd SignatureAndData) ValidateBasic() error {
 	}
 	if sd.DataType == UNSPECIFIED {
 		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "data type cannot be UNSPECIFIED")
+	}
+	if sd.Timestamp == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignatureAndData, "timestamp cannot be 0")
 	}
 
 	return nil

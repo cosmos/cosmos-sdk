@@ -5,9 +5,24 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
-
+import "cosmos/base/abci/v1beta1/abci.proto";
 option go_package            = "github.com/cosmos/cosmos-sdk/x/msg_authorization/types";
 option (gogoproto.equal_all) = true;
+
+
+// Msg defines the msg_authorization Msg service.
+service Msg {
+     // GrantAuthorization grants the provided authorization to the grantee on the granter's
+  // account with the provided expiration time.
+  rpc GrantAuthorization(MsgGrantAuthorization) returns (MsgGrantAuthorizationResponse);
+  // ExecAuthorized attempts to execute the provided messages using
+  // authorizations granted to the grantee. Each message should have only
+  // one signer corresponding to the granter of the authorization.
+  rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse);
+  // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
+  // granter's account that has been granted to the grantee.
+  rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);
+}
 
 // MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
@@ -28,6 +43,14 @@ message MsgGrantAuthorization{
     ];
 }
 
+
+// MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
+message MsgExecAuthorizedResponse { 
+    option (gogoproto.equal) = false;
+
+    cosmos.base.abci.v1beta1.Result result = 1;
+ }
+
 // MsgExecAuthorized attempts to execute the provided messages using
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
@@ -42,6 +65,9 @@ message MsgExecAuthorized {
     ];
 }
 
+// MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
+message MsgGrantAuthorizationResponse {  }
+
 // MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevokeAuthorization{
@@ -52,3 +78,6 @@ message MsgRevokeAuthorization{
   string grantee = 2;
   string authorization_msg_type = 3 [(gogoproto.moretags)  = "yaml:\"authorization_msg_type\""];
 }
+
+// MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
+message MsgRevokeAuthorizationResponse {  }

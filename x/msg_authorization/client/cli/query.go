@@ -2,38 +2,37 @@ package cli
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Querying commands for the msg authorization module",
-		Long: "",
+		Long:                       "",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
 	authorizationQueryCmd.AddCommand(
-		GetCmdQueryAuthorization(queryRoute),
+		GetCmdQueryAuthorization(),
 	)
 
 	return authorizationQueryCmd
 }
 
 // GetCmdQueryAuthorization implements the query authorizations command.
-func GetCmdQueryAuthorization(storeName string) *cobra.Command {
-	//TODO update description
+func GetCmdQueryAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "authorization [grantee-addr] [msg-type]",
-		Args:  cobra.ExactArgs(2),
+		Use:   "authorization [granter-addr] [grantee-addr] [msg-type]",
+		Args:  cobra.ExactArgs(3),
 		Short: "query authorization for a granter-grantee pair",
 		Long:  "query authorization for a granter-grantee pair",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,25 +43,27 @@ func GetCmdQueryAuthorization(storeName string) *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			granterAddr := clientCtx.FromAddress
-
-			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
+			granterAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			msgAuthorized := args[1]
+			granteeAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			msgAuthorized := args[2]
 
 			res, err := queryClient.Authorization(
 				context.Background(),
 				&types.QueryAuthorizationRequest{
 					GranterAddr: granterAddr.String(),
 					GranteeAddr: granteeAddr.String(),
-					 MsgType: msgAuthorized,
+					MsgType:     msgAuthorized,
 				},
 			)
 			if err != nil {
-				fmt.Println("Errrrrrrrrrrrrrrrr", err)
 				return err
 			}
 

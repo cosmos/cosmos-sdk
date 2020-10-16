@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
@@ -13,7 +12,6 @@ import (
 // NewQuerier returns a new sdk.Keeper instance.
 func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
-		fmt.Println("Path ---------------======----->   ", path)
 		switch path[0] {
 		case types.QueryAuthorization:
 			return queryAuthorization(ctx, req, k, legacyQuerierCdc)

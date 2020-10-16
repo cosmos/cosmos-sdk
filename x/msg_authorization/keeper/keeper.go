@@ -7,12 +7,12 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/tendermint/tendermint/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
@@ -23,8 +23,7 @@ type Keeper struct {
 
 // NewKeeper constructs a message authorization Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Router) Keeper {
-	
-	
+
 	// It is vital to seal the msg_authorization proposal router here as to not allow
 	// further handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
@@ -38,18 +37,13 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router types.Ro
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // Router returns the gov Keeper's Router
-func (keeper Keeper) Router() types.Router {
-	return keeper.router
-}
-
-
-func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
-	return []byte(fmt.Sprintf("c/%x/%x/%s", grantee, granter, msgType))
+func (k Keeper) Router() types.Router {
+	return k.router
 }
 
 func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
@@ -63,7 +57,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
-	actor := k.getActorAuthorizationKey(grantee, granter, updated.MsgType())
+	actor := types.GetActorAuthorizationKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return
@@ -96,7 +90,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg.Type())
+			authorization, _ := k.GetAuthorization(ctx, grantee, granter, proto.MessageName(msg))
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
@@ -111,13 +105,14 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 		handler := k.router.GetRoute(msg.Route())
+
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msg.Route())
 		}
 
 		msgResult, err = handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", msg.Type())
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", proto.MessageName(msg))
 		}
 	}
 
@@ -135,15 +130,15 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 		panic(err)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(grant)
-	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
+	bz := k.cdc.MustMarshalBinaryBare(&grant)
+	actor := types.GetActorAuthorizationKey(grantee, granter, authorization.MethodName())
 	store.Set(actor, bz)
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
+	actor := types.GetActorAuthorizationKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, actor)
 	if !found {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
@@ -156,7 +151,7 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 // GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
 func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap types.Authorization, expiration int64) {
-	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
+	grant, found := k.getAuthorizationGrant(ctx, types.GetActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
 		return nil, 0
 	}
@@ -166,4 +161,20 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	}
 
 	return grant.GetAuthorization(), grant.Expiration
+}
+
+// IterateGrants iterates over all authorization grants
+func (k Keeper) IterateGrants(ctx sdk.Context,
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.AuthorizationGrant) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.GrantKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var grant types.AuthorizationGrant
+		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
+		if handler(granterAddr, granteeAddr, grant) {
+			break
+		}
+	}
 }

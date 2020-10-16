@@ -4,10 +4,18 @@ import (
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
 	registry := types.NewInterfaceRegistry()
+	RegisterInterfaces(registry)
+	return registry
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil), &TestMsg{})
+
 	registry.RegisterInterface("Animal", (*Animal)(nil))
 	registry.RegisterImplementations(
 		(*Animal)(nil),
@@ -22,7 +30,6 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 		(*HasHasAnimalI)(nil),
 		&HasHasAnimal{},
 	)
-	return registry
 }
 
 func NewTestAmino() *amino.Codec {

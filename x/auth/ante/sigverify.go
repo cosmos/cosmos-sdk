@@ -76,7 +76,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		// account already has pubkey set,no need to reset
 		if acc.GetPubKey() != nil {
-                         // Check to make sure the pubkeys match
+			// Check to make sure the pubkeys match
 			// Only make check if simulate=false
 			if !simulate && !bytes.Equal(pk.Address(), acc.GetPubKey().Address()) {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
@@ -85,7 +85,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			continue
 		}
 
-// If pubkey is not set on an account, make sure that pubkey from address hashes to account address
+		// If pubkey is not set on an account, make sure that pubkey from address hashes to account address
 		// Only make check if simulate=false and if pubkey is not available
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,

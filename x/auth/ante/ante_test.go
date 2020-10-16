@@ -147,7 +147,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			sdkerrors.ErrUnknownAddress,
 		},
 		{
-			"unmatching pubkey address set, wrong pubkey provide",
+			"provide wrong pubkey for account with changed pubkey",
 			func() {
 				acc3 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr3)
 				acc3.SetPubKey(priv2.PubKey())

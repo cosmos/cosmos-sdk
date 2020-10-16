@@ -104,7 +104,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, totalBond, true)
 
 	var resData types.MsgUndelegateResponse
-	err = proto.Unmarshal(res.Data, &resData)
+	err := proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -202,7 +202,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	res := tstaking.Undelegate(sdk.AccAddress(valAddr), valAddr, bondAmount, true)
 
 	var resData types.MsgUndelegateResponse
-	err = proto.Unmarshal(res.Data, &resData)
+	err := proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -402,12 +402,10 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	numUnbonds := int64(5)
 
 	for i := int64(0); i < numUnbonds; i++ {
-		res, err := handler(ctx, msgUndelegate)
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		res := tstaking.Handle(msgUndelegate, true)
 
 		var resData types.MsgUndelegateResponse
-		err = proto.Unmarshal(res.Data, &resData)
+		err := proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -505,7 +503,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		res := tstaking.Undelegate(delegatorAddrs[i], validatorAddr, amt, true)
 
 		var resData types.MsgUndelegateResponse
-		err = proto.Unmarshal(res.Data, &resData)
+		err := proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
 		// adds validator into unbonding queue
@@ -547,7 +545,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		res := tstaking.Undelegate(delegatorAddr, validatorAddr, sdk.NewInt(amount), true)
 
 		var resData types.MsgUndelegateResponse
-		err = proto.Unmarshal(res.Data, &resData)
+		err := proto.Unmarshal(res.Data, &resData)
 		require.NoError(t, err)
 
 		ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -571,14 +569,11 @@ func TestJailValidator(t *testing.T) {
 	tstaking.Delegate(delegatorAddr, validatorAddr, amt)
 
 	// unbond the validators bond portion
-	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
-	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-	res, err = handler(ctx, msgUndelegateValidator)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	unamt := sdk.NewInt(amt)
+	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, unamt, true)
 
 	var resData types.MsgUndelegateResponse
-	err = proto.Unmarshal(res.Data, &resData)
+	err := proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(resData.CompletionTime)
@@ -588,11 +583,7 @@ func TestJailValidator(t *testing.T) {
 	tstaking.CheckValidator(validatorAddr, -1, true)
 
 	// test that the delegator can still withdraw their bonds
-	msgUndelegateDelegator := types.NewMsgUndelegate(delegatorAddr, validatorAddr, unbondAmt)
-
-	res, err = handler(ctx, msgUndelegateDelegator)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	tstaking.Undelegate(delegatorAddr, validatorAddr, unamt, true)
 
 	err = proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
@@ -621,15 +612,13 @@ func TestValidatorQueue(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, delTokens)
-	msgUndelegateValidator := types.NewMsgUndelegate(sdk.AccAddress(validatorAddr), validatorAddr, unbondAmt)
-	res, err = handler(ctx, msgUndelegateValidator)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+	res := tstaking.Undelegate(sdk.AccAddress(validatorAddr), validatorAddr, amt, true)
 
 	var resData types.MsgUndelegateResponse
-	err = proto.Unmarshal(res.Data, &resData)
+	err := proto.Unmarshal(res.Data, &resData)
 	require.NoError(t, err)
+
+	finishTime := resData.CompletionTime
 
 	ctx = tstaking.TurnBlock(finishTime)
 	origHeader := ctx.BlockHeader()

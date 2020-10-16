@@ -169,6 +169,10 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 			granter.PrivKey,
 		)
 
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRevokeAuthorization, err.Error()), nil, err
+		}
+
 		_, _, err = app.Deliver(tx)
 		return simtypes.NewOperationMsg(&msg, true, ""), nil, err
 	}
@@ -236,6 +240,10 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			[]uint64{granteeAccount.GetSequence()},
 			grantee.PrivKey,
 		)
+
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
+		}
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

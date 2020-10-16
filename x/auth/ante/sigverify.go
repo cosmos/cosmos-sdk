@@ -70,20 +70,28 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			pk = simSecp256k1Pubkey
 		}
-		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
-		}
-
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
 		// account already has pubkey set,no need to reset
 		if acc.GetPubKey() != nil {
+			// Check to make sure the pubkeys match
+			// Only make check if simulate=false
+			if !simulate && !bytes.Equal(pk.Address(), acc.GetPubKey().Address()) {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
+					"pubKey does not match existing one assigned to address %s with signer index: %d", signers[i], i)
+			}
 			continue
 		}
+
+		// If pubkey is not set on an account, make sure that pubkey from address hashes to account address
+		// Only make check if simulate=false and if pubkey is not available
+		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
+				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+		}
+
 		err = acc.SetPubKey(pk)
 		if err != nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())

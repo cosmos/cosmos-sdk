@@ -82,6 +82,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
+	priv3, _, addr3 := testdata.KeyTestPubAddr()
+	_, _, addr4 := testdata.KeyTestPubAddr()
 	msgs := []sdk.Msg{
 		testdata.NewTestMsg(addr0, addr1),
 		testdata.NewTestMsg(addr0, addr2),
@@ -143,6 +145,41 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 			false,
 			false,
 			sdkerrors.ErrUnknownAddress,
+		},
+		{
+			"provide wrong pubkey for account with changed pubkey",
+			func() {
+				acc3 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr3)
+				acc3.SetPubKey(priv2.PubKey())
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc3)
+				err := suite.app.BankKeeper.SetBalances(suite.ctx, addr3, feeAmount)
+				suite.Require().NoError(err)
+				msg := testdata.NewTestMsg(addr3)
+				msgs = []sdk.Msg{msg}
+				// we should provide priv2 since we changed pubkey of acc3 to priv2.PubKey()
+				// but since it provide priv3, it should fail for InvalidPubKey
+				privs, accNums, accSeqs = []crypto.PrivKey{priv3}, []uint64{acc3.GetAccountNumber()}, []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+		{
+			"provide correct pubkey for account with changed pubkey",
+			func() {
+				acc4 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr4)
+				acc4.SetPubKey(priv2.PubKey())
+				suite.app.AccountKeeper.SetAccount(suite.ctx, acc4)
+				err := suite.app.BankKeeper.SetBalances(suite.ctx, addr4, feeAmount)
+				suite.Require().NoError(err)
+				msg := testdata.NewTestMsg(addr4)
+				msgs = []sdk.Msg{msg}
+				// we provide priv2 since we changed pubkey of acc4 to priv2.PubKey()
+				privs, accNums, accSeqs = []crypto.PrivKey{priv2}, []uint64{acc4.GetAccountNumber()}, []uint64{0}
+			},
+			false,
+			true,
+			nil,
 		},
 	}
 

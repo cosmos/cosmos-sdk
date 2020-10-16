@@ -48,7 +48,7 @@ The constructor follows:
 
 #### Types
 
-The Service accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
+`Service` accepts an `Options` `struct` that holds service configuration values, such as the port the service would be listening to:
 
 ```golang
 type Options struct {

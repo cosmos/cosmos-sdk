@@ -7,8 +7,10 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -65,15 +67,31 @@ func NewContext(v *viper.Viper, config *tmcfg.Config, logger log.Logger) *Contex
 // the application configuration. Command handlers can fetch the server Context
 // to get the Tendermint configuration or to get access to Viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
-	rootViper := viper.New()
-	rootViper.BindPFlags(cmd.Flags())
-	rootViper.BindPFlags(cmd.PersistentFlags())
-
 	serverCtx := NewDefaultContext()
-	config, err := interceptConfigs(serverCtx, rootViper)
+
+	// Get the executable name and configure the viper instance so that environmental
+	// variables are checked based off that name. The underscore character is used
+	// as a separator
+	executableName, err := os.Executable()
 	if err != nil {
 		return err
 	}
+	basename := path.Base(executableName)
+
+	// Configure the viper instance
+	serverCtx.Viper.BindPFlags(cmd.Flags())
+	serverCtx.Viper.BindPFlags(cmd.PersistentFlags())
+	serverCtx.Viper.SetEnvPrefix(basename)
+	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	serverCtx.Viper.AutomaticEnv()
+
+	// Intercept configuration files, using both Viper instances separately
+	config, err := interceptConfigs(serverCtx.Viper)
+	if err != nil {
+		return err
+	}
+	// Return value is a tendermint configuration object
+	serverCtx.Config = config
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel())
@@ -81,11 +99,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 		return err
 	}
 
-	if rootViper.GetBool(tmcli.TraceFlag) {
+	// Check if the tendermint flag for trace logging is set
+	// if it is then setup a tracing logger in this app as well
+	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
 		logger = log.NewTracingLogger(logger)
 	}
 
-	serverCtx.Config = config
 	serverCtx.Logger = logger.With("module", "main")
 
 	return SetCmdServerContext(cmd, serverCtx)
@@ -120,7 +139,7 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 // configuration file. The Tendermint configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, error) {
+func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
 	configFile := filepath.Join(configPath, "config.toml")
@@ -146,17 +165,19 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		if err := rootViper.ReadInConfig(); err != nil {
 			return nil, fmt.Errorf("failed to read in app.toml: %w", err)
 		}
-
-		if err := rootViper.Unmarshal(conf); err != nil {
-			return nil, err
-		}
 	}
 
+	// Read into the configuration whatever data the viper instance has for it
+	// This may come from the configuration file above but also any of the other sources
+	// viper uses
+	if err := rootViper.Unmarshal(conf); err != nil {
+		return nil, err
+	}
 	conf.SetRoot(rootDir)
 
 	appConfigFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
-		appConf, err := config.ParseConfig(ctx.Viper)
+		appConf, err := config.ParseConfig(rootViper)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse app.toml: %w", err)
 		}
@@ -164,10 +185,10 @@ func interceptConfigs(ctx *Context, rootViper *viper.Viper) (*tmcfg.Config, erro
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	ctx.Viper.SetConfigType("toml")
-	ctx.Viper.SetConfigName("app")
-	ctx.Viper.AddConfigPath(configPath)
-	if err := ctx.Viper.ReadInConfig(); err != nil {
+	rootViper.SetConfigType("toml")
+	rootViper.SetConfigName("app")
+	rootViper.AddConfigPath(configPath)
+	if err := rootViper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read in app.toml: %w", err)
 	}
 

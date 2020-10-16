@@ -57,7 +57,7 @@ func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
 	m.InitialDeposit = coins
 }
 
-func (m *MsgSubmitProposal) SetProposer(address sdk.AccAddress) {
+func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
 	m.Proposer = address.String()
 }
 

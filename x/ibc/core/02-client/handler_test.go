@@ -11,6 +11,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
 	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -204,9 +205,7 @@ func (suite *ClientTestSuite) TestUpgradeClient() {
 
 		tc.setup()
 
-		_, err := client.HandleMsgUpgradeClient(
-			suite.chainA.GetContext(), suite.chainA.App.IBCKeeper.ClientKeeper, msg,
-		)
+		_, err := keeper.Keeper.UpgradeClient(*suite.chainA.App.IBCKeeper, sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err, "upgrade handler failed on valid case: %s", tc.name)

@@ -14,15 +14,11 @@ import (
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
 )
 
-type MsgServer struct {
-	Keeper
-}
+var _ clienttypes.MsgServer = Keeper{}
+var _ connectiontypes.MsgServer = Keeper{}
+var _ channeltypes.MsgServer = Keeper{}
 
-var _ clienttypes.MsgServer = MsgServer{}
-var _ connectiontypes.MsgServer = MsgServer{}
-var _ channeltypes.MsgServer = MsgServer{}
-
-func (k MsgServer) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateClient) (*clienttypes.MsgCreateClientResponse, error) {
+func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateClient) (*clienttypes.MsgCreateClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	clientState, err := clienttypes.UnpackClientState(msg.ClientState)
@@ -55,7 +51,7 @@ func (k MsgServer) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreat
 	return &clienttypes.MsgCreateClientResponse{}, nil
 }
 
-func (k MsgServer) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdateClient) (*clienttypes.MsgUpdateClientResponse, error) {
+func (k Keeper) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdateClient) (*clienttypes.MsgUpdateClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	header, err := clienttypes.UnpackHeader(msg.Header)
@@ -77,7 +73,7 @@ func (k MsgServer) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdat
 	return &clienttypes.MsgUpdateClientResponse{}, nil
 }
 
-func (k MsgServer) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgradeClient) (*clienttypes.MsgUpgradeClientResponse, error) {
+func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgradeClient) (*clienttypes.MsgUpgradeClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	upgradedClient, err := clienttypes.UnpackClientState(msg.ClientState)
@@ -103,7 +99,7 @@ func (k MsgServer) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgr
 	return &clienttypes.MsgUpgradeClientResponse{}, nil
 }
 
-func (k MsgServer) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSubmitMisbehaviour) (*clienttypes.MsgSubmitMisbehaviourResponse, error) {
+func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSubmitMisbehaviour) (*clienttypes.MsgSubmitMisbehaviourResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	misbehaviour, err := clienttypes.UnpackMisbehaviour(msg.Misbehaviour)
@@ -127,7 +123,7 @@ func (k MsgServer) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.Ms
 	return &clienttypes.MsgSubmitMisbehaviourResponse{}, nil
 }
 
-func (k MsgServer) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
+func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := k.ConnectionKeeper.ConnOpenInit(
@@ -153,7 +149,7 @@ func (k MsgServer) ConnectionOpenInit(goCtx context.Context, msg *connectiontype
 	return &connectiontypes.MsgConnectionOpenInitResponse{}, nil
 }
 
-func (k MsgServer) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenTry) (*connectiontypes.MsgConnectionOpenTryResponse, error) {
+func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenTry) (*connectiontypes.MsgConnectionOpenTryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
@@ -186,7 +182,7 @@ func (k MsgServer) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes
 	return &connectiontypes.MsgConnectionOpenTryResponse{}, nil
 }
 
-func (k MsgServer) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenAck) (*connectiontypes.MsgConnectionOpenAckResponse, error) {
+func (k Keeper) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenAck) (*connectiontypes.MsgConnectionOpenAckResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
 	if err != nil {
@@ -220,7 +216,7 @@ func (k MsgServer) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes
 	return &connectiontypes.MsgConnectionOpenAckResponse{}, nil
 }
 
-func (k MsgServer) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenConfirm) (*connectiontypes.MsgConnectionOpenConfirmResponse, error) {
+func (k Keeper) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenConfirm) (*connectiontypes.MsgConnectionOpenConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := k.ConnectionKeeper.ConnOpenConfirm(
@@ -248,7 +244,7 @@ func (k MsgServer) ConnectionOpenConfirm(goCtx context.Context, msg *connectiont
 	return &connectiontypes.MsgConnectionOpenConfirmResponse{}, nil
 }
 
-func (k MsgServer) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChannelOpenInit) (*channeltypes.MsgChannelOpenInitResponse, error) {
+func (k Keeper) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChannelOpenInit) (*channeltypes.MsgChannelOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by port capability
@@ -275,7 +271,7 @@ func (k MsgServer) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgC
 	return &channeltypes.MsgChannelOpenInitResponse{}, nil
 }
 
-func (k MsgServer) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChannelOpenTry) (*channeltypes.MsgChannelOpenTryResponse, error) {
+func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChannelOpenTry) (*channeltypes.MsgChannelOpenTryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by port capability
 	module, portCap, err := k.PortKeeper.LookupModuleByPort(ctx, msg.PortId)
@@ -301,7 +297,7 @@ func (k MsgServer) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgCh
 	return &channeltypes.MsgChannelOpenTryResponse{}, nil
 }
 
-func (k MsgServer) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChannelOpenAck) (*channeltypes.MsgChannelOpenAckResponse, error) {
+func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChannelOpenAck) (*channeltypes.MsgChannelOpenAckResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability
@@ -328,7 +324,7 @@ func (k MsgServer) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgCh
 	return &channeltypes.MsgChannelOpenAckResponse{}, nil
 }
 
-func (k MsgServer) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgChannelOpenConfirm) (*channeltypes.MsgChannelOpenConfirmResponse, error) {
+func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgChannelOpenConfirm) (*channeltypes.MsgChannelOpenConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability
@@ -355,7 +351,7 @@ func (k MsgServer) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.M
 	return &channeltypes.MsgChannelOpenConfirmResponse{}, nil
 }
 
-func (k MsgServer) ChannelCloseInit(goCtx context.Context, msg *channeltypes.MsgChannelCloseInit) (*channeltypes.MsgChannelCloseInitResponse, error) {
+func (k Keeper) ChannelCloseInit(goCtx context.Context, msg *channeltypes.MsgChannelCloseInit) (*channeltypes.MsgChannelCloseInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by channel capability
 	module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
@@ -381,7 +377,7 @@ func (k MsgServer) ChannelCloseInit(goCtx context.Context, msg *channeltypes.Msg
 	return &channeltypes.MsgChannelCloseInitResponse{}, nil
 }
 
-func (k MsgServer) ChannelCloseConfirm(goCtx context.Context, msg *channeltypes.MsgChannelCloseConfirm) (*channeltypes.MsgChannelCloseConfirmResponse, error) {
+func (k Keeper) ChannelCloseConfirm(goCtx context.Context, msg *channeltypes.MsgChannelCloseConfirm) (*channeltypes.MsgChannelCloseConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability
@@ -408,7 +404,7 @@ func (k MsgServer) ChannelCloseConfirm(goCtx context.Context, msg *channeltypes.
 	return &channeltypes.MsgChannelCloseConfirmResponse{}, nil
 }
 
-func (k MsgServer) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacket) (*channeltypes.MsgRecvPacketResponse, error) {
+func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacket) (*channeltypes.MsgRecvPacketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability
@@ -463,7 +459,7 @@ func (k MsgServer) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPa
 	return &channeltypes.MsgRecvPacketResponse{}, nil
 }
 
-func (k MsgServer) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*channeltypes.MsgTimeoutResponse, error) {
+func (k Keeper) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*channeltypes.MsgTimeoutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by channel capability
 	module, cap, err := k.ChannelKeeper.LookupModuleByChannel(ctx, msg.Packet.SourcePort, msg.Packet.SourceChannel)
@@ -510,7 +506,7 @@ func (k MsgServer) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) 
 	return &channeltypes.MsgTimeoutResponse{}, nil
 }
 
-func (k MsgServer) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeoutOnClose) (*channeltypes.MsgTimeoutOnCloseResponse, error) {
+func (k Keeper) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeoutOnClose) (*channeltypes.MsgTimeoutOnCloseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability
@@ -560,7 +556,7 @@ func (k MsgServer) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTi
 	return &channeltypes.MsgTimeoutOnCloseResponse{}, nil
 }
 
-func (k MsgServer) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAcknowledgement) (*channeltypes.MsgAcknowledgementResponse, error) {
+func (k Keeper) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAcknowledgement) (*channeltypes.MsgAcknowledgementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Lookup module by channel capability

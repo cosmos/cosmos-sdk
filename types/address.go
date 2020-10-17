@@ -687,6 +687,7 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 
 	// We are bech32ifying some secp256k1 keys in tests.
 	case *secp256k1.PubKey:
+		protoPk = aminoPk
 	case *ed25519.PubKey:
 		protoPk = aminoPk
 

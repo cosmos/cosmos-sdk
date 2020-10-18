@@ -212,7 +212,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, false)
 
 	// 600 more blocks happened
-	height = int64(700)
+	height = 700
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
@@ -274,5 +274,5 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator should now be jailed & kicked
 	staking.EndBlocker(ctx, app.StakingKeeper)
-	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, true)
+	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 }

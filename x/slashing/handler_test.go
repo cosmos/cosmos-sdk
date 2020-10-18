@@ -57,7 +57,10 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
-	amt := tstaking.CreateValidatorWithValPower(addr, val, 100, true)
+	amt := sdk.TokensFromConsensusPower(100)
+	msg := tstaking.CreateValidatorMsg(addr, val, amt.Int64())
+	msg.MinSelfDelegation = amt
+	tstaking.Handle(msg, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
@@ -65,7 +68,6 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 		sdk.Coins{sdk.NewCoin(app.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))},
 	)
 
-	tstaking.Denom = app.StakingKeeper.GetParams(ctx).BondDenom
 	tstaking.Undelegate(sdk.AccAddress(addr), addr, sdk.OneInt(), true)
 	require.True(t, app.StakingKeeper.Validator(ctx, addr).IsJailed())
 

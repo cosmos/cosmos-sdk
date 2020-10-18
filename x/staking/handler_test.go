@@ -46,7 +46,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	initPower := int64(1000000)
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 10, 10000000000000)
 	validatorAddr, validatorAddr3 := valAddrs[0], valAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator
 	initBond := tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], initPower, true)
@@ -123,7 +123,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	addr1, addr2 := valAddrs[0], valAddrs[1]
 	pk1, pk2 := PKs[0], PKs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	valTokens := tstaking.CreateValidatorWithValPower(addr1, pk1, 10, true)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -164,7 +164,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 	addr := valAddrs[0]
 	invalidPk := secp256k1.GenPrivKey().PubKey()
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// invalid pukKey type should not be allowed
 	tstaking.CreateValidator(addr, invalidPk, 10, false)
@@ -173,7 +173,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 func TestLegacyValidatorDelegations(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 100000000)
 
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	valAddr := valAddrs[0]
 	valConsPubKey, valConsAddr := PKs[0], sdk.ConsAddress(PKs[0].Address())
 	delAddr := delAddrs[1]
@@ -254,7 +254,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// first create validator
 	bondAmount := tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], 10, true)
@@ -312,7 +312,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 1, 1000000000)
 
 	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator
 	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond.Int64())
@@ -342,7 +342,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, 1000000000)
 	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create validator
 	msgCreateValidator := tstaking.CreateValidatorMsg(validatorAddr, PKs[0], initBond.Int64())
@@ -370,7 +370,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	initPower := int64(1000)
 
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 2, 1000000000)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	params := app.StakingKeeper.GetParams(ctx)
 	denom := params.BondDenom
 
@@ -463,7 +463,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	validatorAddrs := []sdk.ValAddress{
 		valAddrs[0],
@@ -528,7 +528,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 func TestMultipleMsgDelegate(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 50, 1000000000)
 	validatorAddr, delegatorAddrs := valAddrs[0], delAddrs[1:]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	var amount int64 = 10
 
 	// first make a validator
@@ -561,7 +561,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 func TestJailValidator(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	var amt int64 = 10
 
 	// create the validator and delegate
@@ -599,7 +599,7 @@ func TestJailValidator(t *testing.T) {
 func TestValidatorQueue(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -645,7 +645,7 @@ func TestValidatorQueue(t *testing.T) {
 func TestUnbondingPeriod(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000000000)
 	validatorAddr := valAddrs[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -683,7 +683,7 @@ func TestUnbondingPeriod(t *testing.T) {
 func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	validatorAddr, delegatorAddr := valAddrs[0], delAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create the validator and delegate
 	tstaking.CreateValidator(validatorAddr, PKs[0], 10, true)
@@ -716,7 +716,7 @@ func TestRedelegationPeriod(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	validatorAddr, validatorAddr2 := valAddrs[0], valAddrs[1]
 	denom := app.StakingKeeper.GetParams(ctx).BondDenom
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -768,7 +768,7 @@ func TestTransitiveRedelegation(t *testing.T) {
 	val1, val2, val3 := valAddrs[0], valAddrs[1], valAddrs[2]
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create the validators
 	tstaking.CreateValidator(val1, PKs[0], 10, true)
@@ -799,7 +799,7 @@ func TestMultipleRedelegationAtSameTime(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	valAddr := valAddrs[0]
 	valAddr2 := valAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -842,7 +842,7 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, 1000000000)
 	valAddr := valAddrs[0]
 	valAddr2 := valAddrs[1]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -887,7 +887,7 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000000000)
 	valAddr := valAddrs[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -926,7 +926,7 @@ func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
 func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 1, 1000000000)
 	valAddr := valAddrs[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -975,7 +975,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	val1 := valAddrs[0]
 	val2 := valAddrs[1]
 	val3 := valAddrs[2]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// set the unbonding time
 	params := app.StakingKeeper.GetParams(ctx)
@@ -1013,7 +1013,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 3, 1000000000)
 	valA, valB, del := valAddrs[0], valAddrs[1], delAddrs[2]
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	valTokens := tstaking.CreateValidatorWithValPower(valA, PKs[0], 10, true)
 	tstaking.CreateValidator(valB, PKs[1], valTokens.Int64(), true)
@@ -1114,7 +1114,7 @@ func TestInvalidMsg(t *testing.T) {
 func TestInvalidCoinDenom(t *testing.T) {
 	app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 3, 1000000000)
 	valA, valB, delAddr := valAddrs[0], valAddrs[1], delAddrs[2]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	valTokens := sdk.TokensFromConsensusPower(100)
 	invalidCoin := sdk.NewCoin("churros", valTokens)

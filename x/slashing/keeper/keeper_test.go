@@ -26,7 +26,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 6, sdk.TokensFromConsensusPower(200))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(6)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
@@ -87,7 +87,7 @@ func TestHandleNewValidator(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 	pks := simapp.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(app.SlashingKeeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
@@ -132,7 +132,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(1)
 	addr, val := valAddrs[0], pks[0]
 	power := int64(100)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 
@@ -192,7 +192,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	valAddr := sdk.ValAddress(addr)
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)

@@ -28,7 +28,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 
@@ -54,7 +54,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	pks := simapp.CreateTestPubKeys(1)
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
 
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	slh := slashing.NewHandler(app.SlashingKeeper)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 	amt := sdk.TokensFromConsensusPower(100)
@@ -87,7 +87,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(20))
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	stakingParams := app.StakingKeeper.GetParams(ctx)
 	app.StakingKeeper.SetParams(ctx, stakingParams)
 	valAddr, consAddr := sdk.ValAddress(pks[1].Address()), sdk.ConsAddress(pks[0].Address())
@@ -151,7 +151,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	power := int64(100)
 	addr, val := sdk.ValAddress(pks[0].Address()), pks[0]
 	slh := slashing.NewHandler(app.SlashingKeeper)
-	tstaking := teststaking.NewService(t, ctx, app.StakingKeeper)
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(addr, val, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)

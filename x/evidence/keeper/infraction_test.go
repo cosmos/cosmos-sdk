@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
-	tstaking := teststaking.NewService(suite.T(), ctx, suite.app.StakingKeeper)
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	power := int64(100)
 	stakingParams := suite.app.StakingKeeper.GetParams(ctx)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
-	tstaking := teststaking.NewService(suite.T(), ctx, suite.app.StakingKeeper)
+	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 

@@ -489,3 +489,9 @@ func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pk crypto.PubKey
+	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
+}

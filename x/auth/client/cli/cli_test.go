@@ -28,6 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -831,6 +833,66 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 			}
 		})
 	}
+}
+
+// TestTxWithoutPublicKey makes sure sending a proto tx message without the
+// public key doesn't cause any error in the RPC layer (broadcast).
+// See https://github.com/cosmos/cosmos-sdk/issues/7585 for more details.
+func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
+	val1 := s.network.Validators[0]
+	txCfg := val1.ClientCtx.TxConfig
+
+	// Create a txBuilder with an unsigned tx.
+	txBuilder := txCfg.NewTxBuilder()
+	msg := banktypes.NewMsgSend(val1.Address, val1.Address, sdk.NewCoins(
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	))
+	err := txBuilder.SetMsgs(msg)
+	s.Require().NoError(err)
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))))
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	// Set empty signature to set signer infos.
+	sigV2 := signing.SignatureV2{
+		PubKey: val1.PubKey,
+		Data: &signing.SingleSignatureData{
+			SignMode:  txCfg.SignModeHandler().DefaultMode(),
+			Signature: nil,
+		},
+	}
+	err = txBuilder.SetSignatures(sigV2)
+	s.Require().NoError(err)
+
+	// Create a file with the unsigned tx.
+	txJSON, err := txCfg.TxJSONEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+	unsignedTxFile, cleanup := testutil.WriteToNewTempFile(s.T(), string(txJSON))
+	defer cleanup()
+
+	// Sign the file with the unsignedTx.
+	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
+	s.Require().NoError(err)
+
+	// Remove the signerInfo's `public_key` field manually from the signedTx.
+	// Note: this method is only used for test purposes! In general, one should
+	// use txBuilder and TxEncoder/TxDecoder to manipulate txs.
+	var tx tx.Tx
+	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(signedTx.Bytes(), &tx)
+	s.Require().NoError(err)
+	tx.AuthInfo.SignerInfos[0].PublicKey = nil
+	// Re-encode the tx again, to another file.
+	txJSON, err = val1.ClientCtx.JSONMarshaler.MarshalJSON(&tx)
+	s.Require().NoError(err)
+	signedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(txJSON))
+	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
+	defer cleanup2()
+
+	// Broadcast tx, test that it shouldn't panic.
+	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
+	out, err := authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	var res sdk.TxResponse
+	s.Require().NoError(val1.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEqual(0, res.Code)
+	s.Require().NoError(err)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

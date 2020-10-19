@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.staking.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/staking/v1beta1/staking.proto";
@@ -44,7 +45,7 @@ message MsgCreateValidator {
   ];
   string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
-  google.protobuf.Any      pubkey            = 6;
+  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
 }
 
@@ -104,7 +105,7 @@ message MsgBeginRedelegate {
 }
 
 // MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
-message MsgBeginRedelegateResponse { 
+message MsgBeginRedelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
 
@@ -120,6 +121,6 @@ message MsgUndelegate {
 }
 
 // MsgUndelegateResponse defines the Msg/Undelegate response type.
-message MsgUndelegateResponse { 
+message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }

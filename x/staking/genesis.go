@@ -146,7 +146,11 @@ func InitGenesis(
 			res = append(res, update)
 		}
 	} else {
-		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		var err error
+		res, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return res
@@ -192,9 +196,19 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
+		consAddr, err := validator.GetConsAddr()
+		if err != nil {
+			panic(err)
+		}
+
+		consPk, err := validator.GetConsPubKey()
+		if err != nil {
+			panic(err)
+		}
+
 		vals = append(vals, tmtypes.GenesisValidator{
-			Address: validator.GetConsAddr().Bytes(),
-			PubKey:  validator.GetConsPubKey(),
+			Address: consAddr.Bytes(),
+			PubKey:  consPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),
 		})

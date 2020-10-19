@@ -27,9 +27,6 @@ func NewDecodeStore(cdc ClientUnmarshaler, kvA, kvB kv.Pair) (string, bool) {
 		clientStateB := cdc.MustUnmarshalClientState(kvB.Value)
 		return fmt.Sprintf("ClientState A: %v\nClientState B: %v", clientStateA, clientStateB), true
 
-	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.HasSuffix(kvA.Key, host.KeyClientType()):
-		return fmt.Sprintf("Client type A: %s\nClient type B: %s", string(kvA.Value), string(kvB.Value)), true
-
 	case bytes.HasPrefix(kvA.Key, host.KeyClientStorePrefix) && bytes.Contains(kvA.Key, []byte("consensusState")):
 		consensusStateA := cdc.MustUnmarshalConsensusState(kvA.Value)
 		consensusStateB := cdc.MustUnmarshalConsensusState(kvB.Value)

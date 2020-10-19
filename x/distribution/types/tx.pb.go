@@ -7,9 +7,9 @@ import (
 	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -490,14 +490,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// ModifyWithdrawAddress defines a method to change the withdraw address
+	// SetWithdrawAddress defines a method to change the withdraw address
 	// for a delegator (or validator self-delegation).
 	SetWithdrawAddress(ctx context.Context, in *MsgSetWithdrawAddress, opts ...grpc.CallOption) (*MsgSetWithdrawAddressResponse, error)
 	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
 	// from a single validator.
 	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
 	// WithdrawValidatorCommission defines a method to withdraw the
-	// full commission to the validator address
+	// full commission to the validator address.
 	WithdrawValidatorCommission(ctx context.Context, in *MsgWithdrawValidatorCommission, opts ...grpc.CallOption) (*MsgWithdrawValidatorCommissionResponse, error)
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
@@ -550,14 +550,14 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// ModifyWithdrawAddress defines a method to change the withdraw address
+	// SetWithdrawAddress defines a method to change the withdraw address
 	// for a delegator (or validator self-delegation).
 	SetWithdrawAddress(context.Context, *MsgSetWithdrawAddress) (*MsgSetWithdrawAddressResponse, error)
 	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
 	// from a single validator.
 	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
 	// WithdrawValidatorCommission defines a method to withdraw the
-	// full commission to the validator address
+	// full commission to the validator address.
 	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.

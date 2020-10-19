@@ -72,14 +72,14 @@ type NetworkProperties struct {
 	// Mandatory properties
 	Blockchain          string
 	Network             string
-	AddrPrefix          string
+	Bech32Prefix        string
 	SupportedOperations []string
 }
 ```
 
 Rosetta API services use Blockchain and Network as identifiers, e.g. the developers of gaia, the application that powers the Cosmos Hub, may want to set those to Cosmos Hub and cosmos-hub-3 respectively.
 
-`AddrPrefix` contains the network-specific address prefix. Cosmos SDK base implementations will default to `cosmos`, client applications should change this according to their network configuration.
+`Bech32Prefix` contains the network-specific bech32 prefix. Cosmos SDK base implementations will default to `cosmos`, client applications should change this according to their network configuration.
 
 `SupportedOperations` contains the transaction types that are supported by the library. At the present time, only `Transfer` is supported. Additional operations will be added in due time.
 
@@ -129,10 +129,10 @@ func NewNetwork(options Options) service.Network {
 			cosmosClient,
 			tendermintClient,
 			properties{
-				Blockchain:  options.Blockchain,
-				Network:     options.Network,
-				AddrPrefix:  options.AddrPrefix,
-				OfflineMode: options.OfflineMode,
+				Blockchain:   options.Blockchain,
+				Network:      options.Network,
+				Bech32Prefix: options.Bech32Prefix,
+				OfflineMode:  options.OfflineMode,
 			},
 		),
 	}

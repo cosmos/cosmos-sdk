@@ -206,7 +206,70 @@ basic string matching using a single compatible version.
 
 ## Sending, Receiving, Acknowledging Packets
 
+A packet may be associated with one of the following states:
+- packet does not exist (ie it has not been sent)
+- packet has been sent but not received (the packet commitment exists on the 
+sending chain, but no receipt exists on the receiving chain)
+- packet has been received but not acknowledged (packet commitment exists 
+on the sending chain, a receipt exists on the receiving chain, but no acknowledgement
+exists on the receiving chain)
+- packet has been acknowledgement but the acknowledgement has not been relayed 
+(the packet commitment exists on the sending chain, the receipt and acknowledgement
+exist on the receiving chain)
+- packet has completed its life cycle (the packet commitment does not exist on
+the sending chain, but a receipt and acknowledgement exist on the receiving chain)
+
+
+Sending of a packet is initiated by a call to the `ChannelKeeper.SendPacket` 
+function by an application module. Packets being sent will be verified for
+correctness (core logic only). If the packet is valid, a hash of the packet
+will be stored as a packet commitment using the packet sequence in the key.
+Packet commitments are stored on the sending chain.
+
+A message should be sent to the receving chain indicating that the packet
+has been committed on the sending chain and should be received on the 
+receiving chain. The light client on the receiving chain, which verifies
+the sending chain's state, should be updated to the lastest sending chain
+state if possible. The verification will fail if the lastest state of the
+light client does not include the packet commitment. The receiving chain
+is responsible for verifying that the counterparty set the hash of the 
+packet. If verification of the packet to be received is successful, the
+receiving chain should store a receipt of the packet and call application
+logic if necessary. An acknowledgement may be stored at this time or at 
+another point in the future aynchronously. 
+
+Acknowledgements written on the receiving chain may be verified on the 
+sending chain. If the sending chain successfully verifies the acknowledgement
+then it may delete the packet commitment stored at that sequence. There is
+no requirement for acknowledgements to be written. Only the hash of the
+acknowledgement is stored on the chain. Application logic may be executed
+in conjunction with verifying an acknowledgement. For example, in fungible
+cross-chain token transfer, a failed acknowledgement results in locked or
+burned funds being refunded. 
+
+Relayers are responsible for reconstructing packets between the sending, 
+receiving, and acknowledging of packets. 
+
+Future optimizations may allow for storage cleanup of stored packet 
+commitments and acknowledgements that no longer provide any usefulness. 
+This may be from packets that have completed their life cycles or from
+channels which do not require written acknowledgements. 
+
 ## Timing out Packets
+
+A packet may be timed out on the receiving chain if the packet timeouts have
+been surpassed on the receving chain or the channel has closed. A timed out
+packet can only occur if the packet has never been received on the receiving 
+chain. ORDERED channels will verify that the packet sequence is greater than 
+the `NextSequenceRecv` on the receiving chain. UNORDERED channels will verify 
+that the packet receipt has not been written on the receiving chain. A timeout
+on channel closure will additionally verify that the counterparty channel has 
+been closed. A successful timeout may execute application logic as appropriate.
+
+Both the packet's timeout timestamp and the timeout height must have been 
+surpassed on the receiving chain for a timeout to be valid. A timeout timestamp 
+or timeout height with a 0 value indicates the timeout field may be ignored. 
+Each packet is required to have at least one valid timeout field. 
 
 ## Closing Channels
 

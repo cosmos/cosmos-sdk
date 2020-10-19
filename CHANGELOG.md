@@ -34,6 +34,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v0.40.0-rc1 - [Unreleased]
+
+### Client Breaking Changes
+
+* __General__
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
+
 ## v0.40.0-rc0 - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases

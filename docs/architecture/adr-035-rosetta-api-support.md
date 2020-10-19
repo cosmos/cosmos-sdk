@@ -20,7 +20,7 @@ The driving principles of the proposed design are:
 2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
 3. **Cost-efficiency:** Backporting features from `master` to the various stable branches of Cosmos SDK is a cost that needs to be reduced.
 
-This ADR will describe how this will be achieved.
+We will achieve these delivering on these principles by the following:
 
 1. There will be an external repo called [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) for the implementation of the core Rosetta API features, particularly:
    a. The types and interfaces. This separates design from implementation detail.
@@ -30,7 +30,6 @@ This ADR will describe how this will be achieved.
    a. API shares the application process
    b. API-specific process.
 
-This document below will describe each design component of the proposed architecture.
 
 ## Architecture
 

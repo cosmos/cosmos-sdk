@@ -43,7 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
-* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+* (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
 
 ### Features
 

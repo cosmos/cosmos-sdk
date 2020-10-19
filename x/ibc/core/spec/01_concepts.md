@@ -126,6 +126,35 @@ The IBC interfaces expect an `ibcexported.Height` interface, however all clients
 
 ## Connection Handshake
 
+The connection handshake occurs in 4 steps as defined in [ICS 03](https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics).
+
+`ConnOpenInit` is the first attempt to initialize a connection on the executing chain. 
+The handshake is expected to succeed if the connection identifier selected is not used and the
+version selected is supported. The connection identifier for the counterparty connection may 
+be left empty indicating that the counterparty may select its own identifier. The connection
+set set and stored in the INIT state upon success.
+
+`ConnOpenTry` is a response to a chain executing `ConnOpenInit`. The executing chain will validate
+the chain level parameters the counterparty has stored such as its chainID and consensus parameters.
+The executing chain will also verify that if a previous connection exists for the specified
+connection identifier that all the parameters match and its previous state was in INIT. This
+may occur when both chains execute `ConnOpenInit` simultaneously. The connection state of the 
+counterparty will be verified. It is expected to be in INIT. The `ClientState` and `ConsensusState` 
+the counterparty stores for the executing chain will also be verified. The executing chain
+will select a version from the intersection of its supported versions and the versions set 
+by the counterparty. The connection is set and stored in the TRYOPEN state upon success. 
+
+`ConnOpenAck` may be called on a chain when the counterparty connection has entered TRYOPEN. A
+previous connection on the executing chain must exist in either INIT or TRYOPEN. The executing
+chain will verify the version the counterparty selected. If the counterparty selected its own 
+connection identifier, it will be validate in the basic validation of a `MsgConnOpenAck`. The
+counterparty connection state is verified along with the `ClientState` and `ConsensusState`
+stored for the executing chain. The connection is set and stored in the OPEN state upon success.
+
+`ConnOpenConfirm` is a response to a chain executing `ConnOpenAck`. The executing chain's connection
+must be in TRYOPEN. The counterparty connection state is verified. The connection is set and stored
+in the OPEN state upon success.
+
 ## Connection Version Negotiation
 
 During the handshake procedure for connections a version string is agreed

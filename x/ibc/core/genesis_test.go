@@ -35,9 +35,7 @@ const (
 	channel2 = "secondchannel"
 )
 
-var (
-	clientHeight = clienttypes.NewHeight(0, 10)
-)
+var clientHeight = clienttypes.NewHeight(0, 10)
 
 type IBCTestSuite struct {
 	suite.Suite

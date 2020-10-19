@@ -18,9 +18,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-const (
-	height = 10
-)
+const height = 10
 
 var (
 	timeoutHeight = clienttypes.NewHeight(0, 10000)

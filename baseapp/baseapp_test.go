@@ -98,8 +98,8 @@ func registerTestCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
 }
 
-// txEncoder creates a amino TxEncoder for testing purposes.
-func txEncoder() sdk.TxEncoder {
+// aminoTxEncoder creates a amino TxEncoder for testing purposes.
+func aminoTxEncoder() sdk.TxEncoder {
 	cdc := codec.NewLegacyAmino()
 	registerTestCodec(cdc)
 
@@ -1180,7 +1180,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no messages
 	{
 		emptyTx := &txTest{}
-		_, result, err := app.Deliver(txEncoder(), emptyTx)
+		_, result, err := app.Deliver(aminoTxEncoder(), emptyTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1207,7 +1207,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.Deliver(txEncoder(), tx)
+			_, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1224,7 +1224,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no known route
 	{
 		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
-		_, result, err := app.Deliver(txEncoder(), unknownRouteTx)
+		_, result, err := app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1233,7 +1233,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
-		_, result, err = app.Deliver(txEncoder(), unknownRouteTx)
+		_, result, err = app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1331,7 +1331,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
-		gInfo, result, err := app.Deliver(txEncoder(), tx)
+		gInfo, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1421,7 +1421,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-			_, result, err := app.Deliver(txEncoder(), tx)
+			_, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 			ctx := app.getState(runTxModeDeliver).ctx
 
@@ -1489,7 +1489,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	{
 		tx := newTxCounter(0, 0)
 
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(txEncoder(), tx) })
+		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(aminoTxEncoder(), tx) })
 	}
 }
 
@@ -1677,7 +1677,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a CheckTx
-	_, resTx, err := app.Check(txEncoder(), tx)
+	_, resTx, err := app.Check(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1687,7 +1687,7 @@ func TestQuery(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, resTx, err = app.Deliver(txEncoder(), tx)
+	_, resTx, err = app.Deliver(aminoTxEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)

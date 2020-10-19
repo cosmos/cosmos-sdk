@@ -849,7 +849,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	))
 	err := txBuilder.SetMsgs(msg)
 	s.Require().NoError(err)
-	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	// Set empty signature to set signer infos.
 	sigV2 := signing.SignatureV2{
@@ -883,12 +883,16 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	txJSON, err = val1.ClientCtx.JSONMarshaler.MarshalJSON(&tx)
 	s.Require().NoError(err)
 	signedTxFile, cleanup2 := testutil.WriteToNewTempFile(s.T(), string(txJSON))
+	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
 	defer cleanup2()
 
 	// Broadcast tx, test that it shouldn't panic.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
-	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
-	s.Require().EqualError(err, "TODO some error")
+	out, err := authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	var res sdk.TxResponse
+	s.Require().NoError(val1.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEqual(0, res.Code)
+	s.Require().NoError(err)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

@@ -673,7 +673,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to decode tx"))
 			}
 
-			gInfo, res, err := app.Simulate(txBytes, tx)
+			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {
 				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to simulate tx"))
 			}

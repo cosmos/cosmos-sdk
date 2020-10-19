@@ -11,7 +11,7 @@ func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeCheck, nil)
 }
 
-func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 	return app.runTx(runTxModeSimulate, txBytes)
 }
 

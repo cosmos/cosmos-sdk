@@ -7,15 +7,17 @@ import (
 )
 
 func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeCheck, nil, tx)
+	// TODO re-encode tx and pass it to runTx
+	return app.runTx(runTxModeCheck, nil)
 }
 
 func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeSimulate, txBytes, tx)
+	return app.runTx(runTxModeSimulate, txBytes)
 }
 
 func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeDeliver, nil, tx)
+	// TODO re-encode tx and pass it to runTx
+	return app.runTx(runTxModeDeliver, nil)
 }
 
 // Context with current {check, deliver}State of the app used by tests.

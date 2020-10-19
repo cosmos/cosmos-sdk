@@ -9,6 +9,24 @@ this [document](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_TERMINOLOGY.
 
 ## Client Creation, Updates, and Upgrades
 
+IBC clients are on chain light clients. The light client is responsible for verifying
+counterparty state. A light client can be created by any user submitting a client
+identifier and a valid initial `ClientState` and `ConsensusState`. The client identifier
+must not already be used. Clients are given a client identifier prefixed store to
+store their associated client state and consensus states. Consensus states are 
+stored using its associated height. 
+
+Clients can be updated by any user submitting a valid `Header`. The client state callback
+to `CheckHeaderAndUpdateState` is responsible for verifying the header against previously
+stored state. The function should also return the updated client state and consensus state 
+if the header is considered a valid update. A light client, such as Tendermint, may have
+client specific parameters like `TrustLevel` which must be considered valid in relation
+to the `Header`.
+
+Clients may be upgraded. The upgrade should be verified using `VerifyUpgrade`. It is not
+a requirement to allow for light client upgrades. For example, the solo machine client 
+will simply return an error on `VerifyUpgrade`.
+
 ## Client Misbehaviour
 
 IBC clients must freeze when the counterparty chain becomes malicious and 

@@ -23,6 +23,7 @@ const height = 10
 var (
 	timeoutHeight = clienttypes.NewHeight(0, 10000)
 	maxSequence   = uint64(10)
+	clientHeight  = clienttypes.NewHeight(0, 10)
 )
 
 type KeeperTestSuite struct {
@@ -37,6 +38,7 @@ type KeeperTestSuite struct {
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }

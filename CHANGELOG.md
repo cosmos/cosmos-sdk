@@ -34,7 +34,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## v0.40.0-rc1 - Unreleased
+## v0.40.0-rc1 - 2020-10-19
 
 ### Client Breaking Changes
 
@@ -50,7 +50,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (codec) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) `InterfaceRegistry` now inherits `jsonpb.AnyResolver`, and has a `RegisterCustomTypeURL` method to support ADR 031 packing of `Any`s. `AnyResolver` is now a required parameter to `RejectUnknownFields`.
 * (baseapp) [\#7519](https://github.com/cosmos/cosmos-sdk/pull/7519) Add `ServiceMsgRouter` to BaseApp to handle routing of protobuf service `Msg`s. The two new types defined in ADR 031, `sdk.ServiceMsg` and `sdk.MsgRequest` are introduced with this router.
+* (cli) [\#7221](https://github.com/cosmos/cosmos-sdk/pull/) Add the option of emitting amino encoded json from the CLI
 
+### Bug Fixes
+
+* (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+
+### Improvements
+
+* (tendermint) [\#7527](https://github.com/cosmos/cosmos-sdk/pull/7527) Update sdk to tendermint 0.34-rc5
+* (iavl) [\#7549](https://github.com/cosmos/cosmos-sdk/pull/7549) Update sdk to IAVL 0.15.0-rc4
 
 ## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
 

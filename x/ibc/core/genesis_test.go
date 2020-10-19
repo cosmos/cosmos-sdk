@@ -59,6 +59,8 @@ func TestIBCTestSuite(t *testing.T) {
 }
 
 func (suite *IBCTestSuite) TestValidateGenesis() {
+	header := suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, clienttypes.NewHeight(0, uint64(suite.chainA.CurrentHeader.Height-1)), suite.chainA.CurrentHeader.Time, suite.chainA.Vals, suite.chainA.Vals, suite.chainA.Signers)
+
 	testCases := []struct {
 		name     string
 		genState *types.GenesisState
@@ -75,7 +77,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+							clientID, ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
@@ -86,9 +88,9 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 							clientID,
 							[]clienttypes.ConsensusStateWithHeight{
 								clienttypes.NewConsensusStateWithHeight(
-									suite.header.GetHeight().(clienttypes.Height),
+									header.GetHeight().(clienttypes.Height),
 									ibctmtypes.NewConsensusState(
-										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+										header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.AppHash), header.Header.NextValidatorsHash,
 									),
 								),
 							},
@@ -108,8 +110,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 					[]channeltypes.IdentifiedChannel{
 						channeltypes.NewIdentifiedChannel(
 							port1, channel1, channeltypes.NewChannel(
-								channeltypes.INIT, channelOrder,
-								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+								channeltypes.INIT, channeltypes.ORDERED,
+								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, ibctesting.DefaultChannelVersion,
 							),
 						),
 					},
@@ -138,7 +140,7 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+							clientID, ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("(chaindID)", clienttypes.ZeroHeight()),
@@ -193,6 +195,8 @@ func (suite *IBCTestSuite) TestValidateGenesis() {
 }
 
 func (suite *IBCTestSuite) TestInitGenesis() {
+	header := suite.chainA.CreateTMClientHeader(suite.chainA.ChainID, suite.chainA.CurrentHeader.Height, clienttypes.NewHeight(0, uint64(suite.chainA.CurrentHeader.Height-1)), suite.chainA.CurrentHeader.Time, suite.chainA.Vals, suite.chainA.Vals, suite.chainA.Signers)
+
 	testCases := []struct {
 		name     string
 		genState *types.GenesisState
@@ -207,7 +211,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 				ClientGenesis: clienttypes.NewGenesisState(
 					[]clienttypes.IdentifiedClientState{
 						clienttypes.NewIdentifiedClientState(
-							clientID, ibctmtypes.NewClientState(chainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
+							clientID, ibctmtypes.NewClientState(suite.chainA.ChainID, ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod, ibctesting.MaxClockDrift, clientHeight, ibctesting.DefaultConsensusParams, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false),
 						),
 						clienttypes.NewIdentifiedClientState(
 							exported.Localhost, localhosttypes.NewClientState("chaindID", clientHeight),
@@ -218,9 +222,9 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 							clientID,
 							[]clienttypes.ConsensusStateWithHeight{
 								clienttypes.NewConsensusStateWithHeight(
-									suite.header.GetHeight().(clienttypes.Height),
+									header.GetHeight().(clienttypes.Height),
 									ibctmtypes.NewConsensusState(
-										suite.header.GetTime(), commitmenttypes.NewMerkleRoot(suite.header.Header.AppHash), suite.header.Header.NextValidatorsHash,
+										header.GetTime(), commitmenttypes.NewMerkleRoot(header.Header.AppHash), header.Header.NextValidatorsHash,
 									),
 								),
 							},
@@ -240,8 +244,8 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 					[]channeltypes.IdentifiedChannel{
 						channeltypes.NewIdentifiedChannel(
 							port1, channel1, channeltypes.NewChannel(
-								channeltypes.INIT, channelOrder,
-								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, channelVersion,
+								channeltypes.INIT, channeltypes.ORDERED,
+								channeltypes.NewCounterparty(port2, channel2), []string{connectionID}, ibctesting.DefaultChannelVersion,
 							),
 						),
 					},
@@ -274,8 +278,7 @@ func (suite *IBCTestSuite) TestInitGenesis() {
 	}
 }
 
-// TODO: HandlerTestSuite should replace IBCTestSuite
-func (suite *HandlerTestSuite) TestExportGenesis() {
+func (suite *IBCTestSuite) TestExportGenesis() {
 	testCases := []struct {
 		msg      string
 		malleate func()

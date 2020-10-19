@@ -4,26 +4,26 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
-// txEncoder creates a proto TxEncoder for testing purposes.
-func txEncoder(interfaceRegistry codectypes.InterfaceRegistry) sdk.TxEncoder {
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+// txEncoder creates a amino TxEncoder for testing purposes.
+func txEncoder() sdk.TxEncoder {
+	cdc := codec.NewLegacyAmino()
+	registerTestCodec(cdc)
 
-	return txCfg.TxEncoder()
+	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
 }
 
 func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// runTx expects tx bytes as argument, so we encode the tx argument into
 	// bytes. Note that runTx will actually decode those bytes again. But since
 	// this helper is only used in tests/simulation, it's fine.
-	bz, err := txEncoder(app.interfaceRegistry)(tx)
+	bz, err := txEncoder()(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	return app.runTx(runTxModeCheck, bz)
 }
@@ -34,9 +34,9 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 
 func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// See comment for Check().
-	bz, err := txEncoder(app.interfaceRegistry)(tx)
+	bz, err := txEncoder()(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	return app.runTx(runTxModeDeliver, bz)
 }

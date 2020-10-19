@@ -138,8 +138,9 @@ func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, acco
 	account := accounts[n]
 	valPubKey := account.PubKey
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
-	validator, err := validator.SetInitialCommission(commission)
+	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
+	require.NoError(t, err)
+	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(t, err)
 
 	validator.DelegatorShares = sdk.NewDec(100)

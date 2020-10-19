@@ -102,11 +102,11 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
-
+	var err error
 	for i := range validators {
-		validators[i] = types.NewValidator(sdk.ValAddress(addrs[i]),
+		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
-
+		require.NoError(t, err)
 		validators[i].Status = types.Bonded
 
 		tokens := sdk.TokensFromConsensusPower(1)
@@ -131,7 +131,9 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
-	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", "", ""))
+	var err error
+	genValidators1[0], err = types.NewValidator(sdk.ValAddress(pk.Address()), 	require.NoError(t, err)
+	pk, types.NewDescription("", "", "", "", ""))
 	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 

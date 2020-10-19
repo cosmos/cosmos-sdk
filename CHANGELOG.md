@@ -48,8 +48,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (tendermint) \#7527 Update sdk to tendermint 0.34-rc5
 
-
-
 ## v0.40.0-rc0 - 2020-10-13
 
 v0.40.0, known as the Stargate release of the Cosmos SDK, is one of the largest releases

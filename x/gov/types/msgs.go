@@ -21,25 +21,8 @@ const (
 
 var (
 	_, _, _ sdk.Msg                       = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}
-	_       MsgSubmitProposalI            = &MsgSubmitProposal{}
 	_       types.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
-
-// MsgSubmitProposalI defines the specific interface a concrete message must
-// implement in order to process governance proposals. The concrete MsgSubmitProposal
-// must be defined at the application-level.
-type MsgSubmitProposalI interface {
-	sdk.Msg
-
-	GetContent() Content
-	SetContent(Content) error
-
-	GetInitialDeposit() sdk.Coins
-	SetInitialDeposit(sdk.Coins)
-
-	GetProposer() sdk.AccAddress
-	SetProposer(sdk.AccAddress)
-}
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
@@ -74,7 +57,7 @@ func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
 	m.InitialDeposit = coins
 }
 
-func (m *MsgSubmitProposal) SetProposer(address sdk.AccAddress) {
+func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
 	m.Proposer = address.String()
 }
 

@@ -4,7 +4,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// x/gov module sentinel errors
+// x/msg_authorization module sentinel errors
 var (
 	ErrInvalidGranter        = sdkerrors.Register(ModuleName, 1, "invalid granter address")
 	ErrInvalidGrantee        = sdkerrors.Register(ModuleName, 2, "invalid grantee address")

@@ -41,11 +41,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// Router returns the gov Keeper's Router
+// Router returns the msg_authorization Keeper's Router
 func (k Keeper) Router() types.Router {
 	return k.router
 }
 
+// getAuthorizationGrant returns grant between granter and grantee for the given msg type
 func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(actor)
@@ -155,7 +156,6 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 	if !found {
 		return nil, 0
 	}
-	fmt.Println("Exp = ", grant.Expiration, "  BT = ", ctx.BlockHeader().Time.Unix())
 	if grant.Expiration != 0 && grant.Expiration < (ctx.BlockHeader().Time.Unix()) {
 		k.Revoke(ctx, grantee, granter, msgType)
 		return nil, 0

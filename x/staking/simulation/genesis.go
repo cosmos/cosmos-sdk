@@ -37,6 +37,7 @@ func GetHistEntries(r *rand.Rand) uint32 {
 }
 
 // RandomizedGenState generates a random GenesisState for staking
+// TODO: this function should not panic
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
 	var (
@@ -84,7 +85,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		validator, err := types.NewValidator(valAddr, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		if err != nil {
+			panic(err)
+		}
 		validator.Tokens = sdk.NewInt(simState.InitialStake)
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
 		validator.Commission = commission

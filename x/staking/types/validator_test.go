@@ -75,13 +75,7 @@ func TestABCIValidatorUpdateZero(t *testing.T) {
 }
 
 func TestShareTokens(t *testing.T) {
-	validator := Validator{
-		OperatorAddress: valAddr1.String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDec(100),
-	}
+	validator := mkValidator(100, sdk.NewDec(100))
 	assert.True(sdk.DecEq(t, sdk.NewDec(50), validator.TokensFromShares(sdk.NewDec(50))))
 
 	validator.Tokens = sdk.NewInt(50)
@@ -90,16 +84,7 @@ func TestShareTokens(t *testing.T) {
 }
 
 func TestRemoveTokens(t *testing.T) {
-	valPubKey := pk1
-	valAddr := sdk.ValAddress(valPubKey.Address().Bytes())
-
-	validator := Validator{
-		OperatorAddress: valAddr.String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey),
-		Status:          Bonded,
-		Tokens:          sdk.NewInt(100),
-		DelegatorShares: sdk.NewDec(100),
-	}
+	validator := mkValidator(100, sdk.NewDec(100))
 
 	// remove tokens and test check everything
 	validator = validator.RemoveTokens(sdk.NewInt(10))
@@ -151,7 +136,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 func TestRemoveDelShares(t *testing.T) {
 	valA := Validator{
 		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
+		ConsensusPubkey: pk1Any,
 		Status:          Bonded,
 		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
@@ -164,18 +149,8 @@ func TestRemoveDelShares(t *testing.T) {
 	require.Equal(t, int64(90), valB.BondedTokens().Int64())
 
 	// specific case from random tests
-	poolTokens := sdk.NewInt(5102)
-	delShares := sdk.NewDec(115)
-	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          Bonded,
-		Tokens:          poolTokens,
-		DelegatorShares: delShares,
-	}
-
-	shares := sdk.NewDec(29)
-	_, tokens := validator.RemoveDelShares(shares)
+	validator := mkValidator(5102, sdk.NewDec(115))
+	_, tokens := validator.RemoveDelShares(sdk.NewDec(29))
 
 	require.True(sdk.IntEq(t, sdk.NewInt(1286), tokens))
 }
@@ -215,14 +190,7 @@ func TestUpdateStatus(t *testing.T) {
 
 func TestPossibleOverflow(t *testing.T) {
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
-	validator := Validator{
-		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
-		ConsensusPubkey: sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pk1),
-		Status:          Bonded,
-		Tokens:          sdk.NewInt(2159),
-		DelegatorShares: delShares,
-	}
-
+	validator := mkValidator(2159, delShares)
 	newValidator, _ := validator.AddTokensFromDel(sdk.NewInt(71))
 
 	require.False(t, newValidator.DelegatorShares.IsNegative())
@@ -328,4 +296,15 @@ func TestBondStatus(t *testing.T) {
 	require.Equal(t, BondStatusUnbonded, Unbonded.String())
 	require.Equal(t, BondStatusBonded, Bonded.String())
 	require.Equal(t, BondStatusUnbonding, Unbonding.String())
+}
+
+func mkValidator(tokens int64, shares sdk.Dec) Validator {
+	return Validator{
+		// TODO: use valAddr1
+		OperatorAddress: sdk.ValAddress(pk1.Address().Bytes()).String(),
+		ConsensusPubkey: pk1Any,
+		Status:          Bonded,
+		Tokens:          sdk.NewInt(tokens),
+		DelegatorShares: shares,
+	}
 }

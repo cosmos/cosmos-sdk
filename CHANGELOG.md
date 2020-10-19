@@ -36,6 +36,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.40.0-rc1 - 2020-10-19
 
+### Client Breaking Changes
+
+* __Modules__
+  * (x/staking) [\#7499](https://github.com/cosmos/cosmos-sdk/pull/7499) `BondStatus` is now a protobuf `enum` instead of an `int32`, and JSON serialized using its protobuf name, so expect names like `BOND_STATUS_UNBONDING` as opposed to `Unbonding`.
+
 ### Features
 
 * (cli) \#7221 Add the option of emitting amino encoded json from the CLI
@@ -47,6 +52,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (tendermint) \#7527 Update sdk to tendermint 0.34-rc5
+* (iavl) \#7549 Update sdk to IAVL 0.15.0-rc4
+
 
 ## v0.40.0-rc0 - 2020-10-13
 

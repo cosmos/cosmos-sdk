@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		pk, err := privVal.GetPubKey()
 		suite.Require().NoError(err)
 		val := stakingtypes.NewValidator(sdk.ValAddress(pk.Address()), pk, stakingtypes.Description{})
-		val.Status = sdk.Bonded
+		val.Status = stakingtypes.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		validators = append(validators, val)
 

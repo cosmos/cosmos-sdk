@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 var (
@@ -83,6 +84,26 @@ func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
+}
+
+func registerTestCodec(cdc *codec.LegacyAmino) {
+	// register Tx, Msg
+	sdk.RegisterLegacyAminoCodec(cdc)
+
+	// register test types
+	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
+	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
+	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
+	cdc.RegisterConcrete(&msgKeyValue{}, "cosmos-sdk/baseapp/msgKeyValue", nil)
+	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
+}
+
+// txEncoder creates a amino TxEncoder for testing purposes.
+func txEncoder() sdk.TxEncoder {
+	cdc := codec.NewLegacyAmino()
+	registerTestCodec(cdc)
+
+	return legacytx.StdTxConfig{Cdc: cdc}.TxEncoder()
 }
 
 // simple one store baseapp
@@ -656,6 +677,125 @@ func TestBeginBlock_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
+// Simple tx with a list of Msgs.
+type txTest struct {
+	Msgs       []sdk.Msg
+	Counter    int64
+	FailOnAnte bool
+}
+
+func (tx *txTest) setFailOnAnte(fail bool) {
+	tx.FailOnAnte = fail
+}
+
+func (tx *txTest) setFailOnHandler(fail bool) {
+	for i, msg := range tx.Msgs {
+		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
+	}
+}
+
+// Implements Tx
+func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
+func (tx txTest) ValidateBasic() error { return nil }
+
+const (
+	routeMsgCounter  = "msgCounter"
+	routeMsgCounter2 = "msgCounter2"
+	routeMsgKeyValue = "msgKeyValue"
+)
+
+// ValidateBasic() fails on negative counters.
+// Otherwise it's up to the handlers
+type msgCounter struct {
+	Counter       int64
+	FailOnHandler bool
+}
+
+// dummy implementation of proto.Message
+func (msg msgCounter) Reset()         {}
+func (msg msgCounter) String() string { return "TODO" }
+func (msg msgCounter) ProtoMessage()  {}
+
+// Implements Msg
+func (msg msgCounter) Route() string                { return routeMsgCounter }
+func (msg msgCounter) Type() string                 { return "counter1" }
+func (msg msgCounter) GetSignBytes() []byte         { return nil }
+func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter) ValidateBasic() error {
+	if msg.Counter >= 0 {
+		return nil
+	}
+	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+func newTxCounter(counter int64, msgCounters ...int64) *txTest {
+	msgs := make([]sdk.Msg, 0, len(msgCounters))
+	for _, c := range msgCounters {
+		msgs = append(msgs, msgCounter{c, false})
+	}
+
+	return &txTest{msgs, counter, false}
+}
+
+// a msg we dont know how to route
+type msgNoRoute struct {
+	msgCounter
+}
+
+func (tx msgNoRoute) Route() string { return "noroute" }
+
+// a msg we dont know how to decode
+type msgNoDecode struct {
+	msgCounter
+}
+
+func (tx msgNoDecode) Route() string { return routeMsgCounter }
+
+// Another counter msg. Duplicate of msgCounter
+type msgCounter2 struct {
+	Counter int64
+}
+
+// dummy implementation of proto.Message
+func (msg msgCounter2) Reset()         {}
+func (msg msgCounter2) String() string { return "TODO" }
+func (msg msgCounter2) ProtoMessage()  {}
+
+// Implements Msg
+func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
+func (msg msgCounter2) Type() string                 { return "counter2" }
+func (msg msgCounter2) GetSignBytes() []byte         { return nil }
+func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter2) ValidateBasic() error {
+	if msg.Counter >= 0 {
+		return nil
+	}
+	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+}
+
+// A msg that sets a key/value pair.
+type msgKeyValue struct {
+	Key   []byte
+	Value []byte
+}
+
+func (msg msgKeyValue) Reset()                       {}
+func (msg msgKeyValue) String() string               { return "TODO" }
+func (msg msgKeyValue) ProtoMessage()                {}
+func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
+func (msg msgKeyValue) Type() string                 { return "keyValue" }
+func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
+func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgKeyValue) ValidateBasic() error {
+	if msg.Key == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
+	}
+	if msg.Value == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	return nil
+}
+
 // amino decode
 func testTxDecoder(cdc *codec.LegacyAmino) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
@@ -1040,7 +1180,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no messages
 	{
 		emptyTx := &txTest{}
-		_, result, err := app.Deliver(emptyTx)
+		_, result, err := app.Deliver(txEncoder(), emptyTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1067,7 +1207,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		for _, testCase := range testCases {
 			tx := testCase.tx
-			_, result, err := app.Deliver(tx)
+			_, result, err := app.Deliver(txEncoder(), tx)
 
 			if testCase.fail {
 				require.Error(t, err)
@@ -1084,7 +1224,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction with no known route
 	{
 		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
-		_, result, err := app.Deliver(unknownRouteTx)
+		_, result, err := app.Deliver(txEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1093,7 +1233,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
-		_, result, err = app.Deliver(unknownRouteTx)
+		_, result, err = app.Deliver(txEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
 
@@ -1191,7 +1331,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
-		gInfo, result, err := app.Deliver(tx)
+		gInfo, result, err := app.Deliver(txEncoder(), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1281,7 +1421,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 		// execute the transaction multiple times
 		for j := 0; j < tc.numDelivers; j++ {
-			_, result, err := app.Deliver(tx)
+			_, result, err := app.Deliver(txEncoder(), tx)
 
 			ctx := app.getState(runTxModeDeliver).ctx
 
@@ -1349,7 +1489,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	{
 		tx := newTxCounter(0, 0)
 
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(tx) })
+		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(txEncoder(), tx) })
 	}
 }
 
@@ -1537,7 +1677,7 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, 0, len(res.Value))
 
 	// query is still empty after a CheckTx
-	_, resTx, err := app.Check(tx)
+	_, resTx, err := app.Check(txEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)
@@ -1547,7 +1687,7 @@ func TestQuery(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, resTx, err = app.Deliver(tx)
+	_, resTx, err = app.Deliver(txEncoder(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, resTx)
 	res = app.Query(query)

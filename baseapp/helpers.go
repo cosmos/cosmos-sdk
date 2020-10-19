@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -23,7 +24,7 @@ func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// this helper is only used in tests/simulation, it's fine.
 	bz, err := txEncoder(app.interfaceRegistry)(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	return app.runTx(runTxModeCheck, bz)
 }
@@ -36,7 +37,7 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// See comment for Check().
 	bz, err := txEncoder(app.interfaceRegistry)(tx)
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	return app.runTx(runTxModeDeliver, bz)
 }

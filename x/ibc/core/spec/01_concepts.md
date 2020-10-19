@@ -277,4 +277,22 @@ Each packet is required to have at least one valid timeout field.
 
 ## Hostname Validation
 
+The 24-host sub-module parses and validates identifiers. It also builds 
+the key paths used to store IBC related information. 
+
+A valid identifier must conatin only alphanumeric characters or the 
+following list of allowed characters: 
+".", "\_", "+", "-", "#", "[", "]", "<", ">" 
+
+Client identifiers must contain between 9 and 64 characters.
+Connection identifiers must contain between 10 and 64 characters.
+Channel identifiers must contain between 10 and 64 characters.
+Port identifiers must contain between 2 and 64 characters.
+
 ## Proofs
+
+Proofs for counterparty state validation are provided as bytes. These bytes 
+can be unmarshaled into proto definitions as necessary by light clients.
+For example, the Tendermint light client will use the bytes as a merkle 
+proof where as the solo machine client will unmarshal the proof into
+several layers proto definitions used for signature verficiation. 

@@ -36,7 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.40.0-rc1 - 2020-10-19
 
+### Features
+
+* (cli) \#7221 Add the option of emitting amino encoded json from the CLI
+
+### Bug Fixes
+
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
+
+### Improvements
+
+* (tendermint) \#7527 Update sdk to tendermint 0.34-rc5
+
 
 
 ## v0.40.0-rc0 - 2020-10-13

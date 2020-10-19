@@ -100,9 +100,14 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
-func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) error {
+	consPk, err := validator.GetConsAddr()
+	if err != nil {
+		return err
+	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorByConsAddrKey(validator.GetConsAddr()), validator.GetOperator())
+	store.Set(types.GetValidatorByConsAddrKey(consPk), validator.GetOperator())
+	return nil
 }
 
 // validator index
@@ -195,7 +200,11 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 		panic("attempting to remove a validator which still contains tokens")
 	}
 
-	valConsAddr := validator.GetConsAddr()
+	valConsAddr, err := validator.GetConsAddr()
+	if err != nil {
+		// TODO, this function shouldn't panic
+		panic(err)
+	}
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)

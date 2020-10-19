@@ -88,13 +88,17 @@ func (v Validators) ToSDKValidators() (validators []ValidatorI) {
 }
 
 // ToTmValidators casts all validators to the corresponding tendermint type.
-func (v Validators) ToTmValidators() []*tmtypes.Validator {
+func (v Validators) ToTmValidators() ([]*tmtypes.Validator, error) {
 	validators := make([]*tmtypes.Validator, len(v))
+	var err error
 	for i, val := range v {
-		validators[i] = val.ToTmValidator()
+		validators[i], err = val.ToTmValidator()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return validators
+	return validators, nil
 }
 
 // Sort Validators sorts validator array in ascending operator address order
@@ -268,8 +272,12 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 }
 
 // ToTmValidator casts an SDK validator to a tendermint type Validator.
-func (v Validator) ToTmValidator() *tmtypes.Validator {
-	return tmtypes.NewValidator(v.GetConsPubKey(), v.ConsensusPower())
+func (v Validator) ToTmValidator() (*tmtypes.Validator, error) {
+	consPk, err := v.GetConsPubKey()
+	if err != nil {
+		return nil, err
+	}
+	return tmtypes.NewValidator(consPk, v.ConsensusPower()), nil
 }
 
 // SetInitialCommission attempts to set a validator's initial commission. An

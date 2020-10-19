@@ -283,8 +283,9 @@ func TestValidatorToTm(t *testing.T) {
 		vals[i] = val
 		expected[i] = tmtypes.NewValidator(pk.(cryptotypes.IntoTmPubKey).AsTmPubKey(), val.ConsensusPower())
 	}
-
-	require.Equal(t, expected, vals.ToTmValidators())
+	vs, err := vals.ToTmValidators()
+	require.NoError(t, err)
+	require.Equal(t, expected, vs)
 }
 
 func TestBondStatus(t *testing.T) {

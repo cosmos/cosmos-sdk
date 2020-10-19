@@ -12,12 +12,28 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
+const (
+	connectionID  = "connectionidone"
+	clientID      = "clientidone"
+	connectionID2 = "connectionidtwo"
+	clientID2     = "clientidtwo"
+
+	port1 = "firstport"
+	port2 = "secondport"
+
+	channel1 = "firstchannel"
+	channel2 = "secondchannel"
+
+	height = 10
+)
+
 var (
 	timeoutHeight = clienttypes.NewHeight(0, 10000)
 	maxSequence   = uint64(10)
+	clientHeight  = clienttypes.NewHeight(0, 10)
 )
 
-type HandlerTestSuite struct {
+type IBCTestSuite struct {
 	suite.Suite
 
 	coordinator *ibctesting.Coordinator
@@ -27,14 +43,15 @@ type HandlerTestSuite struct {
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *HandlerTestSuite) SetupTest() {
+func (suite *IBCTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 }
 
-func TestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
+func TestIBCTestSuite(t *testing.T) {
+	suite.Run(t, new(IBCTestSuite))
 }
 
 // tests the IBC handler receiving a packet on ordered and unordered channels.
@@ -42,7 +59,7 @@ func TestHandlerTestSuite(t *testing.T) {
 // tests high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'RecvPacket' and 'WriteReceipt' can be found in the
 // 04-channel/keeper/packet_test.go.
-func (suite *HandlerTestSuite) TestHandleRecvPacket() {
+func (suite *IBCTestSuite) TestHandleRecvPacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -162,7 +179,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 // occurs. It test high level properties like ordering and basic sanity
 // checks. More rigorous testing of 'AcknowledgePacket' and 'AcknowledgementExecuted'
 // can be found in the 04-channel/keeper/packet_test.go.
-func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
+func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -320,7 +337,7 @@ func (suite *HandlerTestSuite) TestHandleAcknowledgePacket() {
 // high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'TimeoutPacket' and 'TimeoutExecuted' can be found in
 // the 04-channel/keeper/timeout_test.go.
-func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
+func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
 	var (
 		packet    channeltypes.Packet
 		packetKey []byte
@@ -443,7 +460,7 @@ func (suite *HandlerTestSuite) TestHandleTimeoutPacket() {
 // commitment occurs. It tests high level properties like ordering and basic
 // sanity checks. More rigorous testing of 'TimeoutOnClose' and
 //'TimeoutExecuted' can be found in the 04-channel/keeper/timeout_test.go.
-func (suite *HandlerTestSuite) TestHandleTimeoutOnClosePacket() {
+func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
 	var (
 		packet              channeltypes.Packet
 		packetKey           []byte

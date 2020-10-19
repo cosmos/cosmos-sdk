@@ -7,6 +7,7 @@ import (
 	metrics "github.com/armon/go-metrics"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,9 +39,9 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, types.ErrValidatorOwnerExists
 	}
 
-	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msg.Pubkey)
-	if err != nil {
-		return nil, err
+	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting crypto.PubKey, got %T", pk)
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {

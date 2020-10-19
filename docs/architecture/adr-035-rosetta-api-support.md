@@ -30,7 +30,6 @@ This ADR will describe how this will be achieved.
    a. API shares the application process
    b. API-specific process.
 
-This document below will describe each design component of the proposed architecture.
 
 ## Architecture
 

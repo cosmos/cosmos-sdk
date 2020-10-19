@@ -172,6 +172,11 @@ func (registry *interfaceRegistry) ListImplementations(ifaceName string) []strin
 }
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
+	// here we gracefully handle the case in which `any` itself is `nil`, which may occur in message decoding
+	if any == nil {
+		return nil
+	}
+
 	if any.TypeUrl == "" {
 		// if TypeUrl is empty return nil because without it we can't actually unpack anything
 		return nil

@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -15,15 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
-	val1 := teststaking.NewValidator(t, valAddr1, pk1)
-	val2 := teststaking.NewValidator(t, valAddr1, pk1)
+	val1 := newValidator(t, valAddr1, pk1)
+	val2 := newValidator(t, valAddr1, pk1)
 	require.Equal(t, val1.String(), val2.String())
 
-	val2 = teststaking.NewValidator(t, valAddr2, pk2)
+	val2 = newValidator(t, valAddr2, pk2)
 	require.NotEqual(t, val1.String(), val2.String())
 }
 
@@ -57,18 +57,22 @@ func TestUpdateDescription(t *testing.T) {
 }
 
 func TestABCIValidatorUpdate(t *testing.T) {
-	validator := teststaking.NewValidator(t, valAddr1, pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdate()
-	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
+	consPk, err := validator.GetConsPubKey()
+	require.NoError(t, err)
+	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := teststaking.NewValidator(t, valAddr1, pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := encoding.PubKeyToProto(validator.GetConsPubKey())
+	consPk, err := validator.GetConsPubKey()
+	require.NoError(t, err)
+	pk, err := encoding.PubKeyToProto(consPk)
 	require.NoError(t, err)
 	require.Equal(t, pk, abciVal.PubKey)
 	require.Equal(t, int64(0), abciVal.Power)
@@ -100,7 +104,7 @@ func TestRemoveTokens(t *testing.T) {
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {
-	validator := teststaking.NewValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
 	validator = validator.UpdateStatus(Bonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -110,7 +114,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
-	validator := teststaking.NewValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
 	validator = validator.UpdateStatus(Unbonding)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -122,7 +126,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 
-	validator := teststaking.NewValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
 	validator = validator.UpdateStatus(Unbonded)
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
@@ -156,7 +160,7 @@ func TestRemoveDelShares(t *testing.T) {
 }
 
 func TestAddTokensFromDel(t *testing.T) {
-	validator := teststaking.NewValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
 
 	validator, shares := validator.AddTokensFromDel(sdk.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
@@ -170,7 +174,7 @@ func TestAddTokensFromDel(t *testing.T) {
 }
 
 func TestUpdateStatus(t *testing.T) {
-	validator := teststaking.NewValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
+	validator := newValidator(t, sdk.ValAddress(pk1.Address().Bytes()), pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))
 	require.Equal(t, Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
@@ -198,7 +202,7 @@ func TestPossibleOverflow(t *testing.T) {
 }
 
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
-	validator := teststaking.NewValidator(t, valAddr1, pk1)
+	validator := newValidator(t, valAddr1, pk1)
 	js, err := legacy.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
@@ -210,7 +214,7 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 }
 
 func TestValidatorSetInitialCommission(t *testing.T) {
-	val := teststaking.NewValidator(t, valAddr1, pk1)
+	val := newValidator(t, valAddr1, pk1)
 	testCases := []struct {
 		validator   Validator
 		commission  Commission
@@ -251,7 +255,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	// Create random validator slice
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
-		vals[i] = teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk)
+		vals[i] = newValidator(t, sdk.ValAddress(pk.Address()), pk)
 	}
 
 	// Save sorted copy
@@ -277,7 +281,7 @@ func TestValidatorToTm(t *testing.T) {
 
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
-		val := teststaking.NewValidator(t, sdk.ValAddress(pk.Address()), pk)
+		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
 		val.Status = Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
@@ -308,4 +312,12 @@ func mkValidator(tokens int64, shares sdk.Dec) Validator {
 		Tokens:          sdk.NewInt(tokens),
 		DelegatorShares: shares,
 	}
+}
+
+// copy of newValidator. Unfortunately we can't use it because
+// of an import cycle
+func newValidator(t *testing.T, operator sdk.ValAddress, pubKey crypto.PubKey) Validator {
+	v, err := NewValidator(operator, pubKey, Description{})
+	require.NoError(t, err)
+	return v
 }

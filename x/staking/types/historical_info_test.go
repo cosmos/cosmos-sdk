@@ -5,7 +5,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -17,9 +16,9 @@ var header = tmproto.Header{
 
 func createValidators(t *testing.T) []Validator {
 	return []Validator{
-		teststaking.NewValidator(t, valAddr1, pk1),
-		teststaking.NewValidator(t, valAddr2, pk2),
-		teststaking.NewValidator(t, valAddr3, pk3),
+		newValidator(t, valAddr1, pk1),
+		newValidator(t, valAddr2, pk2),
+		newValidator(t, valAddr3, pk3),
 	}
 }
 

@@ -19,27 +19,15 @@ import (
 )
 
 const (
-	connectionID  = "connectionidone"
-	clientID      = "clientidone"
-	connectionID2 = "connectionidtwo"
-	clientID2     = "clientidtwo"
-
-	port1 = "firstport"
-	port2 = "secondport"
-
-	channel1 = "firstchannel"
-	channel2 = "secondchannel"
-
 	height = 10
 )
 
 var (
 	timeoutHeight = clienttypes.NewHeight(0, 10000)
 	maxSequence   = uint64(10)
-	clientHeight  = clienttypes.NewHeight(0, 10)
 )
 
-type IBCTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
 	coordinator *ibctesting.Coordinator
@@ -49,7 +37,7 @@ type IBCTestSuite struct {
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *IBCTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
@@ -57,7 +45,7 @@ func (suite *IBCTestSuite) SetupTest() {
 }
 
 func TestIBCTestSuite(t *testing.T) {
-	suite.Run(t, new(IBCTestSuite))
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 // tests the IBC handler receiving a packet on ordered and unordered channels.
@@ -65,7 +53,7 @@ func TestIBCTestSuite(t *testing.T) {
 // tests high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'RecvPacket' and 'WriteReceipt' can be found in the
 // 04-channel/keeper/packet_test.go.
-func (suite *IBCTestSuite) TestHandleRecvPacket() {
+func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -183,7 +171,7 @@ func (suite *IBCTestSuite) TestHandleRecvPacket() {
 // occurs. It test high level properties like ordering and basic sanity
 // checks. More rigorous testing of 'AcknowledgePacket' and 'AcknowledgementExecuted'
 // can be found in the 04-channel/keeper/packet_test.go.
-func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
+func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
 	var (
 		packet channeltypes.Packet
 	)
@@ -339,7 +327,7 @@ func (suite *IBCTestSuite) TestHandleAcknowledgePacket() {
 // high level properties like ordering and basic sanity checks. More
 // rigorous testing of 'TimeoutPacket' and 'TimeoutExecuted' can be found in
 // the 04-channel/keeper/timeout_test.go.
-func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
+func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 	var (
 		packet    channeltypes.Packet
 		packetKey []byte
@@ -460,7 +448,7 @@ func (suite *IBCTestSuite) TestHandleTimeoutPacket() {
 // commitment occurs. It tests high level properties like ordering and basic
 // sanity checks. More rigorous testing of 'TimeoutOnClose' and
 //'TimeoutExecuted' can be found in the 04-channel/keeper/timeout_test.go.
-func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
+func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 	var (
 		packet              channeltypes.Packet
 		packetKey           []byte
@@ -637,7 +625,7 @@ func (suite *IBCTestSuite) TestHandleTimeoutOnClosePacket() {
 	}
 }
 
-func (suite *IBCTestSuite) TestUpgradeClient() {
+func (suite *KeeperTestSuite) TestUpgradeClient() {
 	var (
 		clientA        string
 		upgradedClient exported.ClientState

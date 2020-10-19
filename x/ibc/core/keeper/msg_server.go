@@ -18,6 +18,7 @@ var _ clienttypes.MsgServer = Keeper{}
 var _ connectiontypes.MsgServer = Keeper{}
 var _ channeltypes.MsgServer = Keeper{}
 
+// CreateClient defines a rpc handler method for MsgCreateClient.
 func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateClient) (*clienttypes.MsgCreateClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -51,6 +52,7 @@ func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateCl
 	return &clienttypes.MsgCreateClientResponse{}, nil
 }
 
+// UpdateClient defines a rpc handler method for MsgUpdateClient.
 func (k Keeper) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdateClient) (*clienttypes.MsgUpdateClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -73,6 +75,7 @@ func (k Keeper) UpdateClient(goCtx context.Context, msg *clienttypes.MsgUpdateCl
 	return &clienttypes.MsgUpdateClientResponse{}, nil
 }
 
+// UpgradeClient defines a rpc handler method for MsgUpgradeClient.
 func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgradeClient) (*clienttypes.MsgUpgradeClientResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -99,6 +102,7 @@ func (k Keeper) UpgradeClient(goCtx context.Context, msg *clienttypes.MsgUpgrade
 	return &clienttypes.MsgUpgradeClientResponse{}, nil
 }
 
+// SubmitMisbehaviour defines a rpc handler method for MsgSubmitMisbehaviour.
 func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSubmitMisbehaviour) (*clienttypes.MsgSubmitMisbehaviourResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -123,6 +127,7 @@ func (k Keeper) SubmitMisbehaviour(goCtx context.Context, msg *clienttypes.MsgSu
 	return &clienttypes.MsgSubmitMisbehaviourResponse{}, nil
 }
 
+// ConnectionOpenInit defines a rpc handler method for MsgConnectionOpenInit.
 func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenInit) (*connectiontypes.MsgConnectionOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -149,6 +154,7 @@ func (k Keeper) ConnectionOpenInit(goCtx context.Context, msg *connectiontypes.M
 	return &connectiontypes.MsgConnectionOpenInitResponse{}, nil
 }
 
+// ConnectionOpenTry defines a rpc handler method for MsgConnectionOpenTry.
 func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenTry) (*connectiontypes.MsgConnectionOpenTryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -182,6 +188,7 @@ func (k Keeper) ConnectionOpenTry(goCtx context.Context, msg *connectiontypes.Ms
 	return &connectiontypes.MsgConnectionOpenTryResponse{}, nil
 }
 
+// ConnectionOpenAck defines a rpc handler method for MsgConnectionOpenAck.
 func (k Keeper) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenAck) (*connectiontypes.MsgConnectionOpenAckResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	targetClient, err := clienttypes.UnpackClientState(msg.ClientState)
@@ -216,6 +223,7 @@ func (k Keeper) ConnectionOpenAck(goCtx context.Context, msg *connectiontypes.Ms
 	return &connectiontypes.MsgConnectionOpenAckResponse{}, nil
 }
 
+// ConnectionOpenConfirm defines a rpc handler method for MsgConnectionOpenConfirm.
 func (k Keeper) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontypes.MsgConnectionOpenConfirm) (*connectiontypes.MsgConnectionOpenConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -244,6 +252,7 @@ func (k Keeper) ConnectionOpenConfirm(goCtx context.Context, msg *connectiontype
 	return &connectiontypes.MsgConnectionOpenConfirmResponse{}, nil
 }
 
+// ChannelOpenInit defines a rpc handler method for MsgChannelOpenInit.
 func (k Keeper) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChannelOpenInit) (*channeltypes.MsgChannelOpenInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -271,6 +280,7 @@ func (k Keeper) ChannelOpenInit(goCtx context.Context, msg *channeltypes.MsgChan
 	return &channeltypes.MsgChannelOpenInitResponse{}, nil
 }
 
+// ChannelOpenTry defines a rpc handler method for MsgChannelOpenTry.
 func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChannelOpenTry) (*channeltypes.MsgChannelOpenTryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by port capability
@@ -297,6 +307,7 @@ func (k Keeper) ChannelOpenTry(goCtx context.Context, msg *channeltypes.MsgChann
 	return &channeltypes.MsgChannelOpenTryResponse{}, nil
 }
 
+// ChannelOpenAck defines a rpc handler method for MsgChannelOpenAck.
 func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChannelOpenAck) (*channeltypes.MsgChannelOpenAckResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -324,6 +335,7 @@ func (k Keeper) ChannelOpenAck(goCtx context.Context, msg *channeltypes.MsgChann
 	return &channeltypes.MsgChannelOpenAckResponse{}, nil
 }
 
+// ChannelOpenConfirm defines a rpc handler method for MsgChannelOpenConfirm.
 func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgChannelOpenConfirm) (*channeltypes.MsgChannelOpenConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -351,6 +363,7 @@ func (k Keeper) ChannelOpenConfirm(goCtx context.Context, msg *channeltypes.MsgC
 	return &channeltypes.MsgChannelOpenConfirmResponse{}, nil
 }
 
+// ChannelCloseInit defines a rpc handler method for MsgChannelCloseInit.
 func (k Keeper) ChannelCloseInit(goCtx context.Context, msg *channeltypes.MsgChannelCloseInit) (*channeltypes.MsgChannelCloseInitResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by channel capability
@@ -377,6 +390,7 @@ func (k Keeper) ChannelCloseInit(goCtx context.Context, msg *channeltypes.MsgCha
 	return &channeltypes.MsgChannelCloseInitResponse{}, nil
 }
 
+// ChannelCloseConfirm defines a rpc handler method for MsgChannelCloseConfirm.
 func (k Keeper) ChannelCloseConfirm(goCtx context.Context, msg *channeltypes.MsgChannelCloseConfirm) (*channeltypes.MsgChannelCloseConfirmResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -404,6 +418,7 @@ func (k Keeper) ChannelCloseConfirm(goCtx context.Context, msg *channeltypes.Msg
 	return &channeltypes.MsgChannelCloseConfirmResponse{}, nil
 }
 
+// RecvPacket defines a rpc handler method for MsgRecvPacket.
 func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacket) (*channeltypes.MsgRecvPacketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -459,6 +474,7 @@ func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacke
 	return &channeltypes.MsgRecvPacketResponse{}, nil
 }
 
+// Timeout defines a rpc handler method for MsgTimeout.
 func (k Keeper) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*channeltypes.MsgTimeoutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Lookup module by channel capability
@@ -506,6 +522,7 @@ func (k Keeper) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*c
 	return &channeltypes.MsgTimeoutResponse{}, nil
 }
 
+// TimeoutOnClose defines a rpc handler method for MsgTimeoutOnClose.
 func (k Keeper) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeoutOnClose) (*channeltypes.MsgTimeoutOnCloseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -556,6 +573,7 @@ func (k Keeper) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeo
 	return &channeltypes.MsgTimeoutOnCloseResponse{}, nil
 }
 
+// Acknowledgement defines a rpc handler method for MsgAcknowledgement.
 func (k Keeper) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAcknowledgement) (*channeltypes.MsgAcknowledgementResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

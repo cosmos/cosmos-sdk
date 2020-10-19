@@ -70,9 +70,9 @@ func NewCmdGrantAuthorization() *cobra.Command {
 				return errors.New("invalid authorization type")
 			}
 
-			period := time.Unix(viper.GetInt64(FlagExpiration), 0)
+			period := time.Duration(viper.GetInt64(FlagExpiration)) * time.Second
 
-			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, period)
+			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Now().Add(period))
 			if err != nil {
 				return err
 			}

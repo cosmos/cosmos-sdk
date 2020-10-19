@@ -78,9 +78,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee
 
-	now := time.Now()
-	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
-	pastHour := now.Add(time.Minute * time.Duration(-60)).Unix()
+	twoHours := 60 * 2  // In seconds
+	pastHour := 60 * -1 // In seconds
 
 	testCases := []struct {
 		name         string
@@ -88,7 +87,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 		respType     proto.Message
 		expectedCode uint32
 		expectErr    bool
-		expiration   int64
+		expiration   int
 	}{
 		{
 			"Invalid granter Address",
@@ -178,8 +177,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	now := time.Now()
-	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
+	twoHours := 60 * 2 // In seconds
 	viper.Set(cli.FlagExpiration, twoHours)
 
 	_, err := execGrantSendAuthorization(
@@ -279,8 +277,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee
-	now := time.Now()
-	twoHours := now.Add(time.Minute * time.Duration(120)).Unix()
+	twoHours := 60 * 2 // In seconds
 
 	viper.Set(cli.FlagExpiration, twoHours)
 

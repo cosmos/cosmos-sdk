@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -87,14 +88,14 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, ""), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			types.NewSendAuthorization(spendableCoins.Sub(fees)), time.Now().Add(1*time.Hour))
+			types.NewSendAuthorization(spendableCoins.Sub(fees)), ctx.BlockTime().Add(30*time.Hour))
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, "Error "), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
@@ -210,6 +211,8 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, "no coins"), nil, nil
 		}
 
+		fmt.Println("T1 = ", ctx.BlockHeader().Time)
+
 		granteespendableCoins := bk.SpendableCoins(ctx, granteeAccount.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)
 		if err != nil {
@@ -244,7 +247,6 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgExecDelegated, err.Error()), nil, err
 		}
-
 		_, _, err = app.Deliver(tx)
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient fee") {

@@ -29,6 +29,7 @@ func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server) Configurato
 
 var _ Configurator = configurator{}
 
+// MsgServer implements the Configurator.MsgServer method
 func (c configurator) MsgServer() grpc.Server {
 	return c.msgServer
 }

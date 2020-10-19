@@ -44,6 +44,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking
 
 * (AppModule) [\#7518](https://github.com/cosmos/cosmos-sdk/pull/7518) [\#7584](https://github.com/cosmos/cosmos-sdk/pull/7584) Rename `AppModule.RegisterQueryServices` to `AppModule.RegisterServices`, as this method now registers multiple services (the gRPC query service and the protobuf Msg service). A `Configurator` struct is used to hold the different services.
+* (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447)  Remove bech32 PubKey support
+  * `ValidatorI` inteface update. `GetConsPubKey`, `GetConsAddr` methods return error
+  * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
+  * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`
+  * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`
 
 ### Features
 
@@ -54,15 +59,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (kvstore) [\#7415](https://github.com/cosmos/cosmos-sdk/pull/7415) Allow new stores to be registered during on-chain upgrades.
 
-## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
-
-### API Breaking Changes
-
-* (x/staking/types) [\#7447](https://github.com/cosmos/cosmos-sdk/issues/7447)  Remove bech32 PubKey support
-  * `ValidatorI` inteface update. `GetConsPubKey`, `GetConsAddr` methods return error
-  * `Validator` update. Methods changed in `ValidatorI` (as described above) and `ToTmValidator` return error.
-  * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`
-  * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`
 
 ## [v0.40.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.40.0-rc0) - 2020-10-13
 

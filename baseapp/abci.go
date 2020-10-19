@@ -355,7 +355,7 @@ func (app *BaseApp) halt() {
 // snapshot takes a snapshot of the current state and prunes any old snapshottypes.
 func (app *BaseApp) snapshot(height int64) {
 	if app.snapshotManager == nil {
-		app.logger.Error("snapshot manager not configured")
+		app.logger.Info("snapshot manager not configured")
 		return
 	}
 	app.logger.Info("Creating state snapshot", "height", height)

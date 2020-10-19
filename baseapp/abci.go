@@ -248,11 +248,6 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
-	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
-	}
-
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -667,11 +662,6 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 		switch path[1] {
 		case "simulate":
 			txBytes := req.Data
-
-			tx, err := app.txDecoder(txBytes)
-			if err != nil {
-				return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to decode tx"))
-			}
 
 			gInfo, res, err := app.Simulate(txBytes)
 			if err != nil {

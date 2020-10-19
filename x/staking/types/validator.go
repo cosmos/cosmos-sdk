@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -39,15 +40,15 @@ var _ ValidatorI = Validator{}
 
 // NewValidator constructs a new Validator
 //nolint:interfacer
-func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
-	var pkStr string
-	if pubKey != nil {
-		pkStr = sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubKey)
+func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) (Validator, error) {
+	pkAny, err := codectypes.PackAny(pubKey)
+	if err != nil {
+		return Validator{}, err
 	}
 
 	return Validator{
 		OperatorAddress:   operator.String(),
-		ConsensusPubkey:   pkStr,
+		ConsensusPubkey:   pkAny,
 		Jailed:            false,
 		Status:            Unbonded,
 		Tokens:            sdk.ZeroInt(),
@@ -57,7 +58,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		UnbondingTime:     time.Unix(0, 0).UTC(),
 		Commission:        NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		MinSelfDelegation: sdk.OneInt(),
-	}
+	}, nil
 }
 
 // String implements the Stringer interface for a Validator object.

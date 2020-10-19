@@ -84,7 +84,11 @@ Rosetta API services use Blockchain and Network as identifiers, e.g. the develop
 
 #### Interfaces
 
-`Network` holds an `Adapter` reference too. Each Cosmos SDK release series will have their own Adapter implementations. Developers can implement their own custom adapters as required.
+Every SDK version uses a different format to connect (rpc, gRpc, etc), we have abstracted this in what is called the Adapter. This is an interface
+that defines the methods an adapter implementation must provide in order to be used in the `Network` interface.
+
+Each Cosmos SDK release series will have their own Adapter implementations.
+Developers can implement their own custom adapters as required.
 
 ```golang
 type Adapter interface {

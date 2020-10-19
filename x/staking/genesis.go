@@ -2,8 +2,10 @@ package staking
 
 import (
 	"fmt"
+	"log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,7 +151,7 @@ func InitGenesis(
 		var err error
 		res, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 
@@ -194,20 +196,15 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator) {
+func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
-		consAddr, err := validator.GetConsAddr()
+		var consPk crypto.PubKey
+		consPk, err = validator.GetConsPubKey()
 		if err != nil {
-			panic(err)
+			return true
 		}
-
-		consPk, err := validator.GetConsPubKey()
-		if err != nil {
-			panic(err)
-		}
-
 		vals = append(vals, tmtypes.GenesisValidator{
-			Address: consAddr.Bytes(),
+			Address: sdk.ConsAddress(consPk.Address()).Bytes(),
 			PubKey:  consPk,
 			Power:   validator.GetConsensusPower(),
 			Name:    validator.GetMoniker(),

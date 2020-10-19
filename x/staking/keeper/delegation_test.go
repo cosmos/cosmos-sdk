@@ -362,8 +362,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -439,8 +438,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -518,8 +516,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -606,8 +603,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	// unbond all the remaining delegation
 	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], delTokens.ToDec())
@@ -857,8 +853,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 2, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 2)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -921,8 +916,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -1003,8 +997,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)

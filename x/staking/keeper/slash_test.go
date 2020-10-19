@@ -171,8 +171,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.Len(t, rd.Entries, 1)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt(10), rd.Entries[0].InitialBalance)
@@ -215,8 +214,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	require.True(t, found)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	require.True(t, found)
@@ -247,8 +245,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	require.True(t, found)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	assert.True(t, found)
@@ -285,8 +282,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
 
 	// end block
-	updates := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
 
 	// read updating unbonding delegation
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
@@ -380,7 +376,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, sdk.TokensFromConsensusPower(10), diffTokens)
 
 	// apply TM updates
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	// read updated validator
 	// power decreased by 1 again, validator is out of stake
@@ -512,7 +508,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// apply TM updates
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 	// read updated validator
 	// validator decreased to zero power, should be in unbonding period
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)

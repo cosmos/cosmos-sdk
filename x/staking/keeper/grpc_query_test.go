@@ -593,12 +593,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 	delAmount := sdk.TokensFromConsensusPower(1)
 	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
 	suite.NoError(err)
-	_ = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	rdAmount := sdk.TokensFromConsensusPower(1)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator(), rdAmount.ToDec())
 	suite.NoError(err)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	redel, found := app.StakingKeeper.GetRedelegation(ctx, addrAcc1, val1.GetOperator(), val2.GetOperator())
 	suite.True(found)
@@ -685,7 +685,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	undelAmount := sdk.TokensFromConsensusPower(2)
 	_, err := app.StakingKeeper.Undelegate(ctx, addrAcc1, val1.GetOperator(), undelAmount.ToDec())
 	suite.NoError(err)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(suite.T(), ctx, app.StakingKeeper, -1)
 
 	var req *types.QueryValidatorUnbondingDelegationsRequest
 	testCases := []struct {
@@ -754,7 +754,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), types.Unbonded, val1, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), types.Unbonded, val2, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[2]), types.Unbonded, val2, true)
-	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
 	return addrs, valAddrs, vals
 }

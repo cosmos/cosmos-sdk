@@ -130,7 +130,9 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
-	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
+	consKey, err := validator.GetConsPubKey()
+	require.NoError(t, err)
+	assert.Equal(t, pk1.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consKey)
 	assert.Equal(t, valTokens, validator.BondedTokens())
 	assert.Equal(t, valTokens.ToDec(), validator.DelegatorShares)
 	assert.Equal(t, types.Description{}, validator.Description)
@@ -150,7 +152,9 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 
 	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
-	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), validator.GetConsPubKey())
+	consPk, err := validator.GetConsPubKey()
+	require.NoError(t, err)
+	assert.Equal(t, pk2.(cryptotypes.IntoTmPubKey).AsTmPubKey(), consPk)
 	assert.True(sdk.IntEq(t, valTokens, validator.Tokens))
 	assert.True(sdk.DecEq(t, valTokens.ToDec(), validator.DelegatorShares))
 	assert.Equal(t, types.Description{}, validator.Description)

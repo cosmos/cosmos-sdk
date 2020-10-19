@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,10 +45,10 @@ func TestInitGenesis(t *testing.T) {
 	validators := make([]types.Validator, 2)
 	var delegations []types.Delegation
 
-	pk0, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[0])
+	pk0, err := codectypes.PackAny(PKs[0])
 	require.NoError(t, err)
 
-	pk1, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, PKs[1])
+	pk1, err := codectypes.PackAny(PKs[1])
 	require.NoError(t, err)
 
 	// initialize the validators

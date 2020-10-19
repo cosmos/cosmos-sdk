@@ -220,14 +220,22 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 
 	for i := 0; i < len(validators); i++ {
 		val := validators[i]
-		strKey := string(val.GetConsPubKey().Bytes())
+		consPk, err := val.GetConsPubKey()
+		if err != nil {
+			return err
+		}
+		consAddr, err := val.GetConsAddr()
+		if err != nil {
+			return err
+		}
+		strKey := string(consPk.Bytes())
 
 		if _, ok := addrMap[strKey]; ok {
-			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, consAddr)
 		}
 
 		if val.Jailed && val.IsBonded() {
-			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.GetConsAddr())
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, consAddr)
 		}
 
 		if val.DelegatorShares.IsZero() && !val.IsUnbonding() {

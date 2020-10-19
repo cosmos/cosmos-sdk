@@ -234,7 +234,11 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	consPk, err := v.GetConsPubKey()
+	if err != nil {
+		panic(err)
+	}
+	pk, err := encoding.PubKeyToProto(consPk)
 	if err != nil {
 		panic(err)
 	}
@@ -248,7 +252,11 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	pk, err := encoding.PubKeyToProto(v.GetConsPubKey())
+	consPk, err := v.GetConsPubKey()
+	if err != nil {
+		panic(err)
+	}
+	pk, err := encoding.PubKeyToProto(consPk)
 	if err != nil {
 		panic(err)
 	}
@@ -439,21 +447,34 @@ func (v Validator) GetOperator() sdk.ValAddress {
 	}
 	return addr
 }
-func (v Validator) GetConsPubKey() crypto.PubKey {
+
+// GetConsPubKey casts Validator.ConsensusPubkey to crypto.PubKey
+func (v Validator) GetConsPubKey() (crypto.PubKey, error) {
+	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting crypto.PubKey, got %T", pk)
+	}
+
 	// The way things are refactored now, v.ConsensusPubkey is sometimes a TM
 	// ed25519 pubkey, sometimes our own ed25519 pubkey. This is very ugly and
 	// inconsistent.
 	// Luckily, here we coerce it into a TM ed25519 pubkey always, as this
 	// pubkey will be passed into TM (eg calling encoding.PubKeyToProto).
-	pk := sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, v.ConsensusPubkey)
-
 	if intoTmPk, ok := pk.(cryptotypes.IntoTmPubKey); ok {
-		return intoTmPk.AsTmPubKey()
+		return intoTmPk.AsTmPubKey(), nil
 	}
-
-	return pk
+	return pk, nil
 }
-func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.GetConsPubKey().Address()) }
+
+// GetConsAddr extracts Consensus key address
+func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
+	pk, err := v.GetConsPubKey()
+	if err != nil {
+		return sdk.ConsAddress{}, err
+	}
+	return sdk.ConsAddress(pk.Address()), nil
+}
+
 func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
 func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }

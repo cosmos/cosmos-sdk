@@ -410,7 +410,9 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 
-	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(val2.GetConsPubKey().Address()))
+	consKey, err := val2.GetConsPubKey()
+	require.NoError(t, err)
+	app.StakingKeeper.Jail(ctx, sdk.ConsAddress(consKey.Address()))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
